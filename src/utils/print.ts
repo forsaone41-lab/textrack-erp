@@ -1,0 +1,253 @@
+import { Facture, Commande } from '../types';
+
+function printHTML(html: string, title: string) {
+  const win = window.open('', '_blank', 'width=900,height=700');
+  if (!win) return;
+  win.document.write(html);
+  win.document.close();
+  win.document.title = title;
+  win.onload = () => {
+    setTimeout(() => {
+      win.focus();
+      win.print();
+    }, 300);
+  };
+}
+
+// ─── Facture PDF ────────────────────────────────────────────────
+export function printFacture(facture: Facture, commande?: Commande) {
+  const statutLabel = facture.statut === 'payée' ? 'PAYÉE' : facture.statut === 'en_attente' ? 'EN ATTENTE' : 'IMPAYÉE';
+  const statutColor = facture.statut === 'payée' ? '#059669' : facture.statut === 'en_attente' ? '#d97706' : '#dc2626';
+
+  const fmtDate = (d?: string) => d ? new Date(d).toLocaleDateString('fr-MA', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
+  const fmtNum  = (n: number)  => n.toLocaleString('fr-MA');
+
+  const itemsRows = commande
+    ? `<tr>
+        <td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;">${commande.modele}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;text-align:center;">${commande.quantite} pcs</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;text-align:right;">${fmtNum(commande.prix)} MAD</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;text-align:right;font-weight:700;">${fmtNum(commande.quantite * commande.prix)} MAD</td>
+       </tr>`
+    : `<tr>
+        <td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;">Prestation / Services</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;text-align:center;">1</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;text-align:right;">${fmtNum(facture.montant)} MAD</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;text-align:right;font-weight:700;">${fmtNum(facture.montant)} MAD</td>
+       </tr>`;
+
+  const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Facture ${facture.numero}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; background: #fff; }
+    @media print {
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .no-print { display: none !important; }
+    }
+    .page { max-width: 800px; margin: 0 auto; padding: 48px 40px; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .brand-icon { width: 48px; height: 48px; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+    .brand-icon svg { width: 24px; height: 24px; stroke: white; fill: none; stroke-width: 2; }
+    .brand-name { font-size: 22px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px; }
+    .brand-sub { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; }
+    .invoice-meta { text-align: right; }
+    .invoice-title { font-size: 28px; font-weight: 900; color: #1e293b; letter-spacing: -1px; }
+    .invoice-num { font-size: 14px; color: #64748b; margin-top: 4px; }
+    .statut-badge { display: inline-block; margin-top: 8px; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 1px; color: white; background: ${statutColor}; }
+    .divider { border: none; border-top: 2px solid #f1f5f9; margin: 24px 0; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 36px; }
+    .info-label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; }
+    .info-value { font-size: 15px; font-weight: 600; color: #1e293b; }
+    .info-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .info-row-label { font-size: 12px; color: #94a3b8; }
+    .info-row-value { font-size: 12px; font-weight: 600; color: #334155; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+    thead tr { background: #f8fafc; }
+    thead th { padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #e2e8f0; }
+    thead th:last-child, thead th:nth-child(3), thead th:nth-child(2) { text-align: right; }
+    thead th:nth-child(2) { text-align: center; }
+    .total-box { display: flex; justify-content: flex-end; }
+    .total-inner { background: #1e293b; color: white; border-radius: 16px; padding: 20px 28px; text-align: right; min-width: 220px; }
+    .total-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; }
+    .total-value { font-size: 32px; font-weight: 900; letter-spacing: -1px; }
+    .total-currency { font-size: 14px; color: #94a3b8; margin-top: 2px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+    .footer-brand { font-size: 12px; color: #94a3b8; }
+    .footer-note { font-size: 11px; color: #cbd5e1; }
+    .print-btn { position: fixed; bottom: 24px; right: 24px; background: #6366f1; color: white; border: none; padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 20px rgba(99,102,241,0.4); }
+    .print-btn:hover { background: #4f46e5; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        </div>
+        <div>
+          <div class="brand-name">TexTrack</div>
+          <div class="brand-sub">ERP Gestion Textile</div>
+        </div>
+      </div>
+      <div class="invoice-meta">
+        <div class="invoice-title">FACTURE</div>
+        <div class="invoice-num">${facture.numero}</div>
+        <div class="statut-badge">${statutLabel}</div>
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <div class="info-grid">
+      <div>
+        <div class="info-label">Facturé à</div>
+        <div class="info-value">${facture.client}</div>
+      </div>
+      <div>
+        <div class="info-row"><span class="info-row-label">Date d'émission</span><span class="info-row-value">${fmtDate(facture.date)}</span></div>
+        <div class="info-row"><span class="info-row-label">Date d'échéance</span><span class="info-row-value">${fmtDate(facture.echeance)}</span></div>
+        ${commande ? `<div class="info-row"><span class="info-row-label">Commande</span><span class="info-row-value">${commande.reference}</span></div>` : ''}
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th style="text-align:center">Quantité</th>
+          <th style="text-align:right">Prix U.</th>
+          <th style="text-align:right">Total</th>
+        </tr>
+      </thead>
+      <tbody>${itemsRows}</tbody>
+    </table>
+
+    <div class="total-box">
+      <div class="total-inner">
+        <div class="total-label">Montant Total TTC</div>
+        <div class="total-value">${fmtNum(facture.montant)}</div>
+        <div class="total-currency">Dirhams Marocains (MAD)</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-brand">TexTrack · Gestion Textile Professionnelle · ${new Date().getFullYear()}</div>
+      <div class="footer-note">Document généré le ${new Date().toLocaleDateString('fr-MA')}</div>
+    </div>
+  </div>
+
+  <button class="print-btn no-print" onclick="window.print()">⬇ Télécharger PDF</button>
+</body>
+</html>`;
+
+  printHTML(html, `Facture ${facture.numero}`);
+}
+
+// ─── Export CSV Factures ─────────────────────────────────────────
+export function exportFacturesCSV(factures: Facture[]) {
+  const headers = ['N° Facture', 'Client', 'Montant (MAD)', 'Date', 'Échéance', 'Statut'];
+  const rows = factures.map(f => [
+    f.numero,
+    f.client,
+    f.montant.toString(),
+    f.date || '',
+    f.echeance || '',
+    f.statut === 'payée' ? 'Payée' : f.statut === 'en_attente' ? 'En attente' : 'Impayée',
+  ]);
+  const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+  downloadFile(csv, `factures_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv;charset=utf-8;');
+}
+
+// ─── Export CSV Charges ──────────────────────────────────────────
+export function exportChargesCSV(charges: { designation: string; categorie: string; montant: number; date: string; statut: string; recurrence: string; fournisseur?: string }[]) {
+  const headers = ['Désignation', 'Catégorie', 'Montant (MAD)', 'Date', 'Statut', 'Récurrence', 'Fournisseur'];
+  const rows = charges.map(c => [
+    c.designation, c.categorie, c.montant.toString(), c.date,
+    c.statut, c.recurrence, c.fournisseur || '',
+  ]);
+  const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+  downloadFile(csv, `charges_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv;charset=utf-8;');
+}
+
+// ─── Bilan PDF ───────────────────────────────────────────────────
+export function printBilan(data: {
+  ca: number; totalCharges: number; benefice: number; marge: number;
+  caAttente: number; chargesAttente: number; year: number;
+}) {
+  const fmt = (n: number) => n.toLocaleString('fr-MA');
+  const html = `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"/>
+<title>Bilan Financier ${data.year}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; background: #fff; }
+  @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .no-print { display: none !important; } }
+  .page { max-width: 800px; margin: 0 auto; padding: 48px 40px; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
+  .title { font-size: 26px; font-weight: 900; color: #1e293b; }
+  .sub { font-size: 13px; color: #64748b; margin-top: 4px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 28px 0; }
+  .card { padding: 20px; border-radius: 12px; border: 2px solid; }
+  .card.green { border-color: #d1fae5; background: #f0fdf4; color: #065f46; }
+  .card.red   { border-color: #fee2e2; background: #fef2f2; color: #991b1b; }
+  .card.blue  { border-color: #dbeafe; background: #eff6ff; color: #1e40af; }
+  .card.purple{ border-color: #ede9fe; background: #f5f3ff; color: #5b21b6; }
+  .card-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; margin-bottom: 8px; }
+  .card-value { font-size: 24px; font-weight: 900; }
+  .card-sub   { font-size: 12px; opacity: 0.6; margin-top: 4px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+  th { background: #f8fafc; padding: 10px 16px; text-align: left; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; }
+  td { padding: 10px 16px; font-size: 13px; border-bottom: 1px solid #f1f5f9; }
+  .section-title { font-size: 14px; font-weight: 700; color: #334155; margin: 28px 0 12px; border-left: 3px solid #6366f1; padding-left: 10px; }
+  .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #f1f5f9; font-size: 11px; color: #94a3b8; text-align: center; }
+  .print-btn { position: fixed; bottom: 24px; right: 24px; background: #6366f1; color: white; border: none; padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; }
+</style></head>
+<body><div class="page">
+  <div class="header">
+    <div>
+      <div class="title">Bilan Financier ${data.year}</div>
+      <div class="sub">TexTrack · ERP Gestion Textile · Généré le ${new Date().toLocaleDateString('fr-MA')}</div>
+    </div>
+  </div>
+  <div class="grid">
+    <div class="card green"><div class="card-label">Chiffre d'Affaires Encaissé</div><div class="card-value">${fmt(data.ca)} MAD</div><div class="card-sub">${fmt(data.caAttente)} MAD en attente</div></div>
+    <div class="card red"><div class="card-label">Total Charges Payées</div><div class="card-value">${fmt(data.totalCharges)} MAD</div><div class="card-sub">${fmt(data.chargesAttente)} MAD à régler</div></div>
+    <div class="card blue"><div class="card-label">Bénéfice Net</div><div class="card-value">${fmt(data.benefice)} MAD</div><div class="card-sub">${data.benefice >= 0 ? 'Résultat positif' : 'Résultat déficitaire'}</div></div>
+    <div class="card purple"><div class="card-label">Taux de Marge</div><div class="card-value">${data.marge}%</div><div class="card-sub">Sur CA encaissé</div></div>
+  </div>
+  <p class="section-title">Détail Indicateurs</p>
+  <table>
+    <thead><tr><th>Indicateur</th><th>Montant</th></tr></thead>
+    <tbody>
+      <tr><td>CA Encaissé</td><td><strong>${fmt(data.ca)} MAD</strong></td></tr>
+      <tr><td>CA En attente</td><td>${fmt(data.caAttente)} MAD</td></tr>
+      <tr><td>Charges Payées</td><td><strong>${fmt(data.totalCharges)} MAD</strong></td></tr>
+      <tr><td>Charges À Régler</td><td>${fmt(data.chargesAttente)} MAD</td></tr>
+      <tr style="background:#f8fafc"><td><strong>Bénéfice Net</strong></td><td><strong style="color:${data.benefice >= 0 ? '#059669' : '#dc2626'}">${fmt(data.benefice)} MAD</strong></td></tr>
+      <tr style="background:#f8fafc"><td><strong>Taux de Marge</strong></td><td><strong>${data.marge}%</strong></td></tr>
+    </tbody>
+  </table>
+  <div class="footer">TexTrack · Gestion Textile Professionnelle · Document confidentiel</div>
+</div>
+<button class="print-btn no-print" onclick="window.print()">⬇ Télécharger PDF</button>
+</body></html>`;
+
+  printHTML(html, `Bilan Financier ${data.year}`);
+}
+
+// ─── Helper ──────────────────────────────────────────────────────
+function downloadFile(content: string, filename: string, mime: string) {
+  const blob = new Blob(['﻿' + content], { type: mime });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
