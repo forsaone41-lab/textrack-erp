@@ -192,3 +192,5 @@ export default function App() {
     </LangProvider>
   );
 }
+/ /   t r i g g e r  
+ 
