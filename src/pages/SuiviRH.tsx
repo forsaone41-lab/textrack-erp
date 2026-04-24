@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Search, Edit2, Trash2, Users, CreditCard, Banknote, Building2 } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Users, CreditCard, Banknote, Building2, QrCode } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { Employe, PaiementSalaire, Charge, loadData, saveRecord, deleteRecord, genId } from '../types';
 
 const POSTES_ATELIER = [
@@ -210,7 +211,28 @@ export default function SuiviRH() {
     new Date(m + '-01').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 
   return (
-    <div className="space-y-6">
+    <>
+      {/* Print Badges Section */}
+      <div className="hidden print:block p-8 bg-white min-h-screen">
+        <h1 className="text-3xl font-bold mb-8 text-center text-slate-800">Badges Employés — TexTrack</h1>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+          {employes.filter(e => e.actif).map(emp => (
+            <div key={emp.id} className="border-2 border-slate-800 rounded-xl p-4 flex flex-col items-center text-center break-inside-avoid shadow-sm">
+              <div className="w-full bg-slate-800 text-white py-2 rounded-t-lg mb-4 -mt-4 -mx-4 w-[calc(100%+2rem)]">
+                <h2 className="font-bold text-lg uppercase tracking-wider">{emp.prenom ? `${emp.prenom} ${emp.nom}` : emp.nom}</h2>
+              </div>
+              <p className="text-slate-600 text-sm mb-4 font-medium">{emp.poste}</p>
+              <div className="p-2 bg-white rounded-lg border border-slate-200">
+                <QRCodeSVG value={emp.cin || emp.id} size={140} />
+              </div>
+              <p className="text-xs font-mono mt-3 text-slate-500">{emp.cin ? `CIN: ${emp.cin}` : `ID: ${emp.id}`}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Main App Content */}
+      <div className="space-y-6 print:hidden">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -227,6 +249,12 @@ export default function SuiviRH() {
               <option key={m} value={m}>{moisLabel(m)}</option>
             ))}
           </select>
+          <button 
+            onClick={() => window.print()}
+            className="flex items-center gap-2 bg-slate-800 text-white px-4 py-2.5 rounded-lg hover:bg-slate-700 transition text-sm font-medium shadow-sm"
+          >
+            <QrCode className="w-4 h-4" /> Badges
+          </button>
           <button onClick={openCreate} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-lg hover:bg-indigo-700 transition text-sm font-medium shadow-sm">
             <Plus className="w-4 h-4" /> Ajouter
           </button>
@@ -627,6 +655,7 @@ export default function SuiviRH() {
           </div>
         );
       })()}
-    </div>
+      </div>
+    </>
   );
 }
