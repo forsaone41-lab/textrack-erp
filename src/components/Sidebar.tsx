@@ -44,7 +44,7 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout }: S
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all duration-200 ${
       isActive
-        ? 'bg-slate-800 text-white shadow-lg border border-slate-700/50'
+        ? 'bg-[#C5A059] text-black shadow-lg shadow-[#C5A059]/20 font-bold'
         : 'text-slate-300 hover:bg-slate-800/50 hover:text-white'
     } ${isAr ? 'flex-row-reverse text-right' : ''}`;
 
@@ -53,12 +53,12 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout }: S
       {/* Brand */}
       <div className="px-5 py-5 border-b border-slate-800">
         <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
-          <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center border border-slate-700 shadow-lg flex-shrink-0">
-            <Hexagon className="w-5 h-5 text-white" />
+          <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center border border-[#C5A059] shadow-lg flex-shrink-0">
+            <Hexagon className="w-5 h-5 text-[#C5A059]" />
           </div>
           <div className={isAr ? 'text-right' : ''}>
-            <h1 className="text-lg font-bold tracking-tight text-white">BEYA<span className="font-light">CREATIVE</span></h1>
-            <p className="text-[10px] text-slate-400 uppercase tracking-widest">{t('erp_subtitle', lang)}</p>
+            <h1 className="text-lg font-bold tracking-tight text-white">BEYA<span className="font-light text-[#C5A059]">CREATIVE</span></h1>
+            <p className="text-[10px] text-[#C5A059]/80 uppercase tracking-widest">{t('erp_subtitle', lang)}</p>
           </div>
         </div>
       </div>

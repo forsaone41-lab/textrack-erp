@@ -101,11 +101,11 @@ export default function Login({ onLogin }: LoginProps) {
       <div className="w-full max-w-md relative z-10">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-slate-800 rounded-2xl flex items-center justify-center shadow-2xl mx-auto mb-4 border border-slate-700">
-            <Hexagon className="w-8 h-8 text-white" />
+          <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center shadow-2xl mx-auto mb-4 border border-[#C5A059]">
+            <Hexagon className="w-8 h-8 text-[#C5A059]" />
           </div>
-          <h1 className="text-3xl font-black text-white tracking-tight">BEYA<span className="font-light">CREATIVE</span></h1>
-          <p className="text-slate-400 text-xs mt-1 uppercase tracking-widest">ERP Textile & Confection</p>
+          <h1 className="text-3xl font-black text-white tracking-tight">BEYA<span className="font-light text-[#C5A059]">CREATIVE</span></h1>
+          <p className="text-[#C5A059]/80 text-xs mt-1 uppercase tracking-widest">ERP Textile & Confection</p>
         </div>
 
         {/* Card */}
@@ -160,7 +160,7 @@ export default function Login({ onLogin }: LoginProps) {
               <button
                 onClick={handleLogin}
                 disabled={loading}
-                className="w-full bg-slate-900 text-white py-3 rounded-xl font-semibold hover:bg-black active:bg-slate-800 transition shadow-lg shadow-slate-900/30 disabled:opacity-60 mt-2"
+                className="w-full bg-[#C5A059] text-black py-3 rounded-xl font-bold hover:bg-[#b08d4f] active:bg-[#967741] transition shadow-lg shadow-[#C5A059]/20 disabled:opacity-60 mt-2"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
