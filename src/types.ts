@@ -261,10 +261,12 @@ export async function loadData<T>(table: string): Promise<T[]> {
   }
 }
 
-// Helper to save a single record (Insert or Update)
 export async function saveRecord<T>(table: string, record: T): Promise<void> {
   const { error } = await supabase.from(table).upsert(record as any);
-  if (error) console.error(`Error saving to ${table}:`, error.message);
+  if (error) {
+    console.error(`Error saving to ${table}:`, error.message);
+    alert(`Erreur de sauvegarde dans ${table} : ${error.message}. (Vérifiez le RLS sur Supabase !)`);
+  }
 }
 
 // Helper to delete a single record
