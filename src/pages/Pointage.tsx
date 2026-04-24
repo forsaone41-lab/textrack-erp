@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { LogIn, LogOut, UserCheck, UserX, Clock, Users, CalendarDays } from 'lucide-react';
+import { LogIn, LogOut, UserCheck, UserX, Clock, Users, CalendarDays, QrCode, X } from 'lucide-react';
+import { Scanner } from '@yudiel/react-qr-scanner';
 import { Employe, Presence, loadData, saveRecord, genId } from '../types';
 
 const HEURE_LIMITE_RETARD = '08:30';
@@ -26,6 +27,8 @@ export default function Pointage() {
   const [employes, setEmployes] = useState<Employe[]>([]);
   const [presences, setPresences] = useState<Presence[]>([]);
   const [selectedDate, setSelectedDate] = useState(dateNow());
+  const [showScanner, setShowScanner] = useState(false);
+  const [scanStatus, setScanStatus] = useState<{msg: string, type: 'success'|'error'} | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -100,6 +103,35 @@ export default function Pointage() {
   const retards = actifs.filter(e => { const p = getPresence(e.id); return p && p.statut === 'retard'; });
   const enCours = actifs.filter(e => { const p = getPresence(e.id); return p && p.heureEntree && !p.heureSortie; });
 
+  async function handleScan(text: string) {
+    if (!text) return;
+    
+    // Check if the text matches an employee ID or CIN
+    const emp = employes.find(e => e.id === text || e.cin === text);
+    
+    if (!emp) {
+      setScanStatus({ msg: `Ouvrier non trouvé (${text})`, type: 'error' });
+      setTimeout(() => setScanStatus(null), 3000);
+      return;
+    }
+    
+    const p = getPresence(emp.id);
+    if (!p || !p.heureEntree) {
+      await marquerEntree(emp.id);
+      setScanStatus({ msg: `Entrée enregistrée: ${empName(emp)}`, type: 'success' });
+    } else if (!p.heureSortie) {
+      await marquerSortie(emp.id);
+      setScanStatus({ msg: `Sortie enregistrée: ${empName(emp)}`, type: 'success' });
+    } else {
+      setScanStatus({ msg: `${empName(emp)} a déjà complété sa journée`, type: 'error' });
+    }
+    
+    setTimeout(() => {
+      setScanStatus(null);
+      setShowScanner(false);
+    }, 2500);
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -108,16 +140,60 @@ export default function Pointage() {
           <h1 className="text-2xl font-bold text-slate-800">Pointage Présences</h1>
           <p className="text-slate-500 text-sm">Suivi des entrées et sorties du personnel</p>
         </div>
-        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2 shadow-sm">
-          <CalendarDays className="w-4 h-4 text-indigo-500" />
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={e => setSelectedDate(e.target.value)}
-            className="text-sm text-slate-700 outline-none"
-          />
+        <div className="flex flex-wrap items-center gap-2">
+          <button 
+            onClick={() => setShowScanner(true)}
+            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition shadow-sm"
+          >
+            <QrCode className="w-4 h-4" />
+            Scanner Badge
+          </button>
+          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2 shadow-sm">
+            <CalendarDays className="w-4 h-4 text-indigo-500" />
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={e => setSelectedDate(e.target.value)}
+              className="text-sm text-slate-700 outline-none"
+            />
+          </div>
         </div>
       </div>
+
+      {showScanner && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-slate-100">
+              <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                <QrCode className="w-5 h-5 text-indigo-600" /> Scanner un Badge
+              </h3>
+              <button onClick={() => setShowScanner(false)} className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 relative">
+              {scanStatus ? (
+                <div className={`p-4 rounded-xl text-center mb-4 ${scanStatus.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                  <p className="font-bold">{scanStatus.msg}</p>
+                </div>
+              ) : (
+                <div className="rounded-xl overflow-hidden shadow-inner border-2 border-indigo-100">
+                  <Scanner 
+                    onScan={(result) => {
+                      if (result && result.length > 0) {
+                        handleScan(result[0].rawValue);
+                      }
+                    }} 
+                    components={{ audio: false }}
+                  />
+                </div>
+              )}
+              <p className="text-center text-xs text-slate-400 mt-4">Placez le QR Code de l'employé au centre de la caméra</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
