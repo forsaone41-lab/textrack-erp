@@ -109,7 +109,7 @@ export default function Settings() {
             </div>
           </div>
         </div>
-        
+
         {/* Footer actions */}
         <div className={`bg-slate-50 px-6 py-4 border-t border-slate-200 flex ${isAr ? 'justify-start' : 'justify-end'} items-center gap-4`}>
           {saved && <span className="text-green-600 text-sm font-medium">{t('modifs_enreg', lang)}</span>}

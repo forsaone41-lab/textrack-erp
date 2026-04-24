@@ -95,13 +95,13 @@ export default function Factures() {
   async function markPaid(id: string) {
     const fac = factures.find(f => f.id === id);
     if (!fac) return;
-    
+
     const updatedFac = { ...fac, statut: 'payée' as const };
     const updated = factures.map(f => f.id === id ? updatedFac : f);
-    
+
     setFactures(updated);
     if (viewFacture?.id === id) setViewFacture({ ...viewFacture, statut: 'payée' });
-    
+
     await saveRecord('factures', updatedFac);
   }
 
@@ -226,11 +226,10 @@ export default function Factures() {
             <button
               key={f.key}
               onClick={() => setFilterStatut(f.key)}
-              className={`px-3 py-2 rounded-lg text-xs font-semibold transition border ${
-                filterStatut === f.key
+              className={`px-3 py-2 rounded-lg text-xs font-semibold transition border ${filterStatut === f.key
                   ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
                   : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600'
-              }`}
+                }`}
             >
               {f.label}
             </button>
