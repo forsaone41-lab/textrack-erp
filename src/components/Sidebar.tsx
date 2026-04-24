@@ -3,10 +3,10 @@ import {
   LayoutDashboard, FileText, Scissors, Factory, Package,
   Users, ShoppingCart, Receipt, ClipboardCheck, Globe,
   ChevronDown, ChevronRight, UserCircle, Trophy,
-  TrendingDown, LogOut, ShieldCheck, HardHat, BarChart3, Hexagon
+  TrendingDown, LogOut, ShieldCheck, HardHat, BarChart3, Hexagon, Settings as SettingsIcon
 } from 'lucide-react';
 import { useState } from 'react';
-import { User, loadPermissions, AppPage } from '../types';
+import { User, loadPermissions, AppPage, loadCompanyProfile } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
 
@@ -23,6 +23,7 @@ const ROLE_COLORS: Record<string, string> = {
 };
 
 export default function Sidebar({ onOpenClientPortal, currentUser, onLogout }: SidebarProps) {
+  const company = loadCompanyProfile();
   const [prodOpen, setProdOpen] = useState(true);
   const [stockOpen, setStockOpen] = useState(true);
   const [financeOpen, setFinanceOpen] = useState(true);
@@ -57,8 +58,11 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout }: S
             <Hexagon className="w-5 h-5 text-[#C5A059]" />
           </div>
           <div className={isAr ? 'text-right' : ''}>
-            <h1 className="text-lg font-bold tracking-tight text-white">BEYA<span className="font-light text-[#C5A059]">CREATIVE</span></h1>
-            <p className="text-[10px] text-[#C5A059]/80 uppercase tracking-widest">{t('erp_subtitle', lang)}</p>
+            <h1 className="text-lg font-bold tracking-tight text-white uppercase">
+              {company.name.split(' ')[0]}
+              <span className="font-light text-[#C5A059]"> {company.name.split(' ').slice(1).join(' ')}</span>
+            </h1>
+            <p className="text-[10px] text-[#C5A059]/80 uppercase tracking-widest">{company.subtitle}</p>
           </div>
         </div>
       </div>
@@ -216,6 +220,13 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout }: S
           <NavLink to="/utilisateurs" className={linkClass}>
             <UserCircle className="w-4 h-4 flex-shrink-0" />
             <span>{t('utilisateurs', lang)}</span>
+          </NavLink>
+        )}
+
+        {can('parametres') && (
+          <NavLink to="/parametres" className={linkClass}>
+            <SettingsIcon className="w-4 h-4 flex-shrink-0" />
+            <span>Paramètres</span>
           </NavLink>
         )}
       </nav>

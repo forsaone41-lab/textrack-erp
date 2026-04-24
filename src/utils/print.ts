@@ -1,4 +1,4 @@
-import { Facture, Commande } from '../types';
+import { Facture, Commande, loadCompanyProfile } from '../types';
 
 function printHTML(html: string, title: string) {
   const win = window.open('', '_blank', 'width=900,height=700');
@@ -16,6 +16,7 @@ function printHTML(html: string, title: string) {
 
 // ─── Facture PDF ────────────────────────────────────────────────
 export function printFacture(facture: Facture, commande?: Commande) {
+  const company = loadCompanyProfile();
   const statutLabel = facture.statut === 'payée' ? 'PAYÉE' : facture.statut === 'en_attente' ? 'EN ATTENTE' : 'IMPAYÉE';
   const statutColor = facture.statut === 'payée' ? '#059669' : facture.statut === 'en_attente' ? '#d97706' : '#dc2626';
 
@@ -60,7 +61,7 @@ export function printFacture(facture: Facture, commande?: Commande) {
     .invoice-num { font-size: 14px; color: #64748b; margin-top: 4px; }
     .statut-badge { display: inline-block; margin-top: 8px; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 1px; color: white; background: ${statutColor}; }
     .divider { border: none; border-top: 2px solid #f1f5f9; margin: 24px 0; }
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 36px; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; margin-bottom: 36px; }
     .info-label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; }
     .info-value { font-size: 15px; font-weight: 600; color: #1e293b; }
     .info-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
@@ -91,8 +92,8 @@ export function printFacture(facture: Facture, commande?: Commande) {
           <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
         </div>
         <div>
-          <div class="brand-name">BEYA CREATIVE</div>
-          <div class="brand-sub">Confection de vêtement</div>
+          <div class="brand-name">${company.name}</div>
+          <div class="brand-sub">${company.subtitle}</div>
         </div>
       </div>
       <div class="invoice-meta">
@@ -105,6 +106,16 @@ export function printFacture(facture: Facture, commande?: Commande) {
     <hr class="divider" />
 
     <div class="info-grid">
+      <div>
+        <div class="info-label">Émetteur</div>
+        <div class="info-value" style="margin-bottom: 4px;">${company.name}</div>
+        <div class="info-row-label">
+          ${company.address}<br/>
+          ICE: ${company.ice} &nbsp;|&nbsp; RC: ${company.rc}<br/>
+          IF: ${company.if_tax} &nbsp;|&nbsp; Patente: ${company.patente}<br/>
+          Tél: ${company.phone} &nbsp;|&nbsp; ${company.email}
+        </div>
+      </div>
       <div>
         <div class="info-label">Facturé à</div>
         <div class="info-value">${facture.client}</div>
@@ -137,7 +148,7 @@ export function printFacture(facture: Facture, commande?: Commande) {
     </div>
 
     <div class="footer">
-      <div class="footer-brand">BEYA CREATIVE Confection de vêtement · ${new Date().getFullYear()}</div>
+      <div class="footer-brand">${company.name} ${company.subtitle} · ${new Date().getFullYear()}</div>
       <div class="footer-note">Document généré le ${new Date().toLocaleDateString('fr-MA')}</div>
     </div>
   </div>
@@ -180,6 +191,7 @@ export function printBilan(data: {
   ca: number; totalCharges: number; benefice: number; marge: number;
   caAttente: number; chargesAttente: number; year: number;
 }) {
+  const company = loadCompanyProfile();
   const fmt = (n: number) => n.toLocaleString('fr-MA');
   const html = `<!DOCTYPE html>
 <html lang="fr"><head><meta charset="UTF-8"/>
@@ -212,7 +224,7 @@ export function printBilan(data: {
   <div class="header">
     <div>
       <div class="title">Bilan Financier ${data.year}</div>
-      <div class="sub">BEYA CREATIVE Confection de vêtement · Généré le ${new Date().toLocaleDateString('fr-MA')}</div>
+      <div class="sub">${company.name} ${company.subtitle} · Généré le ${new Date().toLocaleDateString('fr-MA')}</div>
     </div>
   </div>
   <div class="grid">
@@ -233,7 +245,7 @@ export function printBilan(data: {
       <tr style="background:#f8fafc"><td><strong>Taux de Marge</strong></td><td><strong>${data.marge}%</strong></td></tr>
     </tbody>
   </table>
-  <div class="footer">BEYA CREATIVE Confection de vêtement · Document confidentiel</div>
+  <div class="footer">${company.name} ${company.subtitle} · Document confidentiel</div>
 </div>
 <button class="print-btn no-print" onclick="window.print()">⬇ Télécharger PDF</button>
 </body></html>`;

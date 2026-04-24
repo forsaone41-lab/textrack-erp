@@ -15,6 +15,7 @@ import Utilisateurs from './pages/Utilisateurs';
 import Performance from './pages/Performance';
 import Charges from './pages/Charges';
 import BilanFinancier from './pages/BilanFinancier';
+import Settings from './pages/Settings';
 import Login from './pages/Login';
 import { initMockData, User, loadPermissions, AppPage } from './types';
 import { LangProvider, useLang } from './contexts/LangContext';
@@ -149,6 +150,7 @@ function AppContent() {
         {can('charges') ? <Route path="charges" element={<Charges />} /> : <Route path="charges" element={<Navigate to="/" replace />} />}
         {can('bilan') ? <Route path="bilan" element={<BilanFinancier />} /> : <Route path="bilan" element={<Navigate to="/" replace />} />}
         {can('utilisateurs') ? <Route path="utilisateurs" element={<Utilisateurs />} /> : <Route path="utilisateurs" element={<Navigate to="/" replace />} />}
+        {can('parametres') ? <Route path="parametres" element={<Settings />} /> : <Route path="parametres" element={<Navigate to="/" replace />} />}
       </Route>
       <Route element={<PointageLayout />}>
         <Route path="pointage" element={<Pointage />} />

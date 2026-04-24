@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Scissors, Eye, EyeOff, AlertCircle, ShieldCheck, HardHat, ShoppingBag, Hexagon } from 'lucide-react';
-import { User, loadData } from '../types';
+import { User, loadData, loadCompanyProfile } from '../types';
 
 // Fallback passwords for existing installs (no password in localStorage yet)
 const DEFAULT_PASSWORDS: Record<string, string> = {
@@ -59,6 +59,7 @@ interface LoginProps {
 }
 
 export default function Login({ onLogin }: LoginProps) {
+  const company = loadCompanyProfile();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -104,8 +105,11 @@ export default function Login({ onLogin }: LoginProps) {
           <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center shadow-2xl mx-auto mb-4 border border-[#C5A059]">
             <Hexagon className="w-8 h-8 text-[#C5A059]" />
           </div>
-          <h1 className="text-3xl font-black text-white tracking-tight">BEYA<span className="font-light text-[#C5A059]">CREATIVE</span></h1>
-          <p className="text-[#C5A059]/80 text-xs mt-1 uppercase tracking-widest">ERP Textile & Confection</p>
+          <h1 className="text-3xl font-black text-white tracking-tight uppercase">
+            {company.name.split(' ')[0]}
+            <span className="font-light text-[#C5A059]"> {company.name.split(' ').slice(1).join(' ')}</span>
+          </h1>
+          <p className="text-[#C5A059]/80 text-xs mt-1 uppercase tracking-widest">{company.subtitle}</p>
         </div>
 
         {/* Card */}
@@ -175,7 +179,7 @@ export default function Login({ onLogin }: LoginProps) {
 
         </div>
 
-        <p className="text-center text-slate-600 text-xs mt-6">© {new Date().getFullYear()} Beya Creative ERP</p>
+        <p className="text-center text-slate-600 text-xs mt-6">© {new Date().getFullYear()} {company.name} ERP</p>
       </div>
     </div>
   );

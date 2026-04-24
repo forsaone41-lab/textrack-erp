@@ -213,12 +213,12 @@ export interface Charge {
 export type AppPage =
   | 'dashboard' | 'fiches' | 'ordres' | 'chaine' | 'stocks'
   | 'rh' | 'commandes' | 'factures' | 'charges' | 'bilan'
-  | 'pointage' | 'portail_client' | 'performance' | 'utilisateurs';
+  | 'pointage' | 'portail_client' | 'performance' | 'utilisateurs' | 'parametres';
 
 export type RolePermMap = Record<'admin' | 'pointeur' | 'client', AppPage[]>;
 
 export const DEFAULT_PERMISSIONS: RolePermMap = {
-  admin: ['dashboard','fiches','ordres','chaine','stocks','rh','commandes','factures','charges','bilan','pointage','portail_client','performance','utilisateurs'],
+  admin: ['dashboard','fiches','ordres','chaine','stocks','rh','commandes','factures','charges','bilan','pointage','portail_client','performance','utilisateurs','parametres'],
   pointeur: ['fiches','ordres','chaine','pointage'],
   client: ['portail_client'],
 };
@@ -244,6 +244,46 @@ export function loadPermissions(): RolePermMap {
 
 export function savePermissions(perms: RolePermMap): void {
   localStorage.setItem('textrack_permissions', JSON.stringify({ ...perms, _v: PERMISSIONS_VERSION }));
+}
+
+// ─── Company Profile (Local Settings) ──────────────────────────
+export interface CompanyProfile {
+  name: string;
+  subtitle: string;
+  logoUrl: string;
+  address: string;
+  ice: string;
+  rc: string;
+  if_tax: string;
+  patente: string;
+  phone: string;
+  email: string;
+}
+
+export const DEFAULT_COMPANY: CompanyProfile = {
+  name: 'BEYA CREATIVE',
+  subtitle: 'Confection de vêtement',
+  logoUrl: '/logo.png',
+  address: 'Zone Industrielle, Casablanca',
+  ice: '000000000000000',
+  rc: '123456',
+  if_tax: '0000000',
+  patente: '00000000',
+  phone: '+212 6 00 00 00 00',
+  email: 'contact@beyacreative.ma'
+};
+
+export function loadCompanyProfile(): CompanyProfile {
+  try {
+    const data = localStorage.getItem('textrack_company');
+    return data ? JSON.parse(data) : DEFAULT_COMPANY;
+  } catch {
+    return DEFAULT_COMPANY;
+  }
+}
+
+export function saveCompanyProfile(profile: CompanyProfile): void {
+  localStorage.setItem('textrack_company', JSON.stringify(profile));
 }
 
 // ─── Storage Helpers ────────────────────────────────────────

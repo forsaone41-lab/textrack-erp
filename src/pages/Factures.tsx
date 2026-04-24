@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, FileText, Eye, CheckCircle, Clock, AlertCircle, ArrowUpRight, X, Download, Table2 } from 'lucide-react';
-import { Facture, Commande, loadData, saveRecord, deleteRecord, genId } from '../types';
+import { Facture, Commande, loadData, saveRecord, deleteRecord, genId, loadCompanyProfile } from '../types';
 import { printFacture, exportFacturesCSV } from '../utils/print';
 
 export default function Factures() {
+  const company = loadCompanyProfile();
   const [factures, setFactures] = useState<Facture[]>([]);
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [search, setSearch] = useState('');
@@ -373,11 +374,11 @@ export default function Factures() {
                 <div>
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center p-1 border border-slate-200">
-                      <img src="/logo.png" alt="Logo" className="max-w-full max-h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                      <img src={company.logoUrl} alt="Logo" className="max-w-full max-h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                     </div>
                     <div>
-                      <h2 className="text-xl font-black tracking-tight uppercase">Beya Creative</h2>
-                      <p className="text-slate-400 text-[10px] uppercase tracking-widest">Confection de vêtement</p>
+                      <h2 className="text-xl font-black tracking-tight uppercase">{company.name}</h2>
+                      <p className="text-slate-400 text-[10px] uppercase tracking-widest">{company.subtitle}</p>
                     </div>
                   </div>
                 </div>
@@ -464,7 +465,7 @@ export default function Factures() {
             </div>
 
             <div className="px-8 py-5 border-t border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <p className="text-xs text-slate-400 font-medium">BEYA CREATIVE Confection de Vêtement</p>
+              <p className="text-xs text-slate-400 font-medium uppercase">{company.name} {company.subtitle}</p>
               <div className="flex gap-2.5">
                 <button
                   onClick={() => printFacture(viewFacture, cmdOf(viewFacture.commandeId))}
