@@ -114,17 +114,18 @@ export default function FichesTechniques() {
     setForm({ ...form, tailles: (form.tailles || []).filter(x => x !== t) });
   }
 
-  function addMesure() {
-    if (newMesureNom.trim()) {
+  function addMesure(manualName?: string) {
+    const name = manualName || newMesureNom;
+    if (name.trim()) {
       const initialValeurs: Record<string, number> = {};
       (form.tailles || []).forEach(t => {
         initialValeurs[t] = 0;
       });
       setForm({ 
         ...form, 
-        mesures: [...(form.mesures || []), { nom: newMesureNom.trim(), valeurs: initialValeurs }] 
+        mesures: [...(form.mesures || []), { nom: name.trim(), valeurs: initialValeurs }] 
       });
-      setNewMesureNom('');
+      if (!manualName) setNewMesureNom('');
     }
   }
 
@@ -625,12 +626,25 @@ export default function FichesTechniques() {
                 </p>
 
                 {/* Input row */}
-                <div className="flex gap-2 mb-4">
+                <div className="flex gap-2 mb-2">
                   <input value={newMesureNom} onChange={e => setNewMesureNom(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addMesure())}
                     placeholder="Nom de la mesure (ex: Longueur, Tour de poitrine...)"
                     className="flex-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-slate-50 focus:bg-white transition-colors" />
-                  <button onClick={addMesure} className="px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition">+ Ajouter</button>
+                  <button onClick={() => addMesure()} className="px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition">+ Ajouter</button>
+                </div>
+
+                {/* Suggestions chips */}
+                <div className="flex flex-wrap gap-1.5 mb-4">
+                  {['Longueur', 'Poitrine', 'Épaules', 'Manches', 'Taille', 'Hanches', 'Entrejambe', 'Bas'].map(s => (
+                    <button
+                      key={s}
+                      onClick={() => addMesure(s)}
+                      className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 hover:bg-indigo-100 hover:text-indigo-600 rounded-lg transition-colors"
+                    >
+                      + {s}
+                    </button>
+                  ))}
                 </div>
 
                 {/* Mesures Spreadsheet Table */}
