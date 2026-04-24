@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Scissors, Eye, EyeOff, AlertCircle, ShieldCheck, HardHat, ShoppingBag } from 'lucide-react';
+import { Scissors, Eye, EyeOff, AlertCircle, ShieldCheck, HardHat, ShoppingBag, Hexagon } from 'lucide-react';
 import { User, loadData } from '../types';
 
 // Fallback passwords for existing installs (no password in localStorage yet)
@@ -101,10 +101,10 @@ export default function Login({ onLogin }: LoginProps) {
       <div className="w-full max-w-md relative z-10">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-indigo-500/40 mx-auto mb-4">
-            <Scissors className="w-8 h-8 text-white" />
+          <div className="w-16 h-16 bg-slate-800 rounded-2xl flex items-center justify-center shadow-2xl mx-auto mb-4 border border-slate-700">
+            <Hexagon className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-black text-white tracking-tight">Beya Creative</h1>
+          <h1 className="text-3xl font-black text-white tracking-tight">BEYA<span className="font-light">CREATIVE</span></h1>
           <p className="text-slate-400 text-xs mt-1 uppercase tracking-widest">ERP Textile & Confection</p>
         </div>
 
@@ -126,7 +126,7 @@ export default function Login({ onLogin }: LoginProps) {
                   onChange={e => setEmail(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleLogin()}
                   placeholder="votre@email.com"
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 focus:border-slate-800 outline-none transition"
                 />
               </div>
               <div>
@@ -138,7 +138,7 @@ export default function Login({ onLogin }: LoginProps) {
                     onChange={e => setPassword(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleLogin()}
                     placeholder="••••••••"
-                    className="w-full px-4 py-3 pr-11 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                    className="w-full px-4 py-3 pr-11 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 focus:border-slate-800 outline-none transition"
                   />
                   <button
                     type="button"
@@ -160,7 +160,7 @@ export default function Login({ onLogin }: LoginProps) {
               <button
                 onClick={handleLogin}
                 disabled={loading}
-                className="w-full bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 active:bg-indigo-800 transition shadow-lg shadow-indigo-500/30 disabled:opacity-60 mt-2"
+                className="w-full bg-slate-900 text-white py-3 rounded-xl font-semibold hover:bg-black active:bg-slate-800 transition shadow-lg shadow-slate-900/30 disabled:opacity-60 mt-2"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
