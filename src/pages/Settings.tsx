@@ -112,7 +112,7 @@ export default function Settings() {
           {saved && <span className="text-green-600 text-sm font-medium">Modifications enregistrées !</span>}
           <button
             onClick={handleSave}
-            className="flex items-center gap-2 bg-[#C5A059] text-black px-6 py-2.5 rounded-lg hover:bg-[#b08d4f] transition font-bold shadow-sm"
+            className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-2.5 rounded-lg hover:bg-indigo-700 transition font-bold shadow-sm shadow-indigo-500/30"
           >
             <Save className="w-4 h-4" /> Enregistrer & Appliquer
           </button>

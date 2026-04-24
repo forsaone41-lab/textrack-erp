@@ -102,14 +102,14 @@ export default function Login({ onLogin }: LoginProps) {
       <div className="w-full max-w-md relative z-10">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center shadow-2xl mx-auto mb-4 border border-[#C5A059]">
-            <Hexagon className="w-8 h-8 text-[#C5A059]" />
+          <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-indigo-500/40 mx-auto mb-4">
+            <h1 className="text-3xl font-black text-white">B</h1>
           </div>
           <h1 className="text-3xl font-black text-white tracking-tight uppercase">
             {company.name.split(' ')[0]}
-            <span className="font-light text-[#C5A059]"> {company.name.split(' ').slice(1).join(' ')}</span>
+            <span className="font-light text-indigo-400"> {company.name.split(' ').slice(1).join(' ')}</span>
           </h1>
-          <p className="text-[#C5A059]/80 text-xs mt-1 uppercase tracking-widest">{company.subtitle}</p>
+          <p className="text-indigo-200/80 text-xs mt-1 uppercase tracking-widest">{company.subtitle}</p>
         </div>
 
         {/* Card */}
@@ -164,7 +164,7 @@ export default function Login({ onLogin }: LoginProps) {
               <button
                 onClick={handleLogin}
                 disabled={loading}
-                className="w-full bg-[#C5A059] text-black py-3 rounded-xl font-bold hover:bg-[#b08d4f] active:bg-[#967741] transition shadow-lg shadow-[#C5A059]/20 disabled:opacity-60 mt-2"
+                className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 active:bg-indigo-800 transition shadow-lg shadow-indigo-500/30 disabled:opacity-60 mt-2"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
