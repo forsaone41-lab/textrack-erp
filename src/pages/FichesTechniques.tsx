@@ -527,7 +527,7 @@ export default function FichesTechniques() {
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-slate-800">{editId ? 'Modifier' : 'Nouvelle'} Fiche Technique</h2>
-                  <p className="text-xs text-slate-400">Remplissez les informations du modèle</p>
+                  <p className="text-xs text-slate-400 font-medium italic">v1.2 - Remplissez les informations du modèle</p>
                 </div>
               </div>
               <button onClick={() => setShowModal(false)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition">
