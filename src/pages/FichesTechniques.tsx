@@ -574,16 +574,16 @@ export default function FichesTechniques() {
                     <input value={form.type || ''} onChange={e => setForm({ ...form, type: e.target.value })}
                       placeholder="ex: Chemise, Robe..."
                       className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors" />
-                    <div className="flex flex-wrap gap-1 mt-1.5">
+                    <div className="flex flex-wrap gap-1.5 mt-2">
                       {['T-shirt', 'Polo', 'Chemise', 'Pantalon', 'Sweat', 'Veste', 'Robe'].map(t => (
                         <button
                           key={t}
                           type="button"
                           onClick={() => setForm({ ...form, type: t })}
-                          className={`px-2 py-0.5 text-[9px] font-bold rounded-md border transition-colors ${
+                          className={`px-2.5 py-1 text-[10px] font-bold rounded-lg border transition-all shadow-sm ${
                             form.type === t 
-                              ? 'bg-indigo-600 border-indigo-600 text-white' 
-                              : 'bg-white border-slate-200 text-slate-500 hover:border-indigo-300 hover:text-indigo-600'
+                              ? 'bg-indigo-600 border-indigo-600 text-white scale-105 shadow-indigo-200' 
+                              : 'bg-white border-slate-200 text-slate-500 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50'
                           }`}
                         >
                           {t}
@@ -651,12 +651,13 @@ export default function FichesTechniques() {
                 </div>
 
                 {/* Suggestions chips */}
-                <div className="flex flex-wrap gap-1.5 mb-4">
+                <div className="flex flex-wrap gap-1.5 mb-5">
                   {['Longueur', 'Poitrine', 'Épaules', 'Manches', 'Taille', 'Hanches', 'Entrejambe', 'Bas'].map(s => (
                     <button
                       key={s}
+                      type="button"
                       onClick={() => addMesure(s)}
-                      className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 hover:bg-indigo-100 hover:text-indigo-600 rounded-lg transition-colors"
+                      className="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 border border-slate-200 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 rounded-lg transition-all shadow-sm"
                     >
                       + {s}
                     </button>
