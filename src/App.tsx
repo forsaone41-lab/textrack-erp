@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route, Outlet, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
@@ -17,7 +17,7 @@ import Charges from './pages/Charges';
 import BilanFinancier from './pages/BilanFinancier';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
-import { initMockData, User, loadPermissions, AppPage } from './types';
+import { initMockData, User, loadPermissions, AppPage, loadCompanyProfile } from './types';
 import { LangProvider, useLang } from './contexts/LangContext';
 
 initMockData();
@@ -34,10 +34,34 @@ function AdminLayout({
   onLogout: () => void;
 }) {
   const { isAr } = useLang();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const company = loadCompanyProfile();
+  const location = useLocation();
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
   return (
     <div className={`flex min-h-screen bg-slate-50 ${isAr ? 'flex-row-reverse' : ''}`} dir={isAr ? 'rtl' : 'ltr'}>
-      <Sidebar onOpenClientPortal={onOpenClientPortal} currentUser={currentUser} onLogout={onLogout} />
-      <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
+      {/* Mobile Header */}
+      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-slate-900 z-40 flex items-center justify-between px-4 shadow-md">
+        <div className="text-white font-bold tracking-tight uppercase">
+          {company.name.split(' ')[0]} <span className="font-light text-indigo-400">{company.name.split(' ').slice(1).join(' ')}</span>
+        </div>
+        <button onClick={() => setMobileOpen(true)} className="text-slate-300 p-2 focus:outline-none">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg>
+        </button>
+      </div>
+
+      <Sidebar 
+        onOpenClientPortal={onOpenClientPortal} 
+        currentUser={currentUser} 
+        onLogout={onLogout} 
+        mobileOpen={mobileOpen}
+        setMobileOpen={setMobileOpen}
+      />
+      <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto mt-16 md:mt-0 w-full overflow-x-hidden">
         <Outlet />
       </main>
     </div>

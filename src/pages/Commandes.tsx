@@ -8,8 +8,11 @@ import {
   Commande, FicheTechnique, OrdreDeCoupe, PointageEntry, Facture, Employe, User,
   loadData, saveRecord, deleteRecord, genId, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, Phase,
 } from '../types';
+import { useLang } from '../contexts/LangContext';
+import { t } from '../i18n';
 
 export default function Commandes() {
+  const { lang, isAr } = useLang();
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [fiches, setFiches]       = useState<FicheTechnique[]>([]);
   const [ordres, setOrdres]       = useState<OrdreDeCoupe[]>([]);
@@ -149,8 +152,8 @@ export default function Commandes() {
   };
 
   const statutLabel = (s: string, urgent = false) => {
-    if (urgent) return '⚠ En retard';
-    return ({ en_cours: 'En cours', terminé: 'Terminé', livré: 'Livré' }[s] ?? s);
+    if (urgent) return t('urgent_label', lang);
+    return ({ en_cours: t('status_en_cours', lang), terminé: t('status_terminee', lang), livré: t('status_livree', lang) }[s] ?? s);
   };
 
   const ordreStyle = (s: string) => ({ planifié: 'bg-slate-100 text-slate-600', en_cours: 'bg-blue-100 text-blue-700', terminé: 'bg-green-100 text-green-700' }[s] ?? 'bg-slate-100 text-slate-600');
@@ -158,7 +161,7 @@ export default function Commandes() {
 
   function fmtDate(d?: string) {
     if (!d) return '—';
-    return new Date(d).toLocaleDateString('fr-MA', { day: '2-digit', month: 'short', year: 'numeric' });
+    return new Date(d).toLocaleDateString(isAr ? 'ar-MA' : 'fr-MA', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
   function daysLeft(d: string) {
@@ -166,21 +169,21 @@ export default function Commandes() {
   }
 
   const FILTERS = [
-    { key: 'all', label: 'Toutes' },
-    { key: 'en_cours', label: 'En cours' },
-    { key: 'terminé', label: 'Terminées' },
-    { key: 'livré', label: 'Livrées' },
+    { key: 'all', label: t('all', lang) },
+    { key: 'en_cours', label: t('status_en_cours', lang) },
+    { key: 'terminé', label: t('status_terminee', lang) },
+    { key: 'livré', label: t('status_livree', lang) },
   ] as const;
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${isAr ? 'text-right' : ''}`}>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${isAr ? 'flex-row-reverse' : ''}`}>
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Gestion des Commandes</h1>
-          <p className="text-sm text-slate-500">{commandes.length} commande{commandes.length !== 1 ? 's' : ''} · CA total {stats.ca.toLocaleString()} MAD</p>
+          <h1 className="text-2xl font-bold text-slate-800">{t('commandes_title', lang)}</h1>
+          <p className="text-sm text-slate-500">{commandes.length} {t('commandes_count', lang)} · {t('ca_total', lang)} {stats.ca.toLocaleString()} MAD</p>
         </div>
-        <div className="flex gap-2">
+        <div className={`flex gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
           <button
             onClick={() => setShowCalc(true)}
             className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2.5 rounded-xl hover:bg-purple-700 transition text-sm font-semibold shadow-sm"

@@ -11,8 +11,10 @@ import {
   loadData, Commande, StockTissu, Employe, Facture, PointageEntry, Presence,
   PHASE_LABELS, PHASE_ORDER,
 } from '../types';
+import { useLang } from '../contexts/LangContext';
 
 export default function Dashboard() {
+  const { isAr } = useLang();
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [tissus, setTissus] = useState<StockTissu[]>([]);
   const [employes, setEmployes] = useState<Employe[]>([]);
@@ -89,36 +91,36 @@ export default function Dashboard() {
 
   const kpiCards = [
     {
-      title: 'Encours de Production',
-      value: `${totalPiecesEnCours} pièces`,
-      subtitle: `${commandesEnCours.length} commandes actives`,
+      title: isAr ? 'الإنتاج قيد التنفيذ' : 'Encours de Production',
+      value: isAr ? `${totalPiecesEnCours} قطعة` : `${totalPiecesEnCours} pièces`,
+      subtitle: isAr ? `${commandesEnCours.length} طلبيات نشطة` : `${commandesEnCours.length} commandes actives`,
       icon: Shirt,
       color: 'from-indigo-500 to-blue-600',
       bgLight: 'bg-indigo-50',
       textColor: 'text-indigo-600',
     },
     {
-      title: 'Taux de Rebut',
+      title: isAr ? 'نسبة التالف' : 'Taux de Rebut',
       value: `${tauxRebut}%`,
-      subtitle: `${totalRebut} pièces rebutées / ${totalPieces}`,
+      subtitle: isAr ? `${totalRebut} قطعة تالفة / ${totalPieces}` : `${totalRebut} pièces rebutées / ${totalPieces}`,
       icon: TriangleAlert,
       color: 'from-amber-500 to-orange-600',
       bgLight: 'bg-amber-50',
       textColor: 'text-amber-600',
     },
     {
-      title: 'Délais de Livraison',
-      value: `${commandesEnRetard.length} en retard`,
-      subtitle: commandesEnRetard.length === 0 ? 'Tout est dans les temps !' : 'Attention aux délais',
+      title: isAr ? 'مواعيد التسليم' : 'Délais de Livraison',
+      value: isAr ? `${commandesEnRetard.length} متأخرة` : `${commandesEnRetard.length} en retard`,
+      subtitle: commandesEnRetard.length === 0 ? (isAr ? 'الكل في الوقت المحدد!' : 'Tout est dans les temps !') : (isAr ? 'انتبه للمواعيد' : 'Attention aux délais'),
       icon: Truck,
       color: commandesEnRetard.length > 0 ? 'from-red-500 to-rose-600' : 'from-green-500 to-emerald-600',
       bgLight: commandesEnRetard.length > 0 ? 'bg-red-50' : 'bg-green-50',
       textColor: commandesEnRetard.length > 0 ? 'text-red-600' : 'text-green-600',
     },
     {
-      title: 'Chiffre d\'Affaires',
+      title: isAr ? 'رقم الأعمال' : 'Chiffre d\'Affaires',
       value: `${(caTotal / 1000).toFixed(0)}K MAD`,
-      subtitle: `${(caPaye / 1000).toFixed(0)}K encaissé · ${(caImpaye / 1000).toFixed(0)}K impayé`,
+      subtitle: isAr ? `${(caPaye / 1000).toFixed(0)}K مدفوع · ${(caImpaye / 1000).toFixed(0)}K غير مدفوع` : `${(caPaye / 1000).toFixed(0)}K encaissé · ${(caImpaye / 1000).toFixed(0)}K impayé`,
       icon: TrendingUp,
       color: 'from-emerald-500 to-teal-600',
       bgLight: 'bg-emerald-50',
@@ -129,9 +131,9 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-800">Tableau de Bord</h1>
-        <p className="text-slate-500 mt-1">Vue d'ensemble de votre production textile</p>
+      <div className={isAr ? 'text-right' : 'text-left'}>
+        <h1 className="text-2xl font-bold text-slate-800">{isAr ? 'لوحة التحكم' : 'Tableau de Bord'}</h1>
+        <p className="text-slate-500 mt-1">{isAr ? 'نظرة عامة على إنتاج النسيج الخاص بك' : 'Vue d\'ensemble de votre production textile'}</p>
       </div>
 
       {/* KPI Cards */}

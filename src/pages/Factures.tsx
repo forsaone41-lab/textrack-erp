@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, FileText, Eye, CheckCircle, Clock, AlertCircle, ArrowUpRight, X, Download, Table2 } from 'lucide-react';
 import { Facture, Commande, loadData, saveRecord, deleteRecord, genId, loadCompanyProfile } from '../types';
 import { printFacture, exportFacturesCSV } from '../utils/print';
+import { useLang } from '../contexts/LangContext';
+import { t } from '../i18n';
 
 export default function Factures() {
+  const { lang, isAr } = useLang();
   const company = loadCompanyProfile();
   const [factures, setFactures] = useState<Facture[]>([]);
   const [commandes, setCommandes] = useState<Commande[]>([]);
@@ -130,20 +133,21 @@ export default function Factures() {
   const FILTERS = [
     { key: 'all', label: 'Toutes' },
     { key: 'payée', label: 'Payées' },
-    { key: 'en_attente', label: 'En attente' },
-    { key: 'impayée', label: 'Impayées' },
-    { key: 'en_retard', label: 'En retard' },
+    { key: 'all', label: t('all', lang) },
+    { key: 'payée', label: t('paid', lang) },
+    { key: 'en_attente', label: t('pending', lang) },
+    { key: 'impayée', label: t('unpaid', lang) },
+    { key: 'en_retard', label: t('overdue', lang) },
   ] as const;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Factures</h1>
-          <p className="text-sm text-slate-500">{factures.length} facture{factures.length !== 1 ? 's' : ''} enregistrée{factures.length !== 1 ? 's' : ''}</p>
+          <h1 className="text-2xl font-bold text-slate-800">{t('factures_title', lang)}</h1>
+          <p className="text-slate-500 mt-1">{factures.length} {t('factures_subtitle', lang)}</p>
         </div>
-        <div className="flex gap-2">
+        <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
           <button
             onClick={() => exportFacturesCSV(filtered)}
             title="Exporter CSV"
@@ -155,65 +159,63 @@ export default function Factures() {
             onClick={openCreate}
             className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl hover:bg-indigo-700 transition text-sm font-semibold shadow-sm"
           >
-            <Plus className="w-4 h-4" /> Nouvelle Facture
+            <Plus className="w-4 h-4" /> {t('new_facture', lang)}
           </button>
         </div>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
           <div className="flex items-start justify-between mb-3">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Facturé</p>
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('total_invoiced', lang)}</p>
             <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
               <FileText className="w-4 h-4 text-slate-500" />
             </div>
           </div>
           <p className="text-2xl font-bold text-slate-800">{stats.total.toLocaleString()}</p>
-          <p className="text-xs text-slate-400 mt-1">MAD · {factures.length} factures</p>
+          <p className="text-xs text-slate-400 mt-1">MAD</p>
         </div>
 
         <div className="bg-gradient-to-br from-emerald-50 to-white rounded-xl border border-emerald-200 p-5 shadow-sm">
           <div className="flex items-start justify-between mb-3">
-            <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Payées</p>
+            <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wider">{t('paid', lang)}</p>
             <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
               <CheckCircle className="w-4 h-4 text-emerald-500" />
             </div>
           </div>
           <p className="text-2xl font-bold text-emerald-700">{stats.payee.toLocaleString()}</p>
-          <p className="text-xs text-emerald-500 mt-1">MAD · {stats.countPayee} facture{stats.countPayee !== 1 ? 's' : ''}</p>
+          <p className="text-xs text-emerald-500 mt-1">MAD</p>
         </div>
 
         <div className="bg-gradient-to-br from-amber-50 to-white rounded-xl border border-amber-200 p-5 shadow-sm">
           <div className="flex items-start justify-between mb-3">
-            <p className="text-xs font-semibold text-amber-600 uppercase tracking-wider">En Attente</p>
+            <p className="text-xs font-semibold text-amber-600 uppercase tracking-wider">{t('pending', lang)}</p>
             <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
               <Clock className="w-4 h-4 text-amber-500" />
             </div>
           </div>
           <p className="text-2xl font-bold text-amber-700">{stats.attente.toLocaleString()}</p>
-          <p className="text-xs text-amber-500 mt-1">MAD · {stats.countAttente} facture{stats.countAttente !== 1 ? 's' : ''}</p>
+          <p className="text-xs text-amber-500 mt-1">MAD</p>
         </div>
 
         <div className="bg-gradient-to-br from-red-50 to-white rounded-xl border border-red-200 p-5 shadow-sm">
           <div className="flex items-start justify-between mb-3">
-            <p className="text-xs font-semibold text-red-600 uppercase tracking-wider">En Retard</p>
+            <p className="text-xs font-semibold text-red-600 uppercase tracking-wider">{t('overdue', lang)}</p>
             <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
               <AlertCircle className="w-4 h-4 text-red-500" />
             </div>
           </div>
           <p className="text-2xl font-bold text-red-700">{stats.retard.toLocaleString()}</p>
-          <p className="text-xs text-red-500 mt-1">MAD · {stats.countRetard} en retard</p>
+          <p className="text-xs text-red-500 mt-1">MAD</p>
         </div>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Rechercher par N° facture ou client..."
+            placeholder={t('search_placeholder', lang)}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
@@ -236,20 +238,19 @@ export default function Factures() {
         </div>
       </div>
 
-      {/* Table */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-5 py-3.5">N° Facture</th>
-                <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-5 py-3.5">Client</th>
-                <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-5 py-3.5">Commande</th>
-                <th className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide px-5 py-3.5">Montant</th>
-                <th className="text-center text-xs font-semibold text-slate-500 uppercase tracking-wide px-5 py-3.5">Émission</th>
-                <th className="text-center text-xs font-semibold text-slate-500 uppercase tracking-wide px-5 py-3.5">Échéance</th>
-                <th className="text-center text-xs font-semibold text-slate-500 uppercase tracking-wide px-5 py-3.5">Statut</th>
-                <th className="text-center text-xs font-semibold text-slate-500 uppercase tracking-wide px-5 py-3.5">Actions</th>
+                <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-5 py-3.5">{t('num_facture', lang)}</th>
+                <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-5 py-3.5">{t('client', lang)}</th>
+                <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-5 py-3.5">{t('commande_liee', lang)}</th>
+                <th className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide px-5 py-3.5">{t('montant', lang)}</th>
+                <th className="text-center text-xs font-semibold text-slate-500 uppercase tracking-wide px-5 py-3.5">{t('date_emission', lang)}</th>
+                <th className="text-center text-xs font-semibold text-slate-500 uppercase tracking-wide px-5 py-3.5">{t('date_echeance', lang)}</th>
+                <th className="text-center text-xs font-semibold text-slate-500 uppercase tracking-wide px-5 py-3.5">{t('statut', lang)}</th>
+                <th className="text-center text-xs font-semibold text-slate-500 uppercase tracking-wide px-5 py-3.5">{t('actions', lang)}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -336,62 +337,41 @@ export default function Factures() {
             <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <FileText className="w-7 h-7 text-slate-300" />
             </div>
-            <p className="text-slate-500 font-semibold">Aucune facture trouvée</p>
-            <p className="text-slate-400 text-sm mt-1">
-              {search || filterStatut !== 'all' ? 'Modifiez vos filtres' : 'Créez votre première facture'}
-            </p>
+            <p className="text-slate-500 font-semibold">{t('no_facture', lang)}</p>
           </div>
         )}
       </div>
 
-      {/* Delete Confirm */}
       {confirmDelete && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6 text-center">
             <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Trash2 className="w-6 h-6 text-red-500" />
             </div>
-            <h3 className="text-lg font-bold text-slate-800 mb-1">Supprimer cette facture ?</h3>
-            <p className="text-sm text-slate-500 mb-6">Cette action est irréversible.</p>
-            <div className="flex gap-3">
+            <h3 className="text-lg font-bold text-slate-800 mb-1">{t('delete_confirm', lang)}</h3>
+            <div className="flex gap-3 mt-6">
               <button onClick={() => setConfirmDelete(null)} className="flex-1 px-4 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition">
-                Annuler
+                {t('cancel', lang)}
               </button>
               <button onClick={() => remove(confirmDelete)} className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 transition">
-                Supprimer
+                {t('delete', lang)}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Invoice Preview Modal */}
       {viewFacture && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden">
             <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-8 text-white">
               <div className="flex justify-between items-start">
                 <div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center p-1 border border-slate-200">
-                      <img src={company.logoUrl} alt="Logo" className="max-w-full max-h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-black tracking-tight uppercase">{company.name}</h2>
-                      <p className="text-slate-400 text-[10px] uppercase tracking-widest">{company.subtitle}</p>
-                    </div>
-                  </div>
+                  <h2 className="text-xl font-black tracking-tight uppercase">{company.name}</h2>
                 </div>
                 <div className="text-right">
-                  <p className="text-slate-400 text-xs uppercase tracking-widest mb-1">Facture</p>
+                  <p className="text-slate-400 text-xs uppercase tracking-widest mb-1">{t('facture', lang)}</p>
                   <p className="text-2xl font-bold">{viewFacture.numero}</p>
-                  <div className={`inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full text-xs font-bold ${
-                    viewFacture.statut === 'payée' ? 'bg-emerald-500/20 text-emerald-300' :
-                    isOverdue(viewFacture) ? 'bg-red-500/20 text-red-300' : 'bg-amber-500/20 text-amber-300'
-                  }`}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                    {getStatutInfo(viewFacture).label.toUpperCase()}
-                  </div>
                 </div>
               </div>
             </div>
@@ -399,26 +379,8 @@ export default function Factures() {
             <div className="p-8">
               <div className="grid grid-cols-2 gap-8 mb-8">
                 <div>
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Facturer à</p>
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{t('billed_to', lang)}</p>
                   <p className="text-xl font-bold text-slate-800">{viewFacture.client}</p>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-xs text-slate-400">Date d'émission</span>
-                    <span className="text-xs font-semibold text-slate-700">{fmtDate(viewFacture.date)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-xs text-slate-400">Date d'échéance</span>
-                    <span className={`text-xs font-semibold ${isOverdue(viewFacture) ? 'text-red-600' : 'text-slate-700'}`}>
-                      {fmtDate(viewFacture.echeance)}
-                    </span>
-                  </div>
-                  {cmdOf(viewFacture.commandeId) && (
-                    <div className="flex justify-between">
-                      <span className="text-xs text-slate-400">Commande</span>
-                      <span className="text-xs font-semibold text-indigo-600">{cmdOf(viewFacture.commandeId)?.reference}</span>
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -426,10 +388,10 @@ export default function Factures() {
                 <table className="w-full">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="text-left text-xs font-semibold text-slate-500 uppercase px-4 py-3">Description</th>
-                      <th className="text-center text-xs font-semibold text-slate-500 uppercase px-4 py-3">Qté</th>
-                      <th className="text-right text-xs font-semibold text-slate-500 uppercase px-4 py-3">Prix U.</th>
-                      <th className="text-right text-xs font-semibold text-slate-500 uppercase px-4 py-3">Total</th>
+                      <th className="text-left text-xs font-semibold text-slate-500 uppercase px-4 py-3">{t('description', lang)}</th>
+                      <th className="text-center text-xs font-semibold text-slate-500 uppercase px-4 py-3">{t('qty', lang)}</th>
+                      <th className="text-right text-xs font-semibold text-slate-500 uppercase px-4 py-3">{t('price_u', lang)}</th>
+                      <th className="text-right text-xs font-semibold text-slate-500 uppercase px-4 py-3">{t('total', lang)}</th>
                     </tr>
                   </thead>
                   <tbody>
