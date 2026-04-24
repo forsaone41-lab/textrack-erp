@@ -352,7 +352,7 @@ export default function FichesTechniques() {
                     {f.mesures.map((m, i) => (
                       <div key={i} className="bg-slate-50 rounded-lg px-3 py-2 text-center">
                         <p className="text-[10px] text-slate-400 mb-0.5">{m.nom}</p>
-                        <p className="text-sm font-bold text-slate-800">{m.valeur}<span className="text-xs font-normal text-slate-400"> cm</span></p>
+                        <p className="text-sm font-bold text-slate-800">{Object.values(m.valeurs)[0] || 0}<span className="text-xs font-normal text-slate-400"> cm</span></p>
                       </div>
                     ))}
                   </div>

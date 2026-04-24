@@ -1,4 +1,4 @@
-import { Facture, Commande, loadCompanyProfile } from '../types';
+import { Facture, Commande, loadCompanyProfile, FicheTechnique } from '../types';
 
 function printHTML(html: string, title: string) {
   const win = window.open('', '_blank', 'width=900,height=700');
@@ -256,7 +256,6 @@ export function printBilan(data: {
 // ─── Fiche Technique PDF ──────────────────────────────────────────
 export function printFicheTechnique(fiche: FicheTechnique) {
   const company = loadCompanyProfile();
-  const fmtNum = (n: number) => n.toLocaleString('fr-MA');
 
   const html = `<!DOCTYPE html>
 <html lang="fr">
@@ -330,7 +329,7 @@ export function printFicheTechnique(fiche: FicheTechnique) {
         <div style="margin-top: 20px;">
           <h2>Tailles & Gradations</h2>
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            ${fiche.tailles.map(t => `<span style="background: #1e293b; color: white; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 700;">${t}</span>`).join('')}
+            ${fiche.tailles.map((t: string) => `<span style="background: #1e293b; color: white; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 700;">${t}</span>`).join('')}
           </div>
         </div>
       </div>
@@ -341,14 +340,14 @@ export function printFicheTechnique(fiche: FicheTechnique) {
       <thead>
         <tr>
           <th>Point de Mesure</th>
-          ${fiche.tailles.map(t => `<th>${t}</th>`).join('')}
+          ${fiche.tailles.map((t: string) => `<th>${t}</th>`).join('')}
         </tr>
       </thead>
       <tbody>
-        ${fiche.mesures.map(m => `
+        ${fiche.mesures.map((m: any) => `
           <tr>
             <td>${m.nom}</td>
-            ${fiche.tailles.map(t => `<td>${m.valeurs?.[t] || '—'}</td>`).join('')}
+            ${fiche.tailles.map((t: string) => `<td>${m.valeurs?.[t] || '—'}</td>`).join('')}
           </tr>
         `).join('')}
       </tbody>
