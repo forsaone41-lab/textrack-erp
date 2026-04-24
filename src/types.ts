@@ -218,8 +218,8 @@ export type AppPage =
 export type RolePermMap = Record<'admin' | 'pointeur' | 'client', AppPage[]>;
 
 export const DEFAULT_PERMISSIONS: RolePermMap = {
-  admin: ['dashboard','fiches','ordres','chaine','stocks','rh','commandes','factures','charges','bilan','pointage','portail_client','performance','utilisateurs','parametres'],
-  pointeur: ['fiches','ordres','chaine','pointage'],
+  admin: ['dashboard', 'fiches', 'ordres', 'chaine', 'stocks', 'rh', 'commandes', 'factures', 'charges', 'bilan', 'pointage', 'portail_client', 'performance', 'utilisateurs', 'parametres'],
+  pointeur: ['fiches', 'ordres', 'chaine', 'pointage'],
   client: ['portail_client'],
 };
 
