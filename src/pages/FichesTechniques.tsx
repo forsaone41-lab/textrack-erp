@@ -162,91 +162,102 @@ export default function FichesTechniques() {
       </div>
 
       {/* Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {filtered.map(f => (
-          <div key={f.id} className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-            <div className="p-5">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <h3 className="font-semibold text-slate-800 text-sm">{f.modele}</h3>
-                  <p className="text-[10px] text-slate-400 mt-0.5">{f.type} · {f.client}</p>
+          <div key={f.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden group">
+            {/* Photo Banner */}
+            <div className="relative h-48 bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden">
+              {f.photo ? (
+                <img src={f.photo} alt={f.modele} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
+                  <Camera className="w-10 h-10 mb-2" />
+                  <span className="text-xs">Pas de photo</span>
                 </div>
-                <div className="flex gap-1">
-                  <button onClick={() => openEdit(f)} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
-                    <Edit2 className="w-3.5 h-3.5" />
-                  </button>
-                  <button onClick={() => remove(f.id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+              )}
+              {/* Overlay badges */}
+              <div className="absolute top-3 left-3 flex gap-2">
+                {f.type && <span className="px-2.5 py-1 bg-white/90 backdrop-blur text-slate-700 text-xs font-semibold rounded-full shadow-sm">{f.type}</span>}
+              </div>
+              <div className="absolute top-3 right-3 flex gap-1.5">
+                <button onClick={() => openEdit(f)} className="p-1.5 bg-white/90 backdrop-blur text-slate-500 hover:text-indigo-600 rounded-lg shadow-sm transition">
+                  <Edit2 className="w-3.5 h-3.5" />
+                </button>
+                <button onClick={() => remove(f.id)} className="p-1.5 bg-white/90 backdrop-blur text-slate-500 hover:text-red-600 rounded-lg shadow-sm transition">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              {/* Patronage badge */}
+              {f.patronagePhoto && (
+                <div className="absolute bottom-3 right-3">
+                  <span className="flex items-center gap-1 px-2 py-1 bg-indigo-600/90 backdrop-blur text-white text-[10px] font-semibold rounded-full">
+                    <FileText className="w-3 h-3" /> Patron
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Content */}
+            <div className="p-5">
+              <div className="mb-3">
+                <h3 className="font-bold text-slate-800 text-base leading-tight">{f.modele}</h3>
+                <p className="text-sm text-slate-500 mt-0.5">{f.client}</p>
+              </div>
+
+              {f.description && (
+                <p className="text-sm text-slate-600 mb-4 line-clamp-2 leading-relaxed">{f.description}</p>
+              )}
+
+              {/* Stats row */}
+              <div className="flex items-center gap-4 mb-4 pb-4 border-b border-slate-100">
+                <div className="flex items-center gap-1.5">
+                  <Ruler className="w-4 h-4 text-indigo-400" />
+                  <span className="text-sm font-semibold text-slate-700">{f.tissuConsommation}m</span>
+                  <span className="text-xs text-slate-400">/pièce</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Calculator className="w-4 h-4 text-emerald-400" />
+                  <span className="text-sm font-semibold text-slate-700">{f.mesures.length}</span>
+                  <span className="text-xs text-slate-400">mesures</span>
                 </div>
               </div>
 
-              {/* Photos Preview */}
-              <div className="grid grid-cols-2 gap-2 mb-4">
-                {f.photo ? (
-                  <div className="aspect-video rounded-lg overflow-hidden border border-slate-100 bg-slate-50 relative group">
-                    <img src={f.photo} alt="Modèle" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-wrap items-center justify-center gap-2 p-1">
-                      <a href={f.photo} target="_blank" rel="noreferrer" className="text-[10px] text-white font-medium px-2 py-1 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded">Ouvrir</a>
-                      <a href={f.photo} download={`${f.modele}-photo`} className="text-[10px] text-white font-medium px-2 py-1 bg-indigo-600 hover:bg-indigo-700 rounded">Télécharger</a>
-                    </div>
+              {/* Tailles */}
+              {f.tailles.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Tailles</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {f.tailles.map(t => (
+                      <span key={t} className="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-full border border-indigo-100">{t}</span>
+                    ))}
                   </div>
-                ) : (
-                  <div className="aspect-video rounded-lg border border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center text-slate-400">
-                    <Camera className="w-5 h-5 mb-1 opacity-50" />
-                    <span className="text-[10px]">Pas de photo</span>
-                  </div>
-                )}
-                {f.patronagePhoto ? (
-                  <div className="aspect-video rounded-lg overflow-hidden border border-slate-100 bg-slate-50 relative group flex items-center justify-center p-2">
-                    {f.patronagePhoto.startsWith('data:image/') ? (
-                      <img src={f.patronagePhoto} alt="Patronage" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="flex flex-col items-center text-indigo-600">
-                        <FileText className="w-8 h-8 mb-1" />
-                        <span className="text-[8px] font-medium text-center line-clamp-1 px-1">{f.patronageFileName || 'Fichier Patron'}</span>
+                </div>
+              )}
+
+              {/* Mesures preview */}
+              {f.mesures.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Mesures</p>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {f.mesures.slice(0, 4).map((m, i) => (
+                      <div key={i} className="text-xs bg-slate-50 rounded-lg px-3 py-2 flex justify-between">
+                        <span className="text-slate-500">{m.nom}</span>
+                        <span className="font-semibold text-slate-700">{m.valeur}cm</span>
+                      </div>
+                    ))}
+                    {f.mesures.length > 4 && (
+                      <div className="text-xs bg-slate-50 rounded-lg px-3 py-2 text-slate-400 text-center col-span-2">
+                        +{f.mesures.length - 4} autres mesures
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-wrap items-center justify-center gap-2 p-1">
-                      <a href={f.patronagePhoto} target="_blank" rel="noreferrer" className="text-[10px] text-white font-medium px-2 py-1 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded">Ouvrir</a>
-                      <a href={f.patronagePhoto} download={f.patronageFileName || 'patron'} className="text-[10px] text-white font-medium px-2 py-1 bg-indigo-600 hover:bg-indigo-700 rounded">Télécharger</a>
-                    </div>
                   </div>
-                ) : (
-                  <div className="aspect-video rounded-lg border border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center text-slate-400">
-                    <Ruler className="w-5 h-5 mb-1 opacity-50" />
-                    <span className="text-[10px]">Pas de patron</span>
-                  </div>
-                )}
-              </div>
-              <p className="text-sm text-slate-600 mb-3 line-clamp-2">{f.description}</p>
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Ruler className="w-3.5 h-3.5 text-indigo-400" />
-                  <span className="text-xs font-medium text-slate-600">{f.tissuConsommation}m / pièce</span>
                 </div>
-                <div className="flex flex-wrap gap-1">
-                  {f.tailles.map(t => (
-                    <span key={t} className="px-1.5 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] rounded-full font-medium">{t}</span>
-                  ))}
-                </div>
-              </div>
-              {/* Mesures */}
-              <div className="border-t border-slate-100 pt-3 mt-3">
-                <p className="text-xs font-medium text-slate-500 mb-2">Mesures (Patronage)</p>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {f.mesures.map((m, i) => (
-                    <div key={i} className="text-xs bg-slate-50 rounded px-2 py-1.5">
-                      <span className="text-slate-500">{m.nom}:</span>{' '}
-                      <span className="font-medium text-slate-700">{m.valeur} cm</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              )}
             </div>
           </div>
         ))}
       </div>
+
 
       {filtered.length === 0 && (
         <div className="text-center py-12 text-slate-400">
