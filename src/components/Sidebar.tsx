@@ -221,7 +221,7 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout }: S
         {can('parametres') && (
           <NavLink to="/parametres" className={linkClass}>
             <SettingsIcon className="w-4 h-4 flex-shrink-0" />
-            <span>Paramètres</span>
+            <span>{t('parametres', lang)}</span>
           </NavLink>
         )}
       </nav>

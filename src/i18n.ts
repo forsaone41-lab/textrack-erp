@@ -18,6 +18,7 @@ export const T = {
   portail_client:      { fr: 'Portail Client',             ar: 'بوابة الزبون' },
   performance:         { fr: 'Performance Ouvriers',       ar: 'أداء العمال' },
   utilisateurs:        { fr: 'Gestion Utilisateurs',       ar: 'إدارة المستخدمين' },
+  parametres:          { fr: 'Paramètres',                ar: 'الإعدادات' },
 
   bilan:               { fr: 'Bilan Financier',            ar: 'الملخص المالي' },
 
@@ -89,6 +90,21 @@ export const T = {
   login_password:      { fr: 'Mot de passe',              ar: 'كلمة المرور' },
   login_btn:           { fr: 'Se connecter',              ar: 'دخول' },
   login_error:         { fr: 'Email ou mot de passe incorrect', ar: 'البريد أو كلمة المرور غير صحيحة' },
+
+  // Pages — Paramètres
+  parametres_desc:     { fr: 'Gérez les informations de votre société qui apparaîtront sur les factures et les documents.', ar: 'إدارة معلومات شركتك التي ستظهر على الفواتير والمستندات.' },
+  identite_visuelle:   { fr: 'Identité Visuelle',         ar: 'الهوية البصرية' },
+  nom_societe:         { fr: 'Nom de la Société',         ar: 'اسم الشركة' },
+  slogan_specialite:   { fr: 'Slogan / Spécialité',       ar: 'الشعار / التخصص' },
+  lien_logo:           { fr: 'Lien du Logo (URL ou Chemin)', ar: 'رابط الشعار (URL أو مسار)' },
+  info_legales:        { fr: 'Informations Légales',      ar: 'المعلومات القانونية' },
+  contact_adresse:     { fr: 'Contact & Adresse',         ar: 'الاتصال والعنوان' },
+  adresse_complete:    { fr: 'Adresse Complète',          ar: 'العنوان الكامل' },
+  telephone:           { fr: 'Téléphone',                 ar: 'الهاتف' },
+  email_contact:       { fr: 'Email de contact',          ar: 'البريد الإلكتروني للتواصل' },
+  enregistrer_appliq:  { fr: 'Enregistrer & Appliquer',   ar: 'حفظ وتطبيق' },
+  modifs_enreg:        { fr: 'Modifications enregistrées !', ar: 'تم حفظ التعديلات!' },
+  laissez_logo_desc:   { fr: 'Laissez /logo.png si vous avez mis votre image dans le dossier public.', ar: 'اترك /logo.png إذا وضعت صورتك في المجلد العام (public).' },
 } as const;
 
 export type TKey = keyof typeof T;
