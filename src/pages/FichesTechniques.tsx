@@ -166,11 +166,11 @@ export default function FichesTechniques() {
         {filtered.map(f => (
           <div key={f.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden group">
             {/* Photo Banner */}
-            <div className="relative h-48 bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden">
+            <div className="relative h-56 bg-white overflow-hidden border-b border-slate-100">
               {f.photo ? (
-                <img src={f.photo} alt={f.modele} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                <img src={f.photo} alt={f.modele} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
+                <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-gradient-to-br from-slate-50 to-slate-100">
                   <Camera className="w-10 h-10 mb-2" />
                   <span className="text-xs">Pas de photo</span>
                 </div>
