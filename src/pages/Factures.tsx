@@ -376,7 +376,7 @@ export default function Factures() {
                       <FileText className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-black tracking-tight">TexTrack</h2>
+                      <h2 className="text-xl font-black tracking-tight">Beya Creative</h2>
                       <p className="text-slate-400 text-xs">ERP Gestion Textile</p>
                     </div>
                   </div>
@@ -464,7 +464,7 @@ export default function Factures() {
             </div>
 
             <div className="px-8 py-5 border-t border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <p className="text-xs text-slate-400">TexTrack · Gestion Textile Professionnelle</p>
+              <p className="text-xs text-slate-400">Beya Creative · Gestion Textile Professionnelle</p>
               <div className="flex gap-2.5">
                 <button
                   onClick={() => printFacture(viewFacture, cmdOf(viewFacture.commandeId))}

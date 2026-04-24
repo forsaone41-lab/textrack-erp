@@ -214,7 +214,7 @@ export default function SuiviRH() {
     <>
       {/* Print Badges Section */}
       <div className="hidden print:block p-8 bg-white min-h-screen">
-        <h1 className="text-3xl font-bold mb-8 text-center text-slate-800">Badges Employés — TexTrack</h1>
+        <h1 className="text-3xl font-bold mb-8 text-center text-slate-800">Badges Employés — Beya Creative</h1>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
           {employes.filter(e => e.actif).map(emp => (
             <div key={emp.id} className="border-2 border-slate-800 rounded-xl p-4 flex flex-col items-center text-center break-inside-avoid shadow-sm">

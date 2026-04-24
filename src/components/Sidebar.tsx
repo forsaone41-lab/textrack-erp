@@ -57,7 +57,7 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout }: S
             <Scissors className="w-5 h-5 text-white" />
           </div>
           <div className={isAr ? 'text-right' : ''}>
-            <h1 className="text-lg font-bold tracking-tight">TexTrack</h1>
+            <h1 className="text-lg font-bold tracking-tight">Beya Creative</h1>
             <p className="text-[10px] text-slate-400 uppercase tracking-widest">{t('erp_subtitle', lang)}</p>
           </div>
         </div>

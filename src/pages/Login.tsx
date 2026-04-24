@@ -104,7 +104,7 @@ export default function Login({ onLogin }: LoginProps) {
           <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-indigo-500/40 mx-auto mb-4">
             <Scissors className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-black text-white tracking-tight">TexTrack</h1>
+          <h1 className="text-3xl font-black text-white tracking-tight">Beya Creative</h1>
           <p className="text-slate-400 text-xs mt-1 uppercase tracking-widest">ERP Textile & Confection</p>
         </div>
 
@@ -175,7 +175,7 @@ export default function Login({ onLogin }: LoginProps) {
 
         </div>
 
-        <p className="text-center text-slate-600 text-xs mt-6">© 2024 TexTrack ERP v1.0</p>
+        <p className="text-center text-slate-600 text-xs mt-6">© {new Date().getFullYear()} Beya Creative ERP</p>
       </div>
     </div>
   );

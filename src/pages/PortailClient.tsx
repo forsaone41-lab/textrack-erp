@@ -64,7 +64,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
               <Package className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-slate-800 tracking-tight">{isAr ? 'بوابة تيكس تراك' : 'TexTrack Portal'}</h1>
+              <h1 className="text-lg font-bold text-slate-800 tracking-tight">{isAr ? 'بوابة بيا كرياتيف' : 'Beya Creative Portal'}</h1>
               <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-widest">{isAr ? 'فضاء الزبون' : 'Espace Client Premium'}</p>
             </div>
           </div>
