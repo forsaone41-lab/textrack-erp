@@ -161,102 +161,130 @@ export default function FichesTechniques() {
         />
       </div>
 
-      {/* Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      {/* Cards — 2 columns, large pro cards */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {filtered.map(f => (
-          <div key={f.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden group">
-            {/* Photo Banner */}
-            <div className="relative h-56 bg-white overflow-hidden border-b border-slate-100">
-              {f.photo ? (
-                <img src={f.photo} alt={f.modele} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-gradient-to-br from-slate-50 to-slate-100">
-                  <Camera className="w-10 h-10 mb-2" />
-                  <span className="text-xs">Pas de photo</span>
-                </div>
-              )}
-              {/* Overlay badges */}
-              <div className="absolute top-3 left-3 flex gap-2">
-                {f.type && <span className="px-2.5 py-1 bg-white/90 backdrop-blur text-slate-700 text-xs font-semibold rounded-full shadow-sm">{f.type}</span>}
-              </div>
-              <div className="absolute top-3 right-3 flex gap-1.5">
-                <button onClick={() => openEdit(f)} className="p-1.5 bg-white/90 backdrop-blur text-slate-500 hover:text-indigo-600 rounded-lg shadow-sm transition">
-                  <Edit2 className="w-3.5 h-3.5" />
-                </button>
-                <button onClick={() => remove(f.id)} className="p-1.5 bg-white/90 backdrop-blur text-slate-500 hover:text-red-600 rounded-lg shadow-sm transition">
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-              {/* Patronage badge */}
-              {f.patronagePhoto && (
-                <div className="absolute bottom-3 right-3">
-                  <span className="flex items-center gap-1 px-2 py-1 bg-indigo-600/90 backdrop-blur text-white text-[10px] font-semibold rounded-full">
-                    <FileText className="w-3 h-3" /> Patron
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Content */}
-            <div className="p-5">
-              <div className="mb-3">
-                <h3 className="font-bold text-slate-800 text-base leading-tight">{f.modele}</h3>
-                <p className="text-sm text-slate-500 mt-0.5">{f.client}</p>
-              </div>
-
-              {f.description && (
-                <p className="text-sm text-slate-600 mb-4 line-clamp-2 leading-relaxed">{f.description}</p>
-              )}
-
-              {/* Stats row */}
-              <div className="flex items-center gap-4 mb-4 pb-4 border-b border-slate-100">
-                <div className="flex items-center gap-1.5">
-                  <Ruler className="w-4 h-4 text-indigo-400" />
-                  <span className="text-sm font-semibold text-slate-700">{f.tissuConsommation}m</span>
-                  <span className="text-xs text-slate-400">/pièce</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Calculator className="w-4 h-4 text-emerald-400" />
-                  <span className="text-sm font-semibold text-slate-700">{f.mesures.length}</span>
-                  <span className="text-xs text-slate-400">mesures</span>
-                </div>
-              </div>
-
-              {/* Tailles */}
-              {f.tailles.length > 0 && (
-                <div className="mb-4">
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Tailles</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {f.tailles.map(t => (
-                      <span key={t} className="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-full border border-indigo-100">{t}</span>
-                    ))}
+          <div key={f.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-200 overflow-hidden group">
+            
+            {/* Top section: Photo + Info side by side */}
+            <div className="flex">
+              {/* Photo */}
+              <div className="relative w-48 flex-shrink-0 bg-white border-r border-slate-100 overflow-hidden">
+                {f.photo ? (
+                  <img src={f.photo} alt={f.modele} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 min-h-44" />
+                ) : (
+                  <div className="w-full min-h-44 h-full flex flex-col items-center justify-center text-slate-300 bg-gradient-to-br from-slate-50 to-slate-100">
+                    <Camera className="w-10 h-10 mb-2" />
+                    <span className="text-[10px]">Pas de photo</span>
                   </div>
-                </div>
-              )}
+                )}
+                {f.patronagePhoto && (
+                  <div className="absolute bottom-2 left-2">
+                    <span className="flex items-center gap-1 px-2 py-0.5 bg-indigo-600 text-white text-[9px] font-bold rounded-full">
+                      <FileText className="w-2.5 h-2.5" /> Patron
+                    </span>
+                  </div>
+                )}
+              </div>
 
-              {/* Mesures preview */}
-              {f.mesures.length > 0 && (
+              {/* Header Info */}
+              <div className="flex-1 p-4 flex flex-col justify-between">
                 <div>
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Mesures</p>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {f.mesures.slice(0, 4).map((m, i) => (
-                      <div key={i} className="text-xs bg-slate-50 rounded-lg px-3 py-2 flex justify-between">
-                        <span className="text-slate-500">{m.nom}</span>
-                        <span className="font-semibold text-slate-700">{m.valeur}cm</span>
-                      </div>
-                    ))}
-                    {f.mesures.length > 4 && (
-                      <div className="text-xs bg-slate-50 rounded-lg px-3 py-2 text-slate-400 text-center col-span-2">
-                        +{f.mesures.length - 4} autres mesures
-                      </div>
-                    )}
+                  <div className="flex items-start justify-between mb-1">
+                    <div>
+                      <h3 className="font-bold text-slate-800 text-base leading-tight">{f.modele}</h3>
+                      <p className="text-sm text-slate-500">{f.client}</p>
+                    </div>
+                    <div className="flex gap-1 flex-shrink-0">
+                      <button onClick={() => openEdit(f)} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button onClick={() => remove(f.id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {f.type && (
+                    <span className="inline-block mt-1 px-2.5 py-0.5 bg-slate-100 text-slate-600 text-xs font-semibold rounded-full">{f.type}</span>
+                  )}
+
+                  {f.description && (
+                    <p className="text-xs text-slate-500 mt-2 line-clamp-2 leading-relaxed">{f.description}</p>
+                  )}
+                </div>
+
+                {/* Key stats */}
+                <div className="mt-3 flex items-center gap-3">
+                  <div className="flex items-center gap-1.5 bg-indigo-50 rounded-lg px-2.5 py-1.5">
+                    <Ruler className="w-3.5 h-3.5 text-indigo-500" />
+                    <span className="text-xs font-bold text-indigo-700">{f.tissuConsommation}m</span>
+                    <span className="text-[10px] text-indigo-400">/pièce</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-emerald-50 rounded-lg px-2.5 py-1.5">
+                    <Calculator className="w-3.5 h-3.5 text-emerald-500" />
+                    <span className="text-xs font-bold text-emerald-700">{f.tailles.length} tailles</span>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
+
+            {/* Bottom section: Tailles × Mesures Table */}
+            {(f.tailles.length > 0 || f.mesures.length > 0) && (
+              <div className="border-t border-slate-100">
+                {f.tailles.length > 0 && f.mesures.length > 0 ? (
+                  /* Full table: tailles as columns, mesures as rows */
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-slate-800">
+                          <th className="px-3 py-2.5 text-left text-slate-300 font-semibold uppercase tracking-wider w-32">Mesure</th>
+                          {f.tailles.map(taille => (
+                            <th key={taille} className="px-3 py-2.5 text-center text-white font-bold uppercase tracking-wider">
+                              {taille}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {f.mesures.map((m, i) => (
+                          <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/60'}>
+                            <td className="px-3 py-2.5 font-semibold text-slate-600">{m.nom}</td>
+                            {f.tailles.map(taille => (
+                              <td key={taille} className="px-3 py-2.5 text-center font-bold text-slate-800">
+                                {m.valeur} <span className="text-slate-400 font-normal">cm</span>
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : f.tailles.length > 0 ? (
+                  /* Only tailles, no mesures */
+                  <div className="p-4 flex flex-wrap gap-2">
+                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider self-center mr-1">Tailles:</span>
+                    {f.tailles.map(t => (
+                      <span key={t} className="px-3 py-1.5 bg-slate-800 text-white text-xs font-bold rounded-lg">{t}</span>
+                    ))}
+                  </div>
+                ) : (
+                  /* Only mesures, no tailles */
+                  <div className="p-4 grid grid-cols-3 gap-2">
+                    {f.mesures.map((m, i) => (
+                      <div key={i} className="bg-slate-50 rounded-lg px-3 py-2 text-center">
+                        <p className="text-[10px] text-slate-400 mb-0.5">{m.nom}</p>
+                        <p className="text-sm font-bold text-slate-800">{m.valeur}<span className="text-xs font-normal text-slate-400"> cm</span></p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ))}
       </div>
+
 
 
       {filtered.length === 0 && (
