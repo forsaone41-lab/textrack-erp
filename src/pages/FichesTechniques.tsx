@@ -548,6 +548,9 @@ export default function FichesTechniques() {
                         <>
                           <img src={form.photo} alt="Preview" className="w-full h-full object-contain" />
                           <button onClick={() => setForm({ ...form, photo: undefined })} className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-xs">×</button>
+                          <button onClick={() => downloadFile(form.photo!, `Photo_${form.modele || 'fiche'}.png`)} className="absolute top-2 left-2 p-1.5 bg-indigo-600 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+                            <Download className="w-3 h-3" />
+                          </button>
                         </>
                       ) : (
                         <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer">
@@ -566,12 +569,15 @@ export default function FichesTechniques() {
                           {form.patronagePhoto.startsWith('data:image/') ? (
                             <img src={form.patronagePhoto} alt="Preview" className="w-full h-full object-contain" />
                           ) : (
-                            <div className="flex flex-col items-center text-indigo-600">
-                              <FileText className="w-10 h-10 mb-2" />
-                              <span className="text-[10px] font-bold text-center break-all">{form.patronageFileName}</span>
+                            <div className="flex flex-col items-center justify-center h-full">
+                              <FileText className="w-8 h-8 text-indigo-500 mb-2" />
+                              <p className="text-[10px] font-bold text-indigo-600 text-center px-4 truncate w-full">{form.patronageFileName}</p>
                             </div>
                           )}
                           <button onClick={() => setForm({ ...form, patronagePhoto: undefined, patronageFileName: undefined })} className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-xs">×</button>
+                          <button onClick={() => downloadFile(form.patronagePhoto!, form.patronageFileName || 'patronage')} className="absolute top-2 left-2 p-1.5 bg-indigo-600 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+                            <Download className="w-3 h-3" />
+                          </button>
                         </div>
                       ) : (
                         <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer">
