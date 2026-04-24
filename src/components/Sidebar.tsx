@@ -3,7 +3,7 @@ import {
   LayoutDashboard, FileText, Scissors, Factory, Package,
   Users, ShoppingCart, Receipt, ClipboardCheck, Globe,
   ChevronDown, ChevronRight, UserCircle, Trophy,
-  TrendingDown, LogOut, ShieldCheck, HardHat, BarChart3, Hexagon, Settings as SettingsIcon
+  TrendingDown, LogOut, ShieldCheck, HardHat, BarChart3, Settings as SettingsIcon
 } from 'lucide-react';
 import { useState } from 'react';
 import { User, loadPermissions, AppPage, loadCompanyProfile } from '../types';

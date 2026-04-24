@@ -185,7 +185,6 @@ export default function Pointage() {
                         handleScan(result[0].rawValue);
                       }
                     }} 
-                    components={{ audio: false }}
                   />
                 </div>
               )}

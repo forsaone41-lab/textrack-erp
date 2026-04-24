@@ -112,7 +112,7 @@ export default function Factures() {
     await deleteRecord('factures', id);
   }
 
-  const cmdOf = (cmdId?: string) => cmdId ? commandes.find(c => c.id === cmdId) : undefined;
+  const cmdOf = (cmdId?: string | null) => cmdId ? commandes.find(c => c.id === cmdId) : undefined;
 
   function getStatutInfo(f: Facture) {
     if (isOverdue(f)) return { bg: 'bg-red-100 text-red-700', dot: 'bg-red-500', label: 'En retard' };
@@ -254,7 +254,7 @@ export default function Factures() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filtered.map(f => {
-                const cmd = cmdOf(f.commandeId);
+                const cmd = cmdOf(f.commandeId || undefined);
                 const si = getStatutInfo(f);
                 const overdue = isOverdue(f);
                 const days = f.echeance ? daysLeft(f.echeance) : null;
@@ -309,7 +309,7 @@ export default function Factures() {
                         <button onClick={() => setViewFacture(f)} title="Aperçu" className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
                           <Eye className="w-3.5 h-3.5" />
                         </button>
-                        <button onClick={() => printFacture(f, cmdOf(f.commandeId))} title="Télécharger PDF" className="p-1.5 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition">
+                        <button onClick={() => printFacture(f, cmdOf(f.commandeId || undefined))} title="Télécharger PDF" className="p-1.5 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition">
                           <Download className="w-3.5 h-3.5" />
                         </button>
                         {f.statut !== 'payée' && (
@@ -395,7 +395,7 @@ export default function Factures() {
                   </thead>
                   <tbody>
                     {(() => {
-                      const cmd = cmdOf(viewFacture.commandeId);
+                      const cmd = cmdOf(viewFacture.commandeId || undefined);
                       return cmd ? (
                         <tr>
                           <td className="px-4 py-3.5 text-sm text-slate-700 font-medium">{cmd.modele}</td>
@@ -429,7 +429,7 @@ export default function Factures() {
               <p className="text-xs text-slate-400 font-medium uppercase">{company.name} {company.subtitle}</p>
               <div className="flex gap-2.5">
                 <button
-                  onClick={() => printFacture(viewFacture, cmdOf(viewFacture.commandeId))}
+                  onClick={() => printFacture(viewFacture, cmdOf(viewFacture.commandeId || undefined))}
                   className="flex items-center gap-2 px-4 py-2 text-sm bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition font-semibold"
                 >
                   <Download className="w-3.5 h-3.5" /> Télécharger PDF

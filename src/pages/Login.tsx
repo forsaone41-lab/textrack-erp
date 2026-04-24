@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Scissors, Eye, EyeOff, AlertCircle, ShieldCheck, HardHat, ShoppingBag, Hexagon } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { User, loadData, loadCompanyProfile } from '../types';
 
 // Fallback passwords for existing installs (no password in localStorage yet)
@@ -21,38 +21,6 @@ async function verifyLogin(email: string, password: string): Promise<User | null
   return expected === password ? user : null;
 }
 
-const DEMO_ROLES = [
-  {
-    role: 'admin' as const,
-    label: 'Admin',
-    email: 'admin@texttrack.ma',
-    password: 'Admin123',
-    desc: 'Accès complet',
-    icon: ShieldCheck,
-    color: 'border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700',
-    dot: 'bg-indigo-500',
-  },
-  {
-    role: 'pointeur' as const,
-    label: 'Chef',
-    email: 'rachid@texttrack.ma',
-    password: 'Chef123',
-    desc: 'Production & RH',
-    icon: HardHat,
-    color: 'border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700',
-    dot: 'bg-blue-500',
-  },
-  {
-    role: 'client' as const,
-    label: 'Client',
-    email: 'lalla@client.ma',
-    password: 'Client123',
-    desc: 'Portail client',
-    icon: ShoppingBag,
-    color: 'border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700',
-    dot: 'bg-emerald-500',
-  },
-];
 
 interface LoginProps {
   onLogin: (user: User) => void;
@@ -85,11 +53,6 @@ export default function Login({ onLogin }: LoginProps) {
     }
   }
 
-  function quickFill(e: string, p: string) {
-    setEmail(e);
-    setPassword(p);
-    setError('');
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex items-center justify-center p-4">

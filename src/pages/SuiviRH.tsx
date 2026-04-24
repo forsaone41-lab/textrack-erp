@@ -39,16 +39,6 @@ const POSTES_SOUSTRAITANCE = [
   'Prestataire Impression',
 ];
 
-const DEMO_PAIEMENTS: PaiementSalaire[] = [
-  { id: 'ps1', employeId: 'emp1', montant: 3200, date: '2024-03-31', mois: '2024-03', methode: 'virement', notes: 'Salaire complet Mars' },
-  { id: 'ps2', employeId: 'emp2', montant: 3200, date: '2024-03-31', mois: '2024-03', methode: 'virement' },
-  { id: 'ps3', employeId: 'emp3', montant: 3200, date: '2024-03-31', mois: '2024-03', methode: 'especes' },
-  { id: 'ps4', employeId: 'emp4', montant: 2800, date: '2024-03-31', mois: '2024-03', methode: 'especes' },
-  { id: 'ps5', employeId: 'emp5', montant: 5500, date: '2024-03-31', mois: '2024-03', methode: 'virement' },
-  { id: 'ps6', employeId: 'emp6', montant: 2800, date: '2024-03-31', mois: '2024-03', methode: 'especes' },
-  { id: 'ps7', employeId: 'emp1', montant: 1500, date: '2024-04-15', mois: '2024-04', methode: 'especes', notes: 'Avance salaire Avril' },
-  { id: 'ps8', employeId: 'emp5', montant: 3000, date: '2024-04-15', mois: '2024-04', methode: 'virement', notes: 'Acompte Avril' },
-];
 
 const METHODE_LABELS: Record<string, string> = {
   especes: 'Espèces',

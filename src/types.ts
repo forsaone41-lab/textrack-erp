@@ -316,7 +316,7 @@ export async function deleteRecord(table: string, id: string): Promise<void> {
 }
 
 // Keeping this for backwards compatibility, but it should be avoided
-export function saveData<T>(key: string, data: T[]): void {
+export function saveData<T>(_key: string, _data: T[]): void {
   // NO-OP: Deprecated. Components should use saveRecord and deleteRecord.
 }
 

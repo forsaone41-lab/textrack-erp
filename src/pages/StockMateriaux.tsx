@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, TriangleAlert, Package, Layers, MapPin, User, Tag, Coins, Ruler as RulerIcon, Calendar } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, TriangleAlert, Package, Layers, MapPin, User, Tag, Coins, Calendar } from 'lucide-react';
 import { StockTissu, StockFourniture, loadData, saveRecord, deleteRecord, genId } from '../types';
 
 type Tab = 'tissus' | 'fournitures';
@@ -123,7 +123,7 @@ export default function StockMateriaux() {
 
   function openCreateT() {
     setEditTId(null);
-    setTForm({ type: '', couleur: '', metrage: 0, prixMetre: 0, seuilAlerte: 0, metrageTotal: 0, unite: 'm' });
+    setTForm({ type: '', couleur: '', metrage: 0, prixMetre: 0, seuilAlerte: 0, metrageTotal: 0 });
     setShowTModal(true);
   }
 
