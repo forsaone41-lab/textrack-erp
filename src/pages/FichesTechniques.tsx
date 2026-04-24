@@ -3,6 +3,7 @@ import { Plus, Search, Edit2, Trash2, Ruler, Calculator, Camera, FileText, Downl
 import {
   FicheTechnique, StockTissu, loadData, saveRecord, deleteRecord, genId,
 } from '../types';
+import { printFicheTechnique } from '../utils/print';
 
 export default function FichesTechniques() {
   const [fiches, setFiches] = useState<FicheTechnique[]>([]);
@@ -251,20 +252,56 @@ export default function FichesTechniques() {
                   )}
 
                   {f.description && (
-                    <p className="text-xs text-slate-500 mt-2 line-clamp-2 leading-relaxed">{f.description}</p>
+                    <p className="text-[11px] text-slate-500 mt-2 line-clamp-1 italic">{f.description}</p>
                   )}
+
+                  <div className="mt-4">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Téléchargements</p>
+                    <div className="flex flex-wrap gap-2">
+                      <button 
+                        disabled={!f.photo}
+                        onClick={() => downloadFile(f.photo!, `Photo_${f.modele}.png`)}
+                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-bold transition-all ${
+                          f.photo 
+                            ? 'bg-white border-slate-200 text-slate-700 hover:border-indigo-500 hover:text-indigo-600 shadow-sm' 
+                            : 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed'
+                        }`}
+                        title="Télécharger la photo"
+                      >
+                        <Camera className="w-3 h-3" /> IMAGE
+                      </button>
+                      <button 
+                        disabled={!f.patronagePhoto}
+                        onClick={() => downloadFile(f.patronagePhoto!, f.patronageFileName || `Patron_${f.modele}`)}
+                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-bold transition-all ${
+                          f.patronagePhoto 
+                            ? 'bg-white border-slate-200 text-slate-700 hover:border-emerald-500 hover:text-emerald-600 shadow-sm' 
+                            : 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed'
+                        }`}
+                        title="Télécharger le patron"
+                      >
+                        <FileText className="w-3 h-3" /> PATRON
+                      </button>
+                      <button 
+                        onClick={() => printFicheTechnique(f)}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 bg-indigo-600 border border-indigo-600 text-white rounded-lg text-[10px] font-bold hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100"
+                        title="Exporter la fiche technique en PDF"
+                      >
+                        <Download className="w-3 h-3" /> FICHE (PDF)
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Key stats */}
-                <div className="mt-3 flex items-center gap-3">
-                  <div className="flex items-center gap-1.5 bg-indigo-50 rounded-lg px-2.5 py-1.5">
-                    <Ruler className="w-3.5 h-3.5 text-indigo-500" />
-                    <span className="text-xs font-bold text-indigo-700">{f.tissuConsommation}m</span>
-                    <span className="text-[10px] text-indigo-400">/pièce</span>
+                <div className="mt-4 flex items-center gap-3">
+                  <div className="flex items-center gap-1.5 bg-slate-50 rounded-lg px-2 py-1 border border-slate-100">
+                    <Ruler className="w-3 h-3 text-slate-400" />
+                    <span className="text-[11px] font-bold text-slate-600">{f.tissuConsommation}m</span>
                   </div>
-                  <div className="flex items-center gap-1.5 bg-emerald-50 rounded-lg px-2.5 py-1.5">
-                    <Calculator className="w-3.5 h-3.5 text-emerald-500" />
-                    <span className="text-xs font-bold text-emerald-700">{f.tailles.length} tailles</span>
+                  <div className="flex items-center gap-1.5 bg-slate-50 rounded-lg px-2 py-1 border border-slate-100">
+                    <Calculator className="w-3 h-3 text-slate-400" />
+                    <span className="text-[11px] font-bold text-slate-600">{f.tailles.length} tailles</span>
                   </div>
                 </div>
               </div>

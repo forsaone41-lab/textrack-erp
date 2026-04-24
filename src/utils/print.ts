@@ -253,6 +253,120 @@ export function printBilan(data: {
   printHTML(html, `Bilan Financier ${data.year}`);
 }
 
+// ─── Fiche Technique PDF ──────────────────────────────────────────
+export function printFicheTechnique(fiche: FicheTechnique) {
+  const company = loadCompanyProfile();
+  const fmtNum = (n: number) => n.toLocaleString('fr-MA');
+
+  const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Fiche Technique - ${fiche.modele}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; background: #fff; line-height: 1.5; }
+    @media print {
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .no-print { display: none !important; }
+    }
+    .page { max-width: 900px; margin: 0 auto; padding: 40px; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; }
+    .brand-name { font-size: 24px; font-weight: 800; color: #1e293b; }
+    .brand-sub { font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
+    .doc-title { text-align: right; }
+    .doc-title h1 { font-size: 28px; font-weight: 900; color: #4f46e5; margin: 0; }
+    .doc-title p { font-size: 14px; color: #64748b; }
+
+    .main-grid { display: grid; grid-template-columns: 300px 1fr; gap: 30px; margin-bottom: 30px; }
+    .photo-box { width: 100%; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #f8fafc; aspect-ratio: 3/4; display: flex; align-items: center; justify-content: center; }
+    .photo-box img { width: 100%; height: 100%; object-fit: contain; }
+    .no-photo { color: #cbd5e1; font-size: 12px; text-align: center; }
+
+    .info-section h2 { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 15px; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .info-item { margin-bottom: 15px; }
+    .info-label { font-size: 12px; color: #64748b; margin-bottom: 2px; }
+    .info-value { font-size: 16px; font-weight: 700; color: #1e293b; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; }
+    thead th { background: #1e293b; color: white; padding: 12px; text-align: center; font-size: 11px; font-weight: 700; text-transform: uppercase; border: 1px solid #334155; }
+    thead th:first-child { text-align: left; width: 200px; }
+    tbody td { padding: 12px; text-align: center; font-size: 13px; border: 1px solid #e2e8f0; font-weight: 600; }
+    tbody td:first-child { text-align: left; background: #f8fafc; color: #475569; font-weight: 700; }
+    tbody tr:nth-child(even) { background: #fcfdfe; }
+
+    .footer { margin-top: 50px; padding-top: 20px; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; }
+    .print-btn { position: fixed; bottom: 30px; right: 30px; background: #4f46e5; color: white; border: none; padding: 14px 28px; border-radius: 50px; font-weight: 700; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4); }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <div>
+        <div class="brand-name">${company.name}</div>
+        <div class="brand-sub">${company.subtitle}</div>
+      </div>
+      <div class="doc-title">
+        <h1>FICHE TECHNIQUE</h1>
+        <p>Référence Modèle: <strong>${fiche.modele}</strong></p>
+      </div>
+    </div>
+
+    <div class="main-grid">
+      <div class="photo-box">
+        ${fiche.photo ? `<img src="${fiche.photo}" alt="${fiche.modele}" />` : '<div class="no-photo">AUCUNE PHOTO DISPONIBLE</div>'}
+      </div>
+      <div class="info-section">
+        <h2>Informations Générales</h2>
+        <div class="info-grid">
+          <div class="info-item"><div class="info-label">Modèle</div><div class="info-value">${fiche.modele}</div></div>
+          <div class="info-item"><div class="info-label">Client</div><div class="info-value">${fiche.client}</div></div>
+          <div class="info-item"><div class="info-label">Type</div><div class="info-value">${fiche.type || '—'}</div></div>
+          <div class="info-item"><div class="info-label">Consommation</div><div class="info-value">${fiche.tissuConsommation} m / pièce</div></div>
+          <div class="info-item" style="grid-column: span 2;"><div class="info-label">Description</div><div class="info-value" style="font-weight: 400; font-size: 14px;">${fiche.description || 'Pas de description.'}</div></div>
+        </div>
+        
+        <div style="margin-top: 20px;">
+          <h2>Tailles & Gradations</h2>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            ${fiche.tailles.map(t => `<span style="background: #1e293b; color: white; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 700;">${t}</span>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>Tableau des Mesures (cm)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Point de Mesure</th>
+          ${fiche.tailles.map(t => `<th>${t}</th>`).join('')}
+        </tr>
+      </thead>
+      <tbody>
+        ${fiche.mesures.map(m => `
+          <tr>
+            <td>${m.nom}</td>
+            ${fiche.tailles.map(t => `<td>${m.valeurs?.[t] || '—'}</td>`).join('')}
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+
+    <div class="footer">
+      <div>Généré par Textrack ERP · ${company.name}</div>
+      <div>Date: ${new Date().toLocaleDateString('fr-MA')}</div>
+    </div>
+  </div>
+
+  <button class="print-btn no-print" onclick="window.print()">IMPRIMER / PDF</button>
+</body>
+</html>`;
+
+  printHTML(html, `Fiche_${fiche.modele}`);
+}
+
 // ─── Helper ──────────────────────────────────────────────────────
 function downloadFile(content: string, filename: string, mime: string) {
   const blob = new Blob(['﻿' + content], { type: mime });
