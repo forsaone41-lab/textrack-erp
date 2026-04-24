@@ -475,133 +475,206 @@ export default function FichesTechniques() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="p-6 border-b border-slate-100">
-              <h2 className="text-lg font-bold text-slate-800">{editId ? 'Modifier' : 'Nouvelle'} Fiche Technique</h2>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl flex flex-col">
+            
+            {/* Header */}
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-800">{editId ? 'Modifier' : 'Nouvelle'} Fiche Technique</h2>
+                  <p className="text-xs text-slate-400">Remplissez les informations du modèle</p>
+                </div>
+              </div>
+              <button onClick={() => setShowModal(false)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition">
+                ×
+              </button>
             </div>
-            <div className="p-6 space-y-4">
-              {/* Image Upload Area */}
-              <div className="grid grid-cols-2 gap-4 mb-2">
-                <div className="space-y-2">
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Photo du Modèle</label>
-                  <div className="relative aspect-video rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 overflow-hidden group hover:border-indigo-400 transition-colors">
-                    {form.photo ? (
-                      <>
-                        <img src={form.photo} alt="Preview" className="w-full h-full object-cover" />
-                        <button 
-                          onClick={() => setForm({ ...form, photo: undefined })}
-                          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        >×</button>
-                      </>
-                    ) : (
-                      <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer">
-                        <Camera className="w-8 h-8 text-slate-300 mb-2" />
-                        <span className="text-[10px] font-medium text-slate-400 uppercase">Ajouter Photo</span>
-                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'photo')} />
-                      </label>
-                    )}
+
+            <div className="p-6 space-y-6 overflow-y-auto">
+
+              {/* ── Photos ── */}
+              <div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Médias</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold text-slate-600">Photo du Modèle</label>
+                    <div className="relative aspect-video rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 overflow-hidden group hover:border-indigo-400 transition-colors cursor-pointer">
+                      {form.photo ? (
+                        <>
+                          <img src={form.photo} alt="Preview" className="w-full h-full object-contain" />
+                          <button onClick={() => setForm({ ...form, photo: undefined })} className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-xs">×</button>
+                        </>
+                      ) : (
+                        <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer">
+                          <Camera className="w-7 h-7 text-slate-300 mb-1" />
+                          <span className="text-[10px] font-semibold text-slate-400 uppercase">Ajouter Photo</span>
+                          <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'photo')} />
+                        </label>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Patronage (PDF/DXF/Image)</label>
-                  <div className="relative aspect-video rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 overflow-hidden group hover:border-indigo-400 transition-colors">
-                    {form.patronagePhoto ? (
-                      <div className="w-full h-full flex flex-col items-center justify-center p-4">
-                        {form.patronagePhoto.startsWith('data:image/') ? (
-                          <img src={form.patronagePhoto} alt="Preview" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="flex flex-col items-center text-indigo-600">
-                            <FileText className="w-10 h-10 mb-2" />
-                            <span className="text-[10px] font-bold text-center break-all">{form.patronageFileName}</span>
-                          </div>
-                        )}
-                        <button 
-                          onClick={() => setForm({ ...form, patronagePhoto: undefined, patronageFileName: undefined })}
-                          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        >×</button>
-                      </div>
-                    ) : (
-                      <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer">
-                        <FileText className="w-8 h-8 text-slate-300 mb-2" />
-                        <span className="text-[10px] font-medium text-slate-400 uppercase">Ajouter PDF/DXF</span>
-                        <input type="file" accept=".pdf,.dxf,image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'patronagePhoto')} />
-                      </label>
-                    )}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold text-slate-600">Patronage (PDF/DXF/Image)</label>
+                    <div className="relative aspect-video rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 overflow-hidden group hover:border-indigo-400 transition-colors cursor-pointer">
+                      {form.patronagePhoto ? (
+                        <div className="w-full h-full flex flex-col items-center justify-center p-4">
+                          {form.patronagePhoto.startsWith('data:image/') ? (
+                            <img src={form.patronagePhoto} alt="Preview" className="w-full h-full object-contain" />
+                          ) : (
+                            <div className="flex flex-col items-center text-indigo-600">
+                              <FileText className="w-10 h-10 mb-2" />
+                              <span className="text-[10px] font-bold text-center break-all">{form.patronageFileName}</span>
+                            </div>
+                          )}
+                          <button onClick={() => setForm({ ...form, patronagePhoto: undefined, patronageFileName: undefined })} className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-xs">×</button>
+                        </div>
+                      ) : (
+                        <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer">
+                          <FileText className="w-7 h-7 text-slate-300 mb-1" />
+                          <span className="text-[10px] font-semibold text-slate-400 uppercase">Ajouter PDF/DXF</span>
+                          <input type="file" accept=".pdf,.dxf,image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'patronagePhoto')} />
+                        </label>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Modèle *</label>
-                  <input value={form.modele || ''} onChange={e => setForm({ ...form, modele: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+              {/* ── Infos de base ── */}
+              <div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Informations</p>
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">Modèle *</label>
+                    <input value={form.modele || ''} onChange={e => setForm({ ...form, modele: e.target.value })}
+                      className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">Type</label>
+                    <input value={form.type || ''} onChange={e => setForm({ ...form, type: e.target.value })}
+                      placeholder="ex: Chemise, Robe..."
+                      className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors" />
+                  </div>
+                </div>
+                <div className="mb-3">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Client *</label>
+                  <input value={form.client || ''} onChange={e => setForm({ ...form, client: e.target.value })}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors" />
+                </div>
+                <div className="mb-3">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Description</label>
+                  <textarea value={form.description || ''} onChange={e => setForm({ ...form, description: e.target.value })}
+                    rows={2} className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors resize-none" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Type</label>
-                  <input value={form.type || ''} onChange={e => setForm({ ...form, type: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                    <Ruler className="w-3.5 h-3.5 inline mr-1 text-indigo-400" />
+                    Consommation tissu (mètres/pièce)
+                  </label>
+                  <input type="number" step="0.1" value={form.tissuConsommation || 0} onChange={e => setForm({ ...form, tissuConsommation: parseFloat(e.target.value) })}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors" />
                 </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Client *</label>
-                <input value={form.client || ''} onChange={e => setForm({ ...form, client: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Description</label>
-                <textarea value={form.description || ''} onChange={e => setForm({ ...form, description: e.target.value })}
-                  rows={2} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Consommation tissu (mètres/pièce)</label>
-                <input type="number" step="0.1" value={form.tissuConsommation || 0} onChange={e => setForm({ ...form, tissuConsommation: parseFloat(e.target.value) })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
               </div>
 
-              {/* Tailles */}
+              {/* ── Tailles ── */}
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Tailles disponibles</label>
-                <div className="flex gap-2 mb-2">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Tailles disponibles</p>
+                <div className="flex gap-2 mb-3">
                   <input value={newTaille} onChange={e => setNewTaille(e.target.value)}
-                    placeholder="Ex: M, L, XL" className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-                  <button onClick={addTaille} className="px-3 py-2 bg-slate-100 rounded-lg text-sm hover:bg-slate-200 transition">Ajouter</button>
+                    onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addTaille())}
+                    placeholder="Ex: XS, S, M, L, XL..."
+                    className="flex-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors" />
+                  <button onClick={addTaille} className="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition">+ Ajouter</button>
                 </div>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-2">
                   {(form.tailles || []).map(t => (
-                    <span key={t} className="flex items-center gap-1 px-2.5 py-1 bg-indigo-50 text-indigo-700 text-xs rounded-full">
+                    <span key={t} className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 text-white text-xs font-bold rounded-xl">
                       {t}
-                      <button onClick={() => removeTaille(t)} className="hover:text-red-500">×</button>
+                      <button onClick={() => removeTaille(t)} className="hover:text-red-300 transition text-slate-400 text-sm leading-none">×</button>
                     </span>
                   ))}
+                  {(form.tailles || []).length === 0 && (
+                    <p className="text-xs text-slate-400 italic">Aucune taille ajoutée</p>
+                  )}
                 </div>
               </div>
 
-              {/* Mesures */}
+              {/* ── Mesures (Patronage) ── */}
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Mesures (Patronage)</label>
-                <div className="flex gap-2 mb-2">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">
+                  Mesures (Patronage)
+                </p>
+
+                {/* Input row */}
+                <div className="flex gap-2 mb-4">
                   <input value={newMesure.nom} onChange={e => setNewMesure({ ...newMesure, nom: e.target.value })}
-                    placeholder="Nom (ex: Longueur)" className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-                  <input type="number" value={newMesure.valeur || ''} onChange={e => setNewMesure({ ...newMesure, valeur: parseFloat(e.target.value) || 0 })}
-                    placeholder="cm" className="w-20 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-                  <button onClick={addMesure} className="px-3 py-2 bg-slate-100 rounded-lg text-sm hover:bg-slate-200 transition">Ajouter</button>
+                    onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addMesure())}
+                    placeholder="Nom (ex: Longueur, Tour de taille...)"
+                    className="flex-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-slate-50 focus:bg-white transition-colors" />
+                  <div className="relative w-24">
+                    <input type="number" value={newMesure.valeur || ''} onChange={e => setNewMesure({ ...newMesure, valeur: parseFloat(e.target.value) || 0 })}
+                      placeholder="0"
+                      className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-slate-50 focus:bg-white transition-colors pr-8 text-center" />
+                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-medium">cm</span>
+                  </div>
+                  <button onClick={addMesure} className="px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition">+ Ajouter</button>
                 </div>
-                <div className="space-y-1.5">
-                  {(form.mesures || []).map((m, i) => (
-                    <div key={i} className="flex items-center justify-between bg-slate-50 px-3 py-1.5 rounded-lg text-sm">
-                      <span className="text-slate-600">{m.nom}: <strong>{m.valeur} cm</strong></span>
-                      <button onClick={() => removeMesure(i)} className="text-slate-400 hover:text-red-500">×</button>
-                    </div>
-                  ))}
-                </div>
+
+                {/* Mesures Table */}
+                {(form.mesures || []).length > 0 ? (
+                  <div className="rounded-xl overflow-hidden border border-slate-200">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="bg-slate-800 text-white">
+                          <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-wider">#</th>
+                          <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-wider">Mesure</th>
+                          <th className="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">Valeur</th>
+                          <th className="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider w-12"></th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {(form.mesures || []).map((m, i) => (
+                          <tr key={i} className={`${i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'} hover:bg-indigo-50/30 transition-colors group/row`}>
+                            <td className="px-4 py-3 text-xs text-slate-400 font-medium">{i + 1}</td>
+                            <td className="px-4 py-3 text-sm font-semibold text-slate-700">{m.nom}</td>
+                            <td className="px-4 py-3 text-center">
+                              <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-lg text-sm font-bold border border-emerald-100">
+                                {m.valeur}
+                                <span className="text-xs font-normal text-emerald-500">cm</span>
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <button onClick={() => removeMesure(i)} className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition opacity-0 group-hover/row:opacity-100">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 py-8 text-center">
+                    <Ruler className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                    <p className="text-sm text-slate-400 font-medium">Aucune mesure ajoutée</p>
+                    <p className="text-xs text-slate-300 mt-0.5">Ajoutez les mesures du patronage ci-dessus</p>
+                  </div>
+                )}
               </div>
+
             </div>
-            <div className="p-6 border-t border-slate-100 flex justify-end gap-3">
-              <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition">Annuler</button>
-              <button onClick={save} className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium">
-                {editId ? 'Modifier' : 'Créer'}
+
+            {/* Footer */}
+            <div className="p-5 border-t border-slate-100 flex justify-end gap-3 flex-shrink-0 bg-slate-50/50">
+              <button onClick={() => setShowModal(false)} className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition">
+                Annuler
+              </button>
+              <button onClick={save} className="px-6 py-2.5 text-sm font-bold bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition shadow-sm shadow-indigo-500/30">
+                {editId ? '✓ Enregistrer' : '+ Créer la Fiche'}
               </button>
             </div>
           </div>
@@ -618,3 +691,4 @@ function FileTextIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
