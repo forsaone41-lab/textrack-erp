@@ -91,8 +91,8 @@ export function printFacture(facture: Facture, commande?: Commande) {
           <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
         </div>
         <div>
-          <div class="brand-name">Beya Creative</div>
-          <div class="brand-sub">ERP Gestion Textile</div>
+          <div class="brand-name">BEYA CREATIVE</div>
+          <div class="brand-sub">Confection de vêtement</div>
         </div>
       </div>
       <div class="invoice-meta">
@@ -137,7 +137,7 @@ export function printFacture(facture: Facture, commande?: Commande) {
     </div>
 
     <div class="footer">
-      <div class="footer-brand">Beya Creative · Gestion Textile Professionnelle · ${new Date().getFullYear()}</div>
+      <div class="footer-brand">BEYA CREATIVE Confection de vêtement · ${new Date().getFullYear()}</div>
       <div class="footer-note">Document généré le ${new Date().toLocaleDateString('fr-MA')}</div>
     </div>
   </div>
@@ -212,7 +212,7 @@ export function printBilan(data: {
   <div class="header">
     <div>
       <div class="title">Bilan Financier ${data.year}</div>
-      <div class="sub">Beya Creative · ERP Gestion Textile · Généré le ${new Date().toLocaleDateString('fr-MA')}</div>
+      <div class="sub">BEYA CREATIVE Confection de vêtement · Généré le ${new Date().toLocaleDateString('fr-MA')}</div>
     </div>
   </div>
   <div class="grid">
@@ -233,7 +233,7 @@ export function printBilan(data: {
       <tr style="background:#f8fafc"><td><strong>Taux de Marge</strong></td><td><strong>${data.marge}%</strong></td></tr>
     </tbody>
   </table>
-  <div class="footer">Beya Creative · Gestion Textile Professionnelle · Document confidentiel</div>
+  <div class="footer">BEYA CREATIVE Confection de vêtement · Document confidentiel</div>
 </div>
 <button class="print-btn no-print" onclick="window.print()">⬇ Télécharger PDF</button>
 </body></html>`;

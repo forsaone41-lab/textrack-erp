@@ -371,13 +371,13 @@ export default function Factures() {
             <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-8 text-white">
               <div className="flex justify-between items-start">
                 <div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
-                      <FileText className="w-5 h-5 text-white" />
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center p-1 border border-slate-200">
+                      <img src="/logo.png" alt="Logo" className="max-w-full max-h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                     </div>
                     <div>
-                      <h2 className="text-xl font-black tracking-tight">Beya Creative</h2>
-                      <p className="text-slate-400 text-xs">ERP Gestion Textile</p>
+                      <h2 className="text-xl font-black tracking-tight uppercase">Beya Creative</h2>
+                      <p className="text-slate-400 text-[10px] uppercase tracking-widest">Confection de vêtement</p>
                     </div>
                   </div>
                 </div>
@@ -464,7 +464,7 @@ export default function Factures() {
             </div>
 
             <div className="px-8 py-5 border-t border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <p className="text-xs text-slate-400">Beya Creative · Gestion Textile Professionnelle</p>
+              <p className="text-xs text-slate-400 font-medium">BEYA CREATIVE Confection de Vêtement</p>
               <div className="flex gap-2.5">
                 <button
                   onClick={() => printFacture(viewFacture, cmdOf(viewFacture.commandeId))}
