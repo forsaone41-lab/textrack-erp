@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, Ruler, Calculator, Camera, FileText } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Ruler, Calculator, Camera, FileText, Download } from 'lucide-react';
 import {
   FicheTechnique, StockTissu, loadData, saveRecord, deleteRecord, genId,
 } from '../types';
@@ -103,6 +103,15 @@ export default function FichesTechniques() {
     await deleteRecord('fiches', id);
   }
 
+  function downloadFile(data: string, filename: string) {
+    const link = document.createElement('a');
+    link.href = data;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
   function addTaille() {
     if (newTaille && !(form.tailles || []).includes(newTaille)) {
       setForm({ ...form, tailles: [...(form.tailles || []), newTaille] });
@@ -194,11 +203,27 @@ export default function FichesTechniques() {
                     <span className="text-[10px]">Pas de photo</span>
                   </div>
                 )}
+                {f.photo && (
+                  <button 
+                    onClick={() => downloadFile(f.photo!, `Photo_${f.modele}.png`)}
+                    className="absolute top-2 left-2 p-2 bg-white/90 backdrop-blur-sm text-slate-700 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-all hover:text-indigo-600 hover:bg-white"
+                    title="Télécharger la photo"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                  </button>
+                )}
                 {f.patronagePhoto && (
-                  <div className="absolute bottom-2 left-2">
-                    <span className="flex items-center gap-1 px-2 py-0.5 bg-indigo-600 text-white text-[9px] font-bold rounded-full">
+                  <div className="absolute bottom-2 left-2 flex items-center gap-1">
+                    <span className="flex items-center gap-1 px-2 py-0.5 bg-indigo-600 text-white text-[9px] font-bold rounded-full shadow-sm">
                       <FileText className="w-2.5 h-2.5" /> Patron
                     </span>
+                    <button 
+                      onClick={() => downloadFile(f.patronagePhoto!, f.patronageFileName || `Patron_${f.modele}`)}
+                      className="p-1 bg-white/90 backdrop-blur-sm text-indigo-600 rounded-full shadow-sm border border-indigo-100 hover:bg-indigo-600 hover:text-white transition-colors"
+                      title="Télécharger le patronage"
+                    >
+                      <Download className="w-2.5 h-2.5" />
+                    </button>
                   </div>
                 )}
               </div>
