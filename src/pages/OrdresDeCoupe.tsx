@@ -83,7 +83,8 @@ export default function OrdresDeCoupe() {
 
     const isNew = !editId;
     const oId = editId || genId();
-    const ordreData = { id: oId, commandeId: '', ...form } as OrdreDeCoupe;
+    const ordreData = { id: oId, ...form } as OrdreDeCoupe;
+    if (!ordreData.commandeId) ordreData.commandeId = null;
 
     const updated = isNew
       ? [...ordres, ordreData]

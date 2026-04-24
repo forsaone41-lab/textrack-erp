@@ -37,7 +37,7 @@ export interface FicheTechnique {
 
 export interface OrdreDeCoupe {
   id: string;
-  commandeId: string;
+  commandeId?: string | null;
   modele: string;
   quantite: number;
   tissu: string;
@@ -131,7 +131,7 @@ export interface PointageEntry {
 export interface Facture {
   id: string;
   numero: string;
-  commandeId: string;
+  commandeId?: string | null;
   client: string;
   montant: number;
   date: string;

@@ -61,7 +61,7 @@ export default function Factures() {
       date: today,
       echeance: due.toISOString().split('T')[0],
       statut: 'en_attente',
-      commandeId: '',
+      // commandeId is omitted to allow null by default
     });
     setShowModal(true);
   }
@@ -77,6 +77,7 @@ export default function Factures() {
     const isNew = !editId;
     const facId = editId || genId();
     const facData = { id: facId, ...form } as Facture;
+    if (!facData.commandeId) facData.commandeId = null;
 
     const updated = isNew
       ? [...factures, facData]
