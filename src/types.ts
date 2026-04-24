@@ -26,7 +26,7 @@ export interface FicheTechnique {
   description: string;
   client: string;
   tailles: string[];
-  mesures: { nom: string; valeur: number }[];
+  mesures: { nom: string; valeurs: Record<string, number> }[];
   tissuConsommation: number; // mètres par pièce
   type: string;
   createdAt: string;
