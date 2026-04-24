@@ -574,6 +574,22 @@ export default function FichesTechniques() {
                     <input value={form.type || ''} onChange={e => setForm({ ...form, type: e.target.value })}
                       placeholder="ex: Chemise, Robe..."
                       className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors" />
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {['T-shirt', 'Polo', 'Chemise', 'Pantalon', 'Sweat', 'Veste', 'Robe'].map(t => (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => setForm({ ...form, type: t })}
+                          className={`px-2 py-0.5 text-[9px] font-bold rounded-md border transition-colors ${
+                            form.type === t 
+                              ? 'bg-indigo-600 border-indigo-600 text-white' 
+                              : 'bg-white border-slate-200 text-slate-500 hover:border-indigo-300 hover:text-indigo-600'
+                          }`}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
                 <div className="mb-3">
