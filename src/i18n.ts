@@ -12,6 +12,7 @@ export const T = {
   stocks: { fr: 'Stock Matériaux', ar: 'مخزون المواد' },
   rh: { fr: 'Suivi RH & Façonniers', ar: 'الموارد البشرية' },
   commandes: { fr: 'Commandes', ar: 'الطلبيات' },
+  clients: { fr: 'Clients', ar: 'الزبائن' },
   factures: { fr: 'Factures', ar: 'الفواتير' },
   charges: { fr: 'Charges & Dépenses', ar: 'المصاريف والنفقات' },
   pointage: { fr: 'Pointage Présences', ar: 'الحضور والغياب' },

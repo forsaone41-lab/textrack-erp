@@ -181,6 +181,13 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
                 <span className="tracking-wide">{t('commandes', lang)}</span>
               </NavLink>
             )}
+
+            {can('clients') && (
+              <NavLink to="/clients" className={linkClass}>
+                <UserCircle className="w-5 h-5 opacity-80" />
+                <span className="tracking-wide">{t('clients', lang)}</span>
+              </NavLink>
+            )}
           </div>
 
           {/* Finance Section */}

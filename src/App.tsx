@@ -7,6 +7,7 @@ import OrdresDeCoupe from './pages/OrdresDeCoupe';
 import ChaineDeMontage from './pages/ChaineDeMontage';
 import StockMateriaux from './pages/StockMateriaux';
 import SuiviRH from './pages/SuiviRH';
+import Clients from './pages/Clients';
 import Commandes from './pages/Commandes';
 import Factures from './pages/Factures';
 import Pointage from './pages/Pointage';
@@ -183,6 +184,7 @@ function AppContent() {
         {can('stocks') ? <Route path="stocks" element={<StockMateriaux />} /> : <Route path="stocks" element={<Navigate to="/" replace />} />}
         {can('rh') ? <Route path="rh" element={<SuiviRH />} /> : <Route path="rh" element={<Navigate to="/" replace />} />}
         {can('commandes') ? <Route path="commandes" element={<Commandes />} /> : <Route path="commandes" element={<Navigate to="/" replace />} />}
+        {can('clients') ? <Route path="clients" element={<Clients />} /> : <Route path="clients" element={<Navigate to="/" replace />} />}
         {can('performance') ? <Route path="performance" element={<Performance />} /> : <Route path="performance" element={<Navigate to="/" replace />} />}
         {can('factures') ? <Route path="factures" element={<Factures />} /> : <Route path="factures" element={<Navigate to="/" replace />} />}
         {can('charges') ? <Route path="charges" element={<Charges />} /> : <Route path="charges" element={<Navigate to="/" replace />} />}

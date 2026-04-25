@@ -212,13 +212,13 @@ export interface Charge {
 // ─── Permissions ────────────────────────────────────────────
 export type AppPage =
   | 'dashboard' | 'fiches' | 'ordres' | 'chaine' | 'stocks'
-  | 'rh' | 'commandes' | 'factures' | 'charges' | 'bilan'
+  | 'rh' | 'commandes' | 'clients' | 'factures' | 'charges' | 'bilan'
   | 'pointage' | 'portail_client' | 'performance' | 'utilisateurs' | 'parametres';
 
 export type RolePermMap = Record<'admin' | 'pointeur' | 'client', AppPage[]>;
 
 export const DEFAULT_PERMISSIONS: RolePermMap = {
-  admin: ['dashboard', 'fiches', 'ordres', 'chaine', 'stocks', 'rh', 'commandes', 'factures', 'charges', 'bilan', 'pointage', 'portail_client', 'performance', 'utilisateurs', 'parametres'],
+  admin: ['dashboard', 'fiches', 'ordres', 'chaine', 'stocks', 'rh', 'commandes', 'clients', 'factures', 'charges', 'bilan', 'pointage', 'portail_client', 'performance', 'utilisateurs', 'parametres'],
   pointeur: ['fiches', 'ordres', 'chaine', 'pointage'],
   client: ['portail_client'],
 };

@@ -312,7 +312,7 @@ export default function SuiviRH() {
                       <div>
                         <div className="flex items-center gap-2">
                           <h3 className="font-bold text-slate-800">{empName(e)}</h3>
-                          <button 
+                          <button
                             onClick={() => setSelectedBadge(e)}
                             className="p-1 text-slate-300 hover:text-indigo-600 transition"
                             title="Voir le badge"
@@ -479,14 +479,14 @@ export default function SuiviRH() {
               </div>
 
               <div className="p-6 bg-slate-50 grid grid-cols-2 gap-3">
-                <button 
+                <button
                   onClick={() => window.print()}
                   className="h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center gap-2 font-black text-xs uppercase tracking-widest active:scale-95 transition-all"
                 >
                   <Printer className="w-4 h-4" />
                   Imprimer
                 </button>
-                <button 
+                <button
                   onClick={() => {
                     const svg = document.querySelector('svg');
                     if (svg) {
@@ -681,8 +681,8 @@ export default function SuiviRH() {
                           key={m}
                           onClick={() => setPayerForm({ ...payerForm, methode: m })}
                           className={`flex flex-col items-center gap-1 py-3 px-2 rounded-xl border-2 text-xs font-semibold transition ${payerForm.methode === m
-                              ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                              : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                            ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                            : 'border-slate-200 text-slate-500 hover:border-slate-300'
                             }`}
                         >
                           {METHODE_ICONS[m]}
