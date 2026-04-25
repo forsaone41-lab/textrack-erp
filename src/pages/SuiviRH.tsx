@@ -69,6 +69,7 @@ export default function SuiviRH() {
   });
   const [showHistorique, setShowHistorique] = useState<string | null>(null);
   const [selectedBadge, setSelectedBadge] = useState<Employe | null>(null);
+  const [showAllBadges, setShowAllBadges] = useState(false);
   
   // Bon de Travail state
   const [showBonModal, setShowBonModal] = useState(false);
@@ -258,22 +259,6 @@ export default function SuiviRH() {
 
   return (
     <div className="space-y-6 relative">
-      {/* Hidden container for printing ALL badges */}
-      <div className="fixed -left-[2000px] top-0" id="all-badges-capture">
-        <div className="bg-white p-8 grid grid-cols-2 gap-8 w-[800px]">
-          {employes.filter(e => e.type === 'atelier' && e.actif).map(e => (
-            <div key={e.id} className="border-2 border-slate-100 rounded-[32px] p-6 flex flex-col items-center text-center bg-white shadow-sm">
-              <p className="text-sm font-black text-slate-900 italic uppercase mb-4">{company.name}</p>
-              <div className="p-3 bg-white border border-slate-100 rounded-2xl mb-4">
-                <QRCodeSVG value={e.id} size={140} level="H" />
-              </div>
-              <h2 className="text-lg font-black text-slate-900 uppercase leading-tight mb-1">{empName(e)}</h2>
-              <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest bg-indigo-50 px-3 py-1 rounded-full">{e.poste}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -282,7 +267,7 @@ export default function SuiviRH() {
         </div>
         <div className="flex items-center gap-3">
           <button 
-            onClick={() => generatePDF('all-badges-capture', 'Tous_les_Badges')}
+            onClick={() => setShowAllBadges(true)}
             className="flex items-center gap-2 bg-white border-2 border-slate-100 text-slate-600 px-4 py-2.5 rounded-2xl hover:bg-slate-50 transition-all font-black text-[10px] uppercase tracking-widest"
           >
             <QrCode className="w-4 h-4" /> Badges PDF
@@ -424,6 +409,43 @@ export default function SuiviRH() {
           );
         })}
       </div>
+
+      {/* Modal: View All Badges for Export */}
+      {showAllBadges && (
+        <div className="fixed inset-0 z-[250] bg-slate-900/90 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-[40px] w-full max-w-4xl shadow-2xl my-8 overflow-hidden animate-in zoom-in duration-300">
+            <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
+              <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Impression des Badges</h2>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => generatePDF('all-badges-capture', 'Tous_les_Badges')}
+                  className="bg-slate-900 text-white px-6 py-2.5 rounded-2xl flex items-center gap-2 font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-900/20 active:scale-95 transition-all"
+                >
+                  <Download className="w-4 h-4" /> Télécharger PDF
+                </button>
+                <button onClick={() => setShowAllBadges(false)} className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center">
+                  <X className="w-6 h-6 text-slate-900" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-12 bg-white" id="all-badges-capture">
+              <div className="grid grid-cols-2 gap-8">
+                {employes.filter(e => e.type === 'atelier' && e.actif).map(e => (
+                  <div key={e.id} className="border-2 border-slate-100 rounded-[32px] p-8 flex flex-col items-center text-center bg-white shadow-sm break-inside-avoid">
+                    <p className="text-xl font-black text-slate-900 italic uppercase mb-6">{company.name}</p>
+                    <div className="p-4 bg-white border-2 border-slate-50 rounded-3xl mb-6 flex items-center justify-center">
+                      <QRCodeSVG value={e.id} size={150} level="H" />
+                    </div>
+                    <h2 className="text-2xl font-black text-slate-900 uppercase leading-tight mb-2">{empName(e)}</h2>
+                    <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest bg-indigo-50 px-5 py-2 rounded-full">{e.poste}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal: Add/Edit Personnel */}
       {showModal && (
