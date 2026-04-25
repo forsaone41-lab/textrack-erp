@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, Scissors } from 'lucide-react';
-import { OrdreDeCoupe, StockTissu, FicheTechnique, loadData, saveRecord, deleteRecord, genId } from '../types';
+import { Plus, Search, Edit2, Trash2, Scissors, ShoppingCart } from 'lucide-react';
+import { OrdreDeCoupe, StockTissu, FicheTechnique, Commande, loadData, saveRecord, deleteRecord, genId } from '../types';
 
 export default function OrdresDeCoupe() {
   const [ordres, setOrdres] = useState<OrdreDeCoupe[]>([]);
@@ -12,17 +12,28 @@ export default function OrdresDeCoupe() {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<OrdreDeCoupe>>({});
 
+  const [commandes, setCommandes] = useState<Commande[]>([]);
+
   useEffect(() => {
     Promise.all([
       loadData<OrdreDeCoupe>('ordres'),
       loadData<StockTissu>('tissus'),
-      loadData<FicheTechnique>('fiches')
-    ]).then(([ords, tiss, fchs]) => {
+      loadData<FicheTechnique>('fiches'),
+      loadData<Commande>('commandes')
+    ]).then(([ords, tiss, fchs, cmds]) => {
       setOrdres(ords);
       setTissus(tiss);
       setFiches(fchs);
+      setCommandes(cmds);
     });
   }, []);
+
+  // Filtrer les commandes qui sont en phase 'coupe' mais n'ont pas encore d'Ordre de Coupe
+  const pendingCommands = commandes.filter(c => 
+    c.phase === 'coupe' && 
+    !ordres.some(o => o.commandeId === c.id) &&
+    c.statut !== 'livré'
+  );
 
   const filtered = ordres.filter(o => {
     const matchSearch = o.modele.toLowerCase().includes(search.toLowerCase()) || o.tissu.toLowerCase().includes(search.toLowerCase());
@@ -134,6 +145,26 @@ export default function OrdresDeCoupe() {
     });
   };
 
+  const handleImportCommand = (c: Commande) => {
+    const fiche = fiches.find(f => f.modele === c.modele);
+    const conso = fiche?.tissuConsommation || 0;
+    
+    setEditId(null);
+    setForm({
+      id: genId(),
+      commandeId: c.id,
+      modele: c.modele,
+      quantite: c.quantite,
+      tissu: fiche?.type || '',
+      couleur: 'À définir',
+      metrage: Number((conso * c.quantite).toFixed(2)),
+      statut: 'planifié',
+      dateCoupe: new Date().toISOString().split('T')[0],
+      rollId: null
+    });
+    setShowModal(true);
+  };
+
   async function remove(id: string) {
     const orderToDelete = ordres.find(o => o.id === id);
     
@@ -162,10 +193,51 @@ export default function OrdresDeCoupe() {
           <h1 className="text-2xl font-bold text-slate-800">Ordres de Coupe</h1>
           <p className="text-slate-500 text-sm">Suivi des phases de coupe du tissu</p>
         </div>
-        <button onClick={openCreate} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-lg hover:bg-indigo-700 transition text-sm font-medium shadow-sm">
-          <Plus className="w-4 h-4" /> Nouvel Ordre
-        </button>
+        <div className="flex items-center gap-3">
+          {pendingCommands.length > 0 && (
+            <div className="flex items-center gap-2 bg-amber-50 border border-amber-100 px-3 py-2 rounded-lg animate-pulse">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+              </span>
+              <span className="text-xs font-bold text-amber-700">{pendingCommands.length} Nouvelles Commandes</span>
+            </div>
+          )}
+          <button onClick={openCreate} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-lg hover:bg-indigo-700 transition text-sm font-medium shadow-sm">
+            <Plus className="w-4 h-4" /> Nouvel Ordre
+          </button>
+        </div>
       </div>
+
+      {/* Pending Commands Horizontal List */}
+      {pendingCommands.length > 0 && (
+        <div className="bg-gradient-to-r from-indigo-600 to-violet-600 rounded-2xl p-4 shadow-lg text-white">
+          <div className="flex items-center gap-2 mb-3">
+            <ShoppingCart className="w-4 h-4" />
+            <h2 className="text-sm font-bold uppercase tracking-wider">File d'attente (Commandes à traiter)</h2>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+            {pendingCommands.map(c => (
+              <div key={c.id} className="min-w-[280px] bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3 flex flex-col justify-between">
+                <div>
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold">{c.reference}</span>
+                    <span className="text-[10px] font-medium opacity-70">{c.dateCommande}</span>
+                  </div>
+                  <p className="text-sm font-bold leading-tight">{c.client}</p>
+                  <p className="text-xs opacity-80 mb-3">{c.modele} · <span className="font-bold">{c.quantite} pcs</span></p>
+                </div>
+                <button 
+                  onClick={() => handleImportCommand(c)}
+                  className="w-full bg-white text-indigo-600 py-1.5 rounded-lg text-xs font-black hover:bg-indigo-50 transition flex items-center justify-center gap-2"
+                >
+                  <Scissors className="w-3 h-3" /> LANCER LA COUPE
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-3 gap-4">
