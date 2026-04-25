@@ -293,6 +293,7 @@ export default function OrdresDeCoupe() {
                   </div>
                 </div>
               );
+            })}
           </div>
         </div>
       )}
