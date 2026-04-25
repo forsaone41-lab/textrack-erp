@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, Scissors, ShoppingCart, FileText, Image as ImageIcon, Eye, Download, ClipboardList } from 'lucide-react';
 import { OrdreDeCoupe, StockTissu, FicheTechnique, Commande, loadData, saveRecord, deleteRecord, genId } from '../types';
-import { generatePDF } from '../utils/pdf';
+import { generatePDF, printElement } from '../utils/pdf';
 
 export default function OrdresDeCoupe() {
   const [ordres, setOrdres] = useState<OrdreDeCoupe[]>([]);
@@ -126,7 +126,7 @@ export default function OrdresDeCoupe() {
     setPrintContent({
       title: `Fiche Technique - ${fiche.modele}`,
       html: (
-        <div className="w-full max-w-4xl bg-white p-8 text-slate-800 font-sans">
+        <div id="fiche-printable-content" className="w-full max-w-4xl bg-white p-8 text-slate-800 font-sans">
           <div className="flex justify-between items-start border-b-2 border-slate-100 pb-6 mb-8">
             <div>
               <h1 className="text-3xl font-black text-slate-900 tracking-tight">FICHE TECHNIQUE</h1>
@@ -399,7 +399,21 @@ export default function OrdresDeCoupe() {
       {showPrintModal && printContent && (
         <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:p-0 print:bg-white print:static">
           <div className="bg-white rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl print:shadow-none print:max-w-none print:max-h-none print:rounded-none">
-            <div className="p-4 border-b border-slate-100 flex justify-between items-center no-print"><h3 className="font-bold text-slate-800">{printContent.title}</h3><div className="flex gap-2"><button onClick={() => window.print()} className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-800 transition"><Download className="w-4 h-4" /> IMPRIMER</button><button onClick={() => setShowPrintModal(false)} className="px-4 py-2 text-sm text-slate-500 hover:bg-slate-100 rounded-xl transition">FERMER</button></div></div>
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center no-print">
+              <h3 className="font-bold text-slate-800">{printContent.title}</h3>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => {
+                    if (printContent.html) printElement('fiche-printable-content');
+                    else window.print();
+                  }} 
+                  className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-800 transition"
+                >
+                  <Download className="w-4 h-4" /> IMPRIMER
+                </button>
+                <button onClick={() => setShowPrintModal(false)} className="px-4 py-2 text-sm text-slate-500 hover:bg-slate-100 rounded-xl transition">FERMER</button>
+              </div>
+            </div>
             <div className="flex-1 overflow-auto p-8 flex justify-center bg-slate-50 print:bg-white print:p-0">
               {printContent.html ? (
                 <div className="print:m-0 shadow-2xl print:shadow-none bg-white">
