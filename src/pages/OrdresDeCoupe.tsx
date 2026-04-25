@@ -14,7 +14,7 @@ export default function OrdresDeCoupe() {
   const [form, setForm] = useState<Partial<OrdreDeCoupe>>({});
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [showPrintModal, setShowPrintModal] = useState(false);
-  const [printContent, setPrintContent] = useState<{title: string, image: string, isPDF?: boolean} | null>(null);
+  const [printContent, setPrintContent] = useState<{title: string, image?: string, html?: React.ReactNode, isPDF?: boolean} | null>(null);
 
   useEffect(() => {
     refreshData();
@@ -122,56 +122,80 @@ export default function OrdresDeCoupe() {
     setShowPrintModal(true);
   };
 
-  const handleExportFichePDF = async (fiche: FicheTechnique) => {
-    const printDiv = document.createElement('div');
-    printDiv.id = 'fiche-pdf-template';
-    printDiv.style.position = 'absolute';
-    printDiv.style.left = '-9999px';
-    printDiv.innerHTML = `
-      <div style="padding: 40px; font-family: sans-serif; color: #1e293b; background: white; width: 800px;">
-        <div style="display: flex; justify-content: space-between; align-items: start; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px;">
-          <div>
-            <h1 style="font-size: 28px; font-weight: 800; margin: 0; color: #0f172a;">FICHE TECHNIQUE</h1>
-            <p style="font-size: 14px; color: #64748b; margin: 5px 0 0 0;">Référence Modèle: ${fiche.modele}</p>
-          </div>
-          <div style="text-align: right;">
-            <p style="font-size: 18px; font-weight: 700; margin: 0;">BEYA CREATIVE</p>
-            <p style="font-size: 12px; color: #94a3b8; margin: 0;">Confection de Vêtement</p>
-          </div>
-        </div>
-        <div style="display: flex; gap: 40px; margin-top: 30px;">
-          <div style="flex: 1;">
-            <h2 style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 15px;">Détails du Modèle</h2>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-              <div><p style="font-size: 10px; color: #94a3b8; margin: 0;">Client</p><p style="font-size: 14px; font-weight: 600; margin: 2px 0;">${fiche.client}</p></div>
-              <div><p style="font-size: 10px; color: #94a3b8; margin: 0;">Type</p><p style="font-size: 14px; font-weight: 600; margin: 2px 0;">${fiche.type}</p></div>
-              <div><p style="font-size: 10px; color: #94a3b8; margin: 0;">Consommation</p><p style="font-size: 14px; font-weight: 600; margin: 2px 0;">${fiche.tissuConsommation} m/pièce</p></div>
+  const handleExportFichePDF = (fiche: FicheTechnique) => {
+    setPrintContent({
+      title: `Fiche Technique - ${fiche.modele}`,
+      html: (
+        <div className="w-full max-w-4xl bg-white p-8 text-slate-800 font-sans">
+          <div className="flex justify-between items-start border-b-2 border-slate-100 pb-6 mb-8">
+            <div>
+              <h1 className="text-3xl font-black text-slate-900 tracking-tight">FICHE TECHNIQUE</h1>
+              <p className="text-slate-500 font-medium mt-1 uppercase tracking-widest text-xs">Réf: {fiche.modele}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xl font-black text-indigo-600">BEYA CREATIVE</p>
+              <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tighter">Confection Textile Pro</p>
             </div>
           </div>
-          <div style="width: 250px;">
-            <img src="${fiche.photo}" id="pdf-photo-temp" style="width: 100%; border-radius: 12px; border: 1px solid #e2e8f0;" />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div className="space-y-6">
+              <section>
+                <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 border-b border-slate-50 pb-2">Informations Générales</h2>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-[10px] text-slate-400 uppercase font-bold">Client</p>
+                    <p className="text-sm font-black text-slate-700">{fiche.client}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-slate-400 uppercase font-bold">Type de vêtement</p>
+                    <p className="text-sm font-black text-slate-700">{fiche.type}</p>
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 border-b border-slate-50 pb-2">Données de Production</h2>
+                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-[10px] text-slate-500 uppercase font-bold">Consommation Tissu</p>
+                      <p className="text-xl font-black text-indigo-600">{fiche.tissuConsommation} <span className="text-xs text-slate-400 font-medium">m/pièce</span></p>
+                    </div>
+                    <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm border border-slate-100">
+                      <Scissors className="w-6 h-6 text-indigo-500" />
+                    </div>
+                  </div>
+                </div>
+              </section>
+              
+              <section>
+                <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 border-b border-slate-50 pb-2">Notes Techniques</h2>
+                <div className="p-4 bg-amber-50/50 rounded-2xl border border-amber-100/50 min-h-[120px]">
+                  <p className="text-xs leading-relaxed text-slate-600 whitespace-pre-wrap">{fiche.description || 'Aucune consigne particulière.'}</p>
+                </div>
+              </section>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Aperçu du Modèle</h2>
+              <div className="aspect-[3/4] rounded-3xl overflow-hidden border-4 border-white shadow-2xl bg-slate-100 relative group">
+                {fiche.photo ? (
+                  <img src={fiche.photo} className="w-full h-full object-cover" alt="Modèle" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center"><ImageIcon className="w-12 h-12 text-slate-300" /></div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-16 pt-6 border-t border-slate-100 text-center">
+            <p className="text-[9px] text-slate-300 font-bold uppercase tracking-widest">Document généré le {new Date().toLocaleDateString('fr-FR')} par TexTrack ERP</p>
           </div>
         </div>
-        <div style="margin-top: 40px;">
-          <h2 style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 15px;">Description & Notes</h2>
-          <p style="font-size: 13px; line-height: 1.6; color: #475569; background: #f8fafc; padding: 20px; border-radius: 12px;">${fiche.description || 'Aucune note spécifique.'}</p>
-        </div>
-        <div style="margin-top: 100px; padding-top: 20px; border-top: 1px solid #f1f5f9; text-align: center;">
-          <p style="font-size: 10px; color: #cbd5e1;">Document généré le ${new Date().toLocaleDateString('fr-FR')} - TexTrack ERP</p>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(printDiv);
-    const tempImg = document.getElementById('pdf-photo-temp') as HTMLImageElement;
-    if (tempImg) {
-      await new Promise((resolve) => {
-        if (tempImg.complete) resolve(true);
-        else tempImg.onload = () => resolve(true);
-        setTimeout(() => resolve(true), 2000); // Fail-safe
-      });
-    }
-    await generatePDF('fiche-pdf-template', `FICHE-${fiche.modele}`);
-    document.body.removeChild(printDiv);
+      )
+    });
+    setShowPrintModal(true);
   };
 
   const handleModeleChange = (val: string) => {
@@ -377,7 +401,15 @@ export default function OrdresDeCoupe() {
           <div className="bg-white rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl print:shadow-none print:max-w-none print:max-h-none print:rounded-none">
             <div className="p-4 border-b border-slate-100 flex justify-between items-center no-print"><h3 className="font-bold text-slate-800">{printContent.title}</h3><div className="flex gap-2"><button onClick={() => window.print()} className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-800 transition"><Download className="w-4 h-4" /> IMPRIMER</button><button onClick={() => setShowPrintModal(false)} className="px-4 py-2 text-sm text-slate-500 hover:bg-slate-100 rounded-xl transition">FERMER</button></div></div>
             <div className="flex-1 overflow-auto p-8 flex justify-center bg-slate-50 print:bg-white print:p-0">
-              {printContent.isPDF ? <iframe src={printContent.image} className="w-full h-full min-h-[70vh] border-0 rounded-xl shadow-lg no-print" /> : <img src={printContent.image} className="max-w-full h-auto shadow-lg print:shadow-none" alt="Document" />}
+              {printContent.html ? (
+                <div className="print:m-0 shadow-2xl print:shadow-none bg-white">
+                  {printContent.html}
+                </div>
+              ) : printContent.isPDF ? (
+                <iframe src={printContent.image} className="w-full h-full min-h-[70vh] border-0 rounded-xl shadow-lg no-print" title="Document PDF" />
+              ) : (
+                <img src={printContent.image} className="max-w-full h-auto shadow-lg print:shadow-none" alt="Document" />
+              )}
             </div>
           </div>
           <style>{`@media print { body * { visibility: hidden; } .print\\:static, .print\\:static * { visibility: visible; } .print\\:static { position: absolute; left: 0; top: 0; width: 100%; height: 100%; } .no-print { display: none !important; } }`}</style>
