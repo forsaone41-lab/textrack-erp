@@ -224,53 +224,36 @@ export default function OrdresDeCoupe() {
       return;
     }
 
-    try {
-      // Conversion directe pour éviter fetch() et les erreurs de chargement
-      const blob = dataURLtoBlob(fiche.patronagePhoto);
-      if (!blob) {
-        window.open(fiche.patronagePhoto, '_blank');
-        return;
-      }
-      const blobUrl = URL.createObjectURL(blob);
-
-      const win = window.open('', '_blank');
-      if (win) {
-        win.document.write(`
-          <html>
-            <head>
-              <title>Patronage - ${fiche.modele}</title>
-              <style>
-                body { margin: 0; display: flex; justify-content: center; align-items: flex-start; background: #fff; min-height: 100vh; }
-                img { max-width: 100%; height: auto; object-fit: contain; }
-                @media print {
-                  body { margin: 0; padding: 0; }
-                  img { max-width: 100%; height: auto; }
-                }
-              </style>
-            </head>
-            <body>
-              <img src="${blobUrl}" id="patron-img" />
-              <script>
-                const img = document.getElementById('patron-img');
-                img.onload = () => {
-                  setTimeout(() => {
-                    window.print();
-                    // On garde l'URL active pour l'impression, cleanup après focus
-                    window.onfocus = () => { URL.revokeObjectURL('${blobUrl}'); };
-                  }, 500);
-                };
-                img.onerror = () => {
-                  alert("Impossible d'afficher l'image. Veuillez essayer d'utiliser le bouton de téléchargement.");
-                  window.close();
-                };
-              </script>
-            </body>
-          </html>
-        `);
-        win.document.close();
-      }
-    } catch (err) {
-      console.error("Erreur d'impression", err);
+    // Ouverture directe pour une fiabilité maximale (évite les blocages de sécurité document.write)
+    const win = window.open();
+    if (win) {
+      win.document.write(`
+        <html>
+          <head>
+            <title>Patronage - ${fiche.modele}</title>
+            <style>
+              body { margin: 0; background: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; }
+              .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-width: 95%; }
+              img { max-width: 100%; height: auto; display: block; }
+              .toolbar { position: fixed; top: 20px; right: 20px; display: flex; gap: 10px; z-index: 100; }
+              button { background: #1a1c23; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+              @media print { .toolbar { display: none; } body { background: white; } .container { box-shadow: none; padding: 0; } }
+            </style>
+          </head>
+          <body>
+            <div class="toolbar">
+              <button onclick="window.print()">IMPRIMER (CTRL+P)</button>
+              <button onclick="window.close()">FERMER</button>
+            </div>
+            <div class="container">
+              <img src="${fiche.patronagePhoto}" />
+            </div>
+          </body>
+        </html>
+      `);
+      win.document.close();
+    } else {
+      // Fallback si le popup est bloqué
       window.open(fiche.patronagePhoto, '_blank');
     }
   };
