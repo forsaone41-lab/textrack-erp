@@ -208,37 +208,58 @@ export default function OrdresDeCoupe() {
       alert("Aucun patronage n'est associé à cette fiche technique.");
       return;
     }
-    const win = window.open('', '_blank');
-    if (win) {
-      win.document.write(`
-        <html>
-          <head>
-            <title>Patronage - ${fiche.modele}</title>
-            <style>
-              body { margin: 0; display: flex; justify-content: center; align-items: center; background: #fff; min-height: 100vh; }
-              img { max-width: 95%; max-height: 95vh; object-fit: contain; }
-              @media print {
-                body { background: none; }
-                img { max-width: 100%; max-height: 100%; }
-              }
-            </style>
-          </head>
-          <body>
-            <img src="${fiche.patronagePhoto}" id="patron-img" />
-            <script>
-              const img = document.getElementById('patron-img');
-              img.onload = () => {
-                setTimeout(() => {
-                  window.print();
-                  // window.close(); // Optionnel: fermer après impression
-                }, 500);
-              };
-              img.onerror = () => alert("Erreur de chargement de l'image.");
-            </script>
-          </body>
-        </html>
-      `);
-      win.document.close();
+  const handlePrintPatron = async (fiche: FicheTechnique) => {
+    if (!fiche.patronagePhoto) {
+      alert("Aucun patronage n'est associé à cette fiche technique.");
+      return;
+    }
+
+    try {
+      // Conversion en Blob pour une impression fiable (évite les erreurs de chargement sur base64 long)
+      const res = await fetch(fiche.patronagePhoto);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const win = window.open('', '_blank');
+      if (win) {
+        win.document.write(`
+          <html>
+            <head>
+              <title>Patronage - ${fiche.modele}</title>
+              <style>
+                body { margin: 0; display: flex; justify-content: center; align-items: flex-start; background: #fff; min-height: 100vh; }
+                img { max-width: 100%; height: auto; object-fit: contain; }
+                @media print {
+                  body { margin: 0; padding: 0; }
+                  img { max-width: 100%; height: auto; }
+                }
+              </style>
+            </head>
+            <body>
+              <img src="${blobUrl}" id="patron-img" />
+              <script>
+                const img = document.getElementById('patron-img');
+                img.onload = () => {
+                  setTimeout(() => {
+                    window.print();
+                    // Revoke URL after printing to free memory
+                    window.onfocus = () => { URL.revokeObjectURL('${blobUrl}'); };
+                  }, 500);
+                };
+                img.onerror = () => {
+                  alert("Erreur critique de chargement de l'image. Veuillez réessayer.");
+                  window.close();
+                };
+              </script>
+            </body>
+          </html>
+        `);
+        win.document.close();
+      }
+    } catch (err) {
+      console.error("Erreur d'impression", err);
+      // Fallback: ouvrir l'image directement
+      window.open(fiche.patronagePhoto, '_blank');
     }
   };
 
