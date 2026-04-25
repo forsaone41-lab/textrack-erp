@@ -2,8 +2,8 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
 /**
- * Super robust printing: Clones the element to a clean div at the body root 
- * to avoid Modal/Fixed positioning issues that cause page duplication.
+ * Super robust printing: Converts canvases to images first, then clones 
+ * to a clean div to avoid Modal/Fixed positioning issues.
  */
 export function printElement(elementId: string) {
   const original = document.getElementById(elementId);
@@ -12,9 +12,31 @@ export function printElement(elementId: string) {
   // 1. Create a clean container for printing
   const printContainer = document.createElement('div');
   printContainer.id = 'print-container-temp';
-  printContainer.innerHTML = original.innerHTML;
   
-  // 2. Add specific print styles
+  // Clone the node carefully
+  const clone = original.cloneNode(true) as HTMLElement;
+  
+  // 2. IMPORTANT: Copy Canvas content to Images
+  // innerHTML doesn't copy canvas drawings. We must convert them.
+  const originalCanvases = original.querySelectorAll('canvas');
+  const clonedCanvases = clone.querySelectorAll('canvas');
+  
+  originalCanvases.forEach((canv, idx) => {
+    const img = document.createElement('img');
+    img.src = canv.toDataURL();
+    img.style.width = canv.style.width || (canv.width + 'px');
+    img.style.height = canv.style.height || (canv.height + 'px');
+    
+    // Replace the blank canvas in the clone with the static image
+    const targetCanv = clonedCanvases[idx];
+    if (targetCanv && targetCanv.parentNode) {
+      targetCanv.parentNode.replaceChild(img, targetCanv);
+    }
+  });
+
+  printContainer.appendChild(clone);
+  
+  // 3. Add specific print styles
   const style = document.createElement('style');
   style.id = 'print-style-temp';
   style.innerHTML = `
@@ -32,18 +54,18 @@ export function printElement(elementId: string) {
         width: 100% !important;
         background: white !important;
       }
+      /* Ensure grid layout for badges */
       #print-container-temp .grid, 
-      #print-container-temp #all-badges-capture {
+      #print-container-temp [id="all-badges-capture"] {
         display: grid !important;
         grid-template-columns: 1fr 1fr !important;
         gap: 30px !important;
         padding: 20px !important;
       }
-      .break-inside-avoid {
+      #print-container-temp .break-inside-avoid {
         break-inside: avoid !important;
         page-break-inside: avoid !important;
       }
-      /* Clean up UI elements like buttons that might have been cloned */
       button, .no-print { display: none !important; }
     }
   `;
@@ -51,15 +73,15 @@ export function printElement(elementId: string) {
   document.body.appendChild(printContainer);
   document.head.appendChild(style);
 
-  // 3. Print with enough delay for QR codes (Canvas) to be stable
+  // 4. Print with a small delay for DOM stability
   setTimeout(() => {
     window.print();
-    // 4. Cleanup
+    // 5. Cleanup
     setTimeout(() => {
       printContainer.remove();
       style.remove();
     }, 1000);
-  }, 1500);
+  }, 500);
 }
 
 /**
