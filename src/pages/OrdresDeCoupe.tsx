@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, Scissors, ShoppingCart } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Scissors, ShoppingCart, FileText } from 'lucide-react';
 import { OrdreDeCoupe, StockTissu, FicheTechnique, Commande, loadData, saveRecord, deleteRecord, genId } from '../types';
 
 export default function OrdresDeCoupe() {
@@ -25,6 +25,15 @@ export default function OrdresDeCoupe() {
       setTissus(tiss);
       setFiches(fchs);
       setCommandes(cmds);
+
+      // --- MARQUER COMME VU (Logic pour l'Admin) ---
+      const newCommands = cmds.filter(c => c.phase === 'coupe' && !(c as any).vu);
+      if (newCommands.length > 0) {
+        newCommands.forEach(c => {
+          saveRecord('commandes', { ...c, vu: true });
+        });
+      }
+      // --------------------------------------------
     });
   }, []);
 
@@ -165,6 +174,26 @@ export default function OrdresDeCoupe() {
     setShowModal(true);
   };
 
+  const handlePrintPatron = (fiche: FicheTechnique) => {
+    if (!fiche.patronagePhoto) {
+      alert("Aucun patronage n'est associé à cette fiche technique.");
+      return;
+    }
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(`
+        <html>
+          <head><title>Patronage - ${fiche.modele}</title></head>
+          <body style="margin:0; display:flex; justify-content:center; align-items:center; background:#f0f0f0;">
+            <img src="${fiche.patronagePhoto}" style="max-width:100%; max-height:100vh; object-fit:contain; box-shadow:0 10px 30px rgba(0,0,0,0.2);" />
+            <script>window.onload = () => { window.print(); }</script>
+          </body>
+        </html>
+      `);
+      win.document.close();
+    }
+  };
+
   async function remove(id: string) {
     const orderToDelete = ordres.find(o => o.id === id);
     
@@ -217,24 +246,39 @@ export default function OrdresDeCoupe() {
             <h2 className="text-sm font-bold uppercase tracking-wider">File d'attente (Commandes à traiter)</h2>
           </div>
           <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-            {pendingCommands.map(c => (
-              <div key={c.id} className="min-w-[280px] bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3 flex flex-col justify-between">
-                <div>
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold">{c.reference}</span>
-                    <span className="text-[10px] font-medium opacity-70">{c.dateCommande}</span>
+            {pendingCommands.map(c => {
+              const fiche = fiches.find(f => f.modele === c.modele);
+              return (
+                <div key={c.id} className="min-w-[300px] bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold">{c.reference}</span>
+                      <span className="text-[10px] font-medium opacity-70 flex items-center gap-1">
+                        {(c as any).vu && <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full" title="Vu par vous" />}
+                        {c.dateCommande}
+                      </span>
+                    </div>
+                    <p className="text-sm font-bold leading-tight">{c.client}</p>
+                    <p className="text-xs opacity-80 mb-4">{c.modele} · <span className="font-bold">{c.quantite} pcs</span></p>
+                    
+                    {fiche?.patronagePhoto && (
+                      <button 
+                        onClick={() => handlePrintPatron(fiche)}
+                        className="mb-4 flex items-center gap-2 text-[10px] font-bold bg-purple-500/30 hover:bg-purple-500/50 px-3 py-1.5 rounded-lg transition"
+                      >
+                        <FileText className="w-3 h-3" /> VOIR/IMPRIMER PATRON
+                      </button>
+                    )}
                   </div>
-                  <p className="text-sm font-bold leading-tight">{c.client}</p>
-                  <p className="text-xs opacity-80 mb-3">{c.modele} · <span className="font-bold">{c.quantite} pcs</span></p>
+                  <button 
+                    onClick={() => handleImportCommand(c)}
+                    className="w-full bg-white text-indigo-600 py-2 rounded-lg text-xs font-black hover:bg-indigo-50 transition flex items-center justify-center gap-2 shadow-sm"
+                  >
+                    <Scissors className="w-3 h-3" /> LANCER LA COUPE
+                  </button>
                 </div>
-                <button 
-                  onClick={() => handleImportCommand(c)}
-                  className="w-full bg-white text-indigo-600 py-1.5 rounded-lg text-xs font-black hover:bg-indigo-50 transition flex items-center justify-center gap-2"
-                >
-                  <Scissors className="w-3 h-3" /> LANCER LA COUPE
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
