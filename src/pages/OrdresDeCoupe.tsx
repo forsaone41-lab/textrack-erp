@@ -13,6 +13,8 @@ export default function OrdresDeCoupe() {
   const [form, setForm] = useState<Partial<OrdreDeCoupe>>({});
 
   const [commandes, setCommandes] = useState<Commande[]>([]);
+  const [showPrintModal, setShowPrintModal] = useState(false);
+  const [printContent, setPrintContent] = useState<{title: string, image: string} | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -223,39 +225,8 @@ export default function OrdresDeCoupe() {
       alert("Aucun patronage n'est associé à cette fiche technique.");
       return;
     }
-
-    // Ouverture directe pour une fiabilité maximale (évite les blocages de sécurité document.write)
-    const win = window.open();
-    if (win) {
-      win.document.write(`
-        <html>
-          <head>
-            <title>Patronage - ${fiche.modele}</title>
-            <style>
-              body { margin: 0; background: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; }
-              .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-width: 95%; }
-              img { max-width: 100%; height: auto; display: block; }
-              .toolbar { position: fixed; top: 20px; right: 20px; display: flex; gap: 10px; z-index: 100; }
-              button { background: #1a1c23; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-              @media print { .toolbar { display: none; } body { background: white; } .container { box-shadow: none; padding: 0; } }
-            </style>
-          </head>
-          <body>
-            <div class="toolbar">
-              <button onclick="window.print()">IMPRIMER (CTRL+P)</button>
-              <button onclick="window.close()">FERMER</button>
-            </div>
-            <div class="container">
-              <img src="${fiche.patronagePhoto}" />
-            </div>
-          </body>
-        </html>
-      `);
-      win.document.close();
-    } else {
-      // Fallback si le popup est bloqué
-      window.open(fiche.patronagePhoto, '_blank');
-    }
+    setPrintContent({ title: `Patronage - ${fiche.modele}`, image: fiche.patronagePhoto });
+    setShowPrintModal(true);
   };
 
   async function remove(id: string) {
@@ -670,6 +641,40 @@ export default function OrdresDeCoupe() {
               </button>
             </div>
           </div>
+        </div>
+      {/* Print Modal */}
+      {showPrintModal && printContent && (
+        <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:p-0 print:bg-white print:static">
+          <div className="bg-white rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl print:shadow-none print:max-w-none print:max-h-none print:rounded-none">
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center no-print">
+              <h3 className="font-bold text-slate-800">{printContent.title}</h3>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => window.print()}
+                  className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-800 transition"
+                >
+                  <Download className="w-4 h-4" /> IMPRIMER
+                </button>
+                <button 
+                  onClick={() => setShowPrintModal(false)}
+                  className="px-4 py-2 text-sm text-slate-500 hover:bg-slate-100 rounded-xl transition"
+                >
+                  FERMER
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-auto p-8 flex justify-center bg-slate-50 print:bg-white print:p-0">
+              <img src={printContent.image} className="max-w-full h-auto shadow-lg print:shadow-none" alt="Document à imprimer" />
+            </div>
+          </div>
+          <style>{`
+            @media print {
+              body * { visibility: hidden; }
+              .print\\:static, .print\\:static * { visibility: visible; }
+              .print\\:static { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+              .no-print { display: none !important; }
+            }
+          `}</style>
         </div>
       )}
     </div>
