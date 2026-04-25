@@ -231,9 +231,17 @@ export default function OrdresDeCoupe() {
     // Détection du type de contenu (Image vs PDF)
     const isPDF = fiche.patronagePhoto.startsWith('data:application/pdf');
     
+    let finalUrl = fiche.patronagePhoto;
+    if (isPDF) {
+      const blob = dataURLtoBlob(fiche.patronagePhoto);
+      if (blob) {
+        finalUrl = URL.createObjectURL(blob);
+      }
+    }
+
     setPrintContent({ 
       title: `Patronage - ${fiche.modele}`, 
-      image: fiche.patronagePhoto,
+      image: finalUrl,
       isPDF: isPDF
     });
     setShowPrintModal(true);
@@ -247,7 +255,7 @@ export default function OrdresDeCoupe() {
     printDiv.style.left = '-9999px';
     printDiv.innerHTML = `
       <div style="padding: 40px; font-family: sans-serif; color: #1e293b; background: white; width: 800px;">
-        <div style="display: flex; justify-content: space-between; align-items: start; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; mb: 30px;">
+        <div style="display: flex; justify-content: space-between; align-items: start; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px;">
           <div>
             <h1 style="font-size: 28px; font-weight: 800; margin: 0; color: #0f172a;">FICHE TECHNIQUE</h1>
             <p style="font-size: 14px; color: #64748b; margin: 5px 0 0 0;">Référence Modèle: ${fiche.modele}</p>
@@ -277,7 +285,7 @@ export default function OrdresDeCoupe() {
             </div>
           </div>
           <div style="width: 250px;">
-            <img src="${fiche.photo}" style="width: 100%; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);" />
+            <img src="${fiche.photo}" id="pdf-photo-temp" style="width: 100%; border-radius: 12px; border: 1px solid #e2e8f0;" />
           </div>
         </div>
 
@@ -293,6 +301,16 @@ export default function OrdresDeCoupe() {
     `;
     
     document.body.appendChild(printDiv);
+
+    // Attendre que l'image soit chargée avant de générer le PDF
+    const tempImg = document.getElementById('pdf-photo-temp') as HTMLImageElement;
+    if (tempImg) {
+      await new Promise((resolve) => {
+        if (tempImg.complete) resolve(true);
+        else tempImg.onload = () => resolve(true);
+      });
+    }
+
     await generatePDF('fiche-pdf-template', `FICHE-${fiche.modele}`);
     document.body.removeChild(printDiv);
   };
