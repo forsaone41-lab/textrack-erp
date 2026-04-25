@@ -472,19 +472,60 @@ export default function StockMateriaux() {
               <h2 className="text-lg font-bold text-slate-800">{editTId ? 'Modifier' : 'Nouveau'} Rouleau de Tissu</h2>
             </div>
             <div className="p-6 grid grid-cols-2 gap-4">
-              {[
-                { label: 'Type / Matière *', key: 'type', placeholder: 'ex: Coton, Soie...' },
-                { label: 'Couleur / Nom *', key: 'couleur', placeholder: 'ex: Bleu Marine' },
-                { label: 'Composition', key: 'composition', placeholder: 'ex: 100% Coton' },
-                { label: 'Référence', key: 'reference', placeholder: 'Auto si vide' },
-              ].map(({ label, key, placeholder }) => (
-                <div key={key}>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">{label}</label>
-                  <input value={(tForm as any)[key] ?? ''} onChange={e => setTForm({ ...tForm, [key]: e.target.value })}
-                    placeholder={placeholder}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-                </div>
-              ))}
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Type / Matière *</label>
+                <input 
+                  list="tissu-types"
+                  value={tForm.type ?? ''} 
+                  onChange={e => setTForm({ ...tForm, type: e.target.value })}
+                  placeholder="ex: Coton, Soie..."
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" 
+                />
+                <datalist id="tissu-types">
+                  {['Coton', 'Satin', 'Soie', 'Polyester', 'Lin', 'Viscose', 'Denim', 'Velours', 'Jersey', 'Crepe', 'Popeline', 'Lycra'].map(t => (
+                    <option key={t} value={t} />
+                  ))}
+                </datalist>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Couleur / Nom *</label>
+                <input 
+                  list="tissu-couleurs"
+                  value={tForm.couleur ?? ''} 
+                  onChange={e => setTForm({ ...tForm, couleur: e.target.value })}
+                  placeholder="ex: Bleu Marine"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" 
+                />
+                <datalist id="tissu-couleurs">
+                  {['Noir', 'Blanc', 'Bleu Marine', 'Rouge', 'Vert', 'Gris', 'Beige', 'Rose', 'Jaune', 'Bordeaux', 'Ciel', 'Marron', 'Kaki', 'Argent', 'Or'].map(c => (
+                    <option key={c} value={c} />
+                  ))}
+                </datalist>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Composition</label>
+                <input 
+                  list="tissu-compo"
+                  value={tForm.composition ?? ''} 
+                  onChange={e => setTForm({ ...tForm, composition: e.target.value })}
+                  placeholder="ex: 100% Coton"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" 
+                />
+                <datalist id="tissu-compo">
+                  {['100% Coton', '100% Polyester', '100% Soie', '50% Coton 50% Poly', '95% Coton 5% Elasthanne', '80% Coton 20% Polyester', 'Microfibre'].map(cp => (
+                    <option key={cp} value={cp} />
+                  ))}
+                </datalist>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Référence</label>
+                <input value={tForm.reference ?? ''} onChange={e => setTForm({ ...tForm, reference: e.target.value })}
+                  placeholder="Auto si vide"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+              </div>
               {[
                 { label: 'Métrage actuel (m) *', key: 'metrage', type: 'number' },
                 { label: 'Métrage total (m)', key: 'metrageTotal', type: 'number' },
