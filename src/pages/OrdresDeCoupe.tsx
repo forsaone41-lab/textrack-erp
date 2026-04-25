@@ -144,13 +144,33 @@ export default function OrdresDeCoupe() {
     });
   };
 
-  const downloadImage = (url: string, filename: string) => {
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const downloadImage = async (url: string, filename: string) => {
+    try {
+      // Si c'est un base64, on le convertit en Blob pour plus de fiabilité
+      if (url.startsWith('data:')) {
+        const res = await fetch(url);
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+      } else {
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (e) {
+      console.error("Erreur de téléchargement", e);
+      // Fallback simple
+      window.open(url, '_blank');
+    }
   };
 
   const handleQtyChange = (val: number) => {
@@ -192,10 +212,29 @@ export default function OrdresDeCoupe() {
     if (win) {
       win.document.write(`
         <html>
-          <head><title>Patronage - ${fiche.modele}</title></head>
-          <body style="margin:0; display:flex; justify-content:center; align-items:center; background:#f0f0f0;">
-            <img src="${fiche.patronagePhoto}" style="max-width:100%; max-height:100vh; object-fit:contain; box-shadow:0 10px 30px rgba(0,0,0,0.2);" />
-            <script>window.onload = () => { window.print(); }</script>
+          <head>
+            <title>Patronage - ${fiche.modele}</title>
+            <style>
+              body { margin: 0; display: flex; justify-content: center; align-items: center; background: #fff; min-height: 100vh; }
+              img { max-width: 95%; max-height: 95vh; object-fit: contain; }
+              @media print {
+                body { background: none; }
+                img { max-width: 100%; max-height: 100%; }
+              }
+            </style>
+          </head>
+          <body>
+            <img src="${fiche.patronagePhoto}" id="patron-img" />
+            <script>
+              const img = document.getElementById('patron-img');
+              img.onload = () => {
+                setTimeout(() => {
+                  window.print();
+                  // window.close(); // Optionnel: fermer après impression
+                }, 500);
+              };
+              img.onerror = () => alert("Erreur de chargement de l'image.");
+            </script>
           </body>
         </html>
       `);
