@@ -84,11 +84,20 @@ export default function Commandes() {
   function openCreate() {
     setEditId(null);
     const year = new Date().getFullYear();
-    const count = commandes.length + 1;
+    
+    // Trouver le numéro le plus élevé pour l'année en cours
+    const prefix = `CMD-${year}-`;
+    const existingNums = commandes
+      .filter(c => c.reference.startsWith(prefix))
+      .map(c => parseInt(c.reference.replace(prefix, '')))
+      .filter(n => !isNaN(n));
+    
+    const nextNum = existingNums.length > 0 ? Math.max(...existingNums) + 1 : 1;
+    
     const due = new Date();
     due.setDate(due.getDate() + 30);
     setForm({
-      reference: `CMD-${year}-${String(count).padStart(3, '0')}`,
+      reference: `${prefix}${String(nextNum).padStart(3, '0')}`,
       client: '', modele: '', quantite: 0, quantiteLivre: 0,
       dateCommande: today,
       dateLivraisonPrevue: due.toISOString().split('T')[0],
@@ -106,6 +115,13 @@ export default function Commandes() {
   async function save() {
     if (!form.reference || !form.client) return;
     const isNew = !editId;
+    
+    // Vérifier si la référence existe déjà (pour les nouvelles commandes)
+    if (isNew && commandes.some(c => c.reference === form.reference)) {
+      alert(`La référence "${form.reference}" est déjà utilisée. Veuillez utiliser une référence unique.`);
+      return;
+    }
+
     const cmdId = editId || genId();
     const cmdData = { id: cmdId, ...form } as Commande;
 

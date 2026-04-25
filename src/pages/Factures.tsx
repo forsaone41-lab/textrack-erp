@@ -56,11 +56,20 @@ export default function Factures() {
   function openCreate() {
     setEditId(null);
     const year = new Date().getFullYear();
-    const count = factures.length + 1;
+
+    // Trouver le numéro le plus élevé pour l'année en cours
+    const prefix = `FAC-${year}-`;
+    const existingNums = factures
+      .filter(f => f.numero.startsWith(prefix))
+      .map(f => parseInt(f.numero.replace(prefix, '')))
+      .filter(n => !isNaN(n));
+
+    const nextNum = existingNums.length > 0 ? Math.max(...existingNums) + 1 : 1;
+
     const due = new Date();
     due.setDate(due.getDate() + 30);
     setForm({
-      numero: `FAC-${year}-${String(count).padStart(3, '0')}`,
+      numero: `${prefix}${String(nextNum).padStart(3, '0')}`,
       client: '',
       montant: 0,
       date: today,
@@ -80,6 +89,13 @@ export default function Factures() {
   async function save() {
     if (!form.numero || !form.client) return;
     const isNew = !editId;
+
+    // Vérifier si le numéro de facture existe déjà
+    if (isNew && factures.some(f => f.numero === form.numero)) {
+      alert(`Le numéro de facture "${form.numero}" est déjà utilisé. Veuillez utiliser un numéro unique.`);
+      return;
+    }
+
     const facId = editId || genId();
     const facData = { id: facId, ...form } as Facture;
     if (!facData.commandeId) facData.commandeId = null;

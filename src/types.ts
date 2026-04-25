@@ -38,6 +38,7 @@ export interface FicheTechnique {
 export interface OrdreDeCoupe {
   id: string;
   commandeId?: string | null;
+  rollId?: string | null;
   modele: string;
   quantite: number;
   tissu: string;

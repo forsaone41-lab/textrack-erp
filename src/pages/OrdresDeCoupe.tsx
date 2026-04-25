@@ -41,7 +41,16 @@ export default function OrdresDeCoupe() {
 
   function openCreate() {
     setEditId(null);
-    setForm({ modele: '', quantite: 0, tissu: '', couleur: '', metrage: 0, statut: 'planifié', dateCoupe: new Date().toISOString().split('T')[0] });
+    setForm({ 
+      modele: '', 
+      quantite: 0, 
+      tissu: '', 
+      couleur: '', 
+      metrage: 0, 
+      statut: 'planifié', 
+      dateCoupe: new Date().toISOString().split('T')[0],
+      rollId: null 
+    });
     setShowModal(true);
   }
 
@@ -54,37 +63,46 @@ export default function OrdresDeCoupe() {
   async function save() {
     if (!form.modele || !form.tissu) return;
 
-    // --- Gestion du Stock ---
-    const tissuNormalise = form.tissu.trim();
-    const couleurNormalisee = form.couleur?.trim() || '';
-
-    // Vérifier si ce tissu (Type + Couleur) existe déjà dans le stock
-    const existeDansStock = tissus.find(t =>
-      t.type.toLowerCase() === tissuNormalise.toLowerCase() &&
-      t.couleur.toLowerCase() === couleurNormalisee.toLowerCase()
-    );
-
-    if (!existeDansStock) {
-      // Si n'existe pas, on le rajoute au stock automatiquement
-      const nouveauTissu: StockTissu = {
-        id: genId(),
-        type: tissuNormalise,
-        couleur: couleurNormalisee,
-        metrage: 0, // Nouveau type, métrage initial 0 (sera alimenté par des réceptions)
-        prixMetre: 0,
-        seuilAlerte: 10,
-        dateReception: new Date().toISOString().split('T')[0]
-      };
-      const updatedStock = [...tissus, nouveauTissu];
-      setTissus(updatedStock);
-      await saveRecord('tissus', nouveauTissu);
-    }
-    // -------------------------
-
     const isNew = !editId;
     const oId = editId || genId();
     const ordreData = { id: oId, ...form } as OrdreDeCoupe;
     if (!ordreData.commandeId) ordreData.commandeId = null;
+
+    // --- LOGIQUE DE STOCK (L-relation) ---
+    const oldOrdre = !isNew ? ordres.find(o => o.id === editId) : null;
+    
+    // 1. Si le rouleau a changé ou c'est un nouvel ordre
+    if (ordreData.rollId) {
+      const currentRoll = tissus.find(t => t.id === ordreData.rollId);
+      if (currentRoll) {
+        let updatedMetrage = currentRoll.metrage;
+        
+        if (isNew) {
+          // Nouvel ordre: on soustrait tout le métrage
+          updatedMetrage -= (ordreData.metrage || 0);
+        } else {
+          // Edit: on gère la différence
+          const diff = (ordreData.metrage || 0) - (oldOrdre?.metrage || 0);
+          updatedMetrage -= diff;
+        }
+
+        const updatedRoll = { ...currentRoll, metrage: Math.max(0, updatedMetrage) };
+        
+        // Update local state
+        setTissus(tissus.map(t => t.id === updatedRoll.id ? updatedRoll : t));
+        // Save to DB
+        await saveRecord('tissus', updatedRoll);
+      }
+    } else if (oldOrdre?.rollId) {
+      // Si on a enlevé le rouleau, on rend le métrage à l'ancien rouleau
+      const oldRoll = tissus.find(t => t.id === oldOrdre.rollId);
+      if (oldRoll) {
+        const updatedRoll = { ...oldRoll, metrage: oldRoll.metrage + oldOrdre.metrage };
+        setTissus(tissus.map(t => t.id === updatedRoll.id ? updatedRoll : t));
+        await saveRecord('tissus', updatedRoll);
+      }
+    }
+    // -------------------------------------
 
     const updated = isNew
       ? [...ordres, ordreData]
@@ -92,7 +110,6 @@ export default function OrdresDeCoupe() {
 
     setOrdres(updated);
     setShowModal(false);
-
     await saveRecord('ordres', ordreData);
   }
 
@@ -101,6 +118,18 @@ export default function OrdresDeCoupe() {
   };
 
   async function remove(id: string) {
+    const orderToDelete = ordres.find(o => o.id === id);
+    
+    // Rendre le métrage au stock si lié à un rouleau
+    if (orderToDelete?.rollId && orderToDelete.metrage > 0) {
+      const roll = tissus.find(t => t.id === orderToDelete.rollId);
+      if (roll) {
+        const updatedRoll = { ...roll, metrage: roll.metrage + orderToDelete.metrage };
+        setTissus(tissus.map(t => t.id === updatedRoll.id ? updatedRoll : t));
+        await saveRecord('tissus', updatedRoll);
+      }
+    }
+
     const updated = ordres.filter(o => o.id !== id);
     setOrdres(updated);
     await deleteRecord('ordres', id);
@@ -231,6 +260,30 @@ export default function OrdresDeCoupe() {
                   ))}
                 </datalist>
               </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Sélectionner un rouleau du stock (Optionnel)</label>
+                <select 
+                  value={form.rollId || ''} 
+                  onChange={e => {
+                    const rId = e.target.value;
+                    const roll = tissus.find(t => t.id === rId);
+                    if (roll) {
+                      setForm({ ...form, rollId: rId, tissu: roll.type, couleur: roll.couleur });
+                    } else {
+                      setForm({ ...form, rollId: null });
+                    }
+                  }}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 font-medium text-indigo-600"
+                >
+                  <option value="">-- Saisie manuelle --</option>
+                  {tissus.filter(t => t.metrage > 0 || t.id === form.rollId).map(t => (
+                    <option key={t.id} value={t.id}>
+                      {t.type} - {t.couleur} ({t.metrage}m restants)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">Tissu *</label>
@@ -239,6 +292,7 @@ export default function OrdresDeCoupe() {
                     onChange={e => setForm({ ...form, tissu: e.target.value })}
                     list="tissus-list"
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                    disabled={!!form.rollId}
                   />
                   <datalist id="tissus-list">
                     {Array.from(new Set(tissus.map(t => t.type))).map(type => (
@@ -248,8 +302,12 @@ export default function OrdresDeCoupe() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">Couleur</label>
-                  <input value={form.couleur || ''} onChange={e => setForm({ ...form, couleur: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                  <input 
+                    value={form.couleur || ''} 
+                    onChange={e => setForm({ ...form, couleur: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" 
+                    disabled={!!form.rollId}
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
