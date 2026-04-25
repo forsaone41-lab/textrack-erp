@@ -412,16 +412,20 @@ export default function SuiviRH() {
 
       {/* Modal: View All Badges for Export */}
       {showAllBadges && (
-        <div className="fixed inset-0 z-[250] bg-slate-900/90 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-[40px] w-full max-w-4xl shadow-2xl my-8 overflow-hidden animate-in zoom-in duration-300">
-            <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
-              <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Impression des Badges</h2>
+        <div className="fixed inset-0 z-[250] bg-slate-900/90 backdrop-blur-xl flex items-center justify-center p-4">
+          <div className="bg-white rounded-[40px] w-full max-w-4xl h-[90vh] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in duration-300">
+            {/* STICKY HEADER */}
+            <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-white z-10 shrink-0">
+              <div className="flex flex-col">
+                <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Impression des Badges</h2>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total: {employes.filter(e => e.type === 'atelier' && e.actif).length} badges</p>
+              </div>
               <div className="flex items-center gap-3">
                 <button 
                   onClick={() => generatePDF('all-badges-capture', 'Tous_les_Badges')}
-                  className="bg-slate-900 text-white px-6 py-2.5 rounded-2xl flex items-center gap-2 font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-900/20 active:scale-95 transition-all"
+                  className="bg-slate-900 text-white px-8 py-3 rounded-2xl flex items-center gap-2 font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-900/20 active:scale-95 transition-all"
                 >
-                  <Download className="w-4 h-4" /> Télécharger PDF
+                  <Download className="w-5 h-5" /> Télécharger PDF
                 </button>
                 <button onClick={() => setShowAllBadges(false)} className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center">
                   <X className="w-6 h-6 text-slate-900" />
@@ -429,8 +433,9 @@ export default function SuiviRH() {
               </div>
             </div>
 
-            <div className="p-12 bg-white" id="all-badges-capture">
-              <div className="grid grid-cols-2 gap-8">
+            {/* SCROLLABLE CONTENT */}
+            <div className="flex-1 overflow-y-auto p-12 bg-white scrollbar-hide">
+              <div className="grid grid-cols-2 gap-8" id="all-badges-capture">
                 {employes.filter(e => e.type === 'atelier' && e.actif).map(e => (
                   <div key={e.id} className="border-2 border-slate-100 rounded-[32px] p-8 flex flex-col items-center text-center bg-white shadow-sm break-inside-avoid">
                     <p className="text-xl font-black text-slate-900 italic uppercase mb-6">{company.name}</p>
