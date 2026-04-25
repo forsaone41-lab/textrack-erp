@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Search, Plus, User, Phone, Mail, MapPin, ExternalLink, MessageSquare, DollarSign, ChevronRight, TrendingUp, History, FileText, X, Printer, Download, Edit2 } from 'lucide-react';
-import { Commande, loadData, saveRecord, genId, loadCompanyProfile } from '../types';
+import { Commande, loadData, genId, loadCompanyProfile } from '../types';
 
 interface Client {
   id: string;
@@ -10,6 +10,18 @@ interface Client {
   adresse: string;
   ville: string;
   notes: string;
+}
+
+// Local storage helpers for clients specifically to avoid Supabase table errors
+function getLocalClients(): Client[] {
+  try {
+    const data = localStorage.getItem('textrack_clients_profiles');
+    return data ? JSON.parse(data) : [];
+  } catch { return []; }
+}
+
+function saveLocalClients(clients: Client[]) {
+  localStorage.setItem('textrack_clients_profiles', JSON.stringify(clients));
 }
 
 export default function Clients() {
@@ -23,11 +35,11 @@ export default function Clients() {
   const company = loadCompanyProfile();
 
   useEffect(() => {
-    Promise.all([
-      loadData<Client>('clients_profiles'),
-      loadData<Commande>('commandes')
-    ]).then(([storedClients, storedCommandes]) => {
-      // If no clients yet, derive from existing commandes with safety
+    // Load local clients and remote orders
+    const storedClients = getLocalClients();
+    
+    loadData<Commande>('commandes').then((storedCommandes) => {
+      // If no clients in local storage, try to derive from orders
       if (storedClients.length === 0 && storedCommandes.length > 0) {
         const uniqueNames = [...new Set(storedCommandes.map(c => c.clientNom).filter(Boolean))];
         const derived = uniqueNames.map(name => ({
@@ -40,11 +52,15 @@ export default function Clients() {
           notes: ''
         }));
         setClients(derived);
+        saveLocalClients(derived);
       } else {
         setClients(storedClients);
       }
       setCommandes(storedCommandes || []);
-    }).catch(err => console.error("Error loading clients data:", err));
+    }).catch(err => {
+      console.error("Error loading orders data:", err);
+      setClients(storedClients);
+    });
   }, []);
 
   const clientStats = useMemo(() => {
@@ -91,8 +107,8 @@ export default function Clients() {
       : clients.map(c => c.id === editId ? clientData : c);
 
     setClients(updated);
+    saveLocalClients(updated);
     setShowModal(false);
-    await saveRecord('clients_profiles', clientData);
   }
 
   return (
