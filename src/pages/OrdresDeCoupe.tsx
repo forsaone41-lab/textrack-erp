@@ -247,7 +247,7 @@ export default function OrdresDeCoupe() {
           </div>
           <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
             {pendingCommands.map(c => {
-              const fiche = fiches.find(f => f.modele === c.modele);
+              const fiche = fiches.find(f => f.modele.toLowerCase() === c.modele.toLowerCase());
               return (
                 <div key={c.id} className="min-w-[300px] bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 flex flex-col justify-between">
                   <div>
@@ -261,14 +261,12 @@ export default function OrdresDeCoupe() {
                     <p className="text-sm font-bold leading-tight">{c.client}</p>
                     <p className="text-xs opacity-80 mb-4">{c.modele} · <span className="font-bold">{c.quantite} pcs</span></p>
                     
-                    {fiche?.patronagePhoto && (
-                      <button 
-                        onClick={() => handlePrintPatron(fiche)}
-                        className="mb-4 flex items-center gap-2 text-[10px] font-bold bg-purple-500/30 hover:bg-purple-500/50 px-3 py-1.5 rounded-lg transition"
-                      >
-                        <FileText className="w-3 h-3" /> VOIR/IMPRIMER PATRON
-                      </button>
-                    )}
+                    <button 
+                      onClick={() => fiche ? handlePrintPatron(fiche) : alert("Aucun patron trouvé pour ce modèle.")}
+                      className={`mb-4 flex items-center gap-2 text-[10px] font-bold px-3 py-1.5 rounded-lg transition ${fiche?.patronagePhoto || fiche?.patronageFileName ? 'bg-purple-500/50 hover:bg-purple-500/70' : 'bg-slate-500/20 opacity-50 cursor-not-allowed'}`}
+                    >
+                      <FileText className="w-3 h-3" /> {fiche?.patronagePhoto || fiche?.patronageFileName ? 'VOIR/IMPRIMER PATRON' : 'AUCUN PATRON'}
+                    </button>
                   </div>
                   <button 
                     onClick={() => handleImportCommand(c)}
@@ -338,13 +336,15 @@ export default function OrdresDeCoupe() {
                     <div>
                       <p className="text-sm font-medium text-slate-700">{o.modele}</p>
                       {(() => {
-                        const fiche = fiches.find(f => f.modele === o.modele);
-                        return fiche?.patronagePhoto && (
+                        const fiche = fiches.find(f => f.modele.toLowerCase() === o.modele.toLowerCase());
+                        const hasPatron = !!(fiche?.patronagePhoto || fiche?.patronageFileName);
+                        return (
                           <button 
-                            onClick={() => handlePrintPatron(fiche)}
-                            className="text-[10px] text-purple-600 hover:text-purple-800 font-bold flex items-center gap-1 mt-0.5"
+                            onClick={() => fiche && hasPatron && handlePrintPatron(fiche)}
+                            disabled={!hasPatron}
+                            className={`text-[10px] font-bold flex items-center gap-1 mt-0.5 ${hasPatron ? 'text-purple-600 hover:text-purple-800' : 'text-slate-300 cursor-not-allowed'}`}
                           >
-                            <FileText className="w-2.5 h-2.5" /> Patronage
+                            <FileText className="w-2.5 h-2.5" /> Patronage {hasPatron ? '' : '(N/A)'}
                           </button>
                         );
                       })()}
