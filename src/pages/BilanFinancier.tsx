@@ -5,6 +5,7 @@ import {
   Receipt, ArrowUpRight, ArrowRight,
   AlertCircle, CheckCircle, Clock, Download,
 } from 'lucide-react';
+import { generatePDF } from '../utils/pdf';
 import { printBilan, exportFacturesCSV, exportChargesCSV } from '../utils/print';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -153,7 +154,7 @@ export default function BilanFinancier() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" id="bilan-capture">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
@@ -174,7 +175,7 @@ export default function BilanFinancier() {
             <Download className="w-3.5 h-3.5" /> CSV Charges
           </button>
           <button
-            onClick={() => printBilan({ ...stats, year: currentYear })}
+            onClick={() => generatePDF('bilan-capture', `Bilan_Financier_${currentYear}`)}
             className="flex items-center gap-1.5 text-xs bg-purple-600 text-white px-3 py-2 rounded-xl font-semibold hover:bg-purple-700 transition shadow-sm"
           >
             <Download className="w-3.5 h-3.5" /> Bilan PDF
