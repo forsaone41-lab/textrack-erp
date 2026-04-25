@@ -144,12 +144,28 @@ export default function OrdresDeCoupe() {
     });
   };
 
-  const downloadImage = async (url: string, filename: string) => {
+  const dataURLtoBlob = (dataurl: string) => {
     try {
-      // Si c'est un base64, on le convertit en Blob pour plus de fiabilité
+      const parts = dataurl.split(',');
+      const mime = parts[0].match(/:(.*?);/)?.[1] || 'image/png';
+      const bstr = atob(parts[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      return new Blob([u8arr], { type: mime });
+    } catch (e) {
+      console.error("Erreur conversion blob", e);
+      return null;
+    }
+  };
+
+  const downloadImage = (url: string, filename: string) => {
+    try {
       if (url.startsWith('data:')) {
-        const res = await fetch(url);
-        const blob = await res.blob();
+        const blob = dataURLtoBlob(url);
+        if (!blob) throw new Error("Conversion failed");
         const blobUrl = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = blobUrl;
@@ -168,7 +184,6 @@ export default function OrdresDeCoupe() {
       }
     } catch (e) {
       console.error("Erreur de téléchargement", e);
-      // Fallback simple
       window.open(url, '_blank');
     }
   };
@@ -203,16 +218,19 @@ export default function OrdresDeCoupe() {
     setShowModal(true);
   };
 
-  const handlePrintPatron = async (fiche: FicheTechnique) => {
+  const handlePrintPatron = (fiche: FicheTechnique) => {
     if (!fiche.patronagePhoto) {
       alert("Aucun patronage n'est associé à cette fiche technique.");
       return;
     }
 
     try {
-      // Conversion en Blob pour une impression fiable (évite les erreurs de chargement sur base64 long)
-      const res = await fetch(fiche.patronagePhoto);
-      const blob = await res.blob();
+      // Conversion directe pour éviter fetch() et les erreurs de chargement
+      const blob = dataURLtoBlob(fiche.patronagePhoto);
+      if (!blob) {
+        window.open(fiche.patronagePhoto, '_blank');
+        return;
+      }
       const blobUrl = URL.createObjectURL(blob);
 
       const win = window.open('', '_blank');
@@ -237,12 +255,12 @@ export default function OrdresDeCoupe() {
                 img.onload = () => {
                   setTimeout(() => {
                     window.print();
-                    // Revoke URL after printing to free memory
+                    // On garde l'URL active pour l'impression, cleanup après focus
                     window.onfocus = () => { URL.revokeObjectURL('${blobUrl}'); };
                   }, 500);
                 };
                 img.onerror = () => {
-                  alert("Erreur critique de chargement de l'image. Veuillez réessayer.");
+                  alert("Impossible d'afficher l'image. Veuillez essayer d'utiliser le bouton de téléchargement.");
                   window.close();
                 };
               </script>
@@ -253,7 +271,6 @@ export default function OrdresDeCoupe() {
       }
     } catch (err) {
       console.error("Erreur d'impression", err);
-      // Fallback: ouvrir l'image directement
       window.open(fiche.patronagePhoto, '_blank');
     }
   };
