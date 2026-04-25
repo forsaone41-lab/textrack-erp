@@ -203,11 +203,6 @@ export default function OrdresDeCoupe() {
     setShowModal(true);
   };
 
-  const handlePrintPatron = (fiche: FicheTechnique) => {
-    if (!fiche.patronagePhoto) {
-      alert("Aucun patronage n'est associé à cette fiche technique.");
-      return;
-    }
   const handlePrintPatron = async (fiche: FicheTechnique) => {
     if (!fiche.patronagePhoto) {
       alert("Aucun patronage n'est associé à cette fiche technique.");
