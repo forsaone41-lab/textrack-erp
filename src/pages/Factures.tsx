@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, FileText, Eye, CheckCircle, Clock, AlertCircle, ArrowUpRight, X, Download, Table2 } from 'lucide-react';
 import { Facture, Commande, loadData, saveRecord, deleteRecord, genId, loadCompanyProfile } from '../types';
 import { printFacture, exportFacturesCSV } from '../utils/print';
+import { generatePDF } from '../utils/pdf';
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
 
@@ -362,7 +363,7 @@ export default function Factures() {
 
       {viewFacture && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden">
+          <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden" id="invoice-capture">
             <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-8 text-white">
               <div className="flex justify-between items-start">
                 <div>
@@ -429,7 +430,7 @@ export default function Factures() {
               <p className="text-xs text-slate-400 font-medium uppercase">{company.name} {company.subtitle}</p>
               <div className="flex gap-2.5">
                 <button
-                  onClick={() => printFacture(viewFacture, cmdOf(viewFacture.commandeId || undefined))}
+                  onClick={() => generatePDF('invoice-capture', `Facture_${viewFacture.numero}`)}
                   className="flex items-center gap-2 px-4 py-2 text-sm bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition font-semibold"
                 >
                   <Download className="w-3.5 h-3.5" /> Télécharger PDF

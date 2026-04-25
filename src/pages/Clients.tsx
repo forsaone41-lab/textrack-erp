@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Search, Plus, User, Phone, Mail, MapPin, ExternalLink, MessageSquare, DollarSign, ChevronRight, TrendingUp, History, FileText, X, Printer, Download, Edit2 } from 'lucide-react';
 import { Commande, loadData, genId, loadCompanyProfile } from '../types';
+import { generatePDF } from '../utils/pdf';
 
 interface Client {
   id: string;
@@ -381,6 +382,7 @@ export default function Clients() {
                 Imprimer le rapport
               </button>
               <button 
+                onClick={() => generatePDF('printable-situation', `Situation_${selectedClient.nom.replace(/\s+/g, '_')}`)}
                 className="h-14 bg-white text-slate-900 border-2 border-slate-200 rounded-[20px] flex items-center justify-center gap-2 font-black text-xs uppercase tracking-widest active:scale-95 transition-all"
               >
                 <Download className="w-5 h-5" />
