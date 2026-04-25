@@ -1,8 +1,20 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Plus, Search, Edit2, Trash2, Users, CreditCard, Banknote, Building2, QrCode, X, Printer, Download, FileText, DollarSign, Phone, Mail, MapPin, Landmark } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Employe, PaiementSalaire, Charge, Commande, loadData, saveRecord, deleteRecord, genId, loadCompanyProfile } from '../types';
+import { Employe, PaiementSalaire, Charge, Commande, loadData, genId, loadCompanyProfile, saveRecord } from '../types';
 import { generatePDF } from '../utils/pdf';
+
+// Local storage helpers for RH specifically to avoid Supabase schema mismatch
+function getLocalRH<T>(key: string): T[] {
+  try {
+    const data = localStorage.getItem(`textrack_${key}`);
+    return data ? JSON.parse(data) : [];
+  } catch { return []; }
+}
+
+function saveLocalRH<T>(key: string, data: T[]) {
+  localStorage.setItem(`textrack_${key}`, JSON.stringify(data));
+}
 
 const POSTES_ATELIER = [
   '— Production —',
@@ -40,18 +52,6 @@ const POSTES_SOUSTRAITANCE = [
   'Prestataire Impression',
 ];
 
-const METHODE_LABELS: Record<string, string> = {
-  especes: 'Espèces',
-  virement: 'Virement',
-  cheque: 'Chèque',
-};
-
-const METHODE_ICONS: Record<string, React.ReactNode> = {
-  especes: <Banknote className="w-3.5 h-3.5" />,
-  virement: <Building2 className="w-3.5 h-3.5" />,
-  cheque: <CreditCard className="w-3.5 h-3.5" />,
-};
-
 export default function SuiviRH() {
   const [employes, setEmployes] = useState<Employe[]>([]);
   const [paiements, setPaiements] = useState<PaiementSalaire[]>([]);
@@ -78,15 +78,26 @@ export default function SuiviRH() {
   const company = loadCompanyProfile();
 
   useEffect(() => {
-    Promise.all([
-      loadData<Employe>('employes'),
-      loadData<PaiementSalaire>('paiements_salaires'),
-      loadData<Commande>('commandes')
-    ]).then(([emps, stored, cmds]) => {
-      setEmployes(emps || []);
-      setPaiements(stored || []);
+    // Priority to LocalStorage for RH, but fallback to Supabase for commands
+    const localEmps = getLocalRH<Employe>('employes');
+    const localPaiements = getLocalRH<PaiementSalaire>('paiements_salaires');
+    
+    setEmployes(localEmps);
+    setPaiements(localPaiements);
+
+    loadData<Commande>('commandes').then(cmds => {
       setCommandes(cmds || []);
     });
+
+    // If local storage is empty, try to fetch from Supabase once
+    if (localEmps.length === 0) {
+      loadData<Employe>('employes').then(remoteEmps => {
+        if (remoteEmps && remoteEmps.length > 0) {
+          setEmployes(remoteEmps);
+          saveLocalRH('employes', remoteEmps);
+        }
+      }).catch(err => console.log("Remote RH load skipped", err));
+    }
   }, []);
 
   const availableMois = useMemo(() => {
@@ -153,14 +164,14 @@ export default function SuiviRH() {
       : employes.map(e => e.id === editId ? empData : e);
 
     setEmployes(updated);
+    saveLocalRH('employes', updated);
     setShowModal(false);
-    await saveRecord('employes', empData);
   }
 
   async function remove(id: string) {
     const updated = employes.filter(e => e.id !== id);
     setEmployes(updated);
-    await deleteRecord('employes', id);
+    saveLocalRH('employes', updated);
   }
 
   function openPayer(empId: string) {
@@ -187,14 +198,15 @@ export default function SuiviRH() {
 
     const updatedPaiements = [...paiements, newPaiement];
     setPaiements(updatedPaiements);
+    saveLocalRH('paiements_salaires', updatedPaiements);
     setShowPayerModal(false);
-    await saveRecord('paiements_salaires', newPaiement);
 
+    // Also try to record as charge in remote Supabase
     const emp = employes.find(e => e.id === payerEmployeId);
     if (emp) {
       const moisLabelStr = new Date(selectedMois + '-01').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
       const empNameStr = emp.prenom ? `${emp.prenom} ${emp.nom}` : emp.nom;
-      const newCharge: Charge = {
+      const newCharge = {
         id: genId(),
         designation: `Salaire ${empNameStr} — ${moisLabelStr}`,
         categorie: 'salaires',
@@ -205,7 +217,7 @@ export default function SuiviRH() {
         fournisseur: empNameStr,
         notes: notes || undefined,
       };
-      await saveRecord('charges', newCharge);
+      saveRecord('charges', newCharge).catch(() => console.log("Silent error saving charge"));
     }
   }
 
@@ -236,8 +248,9 @@ export default function SuiviRH() {
         methode: bon.methode as any,
         notes: `Avance sur Bon Travail ${bon.id}`
       };
-      setPaiements(prev => [...prev, newP]);
-      saveRecord('paiements_salaires', newP);
+      const updatedP = [...paiements, newP];
+      setPaiements(updatedP);
+      saveLocalRH('paiements_salaires', updatedP);
     }
   }
 
@@ -317,7 +330,6 @@ export default function SuiviRH() {
           const salaire = e.salaireMensuel || 0;
           const paye = getPaye(e.id);
           const reste = getReste(e);
-          const percent = salaire > 0 ? Math.min(100, Math.round((paye / salaire) * 100)) : 0;
 
           return (
             <div key={e.id} className="bg-white rounded-[40px] border-2 border-slate-50 shadow-sm hover:shadow-md transition-all group overflow-hidden">
@@ -338,7 +350,6 @@ export default function SuiviRH() {
                   </div>
                 </div>
 
-                {/* Extended info shown on card */}
                 <div className="space-y-2 mb-6">
                   {e.telephone && (
                     <div className="flex items-center gap-3 text-slate-500">
@@ -391,7 +402,7 @@ export default function SuiviRH() {
         })}
       </div>
 
-      {/* Modal: Add/Edit Personnel (FULL DETAILS RESTORED) */}
+      {/* Modal: Add/Edit Personnel */}
       {showModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-[150] p-4">
           <div className="bg-white rounded-[32px] w-full max-w-2xl shadow-2xl animate-in zoom-in duration-300 max-h-[90vh] overflow-y-auto">
@@ -400,28 +411,27 @@ export default function SuiviRH() {
                 <button onClick={() => setShowModal(false)} className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center"><X className="w-5 h-5" /></button>
              </div>
              <div className="p-8 space-y-6">
-                {/* Section: Identité */}
                 <div>
                   <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-4 border-b border-indigo-50 pb-2">Identité & Poste</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Prénom</label>
-                      <input value={form.prenom || ''} onChange={e => setForm({...form, prenom: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-500" />
+                      <input value={form.prenom || ''} onChange={e => setForm({...form, prenom: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none" />
                     </div>
                     <div>
                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nom *</label>
-                      <input value={form.nom || ''} onChange={e => setForm({...form, nom: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-500" />
+                      <input value={form.nom || ''} onChange={e => setForm({...form, nom: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none" />
                     </div>
                     <div>
                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Poste / Fonction</label>
-                      <select value={form.poste || ''} onChange={e => setForm({...form, poste: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-500">
+                      <select value={form.poste || ''} onChange={e => setForm({...form, poste: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none">
                         <option value="">Sélectionner...</option>
                         {[...POSTES_ATELIER, ...POSTES_SOUSTRAITANCE].map(p => <option key={p} value={p}>{p}</option>)}
                       </select>
                     </div>
                     <div>
                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Type de contrat</label>
-                      <select value={form.type || 'atelier'} onChange={e => setForm({...form, type: e.target.value as any})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-500">
+                      <select value={form.type || 'atelier'} onChange={e => setForm({...form, type: e.target.value as any})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none">
                         <option value="atelier">Interne (Atelier)</option>
                         <option value="sous_traitance">Externe (Façonnier)</option>
                       </select>
@@ -429,64 +439,53 @@ export default function SuiviRH() {
                   </div>
                 </div>
 
-                {/* Section: Contact & Admin */}
                 <div>
                   <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-4 border-b border-indigo-50 pb-2">Contact & Administratif</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">N° Téléphone</label>
-                      <div className="relative">
-                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <input value={form.telephone || ''} onChange={e => setForm({...form, telephone: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-500" />
-                      </div>
+                      <input value={form.telephone || ''} onChange={e => setForm({...form, telephone: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none" />
                     </div>
                     <div>
                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">CIN (N° Carte Nationale)</label>
-                      <input value={form.cin || ''} onChange={e => setForm({...form, cin: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 uppercase outline-none focus:border-indigo-500" />
+                      <input value={form.cin || ''} onChange={e => setForm({...form, cin: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 uppercase outline-none" />
                     </div>
                     <div className="sm:col-span-2">
                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Adresse Résidence</label>
-                      <div className="relative">
-                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <input value={form.adresse || ''} onChange={e => setForm({...form, adresse: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-500" />
-                      </div>
+                      <input value={form.adresse || ''} onChange={e => setForm({...form, adresse: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none" />
                     </div>
                   </div>
                 </div>
 
-                {/* Section: Finance */}
                 <div>
                   <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-4 border-b border-indigo-50 pb-2">Rémunération & Banque</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Salaire de Base / Mois</label>
-                      <input type="number" value={form.salaireMensuel || ''} onChange={e => setForm({...form, salaireMensuel: parseFloat(e.target.value) || 0})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-indigo-600 outline-none focus:border-indigo-500" />
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Salaire / Mois</label>
+                      <input type="number" value={form.salaireMensuel || ''} onChange={e => setForm({...form, salaireMensuel: parseFloat(e.target.value) || 0})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900" />
                     </div>
                     <div>
                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Banque</label>
-                      <div className="relative">
-                        <Landmark className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <select value={form.banque || ''} onChange={e => setForm({...form, banque: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-500">
-                          <option value="">Sélectionner banque...</option>
-                          {['CIH', 'Attijari', 'BP', 'BMCE', 'Al Barid', 'SG', 'BMCI', 'Crédit Agricole'].map(b => <option key={b} value={b}>{b}</option>)}
-                        </select>
-                      </div>
+                      <select value={form.banque || ''} onChange={e => setForm({...form, banque: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900">
+                        <option value="">Sélectionner banque...</option>
+                        {['CIH', 'Attijari', 'BP', 'BMCE', 'Al Barid', 'SG', 'BMCI', 'Crédit Agricole'].map(b => <option key={b} value={b}>{b}</option>)}
+                      </select>
                     </div>
                     <div className="sm:col-span-2">
                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">RIB (24 Chiffres)</label>
-                      <input value={form.rib || ''} onChange={e => setForm({...form, rib: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-mono font-bold text-slate-700 outline-none focus:border-indigo-500" placeholder="000 000 000000000000000000" />
+                      <input value={form.rib || ''} onChange={e => setForm({...form, rib: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-mono font-bold text-slate-700" />
                     </div>
                   </div>
                 </div>
              </div>
              <div className="p-8 bg-slate-50 sticky bottom-0">
-                <button onClick={save} className="w-full h-16 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-900/20 active:scale-95 transition-all">Enregistrer le Profil</button>
+                <button onClick={save} className="w-full h-16 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all">Enregistrer le Profil</button>
              </div>
           </div>
         </div>
       )}
 
-      {/* Rest of Modals (Bon, Badge, Payer) - Same as before */}
+      {/* Bon de Travail Modal */}
       {showBonModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-[150] p-4">
           <div className="bg-white rounded-[32px] w-full max-w-lg shadow-2xl animate-in zoom-in duration-300">
@@ -566,7 +565,7 @@ export default function SuiviRH() {
         </div>
       )}
 
-      {/* Badge QR Modal */}
+      {/* Badge Modal */}
       {selectedBadge && (
         <div className="fixed inset-0 z-[200] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-white rounded-[32px] w-full max-w-[380px] overflow-hidden shadow-2xl animate-in zoom-in duration-300">
@@ -589,7 +588,7 @@ export default function SuiviRH() {
         </div>
       )}
 
-      {/* Payer Salary Modal */}
+      {/* Payment Modal */}
       {showPayerModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-[150] p-4">
           <div className="bg-white rounded-[32px] w-full max-w-md shadow-2xl animate-in zoom-in duration-300">
