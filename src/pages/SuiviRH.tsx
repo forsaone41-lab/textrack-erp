@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Search, Edit2, Trash2, Users, CreditCard, Banknote, Building2, QrCode, X, Printer, Download, FileText, DollarSign, Phone, Mail, MapPin, Landmark } from 'lucide-react';
-import { QRCodeCanvas } from 'qrcode.react'; // Switched to Canvas for better PDF compatibility
+import { Plus, Search, Edit2, Trash2, Users, CreditCard, Banknote, Building2, QrCode, X, Printer, Download, FileText, DollarSign, Phone, Mail, MapPin, Landmark, Loader2 } from 'lucide-react';
+import { QRCodeCanvas } from 'qrcode.react'; 
 import { Employe, PaiementSalaire, Charge, Commande, loadData, genId, loadCompanyProfile, saveRecord } from '../types';
 import { generatePDF } from '../utils/pdf';
 
@@ -253,13 +253,17 @@ export default function SuiviRH() {
     }
   }
 
-  const handleBulkPDF = async () => {
+  const handleDownloadPDF = async (elementId: string, filename: string) => {
+    if (isGenerating) return;
     setIsGenerating(true);
-    try {
-      await generatePDF('all-badges-capture', 'Tous_les_Badges');
-    } finally {
-      setIsGenerating(false);
-    }
+    // Wrap in timeout to allow UI update before blocking thread
+    setTimeout(async () => {
+      try {
+        await generatePDF(elementId, filename);
+      } finally {
+        setIsGenerating(false);
+      }
+    }, 100);
   };
 
   const moisLabel = (m: string) =>
@@ -431,11 +435,11 @@ export default function SuiviRH() {
               </div>
               <div className="flex items-center gap-3">
                 <button 
-                  onClick={handleBulkPDF}
+                  onClick={() => handleDownloadPDF('all-badges-capture', 'Tous_les_Badges')}
                   disabled={isGenerating}
                   className={`${isGenerating ? 'bg-slate-400 cursor-not-allowed' : 'bg-slate-900'} text-white px-8 py-3 rounded-2xl flex items-center gap-2 font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-900/20 active:scale-95 transition-all`}
                 >
-                  {isGenerating ? 'Traitement...' : <><Download className="w-5 h-5" /> Télécharger PDF</>}
+                  {isGenerating ? <><Loader2 className="w-4 h-4 animate-spin" /> Patientez...</> : <><Download className="w-5 h-5" /> Télécharger PDF</>}
                 </button>
                 <button onClick={() => setShowAllBadges(false)} className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center">
                   <X className="w-6 h-6 text-slate-900" />
@@ -450,7 +454,6 @@ export default function SuiviRH() {
                   <div key={e.id} className="border-2 border-slate-100 rounded-[32px] p-8 flex flex-col items-center text-center bg-white shadow-sm break-inside-avoid">
                     <p className="text-xl font-black text-slate-900 italic uppercase mb-6">{company.name}</p>
                     <div className="p-4 bg-white border-2 border-slate-50 rounded-3xl mb-6 flex items-center justify-center">
-                      {/* Switched to Canvas version for better capture */}
                       <QRCodeCanvas value={e.id} size={150} level="H" />
                     </div>
                     <h2 className="text-2xl font-black text-slate-900 uppercase leading-tight mb-2">{empName(e)}</h2>
@@ -610,7 +613,6 @@ export default function SuiviRH() {
                   <p className="text-xs font-bold text-indigo-600 mt-1 uppercase">{generatedBon.emp.poste}</p>
                 </div>
                 <div className="flex flex-col items-center justify-center border-2 border-slate-100 rounded-3xl p-6 text-center">
-                  {/* Switched to Canvas for Bon too */}
                   <QRCodeCanvas value={`BON:${generatedBon.id}`} size={100} />
                   <p className="text-[8px] font-black text-slate-300 mt-3 uppercase tracking-[0.3em]">Scan Suivi</p>
                 </div>
@@ -621,7 +623,13 @@ export default function SuiviRH() {
               </div>
             </div>
             <div className="p-8 bg-slate-50 flex gap-4">
-              <button onClick={() => generatePDF('bon-travail-capture', `Bon_Travail_${generatedBon.id}`)} className="flex-1 h-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center gap-2 font-black text-xs uppercase tracking-widest shadow-xl transition-all"><Download className="w-5 h-5" /> Télécharger PDF</button>
+              <button 
+                onClick={() => handleDownloadPDF('bon-travail-capture', `Bon_Travail_${generatedBon.id}`)} 
+                disabled={isGenerating}
+                className={`flex-1 h-14 text-white rounded-2xl flex items-center justify-center gap-2 font-black text-xs uppercase tracking-widest shadow-xl transition-all ${isGenerating ? 'bg-slate-400' : 'bg-slate-900'}`}
+              >
+                {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Download className="w-5 h-5" /> Télécharger PDF</>}
+              </button>
             </div>
           </div>
         </div>
@@ -638,14 +646,19 @@ export default function SuiviRH() {
             <div className="p-8 flex flex-col items-center text-center" id="badge-capture">
               <p className="text-xl font-black tracking-tighter text-slate-900 italic uppercase mb-8">{company.name}</p>
               <div className="w-48 h-48 bg-white p-4 rounded-3xl border-2 border-slate-100 shadow-sm mb-6 flex items-center justify-center">
-                {/* Canvas version */}
                 <QRCodeCanvas value={selectedBadge.id} size={160} level="H" />
               </div>
               <h2 className="text-2xl font-black text-slate-900 uppercase leading-none mb-2">{empName(selectedBadge)}</h2>
               <p className="text-xs font-bold text-indigo-600 uppercase tracking-[0.2em] mb-8 bg-indigo-50 px-4 py-1.5 rounded-full">{selectedBadge.poste}</p>
             </div>
             <div className="p-6 bg-slate-50">
-              <button onClick={() => generatePDF('badge-capture', `Badge_${selectedBadge.nom}`)} className="w-full h-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center gap-2 font-black text-xs uppercase tracking-widest shadow-lg transition-all"><Download className="w-4 h-4" /> PDF</button>
+              <button 
+                onClick={() => handleDownloadPDF('badge-capture', `Badge_${selectedBadge.nom}`)} 
+                disabled={isGenerating}
+                className={`w-full h-14 text-white rounded-2xl flex items-center justify-center gap-2 font-black text-xs uppercase tracking-widest shadow-lg transition-all ${isGenerating ? 'bg-slate-400' : 'bg-slate-900'}`}
+              >
+                {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Download className="w-4 h-4" /> PDF</>}
+              </button>
             </div>
           </div>
         </div>
