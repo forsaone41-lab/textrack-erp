@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Plus, Search, Edit2, Trash2, Users, CreditCard, Banknote, Building2, QrCode, X, Printer, Download, FileText, DollarSign, Phone, Mail, MapPin, Landmark } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
+import { QRCodeCanvas } from 'qrcode.react'; // Switched to Canvas for better PDF compatibility
 import { Employe, PaiementSalaire, Charge, Commande, loadData, genId, loadCompanyProfile, saveRecord } from '../types';
 import { generatePDF } from '../utils/pdf';
 
@@ -28,7 +28,7 @@ const POSTES_ATELIER = [
   'Modéliste',
   'Patronnière',
   'Mécanicien Machines',
-  'Contrôle Qualité',
+  'Contرôle Qualité',
   '— Encadrement —',
   "Chef d'Atelier",
   'Responsable Production',
@@ -70,6 +70,7 @@ export default function SuiviRH() {
   const [showHistorique, setShowHistorique] = useState<string | null>(null);
   const [selectedBadge, setSelectedBadge] = useState<Employe | null>(null);
   const [showAllBadges, setShowAllBadges] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   
   // Bon de Travail state
   const [showBonModal, setShowBonModal] = useState(false);
@@ -252,6 +253,15 @@ export default function SuiviRH() {
     }
   }
 
+  const handleBulkPDF = async () => {
+    setIsGenerating(true);
+    try {
+      await generatePDF('all-badges-capture', 'Tous_les_Badges');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const moisLabel = (m: string) =>
     new Date(m + '-01').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 
@@ -331,7 +341,6 @@ export default function SuiviRH() {
       {/* Employee Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {filtered.map(e => {
-          const salaire = e.salaireMensuel || 0;
           const paye = getPaye(e.id);
           const reste = getReste(e);
 
@@ -422,10 +431,11 @@ export default function SuiviRH() {
               </div>
               <div className="flex items-center gap-3">
                 <button 
-                  onClick={() => generatePDF('all-badges-capture', 'Tous_les_Badges')}
-                  className="bg-slate-900 text-white px-8 py-3 rounded-2xl flex items-center gap-2 font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-900/20 active:scale-95 transition-all"
+                  onClick={handleBulkPDF}
+                  disabled={isGenerating}
+                  className={`${isGenerating ? 'bg-slate-400 cursor-not-allowed' : 'bg-slate-900'} text-white px-8 py-3 rounded-2xl flex items-center gap-2 font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-900/20 active:scale-95 transition-all`}
                 >
-                  <Download className="w-5 h-5" /> Télécharger PDF
+                  {isGenerating ? 'Traitement...' : <><Download className="w-5 h-5" /> Télécharger PDF</>}
                 </button>
                 <button onClick={() => setShowAllBadges(false)} className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center">
                   <X className="w-6 h-6 text-slate-900" />
@@ -440,7 +450,8 @@ export default function SuiviRH() {
                   <div key={e.id} className="border-2 border-slate-100 rounded-[32px] p-8 flex flex-col items-center text-center bg-white shadow-sm break-inside-avoid">
                     <p className="text-xl font-black text-slate-900 italic uppercase mb-6">{company.name}</p>
                     <div className="p-4 bg-white border-2 border-slate-50 rounded-3xl mb-6 flex items-center justify-center">
-                      <QRCodeSVG value={e.id} size={150} level="H" />
+                      {/* Switched to Canvas version for better capture */}
+                      <QRCodeCanvas value={e.id} size={150} level="H" />
                     </div>
                     <h2 className="text-2xl font-black text-slate-900 uppercase leading-tight mb-2">{empName(e)}</h2>
                     <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest bg-indigo-50 px-5 py-2 rounded-full">{e.poste}</p>
@@ -599,7 +610,8 @@ export default function SuiviRH() {
                   <p className="text-xs font-bold text-indigo-600 mt-1 uppercase">{generatedBon.emp.poste}</p>
                 </div>
                 <div className="flex flex-col items-center justify-center border-2 border-slate-100 rounded-3xl p-6 text-center">
-                  <QRCodeSVG value={`BON:${generatedBon.id}`} size={100} />
+                  {/* Switched to Canvas for Bon too */}
+                  <QRCodeCanvas value={`BON:${generatedBon.id}`} size={100} />
                   <p className="text-[8px] font-black text-slate-300 mt-3 uppercase tracking-[0.3em]">Scan Suivi</p>
                 </div>
               </div>
@@ -626,7 +638,8 @@ export default function SuiviRH() {
             <div className="p-8 flex flex-col items-center text-center" id="badge-capture">
               <p className="text-xl font-black tracking-tighter text-slate-900 italic uppercase mb-8">{company.name}</p>
               <div className="w-48 h-48 bg-white p-4 rounded-3xl border-2 border-slate-100 shadow-sm mb-6 flex items-center justify-center">
-                <QRCodeSVG value={selectedBadge.id} size={160} level="H" />
+                {/* Canvas version */}
+                <QRCodeCanvas value={selectedBadge.id} size={160} level="H" />
               </div>
               <h2 className="text-2xl font-black text-slate-900 uppercase leading-none mb-2">{empName(selectedBadge)}</h2>
               <p className="text-xs font-bold text-indigo-600 uppercase tracking-[0.2em] mb-8 bg-indigo-50 px-4 py-1.5 rounded-full">{selectedBadge.poste}</p>
