@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, Scissors, ShoppingCart, FileText } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Scissors, ShoppingCart, FileText, Image as ImageIcon, Eye } from 'lucide-react';
 import { OrdreDeCoupe, StockTissu, FicheTechnique, Commande, loadData, saveRecord, deleteRecord, genId } from '../types';
 
 export default function OrdresDeCoupe() {
@@ -249,34 +249,50 @@ export default function OrdresDeCoupe() {
             {pendingCommands.map(c => {
               const fiche = fiches.find(f => f.modele.toLowerCase() === c.modele.toLowerCase());
               return (
-                <div key={c.id} className="min-w-[300px] bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 flex flex-col justify-between">
-                  <div>
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold">{c.reference}</span>
-                      <span className="text-[10px] font-medium opacity-70 flex items-center gap-1">
-                        {(c as any).vu && <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full" title="Vu par vous" />}
-                        {c.dateCommande}
-                      </span>
+                <div key={c.id} className="min-w-[320px] bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 flex flex-col justify-between shadow-xl">
+                  <div className="flex gap-4 mb-4">
+                    {/* Thumbnail for Pending Card */}
+                    <div className="w-16 h-16 rounded-xl bg-white/20 overflow-hidden flex-shrink-0 border border-white/30">
+                      {fiche?.photo ? (
+                        <img src={fiche.photo} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <ImageIcon className="w-6 h-6 text-white/50" />
+                        </div>
+                      )}
                     </div>
-                    <p className="text-sm font-bold leading-tight">{c.client}</p>
-                    <p className="text-xs opacity-80 mb-4">{c.modele} · <span className="font-bold">{c.quantite} pcs</span></p>
-                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-black uppercase tracking-tighter">{c.reference}</span>
+                        <span className="text-[10px] font-medium opacity-70 flex items-center gap-1">
+                          {(c as any).vu && <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full shadow-[0_0_8px_rgba(52,211,153,0.8)]" title="Vu par vous" />}
+                          {c.dateCommande}
+                        </span>
+                      </div>
+                      <p className="text-sm font-black truncate">{c.client}</p>
+                      <p className="text-[11px] opacity-80 truncate">{c.modele}</p>
+                      <p className="text-[11px] font-black mt-1">{c.quantite} pièces</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    {fiche?.patronagePhoto && (
+                      <button 
+                        onClick={() => handlePrintPatron(fiche)}
+                        className="w-full flex items-center justify-center gap-2 text-[10px] font-black bg-purple-500 hover:bg-purple-600 px-3 py-2 rounded-xl transition shadow-lg border border-purple-400/30"
+                      >
+                        <FileText className="w-3 h-3" /> IMPRIMER LE PATRON
+                      </button>
+                    )}
                     <button 
-                      onClick={() => fiche ? handlePrintPatron(fiche) : alert("Aucun patron trouvé pour ce modèle.")}
-                      className={`mb-4 flex items-center gap-2 text-[10px] font-bold px-3 py-1.5 rounded-lg transition ${fiche?.patronagePhoto || fiche?.patronageFileName ? 'bg-purple-500/50 hover:bg-purple-500/70' : 'bg-slate-500/20 opacity-50 cursor-not-allowed'}`}
+                      onClick={() => handleImportCommand(c)}
+                      className="w-full bg-white text-indigo-700 py-2.5 rounded-xl text-xs font-black hover:bg-indigo-50 transition flex items-center justify-center gap-2 shadow-xl"
                     >
-                      <FileText className="w-3 h-3" /> {fiche?.patronagePhoto || fiche?.patronageFileName ? 'VOIR/IMPRIMER PATRON' : 'AUCUN PATRON'}
+                      <Scissors className="w-3 h-3" /> LANCER LA COUPE
                     </button>
                   </div>
-                  <button 
-                    onClick={() => handleImportCommand(c)}
-                    className="w-full bg-white text-indigo-600 py-2 rounded-lg text-xs font-black hover:bg-indigo-50 transition flex items-center justify-center gap-2 shadow-sm"
-                  >
-                    <Scissors className="w-3 h-3" /> LANCER LA COUPE
-                  </button>
                 </div>
               );
-            })}
           </div>
         </div>
       )}
@@ -330,24 +346,39 @@ export default function OrdresDeCoupe() {
           <tbody className="divide-y divide-slate-100">
             {filtered.map(o => (
               <tr key={o.id} className="hover:bg-slate-50/50 transition-colors">
-                <td className="px-5 py-3">
-                  <div className="flex items-center gap-2">
-                    <Scissors className="w-4 h-4 text-indigo-400" />
-                    <div>
-                      <p className="text-sm font-medium text-slate-700">{o.modele}</p>
+                <td className="px-5 py-4">
+                  <div className="flex items-center gap-4">
+                    {/* Thumbnail for Table Row */}
+                    <div className="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-200 shadow-sm group-hover:scale-110 transition-transform">
                       {(() => {
                         const fiche = fiches.find(f => f.modele.toLowerCase() === o.modele.toLowerCase());
-                        const hasPatron = !!(fiche?.patronagePhoto || fiche?.patronageFileName);
-                        return (
-                          <button 
-                            onClick={() => fiche && hasPatron && handlePrintPatron(fiche)}
-                            disabled={!hasPatron}
-                            className={`text-[10px] font-bold flex items-center gap-1 mt-0.5 ${hasPatron ? 'text-purple-600 hover:text-purple-800' : 'text-slate-300 cursor-not-allowed'}`}
-                          >
-                            <FileText className="w-2.5 h-2.5" /> Patronage {hasPatron ? '' : '(N/A)'}
-                          </button>
+                        return fiche?.photo ? (
+                          <img src={fiche.photo} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-300">
+                            <ImageIcon className="w-6 h-6" />
+                          </div>
                         );
                       })()}
+                    </div>
+                    
+                    <div>
+                      <p className="text-sm font-bold text-slate-800 leading-tight">{o.modele}</p>
+                      <div className="flex gap-2 mt-1.5">
+                        {(() => {
+                          const fiche = fiches.find(f => f.modele.toLowerCase() === o.modele.toLowerCase());
+                          const hasPatron = !!(fiche?.patronagePhoto || fiche?.patronageFileName);
+                          return (
+                            <button 
+                              onClick={() => fiche && hasPatron && handlePrintPatron(fiche)}
+                              disabled={!hasPatron}
+                              className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-black transition-all shadow-sm ${hasPatron ? 'bg-purple-100 text-purple-700 hover:bg-purple-600 hover:text-white border border-purple-200' : 'bg-slate-50 text-slate-300 cursor-not-allowed border border-slate-100'}`}
+                            >
+                              <FileText className="w-3 h-3" /> PATRON {hasPatron ? '' : '(N/A)'}
+                            </button>
+                          );
+                        })()}
+                      </div>
                     </div>
                   </div>
                 </td>
