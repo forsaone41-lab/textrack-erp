@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, Scissors, ShoppingCart, FileText, Image as ImageIcon, Eye, Download } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Scissors, ShoppingCart, FileText, Image as ImageIcon, Eye, Download, ClipboardList } from 'lucide-react';
 import { OrdreDeCoupe, StockTissu, FicheTechnique, Commande, loadData, saveRecord, deleteRecord, genId } from '../types';
 
 export default function OrdresDeCoupe() {
@@ -293,22 +293,30 @@ export default function OrdresDeCoupe() {
                     </div>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 mb-4">
                     {fiche?.patronagePhoto && (
                       <button 
                         onClick={() => handlePrintPatron(fiche)}
-                        className="flex-1 flex items-center justify-center gap-2 text-[10px] font-black bg-purple-500 hover:bg-purple-600 px-3 py-2.5 rounded-xl transition shadow-lg border border-purple-400/30 text-white"
+                        className="flex-1 flex items-center justify-center gap-2 text-[9px] font-black bg-purple-500 hover:bg-purple-600 px-2 py-2 rounded-lg transition text-white shadow"
                       >
                         <FileText className="w-3 h-3" /> PATRON
                       </button>
                     )}
-                    <button 
-                      onClick={() => handleImportCommand(c)}
-                      className="flex-[2] bg-white text-indigo-700 py-2.5 rounded-xl text-xs font-black hover:bg-indigo-50 transition flex items-center justify-center gap-2 shadow-xl border border-white"
-                    >
-                      <Scissors className="w-3 h-3" /> LANCER LA COUPE
-                    </button>
+                    {fiche?.dossierTechniquePhoto && (
+                      <button 
+                        onClick={() => downloadImage(fiche.dossierTechniquePhoto!, `Dossier-${c.modele}.png`)}
+                        className="flex-1 flex items-center justify-center gap-2 text-[9px] font-black bg-blue-500 hover:bg-blue-600 px-2 py-2 rounded-lg transition text-white shadow"
+                      >
+                        <ClipboardList className="w-3 h-3" /> DOSSIER
+                      </button>
+                    )}
                   </div>
+                  <button 
+                    onClick={() => handleImportCommand(c)}
+                    className="w-full bg-white text-indigo-700 py-2.5 rounded-xl text-xs font-black hover:bg-indigo-50 transition flex items-center justify-center gap-2 shadow-xl border border-white"
+                  >
+                    <Scissors className="w-3 h-3" /> LANCER LA COUPE
+                  </button>
                 </div>
               );
             })}
@@ -392,29 +400,41 @@ export default function OrdresDeCoupe() {
                     
                     <div>
                       <p className="text-sm font-bold text-slate-800 leading-tight">{o.modele}</p>
-                      <div className="flex gap-2 mt-2">
+                      <div className="flex flex-wrap gap-1 mt-2">
                         {(() => {
                           const fiche = fiches.find(f => f.modele.toLowerCase() === o.modele.toLowerCase());
                           const hasPatron = !!(fiche?.patronagePhoto || fiche?.patronageFileName);
+                          const hasDossier = !!(fiche?.dossierTechniquePhoto || fiche?.dossierTechniqueFileName);
                           return (
-                            <div className="flex gap-1">
-                              <button 
-                                onClick={() => fiche && hasPatron && handlePrintPatron(fiche)}
-                                disabled={!hasPatron}
-                                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-black transition-all shadow-sm border ${hasPatron ? 'bg-purple-600 text-white hover:bg-purple-700 border-purple-500' : 'bg-slate-50 text-slate-300 cursor-not-allowed border-slate-100'}`}
-                              >
-                                <Eye className="w-3 h-3" /> VOIR PATRON
-                              </button>
-                              {hasPatron && (
+                            <>
+                              <div className="flex gap-1">
                                 <button 
-                                  onClick={() => downloadImage(fiche!.patronagePhoto!, `Patron-${o.modele}.png`)}
-                                  className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 text-[10px] font-black border border-slate-200 transition-colors"
-                                  title="Télécharger le patron"
+                                  onClick={() => fiche && hasPatron && handlePrintPatron(fiche)}
+                                  disabled={!hasPatron}
+                                  className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[9px] font-black transition-all shadow-sm border ${hasPatron ? 'bg-purple-600 text-white hover:bg-purple-700 border-purple-500' : 'bg-slate-50 text-slate-300 cursor-not-allowed border-slate-100'}`}
                                 >
-                                  <Download className="w-3 h-3" />
+                                  <FileText className="w-3 h-3" /> PATRON {hasPatron ? '' : '(N/A)'}
                                 </button>
+                                {hasPatron && (
+                                  <button 
+                                    onClick={() => downloadImage(fiche!.patronagePhoto!, `Patron-${o.modele}.png`)}
+                                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 text-[9px] font-black border border-slate-200 transition-colors"
+                                  >
+                                    <Download className="w-3 h-3" />
+                                  </button>
+                                )}
+                              </div>
+                              {hasDossier && (
+                                <div className="flex gap-1">
+                                  <button 
+                                    onClick={() => downloadImage(fiche!.dossierTechniquePhoto!, `Dossier-${o.modele}.png`)}
+                                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-[9px] font-black border border-blue-500 transition-colors shadow-sm"
+                                  >
+                                    <ClipboardList className="w-3 h-3" /> DOSSIER
+                                  </button>
+                                </div>
                               )}
-                            </div>
+                            </>
                           );
                         })()}
                       </div>
