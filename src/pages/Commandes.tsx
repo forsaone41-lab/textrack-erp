@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   Plus, Search, Edit2, Trash2, ShoppingCart, Calculator, ChevronDown,
   ChevronRight, Scissors, ClipboardCheck, Receipt, Link, X, TrendingUp,
-  Package, Truck, AlertCircle,
+  Package, Truck, AlertCircle, Eye,
 } from 'lucide-react';
 import {
   Commande, FicheTechnique, OrdreDeCoupe, PointageEntry, Facture, Employe, User,
@@ -367,6 +367,9 @@ export default function Commandes() {
                             <ShoppingCart className={`w-3.5 h-3.5 ${urgent ? 'text-red-500' : 'text-indigo-500'}`} />
                           </div>
                           <span className="text-sm font-semibold text-slate-700">{c.reference}</span>
+                          {(c as any).vu && (
+                            <Eye className="w-3 h-3 text-emerald-500" title="Vu par le coupeur" />
+                          )}
                         </div>
                       </td>
                       <td className="px-4 py-3.5">
