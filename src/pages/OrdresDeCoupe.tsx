@@ -335,7 +335,20 @@ export default function OrdresDeCoupe() {
                 <td className="px-5 py-3">
                   <div className="flex items-center gap-2">
                     <Scissors className="w-4 h-4 text-indigo-400" />
-                    <span className="text-sm font-medium text-slate-700">{o.modele}</span>
+                    <div>
+                      <p className="text-sm font-medium text-slate-700">{o.modele}</p>
+                      {(() => {
+                        const fiche = fiches.find(f => f.modele === o.modele);
+                        return fiche?.patronagePhoto && (
+                          <button 
+                            onClick={() => handlePrintPatron(fiche)}
+                            className="text-[10px] text-purple-600 hover:text-purple-800 font-bold flex items-center gap-1 mt-0.5"
+                          >
+                            <FileText className="w-2.5 h-2.5" /> Patronage
+                          </button>
+                        );
+                      })()}
+                    </div>
                   </div>
                 </td>
                 <td className="px-5 py-3.5">
