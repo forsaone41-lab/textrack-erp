@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, Scissors, ShoppingCart, FileText, Image as ImageIcon, Eye } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Scissors, ShoppingCart, FileText, Image as ImageIcon, Eye, Download } from 'lucide-react';
 import { OrdreDeCoupe, StockTissu, FicheTechnique, Commande, loadData, saveRecord, deleteRecord, genId } from '../types';
 
 export default function OrdresDeCoupe() {
@@ -144,6 +144,15 @@ export default function OrdresDeCoupe() {
     });
   };
 
+  const downloadImage = (url: string, filename: string) => {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleQtyChange = (val: number) => {
     const fiche = fiches.find(f => f.modele === form.modele);
     const conso = fiche?.tissuConsommation || 0;
@@ -252,12 +261,21 @@ export default function OrdresDeCoupe() {
                 <div key={c.id} className="min-w-[320px] bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 flex flex-col justify-between shadow-xl">
                   <div className="flex gap-4 mb-4">
                     {/* Thumbnail for Pending Card */}
-                    <div className="w-16 h-16 rounded-xl bg-white/20 overflow-hidden flex-shrink-0 border border-white/30">
+                    <div className="relative group w-20 h-20 rounded-2xl bg-white/20 overflow-hidden flex-shrink-0 border border-white/30 shadow-inner">
                       {fiche?.photo ? (
-                        <img src={fiche.photo} className="w-full h-full object-cover" />
+                        <>
+                          <img src={fiche.photo} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); downloadImage(fiche.photo!, `Photo-${c.modele}.png`); }}
+                            className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                            title="Télécharger la photo"
+                          >
+                            <Download className="w-5 h-5 text-white" />
+                          </button>
+                        </>
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <ImageIcon className="w-6 h-6 text-white/50" />
+                          <ImageIcon className="w-8 h-8 text-white/50" />
                         </div>
                       )}
                     </div>
@@ -275,18 +293,18 @@ export default function OrdresDeCoupe() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="flex gap-2">
                     {fiche?.patronagePhoto && (
                       <button 
                         onClick={() => handlePrintPatron(fiche)}
-                        className="w-full flex items-center justify-center gap-2 text-[10px] font-black bg-purple-500 hover:bg-purple-600 px-3 py-2 rounded-xl transition shadow-lg border border-purple-400/30"
+                        className="flex-1 flex items-center justify-center gap-2 text-[10px] font-black bg-purple-500 hover:bg-purple-600 px-3 py-2.5 rounded-xl transition shadow-lg border border-purple-400/30 text-white"
                       >
-                        <FileText className="w-3 h-3" /> IMPRIMER LE PATRON
+                        <FileText className="w-3 h-3" /> PATRON
                       </button>
                     )}
                     <button 
                       onClick={() => handleImportCommand(c)}
-                      className="w-full bg-white text-indigo-700 py-2.5 rounded-xl text-xs font-black hover:bg-indigo-50 transition flex items-center justify-center gap-2 shadow-xl"
+                      className="flex-[2] bg-white text-indigo-700 py-2.5 rounded-xl text-xs font-black hover:bg-indigo-50 transition flex items-center justify-center gap-2 shadow-xl border border-white"
                     >
                       <Scissors className="w-3 h-3" /> LANCER LA COUPE
                     </button>
@@ -350,11 +368,20 @@ export default function OrdresDeCoupe() {
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-4">
                     {/* Thumbnail for Table Row */}
-                    <div className="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-200 shadow-sm group-hover:scale-110 transition-transform">
+                    <div className="relative group w-14 h-14 rounded-xl bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-200 shadow-sm transition-all hover:ring-2 hover:ring-indigo-500">
                       {(() => {
                         const fiche = fiches.find(f => f.modele.toLowerCase() === o.modele.toLowerCase());
                         return fiche?.photo ? (
-                          <img src={fiche.photo} className="w-full h-full object-cover" />
+                          <>
+                            <img src={fiche.photo} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                            <button 
+                              onClick={() => downloadImage(fiche.photo!, `Photo-${o.modele}.png`)}
+                              className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                              title="Télécharger la photo"
+                            >
+                              <Download className="w-4 h-4 text-white" />
+                            </button>
+                          </>
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-slate-300">
                             <ImageIcon className="w-6 h-6" />
@@ -365,18 +392,29 @@ export default function OrdresDeCoupe() {
                     
                     <div>
                       <p className="text-sm font-bold text-slate-800 leading-tight">{o.modele}</p>
-                      <div className="flex gap-2 mt-1.5">
+                      <div className="flex gap-2 mt-2">
                         {(() => {
                           const fiche = fiches.find(f => f.modele.toLowerCase() === o.modele.toLowerCase());
                           const hasPatron = !!(fiche?.patronagePhoto || fiche?.patronageFileName);
                           return (
-                            <button 
-                              onClick={() => fiche && hasPatron && handlePrintPatron(fiche)}
-                              disabled={!hasPatron}
-                              className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-black transition-all shadow-sm ${hasPatron ? 'bg-purple-100 text-purple-700 hover:bg-purple-600 hover:text-white border border-purple-200' : 'bg-slate-50 text-slate-300 cursor-not-allowed border border-slate-100'}`}
-                            >
-                              <FileText className="w-3 h-3" /> PATRON {hasPatron ? '' : '(N/A)'}
-                            </button>
+                            <div className="flex gap-1">
+                              <button 
+                                onClick={() => fiche && hasPatron && handlePrintPatron(fiche)}
+                                disabled={!hasPatron}
+                                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-black transition-all shadow-sm border ${hasPatron ? 'bg-purple-600 text-white hover:bg-purple-700 border-purple-500' : 'bg-slate-50 text-slate-300 cursor-not-allowed border-slate-100'}`}
+                              >
+                                <Eye className="w-3 h-3" /> VOIR PATRON
+                              </button>
+                              {hasPatron && (
+                                <button 
+                                  onClick={() => downloadImage(fiche!.patronagePhoto!, `Patron-${o.modele}.png`)}
+                                  className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 text-[10px] font-black border border-slate-200 transition-colors"
+                                  title="Télécharger le patron"
+                                >
+                                  <Download className="w-3 h-3" />
+                                </button>
+                              )}
+                            </div>
                           );
                         })()}
                       </div>
