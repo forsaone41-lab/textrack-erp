@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, Scissors, ShoppingCart, FileText, Image as ImageIcon, Eye, Download, ClipboardList } from 'lucide-react';
 import { OrdreDeCoupe, StockTissu, FicheTechnique, Commande, loadData, saveRecord, deleteRecord, genId } from '../types';
 
+import { generatePDF } from '../utils/pdf';
+
 export default function OrdresDeCoupe() {
   const [ordres, setOrdres] = useState<OrdreDeCoupe[]>([]);
   const [tissus, setTissus] = useState<StockTissu[]>([]);
@@ -14,7 +16,7 @@ export default function OrdresDeCoupe() {
 
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [showPrintModal, setShowPrintModal] = useState(false);
-  const [printContent, setPrintContent] = useState<{title: string, image: string} | null>(null);
+  const [printContent, setPrintContent] = useState<{title: string, image: string, isPDF?: boolean} | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -225,8 +227,74 @@ export default function OrdresDeCoupe() {
       alert("Aucun patronage n'est associé à cette fiche technique.");
       return;
     }
-    setPrintContent({ title: `Patronage - ${fiche.modele}`, image: fiche.patronagePhoto });
+    
+    // Détection du type de contenu (Image vs PDF)
+    const isPDF = fiche.patronagePhoto.startsWith('data:application/pdf');
+    
+    setPrintContent({ 
+      title: `Patronage - ${fiche.modele}`, 
+      image: fiche.patronagePhoto,
+      isPDF: isPDF
+    });
     setShowPrintModal(true);
+  };
+
+  const handleExportFichePDF = async (fiche: FicheTechnique) => {
+    // Créer un élément temporaire masqué pour le rendu PDF
+    const printDiv = document.createElement('div');
+    printDiv.id = 'fiche-pdf-template';
+    printDiv.style.position = 'absolute';
+    printDiv.style.left = '-9999px';
+    printDiv.innerHTML = `
+      <div style="padding: 40px; font-family: sans-serif; color: #1e293b; background: white; width: 800px;">
+        <div style="display: flex; justify-content: space-between; align-items: start; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; mb: 30px;">
+          <div>
+            <h1 style="font-size: 28px; font-weight: 800; margin: 0; color: #0f172a;">FICHE TECHNIQUE</h1>
+            <p style="font-size: 14px; color: #64748b; margin: 5px 0 0 0;">Référence Modèle: ${fiche.modele}</p>
+          </div>
+          <div style="text-align: right;">
+            <p style="font-size: 18px; font-weight: 700; margin: 0;">BEYA CREATIVE</p>
+            <p style="font-size: 12px; color: #94a3b8; margin: 0;">Confection de Vêtement</p>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 40px; margin-top: 30px;">
+          <div style="flex: 1;">
+            <h2 style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 15px;">Détails du Modèle</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+              <div>
+                <p style="font-size: 10px; color: #94a3b8; margin: 0;">Client</p>
+                <p style="font-size: 14px; font-weight: 600; margin: 2px 0;">${fiche.client}</p>
+              </div>
+              <div>
+                <p style="font-size: 10px; color: #94a3b8; margin: 0;">Type</p>
+                <p style="font-size: 14px; font-weight: 600; margin: 2px 0;">${fiche.type}</p>
+              </div>
+              <div>
+                <p style="font-size: 10px; color: #94a3b8; margin: 0;">Consommation</p>
+                <p style="font-size: 14px; font-weight: 600; margin: 2px 0;">${fiche.tissuConsommation} m/pièce</p>
+              </div>
+            </div>
+          </div>
+          <div style="width: 250px;">
+            <img src="${fiche.photo}" style="width: 100%; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);" />
+          </div>
+        </div>
+
+        <div style="margin-top: 40px;">
+          <h2 style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 15px;">Description & Notes</h2>
+          <p style="font-size: 13px; line-height: 1.6; color: #475569; background: #f8fafc; padding: 20px; border-radius: 12px;">${fiche.description || 'Aucune note spécifique.'}</p>
+        </div>
+
+        <div style="margin-top: 100px; padding-top: 20px; border-top: 1px solid #f1f5f9; text-align: center;">
+          <p style="font-size: 10px; color: #cbd5e1;">Document généré le ${new Date().toLocaleDateString('fr-FR')} - TexTrack ERP</p>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(printDiv);
+    await generatePDF('fiche-pdf-template', `FICHE-${fiche.modele}`);
+    document.body.removeChild(printDiv);
   };
 
   async function remove(id: string) {
@@ -451,6 +519,14 @@ export default function OrdresDeCoupe() {
                                   </button>
                                 )}
                               </div>
+                              <div className="flex gap-1.5">
+                                <button 
+                                  onClick={() => fiche && handleExportFichePDF(fiche)}
+                                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-[10px] font-bold transition-colors shadow-lg border border-slate-800"
+                                >
+                                  <FileText className="w-3.5 h-3.5" /> FICHE PDF
+                                </button>
+                              </div>
                               {hasDossier && (
                                 <div className="flex gap-1.5">
                                   <button 
@@ -664,7 +740,11 @@ export default function OrdresDeCoupe() {
               </div>
             </div>
             <div className="flex-1 overflow-auto p-8 flex justify-center bg-slate-50 print:bg-white print:p-0">
-              <img src={printContent.image} className="max-w-full h-auto shadow-lg print:shadow-none" alt="Document à imprimer" />
+              {printContent.isPDF ? (
+                <iframe src={printContent.image} className="w-full h-full min-h-[70vh] border-0 rounded-xl shadow-lg no-print" />
+              ) : (
+                <img src={printContent.image} className="max-w-full h-auto shadow-lg print:shadow-none" alt="Document à imprimer" />
+              )}
             </div>
           </div>
           <style>{`
