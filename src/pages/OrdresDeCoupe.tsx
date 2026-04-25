@@ -12,7 +12,7 @@ export default function OrdresDeCoupe() {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<OrdreDeCoupe>>({});
 
-  useEffect(() => { 
+  useEffect(() => {
     Promise.all([
       loadData<OrdreDeCoupe>('ordres'),
       loadData<StockTissu>('tissus'),
@@ -57,10 +57,10 @@ export default function OrdresDeCoupe() {
     // --- Gestion du Stock ---
     const tissuNormalise = form.tissu.trim();
     const couleurNormalisee = form.couleur?.trim() || '';
-    
+
     // Vérifier si ce tissu (Type + Couleur) existe déjà dans le stock
-    const existeDansStock = tissus.find(t => 
-      t.type.toLowerCase() === tissuNormalise.toLowerCase() && 
+    const existeDansStock = tissus.find(t =>
+      t.type.toLowerCase() === tissuNormalise.toLowerCase() &&
       t.couleur.toLowerCase() === couleurNormalisee.toLowerCase()
     );
 
@@ -89,10 +89,10 @@ export default function OrdresDeCoupe() {
     const updated = isNew
       ? [...ordres, ordreData]
       : ordres.map(o => o.id === editId ? ordreData : o);
-      
+
     setOrdres(updated);
     setShowModal(false);
-    
+
     await saveRecord('ordres', ordreData);
   }
 
@@ -219,11 +219,11 @@ export default function OrdresDeCoupe() {
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Modèle *</label>
-                <input 
-                  value={form.modele || ''} 
+                <input
+                  value={form.modele || ''}
                   onChange={e => handleModeleChange(e.target.value)}
                   list="modeles-list"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" 
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                 />
                 <datalist id="modeles-list">
                   {fiches.map(f => (
@@ -234,11 +234,11 @@ export default function OrdresDeCoupe() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">Tissu *</label>
-                  <input 
-                    value={form.tissu || ''} 
+                  <input
+                    value={form.tissu || ''}
                     onChange={e => setForm({ ...form, tissu: e.target.value })}
                     list="tissus-list"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" 
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                   />
                   <datalist id="tissus-list">
                     {Array.from(new Set(tissus.map(t => t.type))).map(type => (

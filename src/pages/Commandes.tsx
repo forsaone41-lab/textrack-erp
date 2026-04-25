@@ -14,21 +14,21 @@ import { t } from '../i18n';
 export default function Commandes() {
   const { lang, isAr } = useLang();
   const [commandes, setCommandes] = useState<Commande[]>([]);
-  const [fiches, setFiches]       = useState<FicheTechnique[]>([]);
-  const [ordres, setOrdres]       = useState<OrdreDeCoupe[]>([]);
+  const [fiches, setFiches] = useState<FicheTechnique[]>([]);
+  const [ordres, setOrdres] = useState<OrdreDeCoupe[]>([]);
   const [pointages, setPointages] = useState<PointageEntry[]>([]);
-  const [factures, setFactures]   = useState<Facture[]>([]);
-  const [employes, setEmployes]   = useState<Employe[]>([]);
-  const [users, setUsers]         = useState<User[]>([]);
+  const [factures, setFactures] = useState<Facture[]>([]);
+  const [employes, setEmployes] = useState<Employe[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
 
-  const [search, setSearch]             = useState('');
+  const [search, setSearch] = useState('');
   const [filterStatut, setFilterStatut] = useState('all');
-  const [expandedId, setExpandedId]     = useState<string | null>(null);
-  const [showModal, setShowModal]       = useState(false);
-  const [editId, setEditId]             = useState<string | null>(null);
-  const [form, setForm]                 = useState<Partial<Commande>>({});
-  const [showCalc, setShowCalc]         = useState(false);
-  const [calcModele, setCalcModele]     = useState('');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [form, setForm] = useState<Partial<Commande>>({});
+  const [showCalc, setShowCalc] = useState(false);
+  const [calcModele, setCalcModele] = useState('');
   const [calcQuantite, setCalcQuantite] = useState(0);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
@@ -112,10 +112,10 @@ export default function Commandes() {
     const updated = isNew
       ? [...commandes, cmdData]
       : commandes.map(c => c.id === editId ? cmdData : c);
-      
+
     setCommandes(updated);
     setShowModal(false);
-    
+
     await saveRecord('commandes', cmdData);
   }
 
@@ -263,11 +263,10 @@ export default function Commandes() {
             <button
               key={f.key}
               onClick={() => setFilterStatut(f.key)}
-              className={`px-3 py-2 rounded-lg text-xs font-semibold transition border ${
-                filterStatut === f.key
+              className={`px-3 py-2 rounded-lg text-xs font-semibold transition border ${filterStatut === f.key
                   ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
                   : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600'
-              }`}
+                }`}
             >
               {f.label}
             </button>
@@ -296,16 +295,16 @@ export default function Commandes() {
             </thead>
             <tbody>
               {filtered.map(c => {
-                const cmdOrdres    = ordres.filter(o => o.commandeId === c.id);
+                const cmdOrdres = ordres.filter(o => o.commandeId === c.id);
                 const cmdPointages = pointages.filter(p => p.commandeId === c.id);
-                const cmdFacture   = factures.find(f => f.commandeId === c.id);
-                const isExpanded   = expandedId === c.id;
-                const totalPts     = cmdPointages.reduce((a, p) => a + p.piecesCompletees, 0);
-                const totalRebut   = cmdPointages.reduce((a, p) => a + p.rebut, 0);
-                const progress     = c.quantite > 0 ? Math.min(100, Math.round(((totalPts - totalRebut) / c.quantite) * 100)) : 0;
-                const urgent       = isUrgent(c);
-                const valeur       = c.quantite * c.prix;
-                const days         = c.dateLivraisonPrevue ? daysLeft(c.dateLivraisonPrevue) : null;
+                const cmdFacture = factures.find(f => f.commandeId === c.id);
+                const isExpanded = expandedId === c.id;
+                const totalPts = cmdPointages.reduce((a, p) => a + p.piecesCompletees, 0);
+                const totalRebut = cmdPointages.reduce((a, p) => a + p.rebut, 0);
+                const progress = c.quantite > 0 ? Math.min(100, Math.round(((totalPts - totalRebut) / c.quantite) * 100)) : 0;
+                const urgent = isUrgent(c);
+                const valeur = c.quantite * c.prix;
+                const days = c.dateLivraisonPrevue ? daysLeft(c.dateLivraisonPrevue) : null;
 
                 return (
                   <>

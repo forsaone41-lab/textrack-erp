@@ -12,7 +12,7 @@ import {
 } from 'recharts';
 import { loadData, Facture, Charge, Commande, CATEGORIE_LABELS, CATEGORIE_COLORS } from '../types';
 
-const MONTHS_FR = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+const MONTHS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
 
 function KpiCard({
   label, value, sub, icon: Icon, color, trend, onClick,
@@ -66,16 +66,16 @@ export default function BilanFinancier() {
   const currentYear = today.getFullYear();
 
   const stats = useMemo(() => {
-    const ca       = factures.filter(f => f.statut === 'payée').reduce((a, f) => a + f.montant, 0);
-    const caTotal  = factures.reduce((a, f) => a + f.montant, 0);
+    const ca = factures.filter(f => f.statut === 'payée').reduce((a, f) => a + f.montant, 0);
+    const caTotal = factures.reduce((a, f) => a + f.montant, 0);
     const caAttente = factures.filter(f => f.statut === 'en_attente').reduce((a, f) => a + f.montant, 0);
-    const caRetard  = factures.filter(f => f.statut !== 'payée' && f.echeance && f.echeance < today.toISOString().split('T')[0]).reduce((a, f) => a + f.montant, 0);
+    const caRetard = factures.filter(f => f.statut !== 'payée' && f.echeance && f.echeance < today.toISOString().split('T')[0]).reduce((a, f) => a + f.montant, 0);
 
     const totalCharges = charges.filter(c => c.statut === 'payé').reduce((a, c) => a + c.montant, 0);
     const chargesAttente = charges.filter(c => c.statut !== 'payé').reduce((a, c) => a + c.montant, 0);
 
     const benefice = ca - totalCharges;
-    const marge    = ca > 0 ? Math.round((benefice / ca) * 100) : 0;
+    const marge = ca > 0 ? Math.round((benefice / ca) * 100) : 0;
 
     return { ca, caTotal, caAttente, caRetard, totalCharges, chargesAttente, benefice, marge };
   }, [factures, charges]);
@@ -111,9 +111,9 @@ export default function BilanFinancier() {
 
   // Factures by statut
   const facturesByStatut = useMemo(() => [
-    { name: 'Payées',     value: factures.filter(f => f.statut === 'payée').length,     color: '#10b981' },
+    { name: 'Payées', value: factures.filter(f => f.statut === 'payée').length, color: '#10b981' },
     { name: 'En attente', value: factures.filter(f => f.statut === 'en_attente').length, color: '#f59e0b' },
-    { name: 'Impayées',   value: factures.filter(f => f.statut === 'impayée').length,   color: '#ef4444' },
+    { name: 'Impayées', value: factures.filter(f => f.statut === 'impayée').length, color: '#ef4444' },
   ].filter(s => s.value > 0), [factures]);
 
   // Top commandes by value
@@ -266,11 +266,11 @@ export default function BilanFinancier() {
           <BarChart data={monthlyData} barGap={4}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
             <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
+            <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
             <Tooltip content={customTooltip} />
-            <Bar dataKey="revenue"  name="Revenus"  fill="#10b981" radius={[4,4,0,0]} />
-            <Bar dataKey="depenses" name="Charges"  fill="#f87171" radius={[4,4,0,0]} />
-            <Bar dataKey="benefice" name="Bénéfice" fill="#818cf8" radius={[4,4,0,0]} />
+            <Bar dataKey="revenue" name="Revenus" fill="#10b981" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="depenses" name="Charges" fill="#f87171" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="benefice" name="Bénéfice" fill="#818cf8" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -449,10 +449,9 @@ export default function BilanFinancier() {
                   </div>
                   <div className="text-right">
                     <p className="text-xs font-bold text-red-600">{fmt(c.montant)} MAD</p>
-                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
-                      c.statut === 'payé' ? 'bg-emerald-100 text-emerald-600' :
-                      c.statut === 'en_attente' ? 'bg-amber-100 text-amber-600' : 'bg-red-100 text-red-600'
-                    }`}>
+                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${c.statut === 'payé' ? 'bg-emerald-100 text-emerald-600' :
+                        c.statut === 'en_attente' ? 'bg-amber-100 text-amber-600' : 'bg-red-100 text-red-600'
+                      }`}>
                       {c.statut === 'payé' ? 'Payé' : c.statut === 'en_attente' ? 'En attente' : 'Impayé'}
                     </span>
                   </div>
@@ -477,12 +476,12 @@ export default function BilanFinancier() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {[
-                { label: 'CA Encaissé (factures payées)',    val: stats.ca,          detail: `${factures.filter(f => f.statut === 'payée').length} facture(s)`,  color: 'text-emerald-600' },
-                { label: 'CA En attente',                    val: stats.caAttente,   detail: `${factures.filter(f => f.statut === 'en_attente').length} facture(s)`, color: 'text-amber-600' },
-                { label: 'CA Total Facturé',                 val: stats.caTotal,     detail: `${factures.length} facture(s)`, color: 'text-indigo-600' },
-                { label: 'Total Charges Réglées',            val: stats.totalCharges,detail: `${charges.filter(c => c.statut === 'payé').length} charge(s)`, color: 'text-red-600' },
-                { label: 'Charges À Régler',                 val: stats.chargesAttente, detail: `${charges.filter(c => c.statut !== 'payé').length} charge(s)`, color: 'text-orange-500' },
-                { label: 'Bénéfice Net',                     val: stats.benefice,    detail: `Marge ${stats.marge}%`, color: stats.benefice >= 0 ? 'text-emerald-700' : 'text-red-700' },
+                { label: 'CA Encaissé (factures payées)', val: stats.ca, detail: `${factures.filter(f => f.statut === 'payée').length} facture(s)`, color: 'text-emerald-600' },
+                { label: 'CA En attente', val: stats.caAttente, detail: `${factures.filter(f => f.statut === 'en_attente').length} facture(s)`, color: 'text-amber-600' },
+                { label: 'CA Total Facturé', val: stats.caTotal, detail: `${factures.length} facture(s)`, color: 'text-indigo-600' },
+                { label: 'Total Charges Réglées', val: stats.totalCharges, detail: `${charges.filter(c => c.statut === 'payé').length} charge(s)`, color: 'text-red-600' },
+                { label: 'Charges À Régler', val: stats.chargesAttente, detail: `${charges.filter(c => c.statut !== 'payé').length} charge(s)`, color: 'text-orange-500' },
+                { label: 'Bénéfice Net', val: stats.benefice, detail: `Marge ${stats.marge}%`, color: stats.benefice >= 0 ? 'text-emerald-700' : 'text-red-700' },
               ].map((row, i) => (
                 <tr key={i} className="hover:bg-slate-50/60 transition-colors">
                   <td className="px-4 py-3 text-sm text-slate-700">{row.label}</td>

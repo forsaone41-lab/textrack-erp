@@ -182,11 +182,10 @@ export default function ChaineDeMontage() {
               <div key={phase} className="flex items-center gap-2 min-w-fit">
                 <button
                   onClick={() => setSelectedPhase(selectedPhase === phase ? 'all' : phase)}
-                  className={`flex flex-col items-center px-5 py-4 rounded-xl border-2 transition-all min-w-[120px] ${
-                    selectedPhase === phase
+                  className={`flex flex-col items-center px-5 py-4 rounded-xl border-2 transition-all min-w-[120px] ${selectedPhase === phase
                       ? 'border-indigo-500 bg-indigo-50 shadow-md'
                       : 'border-slate-200 hover:border-slate-300 bg-slate-50'
-                  }`}
+                    }`}
                 >
                   <div className={`w-3 h-3 rounded-full ${PHASE_COLORS[phase]} mb-2`} />
                   <span className="text-xs font-semibold text-slate-700">{PHASE_LABELS[phase]}</span>
@@ -225,7 +224,7 @@ export default function ChaineDeMontage() {
           const jRest = joursRestants(cmd);
           const attenteCouleur = jPhase >= 14 ? 'bg-red-100 text-red-700 border-red-200'
             : jPhase >= 7 ? 'bg-amber-100 text-amber-700 border-amber-200'
-            : 'bg-green-100 text-green-700 border-green-200';
+              : 'bg-green-100 text-green-700 border-green-200';
           const resteCouleur = jRest < 0 ? 'text-red-600' : jRest <= 3 ? 'text-amber-600' : 'text-green-600';
           return (
             <div key={cmd.id} className={`bg-white rounded-xl border shadow-sm p-5 ${jRest < 0 ? 'border-red-300' : 'border-slate-200'}`}>

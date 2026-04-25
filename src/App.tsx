@@ -43,14 +43,30 @@ function AdminLayout({
   }, [location.pathname]);
 
   return (
-    <div className={`flex min-h-screen bg-slate-50 ${isAr ? 'flex-row-reverse' : ''}`} dir={isAr ? 'rtl' : 'ltr'}>
-      {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-slate-900 z-40 flex items-center justify-between px-4 shadow-md">
-        <div className="text-white font-bold tracking-tight uppercase">
-          {company.name.split(' ')[0]} <span className="font-light text-indigo-400">{company.name.split(' ').slice(1).join(' ')}</span>
+    <div className="flex min-h-screen bg-slate-50/50" dir={isAr ? 'rtl' : 'ltr'}>
+      {/* Mobile Header - Premium Design */}
+      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-slate-900/95 backdrop-blur-md border-b border-white/5 z-40 flex items-center justify-between px-5 shadow-2xl">
+        <div className={`flex flex-col ${isAr ? 'text-right' : 'text-left'}`}>
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-base font-black tracking-tighter text-white uppercase leading-none">
+              {company.name.split(' ')[0]}
+            </span>
+            <span className="text-base font-light text-indigo-400 uppercase tracking-tight opacity-90">
+              {company.name.split(' ').slice(1).join(' ')}
+            </span>
+          </div>
+          <p className="text-[8px] text-slate-400 uppercase tracking-widest mt-1">
+            {company.subtitle}
+          </p>
         </div>
-        <button onClick={() => setMobileOpen(true)} className="text-slate-300 p-2 focus:outline-none">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg>
+        
+        <button 
+          onClick={() => setMobileOpen(true)} 
+          className="relative w-10 h-10 flex items-center justify-center text-slate-300 hover:text-white transition-colors bg-white/5 rounded-xl border border-white/10 active:scale-95"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+          </svg>
         </button>
       </div>
 
@@ -61,8 +77,10 @@ function AdminLayout({
         mobileOpen={mobileOpen}
         setMobileOpen={setMobileOpen}
       />
-      <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto mt-16 md:mt-0 w-full overflow-x-hidden">
-        <Outlet />
+      <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto mt-16 md:mt-0 w-full overflow-x-hidden min-h-screen">
+        <div className="max-w-[1600px] mx-auto">
+          <Outlet />
+        </div>
       </main>
     </div>
   );
@@ -70,19 +88,8 @@ function AdminLayout({
 
 function PointageLayout() {
   return (
-    <div className="flex min-h-screen bg-slate-50">
-      <aside className="w-16 min-h-screen bg-slate-900 flex flex-col items-center py-5 gap-4">
-        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-            <polyline points="14 2 14 8 20 8" />
-            <line x1="16" y1="13" x2="8" y2="13" />
-            <line x1="16" y1="17" x2="8" y2="17" />
-            <line x1="10" y1="9" x2="8" y2="9" />
-          </svg>
-        </div>
-      </aside>
-      <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
+    <div className="min-h-screen bg-slate-50">
+      <main className="w-full min-h-screen p-4 md:p-6 lg:p-8 overflow-y-auto">
         <Outlet />
       </main>
     </div>
@@ -124,7 +131,14 @@ function AppContent() {
   }
 
   if (!currentUser) {
-    return <Login onLogin={handleLogin} />;
+    return (
+      <Routes>
+        <Route element={<PointageLayout />}>
+          <Route path="pointage" element={<Pointage />} />
+        </Route>
+        <Route path="*" element={<Login onLogin={handleLogin} />} />
+      </Routes>
+    );
   }
 
   if (currentUser.role === 'client') {

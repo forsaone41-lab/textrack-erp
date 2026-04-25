@@ -240,9 +240,8 @@ export default function Performance() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${
-                        s.emp.type === 'atelier' ? 'bg-gradient-to-br from-green-400 to-emerald-600' : 'bg-gradient-to-br from-blue-400 to-indigo-600'
-                      }`}>{empInitials(s.emp)}</div>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${s.emp.type === 'atelier' ? 'bg-gradient-to-br from-green-400 to-emerald-600' : 'bg-gradient-to-br from-blue-400 to-indigo-600'
+                        }`}>{empInitials(s.emp)}</div>
                       <div>
                         <p className="text-sm font-medium text-slate-800">{empName(s.emp)}</p>
                         <p className="text-xs text-slate-400">{s.emp.poste}</p>
@@ -262,11 +261,10 @@ export default function Performance() {
                   </td>
                   <td className="px-4 py-3 text-center text-sm font-semibold text-blue-600">{s.presenceRate}%</td>
                   <td className="px-4 py-3 text-center">
-                    <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-bold ${
-                      s.score >= 85 ? 'bg-green-100 text-green-700' :
-                      s.score >= 65 ? 'bg-amber-100 text-amber-700' :
-                      'bg-red-100 text-red-600'
-                    }`}>{s.score}%</span>
+                    <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-bold ${s.score >= 85 ? 'bg-green-100 text-green-700' :
+                        s.score >= 65 ? 'bg-amber-100 text-amber-700' :
+                          'bg-red-100 text-red-600'
+                      }`}>{s.score}%</span>
                   </td>
                 </tr>
               ))}

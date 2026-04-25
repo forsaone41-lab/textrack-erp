@@ -20,14 +20,14 @@ const ROLE_CFG = {
     bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200',
     ring: 'ring-indigo-400', avatar: 'from-indigo-500 to-purple-600', dot: 'bg-indigo-500',
     desc: 'Accès complet — toutes les fonctionnalités',
-    access: ['Dashboard','Production','RH','Stocks','Commandes','Factures','Charges','Utilisateurs'],
+    access: ['Dashboard', 'Production', 'RH', 'Stocks', 'Commandes', 'Factures', 'Charges', 'Utilisateurs'],
   },
   pointeur: {
     label: 'Chef', icon: HardHat,
     bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200',
     ring: 'ring-blue-400', avatar: 'from-blue-500 to-cyan-600', dot: 'bg-blue-500',
     desc: 'Production, RH, Commandes, Stocks',
-    access: ['Dashboard','Production','RH','Stocks','Commandes','Pointage','Performance'],
+    access: ['Dashboard', 'Production', 'RH', 'Stocks', 'Commandes', 'Pointage', 'Performance'],
   },
   client: {
     label: 'Client', icon: ShoppingBag,
@@ -41,19 +41,19 @@ const ROLE_CFG = {
 // ─── Pages Definition ──────────────────────────────────────
 interface PageDef { key: AppPage; label: string; icon: React.ElementType; group: string; }
 const ALL_PAGES: PageDef[] = [
-  { key: 'dashboard',     label: 'Dashboard',            icon: LayoutDashboard, group: 'Général' },
-  { key: 'fiches',        label: 'Fiches Techniques',    icon: FileText,        group: 'Production' },
-  { key: 'ordres',        label: 'Ordres de Coupe',      icon: Scissors,        group: 'Production' },
-  { key: 'chaine',        label: 'Chaîne de Montage',    icon: Factory,         group: 'Production' },
-  { key: 'stocks',        label: 'Stock Matériaux',      icon: Package,         group: 'Stocks' },
-  { key: 'rh',            label: 'Suivi RH & Façonniers',icon: Users,           group: 'RH & Finance' },
-  { key: 'commandes',     label: 'Commandes',            icon: ShoppingCart,    group: 'RH & Finance' },
-  { key: 'factures',      label: 'Factures',             icon: Receipt,         group: 'RH & Finance' },
-  { key: 'charges',       label: 'Charges & Dépenses',   icon: TrendingDown,    group: 'RH & Finance' },
-  { key: 'pointage',      label: 'Pointage',             icon: ClipboardCheck,  group: 'Outils' },
-  { key: 'portail_client',label: 'Portail Client',       icon: Globe,           group: 'Outils' },
-  { key: 'performance',   label: 'Performance Ouvriers', icon: Trophy,          group: 'Outils' },
-  { key: 'utilisateurs',  label: 'Gestion Utilisateurs', icon: UserCircle,      group: 'Outils' },
+  { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, group: 'Général' },
+  { key: 'fiches', label: 'Fiches Techniques', icon: FileText, group: 'Production' },
+  { key: 'ordres', label: 'Ordres de Coupe', icon: Scissors, group: 'Production' },
+  { key: 'chaine', label: 'Chaîne de Montage', icon: Factory, group: 'Production' },
+  { key: 'stocks', label: 'Stock Matériaux', icon: Package, group: 'Stocks' },
+  { key: 'rh', label: 'Suivi RH & Façonniers', icon: Users, group: 'RH & Finance' },
+  { key: 'commandes', label: 'Commandes', icon: ShoppingCart, group: 'RH & Finance' },
+  { key: 'factures', label: 'Factures', icon: Receipt, group: 'RH & Finance' },
+  { key: 'charges', label: 'Charges & Dépenses', icon: TrendingDown, group: 'RH & Finance' },
+  { key: 'pointage', label: 'Pointage', icon: ClipboardCheck, group: 'Outils' },
+  { key: 'portail_client', label: 'Portail Client', icon: Globe, group: 'Outils' },
+  { key: 'performance', label: 'Performance Ouvriers', icon: Trophy, group: 'Outils' },
+  { key: 'utilisateurs', label: 'Gestion Utilisateurs', icon: UserCircle, group: 'Outils' },
 ];
 
 const PAGE_GROUPS = ['Général', 'Production', 'Stocks', 'RH & Finance', 'Outils'];
@@ -79,13 +79,11 @@ function Toggle({ checked, onChange, locked }: { checked: boolean; onChange: () 
     <button
       type="button"
       onClick={locked ? undefined : onChange}
-      className={`relative w-10 h-5 rounded-full transition-colors flex-shrink-0 ${
-        locked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
-      } ${checked ? 'bg-indigo-500' : 'bg-slate-200'}`}
+      className={`relative w-10 h-5 rounded-full transition-colors flex-shrink-0 ${locked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+        } ${checked ? 'bg-indigo-500' : 'bg-slate-200'}`}
     >
-      <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-        checked ? 'translate-x-5' : 'translate-x-0'
-      }`} />
+      <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${checked ? 'translate-x-5' : 'translate-x-0'
+        }`} />
     </button>
   );
 }
@@ -140,10 +138,10 @@ export default function Utilisateurs() {
     const updated = isNew
       ? [...users, uData]
       : users.map(u => (u.id === editId ? uData : u));
-      
+
     setUsers(updated);
     setShowModal(false);
-    
+
     await saveRecord('users', uData);
   }
   function confirmDelete(id: string) {
@@ -229,11 +227,10 @@ export default function Utilisateurs() {
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
-              tab === t.key
+            className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${tab === t.key
                 ? 'bg-white text-indigo-700 shadow-sm'
                 : 'text-slate-500 hover:text-slate-700'
-            }`}
+              }`}
           >
             {t.label}
           </button>

@@ -38,7 +38,7 @@ export default function Login({ onLogin }: LoginProps) {
     if (!email || !password) { setError('Veuillez remplir tous les champs.'); return; }
     setError('');
     setLoading(true);
-    
+
     try {
       const user = await verifyLogin(email, password);
       if (user) {

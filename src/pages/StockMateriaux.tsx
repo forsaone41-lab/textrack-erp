@@ -32,14 +32,14 @@ const FOURNI_ICONS: Record<string, string> = {
 
 const STATUT_TISSU_STYLE = {
   disponible: { label: 'Disponible', cls: 'bg-green-100 text-green-700', border: 'border-t-green-500' },
-  alerte:     { label: 'Alerte',     cls: 'bg-amber-100 text-amber-700',  border: 'border-t-amber-500'  },
-  epuise:     { label: 'Épuisé',     cls: 'bg-red-100 text-red-700',      border: 'border-t-red-500'    },
+  alerte: { label: 'Alerte', cls: 'bg-amber-100 text-amber-700', border: 'border-t-amber-500' },
+  epuise: { label: 'Épuisé', cls: 'bg-red-100 text-red-700', border: 'border-t-red-500' },
 };
 
 const STATUT_FOURNI_STYLE = {
-  normal:   { label: 'Normal',   cls: 'bg-green-100 text-green-700' },
-  alerte:   { label: 'Alerte',   cls: 'bg-amber-100 text-amber-700' },
-  rupture:  { label: 'Rupture',  cls: 'bg-red-100 text-red-700'    },
+  normal: { label: 'Normal', cls: 'bg-green-100 text-green-700' },
+  alerte: { label: 'Alerte', cls: 'bg-amber-100 text-amber-700' },
+  rupture: { label: 'Rupture', cls: 'bg-red-100 text-red-700' },
 };
 
 // ─── Component ──────────────────────────────────────────────
@@ -275,7 +275,7 @@ export default function StockMateriaux() {
                           <p className="text-xs text-slate-600 font-medium">{t.fournisseur}</p>
                         </div>
                       )}
-                      
+
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Tag className="w-3.5 h-3.5 text-slate-400" />

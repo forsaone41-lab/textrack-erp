@@ -227,8 +227,8 @@ export default function Factures() {
               key={f.key}
               onClick={() => setFilterStatut(f.key)}
               className={`px-3 py-2 rounded-lg text-xs font-semibold transition border ${filterStatut === f.key
-                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                  : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600'
+                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600'
                 }`}
             >
               {f.label}

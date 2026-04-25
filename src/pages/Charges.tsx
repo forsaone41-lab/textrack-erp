@@ -143,10 +143,10 @@ export default function Charges() {
     } else {
       updated = charges.map(c => (c.id === editId ? chargeData : c));
     }
-    
+
     setCharges(updated);
     setShowModal(false);
-    
+
     await saveRecord('charges', chargeData);
   }
 
