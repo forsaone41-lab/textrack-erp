@@ -78,7 +78,6 @@ export default function SuiviRH() {
   const company = loadCompanyProfile();
 
   useEffect(() => {
-    // Priority to LocalStorage for RH, but fallback to Supabase for commands
     const localEmps = getLocalRH<Employe>('employes');
     const localPaiements = getLocalRH<PaiementSalaire>('paiements_salaires');
     
@@ -89,7 +88,6 @@ export default function SuiviRH() {
       setCommandes(cmds || []);
     });
 
-    // If local storage is empty, try to fetch from Supabase once
     if (localEmps.length === 0) {
       loadData<Employe>('employes').then(remoteEmps => {
         if (remoteEmps && remoteEmps.length > 0) {
@@ -201,7 +199,6 @@ export default function SuiviRH() {
     saveLocalRH('paiements_salaires', updatedPaiements);
     setShowPayerModal(false);
 
-    // Also try to record as charge in remote Supabase
     const emp = employes.find(e => e.id === payerEmployeId);
     if (emp) {
       const moisLabelStr = new Date(selectedMois + '-01').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
@@ -260,7 +257,23 @@ export default function SuiviRH() {
   const empName = (e: Employe) => e.prenom ? `${e.prenom} ${e.nom}` : e.nom;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Hidden container for printing ALL badges */}
+      <div className="fixed -left-[2000px] top-0" id="all-badges-capture">
+        <div className="bg-white p-8 grid grid-cols-2 gap-8 w-[800px]">
+          {employes.filter(e => e.type === 'atelier' && e.actif).map(e => (
+            <div key={e.id} className="border-2 border-slate-100 rounded-[32px] p-6 flex flex-col items-center text-center bg-white shadow-sm">
+              <p className="text-sm font-black text-slate-900 italic uppercase mb-4">{company.name}</p>
+              <div className="p-3 bg-white border border-slate-100 rounded-2xl mb-4">
+                <QRCodeSVG value={e.id} size={140} level="H" />
+              </div>
+              <h2 className="text-lg font-black text-slate-900 uppercase leading-tight mb-1">{empName(e)}</h2>
+              <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest bg-indigo-50 px-3 py-1 rounded-full">{e.poste}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -268,6 +281,12 @@ export default function SuiviRH() {
           <p className="text-slate-500 text-sm font-medium">Gestion du personnel atelier et sous-traitance</p>
         </div>
         <div className="flex items-center gap-3">
+          <button 
+            onClick={() => generatePDF('all-badges-capture', 'Tous_les_Badges')}
+            className="flex items-center gap-2 bg-white border-2 border-slate-100 text-slate-600 px-4 py-2.5 rounded-2xl hover:bg-slate-50 transition-all font-black text-[10px] uppercase tracking-widest"
+          >
+            <QrCode className="w-4 h-4" /> Badges PDF
+          </button>
           <select
             value={selectedMois}
             onChange={e => setSelectedMois(e.target.value)}
@@ -569,7 +588,7 @@ export default function SuiviRH() {
         </div>
       )}
 
-      {/* Badge Modal */}
+      {/* Badge QR Modal */}
       {selectedBadge && (
         <div className="fixed inset-0 z-[200] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-white rounded-[32px] w-full max-w-[380px] overflow-hidden shadow-2xl animate-in zoom-in duration-300">
