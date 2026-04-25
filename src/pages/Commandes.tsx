@@ -133,6 +133,33 @@ export default function Commandes() {
     setShowModal(false);
 
     await saveRecord('commandes', cmdData);
+
+    // --- CRÉATION AUTOMATIQUE DE L'ORDRE DE COUPE (Relation) ---
+    if (isNew) {
+      const fiche = fiches.find(f => f.modele === cmdData.modele);
+      if (fiche) {
+        const metrageTotal = (fiche.tissuConsommation || 0) * (cmdData.quantite || 0);
+        
+        const nouveauOrdre: OrdreDeCoupe = {
+          id: genId(),
+          commandeId: cmdData.id,
+          rollId: null, // Sera sélectionné plus tard dans la page de coupe
+          modele: cmdData.modele,
+          quantite: cmdData.quantite,
+          tissu: fiche.type || 'À définir',
+          couleur: 'À définir',
+          metrage: Number(metrageTotal.toFixed(2)),
+          statut: 'planifié',
+          dateCoupe: cmdData.dateCommande
+        };
+
+        // Update local state for ordres
+        setOrdres(prev => [...prev, nouveauOrdre]);
+        // Save to DB
+        await saveRecord('ordres', nouveauOrdre);
+      }
+    }
+    // -----------------------------------------------------------
   }
 
   async function remove(id: string) {
