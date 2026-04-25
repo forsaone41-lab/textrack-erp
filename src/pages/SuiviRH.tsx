@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Plus, Search, Edit2, Trash2, Users, CreditCard, Banknote, Building2, QrCode, X, Printer, Download, FileText, DollarSign, Phone, Mail, MapPin, Landmark, Loader2 } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react'; 
 import { Employe, PaiementSalaire, Charge, Commande, loadData, genId, loadCompanyProfile, saveRecord } from '../types';
-import { generatePDF } from '../utils/pdf';
+import { generatePDF, printElement } from '../utils/pdf';
 
 // Local storage helpers for RH specifically to avoid Supabase schema mismatch
 function getLocalRH<T>(key: string): T[] {
@@ -256,7 +256,6 @@ export default function SuiviRH() {
   const handleDownloadPDF = async (elementId: string, filename: string) => {
     if (isGenerating) return;
     setIsGenerating(true);
-    // Wrap in timeout to allow UI update before blocking thread
     setTimeout(async () => {
       try {
         await generatePDF(elementId, filename);
@@ -427,19 +426,26 @@ export default function SuiviRH() {
       {showAllBadges && (
         <div className="fixed inset-0 z-[250] bg-slate-900/90 backdrop-blur-xl flex items-center justify-center p-4">
           <div className="bg-white rounded-[40px] w-full max-w-4xl h-[90vh] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in duration-300">
-            {/* STICKY HEADER */}
             <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-white z-10 shrink-0">
               <div className="flex flex-col">
                 <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Impression des Badges</h2>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total: {employes.filter(e => e.type === 'atelier' && e.actif).length} badges</p>
               </div>
               <div className="flex items-center gap-3">
+                {/* PDF Download Button */}
                 <button 
                   onClick={() => handleDownloadPDF('all-badges-capture', 'Tous_les_Badges')}
                   disabled={isGenerating}
-                  className={`${isGenerating ? 'bg-slate-400 cursor-not-allowed' : 'bg-slate-900'} text-white px-8 py-3 rounded-2xl flex items-center gap-2 font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-900/20 active:scale-95 transition-all`}
+                  className={`${isGenerating ? 'bg-slate-400 cursor-not-allowed' : 'bg-slate-900'} text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-900/20 active:scale-95 transition-all`}
                 >
-                  {isGenerating ? <><Loader2 className="w-4 h-4 animate-spin" /> Patientez...</> : <><Download className="w-5 h-5" /> Télécharger PDF</>}
+                  {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Download className="w-5 h-5" /> Télécharger PDF</>}
+                </button>
+                {/* Guaranteed Print Button */}
+                <button 
+                  onClick={() => printElement('all-badges-capture')}
+                  className="bg-indigo-600 text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-600/20 active:scale-95 transition-all"
+                >
+                  <Printer className="w-5 h-5" /> Imprimer / PDF Direct
                 </button>
                 <button onClick={() => setShowAllBadges(false)} className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center">
                   <X className="w-6 h-6 text-slate-900" />
@@ -447,7 +453,6 @@ export default function SuiviRH() {
               </div>
             </div>
 
-            {/* SCROLLABLE CONTENT */}
             <div className="flex-1 overflow-y-auto p-12 bg-white scrollbar-hide">
               <div className="grid grid-cols-2 gap-8" id="all-badges-capture">
                 {employes.filter(e => e.type === 'atelier' && e.actif).map(e => (
@@ -593,7 +598,15 @@ export default function SuiviRH() {
           <div className="bg-white rounded-[40px] w-full max-w-2xl overflow-hidden shadow-2xl my-8 animate-in zoom-in duration-300">
             <div className="p-8 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
               <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Aperçu du Bon</h2>
-              <button onClick={() => setGeneratedBon(null)} className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center"><X className="w-6 h-6 text-slate-900" /></button>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => printElement('bon-travail-capture')}
+                  className="bg-indigo-600 text-white p-2.5 rounded-xl flex items-center gap-2 font-black text-xs uppercase tracking-widest shadow-lg"
+                >
+                  <Printer className="w-4 h-4" />
+                </button>
+                <button onClick={() => setGeneratedBon(null)} className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center"><X className="w-6 h-6 text-slate-900" /></button>
+              </div>
             </div>
             <div className="p-12 bg-white" id="bon-travail-capture">
               <div className="flex justify-between items-start mb-12">
@@ -641,7 +654,15 @@ export default function SuiviRH() {
           <div className="bg-white rounded-[32px] w-full max-w-[380px] overflow-hidden shadow-2xl animate-in zoom-in duration-300">
             <div className="p-6 flex items-center justify-between border-b border-slate-100">
               <h3 className="font-black text-slate-900 uppercase tracking-tighter">Badge QR</h3>
-              <button onClick={() => setSelectedBadge(null)} className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center"><X className="w-5 h-5" /></button>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => printElement('badge-capture')}
+                  className="bg-indigo-600 text-white p-2 rounded-xl flex items-center justify-center shadow-lg"
+                >
+                  <Printer className="w-4 h-4" />
+                </button>
+                <button onClick={() => setSelectedBadge(null)} className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center"><X className="w-5 h-5" /></button>
+              </div>
             </div>
             <div className="p-8 flex flex-col items-center text-center" id="badge-capture">
               <p className="text-xl font-black tracking-tighter text-slate-900 italic uppercase mb-8">{company.name}</p>

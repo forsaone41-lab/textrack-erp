@@ -2,75 +2,94 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
 /**
- * Generates a high-quality PDF from a DOM element.
- * Optimized for print quality (A4).
+ * Handles printing an element using the browser's native print dialog.
+ * This is a foolproof fallback when canvas-based PDF generation fails.
  */
-export async function generatePDF(elementId: string, filename: string) {
+export function printElement(elementId: string) {
   const element = document.getElementById(elementId);
-  if (!element) {
-    console.error(`Element with id ${elementId} not found.`);
+  if (!element) return;
+
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) {
+    alert('Veuillez autoriser les fenêtres surgissantes (pop-ups) pour imprimer.');
     return;
   }
 
+  // Get all styles to preserve design
+  const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+    .map(style => style.outerHTML)
+    .join('');
+
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Impression - BEYA</title>
+        ${styles}
+        <style>
+          @media print {
+            body { background: white !important; padding: 0 !important; margin: 0 !important; }
+            .no-print { display: none !important; }
+            #${elementId} { 
+              width: 100% !important; 
+              max-width: 100% !important; 
+              box-shadow: none !important; 
+              border: none !important;
+              padding: 20px !important;
+            }
+            /* Grid optimization for badges */
+            .grid { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 20px !important; }
+          }
+          body { font-family: sans-serif; }
+        </style>
+      </head>
+      <body>
+        <div id="print-content">
+          ${element.innerHTML}
+        </div>
+        <script>
+          setTimeout(() => {
+            window.print();
+            window.close();
+          }, 500);
+        </script>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+}
+
+/**
+ * Generates a high-quality PDF from a DOM element.
+ */
+export async function generatePDF(elementId: string, filename: string) {
+  const element = document.getElementById(elementId);
+  if (!element) return;
+
   try {
-    // Scroll to top of element to ensure full capture
+    // Scroll to top
     element.scrollTop = 0;
 
-    // Capture using html2canvas with optimized settings
-    // Reduced scale to 2 for better stability on all devices
+    // Use lower scale for maximum compatibility
     const canvas = await html2canvas(element, {
-      scale: 2, 
+      scale: 1.5, 
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
-      allowTaint: true,
-      onclone: (clonedDoc) => {
-        // Optional: Remove complex shadows or animations from the clone to speed up
-        const el = clonedDoc.getElementById(elementId);
-        if (el) {
-          el.style.boxShadow = 'none';
-          el.style.animation = 'none';
-          el.style.transition = 'none';
-        }
-      }
     });
 
-    const imgData = canvas.toDataURL('image/png', 1.0);
-    
-    // A4 dimensions in mm
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4',
-    });
-
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    
-    const canvasWidth = canvas.width;
-    const canvasHeight = canvas.height;
-    
-    // Calculate aspect ratio to fit width
-    const ratio = canvasWidth / pdfWidth;
-    const imgHeight = canvasHeight / ratio;
+    const ratio = canvas.width / pdfWidth;
+    const imgHeight = canvas.height / ratio;
 
-    // If content is longer than one page, handle it (basic version)
     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight, undefined, 'FAST');
-    
     pdf.save(`${filename}.pdf`);
   } catch (error) {
     console.error('PDF Generation Error:', error);
-    alert('Erreur lors de la génération du PDF. Tentative de téléchargement en tant qu\'image...');
-    
-    // Fallback: Try to download as image if PDF fails
-    try {
-      const canvas = await html2canvas(element, { scale: 2 });
-      const link = document.createElement('a');
-      link.download = `${filename}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    } catch (fallbackError) {
-      alert('Désolé, le téléchargement a échoué. Veuillez essayer sur un autre navigateur (Chrome recommandé).');
+    // If it fails, suggest Printing as PDF
+    if (confirm('Le téléchargement direct a échoué. Voulez-vous essayer d\'imprimer (et choisir "Enregistrer en PDF") ?')) {
+      printElement(elementId);
     }
   }
 }
