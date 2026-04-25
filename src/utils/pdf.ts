@@ -3,6 +3,7 @@ import jsPDF from 'jspdf';
 
 /**
  * Robust printing using a temporary overlay to avoid pop-up blockers.
+ * Increased delay to ensure all canvas elements (QR codes) are fully rendered.
  */
 export function printElement(elementId: string) {
   const element = document.getElementById(elementId);
@@ -21,30 +22,35 @@ export function printElement(elementId: string) {
         top: 0 !important;
         width: 100% !important;
         margin: 0 !important;
-        padding: 20px !important;
+        padding: 0 !important;
         box-shadow: none !important;
         border: none !important;
       }
-      /* Ensure grid layout for bulk badges */
+      /* Grid optimization for badges - 2 per row */
       #all-badges-capture {
         display: grid !important;
         grid-template-columns: 1fr 1fr !important;
-        gap: 20px !important;
+        gap: 30px !important;
+        padding: 40px !important;
+      }
+      .break-inside-avoid {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
       }
     }
   `;
 
   document.head.appendChild(style);
 
-  // Trigger print directly on current window
+  // Increased delay to 1.5s to ensure QR codes are fully drawn on all canvases
   setTimeout(() => {
     window.print();
     // Remove the style after printing starts
     setTimeout(() => {
       const s = document.getElementById('print-style-temp');
       if (s) s.remove();
-    }, 1000);
-  }, 100);
+    }, 2000);
+  }, 1500); 
 }
 
 /**
