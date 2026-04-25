@@ -383,18 +383,22 @@ export default function SuiviRH() {
                   >
                     <DollarSign className="w-4 h-4" /> Payer
                   </button>
-                  <button 
-                    onClick={() => { setBonForm({ ...bonForm, empId: e.id }); setShowBonModal(true); }}
-                    className="w-12 h-12 bg-white border-2 border-slate-100 text-slate-400 rounded-2xl flex items-center justify-center hover:bg-slate-50 hover:text-slate-900 transition-all"
-                  >
-                    <FileText className="w-5 h-5" />
-                  </button>
-                  <button 
-                    onClick={() => setSelectedBadge(e)}
-                    className="w-12 h-12 bg-white border-2 border-slate-100 text-slate-400 rounded-2xl flex items-center justify-center hover:bg-slate-50 hover:text-slate-900 transition-all"
-                  >
-                    <QrCode className="w-5 h-5" />
-                  </button>
+                  {e.type === 'atelier' && (
+                    <>
+                      <button 
+                        onClick={() => { setBonForm({ ...bonForm, empId: e.id }); setShowBonModal(true); }}
+                        className="w-12 h-12 bg-white border-2 border-slate-100 text-slate-400 rounded-2xl flex items-center justify-center hover:bg-slate-50 hover:text-slate-900 transition-all"
+                      >
+                        <FileText className="w-5 h-5" />
+                      </button>
+                      <button 
+                        onClick={() => setSelectedBadge(e)}
+                        className="w-12 h-12 bg-white border-2 border-slate-100 text-slate-400 rounded-2xl flex items-center justify-center hover:bg-slate-50 hover:text-slate-900 transition-all"
+                      >
+                        <QrCode className="w-5 h-5" />
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
