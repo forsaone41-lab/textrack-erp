@@ -114,7 +114,24 @@ export default function OrdresDeCoupe() {
   }
 
   const handleModeleChange = (val: string) => {
-    setForm({ ...form, modele: val });
+    const fiche = fiches.find(f => f.modele === val);
+    const conso = fiche?.tissuConsommation || 0;
+    const qty = form.quantite || 0;
+    setForm({ 
+      ...form, 
+      modele: val, 
+      metrage: Number((conso * qty).toFixed(2)) 
+    });
+  };
+
+  const handleQtyChange = (val: number) => {
+    const fiche = fiches.find(f => f.modele === form.modele);
+    const conso = fiche?.tissuConsommation || 0;
+    setForm({ 
+      ...form, 
+      quantite: val, 
+      metrage: Number((conso * val).toFixed(2)) 
+    });
   };
 
   async function remove(id: string) {
@@ -313,15 +330,47 @@ export default function OrdresDeCoupe() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">Quantité (pièces)</label>
-                  <input type="number" value={form.quantite || 0} onChange={e => setForm({ ...form, quantite: parseInt(e.target.value) })}
+                  <input type="number" value={form.quantite || 0} onChange={e => handleQtyChange(parseInt(e.target.value) || 0)}
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Métrage (m)</label>
-                  <input type="number" step="0.1" value={form.metrage || 0} onChange={e => setForm({ ...form, metrage: parseFloat(e.target.value) })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Métrage total (m)</label>
+                  <input type="number" step="0.1" value={form.metrage || 0} onChange={e => setForm({ ...form, metrage: parseFloat(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-indigo-50 font-bold text-indigo-700" />
                 </div>
               </div>
+
+              {/* Smart Calculator Info */}
+              {form.modele && (
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
+                  <div className="flex justify-between text-xs text-slate-500">
+                    <span>Consommation estimée :</span>
+                    <span className="font-bold text-slate-700">
+                      {fiches.find(f => f.modele === form.modele)?.tissuConsommation || 0} m/pièce
+                    </span>
+                  </div>
+                  
+                  {form.rollId && (
+                    <div className="pt-2 border-t border-slate-200">
+                      {(() => {
+                        const roll = tissus.find(t => t.id === form.rollId);
+                        const dispo = roll?.metrage || 0;
+                        const besoin = form.metrage || 0;
+                        const isOk = dispo >= besoin;
+                        return (
+                          <div className={`flex items-center justify-between p-2 rounded-lg ${isOk ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+                            <div className="text-[11px]">
+                              <p className="font-bold">{isOk ? '✓ Stock OK' : '⚠ Stock Insuffisant'}</p>
+                              <p>Disponible: {dispo}m | Nécessaire: {besoin}m</p>
+                            </div>
+                            {!isOk && <span className="text-[10px] font-black uppercase">Manque: {(besoin - dispo).toFixed(1)}m</span>}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">Date de coupe</label>
