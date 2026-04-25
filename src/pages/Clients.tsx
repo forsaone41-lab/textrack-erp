@@ -27,12 +27,12 @@ export default function Clients() {
       loadData<Client>('clients_profiles'),
       loadData<Commande>('commandes')
     ]).then(([storedClients, storedCommandes]) => {
-      // If no clients yet, maybe derive some from existing commandes?
+      // If no clients yet, derive from existing commandes with safety
       if (storedClients.length === 0 && storedCommandes.length > 0) {
-        const uniqueNames = [...new Set(storedCommandes.map(c => c.clientNom))];
+        const uniqueNames = [...new Set(storedCommandes.map(c => c.clientNom).filter(Boolean))];
         const derived = uniqueNames.map(name => ({
           id: genId(),
-          nom: name,
+          nom: name || 'Client Inconnu',
           telephone: '',
           email: '',
           adresse: '',
@@ -43,13 +43,15 @@ export default function Clients() {
       } else {
         setClients(storedClients);
       }
-      setCommandes(storedCommandes);
-    });
+      setCommandes(storedCommandes || []);
+    }).catch(err => console.error("Error loading clients data:", err));
   }, []);
 
   const clientStats = useMemo(() => {
+    if (!clients) return [];
     return clients.map(client => {
-      const clientCmds = commandes.filter(c => c.clientNom.toLowerCase() === client.nom.toLowerCase());
+      const clientName = (client.nom || '').toLowerCase();
+      const clientCmds = (commandes || []).filter(c => (c.clientNom || '').toLowerCase() === clientName);
       const totalAffaire = clientCmds.reduce((sum, c) => sum + (c.total || 0), 0);
       const totalPaye = clientCmds.reduce((sum, c) => sum + (c.avance || 0), 0);
       const totalDette = totalAffaire - totalPaye;
@@ -59,12 +61,12 @@ export default function Clients() {
   }, [clients, commandes]);
 
   const filtered = clientStats.filter(c => 
-    c.nom.toLowerCase().includes(search.toLowerCase()) || 
-    c.telephone.includes(search)
+    (c.nom || '').toLowerCase().includes(search.toLowerCase()) || 
+    (c.telephone || '').includes(search)
   );
 
-  const totalDetteGlobale = clientStats.reduce((sum, c) => sum + c.totalDette, 0);
-  const clientActifCount = clientStats.filter(c => c.cmdCount > 0).length;
+  const totalDetteGlobale = clientStats.reduce((sum, c) => sum + (c.totalDette || 0), 0);
+  const clientActifCount = clientStats.filter(c => (c.cmdCount || 0) > 0).length;
 
   function openCreate() {
     setEditId(null);
@@ -119,13 +121,13 @@ export default function Clients() {
         <div className="bg-emerald-50 p-6 rounded-[32px] border-2 border-emerald-100 shadow-sm">
           <p className="text-[10px] font-black text-emerald-600/60 uppercase tracking-[0.2em] mb-1">Chiffre d'Affaires</p>
           <p className="text-3xl font-black text-emerald-700">
-            {clientStats.reduce((sum, c) => sum + c.totalAffaire, 0).toLocaleString()} <span className="text-sm">MAD</span>
+            {clientStats.reduce((sum, c) => sum + (c.totalAffaire || 0), 0).toLocaleString()} <span className="text-sm">MAD</span>
           </p>
         </div>
         <div className="bg-rose-50 p-6 rounded-[32px] border-2 border-rose-100 shadow-sm">
           <p className="text-[10px] font-black text-rose-600/60 uppercase tracking-[0.2em] mb-1">Dette Globale</p>
           <p className="text-3xl font-black text-rose-700">
-            {totalDetteGlobale.toLocaleString()} <span className="text-sm">MAD</span>
+            {(totalDetteGlobale || 0).toLocaleString()} <span className="text-sm">MAD</span>
           </p>
         </div>
       </div>
@@ -150,10 +152,10 @@ export default function Clients() {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 bg-slate-900 rounded-[20px] flex items-center justify-center text-white font-black text-xl shadow-lg">
-                    {c.nom[0].toUpperCase()}
+                    {(c.nom || 'C')[0].toUpperCase()}
                   </div>
                   <div>
-                    <h3 className="font-black text-slate-900 uppercase tracking-tighter truncate max-w-[150px]">{c.nom}</h3>
+                    <h3 className="font-black text-slate-900 uppercase tracking-tighter truncate max-w-[150px]">{c.nom || 'Client Sans Nom'}</h3>
                     <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{c.ville || 'Ville non spécifiée'}</p>
                   </div>
                 </div>
@@ -171,7 +173,7 @@ export default function Clients() {
                 )}
                 <div className="flex items-center gap-3 text-slate-500">
                   <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center"><TrendingUp className="w-3.5 h-3.5" /></div>
-                  <span className="text-xs font-bold">{c.cmdCount} Commandes passées</span>
+                  <span className="text-xs font-bold">{c.cmdCount || 0} Commandes passées</span>
                 </div>
               </div>
 
@@ -179,11 +181,11 @@ export default function Clients() {
               <div className="grid grid-cols-2 gap-2 p-3 bg-slate-50 rounded-2xl mb-4">
                 <div>
                   <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Réglé</p>
-                  <p className="text-xs font-black text-emerald-600">{c.totalPaye.toLocaleString()} MAD</p>
+                  <p className="text-xs font-black text-emerald-600">{(c.totalPaye || 0).toLocaleString()} MAD</p>
                 </div>
                 <div>
                   <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Reste</p>
-                  <p className="text-xs font-black text-rose-600">{c.totalDette.toLocaleString()} MAD</p>
+                  <p className="text-xs font-black text-rose-600">{(c.totalDette || 0).toLocaleString()} MAD</p>
                 </div>
               </div>
 
@@ -198,7 +200,7 @@ export default function Clients() {
                 </button>
                 {c.telephone && (
                   <a 
-                    href={`https://wa.me/${c.telephone.replace(/\s/g, '')}`} 
+                    href={`https://wa.me/${(c.telephone || '').replace(/\s/g, '')}`} 
                     target="_blank"
                     className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center border border-emerald-100 hover:bg-emerald-100 transition-colors"
                   >
@@ -282,7 +284,7 @@ export default function Clients() {
             <div className="p-8 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
               <div>
                 <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Situation Client</h2>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{selectedClient.nom}</p>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{selectedClient.nom || 'Client'}</p>
               </div>
               <button onClick={() => setSelectedClient(null)} className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center">
                 <X className="w-6 h-6 text-slate-900" />
@@ -306,7 +308,7 @@ export default function Clients() {
               <div className="grid grid-cols-2 gap-8 mb-12">
                 <div className="bg-slate-50 p-6 rounded-3xl">
                   <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Client</h3>
-                  <p className="text-xl font-black text-slate-900">{selectedClient.nom}</p>
+                  <p className="text-xl font-black text-slate-900">{selectedClient.nom || 'Sans Nom'}</p>
                   <p className="text-sm text-slate-500 font-bold mt-1">{selectedClient.telephone || 'N/A'}</p>
                   <p className="text-xs text-slate-400 mt-2 italic">{selectedClient.adresse || 'Pas d\'adresse'}</p>
                 </div>
@@ -324,7 +326,7 @@ export default function Clients() {
                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Récapitulatif des Commandes</h3>
                 <div className="space-y-3">
                   {commandes
-                    .filter(c => c.clientNom.toLowerCase() === selectedClient.nom.toLowerCase())
+                    .filter(c => (c.clientNom || '').toLowerCase() === (selectedClient.nom || '').toLowerCase())
                     .map(cmd => (
                       <div key={cmd.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
                         <div>
@@ -332,7 +334,7 @@ export default function Clients() {
                           <p className="text-[10px] font-bold text-slate-400">{cmd.designation}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs font-black text-slate-900">{cmd.total.toLocaleString()} MAD</p>
+                          <p className="text-xs font-black text-slate-900">{(cmd.total || 0).toLocaleString()} MAD</p>
                           <p className={`text-[10px] font-black uppercase ${cmd.statut === 'payé' ? 'text-emerald-500' : 'text-amber-500'}`}>
                             {cmd.statut}
                           </p>
@@ -344,7 +346,7 @@ export default function Clients() {
 
               <div className="p-8 bg-indigo-50 rounded-[32px] border-2 border-indigo-100 flex justify-between items-center">
                 <div>
-                  <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">Motal des Affaires</p>
+                  <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">Total des Affaires</p>
                   <p className="text-2xl font-black text-slate-900">{((selectedClient as any).totalAffaire || 0).toLocaleString()} MAD</p>
                 </div>
                 <div className="text-right">
