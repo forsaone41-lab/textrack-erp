@@ -130,34 +130,34 @@ export default function Commandes() {
     // Safety check: remove tissu if it causes database errors (until SQL migration is run)
     const dataToSave = { ...cmdData };
     await saveRecord('commandes', dataToSave);
-
-    // Sync with cutting orders
-    if (cmdData.phase === 'coupe' && cmdData.statut !== 'livré') {
-      const existingOrdre = ordres.find(o => o.commandeId === cmdData.id);
-      if (!existingOrdre) {
-        const fiche = fiches.find(f => f.modele === cmdData.modele);
-        const conso = fiche?.tissuConsommation || 0;
-        const nouveauOrdre: OrdreDeCoupe = {
-          id: genId(),
-          commandeId: cmdData.id,
-          modele: cmdData.modele,
-          client: cmdData.client,
-          quantite: cmdData.quantite,
-          tissu: fiche?.type || cmdData.tissu || '',
-          couleur: 'À définir',
-          metrage: Number((conso * cmdData.quantite).toFixed(2)),
-          statut: 'planifié',
-          dateCoupe: cmdData.dateCommande
-        };
-        await saveRecord('ordres', nouveauOrdre);
-        setOrdres(prev => [...prev, nouveauOrdre]);
-      } else if (existingOrdre.modele !== cmdData.modele || existingOrdre.quantite !== cmdData.quantite) {
-        const updatedOrdre = { ...existingOrdre, modele: cmdData.modele, quantite: cmdData.quantite, client: cmdData.client };
-        await saveRecord('ordres', updatedOrdre);
-        setOrdres(prev => prev.map(o => o.id === updatedOrdre.id ? updatedOrdre : o));
-      }
-    }
   }
+
+  const handleSendToCutter = async (c: Commande) => {
+    const existingOrdre = ordres.find(o => o.commandeId === c.id);
+    if (existingOrdre) {
+      alert(lang === 'fr' ? 'Déjà envoyé à la coupure' : 'مرسلة بالفعل للفصالة');
+      return;
+    }
+
+    const fiche = fiches.find(f => f.modele === c.modele);
+    const conso = fiche?.tissuConsommation || 0;
+    const nouveauOrdre: OrdreDeCoupe = {
+      id: genId(),
+      commandeId: c.id,
+      modele: c.modele,
+      client: c.client,
+      quantite: c.quantite,
+      tissu: fiche?.type || c.tissu || '',
+      couleur: 'À définir',
+      metrage: Number((conso * c.quantite).toFixed(2)),
+      statut: 'planifié',
+      dateCoupe: c.dateCommande
+    };
+    
+    await saveRecord('ordres', nouveauOrdre);
+    setOrdres(prev => [...prev, nouveauOrdre]);
+    alert(lang === 'fr' ? 'Envoyé à la coupure !' : 'تم الإرسال للفصالة بنجاح !');
+  };
 
   async function remove(id: string) {
     setCommandes(commandes.filter(c => c.id !== id));
@@ -314,7 +314,26 @@ export default function Commandes() {
                         })()}
                       </td>
                       <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}><div className="flex items-center justify-center gap-1"><span title="Ordres de coupe" className="flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-700"><Scissors className="w-3 h-3" />{cmdOrdres.length}</span><span title="Pointages" className="flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700"><ClipboardCheck className="w-3 h-3" />{cmdPointages.length}</span></div></td>
-                      <td className="px-4 py-3.5 text-center" onClick={e => e.stopPropagation()}><div className="flex items-center justify-center gap-1">{!cmdFacture && <button onClick={() => createFacture(c)} className="p-1.5 text-slate-400 hover:text-emerald-600 rounded-lg"><Receipt className="w-3.5 h-3.5" /></button>}<button onClick={() => openEdit(c)} className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg"><Edit2 className="w-3.5 h-3.5" /></button><button onClick={() => setConfirmDelete(c.id)} className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg"><Trash2 className="w-3.5 h-3.5" /></button></div></td>
+                      <td className="px-4 py-3.5 text-center" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-center gap-1">
+                          {c.phase === 'coupe' && (
+                            <button 
+                              onClick={() => handleSendToCutter(c)} 
+                              title="Envoyer à la coupure"
+                              className={`p-1.5 rounded-lg transition-all ${
+                                ordres.some(o => o.commandeId === c.id) 
+                                  ? 'text-slate-300 cursor-not-allowed' 
+                                  : 'text-orange-500 hover:bg-orange-50 hover:shadow-sm'
+                              }`}
+                            >
+                              <Scissors className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          {!cmdFacture && <button onClick={() => createFacture(c)} className="p-1.5 text-slate-400 hover:text-emerald-600 rounded-lg"><Receipt className="w-3.5 h-3.5" /></button>}
+                          <button onClick={() => openEdit(c)} className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg"><Edit2 className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => setConfirmDelete(c.id)} className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg"><Trash2 className="w-3.5 h-3.5" /></button>
+                        </div>
+                      </td>
                     </tr>
                     {isExpanded && (
                       <tr key={`${c.id}-rel`} className="bg-indigo-50/30 border-b-2 border-indigo-200">

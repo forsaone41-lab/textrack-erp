@@ -131,44 +131,7 @@ export default function OrdresDeCoupe() {
           <h1 className="text-2xl font-bold text-slate-800">Ordres de Coupe</h1>
           <p className="text-slate-500 text-sm">Gestion des bons de coupe et patronage</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button onClick={() => { setEditId(null); setForm({ statut: 'planifié', dateCoupe: new Date().toISOString().split('T')[0] }); setShowModal(true); }} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-lg hover:bg-indigo-700 transition text-sm font-medium shadow-sm">
-            <Plus className="w-4 h-4" /> Nouvel Ordre
-          </button>
-        </div>
       </div>
-
-      {pendingCommands.length > 0 && (
-        <div className="bg-gradient-to-r from-indigo-600 to-violet-600 rounded-2xl p-6 shadow-xl text-white">
-          <div className="flex items-center gap-2 mb-4"><ShoppingCart className="w-5 h-5" /><h2 className="text-sm font-bold uppercase tracking-wider">File d'attente production</h2></div>
-          <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
-            {pendingCommands.map(c => {
-              const fiche = fiches.find(f => f.modele.toLowerCase() === c.modele.toLowerCase());
-              return (
-                <div key={c.id} className="min-w-[340px] bg-white border border-slate-200 rounded-3xl p-5 flex flex-col shadow-2xl text-slate-800">
-                  <div className="flex gap-4 mb-5">
-                    <div className="w-24 h-24 rounded-2xl bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-100">
-                      {fiche?.photo ? <img src={fiche.photo} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><ImageIcon className="w-8 h-8 text-slate-300" /></div>}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start mb-1">
-                        <h3 className="text-base font-black truncate">{c.modele}</h3>
-                      </div>
-                      <p className="text-xs font-bold text-indigo-600 mb-2">{c.client}</p>
-                      <div className="flex items-center gap-2 px-2 py-1 bg-slate-100 rounded-lg w-fit">
-                        <Scissors className="w-3 h-3 text-slate-500" />
-                        <span className="text-[10px] font-black uppercase">{c.quantite} pièces</span>
-                      </div>
-                    </div>
-                  </div>
-                  {fiche && <div className="mb-5 border-t border-slate-100 pt-5"><AssetsBlock fiche={fiche} /></div>}
-                  <button onClick={() => handleImportCommand(c)} className="w-full bg-indigo-600 text-white py-3.5 rounded-xl text-xs font-black hover:bg-indigo-700 transition flex items-center justify-center gap-2 shadow-lg tracking-widest uppercase">LANCER LA COUPE <ChevronRight className="w-4 h-4" /></button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
