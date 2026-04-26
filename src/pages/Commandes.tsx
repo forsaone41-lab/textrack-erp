@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   Plus, Search, Edit2, Trash2, ShoppingCart, Calculator, ChevronDown,
   ChevronRight, Scissors, ClipboardCheck, Receipt, Link, X, TrendingUp,
-  Package, Truck, AlertCircle, Eye,
+  Package, Truck, AlertCircle, Eye, TriangleAlert
 } from 'lucide-react';
 import {
   Commande, FicheTechnique, OrdreDeCoupe, PointageEntry, Facture, Employe, User, StockTissu,
@@ -33,6 +33,11 @@ export default function Commandes() {
   const [form, setForm] = useState<Partial<Commande>>({});
   const [showCalc, setShowCalc] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [showStockWarning, setShowStockWarning] = useState<{
+    order: Commande;
+    needed: number;
+    available: number;
+  } | null>(null);
 
   const [showFacturePreview, setShowFacturePreview] = useState(false);
   const [selectedFacture, setSelectedFacture] = useState<Facture | null>(null);
@@ -170,7 +175,7 @@ export default function Commandes() {
     await saveRecord('commandes', dataToSave);
   }
 
-  const handleSendToCutter = async (c: Commande) => {
+  const handleSendToCutter = async (c: Commande, force: boolean = false) => {
     const existingOrdre = ordres.find(o => o.commandeId === c.id);
     if (existingOrdre) {
       alert(lang === 'fr' ? 'Déjà envoyé à la coupure' : 'مرسلة بالفعل للفصالة');
@@ -183,16 +188,14 @@ export default function Commandes() {
 
     // Stock Linkage: Find the roll and deduct
     const selectedRoll = tissus.find(t => `${t.type} ${t.couleur}` === c.tissu);
-    if (selectedRoll) {
+    if (selectedRoll && !force) {
       if (selectedRoll.metrage < metrageRequis) {
-        if (!confirm(lang === 'fr' 
-          ? `Stock insuffisant (${selectedRoll.metrage}m). Voulez-vous quand même continuer ?` 
-          : `المخزون غير كافٍ (${selectedRoll.metrage} متر). واش بغيتي تزيد؟`)) {
-          return;
-        }
+        setShowStockWarning({ order: c, needed: metrageRequis, available: selectedRoll.metrage });
+        return;
       }
-      
-      // Deduct from stock
+    }
+    
+    if (selectedRoll) {
       const updatedRoll = { ...selectedRoll, metrage: Math.max(0, selectedRoll.metrage - metrageRequis) };
       await saveRecord('tissus', updatedRoll);
       setTissus(prev => prev.map(t => t.id === updatedRoll.id ? updatedRoll : t));
@@ -473,6 +476,43 @@ export default function Commandes() {
           </table>
         </div>
       </div>
+
+      {/* STOCK WARNING MODAL */}
+      {showStockWarning && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden border border-red-100 animate-in fade-in zoom-in duration-300">
+            <div className="bg-red-50 p-8 flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-red-200">
+                <TriangleAlert className="w-8 h-8 text-red-600" />
+              </div>
+              <h3 className="text-xl font-black text-slate-800 mb-2">Attention : Stock Insuffisant</h3>
+              <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                Vous avez besoin de <span className="text-red-600 font-bold">{showStockWarning.needed.toFixed(1)}m</span> de tissu, 
+                mais il ne reste que <span className="text-slate-800 font-bold">{showStockWarning.available.toFixed(1)}m</span> en stock.
+              </p>
+            </div>
+            
+            <div className="p-8 flex flex-col gap-3">
+              <button 
+                onClick={() => {
+                  const cmd = showStockWarning.order;
+                  setShowStockWarning(null);
+                  handleSendToCutter(cmd, true);
+                }}
+                className="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black text-sm transition shadow-lg shadow-red-200"
+              >
+                CONTINUER QUAND MÊME
+              </button>
+              <button 
+                onClick={() => setShowStockWarning(null)}
+                className="w-full py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-bold text-sm transition"
+              >
+                ANNULER ET VÉRIFIER
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* CALCULATEUR MODAL */}
       {showCalc && (() => {
