@@ -319,7 +319,7 @@ export async function saveRecord<T>(table: string, record: T): Promise<void> {
     if (error.message.includes('column') && error.message.includes('not find')) {
       const fallbackRecord = { ...record as any };
       // List of potential new columns that might not exist yet
-      ['tissu', 'tissuConsommation', 'type', 'client', 'commandeId'].forEach(col => delete fallbackRecord[col]);
+      ['tissu', 'tissuConsommation', 'type', 'client', 'commandeId', 'fournisseurTel'].forEach(col => delete fallbackRecord[col]);
       const { error: retryError } = await supabase.from(table).upsert(fallbackRecord);
       if (!retryError) return; // Fallback worked!
     }
