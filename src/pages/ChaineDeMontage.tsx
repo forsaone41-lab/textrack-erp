@@ -353,10 +353,12 @@ export default function ChaineDeMontage() {
                     <div className="flex items-center gap-2">
                        <button 
                         onClick={() => openPointage(cmd)}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-blue-600 text-white rounded-xl text-xs font-black shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all uppercase tracking-widest"
+                        className="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-100 hover:shadow-blue-200 hover:-translate-y-0.5 active:translate-y-0 transition-all border border-blue-400/20"
                       >
-                        <ClipboardCheck className="w-3.5 h-3.5" />
-                        + Pointage
+                        <div className="bg-white/20 p-1 rounded-lg">
+                          <ClipboardCheck className="w-3.5 h-3.5" />
+                        </div>
+                        Pointage Production
                       </button>
 
                       {canGoBack && (

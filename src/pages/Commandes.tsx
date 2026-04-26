@@ -383,7 +383,13 @@ export default function Commandes() {
                                    <ClipboardCheck className="w-4 h-4 text-blue-500" />
                                    <span className="text-xs font-bold text-blue-700 uppercase tracking-wide">Pointages</span>
                                  </div>
-                                 <button onClick={() => openPointage(c)} className="text-[10px] bg-blue-600 text-white px-2 py-1 rounded-lg font-bold hover:bg-blue-700">+ Pointage</button>
+                                 <button 
+                                   onClick={() => openPointage(c)} 
+                                   className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md shadow-blue-100 hover:shadow-blue-200 hover:-translate-y-0.5 transition-all border border-blue-400/20"
+                                 >
+                                   <ClipboardCheck className="w-3 h-3" />
+                                   + Pointage
+                                 </button>
                                </div>
                                <p className="text-xs text-slate-600 font-bold mb-2">{totalPts - totalRebut} pièces produites</p>
                                <div className="space-y-1">
