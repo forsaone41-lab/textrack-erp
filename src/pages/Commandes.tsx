@@ -180,14 +180,20 @@ export default function Commandes() {
     await saveRecord('factures', newFacture);
   }
 
-  const statutBadge = (s: string, urgent = false) => {
-    if (urgent) return 'bg-red-100 text-red-700';
-    return ({ en_cours: 'bg-blue-100 text-blue-700', terminé: 'bg-violet-100 text-violet-700', livré: 'bg-emerald-100 text-emerald-700' }[s] ?? 'bg-slate-100 text-slate-600');
-  };
-
-  const statutLabel = (s: string, urgent = false) => {
-    if (urgent) return t('urgent_label', lang);
-    return ({ en_cours: t('status_en_cours', lang), terminé: t('status_terminee', lang), livré: t('status_livree', lang) }[s] ?? s);
+  const getDynamicStatus = (c: Partial<Commande>) => {
+    if (c.statut === 'livré') return { label: t('status_livree', lang), color: 'bg-emerald-50 text-emerald-700 border-emerald-100', icon: '✓' };
+    
+    const phase = c.phase || 'coupe';
+    switch (phase) {
+      case 'coupe':
+        return { label: lang === 'fr' ? 'En Coupe' : 'قيد الفصالة', color: 'bg-amber-50 text-amber-700 border-amber-100', icon: '✂️' };
+      case 'montage':
+        return { label: lang === 'fr' ? 'En Montage' : 'قيد الخياطة', color: 'bg-indigo-50 text-indigo-700 border-indigo-100', icon: '🧵' };
+      case 'finition':
+        return { label: lang === 'fr' ? 'Finition' : 'التشطيب', color: 'bg-purple-50 text-purple-700 border-purple-100', icon: '✨' };
+      default:
+        return { label: t('status_en_cours', lang), color: 'bg-slate-50 text-slate-700 border-slate-100', icon: '⏳' };
+    }
   };
 
   function fmtDate(d?: string) {
@@ -296,7 +302,17 @@ export default function Commandes() {
                       <td className="px-4 py-3.5 text-center"><span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold text-white ${PHASE_COLORS[c.phase]}`}>{PHASE_LABELS[c.phase]}</span></td>
                       <td className="px-4 py-3.5 text-right"><span className="text-sm font-bold text-slate-800">{(c.quantite * c.prix).toLocaleString()}</span><span className="text-xs text-slate-400"> MAD</span></td>
                       <td className="px-4 py-3.5 text-center"><div><p className={`text-xs ${urgent ? 'text-red-600 font-semibold' : 'text-slate-500'}`}>{fmtDate(c.dateLivraisonPrevue)}</p></div></td>
-                      <td className="px-4 py-3.5 text-center"><span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${statutBadge(c.statut, urgent)}`}>{statutLabel(c.statut, urgent)}</span></td>
+                      <td className="px-4 py-3.5 text-center">
+                        {(() => {
+                          const ds = getDynamicStatus(c);
+                          return (
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${ds.color} shadow-sm`}>
+                              <span>{ds.icon}</span>
+                              {ds.label}
+                            </span>
+                          );
+                        })()}
+                      </td>
                       <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}><div className="flex items-center justify-center gap-1"><span title="Ordres de coupe" className="flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-700"><Scissors className="w-3 h-3" />{cmdOrdres.length}</span><span title="Pointages" className="flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700"><ClipboardCheck className="w-3 h-3" />{cmdPointages.length}</span></div></td>
                       <td className="px-4 py-3.5 text-center" onClick={e => e.stopPropagation()}><div className="flex items-center justify-center gap-1">{!cmdFacture && <button onClick={() => createFacture(c)} className="p-1.5 text-slate-400 hover:text-emerald-600 rounded-lg"><Receipt className="w-3.5 h-3.5" /></button>}<button onClick={() => openEdit(c)} className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg"><Edit2 className="w-3.5 h-3.5" /></button><button onClick={() => setConfirmDelete(c.id)} className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg"><Trash2 className="w-3.5 h-3.5" /></button></div></td>
                     </tr>

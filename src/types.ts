@@ -40,6 +40,7 @@ export interface OrdreDeCoupe {
   commandeId?: string | null;
   rollId?: string | null;
   modele: string;
+  client: string;
   quantite: number;
   tissu: string;
   couleur: string;
