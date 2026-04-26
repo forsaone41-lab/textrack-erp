@@ -131,24 +131,30 @@ export default function Commandes() {
     const dataToSave = { ...cmdData };
     await saveRecord('commandes', dataToSave);
 
-    if (isNew) {
-      const fiche = fiches.find(f => f.modele === cmdData.modele);
-      if (fiche) {
-        const metrageTotal = (fiche.tissuConsommation || 0) * (cmdData.quantite || 0);
+    // Sync with cutting orders
+    if (cmdData.phase === 'coupe' && cmdData.statut !== 'livré') {
+      const existingOrdre = ordres.find(o => o.commandeId === cmdData.id);
+      if (!existingOrdre) {
+        const fiche = fiches.find(f => f.modele === cmdData.modele);
+        const conso = fiche?.tissuConsommation || 0;
         const nouveauOrdre: OrdreDeCoupe = {
           id: genId(),
           commandeId: cmdData.id,
-          rollId: null,
           modele: cmdData.modele,
+          client: cmdData.client,
           quantite: cmdData.quantite,
-          tissu: cmdData.tissu || fiche.type || 'À définir',
+          tissu: fiche?.type || cmdData.tissu || '',
           couleur: 'À définir',
-          metrage: Number(metrageTotal.toFixed(2)),
+          metrage: Number((conso * cmdData.quantite).toFixed(2)),
           statut: 'planifié',
           dateCoupe: cmdData.dateCommande
         };
-        setOrdres(prev => [...prev, nouveauOrdre]);
         await saveRecord('ordres', nouveauOrdre);
+        setOrdres(prev => [...prev, nouveauOrdre]);
+      } else if (existingOrdre.modele !== cmdData.modele || existingOrdre.quantite !== cmdData.quantite) {
+        const updatedOrdre = { ...existingOrdre, modele: cmdData.modele, quantite: cmdData.quantite, client: cmdData.client };
+        await saveRecord('ordres', updatedOrdre);
+        setOrdres(prev => prev.map(o => o.id === updatedOrdre.id ? updatedOrdre : o));
       }
     }
   }
