@@ -140,9 +140,6 @@ export default function OrdresDeCoupe() {
           <h1 className="text-2xl font-black text-slate-800 tracking-tight">Espace Coupure</h1>
           <p className="text-slate-500 text-sm font-medium">Gestion de la file d'attente et du patronage</p>
         </div>
-        <button onClick={() => { setEditId(null); setForm({ statut: 'planifié', dateCoupe: new Date().toISOString().split('T')[0] }); setShowModal(true); }} className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-3 rounded-2xl hover:bg-indigo-700 transition font-black text-xs shadow-xl shadow-indigo-100 uppercase tracking-widest">
-          <Plus className="w-4 h-4" /> Nouvel Ordre
-        </button>
       </div>
 
       {/* SECTION 1: FILE D'ATTENTE (PENDING) */}
