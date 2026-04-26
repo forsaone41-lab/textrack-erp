@@ -339,7 +339,13 @@ export default function Commandes() {
                     <div><label className="block text-xs font-black text-slate-400 uppercase mb-2">Quantité</label><input type="number" min="1" value={calcQty || ''} onChange={e => setCalcQty(parseInt(e.target.value) || 1)} className="w-full px-5 py-3 border border-slate-200 rounded-2xl text-sm font-bold outline-none" /></div>
                   </div>
                   <div><label className="block text-xs font-black text-slate-400 uppercase mb-2">Tissu du Stock</label><select value={calcTissuId} onChange={e => handleTissuChange(e.target.value)} className="w-full px-5 py-3 border border-slate-200 rounded-2xl text-sm font-bold outline-none"><option value="">— Choisir un rouleau —</option>{tissus.map(t => <option key={t.id} value={t.id}>{t.couleur} · {t.type} — {t.metrage}m dispo</option>)}</select></div>
-                  <div><label className="block text-xs font-black text-slate-400 uppercase mb-2">Prix tissu (MAD/m)</label><input type="number" value={calcPrixTissu || ''} onChange={e => setCalcPrixTissu(parseFloat(e.target.value) || 0)} className="w-full px-5 py-3 bg-green-50 border border-green-100 rounded-2xl text-sm font-black text-green-700 outline-none" /></div>
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-xs font-black text-slate-400 uppercase">Prix tissu (MAD/m)</label>
+                      {calcTissuId && <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">✓ Auto depuis stock</span>}
+                    </div>
+                    <input type="number" value={calcPrixTissu || ''} onChange={e => setCalcPrixTissu(parseFloat(e.target.value) || 0)} className="w-full px-5 py-3 bg-green-50 border border-green-100 rounded-2xl text-sm font-black text-green-700 outline-none" />
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div><label className="block text-xs font-black text-slate-400 uppercase mb-2">Main d'œuvre</label><input type="number" value={calcMainOeuvre || ''} onChange={e => setCalcMainOeuvre(parseFloat(e.target.value) || 0)} className="w-full px-5 py-3 border border-slate-200 rounded-2xl text-sm font-bold outline-none" /></div>
                     <div><label className="block text-xs font-black text-slate-400 uppercase mb-2">Charges fixes</label><input type="number" value={calcCharges || ''} onChange={e => setCalcCharges(parseFloat(e.target.value) || 0)} className="w-full px-5 py-3 border border-slate-200 rounded-2xl text-sm font-bold outline-none" /></div>
