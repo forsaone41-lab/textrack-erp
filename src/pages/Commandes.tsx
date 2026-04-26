@@ -196,8 +196,12 @@ export default function Commandes() {
         return { label: lang === 'fr' ? 'En Montage' : 'قيد الخياطة', color: 'bg-indigo-50 text-indigo-700 border-indigo-100', icon: '🧵' };
       case 'finition':
         return { label: lang === 'fr' ? 'Finition' : 'التشطيب', color: 'bg-purple-50 text-purple-700 border-purple-100', icon: '✨' };
-      case 'control_emballage':
-        return { label: lang === 'fr' ? 'Contrôle & Emballage' : 'الرقابة والتلفيف', color: 'bg-cyan-50 text-cyan-700 border-cyan-100', icon: '📦' };
+      case 'repassage':
+        return { label: lang === 'fr' ? 'Repassage' : 'المصلوح', color: 'bg-amber-50 text-amber-700 border-amber-100', icon: '💨' };
+      case 'controle':
+        return { label: lang === 'fr' ? 'Contrôle Qualité' : 'الرقابة', color: 'bg-rose-50 text-rose-700 border-rose-100', icon: '🔍' };
+      case 'emballage':
+        return { label: lang === 'fr' ? 'Emballage' : 'التلفيف', color: 'bg-cyan-50 text-cyan-700 border-cyan-100', icon: '📦' };
       default:
         return { label: t('status_en_cours', lang), color: 'bg-slate-50 text-slate-700 border-slate-100', icon: '⏳' };
     }

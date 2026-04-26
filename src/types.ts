@@ -1,24 +1,26 @@
 import { supabase } from './supabase';
 
-export type Phase = 'coupe' | 'montage' | 'finition' | 'control_emballage' | 'repassage' | 'livré';
+export type Phase = 'coupe' | 'montage' | 'finition' | 'repassage' | 'controle' | 'emballage' | 'livré';
 
 export const PHASE_LABELS: Record<Phase, string> = {
   coupe: 'Coupe',
   montage: 'Montage',
   finition: 'Finition',
-  control_emballage: 'Contrôle & Emballage',
   repassage: 'Repassage',
+  controle: 'Contrôle Qualité',
+  emballage: 'Emballage',
   livré: 'Livré',
 };
 
-export const PHASE_ORDER: Phase[] = ['coupe', 'montage', 'finition', 'control_emballage', 'repassage', 'livré'];
+export const PHASE_ORDER: Phase[] = ['coupe', 'montage', 'finition', 'repassage', 'controle', 'emballage', 'livré'];
 
 export const PHASE_COLORS: Record<Phase, string> = {
   coupe: 'bg-orange-500',
   montage: 'bg-blue-500',
   finition: 'bg-purple-500',
-  control_emballage: 'bg-cyan-500',
-  repassage: 'bg-yellow-500',
+  repassage: 'bg-amber-500',
+  controle: 'bg-rose-500',
+  emballage: 'bg-cyan-500',
   livré: 'bg-green-500',
 };
 
