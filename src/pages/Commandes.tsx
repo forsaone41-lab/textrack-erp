@@ -538,6 +538,8 @@ export default function Commandes() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6 text-center"><div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4"><Trash2 className="w-6 h-6 text-red-500" /></div><h3 className="text-lg font-bold text-slate-800 mb-1">Supprimer cette commande ?</h3><p className="text-sm text-slate-500 mb-6">Cette action est irréversible.</p><div className="flex gap-3"><button onClick={() => setConfirmDelete(null)} className="flex-1 px-4 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition">Annuler</button><button onClick={() => remove(confirmDelete)} className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 transition">Supprimer</button></div></div>
         </div>
+      )}
+
       {/* Pointage Modal */}
       {showPointageModal && selectedCmd && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
