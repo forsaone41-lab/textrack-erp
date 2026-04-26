@@ -36,7 +36,8 @@ export default function ChaineDeMontage() {
       date: today,
       phase: c.phase,
       piecesCompletees: 0,
-      rebut: 0
+      rebut: 0,
+      retouche: 0
     });
     setShowPointageModal(true);
   }
@@ -341,6 +342,27 @@ export default function ChaineDeMontage() {
                     </div>
                   </div>
 
+                  <div className="flex items-center justify-between px-2 py-2 bg-slate-50/50 rounded-xl border border-slate-100">
+                    <div className="flex gap-3 md:gap-5">
+                       <div className="flex flex-col">
+                         <span className="text-[8px] font-black text-slate-400 uppercase">Bonnes</span>
+                         <span className="text-xs font-black text-indigo-600">{piecesProduites}</span>
+                       </div>
+                       <div className="flex flex-col border-l border-slate-200 pl-3 md:pl-5">
+                         <span className="text-[8px] font-black text-slate-400 uppercase">Rebut</span>
+                         <span className="text-xs font-black text-red-600">{rebutTotal}</span>
+                       </div>
+                       <div className="flex flex-col border-l border-slate-200 pl-3 md:pl-5">
+                         <span className="text-[8px] font-black text-slate-400 uppercase">Retouche</span>
+                         <span className="text-xs font-black text-amber-600">{retoucheTotal}</span>
+                       </div>
+                    </div>
+                    <div className="text-right">
+                       <span className="text-[8px] font-black text-slate-400 uppercase block">Total Phase</span>
+                       <span className="text-xs font-black text-slate-800">{piecesProduites + rebutTotal + retoucheTotal} pcs</span>
+                    </div>
+                  </div>
+
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2 border-t border-slate-50">
                     <div className="flex items-center gap-2">
                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold border ${attenteCouleur}`}>
@@ -433,26 +455,47 @@ export default function ChaineDeMontage() {
                 </select>
               </div>
 
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest text-indigo-600">Pièces Réussies (Bonnes)</label>
+                <input 
+                  type="number" 
+                  value={ptForm.piecesCompletees || ''} 
+                  onChange={e => setPtForm({ ...ptForm, piecesCompletees: parseInt(e.target.value) || 0 })}
+                  className="w-full px-5 py-4 border-2 border-indigo-50 rounded-2xl text-sm font-bold outline-none bg-indigo-50/30 focus:bg-white focus:border-indigo-500 transition-all"
+                  placeholder="0"
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">Pièces Finies</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest text-red-500">Perdues (Rebut)</label>
                   <input 
                     type="number" 
-                    value={ptForm.piecesCompletees || ''} 
-                    onChange={e => setPtForm({ ...ptForm, piecesCompletees: parseInt(e.target.value) || 0 })}
-                    className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl text-sm font-bold outline-none bg-slate-50 focus:bg-white focus:border-indigo-500 transition-all"
-                    placeholder="Ex: 50"
+                    value={ptForm.rebut || ''} 
+                    onChange={e => setPtForm({ ...ptForm, rebut: parseInt(e.target.value) || 0 })}
+                    className="w-full px-5 py-4 border-2 border-red-50 rounded-2xl text-sm font-bold outline-none bg-red-50/30 focus:bg-white focus:border-red-500 transition-all"
+                    placeholder="0"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">Date</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest text-amber-500">À Refaire (Retouche)</label>
                   <input 
-                    type="date" 
-                    value={ptForm.date || ''} 
-                    onChange={e => setPtForm({ ...ptForm, date: e.target.value })}
-                    className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl text-sm font-bold outline-none bg-slate-50 focus:bg-white focus:border-indigo-500 transition-all"
+                    type="number" 
+                    value={ptForm.retouche || ''} 
+                    onChange={e => setPtForm({ ...ptForm, retouche: parseInt(e.target.value) || 0 })}
+                    className="w-full px-5 py-4 border-2 border-amber-50 rounded-2xl text-sm font-bold outline-none bg-amber-50/30 focus:bg-white focus:border-amber-500 transition-all"
+                    placeholder="0"
                   />
                 </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">Date</label>
+                <input 
+                  type="date" 
+                  value={ptForm.date || ''} 
+                  onChange={e => setPtForm({ ...ptForm, date: e.target.value })}
+                  className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl text-sm font-bold outline-none bg-slate-50 focus:bg-white focus:border-indigo-500 transition-all"
+                />
               </div>
             </div>
 

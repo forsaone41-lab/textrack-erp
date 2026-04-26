@@ -133,6 +133,7 @@ export interface PointageEntry {
   date: string;
   piecesCompletees: number;
   rebut: number;
+  retouche: number;
 }
 
 export interface Facture {

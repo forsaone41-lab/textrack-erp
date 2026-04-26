@@ -127,7 +127,8 @@ export default function Commandes() {
       date: today,
       phase: c.phase,
       piecesCompletees: 0,
-      rebut: 0
+      rebut: 0,
+      retouche: 0
     });
     setShowPointageModal(true);
   }
@@ -555,49 +556,73 @@ export default function Commandes() {
               <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest">{selectedCmd.reference}</span>
             </div>
             
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
-                <label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">Employé (Ouvrier)</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">Employé (Ouvrier)</label>
                 <select 
                   value={ptForm.employeId || ''} 
                   onChange={e => setPtForm({ ...ptForm, employeId: e.target.value })}
-                  className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all"
+                  className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl text-sm font-bold outline-none bg-slate-50 focus:bg-white focus:border-indigo-500 transition-all"
                 >
                   <option value="">— Sélectionner —</option>
                   {employes.map(e => <option key={e.id} value={e.id}>{e.prenom} {e.nom} ({e.poste})</option>)}
                 </select>
               </div>
 
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest text-indigo-600">Pièces Réussies (Bonnes)</label>
+                <input 
+                  type="number" 
+                  value={ptForm.piecesCompletees || ''} 
+                  onChange={e => setPtForm({ ...ptForm, piecesCompletees: parseInt(e.target.value) || 0 })}
+                  className="w-full px-5 py-4 border-2 border-indigo-50 rounded-2xl text-sm font-bold outline-none bg-indigo-50/30 focus:bg-white focus:border-indigo-500 transition-all"
+                  placeholder="0"
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">Pièces</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest text-red-500">Perdues (Rebut)</label>
                   <input 
                     type="number" 
-                    value={ptForm.piecesCompletees || 0} 
-                    onChange={e => setPtForm({ ...ptForm, piecesCompletees: parseInt(e.target.value) || 0 })}
-                    className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
+                    value={ptForm.rebut || ''} 
+                    onChange={e => setPtForm({ ...ptForm, rebut: parseInt(e.target.value) || 0 })}
+                    className="w-full px-5 py-4 border-2 border-red-50 rounded-2xl text-sm font-bold outline-none bg-red-50/30 focus:bg-white focus:border-red-500 transition-all"
+                    placeholder="0"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">Phase</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest text-amber-500">À Refaire (Retouche)</label>
+                  <input 
+                    type="number" 
+                    value={ptForm.retouche || ''} 
+                    onChange={e => setPtForm({ ...ptForm, retouche: parseInt(e.target.value) || 0 })}
+                    className="w-full px-5 py-4 border-2 border-amber-50 rounded-2xl text-sm font-bold outline-none bg-amber-50/30 focus:bg-white focus:border-amber-500 transition-all"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">Phase</label>
                   <select 
                     value={ptForm.phase || ''} 
                     onChange={e => setPtForm({ ...ptForm, phase: e.target.value as Phase })}
-                    className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
+                    className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl text-sm font-bold outline-none bg-slate-50 focus:bg-white focus:border-indigo-500 transition-all"
                   >
                     {PHASE_ORDER.map(p => <option key={p} value={p}>{PHASE_LABELS[p]}</option>)}
                   </select>
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">Date</label>
-                <input 
-                  type="date" 
-                  value={ptForm.date || ''} 
-                  onChange={e => setPtForm({ ...ptForm, date: e.target.value })}
-                  className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
-                />
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">Date</label>
+                  <input 
+                    type="date" 
+                    value={ptForm.date || ''} 
+                    onChange={e => setPtForm({ ...ptForm, date: e.target.value })}
+                    className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl text-sm font-bold outline-none bg-slate-50 focus:bg-white focus:border-indigo-500 transition-all"
+                  />
+                </div>
               </div>
             </div>
 
