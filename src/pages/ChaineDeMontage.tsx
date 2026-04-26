@@ -78,6 +78,9 @@ export default function ChaineDeMontage() {
     return Math.floor((new Date(cmd.dateLivraisonPrevue).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
   }
 
+  const enCours = commandes.filter(c => c.statut !== 'livré' && c.phase !== 'coupe');
+  const filtered = selectedPhase === 'all' ? enCours : enCours.filter(c => c.phase === selectedPhase);
+
   const totalPiecesEnCours = enCours.reduce((a, c) => a + c.quantite, 0);
   const retardees = enCours.filter(c => joursRestants(c) < 0).length;
   const urgentes = enCours.filter(c => { const j = joursRestants(c); return j >= 0 && j <= 3; }).length;
