@@ -272,9 +272,20 @@ export default function ChaineDeMontage() {
                       <p className="text-xs text-slate-500 truncate">{cmd.modele} · {cmd.client}</p>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className={`text-xs font-bold ${resteCouleur}`}>
-                        {jRest < 0 ? `Retard ${Math.abs(jRest)}j` : `${jRest}j restants`}
-                      </p>
+                      <div className={`px-4 py-2 rounded-2xl border-2 flex flex-col items-center justify-center animate-pulse-slow ${
+                        jRest < 0 ? 'bg-red-50 border-red-500 text-red-600' :
+                        jRest <= 3 ? 'bg-amber-50 border-amber-500 text-amber-600' :
+                        'bg-emerald-50 border-emerald-500 text-emerald-600'
+                      }`}>
+                        <span className="text-[10px] font-black uppercase tracking-tighter leading-none">Délai Final</span>
+                        <p className="text-lg font-black leading-none mt-1">{cmd.dateLivraisonPrevue}</p>
+                        <div className="mt-1 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          <span className="text-xs font-bold uppercase">
+                            {jRest < 0 ? `Retard: ${Math.abs(jRest)}j` : jRest === 0 ? 'Aujourd\'hui !' : `${jRest}j restants`}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
