@@ -125,7 +125,7 @@ export default function OrdresDeCoupe() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-12">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Ordres de Coupe</h1>
@@ -133,47 +133,121 @@ export default function OrdresDeCoupe() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm"><p className="text-[10px] font-black text-slate-400 uppercase mb-1">Total Ordres</p><p className="text-2xl font-black text-slate-800">{filtered.length}</p></div>
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm"><p className="text-[10px] font-black text-slate-400 uppercase mb-1">Pièces à couper</p><p className="text-2xl font-black text-indigo-600">{filtered.reduce((a, o) => a + o.quantite, 0).toLocaleString()}</p></div>
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm"><p className="text-[10px] font-black text-slate-400 uppercase mb-1">Tissu nécessaire</p><p className="text-2xl font-black text-purple-600">{filtered.reduce((a, o) => a + o.metrage, 0).toLocaleString()} m</p></div>
+      {/* SECTION 1: FILE D'ATTENTE (À FAIRE) - BOX LFOQ */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
+            <ShoppingCart className="w-5 h-5 text-amber-600" />
+          </div>
+          <div>
+            <h2 className="text-lg font-black text-slate-800 leading-none">File d'attente (À Faire)</h2>
+            <p className="text-xs text-slate-400 font-bold mt-1 uppercase tracking-wider">{planifies.length} ordres en attente</p>
+          </div>
+        </div>
+
+        {planifies.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {planifies.map(o => {
+              const fiche = fiches.find(f => f.modele.toLowerCase() === o.modele.toLowerCase());
+              return (
+                <div key={o.id} className="bg-white border-2 border-amber-100 rounded-[2.5rem] p-8 shadow-xl shadow-amber-500/5 flex flex-col hover:border-amber-300 transition-all group">
+                  <div className="flex gap-6 mb-6">
+                    <div className="w-24 h-24 rounded-3xl bg-slate-50 overflow-hidden flex-shrink-0 border border-slate-100 shadow-inner">
+                      {fiche?.photo ? <img src={fiche.photo} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center"><ImageIcon className="w-8 h-8 text-slate-200" /></div>}
+                    </div>
+                    <div className="flex-1 min-w-0 py-1">
+                      <h3 className="text-xl font-black text-slate-800 truncate mb-1 uppercase tracking-tight">{o.modele}</h3>
+                      <p className="text-sm font-bold text-amber-600 mb-4">{o.client}</p>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="px-3 py-1 bg-slate-100 rounded-full text-[10px] font-black uppercase text-slate-500">{o.quantite} PCS</span>
+                        <span className="px-3 py-1 bg-slate-100 rounded-full text-[10px] font-black uppercase text-slate-500">{o.tissu}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {fiche && (
+                    <div className="mb-6 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                      <AssetsBlock fiche={fiche} />
+                    </div>
+                  )}
+
+                  <button 
+                    onClick={() => startCutting(o)}
+                    className="w-full bg-emerald-600 text-white py-4 rounded-2xl text-xs font-black hover:bg-emerald-700 transition-all flex items-center justify-center gap-3 shadow-lg shadow-emerald-100 uppercase tracking-widest"
+                  >
+                    <Scissors className="w-4 h-4" /> Démarrer la Coupe
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="py-12 bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200 text-center">
+            <p className="text-slate-400 font-bold text-sm uppercase tracking-widest">Aucune commande en attente</p>
+          </div>
+        )}
       </div>
 
-      {/* Main Table */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" /><input type="text" placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" /></div>
-          <select value={filterStatut} onChange={e => setFilterStatut(e.target.value)} className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm outline-none cursor-pointer"><option value="all">Tous les statuts</option><option value="planifié">Planifié</option><option value="en_cours">En cours</option><option value="terminé">Terminé</option></select>
+      <hr className="border-slate-100" />
+
+      {/* SECTION 2: PRODUCTION ACTIVE & HISTORIQUE */}
+      <div className="space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+              <Scissors className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div>
+              <h2 className="text-lg font-black text-slate-800 leading-none">Production Active & Historique</h2>
+              <p className="text-xs text-slate-400 font-bold mt-1 uppercase tracking-wider">{actifEtTermines.length} ordres en cours / terminés</p>
+            </div>
+          </div>
+          
+          <div className="flex gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input type="text" placeholder="Filtrer..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 w-48" />
+            </div>
+          </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                <th className="px-6 py-5">Ordre / Modèle</th>
-                <th className="px-6 py-5 min-w-[320px]">Assets & Documents</th>
-                <th className="px-6 py-5 text-center">Quantité</th>
-                <th className="px-6 py-5 text-center">Statut</th>
-                <th className="px-6 py-5 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filtered.map(o => {
-                const fiche = fiches.find(f => f.modele.toLowerCase() === o.modele.toLowerCase());
-                return (
-                  <tr key={o.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-6 py-6"><div className="flex items-center gap-5"><div className="w-16 h-16 rounded-2xl bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-200 shadow-sm">{fiche?.photo ? <img src={fiche.photo} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><ImageIcon className="w-6 h-6 text-slate-300" /></div>}</div><div><p className="text-sm font-black text-slate-800 mb-1 uppercase tracking-tight">{o.modele}</p><p className="text-xs font-bold text-indigo-600">{o.client}</p><p className="text-[10px] font-bold text-slate-500 mt-1 uppercase">{o.tissu} · {o.couleur}</p></div></div></td>
-                    <td className="px-6 py-6">{fiche ? <AssetsBlock fiche={fiche} /> : <div className="text-[10px] font-bold text-slate-300 uppercase tracking-widest italic">Fiche manquante</div>}</td>
-                    <td className="px-6 py-6 text-center"><p className="text-base font-black text-slate-900 tracking-tight">{o.quantite} <span className="text-[10px] font-bold text-slate-400 text-xs">PCS</span></p><p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">{o.metrage} m</p></td>
-                    <td className="px-8 py-6 text-center">
-                        {o.statut === 'planifié' ? (
-                          <button 
-                            onClick={() => startCutting(o)}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-600 border border-amber-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-600 hover:text-white transition-all shadow-sm"
-                          >
-                            <Scissors className="w-3.5 h-3.5" /> Démarrer
-                          </button>
-                        ) : o.statut === 'en_cours' ? (
+
+        <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  <th className="px-8 py-5">Ordre / Modèle</th>
+                  <th className="px-8 py-5">Métrage</th>
+                  <th className="px-8 py-5 text-center">Quantité</th>
+                  <th className="px-8 py-5 text-center">Statut / Action</th>
+                  <th className="px-8 py-5 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {actifEtTermines.filter(o => o.modele.toLowerCase().includes(search.toLowerCase())).map(o => {
+                  const fiche = fiches.find(f => f.modele.toLowerCase() === o.modele.toLowerCase());
+                  return (
+                    <tr key={o.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-4">
+                          <div className="w-14 h-14 rounded-2xl bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-200 shadow-sm">
+                            {fiche?.photo ? <img src={fiche.photo} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><ImageIcon className="w-6 h-6 text-slate-300" /></div>}
+                          </div>
+                          <div>
+                            <p className="text-sm font-black text-slate-800 uppercase">{o.modele}</p>
+                            <p className="text-[10px] font-bold text-indigo-600 mt-1 uppercase tracking-tighter">{o.client} · {o.tissu}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-8 py-6">
+                         <p className="text-xs font-bold text-slate-600 uppercase tracking-tight">{o.metrage} m</p>
+                         <p className="text-[10px] text-slate-400 font-medium uppercase mt-1">{o.couleur}</p>
+                      </td>
+                      <td className="px-8 py-6 text-center">
+                        <p className="text-lg font-black text-slate-900 tracking-tighter">{o.quantite} <span className="text-[10px] font-bold text-slate-400 uppercase">PCS</span></p>
+                      </td>
+                      <td className="px-8 py-6 text-center">
+                        {o.statut === 'en_cours' ? (
                           <button 
                             onClick={() => finishCutting(o)}
                             className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white border border-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100"
@@ -186,12 +260,22 @@ export default function OrdresDeCoupe() {
                           </span>
                         )}
                       </td>
-                    <td className="px-6 py-6 text-center"><div className="flex justify-center gap-1"><button onClick={() => { setEditId(o.id); setForm(o); setShowModal(true); }} className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"><Edit2 className="w-4 h-4" /></button><button onClick={() => remove(o.id)} className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"><Trash2 className="w-4 h-4" /></button></div></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                      <td className="px-8 py-6 text-center">
+                        <div className="flex justify-center gap-2">
+                          <button onClick={() => { setEditId(o.id); setForm(o); setShowModal(true); }} className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all">
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => remove(o.id)} className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
