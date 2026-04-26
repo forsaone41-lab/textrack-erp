@@ -98,7 +98,7 @@ export default function Commandes() {
     due.setDate(due.getDate() + 30);
     setForm({
       reference: `${prefix}${String(nextNum).padStart(3, '0')}`,
-      client: '', modele: '', quantite: 0, quantiteLivre: 0,
+      client: '', modele: '', tissu: '', quantite: 0, quantiteLivre: 0,
       dateCommande: today,
       dateLivraisonPrevue: due.toISOString().split('T')[0],
       phase: 'coupe', prix: 0, rebut: 0, statut: 'en_cours', suivi: [],
@@ -146,7 +146,7 @@ export default function Commandes() {
           rollId: null, // Sera sélectionné plus tard dans la page de coupe
           modele: cmdData.modele,
           quantite: cmdData.quantite,
-          tissu: fiche.type || 'À définir',
+          tissu: cmdData.tissu || fiche.type || 'À définir',
           couleur: 'À définir',
           metrage: Number(metrageTotal.toFixed(2)),
           statut: 'planifié',
@@ -722,7 +722,10 @@ export default function Commandes() {
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5">Modèle</label>
                   <select
                     value={form.modele || ''}
-                    onChange={e => setForm({ ...form, modele: e.target.value })}
+                    onChange={e => {
+                      const fiche = fiches.find(f => f.modele === e.target.value);
+                      setForm({ ...form, modele: e.target.value, tissu: fiche?.type || form.tissu });
+                    }}
                     className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                   >
                     <option value="">— Sélectionner —</option>
@@ -730,12 +733,11 @@ export default function Commandes() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Quantité (pcs)</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Type de Tissu</label>
                   <input
-                    type="number"
-                    min="0"
-                    value={form.quantite || 0}
-                    onChange={e => setForm({ ...form, quantite: parseInt(e.target.value) || 0 })}
+                    value={form.tissu || ''}
+                    onChange={e => setForm({ ...form, tissu: e.target.value })}
+                    placeholder="Ex: Satin, Coton..."
                     className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                   />
                 </div>
@@ -762,7 +764,17 @@ export default function Commandes() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Quantité (pcs)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.quantite || 0}
+                    onChange={e => setForm({ ...form, quantite: parseInt(e.target.value) || 0 })}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                  />
+                </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5">Prix unitaire (MAD)</label>
                   <input
@@ -773,6 +785,8 @@ export default function Commandes() {
                     className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                   />
                 </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5">Phase actuelle</label>
                   <select

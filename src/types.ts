@@ -53,6 +53,7 @@ export interface Commande {
   reference: string;
   client: string;
   modele: string;
+  tissu: string;
   quantite: number;
   quantiteLivre: number;
   dateCommande: string;
