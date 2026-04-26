@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, Scissors, ShoppingCart, FileText, Image as ImageIcon, Download, Ruler, ChevronRight } from 'lucide-react';
-import { OrdreDeCoupe, StockTissu, FicheTechnique, Commande, loadData, saveRecord, deleteRecord, genId } from '../types';
+import { OrdreDeCoupe, StockTissu, FicheTechnique, Commande, loadData, saveRecord, deleteRecord, genId, Phase } from '../types';
 import { printFicheTechnique } from '../utils/print';
 
 export default function OrdresDeCoupe() {
@@ -33,25 +33,34 @@ export default function OrdresDeCoupe() {
     });
   };
 
-  const pendingCommands = commandes.filter(c => 
-    c.phase === 'coupe' && 
-    !ordres.some(o => o.commandeId === c.id) &&
-    c.statut !== 'livré'
-  );
+  const planifies = ordres.filter(o => o.statut === 'planifié');
+  const actifEtTermines = ordres.filter(o => o.statut !== 'planifié');
 
-  const filtered = ordres.filter(o => {
+  const filteredActifs = actifEtTermines.filter(o => {
     const matchSearch = o.modele.toLowerCase().includes(search.toLowerCase()) || o.tissu.toLowerCase().includes(search.toLowerCase());
     const matchStatut = filterStatut === 'all' || o.statut === filterStatut;
     return matchSearch && matchStatut;
   });
 
+  const startCutting = async (o: OrdreDeCoupe) => {
+    const updated = { ...o, statut: 'en_cours' as const };
+    setOrdres(prev => prev.map(item => item.id === o.id ? updated : item));
+    await saveRecord('ordres', updated);
+  };
+
+  const finishCutting = async (o: OrdreDeCoupe) => {
+    const updated = { ...o, statut: 'terminé' as const };
+    setOrdres(prev => prev.map(item => item.id === o.id ? updated : item));
+    await saveRecord('ordres', updated);
+  };
+
   const statutBadge = (s: string) => {
     const map: Record<string, string> = {
-      planifié: 'bg-slate-100 text-slate-600',
-      en_cours: 'bg-blue-100 text-blue-700',
-      terminé: 'bg-green-100 text-green-700',
+      planifié: 'bg-amber-50 text-amber-600 border border-amber-100',
+      en_cours: 'bg-indigo-50 text-indigo-700 border border-indigo-100',
+      terminé: 'bg-emerald-50 text-emerald-700 border border-emerald-100',
     };
-    return map[s] || 'bg-slate-100 text-slate-600';
+    return map[s] || 'bg-slate-50 text-slate-500';
   };
 
   function downloadFile(data: string, filename: string) {
@@ -76,25 +85,7 @@ export default function OrdresDeCoupe() {
     setForm({ ...form, quantite: val, metrage: Number((conso * val).toFixed(2)) });
   };
 
-  const handleImportCommand = (c: Commande) => {
-    const fiche = fiches.find(f => f.modele === c.modele);
-    const conso = fiche?.tissuConsommation || 0;
-    setEditId(null);
-    setForm({
-      id: genId(),
-      commandeId: c.id,
-      modele: c.modele,
-      quantite: c.quantite,
-      tissu: fiche?.type || '',
-      couleur: 'À définir',
-      metrage: Number((conso * c.quantite).toFixed(2)),
-      statut: 'planifié',
-      dateCoupe: new Date().toISOString().split('T')[0],
-    });
-    setShowModal(true);
-  };
-
-  async function save() {
+  const save = async () => {
     if (!form.modele || !form.tissu) return;
     const isNew = !editId;
     const oId = editId || genId();
@@ -103,16 +94,15 @@ export default function OrdresDeCoupe() {
     setOrdres(updated);
     setShowModal(false);
     await saveRecord('ordres', ordreData);
-  }
+  };
 
-  async function remove(id: string) {
+  const remove = async (id: string) => {
     setOrdres(ordres.filter(o => o.id !== id));
     await deleteRecord('ordres', id);
-  }
+  };
 
   const AssetsBlock = ({ fiche }: { fiche: FicheTechnique }) => (
     <div className="space-y-3">
-      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">ASSETS & DOCUMENTS</p>
       <div className="flex flex-col gap-2">
         <div className="grid grid-cols-2 gap-2">
           <button 
@@ -137,97 +127,165 @@ export default function OrdresDeCoupe() {
           onClick={() => setViewMesuresFiche(fiche)}
           className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-white border border-indigo-200 text-indigo-600 rounded-xl text-[10px] font-bold hover:bg-indigo-50 hover:border-indigo-500 transition-all shadow-sm"
         >
-          <Ruler className="w-3.5 h-3.5" /> VOIR LES MESURES (TAILLES)
+          <Ruler className="w-3.5 h-3.5" /> VOIR LES MESURES
         </button>
       </div>
     </div>
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 pb-20">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Ordres de Coupe</h1>
-          <p className="text-slate-500 text-sm">Gestion des bons de coupe et patronage</p>
+          <h1 className="text-2xl font-black text-slate-800 tracking-tight">Espace Coupure</h1>
+          <p className="text-slate-500 text-sm font-medium">Gestion de la file d'attente et du patronage</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button onClick={() => { setEditId(null); setForm({ statut: 'planifié', dateCoupe: new Date().toISOString().split('T')[0] }); setShowModal(true); }} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-lg hover:bg-indigo-700 transition text-sm font-medium shadow-sm">
-            <Plus className="w-4 h-4" /> Nouvel Ordre
-          </button>
-        </div>
+        <button onClick={() => { setEditId(null); setForm({ statut: 'planifié', dateCoupe: new Date().toISOString().split('T')[0] }); setShowModal(true); }} className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-3 rounded-2xl hover:bg-indigo-700 transition font-black text-xs shadow-xl shadow-indigo-100 uppercase tracking-widest">
+          <Plus className="w-4 h-4" /> Nouvel Ordre
+        </button>
       </div>
 
-      {pendingCommands.length > 0 && (
-        <div className="bg-gradient-to-r from-indigo-600 to-violet-600 rounded-2xl p-6 shadow-xl text-white">
-          <div className="flex items-center gap-2 mb-4"><ShoppingCart className="w-5 h-5" /><h2 className="text-sm font-bold uppercase tracking-wider">File d'attente production</h2></div>
-          <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
-            {pendingCommands.map(c => {
-              const fiche = fiches.find(f => f.modele.toLowerCase() === c.modele.toLowerCase());
+      {/* SECTION 1: FILE D'ATTENTE (PENDING) */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
+              <ShoppingCart className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <h2 className="text-lg font-black text-slate-800 leading-none">File d'attente (À Faire)</h2>
+              <p className="text-xs text-slate-400 font-bold mt-1 uppercase tracking-wider">{planifies.length} ordres en attente</p>
+            </div>
+          </div>
+        </div>
+
+        {planifies.length > 0 ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {planifies.map(o => {
+              const fiche = fiches.find(f => f.modele.toLowerCase() === o.modele.toLowerCase());
               return (
-                <div key={c.id} className="min-w-[340px] bg-white border border-slate-200 rounded-3xl p-5 flex flex-col shadow-2xl text-slate-800">
-                  <div className="flex gap-4 mb-5">
-                    <div className="w-24 h-24 rounded-2xl bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-100">
-                      {fiche?.photo ? <img src={fiche.photo} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><ImageIcon className="w-8 h-8 text-slate-300" /></div>}
+                <div key={o.id} className="bg-white border-2 border-amber-100 rounded-[2.5rem] p-8 shadow-xl shadow-amber-500/5 flex flex-col hover:border-amber-300 transition-all group">
+                  <div className="flex gap-6 mb-6">
+                    <div className="w-28 h-28 rounded-3xl bg-slate-50 overflow-hidden flex-shrink-0 border border-slate-100 shadow-inner">
+                      {fiche?.photo ? <img src={fiche.photo} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center"><ImageIcon className="w-8 h-8 text-slate-200" /></div>}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start mb-1">
-                        <h3 className="text-base font-black truncate">{c.modele}</h3>
-                      </div>
-                      <p className="text-xs font-bold text-indigo-600 mb-2">{c.client}</p>
-                      <div className="flex items-center gap-2 px-2 py-1 bg-slate-100 rounded-lg w-fit">
-                        <Scissors className="w-3 h-3 text-slate-500" />
-                        <span className="text-[10px] font-black uppercase">{c.quantite} pièces</span>
+                    <div className="flex-1 min-w-0 py-1">
+                      <h3 className="text-xl font-black text-slate-800 truncate mb-1">{o.modele}</h3>
+                      <p className="text-sm font-bold text-amber-600 mb-4">{o.client}</p>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="px-3 py-1 bg-slate-100 rounded-full text-[10px] font-black uppercase text-slate-500">{o.quantite} PCS</span>
+                        <span className="px-3 py-1 bg-slate-100 rounded-full text-[10px] font-black uppercase text-slate-500">{o.tissu}</span>
                       </div>
                     </div>
                   </div>
-                  {fiche && <div className="mb-5 border-t border-slate-100 pt-5"><AssetsBlock fiche={fiche} /></div>}
-                  <button onClick={() => handleImportCommand(c)} className="w-full bg-indigo-600 text-white py-3.5 rounded-xl text-xs font-black hover:bg-indigo-700 transition flex items-center justify-center gap-2 shadow-lg tracking-widest uppercase">LANCER LA COUPE <ChevronRight className="w-4 h-4" /></button>
+                  
+                  {fiche && (
+                    <div className="mb-6 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                      <AssetsBlock fiche={fiche} />
+                    </div>
+                  )}
+
+                  <button 
+                    onClick={() => startCutting(o)}
+                    className="w-full bg-emerald-600 text-white py-4 rounded-2xl text-xs font-black hover:bg-emerald-700 transition-all flex items-center justify-center gap-3 shadow-lg shadow-emerald-100 uppercase tracking-widest"
+                  >
+                    <Scissors className="w-4 h-4" /> Démarrer la Coupe
+                  </button>
                 </div>
               );
             })}
           </div>
-        </div>
-      )}
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm"><p className="text-[10px] font-black text-slate-400 uppercase mb-1">Total Ordres</p><p className="text-2xl font-black text-slate-800">{filtered.length}</p></div>
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm"><p className="text-[10px] font-black text-slate-400 uppercase mb-1">Pièces à couper</p><p className="text-2xl font-black text-indigo-600">{filtered.reduce((a,o)=>a+o.quantite,0).toLocaleString()}</p></div>
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm"><p className="text-[10px] font-black text-slate-400 uppercase mb-1">Tissu nécessaire</p><p className="text-2xl font-black text-purple-600">{filtered.reduce((a,o)=>a+o.metrage,0).toLocaleString()} m</p></div>
+        ) : (
+          <div className="py-12 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 text-center">
+            <p className="text-slate-400 font-bold text-sm uppercase tracking-widest">Aucune commande en attente</p>
+          </div>
+        )}
       </div>
 
-      {/* Main Table */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" /><input type="text" placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" /></div>
-          <select value={filterStatut} onChange={e => setFilterStatut(e.target.value)} className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm outline-none cursor-pointer"><option value="all">Tous les statuts</option><option value="planifié">Planifié</option><option value="en_cours">En cours</option><option value="terminé">Terminé</option></select>
+      <hr className="border-slate-100" />
+
+      {/* SECTION 2: PRODUCTION ACTIVE & HISTORIQUE */}
+      <div className="space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+              <Scissors className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div>
+              <h2 className="text-lg font-black text-slate-800 leading-none">Production Active & Historique</h2>
+              <p className="text-xs text-slate-400 font-bold mt-1 uppercase tracking-wider">{actifEtTermines.length} ordres enregistrés</p>
+            </div>
+          </div>
+          
+          <div className="flex gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input type="text" placeholder="Filtrer..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 w-48" />
+            </div>
+            <select value={filterStatut} onChange={e => setFilterStatut(e.target.value)} className="px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold outline-none cursor-pointer">
+              <option value="all">Tous</option>
+              <option value="en_cours">En cours</option>
+              <option value="terminé">Terminé</option>
+            </select>
+          </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                <th className="px-6 py-5">Ordre / Modèle</th>
-                <th className="px-6 py-5 min-w-[320px]">Assets & Documents</th>
-                <th className="px-6 py-5 text-center">Quantité</th>
-                <th className="px-6 py-5 text-center">Statut</th>
-                <th className="px-6 py-5 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filtered.map(o => {
-                const fiche = fiches.find(f => f.modele.toLowerCase() === o.modele.toLowerCase());
-                return (
-                  <tr key={o.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-6 py-6"><div className="flex items-center gap-5"><div className="w-16 h-16 rounded-2xl bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-200 shadow-sm">{fiche?.photo ? <img src={fiche.photo} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><ImageIcon className="w-6 h-6 text-slate-300" /></div>}</div><div><p className="text-sm font-black text-slate-800 mb-1 uppercase tracking-tight">{o.modele}</p><p className="text-xs font-bold text-indigo-600">{o.client}</p><p className="text-[10px] font-bold text-slate-500 mt-1 uppercase">{o.tissu} · {o.couleur}</p></div></div></td>
-                    <td className="px-6 py-6">{fiche ? <AssetsBlock fiche={fiche} /> : <div className="text-[10px] font-bold text-slate-300 uppercase tracking-widest italic">Fiche manquante</div>}</td>
-                    <td className="px-6 py-6 text-center"><p className="text-base font-black text-slate-900 tracking-tight">{o.quantite} <span className="text-[10px] font-bold text-slate-400 text-xs">PCS</span></p><p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">{o.metrage} m</p></td>
-                    <td className="px-6 py-6 text-center"><span className={`inline-flex px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${statutBadge(o.statut)}`}>{o.statut}</span></td>
-                    <td className="px-6 py-6 text-center"><div className="flex justify-center gap-1"><button onClick={() => { setEditId(o.id); setForm(o); setShowModal(true); }} className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"><Edit2 className="w-4 h-4" /></button><button onClick={() => remove(o.id)} className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"><Trash2 className="w-4 h-4" /></button></div></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+
+        <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  <th className="px-8 py-5">Ordre / Modèle</th>
+                  <th className="px-8 py-5">Statut</th>
+                  <th className="px-8 py-5 text-center">Quantité</th>
+                  <th className="px-8 py-5 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredActifs.map(o => {
+                  const fiche = fiches.find(f => f.modele.toLowerCase() === o.modele.toLowerCase());
+                  return (
+                    <tr key={o.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-4">
+                          <div className="w-14 h-14 rounded-2xl bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-200 shadow-sm">
+                            {fiche?.photo ? <img src={fiche.photo} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><ImageIcon className="w-6 h-6 text-slate-300" /></div>}
+                          </div>
+                          <div>
+                            <p className="text-sm font-black text-slate-800 uppercase">{o.modele}</p>
+                            <p className="text-[10px] font-bold text-indigo-600 mt-1 uppercase tracking-tighter">{o.client} · {o.tissu}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-8 py-6">
+                        <span className={`inline-flex px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${statutBadge(o.statut)}`}>
+                          {o.statut}
+                        </span>
+                      </td>
+                      <td className="px-8 py-6 text-center">
+                        <p className="text-lg font-black text-slate-900 tracking-tighter">{o.quantite} <span className="text-[10px] font-bold text-slate-400 uppercase">PCS</span></p>
+                      </td>
+                      <td className="px-8 py-6 text-center">
+                        <div className="flex justify-center gap-2">
+                          {o.statut === 'en_cours' && (
+                            <button onClick={() => finishCutting(o)} className="px-4 py-2 bg-emerald-100 text-emerald-700 rounded-xl text-[10px] font-black hover:bg-emerald-600 hover:text-white transition-all uppercase tracking-widest">
+                              Terminer
+                            </button>
+                          )}
+                          <button onClick={() => { setEditId(o.id); setForm(o); setShowModal(true); }} className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all">
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => remove(o.id)} className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -237,7 +295,7 @@ export default function OrdresDeCoupe() {
           <div className="bg-white rounded-[2rem] w-full max-w-lg shadow-2xl p-10 space-y-6">
             <h2 className="text-2xl font-black text-slate-800 tracking-tight leading-none mb-4">{editId ? 'Modifier' : 'Lancer'} l'Ordre</h2>
             <div className="space-y-4">
-              <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Modèle *</label><input value={form.modele || ''} onChange={e => handleModeleChange(e.target.value)} list="modeles-list" className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-50 outline-none transition-all" /></div>
+              <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Modèle *</label><input value={form.modele || ''} onChange={e => handleModeleChange(e.target.value)} className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-50 outline-none transition-all" /></div>
               <div className="grid grid-cols-2 gap-4">
                 <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Tissu</label><input value={form.tissu || ''} onChange={e => setForm({ ...form, tissu: e.target.value })} className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-indigo-50" /></div>
                 <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Couleur</label><input value={form.couleur || ''} onChange={e => setForm({ ...form, couleur: e.target.value })} className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-indigo-50" /></div>
