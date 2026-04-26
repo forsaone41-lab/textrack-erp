@@ -402,27 +402,27 @@ export default function ChaineDeMontage() {
                     </div>
                   </div>
 
-                  {/* Quality Scorecard - Premium Redesign */}
-                  <div className="bg-slate-50/80 rounded-[1.25rem] border border-slate-100 p-3 shadow-inner">
-                    <div className="flex items-center justify-between gap-1">
-                       <div className="flex-1 text-center py-1">
-                         <span className="text-[7px] font-black text-slate-400 uppercase tracking-tighter mb-0.5 block">Bonnes</span>
-                         <span className="text-sm font-black text-indigo-600 tabular-nums">{piecesProduites}</span>
+                  {/* Quality Scorecard - Redesigned PRO */}
+                  <div className="bg-slate-50/80 rounded-[1.5rem] border border-slate-100 p-4 shadow-inner">
+                    <div className="flex items-center justify-between gap-2">
+                       <div className="flex-1 text-center py-2">
+                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Bonnes</span>
+                         <span className="text-xl font-black text-indigo-600 tabular-nums leading-none">{piecesProduites}</span>
                        </div>
-                       <div className="w-px h-6 bg-slate-200" />
-                       <div className="flex-1 text-center py-1">
-                         <span className="text-[7px] font-black text-slate-400 uppercase tracking-tighter mb-0.5 block">Rebut</span>
-                         <span className="text-sm font-black text-red-600 tabular-nums">{rebutTotal}</span>
+                       <div className="w-px h-8 bg-slate-200" />
+                       <div className="flex-1 text-center py-2">
+                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Rebut</span>
+                         <span className="text-xl font-black text-red-600 tabular-nums leading-none">{rebutTotal}</span>
                        </div>
-                       <div className="w-px h-6 bg-slate-200" />
-                       <div className="flex-1 text-center py-1">
-                         <span className="text-[7px] font-black text-slate-400 uppercase tracking-tighter mb-0.5 block">Retouche</span>
-                         <span className="text-sm font-black text-amber-600 tabular-nums">{retoucheTotal}</span>
+                       <div className="w-px h-8 bg-slate-200" />
+                       <div className="flex-1 text-center py-2">
+                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Retouche</span>
+                         <span className="text-xl font-black text-amber-600 tabular-nums leading-none">{retoucheTotal}</span>
                        </div>
-                       <div className="w-px h-6 bg-indigo-200" />
-                       <div className="flex-[1.2] text-center bg-indigo-50/50 rounded-lg py-1 border border-indigo-100/50">
-                         <span className="text-[7px] font-black text-indigo-400 uppercase tracking-tighter mb-0.5 block">Total Phase</span>
-                         <span className="text-sm font-black text-indigo-800 tabular-nums">{piecesProduites + rebutTotal + retoucheTotal}</span>
+                       <div className="w-px h-8 bg-indigo-200" />
+                       <div className="flex-[1.3] text-center bg-indigo-600 rounded-xl py-2 shadow-lg shadow-indigo-100 border border-indigo-500">
+                         <span className="text-[8px] font-black text-indigo-100 uppercase tracking-widest mb-1 block">Total Phase</span>
+                         <span className="text-xl font-black text-white tabular-nums leading-none">{piecesProduites + rebutTotal + retoucheTotal}</span>
                        </div>
                     </div>
                   </div>
