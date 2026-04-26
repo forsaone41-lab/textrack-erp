@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, FileText, Eye, CheckCircle, Clock, AlertCircle, ArrowUpRight, X, Download, Table2 } from 'lucide-react';
 import { Facture, Commande, loadData, saveRecord, deleteRecord, genId, loadCompanyProfile } from '../types';
 import { printFacture, exportFacturesCSV } from '../utils/print';
-import { generatePDF } from '../utils/pdf';
+import { generatePDF, printElement } from '../utils/pdf';
+import { InvoicePRO } from '../components/InvoicePRO';
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
 
@@ -378,95 +379,45 @@ export default function Factures() {
       )}
 
       {viewFacture && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden" id="invoice-capture">
-            <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-8 text-white">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h2 className="text-xl font-black tracking-tight uppercase">{company.name}</h2>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[100] p-4">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-4xl max-h-[95vh] overflow-y-auto shadow-2xl">
+            <div className="p-8 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md z-10">
+              <div className="flex items-center gap-3">
+                <div className="bg-indigo-600 p-2 rounded-xl">
+                  <FileText className="w-5 h-5 text-white" />
                 </div>
-                <div className="text-right">
-                  <p className="text-slate-400 text-xs uppercase tracking-widest mb-1">{t('facture', lang)}</p>
-                  <p className="text-2xl font-bold">{viewFacture.numero}</p>
-                </div>
+                <h2 className="text-xl font-black text-slate-800 tracking-tight">Détails de la Facture</h2>
               </div>
-            </div>
-
-            <div className="p-8">
-              <div className="grid grid-cols-2 gap-8 mb-8">
-                <div>
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{t('billed_to', lang)}</p>
-                  <p className="text-xl font-bold text-slate-800">{viewFacture.client}</p>
-                </div>
-              </div>
-
-              <div className="rounded-xl overflow-hidden border border-slate-200 mb-8">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="text-left text-xs font-semibold text-slate-500 uppercase px-4 py-3">{t('description', lang)}</th>
-                      <th className="text-center text-xs font-semibold text-slate-500 uppercase px-4 py-3">{t('qty', lang)}</th>
-                      <th className="text-right text-xs font-semibold text-slate-500 uppercase px-4 py-3">{t('price_u', lang)}</th>
-                      <th className="text-right text-xs font-semibold text-slate-500 uppercase px-4 py-3">{t('total', lang)}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(() => {
-                      const cmd = cmdOf(viewFacture.commandeId || undefined);
-                      return cmd ? (
-                        <tr>
-                          <td className="px-4 py-3.5 text-sm text-slate-700 font-medium">{cmd.modele}</td>
-                          <td className="px-4 py-3.5 text-sm text-center text-slate-600">{cmd.quantite} pcs</td>
-                          <td className="px-4 py-3.5 text-sm text-right text-slate-600">{cmd.prix.toLocaleString()} MAD</td>
-                          <td className="px-4 py-3.5 text-sm text-right font-bold text-slate-800">{(cmd.quantite * cmd.prix).toLocaleString()} MAD</td>
-                        </tr>
-                      ) : (
-                        <tr>
-                          <td className="px-4 py-3.5 text-sm text-slate-700 font-medium">Prestation</td>
-                          <td className="px-4 py-3.5 text-sm text-center text-slate-600">1</td>
-                          <td className="px-4 py-3.5 text-sm text-right text-slate-600">{viewFacture.montant.toLocaleString()} MAD</td>
-                          <td className="px-4 py-3.5 text-sm text-right font-bold text-slate-800">{viewFacture.montant.toLocaleString()} MAD</td>
-                        </tr>
-                      );
-                    })()}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="flex justify-end">
-                <div className="bg-slate-900 text-white rounded-xl px-6 py-4 text-right min-w-52">
-                  <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Montant Total TTC</p>
-                  <p className="text-3xl font-black">{viewFacture.montant.toLocaleString()}</p>
-                  <p className="text-slate-400 text-sm mt-0.5">Dirhams (MAD)</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="px-8 py-5 border-t border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <p className="text-xs text-slate-400 font-medium uppercase">{company.name} {company.subtitle}</p>
-              <div className="flex gap-2.5">
-                <button
-                  onClick={() => generatePDF('invoice-capture', `Facture_${viewFacture.numero}`)}
-                  className="flex items-center gap-2 px-4 py-2 text-sm bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition font-semibold"
+              <div className="flex items-center gap-3">
+                <button onClick={() => setViewFacture(null)} className="px-5 py-2.5 text-xs font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest transition-all">Fermer</button>
+                <button 
+                  onClick={() => printElement(`facture-pro-view-${viewFacture.id}`)}
+                  className="flex items-center gap-2 px-8 py-3 bg-indigo-600 text-white rounded-2xl text-xs font-black hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all uppercase tracking-widest"
                 >
-                  <Download className="w-3.5 h-3.5" /> Télécharger PDF
-                </button>
-                {viewFacture.statut !== 'payée' && (
-                  <button
-                    onClick={() => markPaid(viewFacture.id)}
-                    className="px-4 py-2 text-sm bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition font-semibold"
-                  >
-                    ✓ Marquer Payée
-                  </button>
-                )}
-                <button
-                  onClick={() => setViewFacture(null)}
-                  className="px-4 py-2 text-sm text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition font-medium"
-                >
-                  Fermer
+                  <Download className="w-4 h-4" /> Imprimer / PDF
                 </button>
               </div>
             </div>
+
+            <div className="p-12 bg-slate-50/50">
+               <InvoicePRO 
+                 id={`facture-pro-view-${viewFacture.id}`}
+                 facture={viewFacture}
+                 commande={commandes.find(c => c.id === viewFacture.commandeId)}
+                 company={company}
+               />
+            </div>
+
+            {viewFacture.statut !== 'payée' && (
+              <div className="p-8 border-t border-slate-100 bg-white flex justify-center">
+                <button
+                  onClick={() => markPaid(viewFacture.id)}
+                  className="flex items-center gap-2 px-10 py-4 bg-emerald-600 text-white rounded-2xl text-sm font-black hover:bg-emerald-700 shadow-xl shadow-emerald-100 transition-all uppercase tracking-widest"
+                >
+                  <CheckCircle className="w-5 h-5" /> Marquer comme payée
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

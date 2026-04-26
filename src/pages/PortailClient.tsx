@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt } from 'lucide-react';
 import {
-  Commande, Facture, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User,
+  Commande, Facture, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile
 } from '../types';
 import { useLang } from '../contexts/LangContext';
+import { printElement } from '../utils/pdf';
+import { InvoicePRO } from '../components/InvoicePRO';
+import { Download } from 'lucide-react';
 
 interface PortailClientProps {
   currentUser?: User | null;
@@ -17,6 +20,9 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [searched, setSearched] = useState(false);
   const [found, setFound] = useState<Commande[]>([]);
   const [notifsEnabled, setNotifsEnabled] = useState(true);
+  const [showInvoiceView, setShowInvoiceView] = useState(false);
+  const [selectedFacture, setSelectedFacture] = useState<Facture | null>(null);
+  const [company] = useState<CompanyProfile>(loadCompanyProfile());
   const { isAr, toggle } = useLang();
 
   // Helper for translating phase names
@@ -317,15 +323,15 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                       {isAr ? 'الفاتورة الخاصة بالطلبية' : 'Facture associée'}
                     </h4>
                     <div className="bg-emerald-50 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 border border-emerald-100">
-                      <div>
+                      <div className="flex-1">
                         <p className="text-xs text-emerald-600/70 uppercase font-bold tracking-wider mb-1">{isAr ? 'رقم الفاتورة' : 'N° Facture'}</p>
                         <p className="font-bold text-emerald-900">{cmdFacture.numero}</p>
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <p className="text-xs text-emerald-600/70 uppercase font-bold tracking-wider mb-1">{isAr ? 'المبلغ الإجمالي' : 'Montant Total'}</p>
-                        <p className="font-black text-emerald-700 text-lg">{cmdFacture.montant.toLocaleString()} MAD</p>
+                        <p className="font-black text-emerald-700 text-lg">{cmdFacture.montant?.toLocaleString()} MAD</p>
                       </div>
-                      <div className={`text-${isAr ? 'left' : 'right'}`}>
+                      <div className="flex-1 flex flex-col items-center sm:items-end">
                         <p className="text-xs text-emerald-600/70 uppercase font-bold tracking-wider mb-1">{isAr ? 'حالة الأداء' : 'Statut Paiement'}</p>
                         <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${cmdFacture.statut === 'payée' ? 'bg-emerald-200 text-emerald-800' :
                             cmdFacture.statut === 'impayée' ? 'bg-red-200 text-red-800' :
@@ -335,6 +341,15 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                             cmdFacture.statut === 'impayée' ? (isAr ? 'مامخلصاش' : 'Impayée') :
                               (isAr ? 'فالانتظار' : 'En attente')}
                         </span>
+                      </div>
+                      <div className="flex-shrink-0">
+                         <button 
+                           onClick={() => { setSelectedFacture(cmdFacture); setShowInvoiceView(true); }}
+                           className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-black hover:bg-emerald-700 transition shadow-md shadow-emerald-100"
+                         >
+                           <Download className="w-3.5 h-3.5" />
+                           {isAr ? 'تحميل' : 'Télécharger'}
+                         </button>
                       </div>
                     </div>
                   </div>
@@ -360,6 +375,39 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
         </a>
       )}
 
+      {/* Invoice Preview Modal for Client */}
+      {showInvoiceView && selectedFacture && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[100] p-4">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-4xl max-h-[95vh] overflow-y-auto shadow-2xl">
+            <div className="p-8 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md z-10">
+              <div className="flex items-center gap-3">
+                <div className="bg-emerald-600 p-2 rounded-xl">
+                  <Receipt className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-xl font-black text-slate-800 tracking-tight">{isAr ? 'معاينة الفاتورة' : 'Aperçu de la Facture'}</h2>
+              </div>
+              <div className="flex items-center gap-3">
+                <button onClick={() => setShowInvoiceView(false)} className="px-5 py-2.5 text-xs font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest transition-all">{isAr ? 'إغلاق' : 'Fermer'}</button>
+                <button 
+                  onClick={() => printElement(`client-invoice-view-${selectedFacture.id}`)}
+                  className="flex items-center gap-2 px-8 py-3 bg-emerald-600 text-white rounded-2xl text-xs font-black hover:bg-emerald-700 shadow-xl shadow-emerald-100 transition-all uppercase tracking-widest"
+                >
+                  <Download className="w-4 h-4" /> {isAr ? 'حفظ / طباعة' : 'Enregistrer / Imprimer'}
+                </button>
+              </div>
+            </div>
+
+            <div className="p-12 bg-slate-50/50">
+               <InvoicePRO 
+                 id={`client-invoice-view-${selectedFacture.id}`}
+                 facture={selectedFacture}
+                 commande={commandes.find(c => c.id === selectedFacture.commandeId)}
+                 company={company}
+               />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
