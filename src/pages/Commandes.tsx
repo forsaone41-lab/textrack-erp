@@ -378,7 +378,22 @@ export default function Commandes() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div><label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">Modèle</label><select value={form.modele || ''} onChange={e => { const fiche = fiches.find(f => f.modele === e.target.value); setForm({ ...form, modele: e.target.value, tissu: fiche?.type || form.tissu }); }} className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none"><option value="">— Sélectionner —</option>{fiches.map(f => <option key={f.id} value={f.modele}>{f.modele}</option>)}</select></div>
-              <div><label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">Type de Tissu</label><input value={form.tissu || ''} onChange={e => setForm({ ...form, tissu: e.target.value })} className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none" placeholder="Satin, Coton..." /></div>
+              <div>
+                <label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">الثوب المطلوب (من المخزون)</label>
+                <select 
+                  value={form.tissu || ''} 
+                  onChange={e => setForm({ ...form, tissu: e.target.value })} 
+                  className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
+                >
+                  <option value="">— اختر الثوب من المستودع —</option>
+                  {tissus.filter(t => t.metrage > 0).map(t => (
+                    <option key={t.id} value={`${t.type} ${t.couleur}`}>
+                      {t.type} {t.couleur} ({t.metrage}m dispo)
+                    </option>
+                  ))}
+                  <option value="Autre">ثوب غير موجود بالمخزون</option>
+                </select>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div><label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">Quantité (PCS)</label><input type="number" value={form.quantite || 0} onChange={e => setForm({ ...form, quantite: parseInt(e.target.value) || 0 })} className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none" /></div>
