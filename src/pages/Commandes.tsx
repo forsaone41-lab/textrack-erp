@@ -38,6 +38,7 @@ export default function Commandes() {
     needed: number;
     available: number;
   } | null>(null);
+  const [stockConfirmChecked, setStockConfirmChecked] = useState(false);
 
   const [showFacturePreview, setShowFacturePreview] = useState(false);
   const [selectedFacture, setSelectedFacture] = useState<Facture | null>(null);
@@ -190,6 +191,7 @@ export default function Commandes() {
     const selectedRoll = tissus.find(t => `${t.type} ${t.couleur}` === c.tissu);
     if (selectedRoll && !force) {
       if (selectedRoll.metrage < metrageRequis) {
+        setStockConfirmChecked(false);
         setShowStockWarning({ order: c, needed: metrageRequis, available: selectedRoll.metrage });
         return;
       }
@@ -493,13 +495,30 @@ export default function Commandes() {
             </div>
             
             <div className="p-8 flex flex-col gap-3">
+              <label className="flex items-start gap-3 p-4 bg-slate-50 rounded-2xl cursor-pointer hover:bg-slate-100 transition-colors border border-slate-100 mb-2">
+                <input 
+                  type="checkbox" 
+                  checked={stockConfirmChecked}
+                  onChange={(e) => setStockConfirmChecked(e.target.checked)}
+                  className="mt-1 w-4 h-4 rounded border-slate-300 text-red-600 focus:ring-red-500"
+                />
+                <span className="text-xs font-bold text-slate-600 leading-tight">
+                  Je confirme que je vais fournir la quantité manquante ({ (showStockWarning.needed - showStockWarning.available).toFixed(1) }m) pour cette commande.
+                </span>
+              </label>
+
               <button 
+                disabled={!stockConfirmChecked}
                 onClick={() => {
                   const cmd = showStockWarning.order;
                   setShowStockWarning(null);
                   handleSendToCutter(cmd, true);
                 }}
-                className="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black text-sm transition shadow-lg shadow-red-200"
+                className={`w-full py-4 rounded-2xl font-black text-sm transition shadow-lg ${
+                  stockConfirmChecked 
+                    ? 'bg-red-600 hover:bg-red-700 text-white shadow-red-200' 
+                    : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                }`}
               >
                 CONTINUER QUAND MÊME
               </button>
