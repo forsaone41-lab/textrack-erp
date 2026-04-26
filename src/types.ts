@@ -101,15 +101,6 @@ export interface StockFourniture {
   fournisseur?: string;
 }
 
-export interface Fournisseur {
-  id: string;
-  nom: string;
-  telephone: string;
-  email?: string;
-  adresse?: string;
-  categorie?: string;
-}
-
 export interface Employe {
   id: string;
   nom: string;

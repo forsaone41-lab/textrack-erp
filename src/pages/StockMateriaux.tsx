@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, TriangleAlert, Package, Layers, MapPin, User, Tag, Coins, Calendar, Phone, X, CheckCircle2 } from 'lucide-react';
-import { StockTissu, StockFourniture, Fournisseur, loadData, saveRecord, deleteRecord, genId } from '../types';
+import { Plus, Search, Edit2, Trash2, TriangleAlert, Package, Layers, MapPin, User, Tag, Coins, Calendar } from 'lucide-react';
+import { StockTissu, StockFourniture, loadData, saveRecord, deleteRecord, genId } from '../types';
 
-type Tab = 'tissus' | 'fournitures' | 'fournisseurs';
+type Tab = 'tissus' | 'fournitures';
 
 // ─── Helpers ────────────────────────────────────────────────
 function getTissuStatut(t: StockTissu): 'disponible' | 'alerte' | 'epuise' {
@@ -52,10 +52,9 @@ export default function StockMateriaux() {
   const [filterCat, setFilterCat] = useState('tous');
   const [commandes, setCommandes] = useState<any[]>([]);
   const [fiches, setFiches] = useState<any[]>([]);
+  const [ordres, setOrdres] = useState<any[]>([]);
   const [filterFourni, setFilterFourni] = useState('tous');
-  const [fournisseurs, setFournisseurs] = useState<Fournisseur[]>([]);
 
-  // Modals States
   const [showTModal, setShowTModal] = useState(false);
   const [editTId, setEditTId] = useState<string | null>(null);
   const [tForm, setTForm] = useState<Partial<StockTissu>>({});
@@ -64,23 +63,19 @@ export default function StockMateriaux() {
   const [editFId, setEditFId] = useState<string | null>(null);
   const [fForm, setFForm] = useState<Partial<StockFourniture>>({});
 
-  const [showSModal, setShowSModal] = useState(false);
-  const [editSId, setEditSId] = useState<string | null>(null);
-  const [sForm, setSForm] = useState<Partial<Fournisseur>>({});
-
   useEffect(() => {
     Promise.all([
       loadData<StockTissu>('tissus'),
       loadData<StockFourniture>('fournitures'),
       loadData<any>('commandes'),
       loadData<any>('fiches_techniques'),
-      loadData<Fournisseur>('fournisseurs')
-    ]).then(([tiss, four, cmds, fch, fours]) => {
+      loadData<any>('ordres')
+    ]).then(([tiss, four, cmds, fch, ord]) => {
       setTissus(tiss);
       setFournitures(four);
       setCommandes(cmds);
       setFiches(fch);
-      setFournisseurs(fours);
+      setOrdres(ord);
     });
   }, []);
 
@@ -173,30 +168,6 @@ export default function StockMateriaux() {
 
   function openEditF(f: StockFourniture) { setEditFId(f.id); setFForm({ ...f }); setShowFModal(true); }
 
-  // ─── Fournisseur CRUD ───
-  async function saveSupp() {
-    if (!sForm.nom || !sForm.telephone) return;
-    const item: Fournisseur = {
-      id: editSId ?? genId(),
-      nom: sForm.nom!,
-      telephone: sForm.telephone!,
-      email: sForm.email ?? '',
-      adresse: sForm.adresse ?? '',
-      categorie: sForm.categorie ?? 'Grossiste',
-    };
-    const updated = editSId ? fournisseurs.map(s => s.id === editSId ? item : s) : [...fournisseurs, item];
-    setFournisseurs(updated); setShowSModal(false);
-    await saveRecord('fournisseurs', item);
-  }
-
-  function openCreateS() {
-    setEditSId(null);
-    setSForm({ nom: '', telephone: '', email: '', adresse: '', categorie: 'Grossiste' });
-    setShowSModal(true);
-  }
-
-  function openEditS(s: Fournisseur) { setEditSId(s.id); setSForm({ ...s }); setShowSModal(true); }
-
   // ─── Render ─────────────────────────────────────────────
   return (
     <div className="space-y-6">
@@ -212,10 +183,6 @@ export default function StockMateriaux() {
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition ${tab === 'fournitures' ? 'bg-indigo-600 text-white shadow' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
           <Package className="w-4 h-4" /> Fournitures
           {alertesF + rupturesF > 0 && <span className="bg-red-500 text-white text-xs rounded-full px-1.5">{alertesF + rupturesF}</span>}
-        </button>
-        <button onClick={() => setTab('fournisseurs')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition ${tab === 'fournisseurs' ? 'bg-indigo-600 text-white shadow' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
-          <User className="w-4 h-4" /> Annuaire Fournisseurs
         </button>
       </div>
 
@@ -391,16 +358,33 @@ export default function StockMateriaux() {
                     {/* Progress */}
                     <div className="mb-4">
                       <div className="flex justify-between text-xs text-slate-500 mb-1">
-                        <span className="font-semibold">{t.metrage} m restants</span>
-                        {t.metrageTotal && <span className="text-slate-400">/ {t.metrageTotal} m</span>}
+                        <span className={`font-black ${statut === 'epuise' ? 'text-red-600 text-lg' : 'font-semibold'}`}>
+                          {t.metrage} m {statut === 'epuise' ? 'RESTANTS' : 'restants'}
+                        </span>
+                        {t.metrageTotal && statut !== 'epuise' && <span className="text-slate-400">/ {t.metrageTotal} m</span>}
                       </div>
-                      {pct !== null && (
-                        <>
-                          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                            <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
-                          </div>
-                          <p className="text-[10px] text-slate-400 mt-1">{pct}% disponible</p>
-                        </>
+                      {statut === 'epuise' ? (
+                        <div className="bg-red-50 border border-red-100 rounded-xl p-3">
+                           <p className="text-[9px] font-black text-red-400 uppercase tracking-tighter mb-1">Cause d'épuisement</p>
+                           {(() => {
+                             const lastOrdre = [...ordres].reverse().find(o => o.tissu === `${t.type} ${t.couleur}`);
+                             const lastCmd = lastOrdre ? commandes.find(c => c.id === lastOrdre.commandeId) : null;
+                             return (
+                               <p className="text-[11px] font-bold text-red-700 leading-tight">
+                                 {lastCmd ? `Consommé par: ${lastCmd.reference} (${lastCmd.modele})` : 'Usage manuel ou non répertorié'}
+                               </p>
+                             );
+                           })()}
+                        </div>
+                      ) : (
+                        pct !== null && (
+                          <>
+                            <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                              <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
+                            </div>
+                            <p className="text-[10px] text-slate-400 mt-1">{pct}% disponible</p>
+                          </>
+                        )
                       )}
                     </div>
 
@@ -601,224 +585,96 @@ export default function StockMateriaux() {
         </>
       )}
 
-      {/* ════════════ FOURNISSEURS ════════════ */}
-      {tab === 'fournisseurs' && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Annuaire des Fournisseurs</h1>
-              <p className="text-sm text-slate-400">{fournisseurs.length} partenaires enregistrés</p>
-            </div>
-            <button 
-              onClick={openCreateS}
-              className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-3 rounded-2xl hover:bg-indigo-700 transition shadow-lg shadow-indigo-100 font-bold text-sm"
-            >
-              <Plus className="w-4 h-4" /> Ajouter un Fournisseur
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {fournisseurs.map(f => (
-              <div key={f.id} className="bg-white rounded-[2rem] border border-slate-100 p-8 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-indigo-100/50 transition-colors" />
-                
-                <div className="relative z-10">
-                  <div className="flex justify-between items-start mb-6">
-                    <div className="bg-indigo-50 w-16 h-16 rounded-[1.5rem] flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
-                      <User className="w-8 h-8" />
-                    </div>
-                    <div className="flex gap-2">
-                      <button onClick={() => openEditS(f)} className="p-2.5 text-slate-400 hover:text-indigo-600 transition bg-slate-50 rounded-xl"><Edit2 className="w-4 h-4" /></button>
-                      <button onClick={async () => {
-                        if (confirm('Supprimer ce fournisseur ?')) {
-                          await deleteRecord('fournisseurs', f.id);
-                          setFournisseurs(fournisseurs.filter(x => x.id !== f.id));
-                        }
-                      }} className="p-2.5 text-slate-400 hover:text-red-600 transition bg-slate-50 rounded-xl"><Trash2 className="w-4 h-4" /></button>
-                    </div>
-                  </div>
-                  
-                  <h3 className="font-black text-slate-800 text-xl mb-1">{f.nom}</h3>
-                  <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-6">{f.categorie || 'Grossiste'}</p>
-                  
-                  <div className="space-y-3">
-                    <a href={`tel:${f.telephone}`} className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl hover:bg-indigo-50 transition group/btn border border-transparent hover:border-indigo-100">
-                      <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-indigo-500 shadow-sm transition group-hover/btn:scale-110">
-                        <Phone className="w-5 h-5" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[9px] font-black text-slate-400 uppercase leading-none mb-1">Téléphone</span>
-                        <span className="text-sm font-bold text-slate-700">{f.telephone}</span>
-                      </div>
-                    </a>
-                    
-                    <a 
-                      href={`https://wa.me/${f.telephone.replace(/\s+/g, '')}`} 
-                      target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-3 p-4 bg-emerald-50 rounded-2xl hover:bg-emerald-100 transition group/wa border border-transparent hover:border-emerald-100"
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-emerald-500 shadow-sm transition group-hover/wa:scale-110">
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.347-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.876 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" /></svg>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[9px] font-black text-emerald-600 uppercase leading-none mb-1">WhatsApp</span>
-                        <span className="text-sm font-bold text-emerald-800 tracking-tight">Envoyer message</span>
-                      </div>
-                    </a>
-                  </div>
-                </div>
-              </div>
-            ))}
-            {fournisseurs.length === 0 && (
-              <div className="col-span-full py-20 text-center bg-slate-50 rounded-[3rem] border border-dashed border-slate-200">
-                <User className="w-12 h-12 text-slate-300 mx-auto mb-4 opacity-20" />
-                <p className="text-slate-400 font-medium italic">Aucun fournisseur enregistré pour le moment.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* ════════════ MODAL TISSU ════════════ */}
       {showTModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col border border-white/20 animate-in fade-in zoom-in duration-300">
-            <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="p-6 border-b border-slate-100">
+              <h2 className="text-lg font-bold text-slate-800">{editTId ? 'Modifier' : 'Nouveau'} Rouleau de Tissu</h2>
+            </div>
+            <div className="p-6 grid grid-cols-2 gap-4">
               <div>
-                <h2 className="text-2xl font-black text-slate-800 tracking-tight">{editTId ? 'Modifier' : 'Nouveau'} Rouleau</h2>
-                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Inventaire des Textiles</p>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Type / Matière *</label>
+                <input 
+                  list="tissu-types"
+                  value={tForm.type ?? ''} 
+                  onChange={e => setTForm({ ...tForm, type: e.target.value })}
+                  placeholder="ex: Coton, Soie..."
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" 
+                />
+                <datalist id="tissu-types">
+                  {['Coton', 'Satin', 'Soie', 'Polyester', 'Lin', 'Viscose', 'Denim', 'Velours', 'Jersey', 'Crepe', 'Popeline', 'Lycra'].map(t => (
+                    <option key={t} value={t} />
+                  ))}
+                </datalist>
               </div>
-              <button onClick={() => setShowTModal(false)} className="p-2 hover:bg-slate-200 rounded-full transition text-slate-400"><X className="w-6 h-6" /></button>
-            </div>
-            
-            <div className="p-8 overflow-y-auto custom-scrollbar">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="col-span-1">
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Type / Matière *</label>
-                  <input 
-                    list="tissu-types"
-                    value={tForm.type ?? ''} 
-                    onChange={e => setTForm({ ...tForm, type: e.target.value })}
-                    className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm focus:ring-4 focus:ring-indigo-500/10 outline-none font-bold" 
-                  />
-                </div>
 
-                <div className="col-span-1">
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Couleur / Nom *</label>
-                  <input 
-                    list="tissu-couleurs"
-                    value={tForm.couleur ?? ''} 
-                    onChange={e => setTForm({ ...tForm, couleur: e.target.value })}
-                    className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm focus:ring-4 focus:ring-indigo-500/10 outline-none font-bold" 
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Couleur / Nom *</label>
+                <input 
+                  list="tissu-couleurs"
+                  value={tForm.couleur ?? ''} 
+                  onChange={e => setTForm({ ...tForm, couleur: e.target.value })}
+                  placeholder="ex: Bleu Marine"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" 
+                />
+                <datalist id="tissu-couleurs">
+                  {['Noir', 'Blanc', 'Bleu Marine', 'Rouge', 'Vert', 'Gris', 'Beige', 'Rose', 'Jaune', 'Bordeaux', 'Ciel', 'Marron', 'Kaki', 'Argent', 'Or'].map(c => (
+                    <option key={c} value={c} />
+                  ))}
+                </datalist>
+              </div>
 
-                <div className="col-span-2 grid grid-cols-2 gap-6 p-6 bg-indigo-50/50 rounded-3xl border border-indigo-100">
-                   <div>
-                     <label className="block text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2 ml-1">Fournisseur</label>
-                     <select 
-                       value={tForm.fournisseur ?? ''} 
-                       onChange={e => {
-                         const f = fournisseurs.find(x => x.nom === e.target.value);
-                         setTForm({ ...tForm, fournisseur: e.target.value, fournisseurTel: f?.telephone || '' });
-                       }}
-                       className="w-full px-5 py-4 bg-white border-none rounded-2xl text-sm focus:ring-4 focus:ring-indigo-500/10 outline-none font-bold appearance-none shadow-sm"
-                     >
-                       <option value="">Sélectionner...</option>
-                       {fournisseurs.map(f => <option key={f.id} value={f.nom}>{f.nom}</option>)}
-                       <option value="Autre">Saisie manuelle...</option>
-                     </select>
-                   </div>
-                   <div>
-                     <label className="block text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2 ml-1">Téléphone</label>
-                     <input 
-                       type="text" 
-                       value={tForm.fournisseurTel ?? ''} 
-                       onChange={e => setTForm({ ...tForm, fournisseurTel: e.target.value })}
-                       className="w-full px-5 py-4 bg-white border-none rounded-2xl text-sm focus:ring-4 focus:ring-indigo-500/10 outline-none font-bold shadow-sm" 
-                     />
-                   </div>
-                </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Composition</label>
+                <input 
+                  list="tissu-compo"
+                  value={tForm.composition ?? ''} 
+                  onChange={e => setTForm({ ...tForm, composition: e.target.value })}
+                  placeholder="ex: 100% Coton"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" 
+                />
+                <datalist id="tissu-compo">
+                  {['100% Coton', '100% Polyester', '100% Soie', '50% Coton 50% Poly', '95% Coton 5% Elasthanne', '80% Coton 20% Polyester', 'Microfibre'].map(cp => (
+                    <option key={cp} value={cp} />
+                  ))}
+                </datalist>
+              </div>
 
-                {[
-                  { label: 'Métrage actuel (m) *', key: 'metrage' },
-                  { label: 'Métrage total (m)', key: 'metrageTotal' },
-                  { label: 'Prix/mètre (MAD)', key: 'prixMetre' },
-                  { label: 'Seuil alerte (m)', key: 'seuilAlerte' },
-                ].map(({ label, key }) => (
-                  <div key={key}>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{label}</label>
-                    <input type="number" value={(tForm as any)[key] ?? ''} onChange={e => setTForm({ ...tForm, [key]: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm focus:ring-4 focus:ring-indigo-500/10 outline-none font-bold" />
-                  </div>
-                ))}
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Référence</label>
+                <input value={tForm.reference ?? ''} onChange={e => setTForm({ ...tForm, reference: e.target.value })}
+                  placeholder="Auto si vide"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+              </div>
+              {[
+                { label: 'Métrage actuel (m) *', key: 'metrage', type: 'number' },
+                { label: 'Métrage total (m)', key: 'metrageTotal', type: 'number' },
+                { label: 'Prix/mètre (MAD)', key: 'prixMetre', type: 'number' },
+                { label: 'Seuil alerte (m)', key: 'seuilAlerte', type: 'number' },
+                { label: 'Largeur (cm)', key: 'largeur', type: 'number' },
+                { label: 'Fournisseur', key: 'fournisseur', type: 'text' },
+                { label: 'Téléphone Fournisseur', key: 'fournisseurTel', type: 'text' },
+                { label: 'Zone', key: 'zone', type: 'text' },
+                { label: 'Étagère', key: 'etagere', type: 'text' },
+              ].map(({ label, key, type }) => (
+                <div key={key}>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">{label}</label>
+                  <input type={type} value={(tForm as any)[key] ?? ''} onChange={e => setTForm({ ...tForm, [key]: type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                </div>
+              ))}
+              <div className="col-span-2">
+                <label className="block text-xs font-medium text-slate-600 mb-1">Date réception</label>
+                <input type="date" value={tForm.dateReception ?? ''} onChange={e => setTForm({ ...tForm, dateReception: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
               </div>
             </div>
-            
-            <div className="p-8 border-t border-slate-50 bg-slate-50/50 flex justify-end gap-4">
-              <button onClick={() => setShowTModal(false)} className="px-8 py-4 text-sm font-black text-slate-400 hover:text-slate-600 transition uppercase tracking-widest">Annuler</button>
-              <button onClick={saveTissu} className="px-10 py-4 bg-indigo-600 text-white rounded-[1.2rem] hover:bg-indigo-700 transition font-black text-sm uppercase tracking-widest shadow-xl shadow-indigo-200">
-                {editTId ? 'Enregistrer' : 'Ajouter'}
+            <div className="p-6 border-t border-slate-100 flex justify-end gap-3">
+              <button onClick={() => setShowTModal(false)} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition">Annuler</button>
+              <button onClick={saveTissu} className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium">
+                {editTId ? 'Modifier' : 'Ajouter'}
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ════════════ MODAL FOURNISSEUR (PRO) ════════════ */}
-      {showSModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-[3rem] w-full max-w-md overflow-hidden shadow-2xl flex flex-col animate-in fade-in slide-in-from-bottom-8 duration-300">
-            <div className="p-8 text-center border-b border-slate-50">
-              <div className="bg-indigo-50 w-20 h-20 rounded-[2rem] flex items-center justify-center text-indigo-600 mx-auto mb-4">
-                <User className="w-10 h-10" />
-              </div>
-              <h2 className="text-2xl font-black text-slate-800 tracking-tight">{editSId ? 'Modifier' : 'Nouveau'} Fournisseur</h2>
-              <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Gestion de l'Annuaire</p>
-            </div>
-
-            <div className="p-10 space-y-6">
-              <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nom du Contact / Société *</label>
-                <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
-                  <input value={sForm.nom ?? ''} onChange={e => setSForm({ ...sForm, nom: e.target.value })}
-                    className="w-full pl-12 pr-6 py-4 bg-slate-50 border-none rounded-2xl text-sm focus:ring-4 focus:ring-indigo-500/10 outline-none font-bold" 
-                    placeholder="ex: Mourad Textile"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Numéro de Téléphone *</label>
-                <div className="relative">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
-                  <input value={sForm.telephone ?? ''} onChange={e => setSForm({ ...sForm, telephone: e.target.value })}
-                    className="w-full pl-12 pr-6 py-4 bg-slate-50 border-none rounded-2xl text-sm focus:ring-4 focus:ring-indigo-500/10 outline-none font-bold" 
-                    placeholder="06 00 00 00 00"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Catégorie de Sourcing</label>
-                <select value={sForm.categorie ?? 'Grossiste'} onChange={e => setSForm({ ...sForm, categorie: e.target.value })}
-                  className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm focus:ring-4 focus:ring-indigo-500/10 outline-none font-bold appearance-none cursor-pointer"
-                >
-                  <option value="Grossiste">Grossiste (Tissus)</option>
-                  <option value="Accessoires">Accessoires (Boutons, Fils...)</option>
-                  <option value="Importateur">Importateur</option>
-                  <option value="Atelier">Atelier Partenaire</option>
-                  <option value="Autre">Autre</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="p-8 pt-0 flex flex-col gap-3">
-              <button onClick={saveSupp} className="w-full py-5 bg-indigo-600 text-white rounded-[1.5rem] hover:bg-indigo-700 transition font-black text-sm uppercase tracking-widest shadow-xl shadow-indigo-200 flex items-center justify-center gap-2">
-                <CheckCircle2 className="w-5 h-5" /> {editSId ? 'Mettre à jour' : 'Enregistrer le contact'}
-              </button>
-              <button onClick={() => setShowSModal(false)} className="w-full py-4 text-xs font-black text-slate-400 hover:text-slate-600 transition uppercase tracking-widest">Annuler</button>
             </div>
           </div>
         </div>
@@ -826,88 +682,74 @@ export default function StockMateriaux() {
 
       {/* ════════════ MODAL FOURNITURE ════════════ */}
       {showFModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col animate-in fade-in zoom-in duration-300">
-            <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-              <div>
-                <h2 className="text-2xl font-black text-slate-800 tracking-tight">{editFId ? 'Modifier' : 'Nouvel'} Article</h2>
-                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Inventaire des Fournitures</p>
-              </div>
-              <button onClick={() => setShowFModal(false)} className="p-2 hover:bg-slate-200 rounded-full transition text-slate-400"><X className="w-6 h-6" /></button>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="p-6 border-b border-slate-100">
+              <h2 className="text-lg font-bold text-slate-800">{editFId ? 'Modifier' : 'Nouvel'} Article Fourniture</h2>
             </div>
-            
-            <div className="p-8 space-y-6">
+            <div className="p-6 space-y-4">
               <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nom de l'Article *</label>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Nom *</label>
                 <input value={fForm.nom ?? ''} onChange={e => setFForm({ ...fForm, nom: e.target.value })}
-                  className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm focus:ring-4 focus:ring-indigo-500/10 outline-none font-bold" 
-                />
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
               </div>
-
-              <div className="grid grid-cols-2 gap-6 p-6 bg-indigo-50/50 rounded-3xl border border-indigo-100">
-                 <div>
-                   <label className="block text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2 ml-1">Fournisseur</label>
-                   <select 
-                     value={fForm.fournisseur ?? ''} 
-                     onChange={e => setFForm({ ...fForm, fournisseur: e.target.value })}
-                     className="w-full px-5 py-4 bg-white border-none rounded-2xl text-sm focus:ring-4 focus:ring-indigo-500/10 outline-none font-bold shadow-sm appearance-none"
-                   >
-                     <option value="">Sélectionner...</option>
-                     {fournisseurs.map(f => <option key={f.id} value={f.nom}>{f.nom}</option>)}
-                     <option value="Autre">Saisie manuelle...</option>
-                   </select>
-                 </div>
-                 <div>
-                    <label className="block text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2 ml-1">Catégorie</label>
-                    <select value={fForm.categorie ?? 'autre'} onChange={e => setFForm({ ...fForm, categorie: e.target.value as any })}
-                      className="w-full px-5 py-4 bg-white border-none rounded-2xl text-sm focus:ring-4 focus:ring-indigo-500/10 outline-none font-bold shadow-sm appearance-none"
-                    >
-                      {['boutons', 'fermetures', 'fil', 'étiquettes', 'élastiques', 'autre'].map(c => (
-                        <option key={c} value={c}>{FOURNI_ICONS[c]} {c.charAt(0).toUpperCase() + c.slice(1)}</option>
-                      ))}
-                    </select>
-                 </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Catégorie</label>
+                  <select value={fForm.categorie ?? 'autre'} onChange={e => setFForm({ ...fForm, categorie: e.target.value as any })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    {['boutons', 'fermetures', 'fil', 'étiquettes', 'élastiques', 'autre'].map(c => (
+                      <option key={c} value={c}>{FOURNI_ICONS[c]} {c.charAt(0).toUpperCase() + c.slice(1)}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Unité</label>
+                  <select value={fForm.unite ?? 'pcs'} onChange={e => setFForm({ ...fForm, unite: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    {['pcs', 'm', 'bobine', 'kg', 'boîte', 'rouleau'].map(u => <option key={u} value={u}>{u}</option>)}
+                  </select>
+                </div>
               </div>
-
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 gap-4">
                 {[
                   { label: 'Stock actuel *', key: 'quantite' },
                   { label: 'Stock minimum', key: 'stockMin' },
                   { label: 'Prix unitaire (MAD)', key: 'prixUnitaire' },
                 ].map(({ label, key }) => (
                   <div key={key}>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{label}</label>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">{label}</label>
                     <input type="number" value={(fForm as any)[key] ?? ''} onChange={e => setFForm({ ...fForm, [key]: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm focus:ring-4 focus:ring-indigo-500/10 outline-none font-bold" />
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
                   </div>
                 ))}
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Unité</label>
-                  <select value={fForm.unite ?? 'pcs'} onChange={e => setFForm({ ...fForm, unite: e.target.value })}
-                    className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm focus:ring-4 focus:ring-indigo-500/10 outline-none font-bold cursor-pointer"
-                  >
-                    {['pcs', 'm', 'bobine', 'kg', 'boîte', 'rouleau'].map(u => <option key={u} value={u}>{u}</option>)}
-                  </select>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Référence</label>
+                  <input value={fForm.reference ?? ''} onChange={e => setFForm({ ...fForm, reference: e.target.value })}
+                    placeholder="Auto si vide"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
                 </div>
               </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Fournisseur</label>
+                <input value={fForm.fournisseur ?? ''} onChange={e => setFForm({ ...fForm, fournisseur: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Description</label>
+                <textarea value={fForm.description ?? ''} onChange={e => setFForm({ ...fForm, description: e.target.value })}
+                  rows={2} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+              </div>
             </div>
-
-            <div className="p-8 border-t border-slate-50 bg-slate-50/50 flex justify-end gap-4">
-              <button onClick={() => setShowFModal(false)} className="px-8 py-4 text-sm font-black text-slate-400 hover:text-slate-600 transition uppercase tracking-widest">Annuler</button>
-              <button onClick={saveFourni} className="px-10 py-4 bg-indigo-600 text-white rounded-[1.2rem] hover:bg-indigo-700 transition font-black text-sm uppercase tracking-widest shadow-xl shadow-indigo-200">
-                {editFId ? 'Mettre à jour' : 'Ajouter'}
+            <div className="p-6 border-t border-slate-100 flex justify-end gap-3">
+              <button onClick={() => setShowFModal(false)} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition">Annuler</button>
+              <button onClick={saveFourni} className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium">
+                {editFId ? 'Modifier' : 'Ajouter'}
               </button>
             </div>
           </div>
         </div>
       )}
-      
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
-      `}</style>
     </div>
   );
 }
