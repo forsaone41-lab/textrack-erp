@@ -345,7 +345,7 @@ export default function Commandes() {
                   <div>
                     <div className="flex justify-between items-center mb-1.5">
                       <label className="block text-xs font-semibold text-slate-600">Prix tissu (MAD/mètre)</label>
-                      {calcTissuId && <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">✓ Auto depuis stock</span>}
+                      {calcTissuId && <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">✓ {t('auto_from_stock', lang)}</span>}
                     </div>
                     <input type="number" min="0" value={calcPrixTissu || ''} onChange={e => setCalcPrixTissu(parseFloat(e.target.value) || 0)}
                       className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none ${selectedTissu ? 'border-green-300 bg-green-50/50' : 'border-slate-200'}`} />
@@ -389,19 +389,19 @@ export default function Commandes() {
             <div className="grid grid-cols-2 gap-4">
               <div><label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">Modèle</label><select value={form.modele || ''} onChange={e => { const fiche = fiches.find(f => f.modele === e.target.value); setForm({ ...form, modele: e.target.value, tissu: fiche?.type || form.tissu }); }} className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none"><option value="">— Sélectionner —</option>{fiches.map(f => <option key={f.id} value={f.modele}>{f.modele}</option>)}</select></div>
               <div>
-                <label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">الثوب المطلوب (من المخزون)</label>
+                <label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">{t('tissu_required_stock', lang)}</label>
                 <select 
                   value={form.tissu || ''} 
                   onChange={e => setForm({ ...form, tissu: e.target.value })} 
                   className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
                 >
-                  <option value="">— اختر الثوب من المستودع —</option>
+                  <option value="">{t('choose_fabric_stock', lang)}</option>
                   {tissus.filter(t => t.metrage > 0).map(t => (
                     <option key={t.id} value={`${t.type} ${t.couleur}`}>
                       {t.type} {t.couleur} ({t.metrage}m dispo)
                     </option>
                   ))}
-                  <option value="Autre">ثوب غير موجود بالمخزون</option>
+                  <option value="Autre">{t('fabric_not_in_stock', lang)}</option>
                 </select>
               </div>
             </div>

@@ -208,6 +208,10 @@ export const T = {
   tissu_types: { fr: 'Types de tissu', ar: 'أنواع الأقمشة' },
   saved_pointages: { fr: 'Pointages enregistrés', ar: 'تسجيلات الحضور' },
   issued_factures: { fr: 'Factures émises', ar: 'الفواتير المصدرة' },
+  tissu_required_stock: { fr: 'Tissu requis (Stock)', ar: 'الثوب المطلوب (من المخزون)' },
+  choose_fabric_stock: { fr: '— Choisir un tissu —', ar: '— اختر الثوب من المستودع —' },
+  fabric_not_in_stock: { fr: 'Non répertorié', ar: 'غير مسجل في المخزون' },
+  auto_from_stock: { fr: 'Auto depuis stock', ar: 'تلقائي من المخزون' },
 } as const;
 
 export type TKey = keyof typeof T;
