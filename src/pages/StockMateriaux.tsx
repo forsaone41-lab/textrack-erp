@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, TriangleAlert, Package, Layers, MapPin, User, Tag, Coins, Calendar } from 'lucide-react';
 import { StockTissu, StockFourniture, loadData, saveRecord, deleteRecord, genId } from '../types';
 
-type Tab = 'tissus' | 'fournitures';
+type Tab = 'tissus' | 'fournitures' | 'fournisseurs';
 
 // ─── Helpers ────────────────────────────────────────────────
 function getTissuStatut(t: StockTissu): 'disponible' | 'alerte' | 'epuise' {
@@ -53,6 +53,7 @@ export default function StockMateriaux() {
   const [commandes, setCommandes] = useState<any[]>([]);
   const [fiches, setFiches] = useState<any[]>([]);
   const [filterFourni, setFilterFourni] = useState('tous');
+  const [fournisseurs, setFournisseurs] = useState<any[]>([]);
 
   const [showTModal, setShowTModal] = useState(false);
   const [editTId, setEditTId] = useState<string | null>(null);
@@ -67,12 +68,14 @@ export default function StockMateriaux() {
       loadData<StockTissu>('tissus'),
       loadData<StockFourniture>('fournitures'),
       loadData<any>('commandes'),
-      loadData<any>('fiches_techniques')
-    ]).then(([tiss, four, cmds, fch]) => {
+      loadData<any>('fiches_techniques'),
+      loadData<any>('fournisseurs')
+    ]).then(([tiss, four, cmds, fch, fours]) => {
       setTissus(tiss);
       setFournitures(four);
       setCommandes(cmds);
       setFiches(fch);
+      setFournisseurs(fours);
     });
   }, []);
 
@@ -180,6 +183,10 @@ export default function StockMateriaux() {
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition ${tab === 'fournitures' ? 'bg-indigo-600 text-white shadow' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
           <Package className="w-4 h-4" /> Fournitures
           {alertesF + rupturesF > 0 && <span className="bg-red-500 text-white text-xs rounded-full px-1.5">{alertesF + rupturesF}</span>}
+        </button>
+        <button onClick={() => setTab('fournisseurs')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition ${tab === 'fournisseurs' ? 'bg-indigo-600 text-white shadow' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+          <User className="w-4 h-4" /> Annuaire Fournisseurs
         </button>
       </div>
 
@@ -565,6 +572,85 @@ export default function StockMateriaux() {
         </>
       )}
 
+      {/* ════════════ FOURNISSEURS ════════════ */}
+      {tab === 'fournisseurs' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Annuaire des Fournisseurs</h1>
+              <p className="text-sm text-slate-400">{fournisseurs.length} partenaires enregistrés</p>
+            </div>
+            <button 
+              onClick={() => {
+                const nom = prompt('Nom du fournisseur ?');
+                const tel = prompt('Téléphone ?');
+                if (nom && tel) {
+                  const f = { id: genId(), nom, telephone: tel };
+                  saveRecord('fournisseurs', f);
+                  setFournisseurs([...fournisseurs, f]);
+                }
+              }}
+              className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-3 rounded-2xl hover:bg-indigo-700 transition shadow-lg shadow-indigo-100 font-bold text-sm"
+            >
+              <Plus className="w-4 h-4" /> Ajouter un Fournisseur
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {fournisseurs.map(f => (
+              <div key={f.id} className="bg-white rounded-[2rem] border border-slate-100 p-8 shadow-sm hover:shadow-xl transition-all group">
+                <div className="flex justify-between items-start mb-6">
+                  <div className="bg-indigo-50 w-16 h-16 rounded-[1.5rem] flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
+                    <User className="w-8 h-8" />
+                  </div>
+                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => {
+                      const tel = prompt('Nouveau téléphone ?', f.telephone);
+                      if (tel) {
+                        const updated = { ...f, telephone: tel };
+                        saveRecord('fournisseurs', updated);
+                        setFournisseurs(fournisseurs.map(x => x.id === f.id ? updated : x));
+                      }
+                    }} className="p-2.5 text-slate-400 hover:text-indigo-600 transition bg-slate-50 rounded-xl"><Edit2 className="w-4 h-4" /></button>
+                    <button onClick={async () => {
+                      if (confirm('Supprimer ce fournisseur ?')) {
+                        await deleteRecord('fournisseurs', f.id);
+                        setFournisseurs(fournisseurs.filter(x => x.id !== f.id));
+                      }
+                    }} className="p-2.5 text-slate-400 hover:text-red-600 transition bg-slate-50 rounded-xl"><Trash2 className="w-4 h-4" /></button>
+                  </div>
+                </div>
+                <h3 className="font-black text-slate-800 text-xl mb-1">{f.nom}</h3>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">{f.categorie || 'Partenaire Commercial'}</p>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <a href={`tel:${f.telephone}`} className="flex flex-col items-center gap-2 p-4 bg-slate-50 rounded-2xl hover:bg-indigo-50 hover:text-indigo-600 transition group/btn">
+                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-slate-400 group-hover/btn:text-indigo-500 shadow-sm transition">📞</div>
+                    <span className="text-[10px] font-black uppercase tracking-tighter text-center">Appeler</span>
+                  </a>
+                  <a 
+                    href={`https://wa.me/${f.telephone.replace(/\s+/g, '')}`} 
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex flex-col items-center gap-2 p-4 bg-emerald-50 rounded-2xl hover:bg-emerald-100 transition group/wa"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-emerald-500 shadow-sm transition">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.347-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.876 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" /></svg>
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-tighter text-emerald-700 text-center">WhatsApp</span>
+                  </a>
+                </div>
+              </div>
+            ))}
+            {fournisseurs.length === 0 && (
+              <div className="col-span-full py-20 text-center bg-slate-50 rounded-[3rem] border border-dashed border-slate-200">
+                <User className="w-12 h-12 text-slate-300 mx-auto mb-4 opacity-20" />
+                <p className="text-slate-400 font-medium italic">Aucun fournisseur enregistré pour le moment.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ════════════ MODAL TISSU ════════════ */}
       {showTModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -633,8 +719,6 @@ export default function StockMateriaux() {
                 { label: 'Prix/mètre (MAD)', key: 'prixMetre', type: 'number' },
                 { label: 'Seuil alerte (m)', key: 'seuilAlerte', type: 'number' },
                 { label: 'Largeur (cm)', key: 'largeur', type: 'number' },
-                { label: 'Fournisseur', key: 'fournisseur', type: 'text' },
-                { label: 'Téléphone Fournisseur', key: 'fournisseurTel', type: 'text' },
                 { label: 'Zone', key: 'zone', type: 'text' },
                 { label: 'Étagère', key: 'etagere', type: 'text' },
               ].map(({ label, key, type }) => (
@@ -644,6 +728,30 @@ export default function StockMateriaux() {
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
                 </div>
               ))}
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Fournisseur</label>
+                <select 
+                  value={tForm.fournisseur ?? ''} 
+                  onChange={e => {
+                    const f = fournisseurs.find(x => x.nom === e.target.value);
+                    setTForm({ ...tForm, fournisseur: e.target.value, fournisseurTel: f?.telephone || '' });
+                  }}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
+                >
+                  <option value="">Sélectionner...</option>
+                  {fournisseurs.map(f => <option key={f.id} value={f.nom}>{f.nom}</option>)}
+                  <option value="Autre">Saisie manuelle...</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Tél. Fournisseur</label>
+                <input 
+                  type="text" 
+                  value={tForm.fournisseurTel ?? ''} 
+                  onChange={e => setTForm({ ...tForm, fournisseurTel: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" 
+                />
+              </div>
               <div className="col-span-2">
                 <label className="block text-xs font-medium text-slate-600 mb-1">Date réception</label>
                 <input type="date" value={tForm.dateReception ?? ''} onChange={e => setTForm({ ...tForm, dateReception: e.target.value })}
@@ -712,8 +820,15 @@ export default function StockMateriaux() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Fournisseur</label>
-                <input value={fForm.fournisseur ?? ''} onChange={e => setFForm({ ...fForm, fournisseur: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                <select 
+                  value={fForm.fournisseur ?? ''} 
+                  onChange={e => setFForm({ ...fForm, fournisseur: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
+                >
+                  <option value="">Sélectionner...</option>
+                  {fournisseurs.map(f => <option key={f.id} value={f.nom}>{f.nom}</option>)}
+                  <option value="Autre">Saisie manuelle...</option>
+                </select>
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Description</label>
