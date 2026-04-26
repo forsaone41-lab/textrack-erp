@@ -10,7 +10,7 @@ export default function ChaineDeMontage() {
 
   useEffect(() => { loadData<Commande>('commandes').then(setCommandes); }, []);
 
-  const enCours = commandes.filter(c => c.statut !== 'livré');
+  const enCours = commandes.filter(c => c.statut !== 'livré' && c.phase !== 'coupe');
   const filtered = selectedPhase === 'all' ? enCours : enCours.filter(c => c.phase === selectedPhase);
 
   async function updatePhase(cmdId: string, newPhase: Phase) {
