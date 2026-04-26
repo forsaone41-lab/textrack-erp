@@ -179,6 +179,25 @@ export default function Commandes() {
 
     const fiche = fiches.find(f => f.modele === c.modele);
     const conso = fiche?.tissuConsommation || 0;
+    const metrageRequis = Number((conso * c.quantite).toFixed(2));
+
+    // Stock Linkage: Find the roll and deduct
+    const selectedRoll = tissus.find(t => `${t.type} ${t.couleur}` === c.tissu);
+    if (selectedRoll) {
+      if (selectedRoll.metrage < metrageRequis) {
+        if (!confirm(lang === 'fr' 
+          ? `Stock insuffisant (${selectedRoll.metrage}m). Voulez-vous quand même continuer ?` 
+          : `المخزون غير كافٍ (${selectedRoll.metrage} متر). واش بغيتي تزيد؟`)) {
+          return;
+        }
+      }
+      
+      // Deduct from stock
+      const updatedRoll = { ...selectedRoll, metrage: Math.max(0, selectedRoll.metrage - metrageRequis) };
+      await saveRecord('tissus', updatedRoll);
+      setTissus(prev => prev.map(t => t.id === updatedRoll.id ? updatedRoll : t));
+    }
+
     const nouveauOrdre: OrdreDeCoupe = {
       id: genId(),
       commandeId: c.id,
@@ -187,14 +206,14 @@ export default function Commandes() {
       quantite: c.quantite,
       tissu: fiche?.type || c.tissu || '',
       couleur: 'À définir',
-      metrage: Number((conso * c.quantite).toFixed(2)),
+      metrage: metrageRequis,
       statut: 'planifié',
       dateCoupe: c.dateCommande
     };
     
     await saveRecord('ordres', nouveauOrdre);
     setOrdres(prev => [...prev, nouveauOrdre]);
-    alert(lang === 'fr' ? 'Envoyé à la coupure !' : 'تم الإرسال للفصالة بنجاح !');
+    alert(lang === 'fr' ? 'Envoyé à la coupure et stock mis à jour !' : 'تم الإرسال للفصالة وتحديث المخزون بنجاح !');
   };
 
   async function remove(id: string) {
@@ -531,6 +550,29 @@ export default function Commandes() {
                   ))}
                   <option value="Autre">{t('fabric_not_in_stock', lang)}</option>
                 </select>
+                {/* Stock Linkage: Real-time Indicator */}
+                {form.modele && form.tissu && form.quantite > 0 && (() => {
+                  const fiche = fiches.find(f => f.modele === form.modele);
+                  const selectedRoll = tissus.find(t => `${t.type} ${t.couleur}` === form.tissu);
+                  const conso = fiche?.tissuConsommation || 0;
+                  const requis = Number((conso * (form.quantite || 0)).toFixed(2));
+                  
+                  if (!fiche) return <p className="text-[10px] text-amber-500 font-bold mt-1">⚠️ Fiche technique non trouvée pour calcul</p>;
+                  if (!selectedRoll) return null;
+
+                  const isOk = selectedRoll.metrage >= requis;
+                  return (
+                    <div className={`mt-2 p-3 rounded-xl border flex items-center justify-between ${isOk ? 'bg-emerald-50 border-emerald-100' : 'bg-red-50 border-red-100'}`}>
+                      <div>
+                        <p className={`text-[10px] font-black uppercase tracking-widest ${isOk ? 'text-emerald-600' : 'text-red-600'}`}>
+                          {isOk ? 'Stock Disponible' : 'Stock Insuffisant'}
+                        </p>
+                        <p className="text-xs font-bold text-slate-700">Besoin: {requis}m | Dispo: {selectedRoll.metrage}m</p>
+                      </div>
+                      {!isOk && <span className="text-[10px] font-black bg-red-600 text-white px-2 py-0.5 rounded-full">-{ (requis - selectedRoll.metrage).toFixed(1) }m</span>}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
