@@ -297,7 +297,6 @@ export default function ChaineDeMontage() {
             const attenteCouleur = jPhase >= 14 ? 'bg-red-100 text-red-700 border-red-200'
               : jPhase >= 7 ? 'bg-amber-100 text-amber-700 border-amber-200'
                 : 'bg-green-100 text-green-700 border-green-200';
-            const resteCouleur = jRest < 0 ? 'text-red-600' : jRest <= 3 ? 'text-amber-600' : 'text-green-600';
             
             const cmdPointages = pointages.filter(p => p.commandeId === cmd.id && p.phase === cmd.phase);
             const piecesProduites = cmdPointages.reduce((a, p) => a + p.piecesCompletees, 0);
@@ -306,16 +305,16 @@ export default function ChaineDeMontage() {
 
             return (
               <div key={cmd.id} className={`bg-white rounded-2xl border shadow-sm p-4 md:p-6 ${jRest < 0 ? 'border-red-300' : 'border-slate-200'}`}>
-                <div className="flex flex-col gap-4">
-                  <div className="flex justify-between items-start">
+                <div className="flex flex-col gap-5">
+                  <div className="flex justify-between items-start gap-4">
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                         <span className="text-sm md:text-base font-bold text-slate-800 truncate">{cmd.reference}</span>
-                        <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium ${PHASE_COLORS[cmd.phase]} text-white`}>
+                        <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${PHASE_COLORS[cmd.phase]} text-white shadow-sm`}>
                           {PHASE_LABELS[cmd.phase]}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-500 truncate">{cmd.modele} · {cmd.client}</p>
+                      <p className="text-xs text-slate-500 font-medium truncate">{cmd.modele} · {cmd.client}</p>
                     </div>
                     <div className="text-right flex-shrink-0">
                       <div className={`px-4 py-2 rounded-2xl border-2 flex flex-col items-center justify-center animate-pulse-slow ${
@@ -327,7 +326,7 @@ export default function ChaineDeMontage() {
                         <p className="text-lg font-black leading-none mt-1">{cmd.dateLivraisonPrevue}</p>
                         <div className="mt-1 flex items-center gap-1">
                           <Clock className="w-3 h-3" />
-                          <span className="text-xs font-bold uppercase">
+                          <span className="text-xs font-bold uppercase tracking-tight">
                             {jRest < 0 ? `Retard: ${Math.abs(jRest)}j` : jRest === 0 ? 'Aujourd\'hui !' : `${jRest}j restants`}
                           </span>
                         </div>
@@ -335,95 +334,103 @@ export default function ChaineDeMontage() {
                     </div>
                   </div>
 
-                  {/* Mobile-friendly Progress Bar */}
-                  <div className="space-y-1">
+                  {/* Mobile Progress Bar */}
+                  <div className="space-y-1.5">
                     <div className="flex items-center gap-1">
                       {PHASE_ORDER.map((p, i) => (
                         <div key={p} className={`h-1.5 flex-1 rounded-full ${i <= phaseIdx ? PHASE_COLORS[p] : 'bg-slate-100'}`} />
                       ))}
                     </div>
-                    <div className="flex justify-between text-[8px] md:text-[10px] text-slate-400 font-bold uppercase">
+                    <div className="flex justify-between text-[8px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest">
                       <span>{PHASE_LABELS[PHASE_ORDER[0]]}</span>
                       <span>{PHASE_LABELS[PHASE_ORDER[PHASE_ORDER.length-1]]}</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between px-2 py-2 bg-slate-50/50 rounded-xl border border-slate-100">
-                    <div className="flex gap-3 md:gap-5">
-                       <div className="flex flex-col">
-                         <span className="text-[8px] font-black text-slate-400 uppercase">Bonnes</span>
-                         <span className="text-xs font-black text-indigo-600">{piecesProduites}</span>
+                  {/* Quality Scorecard - Premium Redesign */}
+                  <div className="bg-slate-50/80 rounded-[1.25rem] border border-slate-100 p-3 shadow-inner">
+                    <div className="flex items-center justify-between gap-1">
+                       <div className="flex-1 text-center py-1">
+                         <span className="text-[7px] font-black text-slate-400 uppercase tracking-tighter mb-0.5 block">Bonnes</span>
+                         <span className="text-sm font-black text-indigo-600 tabular-nums">{piecesProduites}</span>
                        </div>
-                       <div className="flex flex-col border-l border-slate-200 pl-3 md:pl-5">
-                         <span className="text-[8px] font-black text-slate-400 uppercase">Rebut</span>
-                         <span className="text-xs font-black text-red-600">{rebutTotal}</span>
+                       <div className="w-px h-6 bg-slate-200" />
+                       <div className="flex-1 text-center py-1">
+                         <span className="text-[7px] font-black text-slate-400 uppercase tracking-tighter mb-0.5 block">Rebut</span>
+                         <span className="text-sm font-black text-red-600 tabular-nums">{rebutTotal}</span>
                        </div>
-                       <div className="flex flex-col border-l border-slate-200 pl-3 md:pl-5">
-                         <span className="text-[8px] font-black text-slate-400 uppercase">Retouche</span>
-                         <span className="text-xs font-black text-amber-600">{retoucheTotal}</span>
+                       <div className="w-px h-6 bg-slate-200" />
+                       <div className="flex-1 text-center py-1">
+                         <span className="text-[7px] font-black text-slate-400 uppercase tracking-tighter mb-0.5 block">Retouche</span>
+                         <span className="text-sm font-black text-amber-600 tabular-nums">{retoucheTotal}</span>
                        </div>
-                    </div>
-                    <div className="text-right">
-                       <span className="text-[8px] font-black text-slate-400 uppercase block">Total Phase</span>
-                       <span className="text-xs font-black text-slate-800">{piecesProduites + rebutTotal + retoucheTotal} pcs</span>
+                       <div className="w-px h-6 bg-indigo-200" />
+                       <div className="flex-[1.2] text-center bg-indigo-50/50 rounded-lg py-1 border border-indigo-100/50">
+                         <span className="text-[7px] font-black text-indigo-400 uppercase tracking-tighter mb-0.5 block">Total Phase</span>
+                         <span className="text-sm font-black text-indigo-800 tabular-nums">{piecesProduites + rebutTotal + retoucheTotal}</span>
+                       </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2 border-t border-slate-50">
-                    <div className="flex items-center gap-2">
-                       <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold border ${attenteCouleur}`}>
-                        <Clock className="w-3 h-3" />
-                        {jPhase === 0 ? "Auj." : `${jPhase}j phase`}
-                      </span>
-                      <span className="text-xs font-bold text-indigo-600">{cmd.quantite} pcs</span>
+                  <div className="space-y-4 pt-2 border-t border-slate-100">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                         <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold border ${attenteCouleur}`}>
+                          <Clock className="w-3 h-3" />
+                          {jPhase === 0 ? "Aujourd'hui" : `${jPhase}j en phase`}
+                        </span>
+                        <span className="text-xs font-bold text-indigo-600">{cmd.quantite} <span className="text-[10px] text-slate-400 uppercase tracking-tight">Pièces Total</span></span>
+                      </div>
                     </div>
-                    
-                    <div className="flex items-center gap-2">
-                       <button 
-                        onClick={() => openPointage(cmd)}
-                        className="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-100 hover:shadow-blue-200 hover:-translate-y-0.5 active:translate-y-0 transition-all border border-blue-400/20"
-                      >
-                        <div className="bg-white/20 p-1 rounded-lg">
-                          <ClipboardCheck className="w-3.5 h-3.5" />
-                        </div>
-                        Pointage Production
-                      </button>
 
+                    {/* Pointage Button - Premium & Breathable */}
+                    <button 
+                      onClick={() => openPointage(cmd)}
+                      className="w-full flex items-center justify-center gap-3 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-blue-100 hover:shadow-blue-200 hover:-translate-y-0.5 active:translate-y-0 transition-all border border-blue-400/20 px-6"
+                    >
+                      <div className="bg-white/20 p-1.5 rounded-lg">
+                        <ClipboardCheck className="w-4 h-4" />
+                      </div>
+                      POINTAGE PRODUCTION
+                    </button>
+
+                    <div className="flex items-center gap-2">
                       {canGoBack && (
                         <button
                           onClick={() => updatePhase(cmd.id, prevPhase!)}
-                          className="flex-1 flex items-center justify-center gap-1.5 py-3 border-2 border-slate-200 text-slate-500 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all"
+                          className="flex-1 flex items-center justify-center gap-1.5 py-4 border-2 border-slate-200 text-slate-500 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all"
+                          title={`Retour en ${PHASE_LABELS[prevPhase!]}`}
                         >
-                          <ArrowLeft className="w-3 h-3" />
+                          <ArrowLeft className="w-4 h-4" />
                         </button>
                       )}
                       {canAdvance && (
                         <button
                           onClick={() => updatePhase(cmd.id, nextPhase!)}
-                          className="flex-[2] flex items-center justify-center gap-2 py-3 bg-indigo-600 text-white rounded-xl text-xs font-black shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all uppercase tracking-widest"
+                          className="flex-[3] flex items-center justify-center gap-2 py-4 bg-slate-900 text-white rounded-xl text-xs font-black shadow-lg shadow-slate-200 hover:bg-black transition-all uppercase tracking-widest"
                         >
-                          Démarrer {PHASE_LABELS[nextPhase!]} <ArrowRight className="w-3.5 h-3.5" />
+                          Démarrer {PHASE_LABELS[nextPhase!]} <ArrowRight className="w-4 h-4" />
                         </button>
                       )}
                     </div>
                   </div>
-                </div>
-                
-                {/* Historique - REPOSITIONNÉ CORRECTEMENT */}
-                {cmd.suivi.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-slate-50">
-                    <p className="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-widest">Historique de production</p>
-                    <div className="flex flex-wrap gap-2">
-                      {cmd.suivi.map((s, i) => (
-                        <div key={i} className="flex items-center gap-2 bg-slate-50 rounded-lg px-2 py-1 text-[10px]">
-                          <div className={`w-1.5 h-1.5 rounded-full ${PHASE_COLORS[s.phase]}`} />
-                          <span className="font-bold text-slate-600">{PHASE_LABELS[s.phase]}</span>
-                          <span className="text-slate-400">{s.date}</span>
-                        </div>
-                      ))}
+
+                  {/* Production History Summary */}
+                  {cmd.suivi.length > 0 && (
+                    <div className="pt-4 border-t border-slate-50">
+                      <p className="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-widest">Parcours de production</p>
+                      <div className="flex flex-wrap gap-2">
+                        {cmd.suivi.map((s, i) => (
+                          <div key={i} className="flex items-center gap-2 bg-slate-50 rounded-lg px-2.5 py-1 text-[10px] border border-slate-100">
+                            <div className={`w-1.5 h-1.5 rounded-full ${PHASE_COLORS[s.phase]}`} />
+                            <span className="font-bold text-slate-600">{PHASE_LABELS[s.phase]}</span>
+                            <span className="text-slate-400 tabular-nums">{s.date}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             );
           })}
