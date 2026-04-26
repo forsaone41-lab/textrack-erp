@@ -100,109 +100,139 @@ export default function ChaineDeMontage() {
         <p className="text-slate-500 text-sm">Suivi de la production poste par poste</p>
       </div>
 
-      {/* KPI Cards */}
+      {/* KPI Cards - Redesigned PRO */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <Factory className="w-4 h-4 text-indigo-500" />
-            <span className="text-xs text-slate-500">En production</span>
+        <div className="bg-white rounded-[1.5rem] border border-slate-100 p-5 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+          <div className="absolute -right-2 -top-2 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
+             <Factory className="w-20 h-20 text-indigo-600" />
           </div>
-          <p className="text-2xl font-bold text-indigo-600">{enCours.length}</p>
-          <p className="text-xs text-slate-400">commandes actives</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">En Production</p>
+          <div className="flex items-baseline gap-1.5">
+            <p className="text-3xl font-black text-slate-800 tabular-nums">{enCours.length}</p>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Commandes</span>
+          </div>
+          <div className="mt-3 w-10 h-1 bg-indigo-500 rounded-full" />
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <Package className="w-4 h-4 text-blue-500" />
-            <span className="text-xs text-slate-500">Pièces en cours</span>
+
+        <div className="bg-white rounded-[1.5rem] border border-slate-100 p-5 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+          <div className="absolute -right-2 -top-2 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
+             <Package className="w-20 h-20 text-blue-600" />
           </div>
-          <p className="text-2xl font-bold text-blue-600">{totalPiecesEnCours}</p>
-          <p className="text-xs text-slate-400">pièces à produire</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pièces en cours</p>
+          <div className="flex items-baseline gap-1.5">
+            <p className="text-3xl font-black text-blue-600 tabular-nums">{totalPiecesEnCours}</p>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Unités</span>
+          </div>
+          <div className="mt-3 w-10 h-1 bg-blue-500 rounded-full" />
         </div>
-        <div className={`rounded-xl border p-4 ${retardees > 0 ? 'bg-red-50 border-red-200' : 'bg-white border-slate-200'}`}>
-          <div className="flex items-center gap-2 mb-1">
-            <TriangleAlert className={`w-4 h-4 ${retardees > 0 ? 'text-red-500' : 'text-slate-400'}`} />
-            <span className="text-xs text-slate-500">En retard</span>
+
+        <div className={`rounded-[1.5rem] border p-5 shadow-sm transition-all relative overflow-hidden group ${retardees > 0 ? 'bg-red-50/50 border-red-100' : 'bg-white border-slate-100'}`}>
+          <div className="absolute -right-2 -top-2 opacity-[0.05]">
+             <TriangleAlert className={`w-20 h-20 ${retardees > 0 ? 'text-red-500' : 'text-slate-200'}`} />
           </div>
-          <p className={`text-2xl font-bold ${retardees > 0 ? 'text-red-600' : 'text-slate-400'}`}>{retardees}</p>
-          <p className="text-xs text-slate-400">date dépassée</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">En Retard</p>
+          <div className="flex items-baseline gap-1.5">
+            <p className={`text-3xl font-black tabular-nums ${retardees > 0 ? 'text-red-600' : 'text-slate-300'}`}>{retardees}</p>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Retards</span>
+          </div>
+          <div className={`mt-3 w-10 h-1 rounded-full ${retardees > 0 ? 'bg-red-500' : 'bg-slate-200'}`} />
         </div>
-        <div className={`rounded-xl border p-4 ${urgentes > 0 ? 'bg-amber-50 border-amber-200' : 'bg-white border-slate-200'}`}>
-          <div className="flex items-center gap-2 mb-1">
-            <Clock className={`w-4 h-4 ${urgentes > 0 ? 'text-amber-500' : 'text-slate-400'}`} />
-            <span className="text-xs text-slate-500">Urgentes</span>
+
+        <div className={`rounded-[1.5rem] border p-5 shadow-sm transition-all relative overflow-hidden group ${urgentes > 0 ? 'bg-amber-50/50 border-amber-100' : 'bg-white border-slate-100'}`}>
+          <div className="absolute -right-2 -top-2 opacity-[0.05]">
+             <Clock className={`w-20 h-20 ${urgentes > 0 ? 'text-amber-500' : 'text-slate-200'}`} />
           </div>
-          <p className={`text-2xl font-bold ${urgentes > 0 ? 'text-amber-600' : 'text-slate-400'}`}>{urgentes}</p>
-          <p className="text-xs text-slate-400">livraison ≤ 3 jours</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Urgentes</p>
+          <div className="flex items-baseline gap-1.5">
+            <p className={`text-3xl font-black tabular-nums ${urgentes > 0 ? 'text-amber-600' : 'text-slate-300'}`}>{urgentes}</p>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Proches</span>
+          </div>
+          <div className={`mt-3 w-10 h-1 rounded-full ${urgentes > 0 ? 'bg-amber-500' : 'bg-slate-200'}`} />
         </div>
       </div>
 
-      {/* SECTION: TABLEAU RÉSUMÉ (VISIBLE SUR PC UNIQUEMENT) */}
-      <div className="hidden md:block bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-            <Package className="w-4 h-4 text-indigo-500" />
-            Résumé des Commandes (Vue PC)
-          </h3>
-          <span className="text-xs text-slate-400">{enCours.length} commandes · {totalPiecesEnCours} pièces</span>
+      {/* SECTION: TABLEAU RÉSUMÉ PRO */}
+      <div className="hidden md:block bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+        <div className="px-8 py-5 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+          <div className="flex items-center gap-3">
+            <div className="bg-indigo-600 p-2 rounded-xl shadow-lg shadow-indigo-100">
+              <Package className="w-4 h-4 text-white" />
+            </div>
+            <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Résumé de Production</h3>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 bg-white border border-slate-100 rounded-lg text-[10px] font-black text-slate-400 uppercase tabular-nums">{enCours.length} Commandes</span>
+            <span className="px-3 py-1 bg-indigo-600 rounded-lg text-[10px] font-black text-white uppercase tabular-nums shadow-md shadow-indigo-100">{totalPiecesEnCours} Pièces</span>
+          </div>
         </div>
+        
         {enCours.length === 0 ? (
-          <p className="text-sm text-slate-400 text-center py-8">Aucune commande en cours</p>
+          <div className="text-center py-20">
+            <Package className="w-12 h-12 text-slate-100 mx-auto mb-4" />
+            <p className="text-sm font-bold text-slate-300 uppercase tracking-widest">Aucun flux de production actif</p>
+          </div>
         ) : (
-          <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-100">
-              <tr>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Commande</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Client</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Phase</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Pièces</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Attente phase</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Total prod</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Délai</th>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50/50">
+                <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Référence</th>
+                <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Client / Marque</th>
+                <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center border-b border-slate-100">Phase</th>
+                <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center border-b border-slate-100">Qté</th>
+                <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center border-b border-slate-100">Attente</th>
+                <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center border-b border-slate-100">Âge</th>
+                <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right border-b border-slate-100">Statut</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-50">
               {enCours.map(cmd => {
                 const jP = joursEnPhase(cmd);
                 const jT = joursDepuis(cmd.dateCommande);
                 const jR = joursRestants(cmd);
-                const atCouleur = jP >= 14 ? 'text-red-600 font-bold' : jP >= 7 ? 'text-amber-600 font-semibold' : 'text-green-600';
-                const delCouleur = jR < 0 ? 'text-red-600 font-bold' : jR <= 3 ? 'text-amber-600 font-semibold' : 'text-green-600';
+                const atCouleur = jP >= 14 ? 'text-red-500' : jP >= 7 ? 'text-amber-500' : 'text-emerald-500';
+                const delCouleur = jR < 0 ? 'text-red-600 bg-red-50' : jR <= 3 ? 'text-amber-600 bg-amber-50' : 'text-emerald-600 bg-emerald-50';
                 return (
-                  <tr key={cmd.id} className={`hover:bg-slate-50 transition-colors ${jR < 0 ? 'bg-red-50/40' : ''}`}>
-                    <td className="px-5 py-3 text-sm font-semibold text-slate-800">{cmd.reference}</td>
-                    <td className="px-4 py-3 text-sm text-slate-600">{cmd.client}</td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${PHASE_COLORS[cmd.phase]} text-white`}>
+                  <tr key={cmd.id} className="hover:bg-slate-50/80 transition-colors group">
+                    <td className="px-8 py-4">
+                      <span className="text-sm font-black text-slate-800 group-hover:text-indigo-600 transition-colors">{cmd.reference}</span>
+                    </td>
+                    <td className="px-4 py-4">
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-tight">{cmd.client}</span>
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <span className={`inline-flex px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter ${PHASE_COLORS[cmd.phase]} text-white shadow-sm`}>
                         {PHASE_LABELS[cmd.phase]}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center text-sm font-bold text-indigo-600">{cmd.quantite}</td>
-                    <td className="px-4 py-3 text-center text-sm">
-                      <span className={atCouleur}>{jP === 0 ? "auj." : `${jP}j`}</span>
+                    <td className="px-4 py-4 text-center">
+                      <span className="text-sm font-black text-slate-700 tabular-nums">{cmd.quantite}</span>
                     </td>
-                    <td className="px-4 py-3 text-center text-sm text-slate-600">{jT}j</td>
-                    <td className="px-4 py-3 text-center text-sm">
-                      <span className={delCouleur}>
-                        {jR < 0 ? `−${Math.abs(jR)}j` : jR === 0 ? 'auj.' : `+${jR}j`}
+                    <td className="px-4 py-4 text-center">
+                      <span className={`text-xs font-black tabular-nums ${atCouleur}`}>{jP === 0 ? "Auj." : `${jP}j`}</span>
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <span className="text-xs font-bold text-slate-400 tabular-nums">{jT}j</span>
+                    </td>
+                    <td className="px-8 py-4 text-right">
+                      <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black tabular-nums shadow-sm ${delCouleur}`}>
+                        {jR < 0 ? `RETARD ${Math.abs(jR)}J` : jR === 0 ? 'AUJOURD\'HUI' : `+${jR}J`}
                       </span>
                     </td>
                   </tr>
                 );
               })}
             </tbody>
-            <tfoot className="bg-indigo-50 border-t-2 border-indigo-200">
+            <tfoot className="bg-slate-900 border-t border-slate-800">
               <tr>
-                <td colSpan={3} className="px-5 py-3 text-sm font-bold text-indigo-700">
-                  TOTAL — {enCours.length} commandes
+                <td colSpan={3} className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                  Total du Flux Actif
                 </td>
-                <td className="px-4 py-3 text-center text-sm font-bold text-indigo-700">{totalPiecesEnCours}</td>
-                <td className="px-4 py-3 text-center text-sm font-bold text-indigo-700">
-                  {enCours.reduce((a, c) => a + joursEnPhase(c), 0)}j
+                <td className="px-4 py-5 text-center text-lg font-black text-white tabular-nums border-x border-slate-800">
+                  {totalPiecesEnCours}
                 </td>
-                <td className="px-4 py-3 text-center text-sm font-bold text-indigo-700">
-                  {enCours.reduce((a, c) => a + joursDepuis(c.dateCommande), 0)}j
+                <td colSpan={3} className="px-8 py-5 text-right text-[10px] font-bold text-slate-500 italic uppercase">
+                  {enCours.length} Commandes en cours
                 </td>
-                <td className="px-4 py-3" />
               </tr>
             </tfoot>
           </table>
@@ -242,30 +272,51 @@ export default function ChaineDeMontage() {
         })}
       </div>
 
-      {/* Pipeline Visual */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-6">
-        <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
-          <Factory className="w-4 h-4 text-indigo-500" />
-          Pipeline de Production
-        </h3>
-        <div className="flex items-center gap-2 overflow-x-auto pb-4 scrollbar-hide">
+      {/* Pipeline Visual - PRO */}
+      <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 md:p-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div className="flex items-center gap-3">
+             <div className="bg-slate-900 p-2.5 rounded-[1rem] shadow-lg shadow-slate-200">
+                <Factory className="w-5 h-5 text-white" />
+             </div>
+             <div>
+               <h3 className="text-sm font-black text-slate-800 uppercase tracking-[0.1em] leading-none mb-1.5">Flux de Production</h3>
+               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Répartition temps réel des commandes par poste</p>
+             </div>
+          </div>
+          <button 
+            onClick={() => setSelectedPhase('all')}
+            className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm ${selectedPhase === 'all' ? 'bg-slate-900 text-white shadow-slate-200' : 'bg-slate-50 text-slate-400 hover:bg-slate-100 border border-slate-100'}`}
+          >
+            Vue d'ensemble
+          </button>
+        </div>
+
+        <div className="flex items-center gap-4 overflow-x-auto pb-6 scrollbar-hide">
           {PHASE_ORDER.map((phase, idx) => {
             const stat = phaseStats.find(s => s.phase === phase);
+            const isActive = selectedPhase === phase;
             return (
-              <div key={phase} className="flex items-center gap-2 min-w-fit">
+              <div key={phase} className="flex items-center gap-4 min-w-fit">
                 <button
-                  onClick={() => setSelectedPhase(selectedPhase === phase ? 'all' : phase)}
-                  className={`flex flex-col items-center px-4 py-3 md:px-5 md:py-4 rounded-xl border-2 transition-all min-w-[100px] md:min-w-[120px] ${selectedPhase === phase
-                      ? 'border-indigo-500 bg-indigo-50 shadow-md'
-                      : 'border-slate-200 hover:border-slate-300 bg-slate-50'
+                  onClick={() => setSelectedPhase(isActive ? 'all' : phase)}
+                  className={`relative flex flex-col items-center p-6 rounded-[1.75rem] border-2 transition-all min-w-[135px] group ${isActive
+                      ? 'border-indigo-600 bg-indigo-50/40 shadow-xl shadow-indigo-100'
+                      : 'border-slate-50 hover:border-indigo-100 bg-white hover:shadow-xl hover:shadow-slate-100/50'
                     }`}
                 >
-                  <div className={`w-2 h-2 md:w-3 md:h-3 rounded-full ${PHASE_COLORS[phase]} mb-2`} />
-                  <span className="text-[10px] md:text-xs font-semibold text-slate-700">{PHASE_LABELS[phase]}</span>
-                  <span className="text-base md:text-lg font-bold text-slate-800 mt-1">{stat?.count || 0}</span>
+                  <div className={`absolute top-4 right-4 w-2 h-2 rounded-full ${PHASE_COLORS[phase]} shadow-sm group-hover:scale-125 transition-transform`} />
+                  <span className={`text-[9px] font-black uppercase tracking-widest mb-4 ${isActive ? 'text-indigo-600' : 'text-slate-400'}`}>{PHASE_LABELS[phase]}</span>
+                  <span className={`text-3xl font-black tabular-nums leading-none mb-2 ${isActive ? 'text-indigo-800' : 'text-slate-800'}`}>{stat?.count || 0}</span>
+                  <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-full border border-slate-100/50">
+                     <Package className="w-3 h-3 text-slate-300" />
+                     <span className="text-[9px] font-black text-slate-400 tabular-nums">{stat?.pieces || 0} pcs</span>
+                  </div>
                 </button>
                 {idx < PHASE_ORDER.length - 1 && (
-                  <ArrowRight className="w-4 h-4 text-slate-300 flex-shrink-0" />
+                  <div className="flex flex-col items-center opacity-10">
+                    <ArrowRight className="w-5 h-5 text-slate-400" />
+                  </div>
                 )}
               </div>
             );
