@@ -1,17 +1,53 @@
 import { useState, useEffect } from 'react';
-import { Factory, ArrowRight, ArrowLeft, Clock, Package, TriangleAlert } from 'lucide-react';
+import { Factory, ArrowRight, ArrowLeft, Clock, Package, TriangleAlert, ClipboardCheck, X } from 'lucide-react';
 import {
-  Commande, loadData, saveRecord, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, Phase,
+  Commande, PointageEntry, Employe, loadData, saveRecord, genId, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, Phase,
 } from '../types';
 
 export default function ChaineDeMontage() {
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [selectedPhase, setSelectedPhase] = useState<string>('all');
 
-  useEffect(() => { loadData<Commande>('commandes').then(setCommandes); }, []);
+  const [pointages, setPointages] = useState<PointageEntry[]>([]);
+  const [employes, setEmployes] = useState<Employe[]>([]);
+  const [showPointageModal, setShowPointageModal] = useState(false);
+  const [ptForm, setPtForm] = useState<Partial<PointageEntry>>({});
+  const [selectedCmd, setSelectedCmd] = useState<Commande | null>(null);
 
-  const enCours = commandes.filter(c => c.statut !== 'livré' && c.phase !== 'coupe');
-  const filtered = selectedPhase === 'all' ? enCours : enCours.filter(c => c.phase === selectedPhase);
+  const today = new Date().toISOString().split('T')[0];
+
+  useEffect(() => { 
+    Promise.all([
+      loadData<Commande>('commandes'),
+      loadData<PointageEntry>('pointages'),
+      loadData<Employe>('employes')
+    ]).then(([cmds, pts, emps]) => {
+      setCommandes(cmds);
+      setPointages(pts);
+      setEmployes(emps);
+    });
+  }, []);
+
+  function openPointage(c: Commande) {
+    setSelectedCmd(c);
+    setPtForm({
+      id: genId(),
+      commandeId: c.id,
+      date: today,
+      phase: c.phase,
+      piecesCompletees: 0,
+      rebut: 0
+    });
+    setShowPointageModal(true);
+  }
+
+  async function savePointage() {
+    if (!ptForm.employeId || !ptForm.piecesCompletees || !selectedCmd) return;
+    const entry = ptForm as PointageEntry;
+    setPointages([...pointages, entry]);
+    setShowPointageModal(false);
+    await saveRecord('pointages', entry);
+  }
 
   async function updatePhase(cmdId: string, newPhase: Phase) {
     let updatedCmd: Commande | null = null;
@@ -312,22 +348,28 @@ export default function ChaineDeMontage() {
                     </div>
                     
                     <div className="flex items-center gap-2">
+                       <button 
+                        onClick={() => openPointage(cmd)}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-blue-600 text-white rounded-xl text-xs font-black shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all uppercase tracking-widest"
+                      >
+                        <ClipboardCheck className="w-3.5 h-3.5" />
+                        + Pointage
+                      </button>
+
                       {canGoBack && (
                         <button
                           onClick={() => updatePhase(cmd.id, prevPhase!)}
-                          className="flex-1 md:flex-none p-2 bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-100 transition border border-slate-200"
-                          title={`Retour en ${PHASE_LABELS[prevPhase!]}`}
+                          className="flex-1 flex items-center justify-center gap-1.5 py-3 border-2 border-slate-200 text-slate-500 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all"
                         >
-                          <ArrowLeft className="w-4 h-4 mx-auto" />
+                          <ArrowLeft className="w-3 h-3" />
                         </button>
                       )}
                       {canAdvance && (
                         <button
                           onClick={() => updatePhase(cmd.id, nextPhase!)}
-                          className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition shadow-md shadow-indigo-100"
+                          className="flex-[2] flex items-center justify-center gap-2 py-3 bg-indigo-600 text-white rounded-xl text-xs font-black shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all uppercase tracking-widest"
                         >
-                          <span>{PHASE_LABELS[nextPhase!]}</span>
-                          <ArrowRight className="w-4 h-4" />
+                          Démarrer {PHASE_LABELS[nextPhase!]} <ArrowRight className="w-3.5 h-3.5" />
                         </button>
                       )}
                     </div>
@@ -361,6 +403,71 @@ export default function ChaineDeMontage() {
           </div>
         )}
       </div>
+      {/* Pointage Modal */}
+      {showPointageModal && selectedCmd && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
+          <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl p-10 space-y-6 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-black text-slate-800 tracking-tight leading-none mb-1">Nouveau Pointage</h2>
+                <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">Phase: {PHASE_LABELS[selectedCmd.phase]}</p>
+              </div>
+              <button onClick={() => setShowPointageModal(false)} className="p-2 hover:bg-slate-50 rounded-full transition-colors text-slate-400"><X className="w-5 h-5" /></button>
+            </div>
+            
+            <div className="space-y-5">
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">Ouvrier / Sous-traitant</label>
+                <select 
+                  value={ptForm.employeId || ''} 
+                  onChange={e => setPtForm({ ...ptForm, employeId: e.target.value })}
+                  className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl text-sm font-bold outline-none bg-slate-50 focus:bg-white focus:border-indigo-500 transition-all"
+                >
+                  <option value="">— Sélectionner —</option>
+                  {employes.map(e => <option key={e.id} value={e.id}>{e.prenom} {e.nom} ({e.poste})</option>)}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">Pièces Finies</label>
+                  <input 
+                    type="number" 
+                    value={ptForm.piecesCompletees || ''} 
+                    onChange={e => setPtForm({ ...ptForm, piecesCompletees: parseInt(e.target.value) || 0 })}
+                    className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl text-sm font-bold outline-none bg-slate-50 focus:bg-white focus:border-indigo-500 transition-all"
+                    placeholder="Ex: 50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">Date</label>
+                  <input 
+                    type="date" 
+                    value={ptForm.date || ''} 
+                    onChange={e => setPtForm({ ...ptForm, date: e.target.value })}
+                    className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl text-sm font-bold outline-none bg-slate-50 focus:bg-white focus:border-indigo-500 transition-all"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-6">
+              <button 
+                onClick={() => setShowPointageModal(false)} 
+                className="flex-1 py-4 text-xs font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest transition-colors"
+              >
+                Annuler
+              </button>
+              <button 
+                onClick={savePointage} 
+                className="flex-[2] py-4 bg-indigo-600 text-white rounded-2xl text-xs font-black hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all uppercase tracking-widest"
+              >
+                Confirmer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
