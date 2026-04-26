@@ -108,6 +108,7 @@ export default function StockMateriaux() {
       seuilAlerte: tForm.seuilAlerte ?? 0,
       reference: tForm.reference, composition: tForm.composition,
       metrageTotal: tForm.metrageTotal, fournisseur: tForm.fournisseur,
+      fournisseurTel: tForm.fournisseurTel,
       largeur: tForm.largeur, zone: tForm.zone,
       etagere: tForm.etagere, dateReception: tForm.dateReception,
     };
@@ -533,6 +534,7 @@ export default function StockMateriaux() {
                 { label: 'Seuil alerte (m)', key: 'seuilAlerte', type: 'number' },
                 { label: 'Largeur (cm)', key: 'largeur', type: 'number' },
                 { label: 'Fournisseur', key: 'fournisseur', type: 'text' },
+                { label: 'Téléphone Fournisseur', key: 'fournisseurTel', type: 'text' },
                 { label: 'Zone', key: 'zone', type: 'text' },
                 { label: 'Étagère', key: 'etagere', type: 'text' },
               ].map(({ label, key, type }) => (

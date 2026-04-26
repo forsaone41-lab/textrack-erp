@@ -81,6 +81,7 @@ export interface StockTissu {
   composition?: string;
   metrageTotal?: number;
   fournisseur?: string;
+  fournisseurTel?: string;
   largeur?: number;
   zone?: string;
   etagere?: string;
