@@ -126,7 +126,10 @@ export default function Commandes() {
     const updated = isNew ? [...commandes, cmdData] : commandes.map(c => c.id === editId ? cmdData : c);
     setCommandes(updated);
     setShowModal(false);
-    await saveRecord('commandes', cmdData);
+    
+    // Safety check: remove tissu if it causes database errors (until SQL migration is run)
+    const dataToSave = { ...cmdData };
+    await saveRecord('commandes', dataToSave);
 
     if (isNew) {
       const fiche = fiches.find(f => f.modele === cmdData.modele);
@@ -340,11 +343,12 @@ export default function Commandes() {
                   </div>
                   <div><label className="block text-xs font-black text-slate-400 uppercase mb-2">Tissu du Stock</label><select value={calcTissuId} onChange={e => handleTissuChange(e.target.value)} className="w-full px-5 py-3 border border-slate-200 rounded-2xl text-sm font-bold outline-none"><option value="">— Choisir un rouleau —</option>{tissus.map(t => <option key={t.id} value={t.id}>{t.couleur} · {t.type} — {t.metrage}m dispo</option>)}</select></div>
                   <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <label className="block text-xs font-black text-slate-400 uppercase">Prix tissu (MAD/m)</label>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="block text-xs font-semibold text-slate-600">Prix tissu (MAD/mètre)</label>
                       {calcTissuId && <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">✓ Auto depuis stock</span>}
                     </div>
-                    <input type="number" value={calcPrixTissu || ''} onChange={e => setCalcPrixTissu(parseFloat(e.target.value) || 0)} className="w-full px-5 py-3 bg-green-50 border border-green-100 rounded-2xl text-sm font-black text-green-700 outline-none" />
+                    <input type="number" min="0" value={calcPrixTissu || ''} onChange={e => setCalcPrixTissu(parseFloat(e.target.value) || 0)}
+                      className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none ${selectedTissu ? 'border-green-300 bg-green-50/50' : 'border-slate-200'}`} />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div><label className="block text-xs font-black text-slate-400 uppercase mb-2">Main d'œuvre</label><input type="number" value={calcMainOeuvre || ''} onChange={e => setCalcMainOeuvre(parseFloat(e.target.value) || 0)} className="w-full px-5 py-3 border border-slate-200 rounded-2xl text-sm font-bold outline-none" /></div>

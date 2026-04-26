@@ -307,6 +307,16 @@ export async function saveRecord<T>(table: string, record: T): Promise<void> {
   const { error } = await supabase.from(table).upsert(record as any);
   if (error) {
     console.error(`Error saving to ${table}:`, error.message);
+    
+    // If it's a missing column error, try to save without the new fields as a fallback
+    if (error.message.includes('column') && error.message.includes('not find')) {
+      const fallbackRecord = { ...record as any };
+      // List of potential new columns that might not exist yet
+      ['tissu', 'tissuConsommation', 'type'].forEach(col => delete fallbackRecord[col]);
+      const { error: retryError } = await supabase.from(table).upsert(fallbackRecord);
+      if (!retryError) return; // Fallback worked!
+    }
+
     alert(`Erreur de sauvegarde dans ${table} : ${error.message}. (Vérifiez le RLS sur Supabase !)`);
   }
 }

@@ -504,10 +504,10 @@ export default function FichesTechniques() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-                      Prix tissu (MAD/mètre)
-                      {selectedTissu && <span className="ml-1.5 text-[10px] text-green-600 font-normal">· auto depuis stock</span>}
-                    </label>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="block text-xs font-semibold text-slate-600">Prix tissu (MAD/mètre)</label>
+                      {selectedTissu && <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">✓ Auto depuis stock</span>}
+                    </div>
                     <input type="number" min="0" value={calcPrixTissu || ''} onChange={e => setCalcPrixTissu(parseFloat(e.target.value) || 0)}
                       className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none ${selectedTissu ? 'border-green-300 bg-green-50/50' : 'border-slate-200'}`} />
                   </div>
