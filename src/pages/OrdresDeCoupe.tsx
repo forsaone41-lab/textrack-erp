@@ -76,6 +76,30 @@ export default function OrdresDeCoupe() {
     setForm({ ...form, quantite: val, metrage: Number((conso * val).toFixed(2)) });
   };
 
+  const startCutting = async (o: OrdreDeCoupe) => {
+    const updated = { ...o, statut: 'en_cours' as const };
+    setOrdres(prev => prev.map(item => item.id === o.id ? updated : item));
+    await saveRecord('ordres', updated);
+
+    const cmd = commandes.find(c => c.id === o.commandeId);
+    if (cmd) {
+      const updatedCmd = { ...cmd, statut: 'en_cours' as any }; 
+      await saveRecord('commandes', updatedCmd);
+    }
+  };
+
+  const finishCutting = async (o: OrdreDeCoupe) => {
+    const updated = { ...o, statut: 'terminé' as const };
+    setOrdres(prev => prev.map(item => item.id === o.id ? updated : item));
+    await saveRecord('ordres', updated);
+
+    const cmd = commandes.find(c => c.id === o.commandeId);
+    if (cmd) {
+      const updatedCmd = { ...cmd, phase: 'montage' as Phase }; 
+      await saveRecord('commandes', updatedCmd);
+    }
+  };
+
   async function save() {
     if (!form.modele || !form.tissu) return;
     const isNew = !editId;
