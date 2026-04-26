@@ -142,6 +142,63 @@ export default function OrdresDeCoupe() {
         </div>
       </div>
 
+      {/* SECTION 0: COMMANDES EN ATTENTE DE LANCEMENT */}
+      {pendingCommands.length > 0 && (
+        <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-[2.5rem] p-8 shadow-2xl text-white">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
+              <ShoppingCart className="w-5 h-5 text-indigo-300" />
+            </div>
+            <div>
+              <h2 className="text-lg font-black leading-none">Nouveaux Besoins de Coupe</h2>
+              <p className="text-xs text-slate-400 font-bold mt-1 uppercase tracking-wider">{pendingCommands.length} commandes à lancer</p>
+            </div>
+          </div>
+          
+          <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
+            {pendingCommands.map(c => {
+              const fiche = fiches.find(f => f.modele.toLowerCase() === c.modele.toLowerCase());
+              return (
+                <div key={c.id} className="min-w-[320px] bg-white rounded-3xl p-6 flex flex-col shadow-2xl text-slate-800">
+                  <div className="flex gap-4 mb-5">
+                    <div className="w-20 h-20 rounded-2xl bg-slate-100 overflow-hidden flex-shrink-0">
+                      {fiche?.photo ? <img src={fiche.photo} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><ImageIcon className="w-6 h-6 text-slate-300" /></div>}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-black truncate uppercase tracking-tight">{c.modele}</h3>
+                      <p className="text-[10px] font-bold text-indigo-600 mb-2">{c.client}</p>
+                      <span className="px-3 py-1 bg-slate-100 rounded-full text-[10px] font-black uppercase text-slate-500">{c.quantite} PCS</span>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      const fiche = fiches.find(f => f.modele === c.modele);
+                      const conso = fiche?.tissuConsommation || 0;
+                      setEditId(null);
+                      setForm({
+                        id: genId(),
+                        commandeId: c.id,
+                        modele: c.modele,
+                        quantite: c.quantite,
+                        tissu: fiche?.type || '',
+                        couleur: 'À définir',
+                        metrage: Number((conso * c.quantite).toFixed(2)),
+                        statut: 'planifié',
+                        dateCoupe: new Date().toISOString().split('T')[0],
+                      });
+                      setShowModal(true);
+                    }}
+                    className="w-full bg-indigo-600 text-white py-3 rounded-xl text-[10px] font-black hover:bg-indigo-700 transition flex items-center justify-center gap-2 shadow-lg tracking-widest uppercase"
+                  >
+                    LANCER LA COUPE <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* SECTION 1: FILE D'ATTENTE (PENDING) */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
