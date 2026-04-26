@@ -114,6 +114,32 @@ export default function Commandes() {
     setShowModal(true);
   }
 
+  // Quick Pointage Logic
+  const [showPointageModal, setShowPointageModal] = useState(false);
+  const [ptForm, setPtForm] = useState<Partial<PointageEntry>>({});
+  const [selectedCmd, setSelectedCmd] = useState<Commande | null>(null);
+
+  function openPointage(c: Commande) {
+    setSelectedCmd(c);
+    setPtForm({
+      id: genId(),
+      commandeId: c.id,
+      date: today,
+      phase: c.phase,
+      piecesCompletees: 0,
+      rebut: 0
+    });
+    setShowPointageModal(true);
+  }
+
+  async function savePointage() {
+    if (!ptForm.employeId || !ptForm.piecesCompletees || !selectedCmd) return;
+    const entry = ptForm as PointageEntry;
+    setPointages([...pointages, entry]);
+    setShowPointageModal(false);
+    await saveRecord('pointages', entry);
+  }
+
   async function save() {
     if (!form.reference || !form.client) return;
     const isNew = !editId;
@@ -351,7 +377,25 @@ export default function Commandes() {
                         <td colSpan={11} className="px-6 py-5">
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="bg-white rounded-xl border border-orange-200 p-4"><div className="flex items-center gap-2 mb-3"><Scissors className="w-4 h-4 text-orange-500" /><span className="text-xs font-bold text-orange-700 uppercase tracking-wide">Ordres de Coupe</span></div>{cmdOrdres.map(o => <div key={o.id} className="p-2 bg-orange-50 rounded-lg text-xs mb-1 font-semibold">{o.tissu} — {o.quantite} pcs</div>)}</div>
-                            <div className="bg-white rounded-xl border border-blue-200 p-4"><div className="flex items-center gap-2 mb-3"><ClipboardCheck className="w-4 h-4 text-blue-500" /><span className="text-xs font-bold text-blue-700 uppercase tracking-wide">Pointages</span></div><p className="text-xs text-slate-600 font-bold">{totalPts - totalRebut} pièces produites</p></div>
+                             <div className="bg-white rounded-xl border border-blue-200 p-4">
+                               <div className="flex items-center justify-between mb-3">
+                                 <div className="flex items-center gap-2">
+                                   <ClipboardCheck className="w-4 h-4 text-blue-500" />
+                                   <span className="text-xs font-bold text-blue-700 uppercase tracking-wide">Pointages</span>
+                                 </div>
+                                 <button onClick={() => openPointage(c)} className="text-[10px] bg-blue-600 text-white px-2 py-1 rounded-lg font-bold hover:bg-blue-700">+ Pointage</button>
+                               </div>
+                               <p className="text-xs text-slate-600 font-bold mb-2">{totalPts - totalRebut} pièces produites</p>
+                               <div className="space-y-1">
+                                 {cmdPointages.slice(-3).reverse().map((p, i) => (
+                                   <div key={i} className="flex justify-between text-[9px] text-slate-500 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                                     <span className="truncate max-w-[100px]">{empName(p.employeId)}</span>
+                                     <span className="font-bold text-indigo-600">+{p.piecesCompletees}</span>
+                                   </div>
+                                 ))}
+                                 {cmdPointages.length === 0 && <p className="text-[9px] text-slate-400 italic">Aucun pointage</p>}
+                               </div>
+                             </div>
                             <div className="bg-white rounded-xl border border-emerald-200 p-4"><div className="flex items-center gap-2 mb-3"><Receipt className="w-4 h-4 text-emerald-500" /><span className="text-xs font-bold text-emerald-700 uppercase tracking-wide">Facturation</span></div>{cmdFacture ? <p className="text-xs font-bold text-emerald-600">{cmdFacture.numero} · {cmdFacture.montant.toLocaleString()} MAD</p> : <button onClick={() => createFacture(c)} className="text-xs bg-emerald-600 text-white px-3 py-1 rounded-lg">+ Facture</button>}</div>
                           </div>
                         </td>
@@ -493,6 +537,72 @@ export default function Commandes() {
       {confirmDelete && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6 text-center"><div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4"><Trash2 className="w-6 h-6 text-red-500" /></div><h3 className="text-lg font-bold text-slate-800 mb-1">Supprimer cette commande ?</h3><p className="text-sm text-slate-500 mb-6">Cette action est irréversible.</p><div className="flex gap-3"><button onClick={() => setConfirmDelete(null)} className="flex-1 px-4 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition">Annuler</button><button onClick={() => remove(confirmDelete)} className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 transition">Supprimer</button></div></div>
+        </div>
+      {/* Pointage Modal */}
+      {showPointageModal && selectedCmd && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
+          <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl p-10 space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-black text-slate-800 tracking-tight leading-none">Nouveau Pointage</h2>
+              <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest">{selectedCmd.reference}</span>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">Employé (Ouvrier)</label>
+                <select 
+                  value={ptForm.employeId || ''} 
+                  onChange={e => setPtForm({ ...ptForm, employeId: e.target.value })}
+                  className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all"
+                >
+                  <option value="">— Sélectionner —</option>
+                  {employes.map(e => <option key={e.id} value={e.id}>{e.prenom} {e.nom} ({e.poste})</option>)}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">Pièces</label>
+                  <input 
+                    type="number" 
+                    value={ptForm.piecesCompletees || 0} 
+                    onChange={e => setPtForm({ ...ptForm, piecesCompletees: parseInt(e.target.value) || 0 })}
+                    className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">Phase</label>
+                  <select 
+                    value={ptForm.phase || ''} 
+                    onChange={e => setPtForm({ ...ptForm, phase: e.target.value as Phase })}
+                    className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
+                  >
+                    {PHASE_ORDER.map(p => <option key={p} value={p}>{PHASE_LABELS[p]}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">Date</label>
+                <input 
+                  type="date" 
+                  value={ptForm.date || ''} 
+                  onChange={e => setPtForm({ ...ptForm, date: e.target.value })}
+                  className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-6">
+              <button onClick={() => setShowPointageModal(false)} className="px-6 py-4 text-xs font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest">Annuler</button>
+              <button 
+                onClick={savePointage} 
+                className="px-10 py-4 bg-indigo-600 text-white rounded-2xl text-xs font-black hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all uppercase tracking-widest"
+              >
+                Valider
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
