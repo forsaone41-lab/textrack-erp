@@ -39,11 +39,26 @@ export default function OrdresDeCoupe() {
     c.statut !== 'livré'
   );
 
-  const filtered = ordres.filter(o => {
-    const matchSearch = o.modele.toLowerCase().includes(search.toLowerCase()) || o.tissu.toLowerCase().includes(search.toLowerCase());
-    const matchStatut = filterStatut === 'all' || o.statut === filterStatut;
-    return matchSearch && matchStatut;
-  });
+  const planifies = ordres.filter(o => o.statut === 'planifié');
+  const actifEtTermines = ordres.filter(o => o.statut !== 'planifié');
+
+  const startCutting = async (o: OrdreDeCoupe) => {
+    const updated = { ...o, statut: 'en_cours' as const };
+    setOrdres(prev => prev.map(item => item.id === o.id ? updated : item));
+    await saveRecord('ordres', updated);
+  };
+
+  const finishCutting = async (o: OrdreDeCoupe) => {
+    const updated = { ...o, statut: 'terminé' as const };
+    setOrdres(prev => prev.map(item => item.id === o.id ? updated : item));
+    await saveRecord('ordres', updated);
+
+    const cmd = commandes.find(c => c.id === o.commandeId);
+    if (cmd) {
+      const updatedCmd = { ...cmd, phase: 'montage' as any }; 
+      await saveRecord('commandes', updatedCmd);
+    }
+  };
 
   const statutBadge = (s: string) => {
     const map: Record<string, string> = {
