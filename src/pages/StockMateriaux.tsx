@@ -64,19 +64,32 @@ export default function StockMateriaux() {
   const [fForm, setFForm] = useState<Partial<StockFourniture>>({});
 
   useEffect(() => {
-    Promise.all([
-      loadData<StockTissu>('tissus'),
-      loadData<StockFourniture>('fournitures'),
-      loadData<any>('commandes'),
-      loadData<any>('fiches_techniques'),
-      loadData<any>('ordres')
-    ]).then(([tiss, four, cmds, fch, ord]) => {
-      setTissus(tiss);
-      setFournitures(four);
-      setCommandes(cmds);
-      setFiches(fch);
-      setOrdres(ord);
-    });
+    const fetchData = async () => {
+      try {
+        const [tiss, four, cmds, fch] = await Promise.all([
+          loadData<StockTissu>('tissus'),
+          loadData<StockFourniture>('fournitures'),
+          loadData<any>('commandes'),
+          loadData<any>('fiches_techniques')
+        ]);
+        setTissus(tiss || []);
+        setFournitures(four || []);
+        setCommandes(cmds || []);
+        setFiches(fch || []);
+        
+        // Load ordres separately to not break the page if table is missing
+        try {
+          const ord = await loadData<any>('ordres');
+          setOrdres(ord || []);
+        } catch (e) {
+          console.warn("Table 'ordres' not found or empty");
+          setOrdres([]);
+        }
+      } catch (err) {
+        console.error("Error loading stock data:", err);
+      }
+    };
+    fetchData();
   }, []);
 
   // ─── KPIs ───
@@ -226,18 +239,17 @@ export default function StockMateriaux() {
                     commandes.filter(c => c.statut === 'en_cours' && (c.phase === 'coupe' || !c.phase)).forEach(cmd => {
                       const fiche = fiches.find(f => f.modele.trim().toLowerCase() === cmd.modele.trim().toLowerCase());
                       const conso = fiche?.tissuConsommation || 0;
-                      if (conso === 0) return;
                       const amount = conso * cmd.quantite;
-                      const key = cmd.tissu.toLowerCase();
+                      const key = cmd.tissu.trim().toLowerCase() || 'Tissu non spécifié';
                       if (!needs[key]) {
                         needs[key] = { 
                           total: 0, 
                           cmds: [], 
-                          roll: tissus.find(t => `${t.type} ${t.couleur}`.toLowerCase() === key) 
+                          roll: tissus.find(t => `${t.type} ${t.couleur}`.trim().toLowerCase() === key) 
                         };
                       }
                       needs[key].total += amount;
-                      needs[key].cmds.push(cmd.reference);
+                      needs[key].cmds.push(`${cmd.reference} (${cmd.modele})`);
                     });
 
                     const entries = Object.entries(needs);
@@ -259,10 +271,14 @@ export default function StockMateriaux() {
                         <tr key={key} className="bg-white/5 hover:bg-white/10 transition-colors rounded-xl overflow-hidden group">
                           <td className="px-4 py-4 rounded-l-2xl">
                             <p className="text-sm font-black capitalize">{key}</p>
-                            <p className="text-[9px] text-slate-500 font-bold">{data.cmds.join(' · ')}</p>
+                            <p className="text-[9px] text-slate-500 font-bold max-w-xs truncate">{data.cmds.join(' · ')}</p>
                           </td>
                           <td className="px-4 py-4">
-                            <p className="text-base font-black">{totalNeeded}m</p>
+                            {totalNeeded > 0 ? (
+                              <p className="text-base font-black">{totalNeeded}m</p>
+                            ) : (
+                              <p className="text-amber-400 text-[10px] font-black animate-pulse">CONSO. MANQUANTE</p>
+                            )}
                           </td>
                           <td className="px-4 py-4">
                             <p className={`text-sm font-bold ${stockAvailable === 0 ? 'text-slate-600' : 'text-indigo-400'}`}>
