@@ -249,7 +249,7 @@ export default function StockMateriaux() {
                         };
                       }
                       needs[key].total += amount;
-                      needs[key].cmds.push(`${cmd.reference} (${cmd.modele})`);
+                      needs[key].cmds.push(`${cmd.reference}: ${amount.toFixed(1)}m (${cmd.modele})`);
                     });
 
                     const entries = Object.entries(needs);
