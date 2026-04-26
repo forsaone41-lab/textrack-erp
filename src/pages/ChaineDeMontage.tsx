@@ -298,6 +298,12 @@ export default function ChaineDeMontage() {
               : jPhase >= 7 ? 'bg-amber-100 text-amber-700 border-amber-200'
                 : 'bg-green-100 text-green-700 border-green-200';
             const resteCouleur = jRest < 0 ? 'text-red-600' : jRest <= 3 ? 'text-amber-600' : 'text-green-600';
+            
+            const cmdPointages = pointages.filter(p => p.commandeId === cmd.id && p.phase === cmd.phase);
+            const piecesProduites = cmdPointages.reduce((a, p) => a + p.piecesCompletees, 0);
+            const rebutTotal = cmdPointages.reduce((a, p) => a + p.rebut, 0);
+            const retoucheTotal = cmdPointages.reduce((a, p) => a + p.retouche, 0);
+
             return (
               <div key={cmd.id} className={`bg-white rounded-2xl border shadow-sm p-4 md:p-6 ${jRest < 0 ? 'border-red-300' : 'border-slate-200'}`}>
                 <div className="flex flex-col gap-4">
