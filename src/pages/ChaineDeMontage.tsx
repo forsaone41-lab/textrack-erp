@@ -96,12 +96,12 @@ export default function ChaineDeMontage() {
         </div>
       </div>
 
-      {/* Tableau Résumé */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      {/* SECTION: TABLEAU RÉSUMÉ (VISIBLE SUR PC UNIQUEMENT) */}
+      <div className="hidden md:block bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
             <Package className="w-4 h-4 text-indigo-500" />
-            Résumé des Commandes en Production
+            Résumé des Commandes (Vue PC)
           </h3>
           <span className="text-xs text-slate-400">{enCours.length} commandes · {totalPiecesEnCours} pièces</span>
         </div>
@@ -169,31 +169,63 @@ export default function ChaineDeMontage() {
         )}
       </div>
 
+      {/* SECTION: VUE MOBILE CARDS (VISIBLE SUR TÉLÉPHONE UNIQUEMENT) */}
+      <div className="md:hidden space-y-4">
+        <h3 className="text-sm font-bold text-slate-700 px-1">Commandes en production ({enCours.length})</h3>
+        {enCours.map(cmd => {
+          const jR = joursRestants(cmd);
+          return (
+            <div key={cmd.id} className={`bg-white rounded-2xl border p-4 shadow-sm ${jR < 0 ? 'border-red-200 bg-red-50/20' : 'border-slate-200'}`}>
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <p className="text-sm font-bold text-slate-900">{cmd.reference}</p>
+                  <p className="text-xs text-slate-500">{cmd.modele}</p>
+                </div>
+                <span className={`px-2 py-1 rounded-lg text-[10px] font-bold text-white ${PHASE_COLORS[cmd.phase]}`}>
+                  {PHASE_LABELS[cmd.phase]}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs border-t border-slate-100 pt-3 mt-1">
+                <div className="flex flex-col">
+                  <span className="text-slate-400 text-[10px] uppercase font-bold">Pièces</span>
+                  <span className="font-bold text-indigo-600">{cmd.quantite} pcs</span>
+                </div>
+                <div className="flex flex-col items-end">
+                  <span className="text-slate-400 text-[10px] uppercase font-bold">Délai</span>
+                  <span className={`font-bold ${jR < 0 ? 'text-red-600' : 'text-slate-600'}`}>
+                    {jR < 0 ? `Retard ${Math.abs(jR)}j` : `${jR}j restants`}
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
       {/* Pipeline Visual */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-6">
         <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
           <Factory className="w-4 h-4 text-indigo-500" />
           Pipeline de Production
         </h3>
-        <div className="flex items-center gap-2 overflow-x-auto pb-2">
+        <div className="flex items-center gap-2 overflow-x-auto pb-4 scrollbar-hide">
           {PHASE_ORDER.map((phase, idx) => {
             const stat = phaseStats.find(s => s.phase === phase);
             return (
               <div key={phase} className="flex items-center gap-2 min-w-fit">
                 <button
                   onClick={() => setSelectedPhase(selectedPhase === phase ? 'all' : phase)}
-                  className={`flex flex-col items-center px-5 py-4 rounded-xl border-2 transition-all min-w-[120px] ${selectedPhase === phase
+                  className={`flex flex-col items-center px-4 py-3 md:px-5 md:py-4 rounded-xl border-2 transition-all min-w-[100px] md:min-w-[120px] ${selectedPhase === phase
                       ? 'border-indigo-500 bg-indigo-50 shadow-md'
                       : 'border-slate-200 hover:border-slate-300 bg-slate-50'
                     }`}
                 >
-                  <div className={`w-3 h-3 rounded-full ${PHASE_COLORS[phase]} mb-2`} />
-                  <span className="text-xs font-semibold text-slate-700">{PHASE_LABELS[phase]}</span>
-                  <span className="text-lg font-bold text-slate-800 mt-1">{stat?.count || 0}</span>
-                  <span className="text-[10px] text-slate-400">{stat?.pieces || 0} pièces</span>
+                  <div className={`w-2 h-2 md:w-3 md:h-3 rounded-full ${PHASE_COLORS[phase]} mb-2`} />
+                  <span className="text-[10px] md:text-xs font-semibold text-slate-700">{PHASE_LABELS[phase]}</span>
+                  <span className="text-base md:text-lg font-bold text-slate-800 mt-1">{stat?.count || 0}</span>
                 </button>
                 {idx < PHASE_ORDER.length - 1 && (
-                  <ArrowRight className="w-5 h-5 text-slate-300 flex-shrink-0" />
+                  <ArrowRight className="w-4 h-4 text-slate-300 flex-shrink-0" />
                 )}
               </div>
             );
@@ -213,81 +245,95 @@ export default function ChaineDeMontage() {
           )}
         </div>
 
-        {filtered.map(cmd => {
-          const phaseIdx = PHASE_ORDER.indexOf(cmd.phase);
-          const canAdvance = phaseIdx < PHASE_ORDER.length - 1;
-          const canGoBack = phaseIdx > 0;
-          const nextPhase = canAdvance ? PHASE_ORDER[phaseIdx + 1] : null;
-          const prevPhase = canGoBack ? PHASE_ORDER[phaseIdx - 1] : null;
-          const jPhase = joursEnPhase(cmd);
-          const jTotal = joursDepuis(cmd.dateCommande);
-          const jRest = joursRestants(cmd);
-          const attenteCouleur = jPhase >= 14 ? 'bg-red-100 text-red-700 border-red-200'
-            : jPhase >= 7 ? 'bg-amber-100 text-amber-700 border-amber-200'
-              : 'bg-green-100 text-green-700 border-green-200';
-          const resteCouleur = jRest < 0 ? 'text-red-600' : jRest <= 3 ? 'text-amber-600' : 'text-green-600';
-          return (
-            <div key={cmd.id} className={`bg-white rounded-xl border shadow-sm p-5 ${jRest < 0 ? 'border-red-300' : 'border-slate-200'}`}>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2 flex-wrap">
-                    <span className="text-sm font-bold text-slate-800">{cmd.reference}</span>
-                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${PHASE_COLORS[cmd.phase]} text-white`}>
-                      {PHASE_LABELS[cmd.phase]}
-                    </span>
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${attenteCouleur}`}>
-                      <Clock className="w-3 h-3" />
-                      {jPhase === 0 ? "Aujourd'hui" : `${jPhase}j dans cette phase`}
-                    </span>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {filtered.map(cmd => {
+            const phaseIdx = PHASE_ORDER.indexOf(cmd.phase);
+            const canAdvance = phaseIdx < PHASE_ORDER.length - 1;
+            const canGoBack = phaseIdx > 0;
+            const nextPhase = canAdvance ? PHASE_ORDER[phaseIdx + 1] : null;
+            const prevPhase = canGoBack ? PHASE_ORDER[phaseIdx - 1] : null;
+            const jPhase = joursEnPhase(cmd);
+            const jRest = joursRestants(cmd);
+            const attenteCouleur = jPhase >= 14 ? 'bg-red-100 text-red-700 border-red-200'
+              : jPhase >= 7 ? 'bg-amber-100 text-amber-700 border-amber-200'
+                : 'bg-green-100 text-green-700 border-green-200';
+            const resteCouleur = jRest < 0 ? 'text-red-600' : jRest <= 3 ? 'text-amber-600' : 'text-green-600';
+            return (
+              <div key={cmd.id} className={`bg-white rounded-2xl border shadow-sm p-4 md:p-6 ${jRest < 0 ? 'border-red-300' : 'border-slate-200'}`}>
+                <div className="flex flex-col gap-4">
+                  <div className="flex justify-between items-start">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="text-sm md:text-base font-bold text-slate-800 truncate">{cmd.reference}</span>
+                        <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium ${PHASE_COLORS[cmd.phase]} text-white`}>
+                          {PHASE_LABELS[cmd.phase]}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 truncate">{cmd.modele} · {cmd.client}</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className={`text-xs font-bold ${resteCouleur}`}>
+                        {jRest < 0 ? `Retard ${Math.abs(jRest)}j` : `${jRest}j restants`}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-4 text-xs text-slate-500 mb-1">
-                    <span>{cmd.modele} · {cmd.client} · {cmd.quantite} pièces</span>
-                    <span className="text-slate-400">|</span>
-                    <span>En prod depuis <strong className="text-slate-700">{jTotal}j</strong></span>
-                    <span className="text-slate-400">|</span>
-                    <span className={`font-semibold ${resteCouleur}`}>
-                      {jRest < 0 ? `${Math.abs(jRest)}j de retard` : jRest === 0 ? 'Livraison aujourd\'hui' : `${jRest}j restants`}
-                    </span>
-                  </div>
-                  {/* Progress Bar */}
-                  <div className="mt-3">
-                    <div className="flex items-center gap-1 mb-1">
+
+                  {/* Mobile-friendly Progress Bar */}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1">
                       {PHASE_ORDER.map((p, i) => (
-                        <div key={p} className="flex-1 flex items-center gap-1">
-                          <div className={`h-2 flex-1 rounded-full ${i <= phaseIdx ? PHASE_COLORS[p] : 'bg-slate-200'}`} />
-                        </div>
+                        <div key={p} className={`h-1.5 flex-1 rounded-full ${i <= phaseIdx ? PHASE_COLORS[p] : 'bg-slate-100'}`} />
                       ))}
                     </div>
-                    <div className="flex justify-between text-[10px] text-slate-400">
-                      {PHASE_ORDER.map(p => <span key={p}>{PHASE_LABELS[p]}</span>)}
+                    <div className="flex justify-between text-[8px] md:text-[10px] text-slate-400 font-bold uppercase">
+                      <span>{PHASE_LABELS[PHASE_ORDER[0]]}</span>
+                      <span>{PHASE_LABELS[PHASE_ORDER[PHASE_ORDER.length-1]]}</span>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {canGoBack && (
-                    <button
-                      onClick={() => updatePhase(cmd.id, prevPhase!)}
-                      className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-sm hover:bg-slate-200 transition font-medium border border-slate-300"
-                    >
-                      <ArrowLeft className="w-4 h-4" />
-                      Retour en {PHASE_LABELS[prevPhase!]}
-                    </button>
-                  )}
-                  {canAdvance && (
-                    <button
-                      onClick={() => updatePhase(cmd.id, nextPhase!)}
-                      className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 transition font-medium shadow-sm"
-                    >
-                      Passer en {PHASE_LABELS[nextPhase!]}
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
-                  )}
-                  <div className="text-right">
-                    <p className="text-xs text-slate-400">Livraison prévue</p>
-                    <p className="text-sm font-medium text-slate-700">{cmd.dateLivraisonPrevue}</p>
+
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2 border-t border-slate-50">
+                    <div className="flex items-center gap-2">
+                       <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold border ${attenteCouleur}`}>
+                        <Clock className="w-3 h-3" />
+                        {jPhase === 0 ? "Auj." : `${jPhase}j phase`}
+                      </span>
+                      <span className="text-xs font-bold text-indigo-600">{cmd.quantite} pcs</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      {canGoBack && (
+                        <button
+                          onClick={() => updatePhase(cmd.id, prevPhase!)}
+                          className="flex-1 md:flex-none p-2 bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-100 transition border border-slate-200"
+                          title={`Retour en ${PHASE_LABELS[prevPhase!]}`}
+                        >
+                          <ArrowLeft className="w-4 h-4 mx-auto" />
+                        </button>
+                      )}
+                      {canAdvance && (
+                        <button
+                          onClick={() => updatePhase(cmd.id, nextPhase!)}
+                          className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition shadow-md shadow-indigo-100"
+                        >
+                          <span>{PHASE_LABELS[nextPhase!]}</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
+            );
+          })}
+        </div>
+
+        {filtered.length === 0 && (
+          <div className="text-center py-12 text-slate-400 bg-white rounded-xl border border-slate-200">
+            <Factory className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <p>Aucune commande في هذه المرحلة</p>
+          </div>
+        )}
+      </div>
 
               {/* Historique */}
               {cmd.suivi.length > 0 && (
