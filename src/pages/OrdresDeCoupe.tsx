@@ -165,7 +165,27 @@ export default function OrdresDeCoupe() {
                     <td className="px-6 py-6"><div className="flex items-center gap-5"><div className="w-16 h-16 rounded-2xl bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-200 shadow-sm">{fiche?.photo ? <img src={fiche.photo} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><ImageIcon className="w-6 h-6 text-slate-300" /></div>}</div><div><p className="text-sm font-black text-slate-800 mb-1 uppercase tracking-tight">{o.modele}</p><p className="text-xs font-bold text-indigo-600">{o.client}</p><p className="text-[10px] font-bold text-slate-500 mt-1 uppercase">{o.tissu} · {o.couleur}</p></div></div></td>
                     <td className="px-6 py-6">{fiche ? <AssetsBlock fiche={fiche} /> : <div className="text-[10px] font-bold text-slate-300 uppercase tracking-widest italic">Fiche manquante</div>}</td>
                     <td className="px-6 py-6 text-center"><p className="text-base font-black text-slate-900 tracking-tight">{o.quantite} <span className="text-[10px] font-bold text-slate-400 text-xs">PCS</span></p><p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">{o.metrage} m</p></td>
-                    <td className="px-6 py-6 text-center"><span className={`inline-flex px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${statutBadge(o.statut)}`}>{o.statut}</span></td>
+                    <td className="px-8 py-6 text-center">
+                        {o.statut === 'planifié' ? (
+                          <button 
+                            onClick={() => startCutting(o)}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-600 border border-amber-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-600 hover:text-white transition-all shadow-sm"
+                          >
+                            <Scissors className="w-3.5 h-3.5" /> Démarrer
+                          </button>
+                        ) : o.statut === 'en_cours' ? (
+                          <button 
+                            onClick={() => finishCutting(o)}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white border border-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100"
+                          >
+                            <ChevronRight className="w-3.5 h-3.5" /> Terminer & Envoyer au Montage
+                          </button>
+                        ) : (
+                          <span className={`inline-flex px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${statutBadge(o.statut)}`}>
+                            {o.statut}
+                          </span>
+                        )}
+                      </td>
                     <td className="px-6 py-6 text-center"><div className="flex justify-center gap-1"><button onClick={() => { setEditId(o.id); setForm(o); setShowModal(true); }} className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"><Edit2 className="w-4 h-4" /></button><button onClick={() => remove(o.id)} className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"><Trash2 className="w-4 h-4" /></button></div></td>
                   </tr>
                 );
