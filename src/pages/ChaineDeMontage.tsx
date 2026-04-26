@@ -322,42 +322,31 @@ export default function ChaineDeMontage() {
                     </div>
                   </div>
                 </div>
+                
+                {/* Historique - REPOSITIONNÉ CORRECTEMENT */}
+                {cmd.suivi.length > 0 && (
+                  <div className="mt-4 pt-4 border-t border-slate-50">
+                    <p className="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-widest">Historique de production</p>
+                    <div className="flex flex-wrap gap-2">
+                      {cmd.suivi.map((s, i) => (
+                        <div key={i} className="flex items-center gap-2 bg-slate-50 rounded-lg px-2 py-1 text-[10px]">
+                          <div className={`w-1.5 h-1.5 rounded-full ${PHASE_COLORS[s.phase]}`} />
+                          <span className="font-bold text-slate-600">{PHASE_LABELS[s.phase]}</span>
+                          <span className="text-slate-400">{s.date}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
 
         {filtered.length === 0 && (
-          <div className="text-center py-12 text-slate-400 bg-white rounded-xl border border-slate-200">
+          <div className="text-center py-12 text-slate-400 bg-white rounded-2xl border border-slate-200">
             <Factory className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>Aucune commande في هذه المرحلة</p>
-          </div>
-        )}
-      </div>
-
-              {/* Historique */}
-              {cmd.suivi.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-slate-100">
-                  <p className="text-xs font-medium text-slate-500 mb-2">Historique</p>
-                  <div className="flex flex-wrap gap-2">
-                    {cmd.suivi.map((s, i) => (
-                      <div key={i} className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-1.5 text-xs">
-                        <div className={`w-2 h-2 rounded-full ${PHASE_COLORS[s.phase]}`} />
-                        <span className="font-medium text-slate-700">{PHASE_LABELS[s.phase]}</span>
-                        <span className="text-slate-400">{s.date}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-
-        {filtered.length === 0 && (
-          <div className="text-center py-12 text-slate-400 bg-white rounded-xl border border-slate-200">
-            <Factory className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>Aucune commande dans cette phase</p>
+            <p className="text-xs font-bold uppercase tracking-widest">Aucune commande dans cette phase</p>
           </div>
         )}
       </div>
