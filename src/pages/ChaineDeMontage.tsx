@@ -307,10 +307,14 @@ export default function ChaineDeMontage() {
                 >
                   <div className={`absolute top-4 right-4 w-2 h-2 rounded-full ${PHASE_COLORS[phase]} shadow-sm group-hover:scale-125 transition-transform`} />
                   <span className={`text-[9px] font-black uppercase tracking-widest mb-4 ${isActive ? 'text-indigo-600' : 'text-slate-400'}`}>{PHASE_LABELS[phase]}</span>
-                  <span className={`text-3xl font-black tabular-nums leading-none mb-2 ${isActive ? 'text-indigo-800' : 'text-slate-800'}`}>{stat?.count || 0}</span>
-                  <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-full border border-slate-100/50">
-                     <Package className="w-3 h-3 text-slate-300" />
-                     <span className="text-[9px] font-black text-slate-400 tabular-nums">{stat?.pieces || 0} pcs</span>
+                  <span className={`text-3xl font-black tabular-nums leading-none mb-3 ${isActive ? 'text-indigo-800' : 'text-slate-800'}`}>{stat?.count || 0}</span>
+                  <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border shadow-sm transition-colors ${
+                    isActive ? 'bg-indigo-100 border-indigo-200 text-indigo-700' : 'bg-slate-50 border-slate-100 text-slate-500'
+                  }`}>
+                     <Package className={`w-3.5 h-3.5 ${isActive ? 'text-indigo-500' : 'text-slate-400'}`} />
+                     <span className="text-[11px] font-black tabular-nums uppercase tracking-tight">
+                       {stat?.pieces || 0} <span className="opacity-70">pcs</span>
+                     </span>
                   </div>
                 </button>
                 {idx < PHASE_ORDER.length - 1 && (
