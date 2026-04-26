@@ -94,7 +94,7 @@ export default function Commandes() {
       .filter(c => c.reference.startsWith(prefix))
       .map(c => parseInt(c.reference.replace(prefix, '')))
       .filter(n => !isNaN(n));
-    
+
     const nextNum = existingNums.length > 0 ? Math.max(...existingNums) + 1 : 1;
     const due = new Date();
     due.setDate(due.getDate() + 30);
@@ -126,7 +126,7 @@ export default function Commandes() {
     const updated = isNew ? [...commandes, cmdData] : commandes.map(c => c.id === editId ? cmdData : c);
     setCommandes(updated);
     setShowModal(false);
-    
+
     // Safety check: remove tissu if it causes database errors (until SQL migration is run)
     const dataToSave = { ...cmdData };
     await saveRecord('commandes', dataToSave);
@@ -180,19 +180,9 @@ export default function Commandes() {
     await saveRecord('factures', newFacture);
   }
 
-  const getDynamicStatus = (c: Commande) => {
-    if (c.statut === 'livré') return { label: t('status_livree', lang), color: 'bg-emerald-50 text-emerald-700 border-emerald-100', icon: '✓' };
-    
-    switch (c.phase) {
-      case 'coupe':
-        return { label: lang === 'fr' ? 'En Coupe' : 'قيد الفصالة', color: 'bg-amber-50 text-amber-700 border-amber-100', icon: '✂️' };
-      case 'montage':
-        return { label: lang === 'fr' ? 'En Montage' : 'قيد الخياطة', color: 'bg-indigo-50 text-indigo-700 border-indigo-100', icon: '🧵' };
-      case 'finition':
-        return { label: lang === 'fr' ? 'Finition' : 'التشطيب', color: 'bg-purple-50 text-purple-700 border-purple-100', icon: '✨' };
-      default:
-        return { label: t('status_en_cours', lang), color: 'bg-slate-50 text-slate-700 border-slate-100', icon: '⏳' };
-    }
+  const statutBadge = (s: string, urgent = false) => {
+    if (urgent) return 'bg-red-100 text-red-700';
+    return ({ en_cours: 'bg-blue-100 text-blue-700', terminé: 'bg-violet-100 text-violet-700', livré: 'bg-emerald-100 text-emerald-700' }[s] ?? 'bg-slate-100 text-slate-600');
   };
 
   const statutLabel = (s: string, urgent = false) => {
@@ -306,17 +296,7 @@ export default function Commandes() {
                       <td className="px-4 py-3.5 text-center"><span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold text-white ${PHASE_COLORS[c.phase]}`}>{PHASE_LABELS[c.phase]}</span></td>
                       <td className="px-4 py-3.5 text-right"><span className="text-sm font-bold text-slate-800">{(c.quantite * c.prix).toLocaleString()}</span><span className="text-xs text-slate-400"> MAD</span></td>
                       <td className="px-4 py-3.5 text-center"><div><p className={`text-xs ${urgent ? 'text-red-600 font-semibold' : 'text-slate-500'}`}>{fmtDate(c.dateLivraisonPrevue)}</p></div></td>
-                      <td className="px-6 py-6 text-center">
-                        {(() => {
-                          const ds = getDynamicStatus(c);
-                          return (
-                            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${ds.color} shadow-sm`}>
-                              <span className="text-xs">{ds.icon}</span>
-                              {ds.label}
-                            </span>
-                          );
-                        })()}
-                      </td>
+                      <td className="px-4 py-3.5 text-center"><span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${statutBadge(c.statut, urgent)}`}>{statutLabel(c.statut, urgent)}</span></td>
                       <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}><div className="flex items-center justify-center gap-1"><span title="Ordres de coupe" className="flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-700"><Scissors className="w-3 h-3" />{cmdOrdres.length}</span><span title="Pointages" className="flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700"><ClipboardCheck className="w-3 h-3" />{cmdPointages.length}</span></div></td>
                       <td className="px-4 py-3.5 text-center" onClick={e => e.stopPropagation()}><div className="flex items-center justify-center gap-1">{!cmdFacture && <button onClick={() => createFacture(c)} className="p-1.5 text-slate-400 hover:text-emerald-600 rounded-lg"><Receipt className="w-3.5 h-3.5" /></button>}<button onClick={() => openEdit(c)} className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg"><Edit2 className="w-3.5 h-3.5" /></button><button onClick={() => setConfirmDelete(c.id)} className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg"><Trash2 className="w-3.5 h-3.5" /></button></div></td>
                     </tr>
@@ -418,9 +398,9 @@ export default function Commandes() {
               <div><label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">{t('modele_label', lang)}</label><select value={form.modele || ''} onChange={e => { const fiche = fiches.find(f => f.modele === e.target.value); setForm({ ...form, modele: e.target.value, tissu: fiche?.type || form.tissu }); }} className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none"><option value="">— {t('search', lang)} —</option>{fiches.map(f => <option key={f.id} value={f.modele}>{f.modele}</option>)}</select></div>
               <div>
                 <label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">{t('tissu_required_stock', lang)}</label>
-                <select 
-                  value={form.tissu || ''} 
-                  onChange={e => setForm({ ...form, tissu: e.target.value })} 
+                <select
+                  value={form.tissu || ''}
+                  onChange={e => setForm({ ...form, tissu: e.target.value })}
                   className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
                 >
                   <option value="">{t('choose_fabric_stock', lang)}</option>
@@ -443,7 +423,20 @@ export default function Commandes() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div><label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">{t('phase', lang)}</label><select value={form.phase || 'coupe'} onChange={e => setForm({ ...form, phase: e.target.value as Phase })} className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none">{PHASE_ORDER.map(p => <option key={p} value={p}>{PHASE_LABELS[p]}</option>)}</select></div>
-              <div><label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">{t('statut', lang)}</label><select value={form.statut || 'en_cours'} onChange={e => setForm({ ...form, statut: e.target.value as Commande['statut'] })} className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none"><option value="en_cours">{t('status_en_cours', lang)}</option><option value="terminé">{t('status_terminee', lang)}</option><option value="livré">{t('status_livree', lang)}</option></select></div>
+              <div>
+                <label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">{t('statut', lang)} (Auto)</label>
+                <div className="px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                  {(() => {
+                    const ds = getDynamicStatus({ ...form } as Commande);
+                    return (
+                      <span className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest ${ds.color.split(' ')[1]}`}>
+                        <span className="text-xs">{ds.icon}</span>
+                        {ds.label}
+                      </span>
+                    );
+                  })()}
+                </div>
+              </div>
             </div>
             <div className="flex justify-end gap-3 pt-6"><button onClick={() => setShowModal(false)} className="px-6 py-4 text-xs font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest">{t('cancel', lang)}</button><button onClick={save} className="px-10 py-4 bg-indigo-600 text-white rounded-2xl text-xs font-black hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all uppercase tracking-widest">{t('save', lang)}</button></div>
           </div>

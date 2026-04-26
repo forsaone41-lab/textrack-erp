@@ -76,30 +76,6 @@ export default function OrdresDeCoupe() {
     setForm({ ...form, quantite: val, metrage: Number((conso * val).toFixed(2)) });
   };
 
-  const startCutting = async (o: OrdreDeCoupe) => {
-    const updated = { ...o, statut: 'en_cours' as const };
-    setOrdres(prev => prev.map(item => item.id === o.id ? updated : item));
-    await saveRecord('ordres', updated);
-
-    const cmd = commandes.find(c => c.id === o.commandeId);
-    if (cmd) {
-      const updatedCmd = { ...cmd, statut: 'en_cours' as any }; 
-      await saveRecord('commandes', updatedCmd);
-    }
-  };
-
-  const finishCutting = async (o: OrdreDeCoupe) => {
-    const updated = { ...o, statut: 'terminé' as const };
-    setOrdres(prev => prev.map(item => item.id === o.id ? updated : item));
-    await saveRecord('ordres', updated);
-
-    const cmd = commandes.find(c => c.id === o.commandeId);
-    if (cmd) {
-      const updatedCmd = { ...cmd, phase: 'montage' as Phase }; 
-      await saveRecord('commandes', updatedCmd);
-    }
-  };
-
   async function save() {
     if (!form.modele || !form.tissu) return;
     const isNew = !editId;
@@ -125,8 +101,8 @@ export default function OrdresDeCoupe() {
             disabled={!fiche.patronagePhoto}
             onClick={() => downloadFile(fiche.patronagePhoto!, fiche.patronageFileName || `Patron_${fiche.modele}`)}
             className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border text-[10px] font-bold transition-all ${fiche.patronagePhoto
-                ? 'bg-emerald-50 border-emerald-100 text-emerald-700 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 hover:shadow-lg hover:shadow-emerald-200'
-                : 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed opacity-50'
+              ? 'bg-emerald-50 border-emerald-100 text-emerald-700 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 hover:shadow-lg hover:shadow-emerald-200'
+              : 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed opacity-50'
               }`}
           >
             <FileText className="w-3.5 h-3.5" /> PATRON
