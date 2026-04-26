@@ -184,8 +184,13 @@ export default function Commandes() {
     if (c.statut === 'livré') return { label: t('status_livree', lang), color: 'bg-emerald-50 text-emerald-700 border-emerald-100', icon: '✓' };
     
     const phase = c.phase || 'coupe';
+    const cmdOrdre = ordres.find(o => o.commandeId === c.id);
+
     switch (phase) {
       case 'coupe':
+        if (!cmdOrdre || cmdOrdre.statut === 'planifié') {
+          return { label: lang === 'fr' ? 'En Attente (Coupe)' : 'في انتظار الفصالة', color: 'bg-slate-50 text-slate-500 border-slate-100', icon: '⏳' };
+        }
         return { label: lang === 'fr' ? 'En Coupe' : 'قيد الفصالة', color: 'bg-amber-50 text-amber-700 border-amber-100', icon: '✂️' };
       case 'montage':
         return { label: lang === 'fr' ? 'En Montage' : 'قيد الخياطة', color: 'bg-indigo-50 text-indigo-700 border-indigo-100', icon: '🧵' };
