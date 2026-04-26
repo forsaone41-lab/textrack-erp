@@ -377,6 +377,12 @@ export default function Commandes() {
                       <td className="px-3 py-3.5 text-center">{isExpanded ? <ChevronDown className="w-4 h-4 text-indigo-500" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}</td>
                       <td className="px-4 py-3.5"><div className="flex items-center gap-2"><div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${urgent ? 'bg-red-100' : 'bg-indigo-50'}`}><ShoppingCart className={`w-3.5 h-3.5 ${urgent ? 'text-red-500' : 'text-indigo-500'}`} /></div><span className="text-sm font-semibold text-slate-700">{c.reference}</span></div></td>
                       <td className="px-4 py-3.5"><p className="text-sm font-semibold text-slate-800">{c.client}</p><p className="text-xs text-slate-400">{c.modele} · <span className="italic">{c.tissu}</span></p></td>
+                      <td className="px-4 py-3.5"><p className="text-sm font-semibold text-slate-800">{c.client}</p><p className="text-xs text-slate-400">{c.modele}</p></td>
+                      <td className="px-4 py-4 text-left">
+                         <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 text-[10px] font-bold border border-slate-200">
+                           {c.tissu}
+                         </span>
+                      </td>
                       <td className="px-4 py-3.5 text-center"><span className="text-sm font-semibold text-slate-700">{c.quantite}</span><span className="text-xs text-slate-400"> pcs</span></td>
                       <td className="px-4 py-3.5"><div className="min-w-24"><div className="flex items-center justify-between mb-1"><span className="text-xs font-semibold text-slate-600">{progress}%</span><span className="text-[10px] text-slate-400">{totalPts - totalRebut}/{c.quantite}</span></div><div className="w-full bg-slate-100 rounded-full h-1.5"><div className={`h-1.5 rounded-full transition-all ${progress >= 100 ? 'bg-emerald-500' : progress >= 60 ? 'bg-blue-500' : progress >= 30 ? 'bg-amber-500' : 'bg-slate-400'}`} style={{ width: `${progress}%` }} /></div></div></td>
                       <td className="px-4 py-3.5 text-center"><span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold text-white ${PHASE_COLORS[c.phase]}`}>{PHASE_LABELS[c.phase]}</span></td>
