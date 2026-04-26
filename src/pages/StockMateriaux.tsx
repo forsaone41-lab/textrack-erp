@@ -388,8 +388,8 @@ export default function StockMateriaux() {
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <p className="text-[10px] text-slate-400 font-mono mb-0.5">{getTissuRef(t)}</p>
-                        <h3 className="font-bold text-slate-800 text-base">{t.couleur}</h3>
-                        <p className="text-xs text-slate-400">{t.composition ?? t.type}</p>
+                        <h3 className="font-black text-slate-900 text-lg leading-tight uppercase tracking-tight">{t.type} {t.couleur}</h3>
+                        <p className="text-[10px] text-slate-500 font-medium">{t.composition || 'Composition non spécifiée'}</p>
                       </div>
                       <div className="flex items-center gap-1">
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${st.cls}`}>
