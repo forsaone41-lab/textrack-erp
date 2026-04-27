@@ -1,8 +1,21 @@
 import { useState, useEffect } from 'react';
-import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, Clock, UserPlus, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download } from 'lucide-react';
+import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, Clock, UserPlus, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save } from 'lucide-react';
 import { Lead, loadLeads, saveRecord, User, genId } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { generatePDF } from '../utils/pdf';
+
+const DEFAULT_TEMPLATES = {
+  ar: {
+    firstContact: "السلام عليكم *{name}*، معكم *BEYA CREATIVE*. 😊\n\nشكراً على طلبكم الخاص بـ *{type}*. باش نقدروا نعاونوكم أحسن، واش ممكن تجاوبونا على هاد الأسئلة:\n1. فوقاش محتاجين الطلبية (أقصى أجل)؟\n2. واش نتوما علامة تجارية واجدة (Brand) ولا كتبيعوا في الأنترنيت (E-com) وباغين تصاوبوا الماركة ديالكم؟\n3. واش عندكم التصميم (Logo/Design) واجد؟\n4. واش محتاجين الثوب من عندنا ولا عندكم الثوب ديالكم؟\n\nحنا في الخدمة! 🇲🇦",
+    devisTxt: "السلام عليكم *{name}*، معكم *BEYA CREATIVE*. 🧵\n\nإليكم عرض السعر لطلبكم الخاص بـ *{type}*:\n- الكمية: *{quantity} قطعة*\n- المجموع الإجمالي: *{total} درهم* {note}\n\nنحن نضمن لكم الجودة العالية والالتزام التام بالمواعيد. في انتظار ردكم للبدء! 🇲🇦",
+    devisPdf: "السلام عليكم *{name}*، معكم *BEYA CREATIVE*. 😊\n\nيسعدنا أن نقدم لكم تقدير الثمن الخاص بطلبكم. لقد حرصنا على دراسة طلبكم بعناية لنضمن لكم أفضل جودة لمنتجات *{type}*.\n\nنحن في انتظار تأكيدكم للبدء في العمل. شكراً لثقتكم!"
+  },
+  fr: {
+    firstContact: "Bonjour *{name}*, ici *BEYA CREATIVE*. 😊\n\nMerci pour votre demande de *{type}*. Pour mieux vous accompagner, pourriez-vous nous préciser :\n1. Quel est votre délai souhaité ?\n2. Êtes-vous une marque établie ou vendez-vous en ligne (E-com) et souhaitez-vous créer votre propre branding ?\n3. Avez-vous déjà le design ou logo prêt ?\n4. Souhaitez-vous que nous fournissions le tissu ou avez-vous déjà le vôtre ?\n\nNous sommes à votre disposition ! 🇲🇦",
+    devisTxt: "Bonjour *{name}*, ici *BEYA CREATIVE*. 🧵\n\nVoici notre proposition pour votre commande de *{type}* :\n- Quantité : *${devisLead.quantity} pcs*\n- TOTAL : *${total} MAD* {note}\n\nNous vous garantissons une finition premium et un respect total des délais. Dans l'attente de votre retour pour commencer ! 🇲🇦",
+    devisPdf: "Bonjour *${devisLead.name}*, ici *BEYA CREATIVE*. 😊\n\nNous avons le plaisir de vous transmettre votre devis. Nous avons étudié votre demande avec soin pour vous garantir la meilleure qualité pour vos *${devisLead.type}*.\n\nNous attendons votre confirmation pour lancer la production. Merci de votre confiance !"
+  }
+};
 
 export default function Demandes() {
   const { isAr } = useLang();
@@ -16,31 +29,38 @@ export default function Demandes() {
   const [matierePrice, setMatierePrice] = useState<string>('');
   const [laborPrice, setLaborPrice] = useState<string>('');
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [templates, setTemplates] = useState(() => {
+    const saved = localStorage.getItem('textrack_msg_templates');
+    return saved ? JSON.parse(saved) : DEFAULT_TEMPLATES;
+  });
 
   useEffect(() => {
     setLeads(loadLeads());
   }, []);
+
+  const saveTemplates = (newTemplates: any) => {
+    setTemplates(newTemplates);
+    localStorage.setItem('textrack_msg_templates', JSON.stringify(newTemplates));
+    setShowSettings(false);
+  };
 
   const handleConvert = async () => {
     if (!confirmLead) return;
     const lead = confirmLead;
     
     try {
-      // Create a user for this client
       const newClient: User = {
         id: genId(),
         nom: lead.name,
         role: 'client',
         email: lead.email || `${lead.name.toLowerCase().replace(/\s/g, '.')}@client.ma`,
-        password: 'Client' + lead.phone.slice(-4), // Default password
-        pinCode: lead.phone.slice(-4), // Default PIN is last 4 digits
+        password: 'Client' + lead.phone.slice(-4),
+        pinCode: lead.phone.slice(-4),
       };
 
       await saveRecord('users', newClient);
-      
-      // Mark lead as completed
       updateStatus(lead.id, 'completed');
-      
       setSuccessLead(confirmLead);
       setConfirmLead(null);
     } catch (e) {
@@ -67,15 +87,27 @@ export default function Demandes() {
     const unitPrice = Number(matierePrice || 0) + Number(laborPrice || 0);
     const total = unitPrice * devisLead.quantity;
     
+    const hasMatiere = Number(matierePrice) > 0;
     let message = '';
+    
+    const lang = isAr ? 'ar' : 'fr';
+    const t = templates[lang];
+
     if (isPDF) {
-      message = isAr
-        ? `السلام عليكم ${devisLead.name}، معكم BEYA CREATIVE. 📄\n\nتجدون أسفله تقدير الثمن (PDF) لطلبكم الخاص بـ ${devisLead.type}.\n\nشكراً لثقتكم! 🇲🇦`
-        : `Bonjour ${devisLead.name}, ici BEYA CREATIVE. 📄\n\nCi-joint votre devis PDF pour votre demande de ${devisLead.type}.\n\nMerci de votre confiance ! 🇲🇦`;
+      message = t.devisPdf
+        .replace(/{name}/g, devisLead.name)
+        .replace(/{type}/g, devisLead.type);
     } else {
-      message = isAr
-        ? `السلام عليكم ${devisLead.name}، معكم BEYA CREATIVE.\n\nإليكم تقدير الثمن لطلبكم:\n- النوع: ${devisLead.type}\n- الكمية: ${devisLead.quantity} قطعة\n- الثمن للقطعة: ${unitPrice} درهم (Matière: ${matierePrice || 0} + MO: ${laborPrice || 0})\n- المجموع الإجمالي: ${total} درهم\n\nنحن في انتظار تأكيدكم للبدء في العمل. شكراً لثقتكم! 🇲🇦`
-        : `Bonjour ${devisLead.name}, ici BEYA CREATIVE.\n\nVoici votre devis pour votre demande :\n- Type : ${devisLead.type}\n- Quantité : ${devisLead.quantity} pcs\n- Prix Unitaire : ${unitPrice} MAD (Matière: ${matierePrice || 0} + MO: ${laborPrice || 0})\n- TOTAL : ${total} MAD\n\nNous restons à votre disposition pour toute question. Merci de votre confiance ! 🇲🇦`;
+      const matiereNote = isAr 
+        ? (hasMatiere ? ' (يشمل السلعة واليد العاملة)' : ' (يشمل اليد العاملة والتركيب)')
+        : (hasMatiere ? ' (Inclut matière et confection)' : ' (Inclut confection et main d’œuvre)');
+
+      message = t.devisTxt
+        .replace(/{name}/g, devisLead.name)
+        .replace(/{type}/g, devisLead.type)
+        .replace(/{quantity}/g, devisLead.quantity.toString())
+        .replace(/{total}/g, total.toLocaleString())
+        .replace(/{note}/g, matiereNote);
     }
     
     const rawPhone = devisLead.phone.replace(/\D/g, '');
@@ -95,6 +127,13 @@ export default function Demandes() {
       setMatierePrice('');
       setLaborPrice('');
     }
+  };
+
+  const getFirstContactMessage = (lead: Lead) => {
+    const lang = isAr ? 'ar' : 'fr';
+    return templates[lang].firstContact
+      .replace(/{name}/g, lead.name)
+      .replace(/{type}/g, lead.type);
   };
 
   const handleDownloadPDF = async () => {
@@ -357,13 +396,22 @@ export default function Demandes() {
       )}
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-slate-800 uppercase tracking-tight">
-            {isAr ? 'طلبات الزبائن الجدد' : 'Demandes Prospects'}
-          </h1>
-          <p className="text-slate-500 text-sm font-medium">
-            {isAr ? 'تواصل مع المهتمين بخدمات المصنع' : 'Gérez les prospects intéressés par vos services'}
-          </p>
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-black text-slate-800 uppercase tracking-tight">
+              {isAr ? 'طلبات الزبائن الجدد' : 'Demandes Prospects'}
+            </h1>
+            <p className="text-slate-500 text-sm font-medium">
+              {isAr ? 'تواصل مع المهتمين بخدمات المصنع' : 'Gérez les prospects intéressés par vos services'}
+            </p>
+          </div>
+          <button 
+            onClick={() => setShowSettings(true)}
+            className="p-3 bg-white border border-slate-200 text-slate-400 rounded-2xl hover:text-indigo-600 hover:border-indigo-100 transition-all shadow-sm"
+            title={isAr ? 'إعدادات الرسائل' : 'Paramètres des Messages'}
+          >
+            <Settings className="w-5 h-5" />
+          </button>
         </div>
 
         <div className="flex bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
@@ -455,7 +503,7 @@ export default function Demandes() {
                     </a>
 
                     <a 
-                      href={`https://wa.me/${lead.phone.replace(/\D/g, '').startsWith('0') ? '212' + lead.phone.replace(/\D/g, '').substring(1) : lead.phone.replace(/\D/g, '')}`} 
+                      href={`https://wa.me/${lead.phone.replace(/\D/g, '').startsWith('0') ? '212' + lead.phone.replace(/\D/g, '').substring(1) : lead.phone.replace(/\D/g, '')}?text=${encodeURIComponent(getFirstContactMessage(lead))}`} 
                       target="_blank" 
                       className="h-11 px-4 bg-emerald-500 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
                     >
@@ -546,13 +594,22 @@ export default function Demandes() {
             </tr>
           </thead>
           <tbody className="text-sm">
+            {Number(matierePrice) > 0 && (
+              <tr className="border-b border-slate-100">
+                <td className="py-6 px-6 font-black uppercase">{isAr ? 'القماش / المواد' : 'Tissu / Fournitures'}</td>
+                <td className="py-6 px-6 text-center font-bold">{devisLead?.quantity}</td>
+                <td className="py-6 px-6 text-center font-bold text-slate-500">{matierePrice} MAD</td>
+                <td className="py-6 px-6 text-right font-black">
+                  {(Number(matierePrice || 0) * (devisLead?.quantity || 0)).toLocaleString()} MAD
+                </td>
+              </tr>
+            )}
             <tr className="border-b border-slate-100">
-              <td className="py-6 px-6 font-black uppercase">{devisLead?.type}</td>
+              <td className="py-6 px-6 font-black uppercase">{isAr ? 'الفصالة والخياطة' : 'Coupe & Confection'}</td>
               <td className="py-6 px-6 text-center font-bold">{devisLead?.quantity}</td>
-              <td className="py-6 px-6 text-center font-bold text-slate-500">{matierePrice || 0} MAD</td>
-              <td className="py-6 px-6 text-center font-bold text-slate-500">{laborPrice || 0} MAD</td>
+              <td className="py-6 px-6 text-center font-bold text-slate-500">{laborPrice} MAD</td>
               <td className="py-6 px-6 text-right font-black">
-                {((Number(matierePrice || 0) + Number(laborPrice || 0)) * (devisLead?.quantity || 0)).toLocaleString()} MAD
+                {(Number(laborPrice || 0) * (devisLead?.quantity || 0)).toLocaleString()} MAD
               </td>
             </tr>
           </tbody>
@@ -560,10 +617,12 @@ export default function Demandes() {
 
         <div className="flex justify-end mb-20">
           <div className="w-72 space-y-4">
-            <div className="flex justify-between items-center text-slate-500 font-bold uppercase text-[10px] tracking-widest px-4">
-              <span>Total Matière</span>
-              <span>{(Number(matierePrice || 0) * (devisLead?.quantity || 0)).toLocaleString()} MAD</span>
-            </div>
+            {Number(matierePrice) > 0 && (
+              <div className="flex justify-between items-center text-slate-500 font-bold uppercase text-[10px] tracking-widest px-4">
+                <span>Total Matière</span>
+                <span>{(Number(matierePrice || 0) * (devisLead?.quantity || 0)).toLocaleString()} MAD</span>
+              </div>
+            )}
             <div className="flex justify-between items-center text-slate-500 font-bold uppercase text-[10px] tracking-widest px-4">
               <span>Total Main d'œuvre</span>
               <span>{(Number(laborPrice || 0) * (devisLead?.quantity || 0)).toLocaleString()} MAD</span>
@@ -586,6 +645,134 @@ export default function Demandes() {
           </p>
         </div>
       </div>
+      {/* Message Templates Settings Modal */}
+      {showSettings && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-[3rem] shadow-2xl flex flex-col">
+            <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+                  <Settings className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">
+                    {isAr ? 'إعدادات قوالب الرسائل' : 'Paramètres des Templates'}
+                  </h2>
+                  <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">
+                    {isAr ? 'تخصيص الهوية البصرية للنصوص' : 'Personnalisez vos messages clients'}
+                  </p>
+                </div>
+              </div>
+              <button onClick={() => setShowSettings(false)} className="p-3 hover:bg-slate-100 rounded-2xl transition-colors">
+                <X className="w-6 h-6 text-slate-400" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-8 space-y-10">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                {/* Arabic Column */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-2xl">🇲🇦</span>
+                    <h3 className="font-black text-slate-800 uppercase tracking-tight">العربية (AR)</h3>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">رسالة الاتصال الأول</label>
+                      <textarea 
+                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-medium h-32 focus:border-indigo-500 outline-none transition-all"
+                        value={templates.ar.firstContact}
+                        onChange={(e) => setTemplates({...templates, ar: {...templates.ar, firstContact: e.target.value}})}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">رسالة تقدير الثمن (نصية)</label>
+                      <textarea 
+                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-medium h-32 focus:border-indigo-500 outline-none transition-all"
+                        value={templates.ar.devisTxt}
+                        onChange={(e) => setTemplates({...templates, ar: {...templates.ar, devisTxt: e.target.value}})}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">رسالة تقدير الثمن (مع PDF)</label>
+                      <textarea 
+                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-medium h-32 focus:border-indigo-500 outline-none transition-all"
+                        value={templates.ar.devisPdf}
+                        onChange={(e) => setTemplates({...templates, ar: {...templates.ar, devisPdf: e.target.value}})}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* French Column */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-2xl">🇫🇷</span>
+                    <h3 className="font-black text-slate-800 uppercase tracking-tight">Français (FR)</h3>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Premier Contact</label>
+                      <textarea 
+                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-medium h-32 focus:border-indigo-500 outline-none transition-all"
+                        value={templates.fr.firstContact}
+                        onChange={(e) => setTemplates({...templates, fr: {...templates.fr, firstContact: e.target.value}})}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Devis Rapide (Texte)</label>
+                      <textarea 
+                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-medium h-32 focus:border-indigo-500 outline-none transition-all"
+                        value={templates.fr.devisTxt}
+                        onChange={(e) => setTemplates({...templates, fr: {...templates.fr, devisTxt: e.target.value}})}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Devis Officiel (avec PDF)</label>
+                      <textarea 
+                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-medium h-32 focus:border-indigo-500 outline-none transition-all"
+                        value={templates.fr.devisPdf}
+                        onChange={(e) => setTemplates({...templates, fr: {...templates.fr, devisPdf: e.target.value}})}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-amber-50 p-6 rounded-[2rem] border border-amber-100">
+                <div className="flex gap-4">
+                  <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-600 shrink-0">
+                    <AlertTriangle className="w-5 h-5" />
+                  </div>
+                  <div className="text-xs font-bold text-amber-800 space-y-1">
+                    <p className="uppercase tracking-widest mb-1">Guide des variables :</p>
+                    <p>استعمل <code className="bg-amber-200/50 px-1.5 py-0.5 rounded">{"{name}"}</code> للإسم، <code className="bg-amber-200/50 px-1.5 py-0.5 rounded">{"{type}"}</code> للنوع، و <code className="bg-amber-200/50 px-1.5 py-0.5 rounded">{"{total}"}</code> للمجموع.</p>
+                    <p>Utilisez <code className="bg-amber-200/50 px-1.5 py-0.5 rounded">{"{name}"}</code> pour le nom, <code className="bg-amber-200/50 px-1.5 py-0.5 rounded">{"{type}"}</code> pour le type, etc.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-8 bg-slate-50 border-t border-slate-100 flex justify-end gap-4">
+              <button 
+                onClick={() => setShowSettings(false)}
+                className="px-8 py-4 text-sm font-black text-slate-500 uppercase tracking-widest hover:text-slate-800 transition-colors"
+              >
+                {isAr ? 'إلغاء' : 'Annuler'}
+              </button>
+              <button 
+                onClick={() => saveTemplates(templates)}
+                className="px-10 py-4 bg-indigo-600 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center gap-3 shadow-xl shadow-indigo-100"
+              >
+                <Save className="w-5 h-5" />
+                {isAr ? 'حفظ التغييرات' : 'Sauvegarder'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { Play, ShieldCheck, Zap, Users, ArrowRight, MessageCircle, Star, Package, Factory, Globe, Shirt, Scissors, CheckCircle, ImageIcon, X } from 'lucide-react';
+import { Play, ShieldCheck, Zap, Users, ArrowRight, MessageCircle, Star, Package, Factory, Globe, Shirt, Scissors, CheckCircle, ImageIcon, X, ChevronDown } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
@@ -62,15 +62,15 @@ export default function LandingPage() {
 
   // Dynamic SEO Title & Description
   useEffect(() => {
-    const title = isAr 
-      ? `BEYA CREATIVE - رائد صناعة الملابس بالمغرب 🇲🇦` 
+    const title = isAr
+      ? `BEYA CREATIVE - رائد صناعة الملابس بالمغرب 🇲🇦`
       : `BEYA CREATIVE - Excellence en Confection Textile au Maroc 🇲🇦`;
     const desc = isAr
       ? 'نحن نوفر حلولاً متكاملة لصناعة الملابس بالمغرب. تيشيرت، قميص، جلابة، وملابس العمل بجودة عالمية.'
       : 'BEYA CREATIVE : Leader de la confection textile au Maroc. Fabrication de vêtements haute qualité et production 100% marocaine.';
-    
+
     document.title = title;
-    
+
     // Update meta description
     let metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc) {
@@ -85,30 +85,30 @@ export default function LandingPage() {
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-300">
           <div className="bg-white rounded-[3rem] p-12 max-w-lg w-full text-center shadow-[0_50px_100px_rgba(0,0,0,0.3)] border border-white/20 relative overflow-hidden">
             <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-emerald-400 to-teal-500" />
-            
+
             <div className="w-24 h-24 bg-emerald-50 rounded-[2rem] flex items-center justify-center mx-auto mb-8 animate-bounce">
               <CheckCircle className="w-12 h-12 text-emerald-500" />
             </div>
-            
+
             <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tighter mb-4">
               {isAr ? 'تم إرسال طلبكم!' : 'Demande Envoyée !'}
             </h3>
             <p className="text-slate-500 font-medium leading-relaxed mb-10">
-              {isAr 
+              {isAr
                 ? 'شكراً ليكم على اختيار BEYA. الفريق ديالنا غادي يراجع الطلب وغادي يتواصل معاكم فـ أقل من 24 ساعة.'
                 : 'Merci d\'avoir choisi BEYA. Notre équipe examine votre demande et vous contactera en moins de 24 heures.'}
             </p>
-            
+
             <div className="space-y-4">
-              <a 
-                href="https://wa.me/212600000000" 
+              <a
+                href="https://wa.me/212600000000"
                 target="_blank"
                 className="w-full py-5 bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-emerald-600 transition-all flex items-center justify-center gap-3 shadow-xl shadow-emerald-100"
               >
                 <MessageCircle className="w-5 h-5" />
                 {isAr ? 'تواصل معنا الآن' : 'Contactez-nous via WhatsApp'}
               </a>
-              <button 
+              <button
                 onClick={() => setShowSuccess(false)}
                 className="w-full py-4 text-slate-400 font-black uppercase tracking-widest text-xs hover:text-slate-600 transition-colors"
               >
@@ -148,7 +148,7 @@ export default function LandingPage() {
               <span className="text-[8px] font-bold text-emerald-600 uppercase tracking-[0.2em] mt-0.5 flex items-center gap-1">🇲🇦 Made in Morocco</span>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-6">
             <button onClick={toggle} className="text-xs font-black text-slate-500 hover:text-indigo-600 transition uppercase tracking-widest flex items-center gap-2">
               <Globe className="w-4 h-4" />
@@ -202,8 +202,8 @@ export default function LandingPage() {
             {/* Video Container */}
             <div className="relative aspect-video bg-slate-900 rounded-[3rem] overflow-hidden shadow-[0_30px_100px_rgba(0,0,0,0.2)] border-8 border-white">
               {embedUrl ? (
-                <iframe 
-                  src={embedUrl} 
+                <iframe
+                  src={embedUrl}
                   className="absolute inset-0 w-full h-full border-0"
                   allowFullScreen
                   scrolling="no"
@@ -237,11 +237,11 @@ export default function LandingPage() {
                   {isAr ? 'ابدأ مشروعك اليوم' : 'Lancez votre collection'}
                 </h3>
                 <p className="text-slate-400 font-medium mb-12 relative z-10 leading-relaxed">
-                  {isAr 
+                  {isAr
                     ? 'عمر هاد المعلومات وغادي نتواصلو معاك فـ أقل من 24 ساعة باش نعطيوك أحسن عرض ثمن.'
                     : 'Remplissez ce formulaire et notre équipe vous contactera en moins de 24h pour discuter de votre projet et vous proposer le meilleur tarif.'}
                 </p>
-                
+
                 <div className="space-y-6 relative z-10">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-indigo-400 border border-white/10">
@@ -265,15 +265,15 @@ export default function LandingPage() {
               </div>
 
               <div className="p-12 lg:p-16">
-                <form 
-                  className="space-y-6" 
-                  onSubmit={(e) => { 
-                    e.preventDefault(); 
+                <form
+                  className="space-y-6"
+                  onSubmit={(e) => {
+                    e.preventDefault();
                     const formData = new FormData(e.currentTarget);
                     const countryCode = (e.currentTarget.querySelector('select') as HTMLSelectElement).value;
                     const rawPhone = formData.get('phone') as string;
                     const fullPhone = countryCode + rawPhone.replace(/\s/g, '');
-                    
+
                     const leadData = {
                       name: formData.get('name') as string,
                       email: formData.get('email') as string,
@@ -300,7 +300,7 @@ export default function LandingPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 gap-6">
                     <div>
                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'رقم الهاتف' : 'Téléphone / WhatsApp'}</label>
                       <div className="flex gap-2">
@@ -311,35 +311,39 @@ export default function LandingPage() {
                             <option value="+34">🇪🇸 +34</option>
                             <option value="+1">🇺🇸 +1</option>
                           </select>
-                          <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
-                            <Star className="w-3 h-3 text-slate-400" />
+                          <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400">
+                            <ChevronDown className="w-4 h-4" />
                           </div>
                         </div>
                         <input type="tel" name="phone" placeholder="6XXXXXXXX" className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" required />
                       </div>
                     </div>
-                    <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'نوع اللباس' : 'Type de Vêtement'}</label>
-                      <select name="type" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors appearance-none">
-                        <option>T-Shirt / Polo</option>
-                        <option>T-Shirt Oversize</option>
-                        <option>Sweat / Hoodie</option>
-                        <option>Djellaba / Gandoura</option>
-                        <option>Ensemble / Survêtement</option>
-                        <option>Pyjama</option>
-                        <option>Uniforme / Travail</option>
-                        <option>Pantalon</option>
-                        <option>{isAr ? 'آخر' : 'Autre'}</option>
-                      </select>
-                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'الكمية التقديرية' : 'Quantité Estimeé'}</label>
-                      <input type="number" name="quantity" placeholder="Min 100" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" required />
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'نوع اللباس' : 'Type de Vêtement'}</label>
+                      <div className="relative">
+                        <select name="type" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors appearance-none">
+                          <option>T-Shirt / Polo</option>
+                          <option>T-Shirt Oversize</option>
+                          <option>Sweat / Hoodie</option>
+                          <option>Djellaba / Gandoura</option>
+                          <option>Ensemble / Survêtement</option>
+                          <option>Pyjama</option>
+                          <option>Uniforme / Travail</option>
+                          <option>Pantalon</option>
+                          <option>{isAr ? 'آخر' : 'Autre'}</option>
+                        </select>
+                        <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-400">
+                          <ChevronDown className="w-4 h-4" />
+                        </div>
+                      </div>
                     </div>
-                    <div />
+                    <div>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'الكمية التقديرية' : 'Quantité Estimeé'}</label>
+                      <input type="number" name="quantity" defaultValue="100" min="1" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" required />
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -353,7 +357,7 @@ export default function LandingPage() {
                         {selectedPhoto ? (
                           <div className="relative h-full w-full rounded-2xl overflow-hidden border-2 border-indigo-100 shadow-md">
                             <img src={selectedPhoto} alt="Preview" className="w-full h-full object-cover" />
-                            <button 
+                            <button
                               type="button"
                               onClick={() => setSelectedPhoto(null)}
                               className="absolute top-2 right-2 p-1.5 bg-rose-500 text-white rounded-full shadow-lg hover:scale-110 transition-transform"
@@ -394,7 +398,7 @@ export default function LandingPage() {
               <div className={`h-2 w-48 bg-indigo-600 rounded-full ${isAr ? 'mr-0 ml-auto' : ''}`} />
             </div>
             <p className={`text-slate-500 font-bold max-w-md ${isAr ? 'text-right' : 'text-left'}`}>
-              {isAr 
+              {isAr
                 ? 'نحن نوفر حلولاً متكاملة لصناعة الملابس تبدأ من اختيار المواد الأولية وتصميم النماذج وصولاً إلى الإنتاج الضخم.'
                 : 'Nous offrons des solutions complètes de fabrication textile, du choix des matières premières à la production de masse.'}
             </p>
@@ -428,16 +432,16 @@ export default function LandingPage() {
                   </div>
                 )}
                 <span className="text-2xl font-black uppercase tracking-tighter italic">
-                   {company.name.split(' ')[0]}<span className="text-indigo-400">{company.name.split(' ').slice(1).join(' ')}</span>
+                  {company.name.split(' ')[0]}<span className="text-indigo-400">{company.name.split(' ').slice(1).join(' ')}</span>
                 </span>
               </div>
               <p className="text-slate-400 max-w-sm font-medium">
-                {isAr 
+                {isAr
                   ? 'رؤيتنا هي أن نصبح المعيار العالمي للجودة في صناعة الملابس المغربية.'
                   : 'Notre vision هو d\'être la référence mondiale de qualité dans l\'industrie textile marocaine.'}
               </p>
             </div>
-            
+
             <div className="flex flex-col items-center md:items-end gap-6">
               <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400">{isAr ? 'تابعونا على' : 'Suivez-nous'}</p>
               <div className="flex gap-4">
@@ -450,7 +454,7 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
-          
+
           <div className="mt-20 pt-8 border-t border-white/5 text-center text-slate-500 text-xs font-bold uppercase tracking-[0.2em]">
             &copy; 2024 BEYA CREATIVE PORTAL. ALL RIGHTS RESERVED.
           </div>
