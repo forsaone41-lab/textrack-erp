@@ -6,6 +6,8 @@ export const T = {
 
   // Nav labels
   dashboard: { fr: 'Tableau de bord', ar: 'لوحة التحكم' },
+  demandes: { fr: 'Demandes Prospects', ar: 'طلبات الزبائن' },
+  demandes_desc: { fr: 'Gérez les nouveaux prospects', ar: 'إدارة طلبات الزبائن الجدد' },
   fiches: { fr: 'Fiches Techniques', ar: 'البطاقات التقنية' },
   ordres: { fr: 'Ordres de Coupe', ar: 'أوامر القطع' },
   chaine: { fr: 'Chaîne de Montage', ar: 'خط التجميع' },

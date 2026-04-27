@@ -76,6 +76,7 @@ export default function SuiviRH() {
   const [showBonModal, setShowBonModal] = useState(false);
   const [bonForm, setBonForm] = useState({ empId: '', cmdId: '', avance: 0, methode: 'especes' });
   const [generatedBon, setGeneratedBon] = useState<{ id: string; emp: Employe; cmd?: Commande; avance: number; methode: string; date: string } | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const company = loadCompanyProfile();
 
@@ -142,7 +143,8 @@ export default function SuiviRH() {
     setForm({ 
       nom: '', prenom: '', poste: '', type: 'atelier', 
       telephone: '', email: '', adresse: '', cin: '', 
-      banque: '', rib: '', actif: true, salaireMensuel: 0 
+      banque: '', rib: '', actif: true, salaireMensuel: 0,
+      remunerationType: 'mensuel' 
     });
     setShowModal(true);
   }
@@ -166,12 +168,6 @@ export default function SuiviRH() {
     setEmployes(updated);
     saveLocalRH('employes', updated);
     setShowModal(false);
-  }
-
-  async function remove(id: string) {
-    const updated = employes.filter(e => e.id !== id);
-    setEmployes(updated);
-    saveLocalRH('employes', updated);
   }
 
   function openPayer(empId: string) {
@@ -205,10 +201,14 @@ export default function SuiviRH() {
     if (emp) {
       const moisLabelStr = new Date(selectedMois + '-01').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
       const empNameStr = emp.prenom ? `${emp.prenom} ${emp.nom}` : emp.nom;
+      
+      // Determine category: 'salaires' for atelier, 'sous_traitance' for façonnier
+      const chargeCat: any = emp.type === 'sous_traitance' ? 'sous_traitance' : 'salaires';
+      
       const newCharge = {
         id: genId(),
-        designation: `Salaire ${empNameStr} — ${moisLabelStr}`,
-        categorie: 'salaires',
+        designation: `Paiement ${empNameStr} — ${moisLabelStr}`,
+        categorie: chargeCat,
         montant,
         date: newPaiement.date,
         statut: 'payé',
@@ -250,6 +250,23 @@ export default function SuiviRH() {
       const updatedP = [...paiements, newP];
       setPaiements(updatedP);
       saveLocalRH('paiements_salaires', updatedP);
+
+      // AUTOMATIC CHARGE SYNC for Advance
+      const empNameStr = emp.prenom ? `${emp.prenom} ${emp.nom}` : emp.nom;
+      const chargeCat: any = emp.type === 'sous_traitance' ? 'sous_traitance' : 'salaires';
+      
+      const newCharge = {
+        id: genId(),
+        designation: `Avance ${empNameStr} — Bon Travail #${bon.id}`,
+        categorie: chargeCat,
+        montant: bon.avance,
+        date: newP.date,
+        statut: 'payé',
+        recurrence: 'ponctuel',
+        fournisseur: empNameStr,
+        notes: `Commande: ${cmd?.reference || '—'}`,
+      };
+      saveRecord('charges', newCharge).catch(() => console.log("Silent error saving advance charge"));
     }
   }
 
@@ -357,12 +374,17 @@ export default function SuiviRH() {
                     </div>
                     <div>
                       <h3 className="text-lg font-black text-slate-900 uppercase tracking-tighter">{empName(e)}</h3>
-                      <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{e.poste}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{e.poste}</p>
+                        <span className="text-[9px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100">
+                          {(e.salaireMensuel || 0).toLocaleString()} / {e.remunerationType === 'hebdomadaire' ? 'Semaine' : e.remunerationType === 'tache' ? 'Tâche' : 'Mois'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <div className="flex gap-1">
                     <button onClick={() => openEdit(e)} className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition"><Edit2 className="w-4 h-4" /></button>
-                    <button onClick={() => remove(e.id)} className="p-2 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition"><Trash2 className="w-4 h-4" /></button>
+                    <button onClick={() => setConfirmDeleteId(e.id)} className="p-2 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>
 
@@ -530,8 +552,16 @@ export default function SuiviRH() {
                   <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-4 border-b border-indigo-50 pb-2">Rémunération & Banque</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Salaire / Mois</label>
-                      <input type="number" value={form.salaireMensuel || ''} onChange={e => setForm({...form, salaireMensuel: parseFloat(e.target.value) || 0})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900" />
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Base Rémunération</label>
+                      <select value={form.remunerationType || 'mensuel'} onChange={e => setForm({...form, remunerationType: e.target.value as any})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none transition-all focus:border-indigo-500">
+                        <option value="mensuel">Par Mois (Mensuel)</option>
+                        <option value="hebdomadaire">Par Semaine (Hebdo)</option>
+                        <option value="tache">À la Tâche / Commande</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Montant Base (MAD)</label>
+                      <input type="number" value={form.salaireMensuel || ''} onChange={e => setForm({...form, salaireMensuel: parseFloat(e.target.value) || 0})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 focus:border-indigo-500 transition-all outline-none" />
                     </div>
                     <div>
                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Banque</label>
@@ -699,7 +729,7 @@ export default function SuiviRH() {
                 <input type="number" value={payerForm.montant} onChange={e => setPayerForm({...payerForm, montant: parseFloat(e.target.value) || 0})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-2xl font-black text-slate-900 outline-none" />
               </div>
               <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Méthode</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Méثode</label>
                 <div className="grid grid-cols-3 gap-2">
                   {['especes', 'virement', 'cheque'].map(m => (
                     <button key={m} onClick={() => setPayerForm({...payerForm, methode: m})} className={`h-12 rounded-xl border-2 transition-all font-black text-[10px] uppercase ${payerForm.methode === m ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-100 text-slate-400'}`}>{m}</button>
@@ -709,6 +739,46 @@ export default function SuiviRH() {
             </div>
             <div className="p-8 bg-slate-50">
               <button onClick={savePaiement} className="w-full h-14 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg">Confirmer</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Premium Deletion Confirmation Modal */}
+      {confirmDeleteId && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xl flex items-center justify-center z-[500] p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-[40px] w-full max-w-sm shadow-[0_20px_50px_rgba(0,0,0,0.2)] overflow-hidden animate-in zoom-in slide-in-from-bottom-8 duration-500">
+            <div className="p-10 text-center">
+              <div className="w-20 h-20 bg-rose-50 rounded-[30px] flex items-center justify-center mx-auto mb-6 text-rose-500 animate-pulse">
+                <Trash2 className="w-10 h-10" />
+              </div>
+              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-3">Attention !</h3>
+              <p className="text-slate-500 font-bold text-sm leading-relaxed px-4">
+                Êtes-vous sûr de vouloir supprimer ce membre du personnel ? Cette action est irréversible.
+              </p>
+            </div>
+            <div className="p-8 bg-slate-50/50 flex flex-col gap-3">
+              <button 
+                onClick={() => {
+                  const id = confirmDeleteId;
+                  setConfirmDeleteId(null);
+                  import('../types').then(({ deleteRecord }) => {
+                    const updated = employes.filter(e => e.id !== id);
+                    setEmployes(updated);
+                    saveLocalRH('employes', updated);
+                    deleteRecord('employes', id);
+                  });
+                }}
+                className="h-14 bg-rose-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-rose-200 active:scale-95 transition-all"
+              >
+                Oui, Supprimer définitivement
+              </button>
+              <button 
+                onClick={() => setConfirmDeleteId(null)}
+                className="h-14 bg-white text-slate-900 border-2 border-slate-100 rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all"
+              >
+                Annuler
+              </button>
             </div>
           </div>
         </div>

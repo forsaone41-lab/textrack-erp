@@ -17,7 +17,14 @@ async function verifyLogin(email: string, password: string): Promise<User | null
   const users = await loadData<User>('users');
   const user = users.find(u => u.email.toLowerCase() === email.toLowerCase().trim());
   if (!user) return null;
+  
   const expected = user.password || DEFAULT_PASSWORDS[user.email] || '';
+  
+  // For clients, allow login with PIN code as an alternative to password
+  if (user.role === 'client' && user.pinCode === password) {
+    return user;
+  }
+  
   return expected === password ? user : null;
 }
 
@@ -97,14 +104,14 @@ export default function Login({ onLogin }: LoginProps) {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Mot de passe</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Mot de passe / Code PIN</label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                    placeholder="••••••••"
+                    placeholder="Mot de passe ou Code PIN"
                     className="w-full px-4 py-3 pr-11 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 focus:border-slate-800 outline-none transition"
                   />
                   <button

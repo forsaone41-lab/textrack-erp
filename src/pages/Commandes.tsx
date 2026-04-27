@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import {
   Plus, Search, Edit2, Trash2, ShoppingCart, Calculator, ChevronDown,
   ChevronRight, Scissors, ClipboardCheck, Receipt, Link, X, TrendingUp,
-  Package, Truck, AlertCircle, Eye, TriangleAlert
+  Package, Truck, AlertCircle, Eye, TriangleAlert, Filter, ChevronUp, Clock, AlertTriangle, 
+  LayoutGrid, List, CheckCircle
 } from 'lucide-react';
 import {
   Commande, FicheTechnique, OrdreDeCoupe, PointageEntry, Facture, Employe, User, StockTissu,
@@ -39,6 +40,7 @@ export default function Commandes() {
     available: number;
   } | null>(null);
   const [stockConfirmChecked, setStockConfirmChecked] = useState(false);
+  const [showSuccess, setShowSuccess] = useState<{ message: string; sub?: string } | null>(null);
 
   const [showFacturePreview, setShowFacturePreview] = useState(false);
   const [selectedFacture, setSelectedFacture] = useState<Facture | null>(null);
@@ -118,9 +120,8 @@ export default function Commandes() {
     setForm({
       reference: `${prefix}${String(nextNum).padStart(3, '0')}`,
       client: '', modele: '', tissu: '', quantite: 0, quantiteLivre: 0,
-      dateCommande: today,
-      dateLivraisonPrevue: due.toISOString().split('T')[0],
       phase: 'coupe', prix: 0, rebut: 0, statut: 'en_cours', suivi: [],
+      tissuSourcing: 'maison', tissuPrix: 0, coutMainOeuvre: 0, avance: 0
     });
     setShowModal(true);
   }
@@ -196,7 +197,7 @@ export default function Commandes() {
         return;
       }
     }
-    
+
     if (selectedRoll) {
       const updatedRoll = { ...selectedRoll, metrage: Math.max(0, selectedRoll.metrage - metrageRequis) };
       await saveRecord('tissus', updatedRoll);
@@ -215,10 +216,16 @@ export default function Commandes() {
       statut: 'planifié',
       dateCoupe: c.dateCommande
     };
-    
+
     await saveRecord('ordres', nouveauOrdre);
     setOrdres(prev => [...prev, nouveauOrdre]);
-    alert(lang === 'fr' ? 'Envoyé à la coupure et stock mis à jour !' : 'تم الإرسال للفصالة وتحديث المخزون بنجاح !');
+    
+    setShowSuccess({
+      message: lang === 'fr' ? 'Envoyé à la coupure !' : 'تم الإرسال للفصالة !',
+      sub: lang === 'fr' ? 'Le stock de tissu a été mis à jour avec succès.' : 'تم تحديث مخزون الثوب بنجاح.'
+    });
+    
+    setTimeout(() => setShowSuccess(null), 3000);
   };
 
   async function remove(id: string) {
@@ -246,7 +253,7 @@ export default function Commandes() {
     if (!selectedFacture) return;
     setFactures([...factures, selectedFacture]);
     await saveRecord('factures', selectedFacture);
-    
+
     // Auto-print
     setTimeout(() => {
       printElement(`facture-pro-view-${selectedFacture.id}`);
@@ -256,7 +263,7 @@ export default function Commandes() {
 
   const getDynamicStatus = (c: Partial<Commande>) => {
     if (c.statut === 'livré') return { label: t('status_livree', lang), color: 'bg-emerald-50 text-emerald-700 border-emerald-100', icon: '✓' };
-    
+
     const phase = c.phase || 'coupe';
     const cmdOrdre = ordres.find(o => o.commandeId === c.id);
 
@@ -306,75 +313,139 @@ export default function Commandes() {
   };
 
   return (
-    <div className={`space-y-6 ${isAr ? 'text-right' : ''}`}>
-      {/* Header */}
-      <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${isAr ? 'flex-row-reverse' : ''}`}>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">{t('commandes_title', lang)}</h1>
-          <p className="text-sm text-slate-500">{commandes.length} {t('commandes_count', lang)} · {t('ca_total', lang)} {stats.ca.toLocaleString()} MAD</p>
-        </div>
-        <div className={`flex gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
-          <button onClick={() => setShowCalc(true)} className="flex items-center gap-2 bg-green-600 text-white px-4 py-2.5 rounded-xl hover:bg-green-700 transition text-sm font-semibold shadow-sm">
-            <Calculator className="w-4 h-4" /> Calculateur de Prix
-          </button>
-          <button onClick={openCreate} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl hover:bg-indigo-700 transition text-sm font-semibold shadow-sm">
-            <Plus className="w-4 h-4" /> Nouvelle Commande
-          </button>
+    <div className={`space-y-8 pb-10 ${isAr ? 'text-right' : ''}`}>
+      {/* Premium Header */}
+      <div className="relative overflow-hidden bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/50 p-8 shadow-2xl shadow-indigo-100/20">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl -mr-20 -mt-20" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/5 rounded-full blur-3xl -ml-20 -mb-20" />
+        
+        <div className={`relative flex flex-col md:flex-row md:items-center justify-between gap-6 ${isAr ? 'flex-row-reverse' : ''}`}>
+          <div className="flex items-center gap-5">
+            <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl flex items-center justify-center shadow-lg shadow-indigo-200 ring-4 ring-indigo-50">
+              <ShoppingCart className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-tight">{t('commandes_title', lang)}</h1>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest">{commandes.length} {t('commandes_count', lang)}</span>
+                <span className="text-slate-300">/</span>
+                <span className="text-sm font-bold text-slate-500">{t('ca_total', lang)} <span className="text-indigo-600 font-black">{stats.ca.toLocaleString()} MAD</span></span>
+              </div>
+            </div>
+          </div>
+
+          <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
+            <button 
+              onClick={() => setShowCalc(true)} 
+              className="group flex items-center gap-2 bg-white border-2 border-slate-100 text-slate-600 px-6 py-3.5 rounded-2xl hover:border-indigo-600 hover:text-indigo-600 transition-all duration-300 font-black text-xs uppercase tracking-widest shadow-sm active:scale-95"
+            >
+              <Calculator className="w-4 h-4 transition-transform group-hover:rotate-12" />
+              Calculateur
+            </button>
+            <button 
+              onClick={openCreate} 
+              className="flex items-center gap-2 bg-slate-900 text-white px-8 py-3.5 rounded-2xl hover:bg-indigo-600 hover:shadow-xl hover:shadow-indigo-200 transition-all duration-300 font-black text-xs uppercase tracking-widest active:scale-95 ring-offset-2 focus:ring-2 focus:ring-slate-900"
+            >
+              <Plus className="w-5 h-5" />
+              Nouvelle Commande
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-          <div className="flex items-start justify-between mb-3"><p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Chiffre d'Affaires</p><div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center"><TrendingUp className="w-4 h-4 text-indigo-500" /></div></div>
-          <p className="text-2xl font-bold text-slate-800">{stats.ca.toLocaleString()}</p>
-          <p className="text-xs text-slate-400 mt-1">MAD · {stats.total} commandes</p>
-        </div>
-        <div className="bg-gradient-to-br from-blue-50 to-white rounded-xl border border-blue-200 p-5 shadow-sm">
-          <div className="flex items-start justify-between mb-3"><p className="text-xs font-semibold text-blue-600 uppercase tracking-wider">En Cours</p><div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center"><Package className="w-4 h-4 text-blue-500" /></div></div>
-          <p className="text-2xl font-bold text-blue-700">{stats.enCours}</p>
-          <p className="text-xs text-blue-500 mt-1">commande{stats.enCours !== 1 ? 's' : ''} en production</p>
-        </div>
-        <div className="bg-gradient-to-br from-emerald-50 to-white rounded-xl border border-emerald-200 p-5 shadow-sm">
-          <div className="flex items-start justify-between mb-3"><p className="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Livrées</p><div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center"><Truck className="w-4 h-4 text-emerald-500" /></div></div>
-          <p className="text-2xl font-bold text-emerald-700">{stats.livre}</p>
-          <p className="text-xs text-emerald-500 mt-1">commande{stats.livre !== 1 ? 's' : ''} livrée{stats.livre !== 1 ? 's' : ''}</p>
-        </div>
-        <div className={`bg-gradient-to-br rounded-xl border p-5 shadow-sm ${stats.urgent > 0 ? 'from-red-50 to-white border-red-200' : 'from-slate-50 to-white border-slate-200'}`}>
-          <div className="flex items-start justify-between mb-3"><p className={`text-xs font-semibold uppercase tracking-wider ${stats.urgent > 0 ? 'text-red-600' : 'text-slate-400'}`}>En Retard</p><div className={`w-8 h-8 rounded-lg flex items-center justify-center ${stats.urgent > 0 ? 'bg-red-100' : 'bg-slate-100'}`}><AlertCircle className={`w-4 h-4 ${stats.urgent > 0 ? 'text-red-500' : 'text-slate-400'}`} /></div></div>
-          <p className={`text-2xl font-bold ${stats.urgent > 0 ? 'text-red-700' : 'text-slate-500'}`}>{stats.urgent}</p>
-          <p className={`text-xs mt-1 ${stats.urgent > 0 ? 'text-red-500' : 'text-slate-400'}`}>délai dépassé</p>
-        </div>
+      {/* KPI Cards - Modern Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-1">
+        {[
+          { label: "Chiffre d'Affaires", val: stats.ca.toLocaleString(), sub: `${stats.total} commandes`, icon: <TrendingUp />, color: "indigo" },
+          { label: "En Production", val: stats.enCours, sub: "en cours", icon: <Package />, color: "blue" },
+          { label: "Livrées", val: stats.livre, sub: "commandes livrées", icon: <Truck />, color: "emerald" },
+          { label: "Retard Critique", val: stats.urgent, sub: "délai dépassé", icon: <AlertCircle />, color: "rose", urgent: stats.urgent > 0 }
+        ].map((kpi, i) => (
+          <div key={i} className={`group relative bg-white p-6 rounded-[2rem] border-2 transition-all duration-300 hover:shadow-2xl hover:shadow-${kpi.color}-100/50 ${
+            kpi.urgent ? 'border-rose-100 bg-rose-50/10' : 'border-slate-50'
+          }`}>
+            <div className="flex items-start justify-between mb-4">
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 shadow-sm ${
+                kpi.color === 'indigo' ? 'bg-indigo-50 text-indigo-600' :
+                kpi.color === 'blue' ? 'bg-blue-50 text-blue-600' :
+                kpi.color === 'emerald' ? 'bg-emerald-50 text-emerald-600' :
+                'bg-rose-50 text-rose-600'
+              }`}>
+                {kpi.icon}
+              </div>
+              <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter ${
+                kpi.color === 'indigo' ? 'bg-indigo-100 text-indigo-700' :
+                kpi.color === 'blue' ? 'bg-blue-100 text-blue-700' :
+                kpi.color === 'emerald' ? 'bg-emerald-100 text-emerald-700' :
+                'bg-rose-100 text-rose-700'
+              }`}>
+                KPI {i+1}
+              </div>
+            </div>
+            <div>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mb-1">{kpi.label}</p>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-3xl font-black text-slate-900 tracking-tight">{kpi.val}</span>
+                {kpi.color === 'indigo' && <span className="text-[10px] font-bold text-slate-400">MAD</span>}
+              </div>
+              <p className={`text-[10px] font-bold mt-2 ${kpi.urgent ? 'text-rose-500' : 'text-slate-400'}`}>
+                {kpi.urgent && <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse mr-1" />}
+                {kpi.sub}
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" /><input type="text" placeholder="Rechercher par référence, client ou modèle..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" /></div>
-        <div className="flex gap-1.5">
-          {[{ key: 'all', label: t('all', lang) }, { key: 'en_cours', label: t('status_en_cours', lang) }, { key: 'terminé', label: t('status_terminee', lang) }, { key: 'livré', label: t('status_livree', lang) }].map(f => (
-            <button key={f.key} onClick={() => setFilterStatut(f.key as any)} className={`px-3 py-2 rounded-lg text-xs font-semibold transition border ${filterStatut === f.key ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600'}`}>{f.label}</button>
+      {/* Modern Filter Bar */}
+      <div className="bg-white p-4 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-100/50 flex flex-col lg:flex-row gap-4 items-center">
+        <div className="relative flex-1 group w-full">
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+          <input 
+            type="text" 
+            placeholder="Rechercher une commande, un client ou un modèle..." 
+            value={search} 
+            onChange={e => setSearch(e.target.value)} 
+            className="w-full pl-12 pr-6 py-3.5 bg-slate-50 border-transparent rounded-2xl text-sm font-bold text-slate-900 focus:bg-white focus:ring-4 focus:ring-indigo-100/50 focus:border-indigo-500 transition-all outline-none" 
+          />
+        </div>
+        
+        <div className="flex items-center gap-1.5 p-1 bg-slate-50 rounded-[1.5rem] w-full lg:w-auto overflow-x-auto no-scrollbar">
+          {[
+            { key: 'all', label: t('all', lang) }, 
+            { key: 'en_cours', label: t('status_en_cours', lang) }, 
+            { key: 'terminé', label: t('status_terminee', lang) }, 
+            { key: 'livré', label: t('status_livree', lang) }
+          ].map(f => (
+            <button 
+              key={f.key} 
+              onClick={() => setFilterStatut(f.key as any)} 
+              className={`whitespace-nowrap px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-300 ${
+                filterStatut === f.key 
+                  ? 'bg-slate-900 text-white shadow-lg shadow-slate-200' 
+                  : 'text-slate-400 hover:text-slate-600 hover:bg-white'
+              }`}
+            >
+              {f.label}
+            </button>
           ))}
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+      {/* Premium Table Container */}
+      <div className="bg-white/70 backdrop-blur-sm rounded-[2.5rem] border border-white shadow-2xl shadow-indigo-100/30 overflow-hidden">
+        <div className="overflow-x-auto no-scrollbar">
+          <table className="w-full border-collapse">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="w-8 px-3 py-3.5" />
-                <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3.5">Référence</th>
-                <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3.5">Client / Modèle</th>
-                <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3.5">Tissu</th>
-                <th className="text-center text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3.5">Quantité</th>
-                <th className="text-center text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3.5">Avancement</th>
-                <th className="text-center text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3.5">Phase</th>
-                <th className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3.5">Valeur</th>
-                <th className="text-center text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3.5">Livraison</th>
-                <th className="text-center text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3.5">Statut</th>
-                <th className="text-center text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3.5">Liens</th>
-                <th className="text-center text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3.5">Actions</th>
+              <tr className="bg-slate-900/5 border-b border-slate-100">
+                <th className="w-10 px-2 py-3" />
+                <th className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3">Réf</th>
+                <th className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3">Client / Modèle / Tissu</th>
+                <th className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3">Qté / Valeur</th>
+                <th className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3">Suivi Production</th>
+                <th className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3">Livraison</th>
+                <th className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3">Statut</th>
+                <th className="text-right text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -387,86 +458,185 @@ export default function Commandes() {
                 const totalRebut = cmdPointages.reduce((a, p) => a + p.rebut, 0);
                 const progress = c.quantite > 0 ? Math.min(100, Math.round(((totalPts - totalRebut) / c.quantite) * 100)) : 0;
                 const urgent = isUrgent(c);
+                const isLivre = c.statut === 'livré';
+
                 return (
                   <>
-                    <tr key={c.id} onClick={() => setExpandedId(prev => prev === c.id ? null : c.id)} className={`cursor-pointer transition-colors border-b border-slate-100 ${isExpanded ? 'bg-indigo-50/50' : urgent ? 'bg-red-50/20 hover:bg-red-50/40' : 'hover:bg-slate-50/50'}`}>
-                      <td className="px-3 py-3.5 text-center">{isExpanded ? <ChevronDown className="w-4 h-4 text-indigo-500" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}</td>
-                      <td className="px-4 py-3.5"><div className="flex items-center gap-2"><div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${urgent ? 'bg-red-100' : 'bg-indigo-50'}`}><ShoppingCart className={`w-3.5 h-3.5 ${urgent ? 'text-red-500' : 'text-indigo-500'}`} /></div><span className="text-sm font-semibold text-slate-700">{c.reference}</span></div></td>
-                      <td className="px-4 py-3.5"><p className="text-sm font-semibold text-slate-800">{c.client}</p><p className="text-xs text-slate-400">{c.modele}</p></td>
-                      <td className="px-4 py-4 text-left">
-                         <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 text-[10px] font-bold border border-slate-200">
-                           {c.tissu}
-                         </span>
+                    <tr 
+                      key={c.id} 
+                      onClick={() => setExpandedId(prev => prev === c.id ? null : c.id)} 
+                      className={`group cursor-pointer transition-all duration-200 border-b border-slate-100 hover:bg-slate-50/80 ${isExpanded ? 'bg-indigo-50/30' : ''}`}
+                    >
+                      <td className="px-2 py-4 text-center">
+                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors ${isExpanded ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-600'}`}>
+                          {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                        </div>
                       </td>
-                      <td className="px-4 py-3.5 text-center"><span className="text-sm font-semibold text-slate-700">{c.quantite}</span><span className="text-xs text-slate-400"> pcs</span></td>
-                      <td className="px-4 py-3.5"><div className="min-w-24"><div className="flex items-center justify-between mb-1"><span className="text-xs font-semibold text-slate-600">{progress}%</span><span className="text-[10px] text-slate-400">{totalPts - totalRebut}/{c.quantite}</span></div><div className="w-full bg-slate-100 rounded-full h-1.5"><div className={`h-1.5 rounded-full transition-all ${progress >= 100 ? 'bg-emerald-500' : progress >= 60 ? 'bg-blue-500' : progress >= 30 ? 'bg-amber-500' : 'bg-slate-400'}`} style={{ width: `${progress}%` }} /></div></div></td>
-                      <td className="px-4 py-3.5 text-center"><span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold text-white ${PHASE_COLORS[c.phase]}`}>{PHASE_LABELS[c.phase]}</span></td>
-                      <td className="px-4 py-3.5 text-right"><span className="text-sm font-bold text-slate-800">{(c.quantite * c.prix).toLocaleString()}</span><span className="text-xs text-slate-400"> MAD</span></td>
-                      <td className="px-4 py-3.5 text-center"><div><p className={`text-xs ${urgent ? 'text-red-600 font-semibold' : 'text-slate-500'}`}>{fmtDate(c.dateLivraisonPrevue)}</p></div></td>
-                      <td className="px-4 py-3.5 text-center">
+                      
+                      {/* ID & Type */}
+                      <td className="px-4 py-4">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-0.5">{c.reference}</span>
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${urgent ? 'bg-red-50' : 'bg-slate-50'}`}>
+                            <ShoppingCart className={`w-3 h-3 ${urgent ? 'text-red-500' : 'text-slate-400'}`} />
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Client & Detail Info - Combined to save space */}
+                      <td className="px-4 py-4 min-w-[180px]">
+                        <p className="text-sm font-black text-slate-900 uppercase tracking-tight leading-none mb-1">{c.client}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{c.modele}</span>
+                          <span className="w-1 h-1 bg-slate-200 rounded-full" />
+                          <span className="text-[10px] font-black text-indigo-500 uppercase">{c.tissu}</span>
+                        </div>
+                      </td>
+
+                      {/* Quantity & Value */}
+                      <td className="px-4 py-4">
+                        <div className="flex flex-col">
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-sm font-black text-slate-900">{c.quantite}</span>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase">pcs</span>
+                          </div>
+                          <p className="text-[10px] font-black text-emerald-600">{(c.quantite * c.prix).toLocaleString()} MAD</p>
+                        </div>
+                      </td>
+
+                      {/* Production Tracking - Pro Integrated Line */}
+                      <td className="px-4 py-4 min-w-[240px]">
+                        <div className="flex flex-col gap-2">
+                          <div className="flex justify-between items-end">
+                            <span className={`text-[9px] font-black uppercase tracking-widest ${isLivre ? 'text-emerald-600' : 'text-slate-400'}`}>
+                              {isLivre ? 'Livraison Terminée' : `Phase: ${PHASE_LABELS[c.phase]}`}
+                            </span>
+                            <span className="text-[10px] font-black text-slate-900">{progress}%</span>
+                          </div>
+                          <div className="relative h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full transition-all duration-1000 rounded-full ${isLivre ? 'bg-emerald-500' : 'bg-indigo-600'}`} 
+                              style={{ width: `${progress}%` }} 
+                            />
+                            {/* Marker dots for phases */}
+                            <div className="absolute inset-0 flex justify-between px-1">
+                              {[1, 2, 3, 4].map(i => <div key={i} className="w-1 h-1 bg-white/30 rounded-full self-center" />)}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Delivery Date */}
+                      <td className="px-4 py-4 text-center">
+                        <div className={`inline-flex flex-col items-center px-3 py-1.5 rounded-2xl border ${urgent ? 'bg-red-50 border-red-100' : 'bg-slate-50 border-slate-100'}`}>
+                          <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter mb-0.5">Livraison</span>
+                          <span className={`text-[10px] font-black ${urgent ? 'text-red-600' : 'text-slate-700'}`}>{fmtDate(c.dateLivraisonPrevue)}</span>
+                        </div>
+                      </td>
+
+                      {/* Professional Status Badge */}
+                      <td className="px-4 py-4 text-center">
                         {(() => {
                           const ds = getDynamicStatus(c);
                           return (
-                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${ds.color} shadow-sm`}>
-                              <span>{ds.icon}</span>
-                              {ds.label}
-                            </span>
+                            <div className={`px-3 py-1.5 rounded-xl border flex items-center justify-center gap-1.5 ${ds.color} bg-white shadow-sm`}>
+                              <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+                              <span className="text-[10px] font-black uppercase tracking-widest">{ds.label}</span>
+                            </div>
                           );
                         })()}
                       </td>
-                      <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}><div className="flex items-center justify-center gap-1"><span title="Ordres de coupe" className="flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-700"><Scissors className="w-3 h-3" />{cmdOrdres.length}</span><span title="Pointages" className="flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700"><ClipboardCheck className="w-3 h-3" />{cmdPointages.length}</span></div></td>
-                      <td className="px-4 py-3.5 text-center" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-center justify-center gap-1">
+
+                      {/* Pro Actions - Clean & Sleek */}
+                      <td className="px-4 py-4" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-end gap-1.5">
                           {c.phase === 'coupe' && (
-                            <button 
-                              onClick={() => handleSendToCutter(c)} 
-                              title="Envoyer à la coupure"
-                              className={`p-1.5 rounded-lg transition-all ${
-                                ordres.some(o => o.commandeId === c.id) 
-                                  ? 'text-slate-300 cursor-not-allowed' 
-                                  : 'text-orange-500 hover:bg-orange-50 hover:shadow-sm'
+                            <button
+                              onClick={() => handleSendToCutter(c)}
+                              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${ordres.some(o => o.commandeId === c.id)
+                                ? 'bg-slate-50 text-slate-300'
+                                : 'bg-orange-50 text-orange-600 hover:bg-orange-600 hover:text-white shadow-sm hover:shadow-orange-200'
                               }`}
                             >
-                              <Scissors className="w-3.5 h-3.5" />
+                              <Scissors className="w-4 h-4" />
                             </button>
                           )}
-                          {!cmdFacture && <button onClick={() => createFacture(c)} className="p-1.5 text-slate-400 hover:text-emerald-600 rounded-lg"><Receipt className="w-3.5 h-3.5" /></button>}
-                          <button onClick={() => openEdit(c)} className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg"><Edit2 className="w-3.5 h-3.5" /></button>
-                          <button onClick={() => setConfirmDelete(c.id)} className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg"><Trash2 className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => openEdit(c)} className="w-9 h-9 bg-slate-50 text-slate-400 hover:bg-indigo-600 hover:text-white rounded-xl transition-all flex items-center justify-center hover:shadow-lg hover:shadow-indigo-100">
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => setConfirmDelete(c.id)} className="w-9 h-9 bg-slate-50 text-slate-400 hover:bg-rose-600 hover:text-white rounded-xl transition-all flex items-center justify-center hover:shadow-lg hover:shadow-rose-100">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </td>
                     </tr>
+
                     {isExpanded && (
-                      <tr key={`${c.id}-rel`} className="bg-indigo-50/30 border-b-2 border-indigo-200">
-                        <td colSpan={11} className="px-6 py-5">
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="bg-white rounded-xl border border-orange-200 p-4"><div className="flex items-center gap-2 mb-3"><Scissors className="w-4 h-4 text-orange-500" /><span className="text-xs font-bold text-orange-700 uppercase tracking-wide">Ordres de Coupe</span></div>{cmdOrdres.map(o => <div key={o.id} className="p-2 bg-orange-50 rounded-lg text-xs mb-1 font-semibold">{o.tissu} — {o.quantite} pcs</div>)}</div>
-                             <div className="bg-white rounded-xl border border-blue-200 p-4">
-                               <div className="flex items-center justify-between mb-3">
-                                 <div className="flex items-center gap-2">
-                                   <ClipboardCheck className="w-4 h-4 text-blue-500" />
-                                   <span className="text-xs font-bold text-blue-700 uppercase tracking-wide">Pointages</span>
-                                 </div>
-                                 <button 
-                                   onClick={() => openPointage(c)} 
-                                   className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md shadow-blue-100 hover:shadow-blue-200 hover:-translate-y-0.5 transition-all border border-blue-400/20"
-                                 >
-                                   <ClipboardCheck className="w-3 h-3" />
-                                   + Pointage
-                                 </button>
-                               </div>
-                               <p className="text-xs text-slate-600 font-bold mb-2">{totalPts - totalRebut} pièces produites</p>
-                               <div className="space-y-1">
-                                 {cmdPointages.slice(-3).reverse().map((p, i) => (
-                                   <div key={i} className="flex justify-between text-[9px] text-slate-500 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
-                                     <span className="truncate max-w-[100px]">{empName(p.employeId)}</span>
-                                     <span className="font-bold text-indigo-600">+{p.piecesCompletees}</span>
-                                   </div>
-                                 ))}
-                                 {cmdPointages.length === 0 && <p className="text-[9px] text-slate-400 italic">Aucun pointage</p>}
-                               </div>
-                             </div>
-                            <div className="bg-white rounded-xl border border-emerald-200 p-4"><div className="flex items-center gap-2 mb-3"><Receipt className="w-4 h-4 text-emerald-500" /><span className="text-xs font-bold text-emerald-700 uppercase tracking-wide">Facturation</span></div>{cmdFacture ? <p className="text-xs font-bold text-emerald-600">{cmdFacture.numero} · {cmdFacture.montant.toLocaleString()} MAD</p> : <button onClick={() => createFacture(c)} className="text-xs bg-emerald-600 text-white px-3 py-1 rounded-lg">+ Facture</button>}</div>
+                      <tr key={`${c.id}-rel`} className="bg-slate-50/30 border-b border-indigo-100/50">
+                        <td colSpan={12} className="px-2 py-4">
+                          {/* Expanded Details Grid - Narrower and tighter */}
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-5xl mx-auto animate-in slide-in-from-top-2 duration-200">
+                            <div className="bg-white rounded-xl border border-slate-100 p-3 shadow-sm">
+                              <div className="flex items-center gap-2 mb-3">
+                                <div className="w-6 h-6 bg-orange-50 rounded-lg flex items-center justify-center text-orange-500"><Scissors className="w-3.5 h-3.5" /></div>
+                                <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Coupe</span>
+                              </div>
+                              <div className="space-y-1.5">
+                                {cmdOrdres.map(o => (
+                                  <div key={o.id} className="p-2 bg-orange-50/30 rounded-xl border border-orange-100 flex justify-between items-center">
+                                    <span className="text-[10px] font-bold text-orange-700 truncate mr-2">{o.tissu}</span>
+                                    <span className="bg-white px-1.5 py-0.5 rounded-md text-[9px] font-black text-orange-600 border border-orange-200">{o.quantite}p</span>
+                                  </div>
+                                ))}
+                                {cmdOrdres.length === 0 && <p className="text-[9px] text-slate-400 font-bold italic">Aucun ordre...</p>}
+                              </div>
+                            </div>
+
+                            <div className="bg-white rounded-xl border border-slate-100 p-3 shadow-sm">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-6 h-6 bg-blue-50 rounded-lg flex items-center justify-center text-blue-500"><ClipboardCheck className="w-3.5 h-3.5" /></div>
+                                  <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Main d'œuvre</span>
+                                </div>
+                                <button onClick={() => openPointage(c)} className="w-6 h-6 bg-blue-600 text-white rounded-lg flex items-center justify-center text-xs shadow-lg shadow-blue-100">+</button>
+                              </div>
+                              <div className="mb-3">
+                                <div className="flex justify-between items-end mb-1">
+                                  <span className="text-[8px] font-black text-slate-400 uppercase">Avancement</span>
+                                  <span className="text-[10px] font-black text-blue-600">{progress}%</span>
+                                </div>
+                                <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                  <div className="h-full bg-blue-600" style={{ width: `${progress}%` }} />
+                                </div>
+                              </div>
+                              <div className="space-y-1">
+                                {cmdPointages.slice(-2).reverse().map((p, i) => (
+                                  <div key={i} className="flex justify-between text-[9px] font-bold text-slate-600 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                                    <span className="truncate">{empName(p.employeId)}</span>
+                                    <span className="text-blue-600">+{p.piecesCompletees}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="bg-white rounded-xl border border-slate-100 p-3 shadow-sm">
+                              <div className="flex items-center gap-2 mb-3">
+                                <div className="w-6 h-6 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-500"><Receipt className="w-3.5 h-3.5" /></div>
+                                <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Facture</span>
+                              </div>
+                              {cmdFacture ? (
+                                <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-100">
+                                  <div className="flex justify-between items-start">
+                                    <p className="text-[11px] font-black text-emerald-700">{cmdFacture.numero}</p>
+                                    <p className="text-[11px] font-black text-slate-900">{cmdFacture.montant.toLocaleString()} MAD</p>
+                                  </div>
+                                </div>
+                              ) : (
+                                <button onClick={() => createFacture(c)} className="w-full py-2.5 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all">
+                                  Éditer Facture
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </td>
                       </tr>
@@ -489,40 +659,39 @@ export default function Commandes() {
               </div>
               <h3 className="text-xl font-black text-slate-800 mb-2">Attention : Stock Insuffisant</h3>
               <p className="text-sm text-slate-500 font-medium leading-relaxed">
-                Vous avez besoin de <span className="text-red-600 font-bold">{showStockWarning.needed.toFixed(1)}m</span> de tissu, 
+                Vous avez besoin de <span className="text-red-600 font-bold">{showStockWarning.needed.toFixed(1)}m</span> de tissu,
                 mais il ne reste que <span className="text-slate-800 font-bold">{showStockWarning.available.toFixed(1)}m</span> en stock.
               </p>
             </div>
-            
+
             <div className="p-8 flex flex-col gap-3">
               <label className="flex items-start gap-3 p-4 bg-slate-50 rounded-2xl cursor-pointer hover:bg-slate-100 transition-colors border border-slate-100 mb-2">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   checked={stockConfirmChecked}
                   onChange={(e) => setStockConfirmChecked(e.target.checked)}
                   className="mt-1 w-4 h-4 rounded border-slate-300 text-red-600 focus:ring-red-500"
                 />
                 <span className="text-xs font-bold text-slate-600 leading-tight">
-                  Je confirme que je vais fournir la quantité manquante ({ (showStockWarning.needed - showStockWarning.available).toFixed(1) }m) pour cette commande.
+                  Je confirme que je vais fournir la quantité manquante ({(showStockWarning.needed - showStockWarning.available).toFixed(1)}m) pour cette commande.
                 </span>
               </label>
 
-              <button 
+              <button
                 disabled={!stockConfirmChecked}
                 onClick={() => {
                   const cmd = showStockWarning.order;
                   setShowStockWarning(null);
                   handleSendToCutter(cmd, true);
                 }}
-                className={`w-full py-4 rounded-2xl font-black text-sm transition shadow-lg ${
-                  stockConfirmChecked 
-                    ? 'bg-red-600 hover:bg-red-700 text-white shadow-red-200' 
+                className={`w-full py-4 rounded-2xl font-black text-sm transition shadow-lg ${stockConfirmChecked
+                    ? 'bg-red-600 hover:bg-red-700 text-white shadow-red-200'
                     : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
-                }`}
+                  }`}
               >
                 CONTINUER QUAND MÊME
               </button>
-              <button 
+              <button
                 onClick={() => setShowStockWarning(null)}
                 className="w-full py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-bold text-sm transition"
               >
@@ -584,6 +753,7 @@ export default function Commandes() {
                     <h3 className="text-xs font-black text-slate-400 uppercase text-center mb-6">Résultat Prévisionnel</h3>
                     <div className="flex justify-between text-xs font-bold uppercase border-b border-slate-200 pb-3"><span>Matières:</span><span>{matieres.toFixed(2)} DH</span></div>
                     <div className="flex justify-between text-xs font-bold uppercase border-b border-slate-200 pb-3"><span>Main d'œuvre:</span><span>{mo.toFixed(2)} DH</span></div>
+                    <div className="flex justify-between text-xs font-bold uppercase border-b border-slate-200 pb-3"><span>Charges fixes:</span><span>{charges.toFixed(2)} DH</span></div>
                     <div className="flex justify-between text-sm font-black text-indigo-700 pt-2 uppercase"><span>Coût de revient:</span><span>{coutRevient.toFixed(2)} DH</span></div>
                   </div>
                   <div className="bg-green-600 text-white rounded-[2rem] p-8 shadow-2xl">
@@ -614,7 +784,15 @@ export default function Commandes() {
                 <label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">{t('tissu_required_stock', lang)}</label>
                 <select
                   value={form.tissu || ''}
-                  onChange={e => setForm({ ...form, tissu: e.target.value })}
+                  onChange={e => {
+                    const val = e.target.value;
+                    const selectedRoll = tissus.find(t => `${t.type} ${t.couleur}` === val);
+                    setForm({ 
+                      ...form, 
+                      tissu: val, 
+                      tissuPrix: selectedRoll ? selectedRoll.prixMetre : form.tissuPrix 
+                    });
+                  }}
                   className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
                 >
                   <option value="">{t('choose_fabric_stock', lang)}</option>
@@ -625,13 +803,31 @@ export default function Commandes() {
                   ))}
                   <option value="Autre">{t('fabric_not_in_stock', lang)}</option>
                 </select>
+                
+                {/* Tissu Sourcing Toggle */}
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, tissuSourcing: 'maison' })}
+                    className={`flex-1 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${form.tissuSourcing === 'maison' ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-white border-slate-200 text-slate-400 hover:border-indigo-400'}`}
+                  >
+                    Tissu Maison
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, tissuSourcing: 'client' })}
+                    className={`flex-1 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${form.tissuSourcing === 'client' ? 'bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-100' : 'bg-white border-slate-200 text-slate-400 hover:border-amber-400'}`}
+                  >
+                    Tissu Client
+                  </button>
+                </div>
                 {/* Stock Linkage: Real-time Indicator */}
                 {form.modele && form.tissu && form.quantite > 0 && (() => {
                   const fiche = fiches.find(f => f.modele === form.modele);
                   const selectedRoll = tissus.find(t => `${t.type} ${t.couleur}` === form.tissu);
                   const conso = fiche?.tissuConsommation || 0;
                   const requis = Number((conso * (form.quantite || 0)).toFixed(2));
-                  
+
                   if (!fiche) return <p className="text-[10px] text-amber-500 font-bold mt-1">⚠️ Fiche technique non trouvée pour calcul</p>;
                   if (!selectedRoll) return null;
 
@@ -645,24 +841,24 @@ export default function Commandes() {
                         <p className="text-xs font-bold text-slate-700">Besoin: {requis}m | Dispo: {selectedRoll.metrage}m</p>
                       </div>
                       <div className="flex flex-col items-end gap-2">
-                        {!isOk && <span className="text-[10px] font-black bg-red-600 text-white px-2 py-0.5 rounded-full">-{ (requis - selectedRoll.metrage).toFixed(1) }m</span>}
+                        {!isOk && <span className="text-[10px] font-black bg-red-600 text-white px-2 py-0.5 rounded-full">-{(requis - selectedRoll.metrage).toFixed(1)}m</span>}
                         {selectedRoll.fournisseur && (
                           <div className="flex items-center gap-2">
-                             <div className="text-right">
-                               <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Fournisseur</p>
-                               <p className="text-[10px] font-black text-indigo-600 leading-none">{selectedRoll.fournisseur}</p>
-                             </div>
-                             {selectedRoll.fournisseurTel && (
-                               <a 
-                                 href={`https://wa.me/${selectedRoll.fournisseurTel.replace(/\s+/g, '')}`} 
-                                 target="_blank" 
-                                 rel="noopener noreferrer"
-                                 title={`Appeler ${selectedRoll.fournisseur}`}
-                                 className="p-1.5 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition shadow-sm"
-                               >
-                                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.347-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.876 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" /></svg>
-                               </a>
-                             )}
+                            <div className="text-right">
+                              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Fournisseur</p>
+                              <p className="text-[10px] font-black text-indigo-600 leading-none">{selectedRoll.fournisseur}</p>
+                            </div>
+                            {selectedRoll.fournisseurTel && (
+                              <a
+                                href={`https://wa.me/${selectedRoll.fournisseurTel.replace(/\s+/g, '')}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title={`Appeler ${selectedRoll.fournisseur}`}
+                                className="p-1.5 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition shadow-sm"
+                              >
+                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.347-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.876 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" /></svg>
+                              </a>
+                            )}
                           </div>
                         )}
                       </div>
@@ -674,6 +870,22 @@ export default function Commandes() {
             <div className="grid grid-cols-2 gap-4">
               <div><label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">{t('quantite', lang)} (PCS)</label><input type="number" value={form.quantite || 0} onChange={e => setForm({ ...form, quantite: parseInt(e.target.value) || 0 })} className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none" /></div>
               <div><label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">{t('price_u', lang)} (MAD)</label><input type="number" value={form.prix || 0} onChange={e => setForm({ ...form, prix: parseFloat(e.target.value) || 0 })} className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none" /></div>
+              <div><label className="block text-xs font-black text-amber-600 uppercase mb-2 ml-1">Avance (التسبيق)</label><input type="number" value={form.avance || 0} onChange={e => setForm({ ...form, avance: parseFloat(e.target.value) || 0 })} className="w-full px-5 py-4 border border-amber-200 bg-amber-50/30 rounded-2xl text-sm font-black text-emerald-700 outline-none" /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="flex justify-between items-center mb-2 ml-1">
+                  <label className="block text-xs font-black text-slate-400 uppercase">Prix Tissu (DH/m)</label>
+                  {form.tissu && tissus.find(t => `${t.type} ${t.couleur}` === form.tissu) && (
+                    <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">✓ AUTO</span>
+                  )}
+                </div>
+                <input type="number" step="0.01" value={form.tissuPrix || 0} onChange={e => setForm({ ...form, tissuPrix: parseFloat(e.target.value) || 0 })} className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none bg-slate-50/50" />
+              </div>
+              <div>
+                <label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">Main d'œuvre (PCS)</label>
+                <input type="number" step="0.01" value={form.coutMainOeuvre || 0} onChange={e => setForm({ ...form, coutMainOeuvre: parseFloat(e.target.value) || 0 })} className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none bg-slate-50/50" />
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div><label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">{t('date_emission', lang)}</label><input type="date" value={form.dateCommande || ''} onChange={e => setForm({ ...form, dateCommande: e.target.value })} className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none" /></div>
@@ -696,6 +908,42 @@ export default function Commandes() {
                 </div>
               </div>
             </div>
+            {(() => {
+              const fiche = fiches.find(f => f.modele === form.modele);
+              const matieres = (fiche?.tissuConsommation || 0) * (form.tissuPrix || 0) * (form.quantite || 0);
+              const mo = (form.coutMainOeuvre || 0) * (form.quantite || 0);
+              const coutRevient = matieres + mo;
+              const totalVente = (form.quantite || 0) * (form.prix || 0);
+
+              return (
+                <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col gap-2 shadow-inner">
+                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-400">
+                    <span>Aperçu Financier</span>
+                    <span className="text-indigo-600">Détails de la Commande</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 pt-2">
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase">Coût Matière</span>
+                      <span className="text-sm font-black text-slate-700">{(form.tissuSourcing === 'maison' ? matieres : 0).toFixed(2)} DH</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase">Main d'œuvre</span>
+                      <span className="text-sm font-black text-slate-700">{mo.toFixed(2)} DH</span>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase">Reste à payer</span>
+                      <span className="text-sm font-black text-rose-600">
+                        {(totalVente - (form.avance || 0)).toFixed(2)} DH
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center px-4 py-2 bg-indigo-50 rounded-xl mt-1">
+                    <span className="text-[10px] font-black text-indigo-400 uppercase">Total: {totalVente.toFixed(2)} DH</span>
+                    <span className="text-[10px] font-black text-emerald-600 uppercase">Avance: {(form.avance || 0).toFixed(2)} DH</span>
+                  </div>
+                </div>
+              );
+            })()}
             <div className="flex justify-end gap-3 pt-6"><button onClick={() => setShowModal(false)} className="px-6 py-4 text-xs font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest">{t('cancel', lang)}</button><button onClick={save} className="px-10 py-4 bg-indigo-600 text-white rounded-2xl text-xs font-black hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all uppercase tracking-widest">{t('save', lang)}</button></div>
           </div>
         </div>
@@ -716,12 +964,12 @@ export default function Commandes() {
               <h2 className="text-xl font-black text-slate-800 tracking-tight leading-none">Nouveau Pointage</h2>
               <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest">{selectedCmd.reference}</span>
             </div>
-            
+
             <div className="space-y-5">
               <div>
                 <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">Employé (Ouvrier)</label>
-                <select 
-                  value={ptForm.employeId || ''} 
+                <select
+                  value={ptForm.employeId || ''}
                   onChange={e => setPtForm({ ...ptForm, employeId: e.target.value })}
                   className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl text-sm font-bold outline-none bg-slate-50 focus:bg-white focus:border-indigo-500 transition-all"
                 >
@@ -732,9 +980,9 @@ export default function Commandes() {
 
               <div>
                 <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest text-indigo-600">Pièces Réussies (Bonnes)</label>
-                <input 
-                  type="number" 
-                  value={ptForm.piecesCompletees || ''} 
+                <input
+                  type="number"
+                  value={ptForm.piecesCompletees || ''}
                   onChange={e => setPtForm({ ...ptForm, piecesCompletees: parseInt(e.target.value) || 0 })}
                   className="w-full px-5 py-4 border-2 border-indigo-50 rounded-2xl text-sm font-bold outline-none bg-indigo-50/30 focus:bg-white focus:border-indigo-500 transition-all"
                   placeholder="0"
@@ -744,9 +992,9 @@ export default function Commandes() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest text-red-500">Perdues (Rebut)</label>
-                  <input 
-                    type="number" 
-                    value={ptForm.rebut || ''} 
+                  <input
+                    type="number"
+                    value={ptForm.rebut || ''}
                     onChange={e => setPtForm({ ...ptForm, rebut: parseInt(e.target.value) || 0 })}
                     className="w-full px-5 py-4 border-2 border-red-50 rounded-2xl text-sm font-bold outline-none bg-red-50/30 focus:bg-white focus:border-red-500 transition-all"
                     placeholder="0"
@@ -754,9 +1002,9 @@ export default function Commandes() {
                 </div>
                 <div>
                   <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest text-amber-500">À Refaire (Retouche)</label>
-                  <input 
-                    type="number" 
-                    value={ptForm.retouche || ''} 
+                  <input
+                    type="number"
+                    value={ptForm.retouche || ''}
                     onChange={e => setPtForm({ ...ptForm, retouche: parseInt(e.target.value) || 0 })}
                     className="w-full px-5 py-4 border-2 border-amber-50 rounded-2xl text-sm font-bold outline-none bg-amber-50/30 focus:bg-white focus:border-amber-500 transition-all"
                     placeholder="0"
@@ -767,8 +1015,8 @@ export default function Commandes() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">Phase</label>
-                  <select 
-                    value={ptForm.phase || ''} 
+                  <select
+                    value={ptForm.phase || ''}
                     onChange={e => setPtForm({ ...ptForm, phase: e.target.value as Phase })}
                     className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl text-sm font-bold outline-none bg-slate-50 focus:bg-white focus:border-indigo-500 transition-all"
                   >
@@ -777,9 +1025,9 @@ export default function Commandes() {
                 </div>
                 <div>
                   <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">Date</label>
-                  <input 
-                    type="date" 
-                    value={ptForm.date || ''} 
+                  <input
+                    type="date"
+                    value={ptForm.date || ''}
                     onChange={e => setPtForm({ ...ptForm, date: e.target.value })}
                     className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl text-sm font-bold outline-none bg-slate-50 focus:bg-white focus:border-indigo-500 transition-all"
                   />
@@ -789,8 +1037,8 @@ export default function Commandes() {
 
             <div className="flex justify-end gap-3 pt-6">
               <button onClick={() => setShowPointageModal(false)} className="px-6 py-4 text-xs font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest">Annuler</button>
-              <button 
-                onClick={savePointage} 
+              <button
+                onClick={savePointage}
                 className="px-10 py-4 bg-indigo-600 text-white rounded-2xl text-xs font-black hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all uppercase tracking-widest"
               >
                 Valider
@@ -813,7 +1061,7 @@ export default function Commandes() {
               </div>
               <div className="flex items-center gap-3">
                 <button onClick={() => setShowFacturePreview(false)} className="px-5 py-2.5 text-xs font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest transition-all">Annuler</button>
-                <button 
+                <button
                   onClick={handleConfirmFacture}
                   className="flex items-center gap-2 px-8 py-3 bg-emerald-600 text-white rounded-2xl text-xs font-black hover:bg-emerald-700 shadow-xl shadow-emerald-100 transition-all uppercase tracking-widest"
                 >
@@ -823,13 +1071,33 @@ export default function Commandes() {
             </div>
 
             <div className="p-12 bg-slate-50/50">
-               <InvoicePRO 
-                 id={`facture-pro-view-${selectedFacture.id}`}
-                 facture={selectedFacture}
-                 commande={commandes.find(c => c.id === selectedFacture.commandeId)}
-                 company={company}
-               />
+              <InvoicePRO
+                id={`facture-pro-view-${selectedFacture.id}`}
+                facture={selectedFacture}
+                commande={commandes.find(c => c.id === selectedFacture.commandeId)}
+                company={company}
+              />
             </div>
+          </div>
+        </div>
+      )}
+      {/* SUCCESS BOX */}
+      {showSuccess && (
+        <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[300] animate-in slide-in-from-top duration-500 fill-mode-both">
+          <div className="bg-white rounded-3xl shadow-2xl shadow-emerald-200/50 border-2 border-emerald-100 p-2 pl-6 pr-6 flex items-center gap-4 min-w-[300px]">
+            <div className="w-10 h-10 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 shadow-sm border border-emerald-200">
+              <CheckCircle className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-black text-slate-800 leading-none mb-1">{showSuccess.message}</p>
+              {showSuccess.sub && <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{showSuccess.sub}</p>}
+            </div>
+            <button 
+              onClick={() => setShowSuccess(null)}
+              className="ml-4 w-8 h-8 hover:bg-slate-50 rounded-xl flex items-center justify-center transition-colors"
+            >
+              <X className="w-4 h-4 text-slate-400" />
+            </button>
           </div>
         </div>
       )}

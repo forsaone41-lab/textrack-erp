@@ -3,7 +3,7 @@ import { Plus, Search, Edit2, Trash2, Ruler, Calculator, Camera, FileText, Downl
 import {
   FicheTechnique, StockTissu, loadData, saveRecord, deleteRecord, genId,
 } from '../types';
-import { printFicheTechnique } from '../utils/print';
+import { printFicheTechnique as printFT } from '../utils/print';
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
 
@@ -23,10 +23,10 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
         {/* Photo Section */}
         <div className={`relative w-full sm:w-56 aspect-[4/5] sm:aspect-auto bg-slate-50 border-slate-100/50 overflow-hidden group/image ${isAr ? 'border-l' : 'border-r'}`}>
           {f.photo ? (
-            <img 
-              src={f.photo} 
-              alt={f.modele} 
-              className="w-full h-full object-cover group-hover/image:scale-110 transition-transform duration-700" 
+            <img
+              src={f.photo}
+              alt={f.modele}
+              className="w-full h-full object-cover group-hover/image:scale-110 transition-transform duration-700"
             />
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-gradient-to-br from-slate-50 to-slate-100">
@@ -34,11 +34,11 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
               <span className="text-[10px] font-bold tracking-widest uppercase opacity-40">{t('aucun_visuel', lang)}</span>
             </div>
           )}
-          
+
           {/* Badges & Quick Actions on Image */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover/image:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
             {f.photo && (
-              <button 
+              <button
                 onClick={() => downloadFile(f.photo!, `Photo_${f.modele}.png`)}
                 className="w-full py-2 bg-white/20 backdrop-blur-md text-white border border-white/30 rounded-xl text-[10px] font-bold flex items-center justify-center gap-2 hover:bg-white hover:text-indigo-600 transition-all"
               >
@@ -71,7 +71,7 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
                 {f.client}
               </p>
             </div>
-            
+
             <div className={`flex gap-1 ${isAr ? 'flex-row-reverse' : ''}`}>
               <button onClick={() => openEdit(f)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all">
                 <Edit2 className="w-4 h-4" />
@@ -92,25 +92,24 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3">{t('assets_docs', lang)}</p>
               <div className="flex flex-col gap-2">
                 <div className={`grid grid-cols-2 gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
-                  <button 
+                  <button
                     disabled={!f.patronagePhoto}
                     onClick={() => downloadFile(f.patronagePhoto!, f.patronageFileName || `Patron_${f.modele}`)}
-                    className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border text-[10px] font-bold transition-all ${
-                      f.patronagePhoto 
-                        ? 'bg-emerald-50 border-emerald-100 text-emerald-700 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 hover:shadow-lg hover:shadow-emerald-200' 
+                    className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border text-[10px] font-bold transition-all ${f.patronagePhoto
+                        ? 'bg-emerald-50 border-emerald-100 text-emerald-700 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 hover:shadow-lg hover:shadow-emerald-200'
                         : 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed opacity-50'
-                    }`}
+                      }`}
                   >
                     <FileText className="w-3.5 h-3.5" /> {isAr ? 'الباتيرون' : 'PATRON'}
                   </button>
-                  <button 
+                  <button
                     onClick={() => printFicheTechnique(f)}
                     className="flex items-center justify-center gap-2 px-3 py-2.5 bg-slate-900 border border-slate-900 text-white rounded-xl text-[10px] font-bold hover:bg-indigo-600 hover:border-indigo-600 transition-all shadow-lg shadow-slate-200 hover:shadow-indigo-200"
                   >
                     <Download className="w-3.5 h-3.5" /> {isAr ? 'ملف PDF' : 'FICHE PDF'}
                   </button>
                 </div>
-                <button 
+                <button
                   onClick={() => onViewMesures(f)}
                   className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-white border border-indigo-200 text-indigo-600 rounded-xl text-[10px] font-bold hover:bg-indigo-50 hover:border-indigo-500 transition-all shadow-sm"
                 >
@@ -238,7 +237,8 @@ export default function FichesTechniques() {
       id: fId,
       modele: form.modele || '', description: form.description || '',
       client: form.client || '', tailles: form.tailles || [], mesures: form.mesures || [],
-      tissuConsommation: form.tissuConsommation || 0, type: form.type || '',
+      tissuConsommation: form.tissuConsommation || 0,
+      type: form.type || '',
       photo: form.photo, patronagePhoto: form.patronagePhoto,
       patronageFileName: form.patronageFileName,
       createdAt: form.createdAt || new Date().toISOString().split('T')[0],
@@ -287,9 +287,9 @@ export default function FichesTechniques() {
       (form.tailles || []).forEach(t => {
         initialValeurs[t] = 0;
       });
-      setForm({ 
-        ...form, 
-        mesures: [...(form.mesures || []), { nom: name.trim(), valeurs: initialValeurs }] 
+      setForm({
+        ...form,
+        mesures: [...(form.mesures || []), { nom: name.trim(), valeurs: initialValeurs }]
       });
       if (!manualName) setNewMesureNom('');
     }
@@ -359,7 +359,7 @@ export default function FichesTechniques() {
             </div>
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
               {filtered.filter(f => f.patronagePhoto).map(f => (
-                <FicheCard key={f.id} f={f} openEdit={openEdit} remove={remove} downloadFile={downloadFile} printFicheTechnique={printFicheTechnique} onViewMesures={setViewMesuresFiche} />
+                <FicheCard key={f.id} f={f} openEdit={openEdit} remove={remove} downloadFile={downloadFile} printFicheTechnique={printFT} onViewMesures={setViewMesuresFiche} />
               ))}
             </div>
           </div>
@@ -379,7 +379,7 @@ export default function FichesTechniques() {
             </div>
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
               {filtered.filter(f => !f.patronagePhoto).map(f => (
-                <FicheCard key={f.id} f={f} openEdit={openEdit} remove={remove} downloadFile={downloadFile} printFicheTechnique={printFicheTechnique} onViewMesures={setViewMesuresFiche} />
+                <FicheCard key={f.id} f={f} openEdit={openEdit} remove={remove} downloadFile={downloadFile} printFicheTechnique={printFT} onViewMesures={setViewMesuresFiche} />
               ))}
             </div>
           </div>
@@ -608,9 +608,9 @@ export default function FichesTechniques() {
                           <button onClick={() => setForm({ ...form, photo: undefined })} className={`absolute top-2 ${isAr ? 'left-2' : 'right-2'} p-1.5 bg-red-500 text-white rounded-full shadow-md z-20 hover:bg-red-600 transition-colors`}>
                             <span className="text-xs leading-none">×</span>
                           </button>
-                          <button 
+                          <button
                             type="button"
-                            onClick={() => downloadFile(form.photo!, `Photo_${form.modele || 'fiche'}.png`)} 
+                            onClick={() => downloadFile(form.photo!, `Photo_${form.modele || 'fiche'}.png`)}
                             className={`absolute bottom-2 ${isAr ? 'left-2' : 'right-2'} flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-lg shadow-lg z-20 hover:bg-indigo-700 transition-all font-bold text-[10px]`}
                           >
                             <Download className="w-3 h-3" /> {t('download_label', lang)}
@@ -641,9 +641,9 @@ export default function FichesTechniques() {
                           <button onClick={() => setForm({ ...form, patronagePhoto: undefined, patronageFileName: undefined })} className={`absolute top-2 ${isAr ? 'left-2' : 'right-2'} p-1.5 bg-red-500 text-white rounded-full shadow-md z-20 hover:bg-red-600 transition-colors`}>
                             <span className="text-xs leading-none">×</span>
                           </button>
-                          <button 
+                          <button
                             type="button"
-                            onClick={() => downloadFile(form.patronagePhoto!, form.patronageFileName || 'patronage')} 
+                            onClick={() => downloadFile(form.patronagePhoto!, form.patronageFileName || 'patronage')}
                             className={`absolute bottom-2 ${isAr ? 'left-2' : 'right-2'} flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg shadow-lg z-20 hover:bg-emerald-700 transition-all font-bold text-[10px]`}
                           >
                             <Download className="w-3 h-3" /> {t('download_label', lang)}
@@ -681,11 +681,10 @@ export default function FichesTechniques() {
                           key={t}
                           type="button"
                           onClick={() => setForm({ ...form, type: t })}
-                          className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-all ${
-                            form.type === t 
-                              ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-200' 
+                          className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-all ${form.type === t
+                              ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-200'
                               : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-500 hover:text-indigo-600 hover:shadow-sm'
-                          }`}
+                            }`}
                         >
                           {t}
                         </button>
@@ -703,14 +702,14 @@ export default function FichesTechniques() {
                   <textarea value={form.description || ''} onChange={e => setForm({ ...form, description: e.target.value })}
                     rows={2} className={`w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors resize-none ${isAr ? 'text-right' : ''}`} />
                 </div>
-                <div>
-                  <label className={`block text-xs font-semibold text-slate-600 mb-1.5 ${isAr ? 'text-right' : ''}`}>
-                    <Ruler className="w-3.5 h-3.5 inline mr-1 text-indigo-400" />
-                    {t('conso_tissu', lang)}
-                  </label>
-                  <input type="number" step="0.1" value={form.tissuConsommation || 0} onChange={e => setForm({ ...form, tissuConsommation: parseFloat(e.target.value) })}
-                    className={`w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors ${isAr ? 'text-right' : ''}`} />
-                </div>
+                  <div>
+                    <label className={`block text-xs font-semibold text-slate-600 mb-1.5 ${isAr ? 'text-right' : ''}`}>
+                      <Ruler className="w-3.5 h-3.5 inline mr-1 text-indigo-400" />
+                      {t('conso_tissu', lang)}
+                    </label>
+                    <input type="number" step="0.01" value={form.tissuConsommation || 0} onChange={e => setForm({ ...form, tissuConsommation: parseFloat(e.target.value) })}
+                      className={`w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors ${isAr ? 'text-right' : ''}`} />
+                  </div>
               </div>
 
               {/* ── Tailles ── */}
@@ -835,7 +834,7 @@ export default function FichesTechniques() {
       {viewMesuresFiche && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-[60] p-4" dir={isAr ? 'rtl' : 'ltr'}>
           <div className="bg-white rounded-[40px] w-full max-w-5xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300 flex flex-col max-h-[95vh]">
-            
+
             {/* Header */}
             <div className={`p-6 sm:p-8 border-b border-slate-100 flex items-center justify-between bg-white flex-shrink-0 ${isAr ? 'flex-row-reverse' : ''}`}>
               <div className={`flex items-center gap-5 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
@@ -851,10 +850,10 @@ export default function FichesTechniques() {
                 <span className="text-3xl font-light group-hover:rotate-90 transition-transform duration-300">×</span>
               </button>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto p-6 sm:p-10">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                
+
                 {/* Left Column: Visual & Info */}
                 <div className="lg:col-span-4 space-y-8">
                   <div className="space-y-4">
@@ -864,7 +863,7 @@ export default function FichesTechniques() {
                         <>
                           <img src={viewMesuresFiche.photo} alt={viewMesuresFiche.modele} className="w-full h-full object-cover group-hover/photo:scale-105 transition-transform duration-1000" />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover/photo:opacity-100 transition-opacity duration-300 flex items-end p-6">
-                            <button 
+                            <button
                               onClick={() => downloadFile(viewMesuresFiche.photo!, `Photo_${viewMesuresFiche.modele}.png`)}
                               className="w-full py-3 bg-white/20 backdrop-blur-xl border border-white/30 text-white rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-white hover:text-indigo-600 transition-all"
                             >
@@ -917,9 +916,9 @@ export default function FichesTechniques() {
                           {viewMesuresFiche.mesures.map((m, i) => (
                             <tr key={i} className="hover:bg-indigo-50/30 transition-colors group/row">
                               <td className={`px-8 py-4 font-bold text-slate-700 border-r border-slate-100 bg-slate-50/30 group-hover/row:bg-white ${isAr ? 'text-right' : 'text-left'}`}>{m.nom}</td>
-                              {viewMesuresFiche.tailles.map(t => (
-                                <td key={t} className="px-6 py-4 text-center font-black text-indigo-600">
-                                  {m.valeurs?.[t] || 0}<span className="text-[10px] font-normal text-slate-400 ml-1">{t('cm', lang)}</span>
+                              {viewMesuresFiche.tailles.map(taille => (
+                                <td key={taille} className="px-6 py-4 text-center font-black text-indigo-600">
+                                  {m.valeurs?.[taille] || 0}<span className="text-[10px] font-normal text-slate-400 ml-1">{t('cm', lang)}</span>
                                 </td>
                               ))}
                             </tr>
@@ -934,19 +933,19 @@ export default function FichesTechniques() {
                       <p className="text-[11px] text-slate-300 mt-2">{isAr ? 'يرجى تعديل البطاقة لإضافة القياسات' : 'Veuillez éditer la fiche pour ajouter des mesures'}</p>
                     </div>
                   )}
-                  
+
                   {/* Export Options */}
                   <div className={`pt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 ${isAr ? 'flex-row-reverse' : ''}`}>
-                    <button 
-                      onClick={() => printFicheTechnique(viewMesuresFiche)}
+                    <button
+                      onClick={() => printFT(viewMesuresFiche!)}
                       className="flex items-center justify-center gap-3 px-8 py-5 bg-indigo-600 text-white rounded-[24px] font-black text-[11px] uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 hover:shadow-indigo-200 active:scale-95"
                     >
                       <Download className="w-4 h-4" /> {t('export_pdf', lang)}
                     </button>
-                    <button 
+                    <button
                       onClick={() => {
                         // Simuler un pack en téléchargeant la photo et ouvrant le PDF
-                        printFicheTechnique(viewMesuresFiche);
+                        printFT(viewMesuresFiche!);
                         if (viewMesuresFiche.photo) downloadFile(viewMesuresFiche.photo, `Photo_${viewMesuresFiche.modele}.png`);
                         if (viewMesuresFiche.patronagePhoto) downloadFile(viewMesuresFiche.patronagePhoto, viewMesuresFiche.patronageFileName || `Patron_${viewMesuresFiche.modele}`);
                       }}

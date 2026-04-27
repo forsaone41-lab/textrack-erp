@@ -4,14 +4,15 @@ import {
   TrendingUp, TrendingDown, DollarSign, Percent,
   Receipt, ArrowUpRight, ArrowRight,
   AlertCircle, CheckCircle, Clock, Download,
+  Layers, Package, Users, ShoppingCart
 } from 'lucide-react';
 import { generatePDF } from '../utils/pdf';
-import { printBilan, exportFacturesCSV, exportChargesCSV } from '../utils/print';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell,
+  PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
-import { loadData, Facture, Charge, Commande, CATEGORIE_LABELS, CATEGORIE_COLORS } from '../types';
+import { loadData, Facture, Charge, Commande, FicheTechnique, StockTissu } from '../types';
+import { useLang } from '../contexts/LangContext';
 
 const MONTHS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
 
@@ -25,63 +26,135 @@ function KpiCard({
   return (
     <button
       onClick={onClick}
-      className={`bg-white rounded-2xl border p-5 shadow-sm text-left w-full transition-all hover:shadow-md hover:-translate-y-0.5 ${color}`}
+      className={`bg-white rounded-3xl border p-6 shadow-sm text-left w-full transition-all hover:shadow-xl hover:-translate-y-1 border-slate-100 ${color}`}
     >
-      <div className="flex items-start justify-between mb-3">
-        <p className="text-xs font-semibold text-current opacity-70 uppercase tracking-wider">{label}</p>
-        <div className="w-9 h-9 rounded-xl bg-current/10 flex items-center justify-center flex-shrink-0">
-          <Icon className="w-4 h-4" />
+      <div className="flex items-start justify-between mb-4">
+        <p className="text-[10px] font-black text-current opacity-60 uppercase tracking-[0.2em]">{label}</p>
+        <div className="w-12 h-12 rounded-2xl bg-current/10 flex items-center justify-center flex-shrink-0">
+          <Icon className="w-5 h-5" />
         </div>
       </div>
-      <p className="text-2xl font-black tracking-tight">{value}</p>
-      {sub && <p className="text-xs opacity-60 mt-1">{sub}</p>}
-      {trend && (
-        <div className="mt-2">
-          {trend === 'up' && <TrendingUp className="w-3.5 h-3.5 inline opacity-60" />}
-          {trend === 'down' && <TrendingDown className="w-3.5 h-3.5 inline opacity-60" />}
-        </div>
-      )}
+      <p className="text-3xl font-black tracking-tight">{value}</p>
+      {sub && <p className="text-xs opacity-50 mt-1.5 font-bold">{sub}</p>}
     </button>
   );
 }
 
 export default function BilanFinancier() {
   const navigate = useNavigate();
+  const { lang, isAr } = useLang();
   const [factures, setFactures] = useState<Facture[]>([]);
   const [charges, setCharges] = useState<Charge[]>([]);
   const [commandes, setCommandes] = useState<Commande[]>([]);
+  const [fiches, setFiches] = useState<FicheTechnique[]>([]);
+  const [tissus, setTissus] = useState<StockTissu[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
 
   useEffect(() => {
     Promise.all([
       loadData<Facture>('factures'),
       loadData<Charge>('charges'),
-      loadData<Commande>('commandes')
-    ]).then(([f, c, cmd]) => {
+      loadData<Commande>('commandes'),
+      loadData<FicheTechnique>('fiches'),
+      loadData<StockTissu>('tissus'),
+      loadData<any>('users')
+    ]).then(([f, c, cmd, ft, t, u]) => {
       setFactures(f);
       setCharges(c);
       setCommandes(cmd);
+      setFiches(ft);
+      setTissus(t);
+      setClients(u.filter((user: any) => user.role === 'client'));
     });
   }, []);
 
   const today = new Date();
   const currentYear = today.getFullYear();
 
+  // ADVANCED PROFITABILITY CALCULATION
+  const orderProfits = useMemo(() => {
+    return commandes.map(cmd => {
+      const fiche = fiches.find(f => f.modele === cmd.modele);
+      const revenue = (cmd.prix || 0) * (cmd.quantite || 0);
+
+      // Material Cost
+      let fabricCost = 0;
+      if (cmd.tissuSourcing === 'maison' && fiche) {
+        const roll = tissus.find(t => `${t.type} ${t.couleur}` === cmd.tissu);
+        const pricePerMeter = roll?.prixMetre || cmd.tissuPrix || 0;
+        fabricCost = (fiche.tissuConsommation * pricePerMeter) * cmd.quantite;
+      }
+
+      // Labor Cost
+      const laborCost = (cmd.coutMainOeuvre || 0) * cmd.quantite;
+
+      const totalCost = fabricCost + laborCost;
+      const profit = revenue - totalCost;
+      const margin = revenue > 0 ? (profit / revenue) * 100 : 0;
+
+      return {
+        ...cmd,
+        revenue,
+        fabricCost,
+        laborCost,
+        totalCost,
+        profit,
+        margin
+      };
+    });
+  }, [commandes, fiches, tissus]);
+
+  // FIXED: Accurate Global Debt Calculation (Per Client)
+  const totalDettes = useMemo(() => {
+    return (clients || []).reduce((sum, client) => {
+      const clientName = (client.nom || '').toLowerCase();
+      const clientCmds = (commandes || []).filter(c => (c.client || '').toLowerCase() === clientName);
+      const clientFactures = (factures || []).filter(f => (f.client || '').toLowerCase() === clientName);
+      
+      const revenue = clientCmds.reduce((s, c) => s + ((c.quantite || 0) * (c.prix || 0)), 0);
+      const advances = clientCmds.reduce((s, c) => s + (c.avance || 0), 0);
+      const paidInvoices = clientFactures.filter(f => f.statut === 'payée').reduce((s, f) => s + (f.montant || 0), 0);
+      
+      const paid = Math.max(advances, paidInvoices);
+      return sum + Math.max(0, revenue - paid);
+    }, 0);
+  }, [clients, commandes, factures]);
+
+  const totalRevenue = orderProfits.reduce((sum, p) => sum + p.revenue, 0);
+  const totalCosts = orderProfits.reduce((sum, p) => sum + p.totalCost, 0);
+  const totalProfit = totalRevenue - totalCosts;
+  const totalAvances = orderProfits.reduce((sum, p) => sum + (p.avance || 0), 0);
+  const netMargin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+
   const stats = useMemo(() => {
-    const ca = factures.filter(f => f.statut === 'payée').reduce((a, f) => a + f.montant, 0);
-    const caTotal = factures.reduce((a, f) => a + f.montant, 0);
-    const caAttente = factures.filter(f => f.statut === 'en_attente').reduce((a, f) => a + f.montant, 0);
-    const caRetard = factures.filter(f => f.statut !== 'payée' && f.echeance && f.echeance < today.toISOString().split('T')[0]).reduce((a, f) => a + f.montant, 0);
+    // NEW ACCURATE CALCULATION: Total Cash In (Advances + Paid Invoices)
+    const ca = (clients || []).reduce((sum, client) => {
+      const clientName = (client.nom || '').toLowerCase();
+      const clientCmds = (commandes || []).filter(c => (c.client || '').toLowerCase() === clientName);
+      const clientFactures = (factures || []).filter(f => (f.client || '').toLowerCase() === clientName);
+      
+      const advances = clientCmds.reduce((s, c) => s + (c.avance || 0), 0);
+      const paidInvoices = clientFactures.filter(f => f.statut === 'payée').reduce((s, f) => s + (f.montant || 0), 0);
+      
+      return sum + Math.max(advances, paidInvoices);
+    }, 0);
 
+    const caTotal = orderProfits.reduce((a, p) => a + p.revenue, 0);
+    const caAttente = Math.max(0, caTotal - ca);
+
+    // Fixed Charges
     const totalCharges = charges.filter(c => c.statut === 'payé').reduce((a, c) => a + c.montant, 0);
-    const chargesAttente = charges.filter(c => c.statut !== 'payé').reduce((a, c) => a + c.montant, 0);
+    const totalChargesPending = charges.filter(c => c.statut === 'en_attente').reduce((a, c) => a + c.montant, 0);
+    
+    // Direct Costs from Orders
+    const totalOrderCosts = orderProfits.reduce((a, op) => a + op.totalCost, 0);
+    
+    const globalProfit = ca - totalCharges; 
+    const marge = ca > 0 ? Math.round((globalProfit / ca) * 100) : 0;
 
-    const benefice = ca - totalCharges;
-    const marge = ca > 0 ? Math.round((benefice / ca) * 100) : 0;
+    return { ca, caTotal, caAttente, totalCharges, totalChargesPending, totalOrderCosts, globalProfit, marge };
+  }, [factures, charges, orderProfits]);
 
-    return { ca, caTotal, caAttente, caRetard, totalCharges, chargesAttente, benefice, marge };
-  }, [factures, charges]);
-
-  // Monthly data for this year
   const monthlyData = useMemo(() => {
     return MONTHS_FR.map((month, i) => {
       const mStr = String(i + 1).padStart(2, '0');
@@ -95,399 +168,233 @@ export default function BilanFinancier() {
         .filter(c => c.statut === 'payé' && c.date?.startsWith(prefix))
         .reduce((a, c) => a + c.montant, 0);
 
-      return { month, revenue, depenses, benefice: revenue - depenses };
+      return { month, revenue, depenses, profit: revenue - depenses };
     });
   }, [factures, charges, currentYear]);
 
-  // Charges by category
-  const chargesByCategorie = useMemo(() => {
-    const map: Record<string, number> = {};
-    charges.filter(c => c.statut === 'payé').forEach(c => {
-      map[c.categorie] = (map[c.categorie] || 0) + c.montant;
-    });
-    return Object.entries(map)
-      .map(([cat, val]) => ({ name: CATEGORIE_LABELS[cat as keyof typeof CATEGORIE_LABELS] ?? cat, value: val, color: CATEGORIE_COLORS[cat as keyof typeof CATEGORIE_COLORS] ?? '#94a3b8' }))
-      .sort((a, b) => b.value - a.value);
-  }, [charges]);
-
-  // Factures by statut
-  const facturesByStatut = useMemo(() => [
-    { name: 'Payées', value: factures.filter(f => f.statut === 'payée').length, color: '#10b981' },
-    { name: 'En attente', value: factures.filter(f => f.statut === 'en_attente').length, color: '#f59e0b' },
-    { name: 'Impayées', value: factures.filter(f => f.statut === 'impayée').length, color: '#ef4444' },
-  ].filter(s => s.value > 0), [factures]);
-
-  // Top commandes by value
-  const topCommandes = useMemo(() =>
-    [...commandes]
-      .sort((a, b) => (b.quantite * b.prix) - (a.quantite * a.prix))
-      .slice(0, 5),
-    [commandes]
-  );
-
-  // Recent unpaid factures
-  const unpaidFactures = useMemo(() =>
-    factures.filter(f => f.statut !== 'payée').slice(0, 5),
-    [factures]
-  );
-
-  // Recent charges
-  const recentCharges = useMemo(() =>
-    [...charges].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5),
-    [charges]
-  );
-
   const fmt = (n: number) => n.toLocaleString('fr-MA');
 
-  const customTooltip = ({ active, payload, label }: any) => {
-    if (!active || !payload?.length) return null;
-    return (
-      <div className="bg-white border border-slate-200 rounded-xl shadow-lg p-3 text-xs">
-        <p className="font-bold text-slate-700 mb-2">{label}</p>
-        {payload.map((p: any) => (
-          <p key={p.name} style={{ color: p.color }} className="font-semibold">
-            {p.name}: {fmt(p.value)} MAD
-          </p>
-        ))}
-      </div>
-    );
-  };
-
   return (
-    <div className="space-y-6" id="bilan-capture">
+    <div className="space-y-8 pb-20 animate-in fade-in duration-500">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Bilan Financier</h1>
-          <p className="text-sm text-slate-500">Vue consolidée · Données réelles · {currentYear}</p>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Tableau de Bord Financier</h1>
+          <p className="text-slate-500 font-bold uppercase tracking-[0.25em] text-[10px] mt-2">Vue d'ensemble de la rentabilité · {currentYear}</p>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <button
-            onClick={() => exportFacturesCSV(factures)}
-            className="flex items-center gap-1.5 text-xs bg-white border border-slate-200 text-slate-600 px-3 py-2 rounded-xl font-semibold hover:bg-slate-50 transition"
-          >
-            <Download className="w-3.5 h-3.5" /> CSV Factures
+        <div className="flex gap-3 flex-wrap">
+          <button onClick={() => navigate('/factures')} className="flex items-center gap-2 text-xs bg-white border border-slate-200 text-slate-700 px-5 py-3 rounded-2xl font-black hover:bg-slate-50 transition shadow-sm">
+            <Receipt className="w-4 h-4 text-indigo-500" /> FACTURES
+          </button>
+          <button onClick={() => navigate('/charges')} className="flex items-center gap-2 text-xs bg-white border border-slate-200 text-slate-700 px-5 py-3 rounded-2xl font-black hover:bg-slate-50 transition shadow-sm">
+            <TrendingDown className="w-4 h-4 text-red-500" /> CHARGES
           </button>
           <button
-            onClick={() => exportChargesCSV(charges)}
-            className="flex items-center gap-1.5 text-xs bg-white border border-slate-200 text-slate-600 px-3 py-2 rounded-xl font-semibold hover:bg-slate-50 transition"
+            onClick={() => generatePDF('bilan-capture', `Rapport_Financier_${currentYear}`)}
+            className="flex items-center gap-2 text-xs bg-slate-900 text-white px-6 py-3 rounded-2xl font-black hover:bg-slate-800 transition shadow-xl shadow-slate-200"
           >
-            <Download className="w-3.5 h-3.5" /> CSV Charges
-          </button>
-          <button
-            onClick={() => generatePDF('bilan-capture', `Bilan_Financier_${currentYear}`)}
-            className="flex items-center gap-1.5 text-xs bg-purple-600 text-white px-3 py-2 rounded-xl font-semibold hover:bg-purple-700 transition shadow-sm"
-          >
-            <Download className="w-3.5 h-3.5" /> Bilan PDF
-          </button>
-          <button onClick={() => navigate('/factures')} className="flex items-center gap-1.5 text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 px-3 py-2 rounded-xl font-semibold hover:bg-indigo-100 transition">
-            <Receipt className="w-3.5 h-3.5" /> Factures
-          </button>
-          <button onClick={() => navigate('/charges')} className="flex items-center gap-1.5 text-xs bg-red-50 text-red-700 border border-red-200 px-3 py-2 rounded-xl font-semibold hover:bg-red-100 transition">
-            <TrendingDown className="w-3.5 h-3.5" /> Charges
+            <Download className="w-4 h-4" /> EXPORTER RAPPORT
           </button>
         </div>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <KpiCard
           label="Chiffre d'Affaires"
-          value={`${fmt(stats.ca)} MAD`}
-          sub={`${fmt(stats.caTotal)} MAD facturé total`}
+          value={`${totalRevenue.toLocaleString()} DH`}
+          sub={`${totalDettes.toLocaleString()} DH non encaissés`}
           icon={TrendingUp}
-          color="text-emerald-700 border-emerald-200"
+          color="text-indigo-600 border-indigo-100"
           trend="up"
-          onClick={() => navigate('/factures')}
         />
         <KpiCard
-          label="Total Charges"
-          value={`${fmt(stats.totalCharges)} MAD`}
-          sub={`${fmt(stats.chargesAttente)} MAD à payer`}
-          icon={TrendingDown}
-          color="text-red-700 border-red-200"
-          trend="down"
-          onClick={() => navigate('/charges')}
+          label="Dettes Fournisseurs"
+          value={`${fmt(stats.totalChargesPending)} MAD`}
+          sub="Charges en attente de paiement"
+          icon={AlertCircle}
+          color="text-orange-600 border-orange-100"
         />
         <KpiCard
-          label="Bénéfice Net"
-          value={`${fmt(stats.benefice)} MAD`}
-          sub={stats.benefice >= 0 ? 'Positif ✓' : 'Déficit ⚠'}
+          label="Profit Réel (Cash-Flow)"
+          value={`${fmt(stats.globalProfit)} MAD`}
+          sub="Basé sur l'encaissé vs payé"
           icon={DollarSign}
-          color={stats.benefice >= 0 ? 'text-indigo-700 border-indigo-200' : 'text-red-700 border-red-200'}
-          trend={stats.benefice >= 0 ? 'up' : 'down'}
+          color={stats.globalProfit >= 0 ? "text-emerald-600 border-emerald-100" : "text-red-600 border-red-100"}
+          trend={stats.globalProfit >= 0 ? "up" : "down"}
         />
         <KpiCard
-          label="Taux de Marge"
+          label="Restes à Recouvrer"
+          value={`${totalDettes.toLocaleString()} DH`}
+          sub="Somme due par les clients"
+          icon={Clock}
+          color="text-rose-600 border-rose-100"
+          trend="down"
+        />
+        <KpiCard
+          label="Marge Nette"
           value={`${stats.marge}%`}
-          sub={`Sur ${fmt(stats.ca)} MAD encaissé`}
+          sub="Rentabilité globale"
           icon={Percent}
-          color={stats.marge >= 20 ? 'text-violet-700 border-violet-200' : stats.marge >= 0 ? 'text-amber-700 border-amber-200' : 'text-red-700 border-red-200'}
+          color="text-amber-600 border-amber-100"
         />
       </div>
 
-      {/* Alert bar */}
-      {(stats.caRetard > 0 || stats.chargesAttente > 0) && (
-        <div className="flex flex-wrap gap-3">
-          {stats.caRetard > 0 && (
-            <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-2.5 text-sm text-red-700">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
-              <span><strong>{fmt(stats.caRetard)} MAD</strong> de factures en retard</span>
-              <button onClick={() => navigate('/factures')} className="text-red-600 hover:text-red-800 font-semibold flex items-center gap-1 ml-1">
-                Voir <ArrowRight className="w-3 h-3" />
-              </button>
+      {/* NEW: Detailed Cash-Flow Summary */}
+      <div className="bg-slate-900 rounded-[2.5rem] p-10 text-white shadow-2xl shadow-slate-200 overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
+          <div className="flex-1">
+            <h2 className="text-2xl font-black uppercase tracking-tighter mb-2">Bilan Net de Trésorerie</h2>
+            <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Calcul précis entre l'encaissé réel et les dépenses payées</p>
+            
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-8">
+              <div className="border-l-2 border-emerald-500/30 pl-6">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Missions Encaissées (+)</p>
+                <p className="text-2xl font-black text-emerald-400">{fmt(stats.ca)} MAD</p>
+              </div>
+              <div className="border-l-2 border-red-500/30 pl-6">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Dépenses Payées (-)</p>
+                <p className="text-2xl font-black text-red-400">{fmt(stats.totalCharges)} MAD</p>
+              </div>
+              <div className="border-l-2 border-orange-500/30 pl-6">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Dépenses en Attente</p>
+                <p className="text-2xl font-black text-orange-400">{fmt(stats.totalChargesPending)} MAD</p>
+              </div>
+              <div className="border-l-2 border-indigo-500 pl-6">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Bénéfice Réel Disponbile</p>
+                <p className="text-3xl font-black text-white">{fmt(stats.globalProfit)} MAD</p>
+              </div>
             </div>
-          )}
-          {stats.chargesAttente > 0 && (
-            <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 text-sm text-amber-700">
-              <Clock className="w-4 h-4 flex-shrink-0" />
-              <span><strong>{fmt(stats.chargesAttente)} MAD</strong> de charges à régler</span>
-              <button onClick={() => navigate('/charges')} className="text-amber-600 hover:text-amber-800 font-semibold flex items-center gap-1 ml-1">
-                Voir <ArrowRight className="w-3 h-3" />
-              </button>
+          </div>
+          <div className={`w-32 h-32 rounded-full border-8 ${stats.globalProfit >= 0 ? 'border-emerald-500/20' : 'border-red-500/20'} flex items-center justify-center`}>
+            <div className={`w-20 h-20 rounded-full ${stats.globalProfit >= 0 ? 'bg-emerald-500' : 'bg-red-500'} flex items-center justify-center shadow-lg`}>
+              {stats.globalProfit >= 0 ? <TrendingUp className="w-8 h-8 text-white" /> : <TrendingDown className="w-8 h-8 text-white" />}
             </div>
-          )}
+          </div>
         </div>
-      )}
+      </div>
 
-      {/* Monthly Chart */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-8">
+          <div className="flex items-center justify-between mb-10">
+            <div>
+              <h2 className="text-xl font-black text-slate-800">Flux de Trésorerie</h2>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Revenus vs Dépenses mensuelles</p>
+            </div>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={monthlyData} barGap={8}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 700, fill: '#94a3b8' }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 700, fill: '#94a3b8' }} tickFormatter={v => `${v / 1000}k`} />
+              <Tooltip cursor={{ fill: '#f8fafc' }} content={({ active, payload }) => {
+                if (!active || !payload?.length) return null;
+                return (
+                  <div className="bg-white border border-slate-100 p-4 rounded-2xl shadow-2xl">
+                    <p className="text-xs font-black text-slate-400 uppercase mb-2">{payload[0].payload.month}</p>
+                    <p className="text-sm font-black text-emerald-600">Revenu: {fmt(payload[0].value as number)} MAD</p>
+                    <p className="text-sm font-black text-red-500">Charge: {fmt(payload[1].value as number)} MAD</p>
+                  </div>
+                );
+              }} />
+              <Bar dataKey="revenue" fill="#10b981" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="depenses" fill="#f87171" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-8">
+          <h2 className="text-xl font-black text-slate-800 mb-2">Analyse des Coûts</h2>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8">Répartition des dépenses directes</p>
+
+          <div className="space-y-6">
+            <div>
+              <div className="flex justify-between text-xs font-black uppercase mb-2">
+                <span className="text-slate-500">Tissu (Maison)</span>
+                <span className="text-slate-900">{fmt(orderProfits.reduce((a, o) => a + o.fabricCost, 0))} MAD</span>
+              </div>
+              <div className="w-full bg-slate-100 rounded-full h-2">
+                <div className="bg-orange-500 h-2 rounded-full" style={{ width: '45%' }} />
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-xs font-black uppercase mb-2">
+                <span className="text-slate-500">Main d'œuvre</span>
+                <span className="text-slate-900">{fmt(orderProfits.reduce((a, o) => a + o.laborCost, 0))} MAD</span>
+              </div>
+              <div className="w-full bg-slate-100 rounded-full h-2">
+                <div className="bg-blue-500 h-2 rounded-full" style={{ width: '35%' }} />
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-xs font-black uppercase mb-2">
+                <span className="text-slate-500">Charges Fixes</span>
+                <span className="text-slate-900">{fmt(stats.totalCharges)} MAD</span>
+              </div>
+              <div className="w-full bg-slate-100 rounded-full h-2">
+                <div className="bg-indigo-500 h-2 rounded-full" style={{ width: '20%' }} />
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-12 p-6 bg-indigo-50 rounded-3xl border border-indigo-100">
+            <h4 className="text-sm font-black text-indigo-900 mb-1">Observation</h4>
+            <p className="text-xs text-indigo-700 font-medium leading-relaxed">
+              Vos coûts de production directs représentent environ {stats.ca > 0 ? Math.round((stats.totalOrderCosts / stats.ca) * 100) : 0}% de votre CA encaissé.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden" id="bilan-capture">
+        <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
           <div>
-            <h2 className="text-base font-bold text-slate-800">Revenus vs Charges — {currentYear}</h2>
-            <p className="text-xs text-slate-400 mt-0.5">Par mois · données réelles</p>
-          </div>
-          <div className="flex items-center gap-4 text-xs text-slate-500">
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-emerald-500 inline-block" /> Revenus</span>
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-red-400 inline-block" /> Charges</span>
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-indigo-400 inline-block" /> Bénéfice</span>
+            <h2 className="text-xl font-black text-slate-800">Rentabilité par Commande</h2>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Détails précis de la marge nette</p>
           </div>
         </div>
-        <ResponsiveContainer width="100%" height={260}>
-          <BarChart data={monthlyData} barGap={4}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-            <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
-            <Tooltip content={customTooltip} />
-            <Bar dataKey="revenue" name="Revenus" fill="#10b981" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="depenses" name="Charges" fill="#f87171" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="benefice" name="Bénéfice" fill="#818cf8" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Charts row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Charges by category */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-          <h2 className="text-base font-bold text-slate-800 mb-1">Charges par Catégorie</h2>
-          <p className="text-xs text-slate-400 mb-5">Dépenses payées uniquement</p>
-          {chargesByCategorie.length === 0 ? (
-            <div className="text-center py-10 text-slate-300">
-              <TrendingDown className="w-10 h-10 mx-auto mb-2" />
-              <p className="text-sm">Aucune charge enregistrée</p>
-            </div>
-          ) : (
-            <>
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie data={chargesByCategorie} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3} dataKey="value">
-                    {chargesByCategorie.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(v) => [`${fmt(Number(v))} MAD`, '']} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="space-y-2 mt-2">
-                {chargesByCategorie.slice(0, 5).map((c, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: c.color }} />
-                    <span className="text-xs text-slate-600 flex-1 truncate">{c.name}</span>
-                    <span className="text-xs font-bold text-slate-700">{fmt(c.value)} MAD</span>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Factures statut */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-          <h2 className="text-base font-bold text-slate-800 mb-1">État des Factures</h2>
-          <p className="text-xs text-slate-400 mb-5">{factures.length} facture{factures.length !== 1 ? 's' : ''} au total</p>
-          {factures.length === 0 ? (
-            <div className="text-center py-10 text-slate-300">
-              <Receipt className="w-10 h-10 mx-auto mb-2" />
-              <p className="text-sm">Aucune facture</p>
-            </div>
-          ) : (
-            <>
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie data={facturesByStatut} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3} dataKey="value">
-                    {facturesByStatut.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(v) => [`${Number(v)} facture${Number(v) !== 1 ? 's' : ''}`, '']} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="space-y-2 mt-2">
-                {facturesByStatut.map((s, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: s.color }} />
-                    <span className="text-xs text-slate-600 flex-1">{s.name}</span>
-                    <span className="text-xs font-bold text-slate-700">{s.value} facture{s.value !== 1 ? 's' : ''}</span>
-                  </div>
-                ))}
-              </div>
-              <button
-                onClick={() => navigate('/factures')}
-                className="mt-4 w-full flex items-center justify-center gap-2 text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-xl py-2 font-semibold hover:bg-indigo-100 transition"
-              >
-                Gérer les factures <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Bottom row — lists */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Top commandes */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-slate-800">Top Commandes (CA)</h3>
-            <button onClick={() => navigate('/commandes')} className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">
-              Voir tout <ArrowUpRight className="w-3 h-3" />
-            </button>
-          </div>
-          {topCommandes.length === 0 ? (
-            <p className="text-xs text-slate-400 text-center py-6">Aucune commande</p>
-          ) : (
-            <div className="space-y-2.5">
-              {topCommandes.map((c, i) => {
-                const val = c.quantite * c.prix;
-                const maxVal = topCommandes[0].quantite * topCommandes[0].prix;
-                return (
-                  <div key={c.id}>
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-slate-400 w-4">{i + 1}</span>
-                        <div>
-                          <p className="text-xs font-semibold text-slate-700">{c.reference}</p>
-                          <p className="text-[10px] text-slate-400">{c.client}</p>
-                        </div>
-                      </div>
-                      <span className="text-xs font-bold text-slate-800">{fmt(val)} MAD</span>
-                    </div>
-                    <div className="w-full bg-slate-100 rounded-full h-1">
-                      <div className="h-1 bg-indigo-500 rounded-full" style={{ width: `${(val / maxVal) * 100}%` }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Factures à encaisser */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-slate-800">À Encaisser</h3>
-            <button onClick={() => navigate('/factures')} className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">
-              Voir tout <ArrowUpRight className="w-3 h-3" />
-            </button>
-          </div>
-          {unpaidFactures.length === 0 ? (
-            <div className="text-center py-6">
-              <CheckCircle className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
-              <p className="text-xs text-slate-500 font-medium">Toutes les factures sont payées</p>
-            </div>
-          ) : (
-            <div className="space-y-2.5">
-              {unpaidFactures.map(f => {
-                const overdue = f.echeance && f.echeance < today.toISOString().split('T')[0];
-                return (
-                  <div key={f.id} className={`flex items-center justify-between p-2.5 rounded-xl ${overdue ? 'bg-red-50 border border-red-100' : 'bg-slate-50'}`}>
-                    <div>
-                      <p className="text-xs font-semibold text-slate-700">{f.numero}</p>
-                      <p className="text-[10px] text-slate-400">{f.client}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className={`text-xs font-bold ${overdue ? 'text-red-600' : 'text-slate-700'}`}>{fmt(f.montant)} MAD</p>
-                      <p className={`text-[10px] ${overdue ? 'text-red-400' : 'text-slate-400'}`}>
-                        {f.echeance ? new Date(f.echeance).toLocaleDateString('fr-MA') : '—'}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Dernières charges */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-slate-800">Dernières Charges</h3>
-            <button onClick={() => navigate('/charges')} className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">
-              Voir tout <ArrowUpRight className="w-3 h-3" />
-            </button>
-          </div>
-          {recentCharges.length === 0 ? (
-            <p className="text-xs text-slate-400 text-center py-6">Aucune charge enregistrée</p>
-          ) : (
-            <div className="space-y-2.5">
-              {recentCharges.map(c => (
-                <div key={c.id} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl">
-                  <div>
-                    <p className="text-xs font-semibold text-slate-700 truncate max-w-32">{c.designation}</p>
-                    <p className="text-[10px] text-slate-400">
-                      {CATEGORIE_LABELS[c.categorie] ?? c.categorie}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs font-bold text-red-600">{fmt(c.montant)} MAD</p>
-                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${c.statut === 'payé' ? 'bg-emerald-100 text-emerald-600' :
-                        c.statut === 'en_attente' ? 'bg-amber-100 text-amber-600' : 'bg-red-100 text-red-600'
-                      }`}>
-                      {c.statut === 'payé' ? 'Payé' : c.statut === 'en_attente' ? 'En attente' : 'Impayé'}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Summary table */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-        <h2 className="text-base font-bold text-slate-800 mb-4">Récapitulatif Financier</h2>
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50 rounded-xl">
-                <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Indicateur</th>
-                <th className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Montant</th>
-                <th className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Détails</th>
+              <tr className="bg-white border-b border-slate-100">
+                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Commande / Client</th>
+                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Source</th>
+                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Matière</th>
+                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Main d'œuvre</th>
+                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right text-indigo-600">Bénéfice Net</th>
+                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Marge %</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
-              {[
-                { label: 'CA Encaissé (factures payées)', val: stats.ca, detail: `${factures.filter(f => f.statut === 'payée').length} facture(s)`, color: 'text-emerald-600' },
-                { label: 'CA En attente', val: stats.caAttente, detail: `${factures.filter(f => f.statut === 'en_attente').length} facture(s)`, color: 'text-amber-600' },
-                { label: 'CA Total Facturé', val: stats.caTotal, detail: `${factures.length} facture(s)`, color: 'text-indigo-600' },
-                { label: 'Total Charges Réglées', val: stats.totalCharges, detail: `${charges.filter(c => c.statut === 'payé').length} charge(s)`, color: 'text-red-600' },
-                { label: 'Charges À Régler', val: stats.chargesAttente, detail: `${charges.filter(c => c.statut !== 'payé').length} charge(s)`, color: 'text-orange-500' },
-                { label: 'Bénéfice Net', val: stats.benefice, detail: `Marge ${stats.marge}%`, color: stats.benefice >= 0 ? 'text-emerald-700' : 'text-red-700' },
-              ].map((row, i) => (
-                <tr key={i} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="px-4 py-3 text-sm text-slate-700">{row.label}</td>
-                  <td className={`px-4 py-3 text-sm font-bold text-right ${row.color}`}>{fmt(row.val)} MAD</td>
-                  <td className="px-4 py-3 text-xs text-slate-400 text-right">{row.detail}</td>
+            <tbody className="divide-y divide-slate-50">
+              {orderProfits.map((op) => (
+                <tr key={op.id} className="hover:bg-slate-50/50 transition-colors group">
+                  <td className="px-8 py-5">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-black text-slate-800 group-hover:text-indigo-600 transition-colors">{op.reference}</span>
+                      <span className="text-xs font-bold text-slate-400">{op.client} · {op.modele}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5">
+                    <span className={`inline-block px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter ${op.tissuSourcing === 'client' ? 'bg-amber-100 text-amber-600 border border-amber-200' : 'bg-indigo-100 text-indigo-600 border border-indigo-200'}`}>
+                      {op.tissuSourcing === 'client' ? 'Client' : 'Maison'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-5 text-right font-bold text-slate-600 text-xs">-{fmt(op.fabricCost)} MAD</td>
+                  <td className="px-6 py-5 text-right font-bold text-slate-600 text-xs">-{fmt(op.laborCost)} MAD</td>
+                  <td className={`px-6 py-5 text-right font-black text-sm ${op.profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                    {fmt(op.profit)} MAD
+                  </td>
+                  <td className="px-8 py-5 text-right">
+                    <div className="flex items-center justify-end gap-3">
+                      <div className="w-16 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                        <div className={`h-full rounded-full ${op.margin >= 30 ? 'bg-emerald-500' : op.margin >= 15 ? 'bg-blue-500' : 'bg-red-500'}`} style={{ width: `${Math.max(0, Math.min(100, op.margin))}%` }} />
+                      </div>
+                      <span className={`text-xs font-black ${op.margin >= 30 ? 'text-emerald-600' : op.margin >= 15 ? 'text-blue-600' : 'text-red-500'}`}>
+                        {Math.round(op.margin)}%
+                      </span>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>

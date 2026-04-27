@@ -68,6 +68,10 @@ export interface Commande {
   rebut: number;
   statut: 'en_cours' | 'terminé' | 'livré';
   suivi: { phase: Phase; date: string; note: string }[];
+  tissuSourcing?: 'maison' | 'client';
+  tissuPrix?: number;
+  coutMainOeuvre?: number;
+  avance?: number;
 }
 
 export interface StockTissu {
@@ -82,6 +86,7 @@ export interface StockTissu {
   metrageTotal?: number;
   fournisseur?: string;
   fournisseurTel?: string;
+  fournisseurEmail?: string;
   largeur?: number;
   zone?: string;
   etagere?: string;
@@ -114,6 +119,7 @@ export interface Employe {
   rib?: string;
   banque?: string;
   salaireMensuel?: number;
+  remunerationType?: 'mensuel' | 'hebdomadaire' | 'tache';
 }
 
 export interface PaiementSalaire {
@@ -160,13 +166,16 @@ export interface Presence {
 export interface User {
   id: string;
   nom: string;
-  role: 'admin' | 'pointeur' | 'client';
+  role: 'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste';
   email: string;
   password?: string;
+  pinCode?: string;
+  lastActive?: string;
 }
 
 export type ChargeCategorie =
   | 'salaires'
+  | 'achats_matieres'
   | 'loyer'
   | 'electricite'
   | 'eau'
@@ -180,6 +189,7 @@ export type ChargeCategorie =
 
 export const CATEGORIE_LABELS: Record<ChargeCategorie, string> = {
   salaires: "Salaires & Main d'œuvre",
+  achats_matieres: 'Achats Matières Première',
   loyer: 'Loyer & Charges locatives',
   electricite: 'Électricité',
   eau: 'Eau',
@@ -194,6 +204,7 @@ export const CATEGORIE_LABELS: Record<ChargeCategorie, string> = {
 
 export const CATEGORIE_COLORS: Record<ChargeCategorie, string> = {
   salaires: '#6366f1',
+  achats_matieres: '#10b981',
   loyer: '#f59e0b',
   electricite: '#f97316',
   eau: '#3b82f6',
@@ -222,14 +233,17 @@ export interface Charge {
 export type AppPage =
   | 'dashboard' | 'fiches' | 'ordres' | 'chaine' | 'stocks'
   | 'rh' | 'commandes' | 'clients' | 'factures' | 'charges' | 'bilan'
-  | 'pointage' | 'portail_client' | 'performance' | 'utilisateurs' | 'parametres';
+  | 'pointage' | 'portail_client' | 'performance' | 'utilisateurs' | 'parametres' | 'demandes';
 
-export type RolePermMap = Record<'admin' | 'pointeur' | 'client', AppPage[]>;
+export type RolePermMap = Record<'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste', AppPage[]>;
 
 export const DEFAULT_PERMISSIONS: RolePermMap = {
-  admin: ['dashboard', 'fiches', 'ordres', 'chaine', 'stocks', 'rh', 'commandes', 'clients', 'factures', 'charges', 'bilan', 'pointage', 'portail_client', 'performance', 'utilisateurs', 'parametres'],
+  admin: ['dashboard', 'demandes', 'fiches', 'ordres', 'chaine', 'stocks', 'rh', 'commandes', 'clients', 'factures', 'charges', 'bilan', 'pointage', 'portail_client', 'performance', 'utilisateurs', 'parametres'],
   pointeur: ['fiches', 'ordres', 'chaine', 'pointage'],
   client: ['portail_client'],
+  worker: ['pointage'],
+  coupeur: ['ordres'],
+  modeliste: ['fiches'],
 };
 
 const PERMISSIONS_VERSION = 2;
@@ -247,6 +261,9 @@ export function loadPermissions(): RolePermMap {
       admin: parsed.admin ?? DEFAULT_PERMISSIONS.admin,
       pointeur: parsed.pointeur ?? DEFAULT_PERMISSIONS.pointeur,
       client: parsed.client ?? DEFAULT_PERMISSIONS.client,
+      worker: parsed.worker ?? DEFAULT_PERMISSIONS.worker,
+      coupeur: parsed.coupeur ?? DEFAULT_PERMISSIONS.coupeur,
+      modeliste: parsed.modeliste ?? DEFAULT_PERMISSIONS.modeliste,
     };
   } catch { return DEFAULT_PERMISSIONS; }
 }
@@ -267,6 +284,20 @@ export interface CompanyProfile {
   patente: string;
   phone: string;
   email: string;
+  landingVideoUrl?: string;
+}
+
+export interface Lead {
+  id: string;
+  name: string;
+  phone: string;
+  type: string;
+  quantity: number;
+  details: string;
+  date: string;
+  status: 'new' | 'completed';
+  photo?: string;
+  email?: string;
 }
 
 export const DEFAULT_COMPANY: CompanyProfile = {
@@ -289,6 +320,27 @@ export function loadCompanyProfile(): CompanyProfile {
   } catch {
     return DEFAULT_COMPANY;
   }
+}
+
+export function loadLeads(): Lead[] {
+  try {
+    const data = localStorage.getItem('textrack_leads');
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'>) {
+  const leads = loadLeads();
+  const newLead: Lead = {
+    ...lead,
+    id: Math.random().toString(36).substr(2, 9),
+    date: new Date().toISOString(),
+    status: 'new'
+  };
+  localStorage.setItem('textrack_leads', JSON.stringify([newLead, ...leads]));
+  return newLead;
 }
 
 export function saveCompanyProfile(profile: CompanyProfile): void {
@@ -314,17 +366,32 @@ export async function saveRecord<T>(table: string, record: T): Promise<void> {
   const { error } = await supabase.from(table).upsert(record as any);
   if (error) {
     console.error(`Error saving to ${table}:`, error.message);
+
+    // Robust fallback for missing columns in Supabase schema
+    const errMsg = error.message.toLowerCase();
+    const isMissingColumn = errMsg.includes('column') || errMsg.includes('not find') || errMsg.includes('attribute') || errMsg.includes('schema cache');
     
-    // If it's a missing column error, try to save without the new fields as a fallback
-    if (error.message.includes('column') && error.message.includes('not find')) {
+    if (isMissingColumn) {
       const fallbackRecord = { ...record as any };
-      // List of potential new columns that might not exist yet
-      ['tissu', 'tissuConsommation', 'type', 'client', 'commandeId', 'fournisseurTel'].forEach(col => delete fallbackRecord[col]);
+      const newCols = [
+        'tissuPrix', 'coutMainOeuvre', 'tissuSourcing', 
+        'tissu', 'tissuConsommation', 'type', 'client', 
+        'commandeId', 'fournisseurTel', 'fournisseurEmail',
+        'adresse', 'ville', 'notes', 'telephone', 'pinCode',
+        'avance', 'retouche', 'lastActive'
+      ];
+      newCols.forEach(col => delete fallbackRecord[col]);
+      
       const { error: retryError } = await supabase.from(table).upsert(fallbackRecord);
-      if (!retryError) return; // Fallback worked!
+      if (!retryError) {
+        console.warn(`Saved ${table} using fallback (ignored new columns). Run SQL update to enable full tracking.`);
+        return; 
+      }
+      console.error(`Fallback save also failed for ${table}:`, retryError.message);
     }
 
-    alert(`Erreur de sauvegarde dans ${table} : ${error.message}. (Vérifiez le RLS sur Supabase !)`);
+    // Only alert if it's NOT a missing column error (or if fallback failed)
+    alert(`Erreur de sauvegarde dans ${table} : ${error.message}`);
   }
 }
 

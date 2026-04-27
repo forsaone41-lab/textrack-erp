@@ -13,18 +13,19 @@ import {
 } from '../types';
 
 const CATEGORIES: ChargeCategorie[] = [
-  'salaires', 'loyer', 'electricite', 'eau', 'telephone',
+  'salaires', 'achats_matieres', 'loyer', 'electricite', 'eau', 'telephone',
   'transport', 'maintenance', 'fournitures_bureau', 'assurance', 'sous_traitance', 'autre',
 ];
 
 
 const CATEGORIE_BADGE: Record<ChargeCategorie, string> = {
   salaires: 'bg-indigo-100 text-indigo-700',
+  achats_matieres: 'bg-emerald-100 text-emerald-700',
   loyer: 'bg-amber-100 text-amber-700',
   electricite: 'bg-orange-100 text-orange-700',
   eau: 'bg-blue-100 text-blue-700',
   telephone: 'bg-violet-100 text-violet-700',
-  transport: 'bg-emerald-100 text-emerald-700',
+  transport: 'bg-indigo-100 text-indigo-700',
   maintenance: 'bg-red-100 text-red-700',
   fournitures_bureau: 'bg-cyan-100 text-cyan-700',
   assurance: 'bg-pink-100 text-pink-700',

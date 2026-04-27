@@ -36,6 +36,27 @@ const ROLE_CFG = {
     desc: 'Portail client uniquement',
     access: ['Portail Client'],
   },
+  worker: {
+    label: 'Employé', icon: Users,
+    bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200',
+    ring: 'ring-purple-400', avatar: 'from-purple-500 to-indigo-600', dot: 'bg-purple-500',
+    desc: 'Accès restreint aux outils opérationnels',
+    access: ['Pointage'],
+  },
+  coupeur: {
+    label: 'Fossâl (Coupeur)', icon: Scissors,
+    bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200',
+    ring: 'ring-orange-400', avatar: 'from-orange-500 to-amber-600', dot: 'bg-orange-500',
+    desc: 'Gestion des ordres de coupe uniquement',
+    access: ['Ordres de Coupe'],
+  },
+  modeliste: {
+    label: 'Modéliste', icon: FileText,
+    bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200',
+    ring: 'ring-blue-400', avatar: 'from-blue-500 to-indigo-600', dot: 'bg-blue-500',
+    desc: 'Gestion des fiches techniques',
+    access: ['Fiches Techniques'],
+  },
 } as const;
 
 // ─── Pages Definition ──────────────────────────────────────
@@ -166,7 +187,7 @@ export default function Utilisateurs() {
   }
 
   // ── Permissions helpers ───────────────────────────────────
-  function togglePerm(role: 'admin' | 'pointeur' | 'client', page: AppPage) {
+  function togglePerm(role: 'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste', page: AppPage) {
     const locked = LOCKED[role] || [];
     if (locked.includes(page)) return;
     const current = perms[role];
@@ -182,7 +203,7 @@ export default function Utilisateurs() {
     setTimeout(() => setPermsSaved(false), 2000);
   }
 
-  function resetRole(role: 'admin' | 'pointeur' | 'client') {
+  function resetRole(role: 'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste') {
     const updated: RolePermMap = { ...perms, [role]: [...DEFAULT_PERMISSIONS[role]] };
     setPerms(updated);
     savePermissions(updated);
@@ -201,6 +222,9 @@ export default function Utilisateurs() {
     admin: users.filter(u => u.role === 'admin').length,
     pointeur: users.filter(u => u.role === 'pointeur').length,
     client: users.filter(u => u.role === 'client').length,
+    worker: users.filter(u => u.role === 'worker').length,
+    coupeur: users.filter(u => u.role === 'coupeur').length,
+    modeliste: users.filter(u => u.role === 'modeliste').length,
   };
 
   return (
@@ -241,8 +265,8 @@ export default function Utilisateurs() {
       {tab === 'users' && (
         <>
           {/* Role Stats */}
-          <div className="grid grid-cols-3 gap-4">
-            {(['admin', 'pointeur', 'client'] as const).map(role => {
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+            {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste'] as const).map(role => {
               const cfg = ROLE_CFG[role];
               const Icon = cfg.icon;
               const active = filterRole === role;
@@ -366,9 +390,9 @@ export default function Utilisateurs() {
           {/* Permission Matrix */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             {/* Role header */}
-            <div className="grid grid-cols-4 border-b border-slate-200 bg-slate-50">
+            <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50">
               <div className="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Page</div>
-              {(['admin', 'pointeur', 'client'] as const).map(role => {
+              {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste'] as const).map(role => {
                 const cfg = ROLE_CFG[role];
                 const Icon = cfg.icon;
                 const count = perms[role].length;
@@ -401,8 +425,8 @@ export default function Utilisateurs() {
               return (
                 <div key={group}>
                   {/* Group separator */}
-                  <div className="grid grid-cols-4 bg-slate-50/50 border-b border-slate-100">
-                    <div className="px-5 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest col-span-4">
+                  <div className="grid grid-cols-7 bg-slate-50/50 border-b border-slate-100">
+                    <div className="px-5 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest col-span-7">
                       {group}
                     </div>
                   </div>
@@ -412,7 +436,7 @@ export default function Utilisateurs() {
                     return (
                       <div
                         key={page.key}
-                        className={`grid grid-cols-4 border-b border-slate-100 hover:bg-slate-50/30 transition-colors ${idx === pages.length - 1 ? '' : ''}`}
+                        className={`grid grid-cols-7 border-b border-slate-100 hover:bg-slate-50/30 transition-colors ${idx === pages.length - 1 ? '' : ''}`}
                       >
                         {/* Page name */}
                         <div className="px-5 py-3 flex items-center gap-2.5">
@@ -420,7 +444,7 @@ export default function Utilisateurs() {
                           <span className="text-sm text-slate-700">{page.label}</span>
                         </div>
                         {/* Toggle per role */}
-                        {(['admin', 'pointeur', 'client'] as const).map(role => {
+                        {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste'] as const).map(role => {
                           const locked = (LOCKED[role] || []).includes(page.key);
                           const enabled = perms[role].includes(page.key);
                           return (
@@ -516,7 +540,7 @@ export default function Utilisateurs() {
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-2">Rôle & Permissions</label>
                 <div className="space-y-2">
-                  {(['admin', 'pointeur', 'client'] as const).map(r => {
+                  {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste'] as const).map(r => {
                     const cfg = ROLE_CFG[r];
                     const Icon = cfg.icon;
                     const selected = form.role === r;

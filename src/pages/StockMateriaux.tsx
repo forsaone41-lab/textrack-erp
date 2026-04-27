@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, TriangleAlert, Package, Layers, MapPin, User, Tag, Coins, Calendar } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, TriangleAlert, Package, Layers, MapPin, User, Tag, Coins, Calendar, Mail, Phone, MessageCircle } from 'lucide-react';
 import { StockTissu, StockFourniture, loadData, saveRecord, deleteRecord, genId } from '../types';
 
 type Tab = 'tissus' | 'fournitures';
@@ -131,12 +131,30 @@ export default function StockMateriaux() {
       reference: tForm.reference, composition: tForm.composition,
       metrageTotal: tForm.metrageTotal, fournisseur: tForm.fournisseur,
       fournisseurTel: tForm.fournisseurTel,
+      fournisseurEmail: tForm.fournisseurEmail,
       largeur: tForm.largeur, zone: tForm.zone,
       etagere: tForm.etagere, dateReception: tForm.dateReception,
     };
     const updated = editTId ? tissus.map(t => t.id === editTId ? item : t) : [...tissus, item];
     setTissus(updated); setShowTModal(false);
     await saveRecord('tissus', item);
+
+    // AUTOMATIC FINANCE SYNC for Stock Purchase
+    if (!editTId && item.metrage > 0 && item.prixMetre > 0) {
+      const totalCost = item.metrage * item.prixMetre;
+      const chargeData = {
+        id: genId(),
+        designation: `Achat Tissu: ${item.type} ${item.couleur} (${item.metrage}m)`,
+        categorie: 'achats_matieres',
+        montant: totalCost,
+        date: item.dateReception || new Date().toISOString().split('T')[0],
+        statut: 'payé',
+        recurrence: 'ponctuel',
+        fournisseur: item.fournisseur || 'Fournisseur Tissu',
+        notes: `Réf: ${getTissuRef(item)}`,
+      };
+      await saveRecord('charges', chargeData).catch(() => console.log("Silent error saving fabric charge"));
+    }
   }
 
   async function removeTissu(id: string) {
@@ -166,6 +184,23 @@ export default function StockMateriaux() {
     const updated = editFId ? fournitures.map(f => f.id === editFId ? item : f) : [...fournitures, item];
     setFournitures(updated); setShowFModal(false);
     await saveRecord('fournitures', item);
+
+    // AUTOMATIC FINANCE SYNC for Supplies Purchase
+    if (!editFId && item.quantite > 0 && item.prixUnitaire > 0) {
+      const totalCost = item.quantite * item.prixUnitaire;
+      const chargeData = {
+        id: genId(),
+        designation: `Achat Fourniture: ${item.nom} (x${item.quantite} ${item.unite})`,
+        categorie: 'achats_matieres',
+        montant: totalCost,
+        date: new Date().toISOString().split('T')[0],
+        statut: 'payé',
+        recurrence: 'ponctuel',
+        fournisseur: item.fournisseur || 'Fournisseur Fourniture',
+        notes: `Réf: ${getFourniRef(item)}`,
+      };
+      await saveRecord('charges', chargeData).catch(() => console.log("Silent error saving supply charge"));
+    }
   }
 
   async function removeFourni(id: string) {
@@ -455,6 +490,51 @@ export default function StockMateriaux() {
                       </div>
                     </div>
 
+                    {/* Contact Buttons */}
+                    {(t.fournisseurTel || t.fournisseurEmail) && (
+                      <div className="mb-4 flex items-center gap-2">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mr-auto">Contact Fournisseur</p>
+                        <div className="flex gap-1.5">
+                          {t.fournisseurEmail && (
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.location.href = `mailto:${t.fournisseurEmail}`;
+                              }}
+                              className="p-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100 transition shadow-sm border border-indigo-100"
+                              title="Envoyer Email"
+                            >
+                              <Mail className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          {t.fournisseurTel && (
+                            <>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.open(`https://wa.me/${t.fournisseurTel?.replace(/\s+/g, '')}`, '_blank');
+                                }}
+                                className="p-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition shadow-sm border border-emerald-100"
+                                title="WhatsApp"
+                              >
+                                <MessageCircle className="w-3.5 h-3.5" />
+                              </button>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.location.href = `tel:${t.fournisseurTel}`;
+                                }}
+                                className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition shadow-sm border border-blue-100"
+                                title="Appeler"
+                              >
+                                <Phone className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Footer */}
                     <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-[10px] text-slate-400">
                       {(t.zone || t.etagere) && (
@@ -710,6 +790,12 @@ export default function StockMateriaux() {
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
                 </div>
               ))}
+              <div className="col-span-2">
+                <label className="block text-xs font-medium text-slate-600 mb-1">Email Fournisseur</label>
+                <input type="email" value={tForm.fournisseurEmail ?? ''} onChange={e => setTForm({ ...tForm, fournisseurEmail: e.target.value })}
+                  placeholder="ex: contact@fournisseur.com"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+              </div>
               <div className="col-span-2">
                 <label className="block text-xs font-medium text-slate-600 mb-1">Date réception</label>
                 <input type="date" value={tForm.dateReception ?? ''} onChange={e => setTForm({ ...tForm, dateReception: e.target.value })}

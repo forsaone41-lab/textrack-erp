@@ -2,6 +2,7 @@ import { HashRouter, Routes, Route, Outlet, Navigate, useLocation } from 'react-
 import { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
+import Demandes from './pages/Demandes';
 import FichesTechniques from './pages/FichesTechniques';
 import OrdresDeCoupe from './pages/OrdresDeCoupe';
 import ChaineDeMontage from './pages/ChaineDeMontage';
@@ -18,7 +19,8 @@ import Charges from './pages/Charges';
 import BilanFinancier from './pages/BilanFinancier';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
-import { initMockData, User, loadPermissions, AppPage, loadCompanyProfile } from './types';
+import LandingPage from './pages/LandingPage';
+import { initMockData, User, loadPermissions, AppPage, loadCompanyProfile, loadData, saveRecord } from './types';
 import { LangProvider, useLang } from './contexts/LangContext';
 
 initMockData();
@@ -29,10 +31,12 @@ function AdminLayout({
   onOpenClientPortal,
   currentUser,
   onLogout,
+  allUsers,
 }: {
   onOpenClientPortal: () => void;
   currentUser: User;
   onLogout: () => void;
+  allUsers: User[];
 }) {
   const { isAr } = useLang();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -60,9 +64,9 @@ function AdminLayout({
             {company.subtitle}
           </p>
         </div>
-        
-        <button 
-          onClick={() => setMobileOpen(true)} 
+
+        <button
+          onClick={() => setMobileOpen(true)}
           className="relative w-10 h-10 flex items-center justify-center text-slate-300 hover:text-white transition-colors bg-white/5 rounded-xl border border-white/10 active:scale-95"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -71,10 +75,10 @@ function AdminLayout({
         </button>
       </div>
 
-      <Sidebar 
-        onOpenClientPortal={onOpenClientPortal} 
-        currentUser={currentUser} 
-        onLogout={onLogout} 
+      <Sidebar
+        onOpenClientPortal={onOpenClientPortal}
+        currentUser={currentUser}
+        onLogout={onLogout}
         mobileOpen={mobileOpen}
         setMobileOpen={setMobileOpen}
       />
@@ -105,15 +109,41 @@ function AppContent() {
     } catch { return null; }
   });
   const [showClientPortal, setShowClientPortal] = useState(false);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
+
+  // Heartbeat for presence
+  useEffect(() => {
+    if (!currentUser) return;
+    
+    const updateActivity = async () => {
+      const now = new Date().toISOString();
+      await saveRecord('users', { ...currentUser, lastActive: now });
+    };
+
+    const fetchUsers = async () => {
+      const users = await loadData<User>('users');
+      setAllUsers(users);
+    };
+
+    updateActivity();
+    fetchUsers();
+
+    const interval = setInterval(() => {
+      updateActivity();
+      fetchUsers();
+    }, 30000); // every 30s
+
+    return () => clearInterval(interval);
+  }, [currentUser]);
 
   useEffect(() => {
     if (!localStorage.getItem('textrack_wiped_v2')) {
       const adminUser = { id: 'u1', nom: 'Admin Général', role: 'admin', email: 'admin@texttrack.ma', password: 'Admin123' };
       localStorage.setItem('textrack_users', JSON.stringify([adminUser]));
-      
+
       const keys = ['fiches', 'commandes', 'ordres', 'tissus', 'fournitures', 'employes', 'pointages', 'factures', 'charges', 'paiements_salaires'];
       keys.forEach(k => localStorage.setItem(`textrack_${k}`, '[]'));
-      
+
       localStorage.setItem('textrack_wiped_v2', 'true');
       window.location.reload();
     }
@@ -123,21 +153,25 @@ function AppContent() {
     localStorage.setItem(AUTH_KEY, JSON.stringify(user));
     setCurrentUser(user);
     setShowClientPortal(false);
+    window.location.hash = '#/';
   }
 
   function handleLogout() {
     localStorage.removeItem(AUTH_KEY);
     setCurrentUser(null);
     setShowClientPortal(false);
+    window.location.hash = '#/'; // Force go to login
   }
 
   if (!currentUser) {
     return (
       <Routes>
         <Route element={<PointageLayout />}>
-          <Route path="pointage" element={<Pointage />} />
+          <Route path="pointage" element={<Pointage onLogout={handleLogout} />} />
         </Route>
-        <Route path="*" element={<Login onLogin={handleLogin} />} />
+        <Route path="/login" element={<Login onLogin={handleLogin} />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );
   }
@@ -171,13 +205,15 @@ function AppContent() {
             onOpenClientPortal={() => setShowClientPortal(true)}
             currentUser={currentUser}
             onLogout={handleLogout}
+            allUsers={allUsers}
           />
         }
       >
         {can('dashboard')
-          ? <Route index element={<Dashboard />} />
+          ? <Route index element={<Dashboard allUsers={allUsers} />} />
           : <Route index element={<Navigate to={can('fiches') ? '/fiches-techniques' : can('ordres') ? '/ordres-de-coupe' : can('chaine') ? '/chaine-montage' : '/pointage'} replace />} />
         }
+        {can('demandes') ? <Route path="demandes" element={<Demandes />} /> : <Route path="demandes" element={<Navigate to="/" replace />} />}
         {can('fiches') ? <Route path="fiches-techniques" element={<FichesTechniques />} /> : <Route path="fiches-techniques" element={<Navigate to="/" replace />} />}
         {can('ordres') ? <Route path="ordres-de-coupe" element={<OrdresDeCoupe />} /> : <Route path="ordres-de-coupe" element={<Navigate to="/" replace />} />}
         {can('chaine') ? <Route path="chaine-montage" element={<ChaineDeMontage />} /> : <Route path="chaine-montage" element={<Navigate to="/" replace />} />}
@@ -193,8 +229,9 @@ function AppContent() {
         {can('parametres') ? <Route path="parametres" element={<Settings />} /> : <Route path="parametres" element={<Navigate to="/" replace />} />}
       </Route>
       <Route element={<PointageLayout />}>
-        <Route path="pointage" element={<Pointage />} />
+        <Route path="pointage" element={<Pointage onLogout={handleLogout} />} />
       </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

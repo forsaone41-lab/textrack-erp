@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, FileText, Scissors, Factory, Package,
   Users, ShoppingCart, Receipt, ClipboardCheck, Globe,
-  ChevronDown, ChevronRight, UserCircle, Trophy,
+  ChevronDown, ChevronRight, UserCircle, Trophy, Mail,
   TrendingDown, LogOut, ShieldCheck, HardHat, BarChart3, Settings as SettingsIcon
 } from 'lucide-react';
 import { useState } from 'react';
@@ -34,28 +34,27 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
   const allowed = loadPermissions()[currentUser.role] ?? [];
   const can = (page: AppPage) => allowed.includes(page);
 
-  const hasProd    = can('fiches') || can('ordres') || can('chaine');
-  const hasStock   = can('stocks');
+  const hasProd = can('fiches') || can('ordres') || can('chaine');
+  const hasStock = can('stocks');
   const hasFinance = can('bilan') || can('factures') || can('charges');
 
   const roleLabel = currentUser.role === 'admin'
     ? t('role_admin', lang)
     : currentUser.role === 'client'
-    ? t('role_client', lang)
-    : t('role_chef', lang);
+      ? t('role_client', lang)
+      : t('role_chef', lang);
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
-    `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all duration-300 group ${
-      isActive
-        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/40 font-bold scale-[1.02]'
-        : 'text-slate-400 hover:bg-white/5 hover:text-white'
+    `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all duration-300 group ${isActive
+      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/40 font-bold scale-[1.02]'
+      : 'text-slate-400 hover:bg-white/5 hover:text-white'
     }`;
 
   return (
     <>
       {/* Mobile overlay - Premium Blur */}
       {mobileOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-slate-950/60 z-40 md:hidden backdrop-blur-md transition-opacity duration-300"
           onClick={() => setMobileOpen?.(false)}
         />
@@ -68,7 +67,7 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
         ${isAr ? 'right-0 border-l border-white/5' : 'left-0 border-r border-white/5'}
       `}>
         {/* Mobile close button - Styled */}
-        <button 
+        <button
           onClick={() => setMobileOpen?.(false)}
           className={`md:hidden absolute top-4 ${isAr ? 'left-4' : 'right-4'} text-slate-400 hover:text-white z-50 p-2.5 bg-white/5 rounded-xl border border-white/10 active:scale-90 transition-all`}
         >
@@ -102,6 +101,13 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
             <NavLink to="/" className={linkClass} end>
               <LayoutDashboard className="w-5 h-5 opacity-80 group-hover:opacity-100 transition-opacity" />
               <span className="tracking-wide">{t('dashboard', lang)}</span>
+            </NavLink>
+          )}
+
+          {can('demandes') && (
+            <NavLink to="/demandes" className={linkClass}>
+              <Mail className="w-5 h-5 opacity-80 group-hover:opacity-100 transition-opacity" />
+              <span className="tracking-wide">{t('demandes', lang)}</span>
             </NavLink>
           )}
 

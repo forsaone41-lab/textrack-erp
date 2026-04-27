@@ -63,7 +63,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   return (
     <div className={`min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 ${isAr ? 'font-sans' : ''}`} dir={isAr ? 'rtl' : 'ltr'}>
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+      <div className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 shadow-sm">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
@@ -249,7 +249,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                       const isCurrent = idx === currentPhaseIdx && !isDelivered;
                       return (
                         <div key={phase} className="flex flex-col items-center">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all z-10 ${isComplete
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all ${isComplete
                             ? 'bg-green-500 text-white shadow-lg shadow-green-200'
                             : isCurrent
                               ? `${PHASE_COLORS[phase]} text-white shadow-lg ring-4 ring-indigo-100`

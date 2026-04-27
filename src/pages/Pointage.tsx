@@ -15,7 +15,7 @@ function dateNow() {
   return new Date().toISOString().split('T')[0];
 }
 
-export default function Pointage() {
+export default function Pointage({ onLogout }: { onLogout?: () => void }) {
   const { isAr } = useLang();
   const [employes, setEmployes] = useState<Employe[]>([]);
   const [presences, setPresences] = useState<Presence[]>([]);
@@ -162,6 +162,16 @@ export default function Pointage() {
               {isAr ? 'الوقت المباشر' : 'LIVE SYSTEM TIME'}
             </span>
           </div>
+
+          {onLogout && (
+            <button
+              onClick={onLogout}
+              className="absolute top-6 right-6 flex items-center gap-2 bg-rose-50 text-rose-600 px-4 py-2 rounded-2xl border border-rose-100 hover:bg-rose-100 transition shadow-sm font-black text-[10px] uppercase tracking-widest"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              {isAr ? 'خروج' : 'Déconnexion'}
+            </button>
+          )}
           
           <h1 className="text-7xl md:text-8xl font-black text-slate-900 tracking-tighter leading-none mb-6 font-mono drop-shadow-sm">
             {currentTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}

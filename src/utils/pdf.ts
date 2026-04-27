@@ -112,22 +112,45 @@ export async function generatePDF(elementId: string, filename: string) {
   try {
     element.scrollTop = 0;
     const canvas = await html2canvas(element, {
-      scale: 1.5, 
+      scale: 2, 
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
+      onclone: (clonedDoc) => {
+        const clonedElement = clonedDoc.getElementById(elementId);
+        if (clonedElement) {
+          clonedElement.style.opacity = '1';
+          clonedElement.style.visibility = 'visible';
+          clonedElement.style.display = 'block';
+          clonedElement.style.position = 'relative'; // CRITICAL: Reset from 'fixed'
+          clonedElement.style.left = '0';
+          clonedElement.style.top = '0';
+          clonedElement.style.zIndex = '9999';
+        }
+      }
     });
 
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
-    const ratio = canvas.width / pdfWidth;
-    const imgHeight = canvas.height / ratio;
-
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight, undefined, 'FAST');
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    
+    // Calculate dimensions to fit on one page if possible
+    const imgWidth = pdfWidth;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    
+    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight, undefined, 'FAST');
     pdf.save(`${filename}.pdf`);
   } catch (error) {
     console.error('PDF Generation Error:', error);
-    printElement(elementId);
+    // Fallback but with clean style
+    const element = document.getElementById(elementId);
+    if (element) {
+      element.style.opacity = '1';
+      element.style.position = 'relative';
+      printElement(elementId);
+      element.style.opacity = '0';
+      element.style.position = 'fixed';
+    }
   }
 }

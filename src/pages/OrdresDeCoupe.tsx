@@ -66,6 +66,21 @@ export default function OrdresDeCoupe() {
     setOrdres(prev => prev.map(item => item.id === o.id ? updated : item));
     await saveRecord('ordres', updated);
 
+    // AUTOMATIC STOCK DEDUCTION
+    if (o.rollId && o.metrage > 0) {
+      const roll = tissus.find(t => t.id === o.rollId);
+      if (roll) {
+        const updatedRoll = { 
+          ...roll, 
+          metrage: Math.max(0, Number((roll.metrage - o.metrage).toFixed(2))) 
+        };
+        // Update local state
+        setTissus(prev => prev.map(t => t.id === roll.id ? updatedRoll : t));
+        // Save to DB
+        await saveRecord('tissus', updatedRoll).catch(err => console.error("Error updating stock:", err));
+      }
+    }
+
     const cmd = commandes.find(c => c.id === o.commandeId);
     if (cmd) {
       const updatedCmd = { ...cmd, phase: 'montage' as any }; 
@@ -334,9 +349,29 @@ export default function OrdresDeCoupe() {
             <h2 className="text-2xl font-black text-slate-800 tracking-tight leading-none mb-4">{editId ? 'Modifier' : 'Lancer'} l'Ordre</h2>
             <div className="space-y-4">
               <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Modèle *</label><input value={form.modele || ''} onChange={e => handleModeleChange(e.target.value)} list="modeles-list" className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-50 outline-none transition-all" /></div>
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Sélectionner le Rouleau (Stock) *</label>
+                <select 
+                  value={form.rollId || ''} 
+                  onChange={e => {
+                    const roll = tissus.find(t => t.id === e.target.value);
+                    if (roll) {
+                      setForm({ ...form, rollId: roll.id, tissu: roll.type, couleur: roll.couleur });
+                    }
+                  }}
+                  className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-50 outline-none transition-all"
+                >
+                  <option value="">-- Choisir un rouleau --</option>
+                  {tissus.filter(t => t.metrage > 0).map(t => (
+                    <option key={t.id} value={t.id}>
+                      {t.type} {t.couleur} ({t.metrage}m dispos) — {t.reference || t.id.slice(0,4)}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="grid grid-cols-2 gap-4">
-                <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Tissu</label><input value={form.tissu || ''} onChange={e => setForm({ ...form, tissu: e.target.value })} className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-indigo-50" /></div>
-                <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Couleur</label><input value={form.couleur || ''} onChange={e => setForm({ ...form, couleur: e.target.value })} className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-indigo-50" /></div>
+                <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Tissu (Auto)</label><input readOnly value={form.tissu || ''} className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-400 outline-none" /></div>
+                <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Couleur (Auto)</label><input readOnly value={form.couleur || ''} className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-400 outline-none" /></div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Quantité (PCS)</label><input type="number" value={form.quantite || 0} onChange={e => handleQtyChange(parseInt(e.target.value) || 0)} className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-50 outline-none transition-all" /></div>
