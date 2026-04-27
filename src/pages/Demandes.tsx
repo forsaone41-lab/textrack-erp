@@ -26,6 +26,7 @@ export default function Demandes() {
   const [successLead, setSuccessLead] = useState<Lead | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [devisLead, setDevisLead] = useState<Lead | null>(null);
+  const [contactingLead, setContactingLead] = useState<Lead | null>(null);
   const [matierePrice, setMatierePrice] = useState<string>('');
   const [laborPrice, setLaborPrice] = useState<string>('');
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
@@ -135,6 +136,41 @@ export default function Demandes() {
       setMatierePrice('');
       setLaborPrice('');
     }
+  };
+
+  const handleContact = (lead: Lead, typeId: string, customMsg?: string) => {
+    const rawPhone = lead.phone.replace(/\D/g, '');
+    let formattedPhone = rawPhone;
+    if (rawPhone.startsWith('2120')) {
+      formattedPhone = '212' + rawPhone.substring(4);
+    } else if (rawPhone.startsWith('0')) {
+      formattedPhone = '212' + rawPhone.substring(1);
+    } else if (!rawPhone.startsWith('212')) {
+      formattedPhone = '212' + rawPhone;
+    }
+    
+    const lang = isAr ? 'ar' : 'fr';
+    const message = customMsg || templates[lang].firstContact
+      .replace(/{name}/g, lead.name)
+      .replace(/{type}/g, lead.type);
+
+    const encoded = encodeURIComponent(message);
+    window.open(`https://wa.me/${formattedPhone}?text=${encoded}`, '_blank');
+    
+    // Mark as contacted with specific type
+    const updated = leads.map(l => l.id === lead.id ? { 
+      ...l, 
+      contactedAt: new Date().toISOString(),
+      contactedType: typeId 
+    } : l);
+    
+    setLeads(updated);
+    localStorage.setItem('textrack_leads', JSON.stringify(updated));
+    
+    // Slight delay before closing to show feedback
+    setTimeout(() => {
+      setContactingLead(null);
+    }, 800);
   };
 
   const getFirstContactMessage = (lead: Lead) => {
@@ -507,13 +543,17 @@ export default function Demandes() {
                       <PhoneCall className="w-5 h-5" />
                     </a>
 
-                    <a 
-                      href={`https://wa.me/${lead.phone.replace(/\D/g, '').startsWith('0') ? '212' + lead.phone.replace(/\D/g, '').substring(1) : lead.phone.replace(/\D/g, '')}?text=${encodeURIComponent(getFirstContactMessage(lead))}`} 
-                      target="_blank" 
-                      className="h-11 px-4 bg-emerald-500 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
+                    <button 
+                      onClick={() => setContactingLead(lead)} 
+                      className={`h-11 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 ${
+                        lead.contactedAt 
+                          ? 'bg-slate-100 text-emerald-600 border border-emerald-100 shadow-none' 
+                          : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                      }`}
                     >
-                      <Phone className="w-4 h-4" /> {isAr ? '1. تواصل' : '1. Contact'}
-                    </a>
+                      {lead.contactedAt ? <CheckCircle className="w-4 h-4" /> : <Phone className="w-4 h-4" />}
+                      {isAr ? (lead.contactedAt ? 'تم التواصل' : '1. تواصل') : (lead.contactedAt ? 'Contacté' : '1. Contact')}
+                    </button>
                   </div>
 
                   {lead.status !== 'completed' && (
@@ -784,6 +824,104 @@ export default function Demandes() {
                   {isAr ? 'حفظ التغييرات' : 'Sauvegarder'}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Contact Options Modal */}
+      {contactingLead && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-8 border-b border-slate-50 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-200">
+                  <MessageSquare className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">
+                    {isAr ? 'اختيار نوع الرسالة' : 'Type de Message'}
+                  </h3>
+                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest italic">{contactingLead.name}</p>
+                </div>
+              </div>
+              <button onClick={() => setContactingLead(null)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+                <X className="w-6 h-6 text-slate-300" />
+              </button>
+            </div>
+
+            <div className="p-8 space-y-4">
+              {[
+                { 
+                  id: 'standard', 
+                  title: isAr ? 'رسالة تواصل قياسية' : 'Contact Standard',
+                  icon: <FileText className="w-5 h-5" />,
+                  desc: isAr ? 'الرسالة التي قمت بإعدادها في الإعدادات (تحية + أسئلة)' : 'Le message par défaut configuré dans les paramètres.',
+                  msg: templates[isAr ? 'ar' : 'fr'].firstContact.replace(/{name}/g, contactingLead.name).replace(/{type}/g, contactingLead.type)
+                },
+                { 
+                  id: 'strategic', 
+                  title: isAr ? 'تركيز على العلامة التجارية (Brand)' : 'Focus Branding/E-com',
+                  icon: <Settings className="w-5 h-5" />,
+                  desc: isAr ? 'سؤال مباشر عن نوع العمل (Brand أو E-com)' : 'Question directe sur le profil (Marque ou E-commerce).',
+                  msg: isAr 
+                    ? `السلام عليكم *${contactingLead.name}*، معكم *BEYA CREATIVE*. 😊\n\nشكراً على اهتمامكم بـ *${contactingLead.type}*. واش نتوما علامة تجارية واجدة (Brand) ولا كتبيعوا في الأنترنيت (E-com) وبغيتو تصاوبوا الماركة الخاصة ديالكم؟`
+                    : `Bonjour *${contactingLead.name}*, ici *BEYA CREATIVE*. 😊\n\nMerci pour votre intérêt pour les *${contactingLead.type}*. Êtes-vous une marque établie ou vendez-vous en ligne (E-com) et souhaitez-vous créer votre propre branding ?`
+                },
+                { 
+                  id: 'short', 
+                  title: isAr ? 'تحية سريعة' : 'Salut Rapide',
+                  icon: <MessageSquare className="w-5 h-5" />,
+                  desc: isAr ? 'تحية بسيطة لفتح باب النقاش' : 'Un message court pour engager la discussion.',
+                  msg: isAr 
+                    ? `السلام عليكم *${contactingLead.name}*، معكم *BEYA CREATIVE*. 😊 شكراً على طلبكم الخاص بـ *${contactingLead.type}*. واش ممكن تعطينا تفاصيل أكثر؟`
+                    : `Bonjour *${contactingLead.name}*, ici *BEYA CREATIVE*. 😊 Merci pour votre demande de *${contactingLead.type}*. Pourriez-vous nous donner plus de détails ?`
+                }
+              ].map(opt => {
+                const isSent = contactingLead.contactedType === opt.id;
+                return (
+                  <button 
+                    key={opt.id}
+                    onClick={() => handleContact(contactingLead, opt.id, opt.msg)}
+                    className={`w-full text-left p-6 border-2 rounded-3xl transition-all group flex items-start gap-4 relative overflow-hidden ${
+                      isSent 
+                        ? 'bg-emerald-50 border-emerald-500 shadow-lg shadow-emerald-100' 
+                        : 'bg-slate-50 border-transparent hover:border-emerald-500 hover:bg-white'
+                    }`}
+                  >
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                      isSent ? 'bg-emerald-500 text-white shadow-md' : 'bg-white text-slate-400 group-hover:text-emerald-500 group-hover:shadow-lg'
+                    }`}>
+                      {isSent ? <CheckCircle className="w-5 h-5" /> : opt.icon}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className={`text-sm font-black uppercase tracking-tight mb-1 ${isSent ? 'text-emerald-900' : 'text-slate-800'}`}>
+                          {opt.title}
+                        </h4>
+                        {isSent && (
+                          <span className="bg-emerald-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest animate-pulse">
+                            {isAr ? 'تم الإرسال' : 'Envoyé'}
+                          </span>
+                        )}
+                      </div>
+                      <p className={`text-xs font-medium leading-relaxed ${isSent ? 'text-emerald-700/70' : 'text-slate-500'}`}>
+                        {opt.desc}
+                      </p>
+                    </div>
+                    
+                    {isSent && (
+                      <div className="absolute -right-2 -top-2 opacity-10">
+                        <CheckCircle className="w-16 h-16 text-emerald-500 rotate-12" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="p-8 bg-slate-50 border-t border-slate-100 flex items-center gap-3 text-emerald-600">
+              <AlertTriangle className="w-4 h-4" />
+              <p className="text-[10px] font-black uppercase tracking-widest">سيتم فتح WhatsApp تلقائياً وتحديث حالة الطلب</p>
             </div>
           </div>
         </div>

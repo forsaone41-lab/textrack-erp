@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt } from 'lucide-react';
+import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, Settings, ChevronDown, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText } from 'lucide-react';
 import {
   Commande, Facture, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { printElement } from '../utils/pdf';
 import { InvoicePRO } from '../components/InvoicePRO';
-import { Download } from 'lucide-react';
 
 interface PortailClientProps {
   currentUser?: User | null;
@@ -24,9 +23,29 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [selectedFacture, setSelectedFacture] = useState<Facture | null>(null);
   const [company] = useState<CompanyProfile>(loadCompanyProfile());
   const { isAr, toggle } = useLang();
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'docs' | 'support'>('overview');
+  const [showNotifs, setShowNotifs] = useState(false);
 
   // Helper for translating phase names
-  const phaseAr: Record<string, string> = { coupe: 'الفصالة', montage: 'الخياطة', finition: 'الفينيسيون', repassage: 'المصلوح', livré: 'تسلّمات' };
+  const phaseAr: Record<string, string> = { 
+    coupe: 'الفصالة', 
+    montage: 'الخياطة', 
+    finition: 'الفينيسيون', 
+    repassage: 'المصلوح', 
+    controle: 'مراقبة الجودة',
+    emballage: 'التغليف',
+    livré: 'تسلّمات' 
+  };
+
+  const phaseIcons: Record<string, any> = {
+    coupe: <Scissors className="w-5 h-5" />,
+    montage: <Layers className="w-5 h-5" />,
+    finition: <Sparkles className="w-5 h-5" />,
+    repassage: <Wind className="w-5 h-5" />,
+    controle: <ShieldCheck className="w-5 h-5" />,
+    emballage: <Box className="w-5 h-5" />,
+    livré: <Truck className="w-5 h-5" />
+  };
 
   useEffect(() => {
     Promise.all([
@@ -61,348 +80,550 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   }
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 ${isAr ? 'font-sans' : ''}`} dir={isAr ? 'rtl' : 'ltr'}>
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
-              <Package className="w-5 h-5 text-white" />
+    <div className={`min-h-screen bg-slate-50 flex ${isAr ? 'font-sans' : ''}`} dir={isAr ? 'rtl' : 'ltr'}>
+      {/* Sidebar Navigation */}
+      <aside className={`fixed inset-y-0 ${isAr ? 'right-0' : 'left-0'} z-50 w-72 bg-slate-900 text-white transition-transform lg:translate-x-0 hidden lg:block`}>
+        <div className="flex flex-col h-full">
+          <div className="p-8">
+            <div className="flex items-center gap-3 mb-10">
+              <div className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                <Package className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-xl font-black uppercase tracking-tighter italic">BEYA<span className="text-indigo-400">Portal</span></span>
             </div>
-            <div>
-              <h1 className="text-lg font-bold text-slate-800 tracking-tight">{isAr ? 'بوابة بيا كرياتيف' : 'Beya Creative Portal'}</h1>
-              <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-widest">{isAr ? 'فضاء الزبون' : 'Espace Client Premium'}</p>
-            </div>
+
+            <nav className="space-y-2">
+              {[
+                { id: 'overview', icon: <Globe className="w-5 h-5" />, label: isAr ? 'نظرة عامة' : 'Vue d\'ensemble' },
+                { id: 'orders', icon: <Package className="w-5 h-5" />, label: isAr ? 'طلبياتي' : 'Mes Commandes' },
+                { id: 'docs', icon: <Receipt className="w-5 h-5" />, label: isAr ? 'الفواتير والوثائق' : 'Factures & Docs' },
+                { id: 'support', icon: <Bell className="w-5 h-5" />, label: isAr ? 'الدعم الفني VIP' : 'Support VIP' },
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id as any)}
+                  className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-sm font-bold uppercase tracking-widest transition-all ${
+                    activeTab === item.id 
+                      ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-600/20' 
+                      : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  {item.icon}
+                  {item.label}
+                </button>
+              ))}
+            </nav>
           </div>
-          <div className="flex items-center gap-4">
-            <button onClick={toggle} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition text-xs font-bold">
-              <Globe className="w-4 h-4" />
-              {isAr ? 'FR' : 'عربية'}
-            </button>
-            {currentUser && (
-              <div className="hidden sm:flex items-center gap-3 bg-white shadow-sm rounded-full px-4 py-1.5 border border-slate-200">
-                <div className="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center">
-                  <span className="text-xs font-bold text-emerald-700">{currentUser.nom[0]}</span>
-                </div>
-                <span className="text-sm font-medium text-slate-700">{currentUser.nom}</span>
-                <span className="text-[10px] bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full font-bold uppercase">{isAr ? 'الزبون' : 'Client'}</span>
-                {onLogout && (
-                  <button onClick={onLogout} className="text-xs text-red-500 hover:text-red-700 font-bold ml-1 transition">
-                    {isAr ? 'خروج' : 'Déconnexion'}
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
 
-      <div className="max-w-4xl mx-auto px-6 pt-10 pb-20">
-        {/* Welcome Message */}
-        <div className="bg-gradient-to-r from-indigo-600 to-indigo-800 rounded-3xl p-8 mb-12 shadow-2xl shadow-indigo-200 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/20 rounded-full -ml-24 -mb-24 blur-2xl" />
-
-          <div className="relative z-10">
-            <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
-              <div>
-                <h2 className="text-3xl font-black text-white mb-3">
-                  {currentUser ? (isAr ? `مرحباً، ${currentUser.nom} !` : `Bienvenue, ${currentUser.nom} !`) : (isAr ? 'تتبع الطلبية' : 'Suivi de Production')}
-                </h2>
-                <p className="text-indigo-100 text-lg max-w-xl leading-relaxed">
-                  {isAr
-                    ? 'فرحانين حيت خدامين معاك. تبع سلعتك فين وصلات بكل التفاصيل و فاي وقت.'
-                    : "Nous sommes ravis de vous accompagner. Suivez l'avancement de vos commandes en temps réel et restez informé de chaque étape de fabrication."}
-                </p>
-              </div>
-
-              {/* Notification Toggle */}
-              {currentUser?.role === 'client' && (
-                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${notifsEnabled ? 'bg-indigo-500 text-white' : 'bg-white/20 text-indigo-200'}`}>
-                    <Bell className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-white font-semibold text-sm">{isAr ? 'إشعارات الإيميل' : 'Notifications Email'}</p>
-                    <p className="text-indigo-200 text-xs">{isAr ? 'توصل بالجديد فكل مرحلة' : 'Recevoir des alertes'}</p>
-                  </div>
-                  <button
-                    onClick={() => setNotifsEnabled(!notifsEnabled)}
-                    className={`ml-2 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${notifsEnabled ? 'bg-emerald-400' : 'bg-white/30'}`}
-                  >
-                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${notifsEnabled ? (isAr ? '-translate-x-6' : 'translate-x-6') : (isAr ? '-translate-x-1' : 'translate-x-1')}`} />
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="mt-8 flex flex-wrap gap-4">
-              <div className="bg-white/15 backdrop-blur-md rounded-xl px-4 py-3 border border-white/20">
-                <p className="text-indigo-200 text-[10px] font-bold uppercase tracking-wider mb-1">{isAr ? 'الحالة' : 'Status'}</p>
-                <p className="text-white text-sm font-semibold">{isAr ? 'الإنتاج خدام' : 'Production Active'}</p>
-              </div>
-              <div className="bg-white/15 backdrop-blur-md rounded-xl px-4 py-3 border border-white/20">
-                <p className="text-indigo-200 text-[10px] font-bold uppercase tracking-wider mb-1">{isAr ? 'آخر تحديث' : 'Dernière Mise à Jour'}</p>
-                <p className="text-white text-sm font-semibold">{isAr ? 'اليوم' : "Aujourd'hui"}</p>
-              </div>
-            </div>
+          <div className="mt-auto p-8 border-t border-white/5">
+             {currentUser && (
+               <div className="flex items-center gap-4 mb-6">
+                 <div className="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center text-indigo-400 border border-indigo-500/20">
+                   {currentUser.nom[0]}
+                 </div>
+                 <div className="flex-1 min-w-0">
+                    <p className="text-sm font-black truncate uppercase tracking-tight">{currentUser.nom}</p>
+                    <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">{isAr ? 'زبون ممتاز' : 'Client Premium'}</p>
+                 </div>
+               </div>
+             )}
+             <button 
+               onClick={onLogout}
+               className="w-full py-4 bg-white/5 hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border border-transparent hover:border-rose-500/20"
+             >
+               {isAr ? 'تسجيل الخروج' : 'Déconnexion'}
+             </button>
           </div>
         </div>
+      </aside>
 
-        {/* Search Section */}
-        {currentUser?.role !== 'client' && (
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-slate-800 mb-2">{isAr ? 'تتبع الطلبية' : 'Suivi de Commande'}</h2>
-            <p className="text-slate-500 mb-8">{isAr ? 'دخل رقم الطلبية ديالك باش تشوف فين وصلات' : 'Entrez votre référence de commande pour voir où en est votre production'}</p>
-            <div className="flex gap-3 max-w-md mx-auto">
-              <div className="relative flex-1">
-                <Search className={`absolute ${isAr ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400`} />
-                <input
-                  type="text"
-                  placeholder="Ex: CMD-2024-001"
-                  value={reference}
-                  onChange={e => setReference(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                  className={`w-full ${isAr ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-3 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none shadow-sm`}
-                />
-              </div>
-              <button onClick={handleSearch}
-                className="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition font-medium text-sm shadow-sm">
-                {isAr ? 'قلّب' : 'Rechercher'}
+      {/* Main Content Area */}
+      <main className={`flex-1 ${isAr ? 'lg:mr-72' : 'lg:ml-72'} min-h-screen relative`}>
+        {/* Top Header */}
+        <header className="h-24 bg-white/70 backdrop-blur-xl border-b border-slate-100 flex items-center justify-between px-10 sticky top-0 z-40">
+           <div className="flex items-center gap-4">
+              <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">
+                {activeTab === 'overview' ? (isAr ? 'لوحة التحكم' : 'Tableau de Bord') :
+                 activeTab === 'orders' ? (isAr ? 'الطلبيات' : 'Commandes') :
+                 activeTab === 'docs' ? (isAr ? 'الوثائق' : 'Documents') : (isAr ? 'الدعم' : 'Support')}
+              </h2>
+           </div>
+           
+           <div className="flex items-center gap-4">
+              <button onClick={toggle} className="px-5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-100 transition-colors">
+                 {isAr ? 'FR' : 'عربية'}
               </button>
-            </div>
-          </div>
-        )}
+              
+              <div className="relative">
+                 <button 
+                   onClick={() => setShowNotifs(!showNotifs)}
+                   className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${
+                     showNotifs ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-100' : 'bg-slate-50 text-slate-400 border-slate-200'
+                   }`}
+                 >
+                    <Bell className="w-5 h-5" />
+                    <span className="absolute top-0 right-0 w-3 h-3 bg-rose-500 border-2 border-white rounded-full"></span>
+                 </button>
 
-        {currentUser?.role === 'client' && (
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-800 mb-1">{isAr ? 'الطلبيات ديالي' : 'Mes Commandes'}</h2>
-            <p className="text-slate-500 text-sm">{isAr ? `عندك ${found.length} طلبية` : `Vous avez ${found.length} commande(s) en cours ou livrée(s)`}</p>
-          </div>
-        )}
-
-        {/* Results */}
-        {searched && found.length === 0 && (
-          <div className="text-center py-12">
-            <Package className="w-16 h-16 mx-auto mb-4 text-slate-300" />
-            <p className="text-lg font-medium text-slate-500">{isAr ? 'مالقينا حتى طلبية' : 'Aucune commande trouvée'}</p>
-            <p className="text-sm text-slate-400 mt-1">{isAr ? 'تأكد من الرقم و عاود' : 'Vérifiez la référence et réessayez'}</p>
-          </div>
-        )}
-
-        {found.map(cmd => {
-          const currentPhaseIdx = getPhaseIndex(cmd.phase);
-          const isDelivered = cmd.statut === 'livré';
-          const isLate = !isDelivered && new Date(cmd.dateLivraisonPrevue) < new Date();
-          const daysRemaining = Math.ceil((new Date(cmd.dateLivraisonPrevue).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-          const cmdFacture = factures.find(f => f.commandeId === cmd.id);
-
-          return (
-            <div key={cmd.id} className="bg-white rounded-2xl border border-slate-200 shadow-lg mb-6 overflow-hidden">
-              {/* Command Header */}
-              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-indigo-200 text-xs uppercase tracking-wider">{isAr ? 'طلبية' : 'Commande'}</p>
-                    <h3 className="text-2xl font-bold mt-1">{cmd.reference}</h3>
-                  </div>
-                  <div className={`text-${isAr ? 'left' : 'right'}`}>
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${isDelivered ? 'bg-green-500/20 text-green-200' : isLate ? 'bg-red-500/20 text-red-200' : 'bg-white/20 text-white'
-                      }`}>
-                      {isDelivered ? <CircleCheck className="w-4 h-4" /> : isLate ? <Clock className="w-4 h-4" /> : <Truck className="w-4 h-4" />}
-                      {isDelivered ? (isAr ? 'تسلّمات' : 'Livré') : isLate ? (isAr ? 'معطلة' : 'En retard') : (isAr ? 'فالإنتاج' : 'En production')}
-                    </span>
-                  </div>
-                </div>
-                <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <p className="text-indigo-200 text-xs">{isAr ? 'الزبون' : 'Client'}</p>
-                    <p className="font-medium">{cmd.client}</p>
-                  </div>
-                  <div>
-                    <p className="text-indigo-200 text-xs">{isAr ? 'الموديل' : 'Modèle'}</p>
-                    <p className="font-medium">{cmd.modele}</p>
-                  </div>
-                  <div>
-                    <p className="text-indigo-200 text-xs">{isAr ? 'الكمية' : 'Quantité'}</p>
-                    <p className="font-medium">{cmd.quantite} {isAr ? 'قطعة' : 'pièces'}</p>
-                  </div>
-                </div>
+                 {showNotifs && (
+                   <>
+                     <div className="fixed inset-0 z-10" onClick={() => setShowNotifs(false)} />
+                     <div className={`absolute top-full mt-4 ${isAr ? 'left-0' : 'right-0'} w-80 bg-white rounded-[2rem] shadow-2xl border border-slate-100 z-20 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300`}>
+                        <div className="p-6 border-b border-slate-50 flex items-center justify-between">
+                           <h3 className="text-sm font-black uppercase tracking-tighter text-slate-900">{isAr ? 'آخر التحديثات' : 'Notifications'}</h3>
+                           <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md uppercase tracking-widest">New</span>
+                        </div>
+                        <div className="max-h-80 overflow-y-auto">
+                           {found.flatMap(cmd => cmd.suivi.map(s => ({ ...s, cmdRef: cmd.reference }))).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5).map((notif, idx) => (
+                             <div key={idx} className="p-5 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer group">
+                                <div className="flex gap-4">
+                                   <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${PHASE_COLORS[notif.phase]}`} />
+                                   <div>
+                                      <p className="text-xs font-bold text-slate-900 leading-relaxed mb-1">
+                                         {isAr ? `الطلبية ${notif.cmdRef} انتقلت لـ ${phaseAr[notif.phase]}` : `Commande ${notif.cmdRef} est passée à ${PHASE_LABELS[notif.phase]}`}
+                                      </p>
+                                      <p className="text-[10px] text-slate-400 font-medium italic">{notif.date}</p>
+                                   </div>
+                                </div>
+                             </div>
+                           ))}
+                           {found.length === 0 && (
+                             <div className="p-10 text-center">
+                                <Bell className="w-10 h-10 text-slate-100 mx-auto mb-4" />
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Aucune notification</p>
+                             </div>
+                           )}
+                        </div>
+                        <button 
+                          onClick={() => setActiveTab('orders')}
+                          className="w-full py-4 bg-slate-50 text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:bg-indigo-50 transition-colors"
+                        >
+                           {isAr ? 'عرض جميع الطلبيات' : 'Voir tout le suivi'}
+                        </button>
+                     </div>
+                   </>
+                 )}
               </div>
+           </div>
+        </header>
 
-              {/* Progress Timeline */}
-              <div className="p-6">
-                <h4 className="text-sm font-semibold text-slate-700 mb-6">{isAr ? 'فين وصلات السلعة' : 'Progression de Production'}</h4>
-                <div className="relative">
-                  {/* Progress Bar Background */}
-                  <div className={`absolute top-5 left-5 right-5 h-1 bg-slate-200 rounded-full ${isAr ? 'transform scale-x-[-1]' : ''}`}>
-                    <div
-                      className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
-                      style={{ width: `${(currentPhaseIdx / (PHASE_ORDER.length - 1)) * 100}%` }}
-                    />
+        <div className="p-10 max-w-6xl mx-auto">
+          {activeTab === 'overview' && (
+            <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+               {/* Welcome Hero */}
+               <div className="bg-slate-900 rounded-[3rem] p-12 text-white relative overflow-hidden shadow-2xl">
+                  <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl -mr-48 -mt-48" />
+                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -ml-32 -mb-32" />
+                  
+                  <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
+                    <div className="flex-1 text-center md:text-left">
+                       <h1 className="text-4xl md:text-5xl font-black mb-6 leading-tight">
+                         {isAr ? `مرحباً بك، ${currentUser?.nom || 'عزيزي الزبون'}` : `Heureux de vous revoir, ${currentUser?.nom || 'Cher Client'}`}
+                       </h1>
+                       <p className="text-slate-400 text-lg font-medium max-w-xl">
+                         {isAr ? 'تبع طلبياتك، حمل فواتيرك، وتواصل مع الفريق ديالنا. حنا هنا باش نسهلو ليك الخدمة.' 
+                              : 'Suivez vos productions, gérez vos documents et communiquez avec notre équipe en toute simplicité.'}
+                       </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 w-full md:w-auto">
+                       <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-3xl text-center">
+                          <p className="text-3xl font-black mb-1">{found.length}</p>
+                          <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">{isAr ? 'طلبيات' : 'Commandes'}</p>
+                       </div>
+                       <div className="bg-indigo-500 border border-indigo-400 p-6 rounded-3xl text-center shadow-lg shadow-indigo-500/20">
+                          <p className="text-3xl font-black mb-1">{found.filter(c => c.statut === 'en_cours').length}</p>
+                          <p className="text-[10px] text-indigo-100 uppercase font-bold tracking-widest">{isAr ? 'في الإنتاج' : 'Actives'}</p>
+                       </div>
+                    </div>
                   </div>
 
-                  {/* Phase Steps */}
-                  <div className="flex justify-between relative">
-                    {PHASE_ORDER.map((phase, idx) => {
-                      const isComplete = idx < currentPhaseIdx || isDelivered;
-                      const isCurrent = idx === currentPhaseIdx && !isDelivered;
-                      return (
-                        <div key={phase} className="flex flex-col items-center">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all ${isComplete
-                            ? 'bg-green-500 text-white shadow-lg shadow-green-200'
-                            : isCurrent
-                              ? `${PHASE_COLORS[phase]} text-white shadow-lg ring-4 ring-indigo-100`
-                              : 'bg-white border-2 border-slate-300 text-slate-400'
-                            }`}>
-                            {isComplete ? '✓' : idx + 1}
-                          </div>
-                          <p className={`text-xs mt-2 font-medium text-center ${isComplete ? 'text-green-600' : isCurrent ? 'text-slate-800' : 'text-slate-400'
-                            }`}>
-                            {isAr ? phaseAr[phase] : PHASE_LABELS[phase]}
+                  {/* WhatsApp Notification Toggle */}
+                  {currentUser?.role === 'client' && (
+                    <div className="mt-12 flex flex-col md:flex-row items-center gap-6 p-6 bg-white/5 backdrop-blur-md border border-white/10 rounded-[2.5rem]">
+                       <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${notifsEnabled ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-white/10 text-slate-400'}`}>
+                          <MessageCircle className="w-7 h-7" />
+                       </div>
+                       <div className="flex-1 text-center md:text-left">
+                          <h4 className="text-lg font-black text-white uppercase tracking-tight mb-1">
+                            {isAr ? 'تنبيهات الواتساب' : 'Notifications WhatsApp'}
+                          </h4>
+                          <p className="text-slate-400 text-sm font-medium">
+                            {isAr 
+                              ? `توصل بآخر التحديثات مباشرة على الرقم: ${currentUser.telephone || '...'} ` 
+                              : `Recevez les mises à jour en direct sur votre mobile.`}
                           </p>
+                       </div>
+                       <div className="flex items-center gap-4">
+                          <span className={`text-[10px] font-black uppercase tracking-widest ${notifsEnabled ? 'text-emerald-400' : 'text-slate-500'}`}>
+                             {notifsEnabled ? (isAr ? 'مفعّلة' : 'Activé') : (isAr ? 'معطلة' : 'Désactivé')}
+                          </span>
+                          <button
+                            onClick={() => setNotifsEnabled(!notifsEnabled)}
+                            className={`relative inline-flex h-8 w-14 items-center rounded-full transition-all duration-500 outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900 ${notifsEnabled ? 'bg-emerald-500' : 'bg-white/20'}`}
+                          >
+                            <span className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-lg transition-all duration-500 ${notifsEnabled ? (isAr ? '-translate-x-7' : 'translate-x-7') : (isAr ? '-translate-x-1' : 'translate-x-1')}`} />
+                          </button>
+                       </div>
+                    </div>
+                  )}
+               </div>
+
+               {/* Recent Orders Overview */}
+               <div>
+                  <div className="flex items-center justify-between mb-8">
+                     <h3 className="text-xl font-black uppercase tracking-tighter text-slate-800">{isAr ? 'آخر الطلبيات' : 'Commandes Récentes'}</h3>
+                     <button onClick={() => setActiveTab('orders')} className="text-xs font-black text-indigo-600 uppercase tracking-widest hover:underline">{isAr ? 'عرض الكل' : 'Voir tout'}</button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {found.slice(0, 2).map(cmd => {
+                      const progress = (getPhaseIndex(cmd.phase) / (PHASE_ORDER.length - 1)) * 100;
+                      const isActive = cmd.statut !== 'livré';
+                      return (
+                        <div key={cmd.id} className="bg-white/70 backdrop-blur-xl p-10 rounded-[3rem] border border-white shadow-2xl shadow-slate-200/50 group hover:border-indigo-400 transition-all duration-500 relative overflow-hidden">
+                          {/* Live Indicator */}
+                          {isActive && (
+                            <div className="absolute top-6 left-6 flex items-center gap-2">
+                               <span className="relative flex h-3 w-3">
+                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                 <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                               </span>
+                               <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">{isAr ? 'مباشر' : 'Live'}</span>
+                            </div>
+                          )}
+
+                          <div className="flex items-center justify-between mb-10 pt-4">
+                             <div className="flex flex-col">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{isAr ? 'رقم الطلبية' : 'Référence'}</span>
+                                <span className="text-sm font-black text-indigo-600 uppercase tracking-tighter">{cmd.reference}</span>
+                             </div>
+                             <div className="text-right">
+                                <span className={`inline-block px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest ${
+                                  cmd.statut === 'livré' ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-600'
+                                }`}>
+                                  {isAr ? phaseAr[cmd.phase] : PHASE_LABELS[cmd.phase]}
+                                </span>
+                             </div>
+                          </div>
+
+                          <div className="mb-10 text-center md:text-left">
+                             <h4 className="text-3xl font-black text-slate-900 mb-2 uppercase tracking-tight group-hover:text-indigo-600 transition-colors">{cmd.modele}</h4>
+                             <div className="flex items-center justify-center md:justify-start gap-2 text-slate-400 font-bold uppercase text-[10px] tracking-widest">
+                                <span>Quantité:</span>
+                                <span className="text-slate-900">{cmd.quantite} pcs</span>
+                             </div>
+                          </div>
+                          
+                          <div className="space-y-6">
+                             <div className="flex justify-between items-end mb-2">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'حالة التقدم' : 'Progression'}</p>
+                                <p className="text-xl font-black text-indigo-600">{Math.round(progress)}%</p>
+                             </div>
+                             <div className="h-4 w-full bg-slate-50 rounded-full p-1 border border-slate-100 shadow-inner mb-8">
+                                <div 
+                                  className="h-full bg-gradient-to-r from-indigo-500 via-indigo-600 to-purple-600 rounded-full transition-all duration-1000 ease-out shadow-lg shadow-indigo-200" 
+                                  style={{ width: `${progress}%` }} 
+                                />
+                             </div>
+                             
+                             {/* Production Roadmap Icons */}
+                             <div className="relative pt-4 px-2">
+                                <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-slate-100 -translate-y-1/2 z-0" />
+                                <div className="relative z-10 flex justify-between items-center">
+                                   {PHASE_ORDER.map((p, idx) => {
+                                     const isCompleted = getPhaseIndex(cmd.phase) >= idx;
+                                     const isCurrent = cmd.phase === p;
+                                     return (
+                                       <div key={p} className="flex flex-col items-center gap-2 group/step">
+                                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-500 ${
+                                            isCompleted 
+                                              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 scale-110' 
+                                              : 'bg-white text-slate-300 border border-slate-100'
+                                          } ${isCurrent ? 'ring-4 ring-indigo-50' : ''}`}>
+                                             {phaseIcons[p]}
+                                          </div>
+                                          <span className={`text-[8px] font-black uppercase tracking-tighter ${isCompleted ? 'text-indigo-600' : 'text-slate-400'}`}>
+                                             {isAr ? phaseAr[p] : PHASE_LABELS[p]}
+                                          </span>
+                                       </div>
+                                     );
+                                   })}
+                                </div>
+                             </div>
+                          </div>
                         </div>
                       );
                     })}
                   </div>
-                </div>
+               </div>
+            </div>
+          )}
 
-                {/* Timeline details */}
-                {cmd.suivi.length > 0 && (
-                  <div className="mt-8 pt-6 border-t border-slate-100">
-                    <h4 className="text-sm font-semibold text-slate-700 mb-4">{isAr ? 'التفاصيل' : 'Historique détaillé'}</h4>
-                    <div className="space-y-3">
-                      {cmd.suivi.map((s, i) => (
-                        <div key={i} className="flex items-start gap-3">
-                          <div className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 ${PHASE_COLORS[s.phase]}`} />
-                          <div>
-                            <p className="text-sm text-slate-700">
-                              <span className="font-medium">{isAr ? phaseAr[s.phase] : PHASE_LABELS[s.phase]}</span>
-                              <span className="text-slate-400 mx-2">·</span>
-                              <span className="text-slate-500" dir="ltr">{s.date}</span>
-                            </p>
-                            <p className="text-xs text-slate-500 mt-0.5">{s.note}</p>
+          {activeTab === 'orders' && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+               <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 text-center md:text-left">
+                  <div>
+                    <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-2">{isAr ? 'تتبع الإنتاج' : 'Mes Productions'}</h1>
+                    <p className="text-slate-500 font-medium italic">{isAr ? 'إليك تفاصيل كاملة عن سير أعمالك' : 'Détails complets de vos commandes en cours'}</p>
+                  </div>
+                  <div className="relative mx-auto md:mx-0 w-full md:w-auto">
+                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                     <input 
+                       type="text" 
+                       placeholder="Référence..."
+                       className="pl-11 pr-6 py-4 bg-white border border-slate-100 rounded-2xl text-sm font-bold shadow-xl shadow-slate-200/50 outline-none focus:border-indigo-600 transition-all w-full md:w-64"
+                       value={reference}
+                       onChange={(e) => setReference(e.target.value)}
+                       onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                     />
+                  </div>
+               </div>
+
+               <div className="space-y-8">
+                 {found.map(cmd => (
+                   <div key={cmd.id} id={`order-card-${cmd.id}`} className="bg-white rounded-[2rem] md:rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden group transition-all duration-500 hover:shadow-indigo-100">
+                      {/* PRO Gradient Header */}
+                      <div className="p-4 md:p-8 bg-gradient-to-r from-slate-900 via-indigo-950 to-indigo-900 text-white flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8 relative overflow-hidden text-center md:text-left">
+                         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -mr-32 -mt-32" />
+                         <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8 relative z-10 w-full md:w-auto">
+                            <div className="w-14 h-14 md:w-20 md:h-20 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl md:rounded-[2rem] flex items-center justify-center text-white shadow-2xl group-hover:scale-110 transition-transform duration-500">
+                               <Package className="w-7 h-7 md:w-10 md:h-10" />
+                            </div>
+                            <div>
+                               <div className="flex items-center justify-center md:justify-start gap-3 mb-1.5 md:mb-2">
+                                  <span className="px-3 py-1 bg-indigo-500/30 border border-white/20 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em]">{cmd.reference}</span>
+                                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-lg shadow-emerald-500/50" />
+                               </div>
+                               <h3 className="text-xl md:text-3xl font-black uppercase tracking-tight leading-none">{cmd.modele}</h3>
+                               
+                               {/* Status centered below for mobile */}
+                               <div className="mt-3 md:hidden">
+                                  <span className="px-5 py-2 bg-white/10 backdrop-blur-xl text-white rounded-xl text-[9px] font-black uppercase tracking-widest border border-white/20 shadow-2xl inline-block">
+                                     {isAr ? phaseAr[cmd.phase] : PHASE_LABELS[cmd.phase]}
+                                  </span>
+                               </div>
+                            </div>
+                         </div>
+
+                         {/* Status on Right for Desktop */}
+                         <div className="hidden md:flex items-center gap-8 relative z-10">
+                            <div className="text-right">
+                                <p className="text-[10px] font-black text-indigo-300 uppercase tracking-widest mb-2 opacity-80">{isAr ? 'الحالة الحالية للإنتاج' : 'Statut Actuel'}</p>
+                                <span className="px-6 py-3 bg-white/10 backdrop-blur-xl text-white rounded-2xl text-[10px] font-black uppercase tracking-widest border border-white/20 shadow-xl inline-block group-hover:bg-indigo-500 transition-colors">
+                                   {isAr ? phaseAr[cmd.phase] : PHASE_LABELS[cmd.phase]}
+                                </span>
+                             </div>
+                         </div>
+                      </div>
+
+                      {/* Roadmap Section */}
+                      <div className="p-4 md:p-8 text-center md:text-left">
+                          <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0 mb-6 md:mb-8">
+                             <div className="flex flex-col items-center md:items-start gap-1 w-full md:w-auto">
+                                <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500 rounded-full shadow-lg shadow-emerald-500/20">
+                                   <span className="relative flex h-2 w-2">
+                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                     <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                                   </span>
+                                   <span className="text-[8px] md:text-[9px] font-black text-white uppercase tracking-[0.2em]">{isAr ? 'تتبع مباشر' : 'Live Tracking'}</span>
+                                </div>
+                                <h4 className="text-xs md:text-sm font-black text-slate-500 uppercase tracking-widest mt-1">{isAr ? 'مسار الإنتاج الدقيق' : 'Precision Production Flow'}</h4>
+                             </div>
+                             
+                             <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 w-full md:w-auto">
+                                <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl w-full md:w-auto justify-center">
+                                   <div className="w-2 h-2 bg-indigo-500 rounded-full shadow-sm" />
+                                   <span className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest">{isAr ? 'جودة مضمونة' : 'Crafted with Precision'}</span>
+                                </div>
+                                <div className="text-indigo-600 font-black text-xl bg-indigo-50 px-5 py-1.5 rounded-xl border border-indigo-100 shadow-sm w-full md:w-auto text-center">{Math.round((getPhaseIndex(cmd.phase) / (PHASE_ORDER.length - 1)) * 100)}%</div>
+                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Delivery info */}
-                <div className="mt-6 pt-6 border-t border-slate-100">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-slate-400">{isAr ? 'تاريخ الطلب' : 'Date de commande'}</p>
-                      <p className="text-sm font-medium text-slate-700" dir="ltr">{cmd.dateCommande}</p>
-                    </div>
-                    <div className={`text-${isAr ? 'left' : 'right'}`}>
-                      <p className="text-xs text-slate-400">{isAr ? 'التسليم المتوقع' : 'Livraison prévue'}</p>
-                      <div className={`flex items-center gap-2 mt-0.5 ${isAr ? 'justify-start flex-row-reverse' : 'justify-end'}`}>
-                        <p className={`text-sm font-medium ${isLate ? 'text-red-600' : 'text-slate-700'}`} dir="ltr">
-                          {cmd.dateLivraisonPrevue}
-                        </p>
-                        {!isDelivered && (
-                          <span className={`px-2 py-0.5 rounded-md text-xs font-bold ${isLate ? 'bg-red-100 text-red-600' :
-                              daysRemaining <= 3 ? 'bg-orange-100 text-orange-600' :
-                                'bg-blue-100 text-blue-600'
-                            }`}>
-                            {isLate ? (isAr ? 'تعطلات' : 'Retard') : `J-${daysRemaining}`}
-                          </span>
-                        )}
+                          
+                          <div className="relative pt-2 md:pt-4 pb-1 md:pb-2 overflow-x-auto no-scrollbar">
+                             <div className="absolute top-1/2 left-0 right-0 h-1 bg-slate-100 -translate-y-1/2 z-0 rounded-full min-w-[500px] md:min-w-0" />
+                             <div className="relative z-10 flex justify-between items-center min-w-[500px] md:min-w-0 px-2 md:px-0">
+                                {PHASE_ORDER.map((p, idx) => {
+                                  const isCompleted = getPhaseIndex(cmd.phase) >= idx;
+                                  const isCurrent = cmd.phase === p;
+                                  return (
+                                    <div key={p} className="flex flex-col items-center gap-2 group/step">
+                                       <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center transition-all duration-500 ${
+                                         isCompleted 
+                                           ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' 
+                                           : 'bg-white text-slate-300 border-2 border-slate-100'
+                                       } ${isCurrent ? 'ring-4 md:ring-6 ring-indigo-50 scale-110 shadow-xl shadow-indigo-500/20 border-indigo-200' : ''}`}>
+                                          {phaseIcons[p]}
+                                       </div>
+                                       <span className={`text-[8px] md:text-[10px] font-black uppercase tracking-tighter text-center max-w-[50px] md:max-w-[70px] leading-tight ${isCompleted ? 'text-indigo-700' : 'text-slate-500'}`}>
+                                          {isAr ? phaseAr[p] : PHASE_LABELS[p]}
+                                       </span>
+                                    </div>
+                                  );
+                                })}
+                             </div>
+                          </div>
                       </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Invoice info */}
-                {cmdFacture && (
-                  <div className="mt-6 pt-6 border-t border-slate-100">
-                    <h4 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
-                      <Receipt className="w-4 h-4 text-emerald-500" />
-                      {isAr ? 'الفاتورة الخاصة بالطلبية' : 'Facture associée'}
-                    </h4>
-                    <div className="bg-emerald-50 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 border border-emerald-100">
-                      <div className="flex-1">
-                        <p className="text-xs text-emerald-600/70 uppercase font-bold tracking-wider mb-1">{isAr ? 'رقم الفاتورة' : 'N° Facture'}</p>
-                        <p className="font-bold text-emerald-900">{cmdFacture.numero}</p>
+                      
+                      {/* Footer Section with Separator */}
+                      <div className="px-4 md:px-8 pb-4 md:pb-6 flex flex-col md:flex-row items-center justify-between gap-3 md:gap-6 border-t border-slate-100 pt-4 md:pt-6 bg-slate-50/40 text-center md:text-left">
+                         <div className="flex flex-col md:flex-row flex-wrap gap-2 md:gap-4 w-full md:w-auto">
+                            <div className="flex items-center justify-center md:justify-start gap-2 px-4 py-2 bg-white border border-slate-100 rounded-xl text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest shadow-sm">
+                               <Clock className="w-3 h-3 md:w-3.5 md:h-3.5 text-indigo-500" />
+                               {isAr ? 'موعد التسليم:' : 'Livraison:'} <span className="text-slate-950 ml-1 font-black">{cmd.dateLivraisonPrevue}</span>
+                            </div>
+                            <div className="flex items-center justify-center md:justify-start gap-2 px-4 py-2 bg-white border border-slate-100 rounded-xl text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest shadow-sm">
+                               <Truck className="w-3 h-3 md:w-3.5 md:h-3.5 text-indigo-500" />
+                               {isAr ? 'الكمية:' : 'Quantité:'} <span className="text-slate-950 ml-1 font-black">{cmd.quantite} Pcs</span>
+                            </div>
+                         </div>
+                         
+                         {/* Secondary Countdown Badge - Full width on Mobile */}
+                         <div className="flex items-center justify-center gap-3 px-5 py-2.5 bg-slate-900 text-white rounded-xl shadow-xl shadow-slate-200 w-full md:w-auto">
+                            <span className="text-[7px] md:text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">{isAr ? 'الوقت المتبقي' : 'Temps Restant'}</span>
+                            <div className="flex gap-2.5 text-xs font-black text-emerald-400">
+                               <span className="flex items-baseline gap-0.5">02<span className="text-[7px] md:text-[8px] text-slate-500 font-bold uppercase">d</span></span>
+                               <span className="flex items-baseline gap-0.5">14<span className="text-[7px] md:text-[8px] text-slate-500 font-bold uppercase">h</span></span>
+                               <span className="flex items-baseline gap-0.5 animate-pulse">45<span className="text-[7px] md:text-[8px] text-slate-500 font-bold uppercase">m</span></span>
+                            </div>
+                         </div>
                       </div>
-                      <div className="flex-1">
-                        <p className="text-xs text-emerald-600/70 uppercase font-bold tracking-wider mb-1">{isAr ? 'المبلغ الإجمالي' : 'Montant Total'}</p>
-                        <p className="font-black text-emerald-700 text-lg">{cmdFacture.montant?.toLocaleString()} MAD</p>
-                      </div>
-                      <div className="flex-1 flex flex-col items-center sm:items-end">
-                        <p className="text-xs text-emerald-600/70 uppercase font-bold tracking-wider mb-1">{isAr ? 'حالة الأداء' : 'Statut Paiement'}</p>
-                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${cmdFacture.statut === 'payée' ? 'bg-emerald-200 text-emerald-800' :
-                            cmdFacture.statut === 'impayée' ? 'bg-red-200 text-red-800' :
-                              'bg-amber-200 text-amber-800'
-                          }`}>
-                          {cmdFacture.statut === 'payée' ? (isAr ? 'مخلصة' : 'Payée') :
-                            cmdFacture.statut === 'impayée' ? (isAr ? 'مامخلصاش' : 'Impayée') :
-                              (isAr ? 'فالانتظار' : 'En attente')}
-                        </span>
-                      </div>
-                      <div className="flex-shrink-0">
-                         <button 
-                           onClick={() => { setSelectedFacture(cmdFacture); setShowInvoiceView(true); }}
-                           className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-black hover:bg-emerald-700 transition shadow-md shadow-emerald-100"
-                         >
-                           <Download className="w-3.5 h-3.5" />
-                           {isAr ? 'تحميل' : 'Télécharger'}
-                         </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+                   </div>
+                 ))}
+               </div>
             </div>
-          );
-        })}
+          )}
 
+          {activeTab === 'docs' && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+               <div className="mb-10 text-center md:text-left">
+                 <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-2">{isAr ? 'الفواتير والوثائق' : 'Documents & Factures'}</h1>
+                 <p className="text-slate-500 font-medium">{isAr ? 'إدارة كاملة لجميع وثائقك المحاسبية' : 'Gérez l\'ensemble de vos documents comptables'}</p>
+               </div>
 
-      </div>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {factures.filter(f => f.client.toLowerCase() === currentUser?.nom.toLowerCase()).map(f => (
+                    <div key={f.id} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 relative overflow-hidden group hover:border-emerald-200 transition-all">
+                       <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity">
+                          <Receipt className="w-24 h-24 text-emerald-600" />
+                       </div>
+                       <div className="relative z-10 text-center md:text-left">
+                          <div className="flex flex-col md:flex-row items-center gap-3 mb-6">
+                             <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
+                                <Receipt className="w-5 h-5" />
+                             </div>
+                             <div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Facture</p>
+                                <p className="text-sm font-black text-slate-900 uppercase">{f.numero}</p>
+                             </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-6 mb-8">
+                             <div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'المبلغ' : 'Montant'}</p>
+                                <p className="text-xl font-black text-emerald-600">{f.montant.toLocaleString()} MAD</p>
+                             </div>
+                             <div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الحالة' : 'Statut'}</p>
+                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                                  f.statut === 'payée' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
+                                }`}>
+                                   {isAr ? (f.statut === 'payée' ? 'مؤداة' : 'في الانتظار') : f.statut}
+                                </span>
+                             </div>
+                          </div>
 
-      {/* Floating Help Button */}
-      {currentUser?.role === 'client' && (
-        <a
-          href="https://wa.me/212600000000"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition-all hover:scale-105 group flex items-center gap-2 z-50"
-        >
-          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.347-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.876 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" /></svg>
-          <span className="hidden group-hover:inline-block font-semibold text-sm whitespace-nowrap">{isAr ? 'محتاج مساعدة ؟' : "Besoin d'aide ?"}</span>
-        </a>
-      )}
+                          <button 
+                            onClick={() => { setSelectedFacture(f); setShowInvoiceView(true); }}
+                            className="w-full py-4 bg-emerald-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-emerald-700 transition-all flex items-center justify-center gap-3 shadow-xl shadow-emerald-100"
+                          >
+                             <Download className="w-4 h-4" />
+                             {isAr ? 'تحميل الفاتورة' : 'Télécharger PDF'}
+                          </button>
+                       </div>
+                    </div>
+                  ))}
+               </div>
+            </div>
+          )}
 
-      {/* Invoice Preview Modal for Client */}
+          {activeTab === 'support' && (
+            <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
+               <div className="text-center max-w-2xl mx-auto mb-16">
+                 <div className="w-20 h-20 bg-indigo-50 rounded-[2rem] flex items-center justify-center text-indigo-600 mx-auto mb-8 shadow-xl shadow-indigo-100">
+                    <MessageCircle className="w-10 h-10" />
+                 </div>
+                 <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-4">{isAr ? 'الدعم الفني المباشر' : 'Support VIP Direct'}</h1>
+                 <p className="text-slate-500 font-medium text-lg italic">
+                   {isAr ? 'فريق بيا كرياتيف رهن إشارتكم لأي استفسار أو مناقشة' : 'Notre équipe est à votre disposition pour toute question أو discussion stratégique.'}
+                 </p>
+               </div>
+
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <a href={`https://wa.me/${company.phone.replace(/\D/g, '')}`} target="_blank" className="p-10 bg-white border border-slate-100 rounded-[3rem] shadow-xl shadow-slate-200/50 flex flex-col items-center text-center group hover:border-emerald-200 transition-all">
+                     <div className="w-16 h-16 bg-emerald-50 rounded-[1.5rem] flex items-center justify-center text-emerald-600 mb-6 group-hover:scale-110 transition-transform">
+                        <MessageCircle className="w-8 h-8" />
+                     </div>
+                     <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight mb-2">WhatsApp Business</h3>
+                     <p className="text-slate-400 text-sm font-medium mb-8 italic">{isAr ? 'تواصل مباشر وسريع' : 'Réponse instantanée'}</p>
+                     <div className="px-8 py-4 bg-emerald-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-emerald-100">{isAr ? 'ابدأ المحادثة' : 'Démarrer Discussion'}</div>
+                  </a>
+
+                  <a 
+                    href={`https://wa.me/${company.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                      isAr 
+                        ? `مرحباً فريق ${company.name}، أنا ${currentUser?.nom}. بغيت نطلب موعد لمناقشة تقنية بخصوص الموديلات ديالي.`
+                        : `Bonjour l'équipe ${company.name}, je suis ${currentUser?.nom}. J'aimerais demander un rendez-vous pour une discussion technique concernant mes modèles.`
+                    )}`}
+                    target="_blank"
+                    className="p-10 bg-white border border-slate-100 rounded-[3rem] shadow-xl shadow-slate-200/50 flex flex-col items-center text-center group hover:border-indigo-200 transition-all"
+                  >
+                     <div className="w-16 h-16 bg-indigo-50 rounded-[1.5rem] flex items-center justify-center text-indigo-600 mb-6 group-hover:scale-110 transition-transform">
+                        <ArrowRight className="rotate-[-45deg] w-8 h-8" />
+                     </div>
+                     <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight mb-2">{isAr ? 'المناقشة التقنية' : 'Discussion Technique'}</h3>
+                     <p className="text-slate-400 text-sm font-medium mb-8 italic">{isAr ? 'اطلب موعد لمناقشة التصميم' : 'Prendre rendez-vous technique'}</p>
+                     <div className="px-8 py-4 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-slate-900/10 transition-all group-hover:bg-indigo-600">
+                        {isAr ? 'طلب موعد' : 'Prendre Rendez-vous'}
+                     </div>
+                  </a>
+               </div>
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Mobile Nav Toggle (Overlay) */}
+      <button className="fixed bottom-6 right-6 lg:hidden w-14 h-14 bg-indigo-600 text-white rounded-2xl shadow-2xl z-[100] flex items-center justify-center">
+         <Settings className="w-6 h-6 animate-spin-slow" />
+      </button>
+
+      {/* Invoice Preview Modal */}
       {showInvoiceView && selectedFacture && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[100] p-4">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-4xl max-h-[95vh] overflow-y-auto shadow-2xl">
-            <div className="p-8 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md z-10">
-              <div className="flex items-center gap-3">
-                <div className="bg-emerald-600 p-2 rounded-xl">
-                  <Receipt className="w-5 h-5 text-white" />
-                </div>
-                <h2 className="text-xl font-black text-slate-800 tracking-tight">{isAr ? 'معاينة الفاتورة' : 'Aperçu de la Facture'}</h2>
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-xl flex items-center justify-center z-[200] p-6">
+          <div className="bg-white rounded-[3rem] w-full max-w-5xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+            <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-white">
+              <div className="flex items-center gap-4">
+                 <div className="w-12 h-12 bg-emerald-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-200">
+                    <Receipt className="w-6 h-6" />
+                 </div>
+                 <div>
+                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter italic">{isAr ? 'معاينة الفاتورة' : 'Aperçu Document'}</h3>
+                    <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{selectedFacture.numero}</p>
+                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <button onClick={() => setShowInvoiceView(false)} className="px-5 py-2.5 text-xs font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest transition-all">{isAr ? 'إغلاق' : 'Fermer'}</button>
-                <button 
-                  onClick={() => printElement(`client-invoice-view-${selectedFacture.id}`)}
-                  className="flex items-center gap-2 px-8 py-3 bg-emerald-600 text-white rounded-2xl text-xs font-black hover:bg-emerald-700 shadow-xl shadow-emerald-100 transition-all uppercase tracking-widest"
-                >
-                  <Download className="w-4 h-4" /> {isAr ? 'حفظ / طباعة' : 'Enregistrer / Imprimer'}
-                </button>
+              <div className="flex items-center gap-4">
+                 <button onClick={() => setShowInvoiceView(false)} className="px-6 py-3 text-xs font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">{isAr ? 'إغلاق' : 'Fermer'}</button>
+                 <button onClick={() => printElement(`invoice-${selectedFacture.id}`)} className="px-8 py-4 bg-emerald-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-emerald-100 flex items-center gap-3">
+                    <Download className="w-4 h-4" />
+                    {isAr ? 'حفظ / طباعة' : 'Imprimer PDF'}
+                 </button>
               </div>
             </div>
-
-            <div className="p-12 bg-slate-50/50">
+            <div className="flex-1 overflow-y-auto p-12 bg-slate-50/50">
                <InvoicePRO 
-                 id={`client-invoice-view-${selectedFacture.id}`}
-                 facture={selectedFacture}
-                 commande={commandes.find(c => c.id === selectedFacture.commandeId)}
-                 company={company}
+                  id={`invoice-${selectedFacture.id}`}
+                  facture={selectedFacture}
+                  commande={commandes.find(c => c.id === selectedFacture.commandeId)}
+                  company={company}
                />
             </div>
           </div>

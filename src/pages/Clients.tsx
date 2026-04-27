@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Plus, User, Phone, Mail, MapPin, ExternalLink, MessageSquare, DollarSign, ChevronRight, TrendingUp, History, FileText, X, Printer, Download, Edit2 } from 'lucide-react';
+import { Search, Plus, User, Phone, Mail, MapPin, ExternalLink, MessageSquare, DollarSign, ChevronRight, TrendingUp, History, FileText, X, Printer, Download, Edit2, Copy, Check } from 'lucide-react';
 import { Commande, loadData, genId, loadCompanyProfile } from '../types';
 import { generatePDF } from '../utils/pdf';
 
@@ -133,9 +133,17 @@ export default function Clients() {
     setShowModal(false);
   }
 
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
   const activeClient = useMemo(() => {
     return clientStats.find(c => c.id === activeClientId);
   }, [clientStats, activeClientId]);
+
+  function copyPin(pin: string, id: string) {
+    navigator.clipboard.writeText(pin);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -184,7 +192,21 @@ export default function Clients() {
                   </div>
                   <div className="flex items-center gap-3 text-slate-600">
                     <MapPin className="w-4 h-4 text-indigo-500" />
-                    <span className="font-bold text-sm">{activeClient.ville || 'Ville non spécifiée'}</span>
+                    <div className="flex items-center gap-2">
+                       <span className="font-bold text-sm uppercase">{activeClient.ville || 'Ville non spécifiée'}</span>
+                       {(activeClient as any).pinCode && (
+                          <button 
+                            onClick={() => copyPin((activeClient as any).pinCode, activeClient.id)}
+                            className={`text-[10px] font-black px-2 py-1 rounded-lg border transition-all ${
+                              copiedId === activeClient.id 
+                                ? 'bg-emerald-100 text-emerald-700 border-emerald-200' 
+                                : 'bg-amber-100 text-amber-700 border-amber-200 hover:scale-105 active:scale-95'
+                            }`}
+                          >
+                            {copiedId === activeClient.id ? 'Copié !' : `PIN: ${(activeClient as any).pinCode}`}
+                          </button>
+                       )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -243,8 +265,20 @@ export default function Clients() {
                       return (
                         <tr key={cmd.id} className="hover:bg-slate-50/30 transition-colors">
                           <td className="px-8 py-5">
-                            <p className="text-sm font-black text-slate-900 uppercase tracking-tighter">{cmd.reference}</p>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase">{cmd.modele}</p>
+                            <div className="flex items-center gap-2 group/ref">
+                               <p className="text-lg font-black text-slate-900 uppercase tracking-tighter">{cmd.reference}</p>
+                               <button 
+                                 onClick={() => copyPin(cmd.reference, cmd.id)}
+                                 className={`p-1.5 rounded-lg transition-all ${
+                                   copiedId === cmd.id 
+                                     ? 'bg-emerald-100 text-emerald-600' 
+                                     : 'bg-slate-50 text-slate-400 opacity-0 group-hover/ref:opacity-100 hover:bg-indigo-50 hover:text-indigo-600'
+                                 }`}
+                               >
+                                 {copiedId === cmd.id ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                               </button>
+                            </div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{cmd.modele}</p>
                           </td>
                           <td className="px-8 py-5 text-xs font-bold text-slate-500">{new Date(cmd.dateCommande).toLocaleDateString()}</td>
                           <td className="px-8 py-5 text-sm font-black text-slate-700">{cmd.quantite} pcs</td>
@@ -346,9 +380,16 @@ export default function Clients() {
                         <div className="flex items-center gap-2">
                           <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{c.ville || 'Ville non spécifiée'}</p>
                           {(c as any).pinCode && (
-                            <span className="text-[9px] font-black bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-md border border-amber-200">
-                              PIN: {(c as any).pinCode}
-                            </span>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); copyPin((c as any).pinCode, c.id); }}
+                              className={`text-[9px] font-black px-1.5 py-0.5 rounded-md border transition-all ${
+                                copiedId === c.id 
+                                  ? 'bg-emerald-100 text-emerald-700 border-emerald-200' 
+                                  : 'bg-amber-100 text-amber-700 border-amber-200 hover:scale-105 active:scale-95'
+                              }`}
+                            >
+                              {copiedId === c.id ? 'Copié !' : `PIN: ${(c as any).pinCode}`}
+                            </button>
                           )}
                         </div>
                       </div>

@@ -7,7 +7,6 @@ import { loadCompanyProfile, saveLead } from '../types';
 export default function LandingPage() {
   const { isAr, toggle } = useLang();
   const [company] = useState(loadCompanyProfile());
-  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -59,6 +58,8 @@ export default function LandingPage() {
   const embedUrl = getEmbedUrl(company.landingVideoUrl);
 
   const [showSuccess, setShowSuccess] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const [selectedType, setSelectedType] = useState('T-Shirt');
 
   // Dynamic SEO Title & Description
   useEffect(() => {
@@ -164,8 +165,8 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="pt-40 pb-20 px-6">
         <div className="max-w-7xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-8 animate-bounce">
-            <Zap className="w-3 h-3" />
+          <div className="inline-flex items-center gap-3 px-8 py-3 bg-indigo-50 text-indigo-600 rounded-full text-xs font-black uppercase tracking-[0.2em] mb-12 animate-bounce shadow-md border border-indigo-100">
+            <Zap className="w-4 h-4 fill-indigo-600" />
             {isAr ? 'رائد في صناعة الملابس بالمغرب 🇲🇦' : 'Leader de la Confection au Maroc 🇲🇦'}
           </div>
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-slate-900 tracking-tighter leading-[0.9] mb-8">
@@ -272,13 +273,18 @@ export default function LandingPage() {
                     const formData = new FormData(e.currentTarget);
                     const countryCode = (e.currentTarget.querySelector('select') as HTMLSelectElement).value;
                     const rawPhone = formData.get('phone') as string;
-                    const fullPhone = countryCode + rawPhone.replace(/\s/g, '');
+                    const fullPhone = countryCode + (rawPhone.startsWith('0') ? rawPhone.substring(1) : rawPhone);
+                    
+                    let finalType = formData.get('type') as string;
+                    if (finalType === 'Autre' || finalType === 'آخر') {
+                      finalType = formData.get('customType') as string;
+                    }
 
                     const leadData = {
                       name: formData.get('name') as string,
                       email: formData.get('email') as string,
                       phone: fullPhone,
-                      type: formData.get('type') as string,
+                      type: finalType,
                       quantity: Number(formData.get('quantity')),
                       details: formData.get('details') as string,
                       photo: selectedPhoto || undefined
@@ -291,28 +297,28 @@ export default function LandingPage() {
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'الإسم الكامل' : 'Nom Complet'}</label>
+                      <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">{isAr ? 'الإسم الكامل' : 'Nom Complet'}</label>
                       <input type="text" name="name" placeholder="Ex: Ahmed Alami" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" required />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Email</label>
+                      <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">Email</label>
                       <input type="email" name="email" placeholder="email@example.com" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" required />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 gap-6">
                     <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'رقم الهاتف' : 'Téléphone / WhatsApp'}</label>
+                      <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">{isAr ? 'رقم الهاتف' : 'Téléphone / WhatsApp'}</label>
                       <div className="flex gap-2">
-                        <div className="relative">
-                          <select className="appearance-none bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 pl-4 pr-10 text-sm font-bold outline-none focus:border-indigo-600 transition-colors h-full">
-                            <option value="+212">🇲🇦 +212</option>
-                            <option value="+33">🇫🇷 +33</option>
-                            <option value="+34">🇪🇸 +34</option>
-                            <option value="+1">🇺🇸 +1</option>
+                        <div className="relative w-[90px] flex-shrink-0">
+                          <select className="w-full appearance-none bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 pl-3 pr-8 text-xs font-black outline-none focus:border-indigo-600 transition-colors h-full">
+                            <option value="+212">🇲🇦 212</option>
+                            <option value="+33">🇫🇷 33</option>
+                            <option value="+34">🇪🇸 34</option>
+                            <option value="+1">🇺🇸 1</option>
                           </select>
-                          <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400">
-                            <ChevronDown className="w-4 h-4" />
+                          <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none text-slate-400">
+                            <ChevronDown className="w-3 h-3" />
                           </div>
                         </div>
                         <input type="tel" name="phone" placeholder="6XXXXXXXX" className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" required />
@@ -321,38 +327,59 @@ export default function LandingPage() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'نوع اللباس' : 'Type de Vêtement'}</label>
-                      <div className="relative">
-                        <select name="type" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors appearance-none">
-                          <option>T-Shirt / Polo</option>
-                          <option>T-Shirt Oversize</option>
-                          <option>Sweat / Hoodie</option>
-                          <option>Djellaba / Gandoura</option>
-                          <option>Ensemble / Survêtement</option>
-                          <option>Pyjama</option>
-                          <option>Uniforme / Travail</option>
-                          <option>Pantalon</option>
-                          <option>{isAr ? 'آخر' : 'Autre'}</option>
-                        </select>
-                        <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-400">
-                          <ChevronDown className="w-4 h-4" />
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">{isAr ? 'نوع اللباس' : 'Type de Vêtement'}</label>
+                        <div className="relative">
+                          <select 
+                            name="type" 
+                            value={selectedType}
+                            onChange={(e) => setSelectedType(e.target.value)}
+                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors appearance-none"
+                          >
+                            <option>T-Shirt</option>
+                            <option>Polo</option>
+                            <option>T-Shirt Oversize</option>
+                            <option>Sweat / Hoodie</option>
+                            <option>Djellaba / Gandoura</option>
+                            <option>Ensemble / Survêtement</option>
+                            <option>Pyjama</option>
+                            <option>Uniforme / Travail</option>
+                            <option>Pantalon</option>
+                            <option value="Autre">{isAr ? 'نوع آخر' : 'Autre Type'}</option>
+                          </select>
+                          <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-400">
+                            <ChevronDown className="w-4 h-4" />
+                          </div>
                         </div>
                       </div>
+
+                      {(selectedType === 'Autre' || selectedType === 'آخر') && (
+                        <div className="animate-in slide-in-from-top-2 duration-300">
+                          <label className="block text-[13px] font-extrabold text-indigo-700 uppercase tracking-widest mb-3 italic">{isAr ? 'حدد النوع من فضلك' : 'Précisez le type svp'}</label>
+                          <input 
+                            type="text" 
+                            name="customType" 
+                            placeholder={isAr ? 'مثال: ملابس أطفال' : 'Ex: Vêtements enfants'} 
+                            className="w-full bg-indigo-50 border-2 border-indigo-200 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-all shadow-lg shadow-indigo-100" 
+                            required 
+                          />
+                        </div>
+                      )}
                     </div>
                     <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'الكمية التقديرية' : 'Quantité Estimeé'}</label>
-                      <input type="number" name="quantity" defaultValue="100" min="1" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" required />
+                      <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">{isAr ? 'الكمية التقديرية' : 'Quantité Estimeé'}</label>
+                      <input type="number" name="quantity" defaultValue="100" min="1" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors h-[58px]" required />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'تفاصيل إضافية' : 'Détails du Projet'}</label>
+                      <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">{isAr ? 'تفاصيل إضافية' : 'Détails du Projet'}</label>
                       <textarea name="details" rows={4} placeholder={isAr ? 'اشرح لينا شنو باغي تصاوب...' : 'Décrivez votre projet...'} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors resize-none" />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'صورة الموديل (اختياري)' : 'Photo du Modèle (Optionnel)'}</label>
+                      <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">{isAr ? 'صورة الموديل (اختياري)' : 'Photo du Modèle (Optionnel)'}</label>
                       <div className="relative group h-[120px]">
                         {selectedPhoto ? (
                           <div className="relative h-full w-full rounded-2xl overflow-hidden border-2 border-indigo-100 shadow-md">
@@ -438,7 +465,7 @@ export default function LandingPage() {
               <p className="text-slate-400 max-w-sm font-medium">
                 {isAr
                   ? 'رؤيتنا هي أن نصبح المعيار العالمي للجودة في صناعة الملابس المغربية.'
-                  : 'Notre vision هو d\'être la référence mondiale de qualité dans l\'industrie textile marocaine.'}
+                  : 'Notre vision est d\'être la référence mondiale de qualité dans l\'industrie textile marocaine.'}
               </p>
             </div>
 

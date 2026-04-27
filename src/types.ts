@@ -168,6 +168,7 @@ export interface User {
   nom: string;
   role: 'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste';
   email: string;
+  telephone?: string;
   password?: string;
   pinCode?: string;
   lastActive?: string;
@@ -298,6 +299,8 @@ export interface Lead {
   status: 'new' | 'completed';
   photo?: string;
   email?: string;
+  contactedAt?: string;
+  contactedType?: string;
 }
 
 export const DEFAULT_COMPANY: CompanyProfile = {
