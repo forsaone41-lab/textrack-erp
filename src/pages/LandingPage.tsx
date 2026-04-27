@@ -270,10 +270,14 @@ export default function LandingPage() {
                   onSubmit={(e) => { 
                     e.preventDefault(); 
                     const formData = new FormData(e.currentTarget);
+                    const countryCode = (e.currentTarget.querySelector('select') as HTMLSelectElement).value;
+                    const rawPhone = formData.get('phone') as string;
+                    const fullPhone = countryCode + rawPhone.replace(/\s/g, '');
+                    
                     const leadData = {
                       name: formData.get('name') as string,
                       email: formData.get('email') as string,
-                      phone: formData.get('phone') as string,
+                      phone: fullPhone,
                       type: formData.get('type') as string,
                       quantity: Number(formData.get('quantity')),
                       details: formData.get('details') as string,
@@ -299,7 +303,20 @@ export default function LandingPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'رقم الهاتف' : 'Téléphone / WhatsApp'}</label>
-                      <input type="tel" name="phone" placeholder="06XXXXXXXX" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" required />
+                      <div className="flex gap-2">
+                        <div className="relative">
+                          <select className="appearance-none bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 pl-4 pr-10 text-sm font-bold outline-none focus:border-indigo-600 transition-colors h-full">
+                            <option value="+212">🇲🇦 +212</option>
+                            <option value="+33">🇫🇷 +33</option>
+                            <option value="+34">🇪🇸 +34</option>
+                            <option value="+1">🇺🇸 +1</option>
+                          </select>
+                          <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                            <Star className="w-3 h-3 text-slate-400" />
+                          </div>
+                        </div>
+                        <input type="tel" name="phone" placeholder="6XXXXXXXX" className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" required />
+                      </div>
                     </div>
                     <div>
                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'نوع اللباس' : 'Type de Vêtement'}</label>

@@ -78,8 +78,18 @@ export default function Demandes() {
         : `Bonjour ${devisLead.name}, ici BEYA CREATIVE.\n\nVoici votre devis pour votre demande :\n- Type : ${devisLead.type}\n- Quantité : ${devisLead.quantity} pcs\n- Prix Unitaire : ${unitPrice} MAD (Matière: ${matierePrice || 0} + MO: ${laborPrice || 0})\n- TOTAL : ${total} MAD\n\nNous restons à votre disposition pour toute question. Merci de votre confiance ! 🇲🇦`;
     }
     
+    const rawPhone = devisLead.phone.replace(/\D/g, '');
+    let formattedPhone = rawPhone;
+    if (rawPhone.startsWith('2120')) {
+      formattedPhone = '212' + rawPhone.substring(4);
+    } else if (rawPhone.startsWith('0')) {
+      formattedPhone = '212' + rawPhone.substring(1);
+    } else if (!rawPhone.startsWith('212')) {
+      formattedPhone = '212' + rawPhone;
+    }
+    
     const encoded = encodeURIComponent(message);
-    window.open(`https://wa.me/${devisLead.phone.replace(/\D/g, '')}?text=${encoded}`, '_blank');
+    window.open(`https://wa.me/${formattedPhone}?text=${encoded}`, '_blank');
     if (!isPDF) {
       setDevisLead(null);
       setMatierePrice('');
@@ -437,7 +447,7 @@ export default function Demandes() {
 
                   <div className="flex items-center gap-1.5 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
                     <a 
-                      href={`tel:${lead.phone.replace(/\s/g, '')}`} 
+                      href={`tel:${lead.phone.replace(/\D/g, '').startsWith('0') ? '212' + lead.phone.replace(/\D/g, '').substring(1) : lead.phone.replace(/\D/g, '')}`} 
                       className="w-11 h-11 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center hover:bg-indigo-100 transition-colors shadow-sm"
                       title={isAr ? 'اتصال مباشر' : 'Appel Direct'}
                     >
@@ -445,7 +455,7 @@ export default function Demandes() {
                     </a>
 
                     <a 
-                      href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`} 
+                      href={`https://wa.me/${lead.phone.replace(/\D/g, '').startsWith('0') ? '212' + lead.phone.replace(/\D/g, '').substring(1) : lead.phone.replace(/\D/g, '')}`} 
                       target="_blank" 
                       className="h-11 px-4 bg-emerald-500 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
                     >
