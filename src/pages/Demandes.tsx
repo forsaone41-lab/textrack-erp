@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, Clock, UserPlus, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save } from 'lucide-react';
+import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, Clock, UserPlus, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw } from 'lucide-react';
 import { Lead, loadLeads, saveRecord, User, genId } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { generatePDF } from '../utils/pdf';
@@ -7,13 +7,13 @@ import { generatePDF } from '../utils/pdf';
 const DEFAULT_TEMPLATES = {
   ar: {
     firstContact: "السلام عليكم *{name}*، معكم *BEYA CREATIVE*. 😊\n\nشكراً على طلبكم الخاص بـ *{type}*. باش نقدروا نعاونوكم أحسن، واش ممكن تجاوبونا على هاد الأسئلة:\n1. فوقاش محتاجين الطلبية (أقصى أجل)؟\n2. واش نتوما علامة تجارية واجدة (Brand) ولا كتبيعوا في الأنترنيت (E-com) وباغين تصاوبوا الماركة ديالكم؟\n3. واش عندكم التصميم (Logo/Design) واجد؟\n4. واش محتاجين الثوب من عندنا ولا عندكم الثوب ديالكم؟\n\nحنا في الخدمة! 🇲🇦",
-    devisTxt: "السلام عليكم *{name}*، معكم *BEYA CREATIVE*. 🧵\n\nإليكم عرض السعر لطلبكم الخاص بـ *{type}*:\n- الكمية: *{quantity} قطعة*\n- المجموع الإجمالي: *{total} درهم* {note}\n\nنحن نضمن لكم الجودة العالية والالتزام التام بالمواعيد. في انتظار ردكم للبدء! 🇲🇦",
+    devisTxt: "السلام عليكم *{name}*، معكم *BEYA CREATIVE*. 😊\n\nإليكم عرض السعر لطلبكم الخاص بـ *{type}*:\n- الكمية: *{quantity} قطعة*\n- الثمن للقطعة: *{unitPrice} درهم*\n- المجموع الإجمالي: *{total} درهم* {note}\n\n*(ملاحظة: كلما زادت الكمية، ينخفض ثمن القطعة)*\n\nباش نضمنوا الجودة، كنقترحوا نصاوبوا **عينة (Échantillon)** هي الأولى باش نصاوبوا الورقة التقنية. واش نبداو العينة؟ 🧵🇲🇦",
     devisPdf: "السلام عليكم *{name}*، معكم *BEYA CREATIVE*. 😊\n\nيسعدنا أن نقدم لكم تقدير الثمن الخاص بطلبكم. لقد حرصنا على دراسة طلبكم بعناية لنضمن لكم أفضل جودة لمنتجات *{type}*.\n\nنحن في انتظار تأكيدكم للبدء في العمل. شكراً لثقتكم!"
   },
   fr: {
     firstContact: "Bonjour *{name}*, ici *BEYA CREATIVE*. 😊\n\nMerci pour votre demande de *{type}*. Pour mieux vous accompagner, pourriez-vous nous préciser :\n1. Quel est votre délai souhaité ?\n2. Êtes-vous une marque établie ou vendez-vous en ligne (E-com) et souhaitez-vous créer votre propre branding ?\n3. Avez-vous déjà le design ou logo prêt ?\n4. Souhaitez-vous que nous fournissions le tissu ou avez-vous déjà le vôtre ?\n\nNous sommes à votre disposition ! 🇲🇦",
-    devisTxt: "Bonjour *{name}*, ici *BEYA CREATIVE*. 🧵\n\nVoici notre proposition pour votre commande de *{type}* :\n- Quantité : *${devisLead.quantity} pcs*\n- TOTAL : *${total} MAD* {note}\n\nNous vous garantissons une finition premium et un respect total des délais. Dans l'attente de votre retour pour commencer ! 🇲🇦",
-    devisPdf: "Bonjour *${devisLead.name}*, ici *BEYA CREATIVE*. 😊\n\nNous avons le plaisir de vous transmettre votre devis. Nous avons étudié votre demande avec soin pour vous garantir la meilleure qualité pour vos *${devisLead.type}*.\n\nNous attendons votre confirmation pour lancer la production. Merci de votre confiance !"
+    devisTxt: "Bonjour *{name}*, ici *BEYA CREATIVE*. 😊\n\nVoici notre proposition pour votre commande de *{type}* :\n- Quantité : *{quantity} pcs*\n- Prix Unitaire : *{unitPrice} MAD*\n- TOTAL : *{total} MAD* {note}\n\n*(Note : Tarif dégressif selon la quantité)*\n\nPour garantir la qualité, nous suggérons de commencer par un **Échantillon** pour créer la Fiche Technique. On lance l'échantillon ? 🧵🇲🇦",
+    devisPdf: "Bonjour *{name}*, ici *BEYA CREATIVE*. 😊\n\nNous avons le plaisir de vous transmettre votre devis. Nous avons étudié votre demande avec soin pour vous garantir la meilleure qualité pour vos *{type}*.\n\nNous attendons votre confirmation pour lancer la production. Merci de votre confiance !"
   }
 };
 
@@ -43,6 +43,13 @@ export default function Demandes() {
     setTemplates(newTemplates);
     localStorage.setItem('textrack_msg_templates', JSON.stringify(newTemplates));
     setShowSettings(false);
+  };
+
+  const resetTemplates = () => {
+    if (window.confirm(isAr ? 'هل تريد استعادة القوالب الأصلية؟' : 'Voulez-vous restaurer les templates originaux ?')) {
+      setTemplates(DEFAULT_TEMPLATES);
+      localStorage.setItem('textrack_msg_templates', JSON.stringify(DEFAULT_TEMPLATES));
+    }
   };
 
   const handleConvert = async () => {
@@ -106,6 +113,7 @@ export default function Demandes() {
         .replace(/{name}/g, devisLead.name)
         .replace(/{type}/g, devisLead.type)
         .replace(/{quantity}/g, devisLead.quantity.toString())
+        .replace(/{unitPrice}/g, unitPrice.toLocaleString())
         .replace(/{total}/g, total.toLocaleString())
         .replace(/{note}/g, matiereNote);
     }
@@ -159,7 +167,7 @@ export default function Demandes() {
           <div className="bg-white rounded-[3rem] p-10 max-w-md w-full shadow-[0_50px_100px_rgba(0,0,0,0.3)] border border-slate-100 relative overflow-hidden">
             <div className="absolute top-0 inset-x-0 h-2 bg-amber-500" />
             <button 
-              onClick={() => { setDevisLead(null); setDevisPrice(''); }}
+              onClick={() => { setDevisLead(null); setMatierePrice(''); setLaborPrice(''); }}
               className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-600 transition-colors"
             >
               <X className="w-5 h-5" />
@@ -223,12 +231,12 @@ export default function Demandes() {
 
             <div className="grid grid-cols-2 gap-4">
               <button 
-                onClick={sendDevis}
+                onClick={() => sendDevis(false)}
                 disabled={!matierePrice && !laborPrice}
                 className="h-16 bg-slate-100 text-slate-600 rounded-[20px] font-black uppercase tracking-widest text-[9px] hover:bg-slate-200 transition-all flex flex-col items-center justify-center gap-1 disabled:opacity-50"
               >
                 <MessageSquare className="w-4 h-4" />
-                WhatsApp (Txt)
+                {isAr ? '2. إرسال الثمن' : '2. WhatsApp (Txt)'}
               </button>
               <button 
                 onClick={handleDownloadPDF}
@@ -236,15 +244,12 @@ export default function Demandes() {
                 className="h-16 bg-slate-100 text-slate-600 rounded-[20px] font-black uppercase tracking-widest text-[9px] hover:bg-slate-200 transition-all flex flex-col items-center justify-center gap-1 disabled:opacity-50"
               >
                 <Download className="w-4 h-4" />
-                Download PDF
+                {isAr ? 'تحميل PDF' : 'Download PDF'}
               </button>
             </div>
 
             <button 
-              onClick={() => {
-                handleDownloadPDF();
-                setTimeout(() => sendDevis(true), 1500);
-              }}
+              onClick={() => sendDevis(true)}
               disabled={!matierePrice && !laborPrice}
               className="w-full mt-4 h-16 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-[20px] font-black uppercase tracking-widest text-xs hover:shadow-2xl hover:scale-[1.01] transition-all shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale"
             >
@@ -256,7 +261,7 @@ export default function Demandes() {
                   <FileText className="w-5 h-5" />
                 </div>
               </div>
-              {isAr ? 'إرسال PDF عبر WhatsApp' : 'WhatsApp + PDF'}
+              {isAr ? '2. إرسال الثمن + PDF' : '2. WhatsApp + PDF'}
             </button>
           </div>
         </div>
@@ -507,7 +512,7 @@ export default function Demandes() {
                       target="_blank" 
                       className="h-11 px-4 bg-emerald-500 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
                     >
-                      <Phone className="w-4 h-4" /> WhatsApp
+                      <Phone className="w-4 h-4" /> {isAr ? '1. تواصل' : '1. Contact'}
                     </a>
                   </div>
 
@@ -755,20 +760,30 @@ export default function Demandes() {
               </div>
             </div>
 
-            <div className="p-8 bg-slate-50 border-t border-slate-100 flex justify-end gap-4">
+            <div className="p-8 bg-slate-50 border-t border-slate-100 flex justify-between items-center gap-4">
               <button 
-                onClick={() => setShowSettings(false)}
-                className="px-8 py-4 text-sm font-black text-slate-500 uppercase tracking-widest hover:text-slate-800 transition-colors"
+                onClick={resetTemplates}
+                className="flex items-center gap-2 text-xs font-black text-rose-500 uppercase tracking-widest hover:text-rose-600 transition-colors"
               >
-                {isAr ? 'إلغاء' : 'Annuler'}
+                <RefreshCw className="w-4 h-4" />
+                {isAr ? 'استعادة القوالب الأصلية' : 'Restaurer par défaut'}
               </button>
-              <button 
-                onClick={() => saveTemplates(templates)}
-                className="px-10 py-4 bg-indigo-600 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center gap-3 shadow-xl shadow-indigo-100"
-              >
-                <Save className="w-5 h-5" />
-                {isAr ? 'حفظ التغييرات' : 'Sauvegarder'}
-              </button>
+              
+              <div className="flex gap-4">
+                <button 
+                  onClick={() => setShowSettings(false)}
+                  className="px-8 py-4 text-sm font-black text-slate-500 uppercase tracking-widest hover:text-slate-800 transition-colors"
+                >
+                  {isAr ? 'إلغاء' : 'Annuler'}
+                </button>
+                <button 
+                  onClick={() => saveTemplates(templates)}
+                  className="px-10 py-4 bg-indigo-600 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center gap-3 shadow-xl shadow-indigo-100"
+                >
+                  <Save className="w-5 h-5" />
+                  {isAr ? 'حفظ التغييرات' : 'Sauvegarder'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
