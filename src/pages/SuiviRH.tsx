@@ -88,34 +88,25 @@ export default function SuiviRH() {
   useEffect(() => {
     setSyncStatus(isAr ? 'جاري التحميل...' : 'Chargement...');
     
-    Promise.all([
-      loadData<Employe>('employes'),
-      loadData<PaiementSalaire>('paiements_salaires'),
-      loadData<Commande>('commandes')
-    ]).then(([remoteEmps, remotePaiements, remoteCmds]) => {
-      if (remoteEmps && remoteEmps.length > 0) {
-        setEmployes(remoteEmps);
-        saveLocalRH('employes', remoteEmps);
-      } else {
-        setEmployes(getLocalRH<Employe>('employes'));
-      }
-
-      if (remotePaiements && remotePaiements.length > 0) {
-        setPaiements(remotePaiements);
-        saveLocalRH('paiements_salaires', remotePaiements);
-      } else {
-        setPaiements(getLocalRH<PaiementSalaire>('paiements_salaires'));
-      }
-
-      setCommandes(remoteCmds || []);
-      setSyncStatus(null);
-    }).catch(err => {
-      console.error("RH Sync Error:", err);
-      // Fallback to local
+    loadData<Employe>('employes').then(remoteEmps => {
+      setEmployes(remoteEmps || []);
+      saveLocalRH('employes', remoteEmps || []);
+    }).catch(() => {
       setEmployes(getLocalRH<Employe>('employes'));
-      setPaiements(getLocalRH<PaiementSalaire>('paiements_salaires'));
-      setSyncStatus(null);
     });
+
+    loadData<PaiementSalaire>('paiements_salaires').then(remotePaiements => {
+      setPaiements(remotePaiements || []);
+      saveLocalRH('paiements_salaires', remotePaiements || []);
+    }).catch(() => {
+      setPaiements(getLocalRH<PaiementSalaire>('paiements_salaires'));
+    });
+
+    loadData<Commande>('commandes').then(remoteCmds => {
+      setCommandes(remoteCmds || []);
+    });
+
+    setSyncStatus(null);
   }, [isAr]);
 
   const availableMois = useMemo(() => {
@@ -201,7 +192,7 @@ export default function SuiviRH() {
     saveLocalRH('employes', updated);
 
     // Sync with Supabase so other modules (like Commandes) can see them
-    saveRecord('employes', empData, true).catch(err => console.error("Error syncing employee:", err));
+    await saveRecord('employes', empData);
 
     setShowModal(false);
   }
@@ -252,7 +243,7 @@ export default function SuiviRH() {
     saveLocalRH('paiements_salaires', updatedPaiements);
 
     // Sync with server
-    saveRecord('paiements_salaires', newPaiement, true).catch(() => { });
+    await saveRecord('paiements_salaires', newPaiement);
 
     setShowPayerModal(false);
 
@@ -275,7 +266,7 @@ export default function SuiviRH() {
         fournisseur: empNameStr,
         notes: notes || undefined,
       };
-      saveRecord('charges', newCharge, true).catch(() => console.log("Silent error saving charge"));
+      saveRecord('charges', newCharge).catch(() => console.log("Silent error saving charge"));
     }
   }
 
