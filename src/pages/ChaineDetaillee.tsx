@@ -1,0 +1,463 @@
+import { useState, useEffect, useMemo } from 'react';
+import { 
+  Factory, 
+  Settings, 
+  Users, 
+  Clock, 
+  Save, 
+  Plus, 
+  Trash2, 
+  ChevronRight, 
+  TrendingUp, 
+  AlertCircle,
+  LayoutDashboard,
+  CheckCircle2,
+  Timer
+} from 'lucide-react';
+import { 
+  Commande, 
+  Employe, 
+  OperationModele, 
+  SuiviHoraire, 
+  loadData, 
+  saveRecord, 
+  genId,
+  deleteRecord
+} from '../types';
+import { useLang } from '../contexts/LangContext';
+
+const HEURES_TRAVAIL = [
+  '08:00 - 09:00',
+  '09:00 - 10:00',
+  '10:00 - 11:00',
+  '11:00 - 12:00',
+  '14:00 - 15:00',
+  '15:00 - 16:00',
+  '16:00 - 17:00',
+  '17:00 - 18:00',
+];
+
+export default function ChaineDetaillee() {
+  const { isAr } = useLang();
+  const [commandes, setCommandes] = useState<Commande[]>([]);
+  const [employes, setEmployes] = useState<Employe[]>([]);
+  const [operations, setOperations] = useState<OperationModele[]>([]);
+  const [suivi, setSuivi] = useState<SuiviHoraire[]>([]);
+  
+  const [selectedCmdId, setSelectedCmdId] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<'config' | 'suivi' | 'stats'>('suivi');
+  const [loading, setLoading] = useState(true);
+
+  // Form states
+  const [showOpModal, setShowOpModal] = useState(false);
+  const [opForm, setOpForm] = useState<Partial<OperationModele>>({});
+
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      loadData<Commande>('commandes'),
+      loadData<Employe>('employes'),
+      loadData<OperationModele>('operations_modele'),
+      loadData<SuiviHoraire>('suivi_horaire')
+    ]).then(([cmds, emps, ops, s]) => {
+      setCommandes(cmds.filter(c => c.statut === 'en_cours'));
+      setEmployes(emps.filter(e => e.actif));
+      setOperations(ops);
+      setSuivi(s);
+      
+      if (cmds.length > 0 && !selectedCmdId) {
+        const first = cmds.find(c => c.statut === 'en_cours');
+        if (first) setSelectedCmdId(first.id);
+      }
+      setLoading(false);
+    });
+  }, []);
+
+  const selectedCmd = useMemo(() => 
+    commandes.find(c => c.id === selectedCmdId), [commandes, selectedCmdId]);
+
+  const modelOps = useMemo(() => 
+    operations.filter(o => o.modele === selectedCmd?.modele)
+    .sort((a, b) => a.ordreSequence - b.ordreSequence), [operations, selectedCmd]);
+
+  const today = new Date().toISOString().split('T')[0];
+  const todaySuivi = useMemo(() => 
+    suivi.filter(s => s.commandeId === selectedCmdId && s.dateProduction === today), 
+    [suivi, selectedCmdId, today]);
+
+  async function handleAddOperation() {
+    if (!selectedCmd || !opForm.nomOperation) return;
+    
+    const newOp: OperationModele = {
+      id: genId(),
+      modele: selectedCmd.modele,
+      nomOperation: opForm.nomOperation,
+      targetHeure: opForm.targetHeure || 40,
+      ordreSequence: modelOps.length + 1
+    };
+
+    const updated = [...operations, newOp];
+    setOperations(updated);
+    setShowOpModal(false);
+    setOpForm({});
+    await saveRecord('operations_modele', newOp);
+  }
+
+  async function handleDeleteOp(id: string) {
+    if (!confirm('Supprimer cette opération ?')) return;
+    setOperations(operations.filter(o => o.id !== id));
+    await deleteRecord('operations_modele', id);
+  }
+
+  async function handleUpdateSuivi(opId: string, empId: string, heure: string, qte: number) {
+    const [hDebut, hFin] = heure.split(' - ');
+    
+    const existing = todaySuivi.find(s => 
+      s.operationId === opId && 
+      s.heureDebut === hDebut
+    );
+
+    const newEntry: SuiviHoraire = {
+      id: existing?.id || genId(),
+      commandeId: selectedCmdId,
+      employeId: empId,
+      operationId: opId,
+      heureDebut: hDebut,
+      heureFin: hFin,
+      quantiteRealisee: qte,
+      dateProduction: today
+    };
+
+    const updatedSuivi = existing 
+      ? suivi.map(s => s.id === existing.id ? newEntry : s)
+      : [...suivi, newEntry];
+    
+    setSuivi(updatedSuivi);
+    await saveRecord('suivi_horaire', newEntry);
+  }
+
+  const getProduction = (opId: string, heureDebut: string) => {
+    return todaySuivi.find(s => s.operationId === opId && s.heureDebut === heureDebut);
+  };
+
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-[400px]">
+      <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  return (
+    <div className="space-y-6 pb-20">
+      {/* Header & Selection */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-slate-900 to-indigo-950 rounded-[1.5rem] flex items-center justify-center shadow-xl shadow-slate-200">
+            <Factory className="w-8 h-8 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Pilotage Séquentiel</h1>
+            <p className="text-slate-500 text-sm font-bold uppercase tracking-widest opacity-60">Gestion détaillée des postes de travail</p>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          <select 
+            value={selectedCmdId}
+            onChange={e => setSelectedCmdId(e.target.value)}
+            className="w-full sm:w-64 px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-black text-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+          >
+            {commandes.map(c => (
+              <option key={c.id} value={c.id}>{c.reference} — {c.modele}</option>
+            ))}
+          </select>
+          
+          <div className="flex bg-slate-100 p-1.5 rounded-2xl">
+            {(['suivi', 'config', 'stats'] as const).map(t => (
+              <button
+                key={t}
+                onClick={() => setActiveTab(t)}
+                className={`px-6 py-3 rounded-[1rem] text-[10px] font-black uppercase tracking-widest transition-all ${
+                  activeTab === t ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                }`}
+              >
+                {t === 'suivi' ? (isAr ? 'تتبع الإنتاج' : 'Pointage Horaire') : 
+                 t === 'config' ? (isAr ? 'الإعدادات' : 'Configuration') : 
+                 (isAr ? 'إحصائيات' : 'Performance')}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {activeTab === 'config' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* List of operations */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-xl font-black text-slate-800 flex items-center gap-3">
+                  <Settings className="w-6 h-6 text-indigo-600" />
+                  Gamme Opératoire : {selectedCmd?.modele}
+                </h2>
+                <button 
+                  onClick={() => setShowOpModal(true)}
+                  className="px-6 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+                >
+                  Ajouter un poste
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {modelOps.length === 0 ? (
+                  <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-[2rem]">
+                    <AlertCircle className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+                    <p className="text-sm font-bold text-slate-400 uppercase">Aucun poste défini pour ce modèle</p>
+                  </div>
+                ) : (
+                  modelOps.map((op, idx) => (
+                    <div key={op.id} className="flex items-center justify-between p-5 bg-slate-50 hover:bg-slate-100/50 rounded-2xl transition-all border border-transparent hover:border-slate-200 group">
+                      <div className="flex items-center gap-5">
+                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-sm font-black text-indigo-600 shadow-sm border border-slate-100">
+                          {idx + 1}
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-slate-800 uppercase">{op.nomOperation}</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">Cible : {op.targetHeure} pcs / heure</p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => handleDeleteOp(op.id)}
+                        className="p-3 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Stats sidebar */}
+          <div className="space-y-6">
+            <div className="bg-[#0f172a] rounded-[2.5rem] p-8 text-white shadow-xl shadow-slate-200">
+              <h3 className="text-lg font-black mb-6 flex items-center gap-3">
+                <Timer className="w-5 h-5 text-indigo-400" />
+                Résumé Gamme
+              </h3>
+              <div className="space-y-6">
+                <div className="p-5 bg-white/5 rounded-2xl border border-white/5">
+                  <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Nombre de postes</p>
+                  <p className="text-2xl font-black">{modelOps.length}</p>
+                </div>
+                <div className="p-5 bg-white/5 rounded-2xl border border-white/5">
+                  <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">Capacité Max (H)</p>
+                  <p className="text-2xl font-black">{modelOps.length > 0 ? Math.min(...modelOps.map(o => o.targetHeure)) : 0} pcs</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'suivi' && (
+        <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+          <div className="px-8 py-6 border-b border-slate-50 bg-slate-50/30 flex items-center justify-between">
+            <h2 className="text-lg font-black text-slate-800 uppercase tracking-tight flex items-center gap-3">
+              <Clock className="w-6 h-6 text-indigo-600" />
+              Saisie de Production par Heure ({today})
+            </h2>
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase border border-indigo-100">
+                Live Monitoring
+              </span>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[1000px]">
+              <thead>
+                <tr className="bg-slate-50/50">
+                  <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 sticky left-0 bg-slate-50 z-10 w-48">
+                    Heure / Tranche
+                  </th>
+                  {modelOps.map(op => (
+                    <th key={op.id} className="px-4 py-5 text-[10px] font-black text-slate-800 uppercase tracking-widest border-b border-slate-100 border-l border-slate-100">
+                      <div className="flex flex-col">
+                        <span>{op.nomOperation}</span>
+                        <span className="text-[9px] text-indigo-500 mt-0.5">Cible: {op.targetHeure}</span>
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {HEURES_TRAVAIL.map(tranche => (
+                  <tr key={tranche} className="hover:bg-slate-50/30 transition-colors">
+                    <td className="px-8 py-4 font-black text-slate-500 text-xs tabular-nums sticky left-0 bg-white z-10 border-r border-slate-100 shadow-sm">
+                      {tranche}
+                    </td>
+                    {modelOps.map(op => {
+                      const prod = getProduction(op.id, tranche.split(' - ')[0]);
+                      const isBelowTarget = prod && prod.quantiteRealisee < op.targetHeure;
+                      return (
+                        <td key={op.id} className="px-4 py-4 border-l border-slate-100">
+                          <div className="space-y-2">
+                            <select 
+                              value={prod?.employeId || ''}
+                              onChange={e => handleUpdateSuivi(op.id, e.target.value, tranche, prod?.quantiteRealisee || 0)}
+                              className="w-full bg-slate-50 border-none rounded-xl text-[10px] font-bold text-slate-600 py-2 px-2 outline-none focus:ring-1 focus:ring-indigo-500"
+                            >
+                              <option value="">Ouvrier</option>
+                              {employes.map(e => <option key={e.id} value={e.id}>{e.prenom} {e.nom[0]}.</option>)}
+                            </select>
+                            <input 
+                              type="number"
+                              value={prod?.quantiteRealisee ?? ''}
+                              onChange={e => handleUpdateSuivi(op.id, prod?.employeId || '', tranche, parseInt(e.target.value) || 0)}
+                              placeholder="Qté"
+                              className={`w-full px-3 py-2.5 rounded-xl text-sm font-black tabular-nums outline-none transition-all border-2 ${
+                                !prod ? 'bg-white border-slate-100 text-slate-400' :
+                                isBelowTarget ? 'bg-red-50 border-red-100 text-red-600' : 'bg-emerald-50 border-emerald-100 text-emerald-600'
+                              }`}
+                            />
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot className="bg-slate-900 text-white">
+                <tr>
+                  <td className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400 sticky left-0 bg-slate-900 z-10 border-r border-slate-800">
+                    Total Quotidien
+                  </td>
+                  {modelOps.map(op => {
+                    const totalOp = todaySuivi
+                      .filter(s => s.operationId === op.id)
+                      .reduce((a, b) => a + b.quantiteRealisee, 0);
+                    return (
+                      <td key={op.id} className="px-4 py-6 border-l border-slate-800">
+                        <div className="flex flex-col">
+                          <span className="text-xl font-black tabular-nums">{totalOp}</span>
+                          <span className="text-[9px] font-bold text-slate-500 uppercase">Pièces</span>
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'stats' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {modelOps.map(op => {
+            const opSuivi = todaySuivi.filter(s => s.operationId === op.id);
+            const total = opSuivi.reduce((a, b) => a + b.quantiteRealisee, 0);
+            const avg = opSuivi.length > 0 ? total / opSuivi.length : 0;
+            const perf = (avg / op.targetHeure) * 100;
+            
+            return (
+              <div key={op.id} className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm relative overflow-hidden group">
+                <div className={`absolute top-0 right-0 w-32 h-32 opacity-5 -mr-8 -mt-8 transition-transform group-hover:scale-110 ${
+                  perf >= 100 ? 'text-emerald-500' : perf >= 70 ? 'text-amber-500' : 'text-red-500'
+                }`}>
+                  <TrendingUp className="w-full h-full" />
+                </div>
+
+                <h3 className="text-sm font-black text-slate-800 uppercase mb-6">{op.nomOperation}</h3>
+                
+                <div className="space-y-6">
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Efficience</p>
+                      <p className={`text-4xl font-black tabular-nums ${
+                        perf >= 100 ? 'text-emerald-600' : perf >= 70 ? 'text-amber-600' : 'text-red-600'
+                      }`}>{Math.round(perf)}%</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Moyenne</p>
+                      <p className="text-xl font-black text-slate-800 tabular-nums">{Math.round(avg)}/h</p>
+                    </div>
+                  </div>
+
+                  <div className="h-3 bg-slate-50 rounded-full overflow-hidden border border-slate-100">
+                    <div 
+                      className={`h-full transition-all duration-1000 ${
+                        perf >= 100 ? 'bg-emerald-500' : perf >= 70 ? 'bg-amber-500' : 'bg-red-500'
+                      }`}
+                      style={{ width: `${Math.min(100, perf)}%` }}
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 bg-slate-50 p-4 rounded-2xl">
+                    <CheckCircle2 className={`w-4 h-4 ${perf >= 100 ? 'text-emerald-500' : 'text-slate-300'}`} />
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
+                      {perf >= 100 ? 'Objectif Atteint' : `Manque ${Math.max(0, op.targetHeure - Math.round(avg))} pcs/h`}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Operation Modal */}
+      {showOpModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-[250] p-4">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl animate-in zoom-in duration-300">
+            <div className="p-8 border-b border-slate-100 flex items-center justify-between">
+              <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Nouveau Poste</h2>
+              <button onClick={() => setShowOpModal(false)} className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-8 space-y-6">
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nom de l'opération (Poste)</label>
+                <input 
+                  autoFocus
+                  value={opForm.nomOperation || ''} 
+                  onChange={e => setOpForm({...opForm, nomOperation: e.target.value})} 
+                  placeholder="Ex: Jib, Ourlet, Montage..."
+                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-5 text-sm font-black text-slate-900 outline-none focus:border-indigo-500 transition-all" 
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Objectif de Production (Pièces / Heure)</label>
+                <input 
+                  type="number"
+                  value={opForm.targetHeure || ''} 
+                  onChange={e => setOpForm({...opForm, targetHeure: parseInt(e.target.value) || 0})} 
+                  placeholder="40"
+                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-5 text-sm font-black text-slate-900 outline-none focus:border-indigo-500 transition-all" 
+                />
+              </div>
+            </div>
+            <div className="p-8 bg-slate-50">
+              <button 
+                onClick={handleAddOperation}
+                className="w-full h-16 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-200 active:scale-95 transition-all"
+              >
+                Confirmer le poste
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function X({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  );
+}

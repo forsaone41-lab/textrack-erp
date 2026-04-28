@@ -153,6 +153,25 @@ export interface PointageEntry {
   retouche: number;
 }
 
+export interface OperationModele {
+  id: string;
+  modele: string;
+  nomOperation: string;
+  targetHeure: number;
+  ordreSequence: number;
+}
+
+export interface SuiviHoraire {
+  id: string;
+  commandeId: string;
+  employeId: string;
+  operationId: string;
+  heureDebut: string;
+  heureFin: string;
+  quantiteRealisee: number;
+  dateProduction: string;
+}
+
 export interface Facture {
   id: string;
   numero: string;
@@ -400,9 +419,10 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
         'tissuPrix', 'coutMainOeuvre', 'tissuSourcing', 
         'tissu', 'tissuConsommation', 'type', 'client', 
         'commandeId', 'fournisseurTel', 'fournisseurEmail',
-        'adresse', 'ville', 'notes', 'pinCode',
+        'adresse', 'ville', 'notes', 'telephone', 'pinCode',
         'avance', 'retouche', 'lastActive', 'statut', 'photo',
         'composition', 'metrageTotal', 'largeur', 'zone', 'etagere',
+        'cin', 'rib', 'banque', 'salaireMensuel', 'remunerationType', 'actif', 'email', 'prenom',
         'dateEntree', 'contrat', 'cnss', 'mutuelle', 'enfants', 'situation_familiale'
       ];
       newCols.forEach(col => delete fallbackRecord[col]);
@@ -412,10 +432,13 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
         console.warn(`Saved ${table} using fallback (ignored new columns). Run SQL update to enable full tracking.`);
         return; 
       }
-      console.error(`Fallback save also failed for ${table}:`, retryError.message);
+      
+      // If even the fallback fails, use the latest error for the alert
+      if (!silent) alert(`Erreur de sauvegarde dans ${table} : ${retryError.message}\n\nNote: Certaines colonnes sont peut-être manquantes dans votre base de données Supabase.`);
+      return;
     }
 
-    // Only alert if it's NOT a missing column error (or if fallback failed)
+    // Only alert if it's NOT a missing column error
     if (!silent) alert(`Erreur de sauvegarde dans ${table} : ${error.message}`);
   }
 }

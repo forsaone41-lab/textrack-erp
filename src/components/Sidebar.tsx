@@ -109,10 +109,16 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
             </NavLink>
           )}
           {can('chaine') && (
-            <NavLink to="/chaine-montage" className={linkClass} onClick={closeMobile}>
-              <Activity className="w-5 h-5" />
-              <span>{t('chaine', lang)}</span>
-            </NavLink>
+            <>
+              <NavLink to="/chaine-montage" className={linkClass} onClick={closeMobile}>
+                <Activity className="w-5 h-5" />
+                <span>{t('chaine', lang)}</span>
+              </NavLink>
+              <NavLink to="/pilotage-chaine" className={linkClass} onClick={closeMobile}>
+                <TrendingUp className="w-5 h-5" />
+                <span>Pilotage Chaîne</span>
+              </NavLink>
+            </>
           )}
 
           {(can('bilan') || can('factures') || can('charges')) && (
