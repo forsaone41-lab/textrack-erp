@@ -133,7 +133,11 @@ export default function ChaineDetaillee() {
       : [...suivi, newEntry];
     
     setSuivi(updatedSuivi);
-    await saveRecord('suivi_horaire', newEntry);
+    
+    // Only sync with DB if employee is selected (valid UUID)
+    if (empId && empId.length > 10) {
+      await saveRecord('suivi_horaire', newEntry);
+    }
   }
 
   const getProduction = (opId: string, heureDebut: string) => {
