@@ -156,20 +156,20 @@ export interface PointageEntry {
 export interface OperationModele {
   id: string;
   modele: string;
-  nomOperation: string;
-  targetHeure: number;
-  ordreSequence: number;
+  nom_operation: string;
+  target_heure: number;
+  ordre_sequence: number;
 }
 
 export interface SuiviHoraire {
   id: string;
-  commandeId: string;
-  employeId: string;
-  operationId: string;
-  heureDebut: string;
-  heureFin: string;
-  quantiteRealisee: number;
-  dateProduction: string;
+  commande_id: string;
+  employe_id: string;
+  operation_id: string;
+  heure_debut: string;
+  heure_fin: string;
+  quantite_realisee: number;
+  date_production: string;
 }
 
 export interface Facture {

@@ -78,22 +78,22 @@ export default function ChaineDetaillee() {
 
   const modelOps = useMemo(() => 
     operations.filter(o => o.modele === selectedCmd?.modele)
-    .sort((a, b) => a.ordreSequence - b.ordreSequence), [operations, selectedCmd]);
+    .sort((a, b) => a.ordre_sequence - b.ordre_sequence), [operations, selectedCmd]);
 
   const today = new Date().toISOString().split('T')[0];
   const todaySuivi = useMemo(() => 
-    suivi.filter(s => s.commandeId === selectedCmdId && s.dateProduction === today), 
+    suivi.filter(s => s.commande_id === selectedCmdId && s.date_production === today), 
     [suivi, selectedCmdId, today]);
 
   async function handleAddOperation() {
-    if (!selectedCmd || !opForm.nomOperation) return;
+    if (!selectedCmd || !opForm.nom_operation) return;
     
     const newOp: OperationModele = {
       id: genId(),
       modele: selectedCmd.modele,
-      nomOperation: opForm.nomOperation,
-      targetHeure: opForm.targetHeure || 40,
-      ordreSequence: modelOps.length + 1
+      nom_operation: opForm.nom_operation,
+      target_heure: opForm.target_heure || 40,
+      ordre_sequence: modelOps.length + 1
     };
 
     const updated = [...operations, newOp];
@@ -113,19 +113,19 @@ export default function ChaineDetaillee() {
     const [hDebut, hFin] = heure.split(' - ');
     
     const existing = todaySuivi.find(s => 
-      s.operationId === opId && 
-      s.heureDebut === hDebut
+      s.operation_id === opId && 
+      s.heure_debut === hDebut
     );
 
     const newEntry: SuiviHoraire = {
       id: existing?.id || genId(),
-      commandeId: selectedCmdId,
-      employeId: empId,
-      operationId: opId,
-      heureDebut: hDebut,
-      heureFin: hFin,
-      quantiteRealisee: qte,
-      dateProduction: today
+      commande_id: selectedCmdId,
+      employe_id: empId,
+      operation_id: opId,
+      heure_debut: hDebut,
+      heure_fin: hFin,
+      quantite_realisee: qte,
+      date_production: today
     };
 
     const updatedSuivi = existing 
@@ -137,7 +137,7 @@ export default function ChaineDetaillee() {
   }
 
   const getProduction = (opId: string, heureDebut: string) => {
-    return todaySuivi.find(s => s.operationId === opId && s.heureDebut === heureDebut);
+    return todaySuivi.find(s => s.operation_id === opId && s.heure_debut === heureDebut);
   };
 
   if (loading) return (
@@ -221,8 +221,8 @@ export default function ChaineDetaillee() {
                           {idx + 1}
                         </div>
                         <div>
-                          <p className="text-sm font-black text-slate-800 uppercase">{op.nomOperation}</p>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase">Cible : {op.targetHeure} pcs / heure</p>
+                          <p className="text-sm font-black text-slate-800 uppercase">{op.nom_operation}</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">Cible : {op.target_heure} pcs / heure</p>
                         </div>
                       </div>
                       <button 
@@ -252,7 +252,7 @@ export default function ChaineDetaillee() {
                 </div>
                 <div className="p-5 bg-white/5 rounded-2xl border border-white/5">
                   <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">Capacité Max (H)</p>
-                  <p className="text-2xl font-black">{modelOps.length > 0 ? Math.min(...modelOps.map(o => o.targetHeure)) : 0} pcs</p>
+                  <p className="text-2xl font-black">{modelOps.length > 0 ? Math.min(...modelOps.map(o => o.target_heure)) : 0} pcs</p>
                 </div>
               </div>
             </div>
@@ -284,8 +284,8 @@ export default function ChaineDetaillee() {
                   {modelOps.map(op => (
                     <th key={op.id} className="px-4 py-5 text-[10px] font-black text-slate-800 uppercase tracking-widest border-b border-slate-100 border-l border-slate-100">
                       <div className="flex flex-col">
-                        <span>{op.nomOperation}</span>
-                        <span className="text-[9px] text-indigo-500 mt-0.5">Cible: {op.targetHeure}</span>
+                        <span>{op.nom_operation}</span>
+                        <span className="text-[9px] text-indigo-500 mt-0.5">Cible: {op.target_heure}</span>
                       </div>
                     </th>
                   ))}
@@ -299,13 +299,13 @@ export default function ChaineDetaillee() {
                     </td>
                     {modelOps.map(op => {
                       const prod = getProduction(op.id, tranche.split(' - ')[0]);
-                      const isBelowTarget = prod && prod.quantiteRealisee < op.targetHeure;
+                      const isBelowTarget = prod && prod.quantite_realisee < op.target_heure;
                       return (
                         <td key={op.id} className="px-4 py-4 border-l border-slate-100">
                           <div className="space-y-2">
                             <select 
-                              value={prod?.employeId || ''}
-                              onChange={e => handleUpdateSuivi(op.id, e.target.value, tranche, prod?.quantiteRealisee || 0)}
+                              value={prod?.employe_id || ''}
+                              onChange={e => handleUpdateSuivi(op.id, e.target.value, tranche, prod?.quantite_realisee || 0)}
                               className="w-full bg-slate-50 border-none rounded-xl text-[10px] font-bold text-slate-600 py-2 px-2 outline-none focus:ring-1 focus:ring-indigo-500"
                             >
                               <option value="">Ouvrier</option>
@@ -313,8 +313,8 @@ export default function ChaineDetaillee() {
                             </select>
                             <input 
                               type="number"
-                              value={prod?.quantiteRealisee ?? ''}
-                              onChange={e => handleUpdateSuivi(op.id, prod?.employeId || '', tranche, parseInt(e.target.value) || 0)}
+                              value={prod?.quantite_realisee ?? ''}
+                              onChange={e => handleUpdateSuivi(op.id, prod?.employe_id || '', tranche, parseInt(e.target.value) || 0)}
                               placeholder="Qté"
                               className={`w-full px-3 py-2.5 rounded-xl text-sm font-black tabular-nums outline-none transition-all border-2 ${
                                 !prod ? 'bg-white border-slate-100 text-slate-400' :
@@ -335,8 +335,8 @@ export default function ChaineDetaillee() {
                   </td>
                   {modelOps.map(op => {
                     const totalOp = todaySuivi
-                      .filter(s => s.operationId === op.id)
-                      .reduce((a, b) => a + b.quantiteRealisee, 0);
+                      .filter(s => s.operation_id === op.id)
+                      .reduce((a, b) => a + b.quantite_realisee, 0);
                     return (
                       <td key={op.id} className="px-4 py-6 border-l border-slate-800">
                         <div className="flex flex-col">
@@ -356,10 +356,10 @@ export default function ChaineDetaillee() {
       {activeTab === 'stats' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {modelOps.map(op => {
-            const opSuivi = todaySuivi.filter(s => s.operationId === op.id);
-            const total = opSuivi.reduce((a, b) => a + b.quantiteRealisee, 0);
+            const opSuivi = todaySuivi.filter(s => s.operation_id === op.id);
+            const total = opSuivi.reduce((a, b) => a + b.quantite_realisee, 0);
             const avg = opSuivi.length > 0 ? total / opSuivi.length : 0;
-            const perf = (avg / op.targetHeure) * 100;
+            const perf = (avg / op.target_heure) * 100;
             
             return (
               <div key={op.id} className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm relative overflow-hidden group">
@@ -369,7 +369,7 @@ export default function ChaineDetaillee() {
                   <TrendingUp className="w-full h-full" />
                 </div>
 
-                <h3 className="text-sm font-black text-slate-800 uppercase mb-6">{op.nomOperation}</h3>
+                <h3 className="text-sm font-black text-slate-800 uppercase mb-6">{op.nom_operation}</h3>
                 
                 <div className="space-y-6">
                   <div className="flex items-end justify-between">
@@ -397,7 +397,7 @@ export default function ChaineDetaillee() {
                   <div className="flex items-center gap-2 bg-slate-50 p-4 rounded-2xl">
                     <CheckCircle2 className={`w-4 h-4 ${perf >= 100 ? 'text-emerald-500' : 'text-slate-300'}`} />
                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
-                      {perf >= 100 ? 'Objectif Atteint' : `Manque ${Math.max(0, op.targetHeure - Math.round(avg))} pcs/h`}
+                      {perf >= 100 ? 'Objectif Atteint' : `Manque ${Math.max(0, op.target_heure - Math.round(avg))} pcs/h`}
                     </p>
                   </div>
                 </div>
@@ -422,8 +422,8 @@ export default function ChaineDetaillee() {
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nom de l'opération (Poste)</label>
                 <input 
                   autoFocus
-                  value={opForm.nomOperation || ''} 
-                  onChange={e => setOpForm({...opForm, nomOperation: e.target.value})} 
+                  value={opForm.nom_operation || ''} 
+                  onChange={e => setOpForm({...opForm, nom_operation: e.target.value})} 
                   placeholder="Ex: Jib, Ourlet, Montage..."
                   className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-5 text-sm font-black text-slate-900 outline-none focus:border-indigo-500 transition-all" 
                 />
@@ -432,8 +432,8 @@ export default function ChaineDetaillee() {
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Objectif de Production (Pièces / Heure)</label>
                 <input 
                   type="number"
-                  value={opForm.targetHeure || ''} 
-                  onChange={e => setOpForm({...opForm, targetHeure: parseInt(e.target.value) || 0})} 
+                  value={opForm.target_heure || ''} 
+                  onChange={e => setOpForm({...opForm, target_heure: parseInt(e.target.value) || 0})} 
                   placeholder="40"
                   className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-5 text-sm font-black text-slate-900 outline-none focus:border-indigo-500 transition-all" 
                 />
