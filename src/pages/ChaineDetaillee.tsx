@@ -128,6 +128,15 @@ export default function ChaineDetaillee() {
       date_production: today
     };
 
+    // If both employee and quantity are empty/zero, delete the record to clean up
+    if (!empId && (!qte || qte === 0)) {
+      if (existing) {
+        setSuivi(suivi.filter(s => s.id !== existing.id));
+        await deleteRecord('suivi_horaire', existing.id);
+      }
+      return;
+    }
+
     const updatedSuivi = existing 
       ? suivi.map(s => s.id === existing.id ? newEntry : s)
       : [...suivi, newEntry];
@@ -316,7 +325,10 @@ export default function ChaineDetaillee() {
                             <input 
                               type="number"
                               value={prod?.quantite_realisee ?? ''}
-                              onChange={e => handleUpdateSuivi(op.id, prod?.employe_id || '', tranche, parseInt(e.target.value) || 0)}
+                              onChange={e => {
+                                const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+                                handleUpdateSuivi(op.id, prod?.employe_id || '', tranche, val);
+                              }}
                               placeholder="Qté"
                               className={`w-full px-3 py-2.5 rounded-xl text-sm font-black tabular-nums outline-none transition-all border-2 ${
                                 !prod ? 'bg-white border-slate-100 text-slate-400' :
