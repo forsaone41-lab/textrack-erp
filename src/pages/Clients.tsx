@@ -12,7 +12,8 @@ interface Client {
   ville: string;
   notes: string;
 }
-
+import { useLang } from '../contexts/LangContext';
+import { t } from '../i18n';
 // Local storage helpers for clients specifically to avoid Supabase table errors
 function getLocalClients(): Client[] {
   try {
@@ -26,6 +27,7 @@ function saveLocalClients(clients: Client[]) {
 }
 
 export default function Clients() {
+  const { lang, isAr } = useLang();
   const [clients, setClients] = useState<Client[]>([]);
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [search, setSearch] = useState('');

@@ -44,7 +44,11 @@ function calcStats(employes: Employe[], pointages: PointageEntry[], presences: P
 const MEDAL_COLORS = ['from-yellow-400 to-amber-500', 'from-slate-300 to-slate-400', 'from-orange-400 to-amber-600'];
 const MEDAL_ICONS = ['🥇', '🥈', '🥉'];
 
-const empInitials = (e: Employe) => e.prenom ? e.prenom[0] + e.nom[0] : e.nom.substring(0, 2).toUpperCase();
+const empInitials = (e: Employe) => {
+  if (!e) return '??';
+  if (e.prenom && e.nom) return (e.prenom?.[0] || '') + (e.nom?.[0] || '');
+  return (e.nom || '??').substring(0, 2).toUpperCase();
+};
 const empName = (e: Employe) => e.prenom ? `${e.prenom} ${e.nom}` : e.nom;
 
 export default function Performance() {

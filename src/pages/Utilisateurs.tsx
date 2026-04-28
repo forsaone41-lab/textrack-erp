@@ -12,7 +12,8 @@ import {
   loadData, saveRecord, deleteRecord, genId,
   loadPermissions, savePermissions, DEFAULT_PERMISSIONS,
 } from '../types';
-
+import { useLang } from '../contexts/LangContext';
+import { t } from '../i18n';
 // ─── Role Config ───────────────────────────────────────────
 const ROLE_CFG = {
   admin: {
@@ -91,7 +92,7 @@ function generatePassword() {
   return Array.from({ length: 10 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
 }
 function initials(nom: string) {
-  return nom.split(' ').map(n => n[0] || '').join('').substring(0, 2).toUpperCase();
+  return nom.split(' ').filter(Boolean).map(n => n?.[0] || '').join('').substring(0, 2).toUpperCase() || '??';
 }
 
 // ─── Toggle Switch ─────────────────────────────────────────
@@ -111,6 +112,7 @@ function Toggle({ checked, onChange, locked }: { checked: boolean; onChange: () 
 
 // ─── Main Component ────────────────────────────────────────
 export default function Utilisateurs() {
+  const { lang, isAr } = useLang();
   const [tab, setTab] = useState<'users' | 'permissions'>('users');
 
   // Users state

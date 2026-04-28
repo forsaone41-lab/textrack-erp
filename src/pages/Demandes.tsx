@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, Clock, UserPlus, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw } from 'lucide-react';
+import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, Clock, UserPlus, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RotateCw, RefreshCw } from 'lucide-react';
 import { Lead, loadLeads, saveRecord, User, genId } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { generatePDF } from '../utils/pdf';
@@ -32,8 +32,17 @@ export default function Demandes() {
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [templates, setTemplates] = useState(() => {
-    const saved = localStorage.getItem('textrack_msg_templates');
-    return saved ? JSON.parse(saved) : DEFAULT_TEMPLATES;
+    try {
+      const saved = localStorage.getItem('textrack_msg_templates');
+      const parsed = saved ? JSON.parse(saved) : DEFAULT_TEMPLATES;
+      // Deep merge with defaults to ensure all keys exist
+      return {
+        ar: { ...DEFAULT_TEMPLATES.ar, ...(parsed?.ar || {}) },
+        fr: { ...DEFAULT_TEMPLATES.fr, ...(parsed?.fr || {}) }
+      };
+    } catch (e) {
+      return DEFAULT_TEMPLATES;
+    }
   });
 
   useEffect(() => {
@@ -41,6 +50,7 @@ export default function Demandes() {
   }, []);
 
   const saveTemplates = (newTemplates: any) => {
+    console.log("Saving templates...", newTemplates);
     setTemplates(newTemplates);
     localStorage.setItem('textrack_msg_templates', JSON.stringify(newTemplates));
     setShowSettings(false);

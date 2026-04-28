@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { LogIn, LogOut, UserCheck, UserX, Clock, Users, CalendarDays, QrCode, X, Search, CheckCircle2, AlertCircle, Download, Printer } from 'lucide-react';
+import { LogIn, LogOut, UserCheck, UserX, Clock, Users, CalendarDays, QrCode, X, Search, CheckCircle, AlertTriangle, Download, Printer } from 'lucide-react';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import { QRCodeSVG } from 'qrcode.react';
-import { Employe, Presence, loadData, saveRecord, genId, loadCompanyProfile } from '../types';
+import { Employe, Presence, loadData, saveRecord, genId, loadCompanyProfile, safeStorage } from '../types';
 import { useLang } from '../contexts/LangContext';
 
 const HEURE_LIMITE_RETARD = '08:30';
@@ -30,10 +30,39 @@ export default function Pointage({ onLogout }: { onLogout?: () => void }) {
   // Hardware Scanner Support
   const scanBuffer = useRef('');
   const lastKeyTime = useRef(0);
+  const empsRef = useRef<Employe[]>([]);
+  const presRef = useRef<Presence[]>([]);
 
   useEffect(() => {
-    loadData<Employe>('employes').then(setEmployes);
-    loadData<Presence>('presences').then(setPresences);
+    empsRef.current = employes;
+    presRef.current = presences;
+  }, [employes, presences]);
+
+  useEffect(() => {
+    Promise.all([
+      loadData<Employe>('employes'),
+      loadData<Presence>('presences')
+    ]).then(([remoteEmps, remotePres]) => {
+      // Prioritize Remote Data
+      if (remoteEmps && remoteEmps.length > 0) {
+        setEmployes(remoteEmps);
+        safeStorage.setItem('textrack_employes', JSON.stringify(remoteEmps));
+      } else {
+        const local = safeStorage.getItem('textrack_employes');
+        if (local) setEmployes(JSON.parse(local));
+      }
+
+      if (remotePres && remotePres.length > 0) {
+        setPresences(remotePres);
+        safeStorage.setItem('textrack_presences', JSON.stringify(remotePres));
+      } else {
+        const local = safeStorage.getItem('textrack_presences');
+        if (local) setPresences(JSON.parse(local));
+      }
+    }).catch(err => {
+      console.error("Pointage Sync Error:", err);
+    });
+
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
 
     // Global listener for Hardware Scanners
@@ -63,7 +92,14 @@ export default function Pointage({ onLogout }: { onLogout?: () => void }) {
       clearInterval(timer);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [employes, presences, isAr]); // Re-bind when data changes to ensure handleScan has latest state
+  }, [isAr]); // Only re-run when language changes, not when data changes
+
+  // Auto-save to Local Storage
+  useEffect(() => {
+    if (presences.length > 0) {
+      safeStorage.setItem('textrack_presences', JSON.stringify(presences));
+    }
+  }, [presences]);
 
   const actifs = employes.filter(e => e.actif);
   const filtered = actifs.filter(e => 
@@ -78,68 +114,102 @@ export default function Pointage({ onLogout }: { onLogout?: () => void }) {
   async function marquerEntree(empId: string) {
     const now = heureNow();
     const statut = now > HEURE_LIMITE_RETARD ? 'retard' : 'present';
-    const existing = getPresence(empId);
 
-    let updatedRecord: Presence;
-    if (existing) {
-      updatedRecord = { ...existing, heureEntree: now, statut };
-    } else {
-      updatedRecord = { id: genId(), employeId: empId, date: selectedDate, heureEntree: now, heureSortie: null, statut };
-    }
+    setPresences(prev => {
+      const existing = prev.find(p => p.employeId === empId && p.date === selectedDate);
+      let updatedRecord: Presence;
+      
+      if (existing) {
+        updatedRecord = { ...existing, heureEntree: now, statut };
+      } else {
+        updatedRecord = { id: genId(), employeId: empId, date: selectedDate, heureEntree: now, heureSortie: null, statut };
+      }
 
-    const updatedList = existing
-      ? presences.map(p => p.id === existing.id ? updatedRecord : p)
-      : [...presences, updatedRecord];
+      // Async save (background)
+      const emp = employes.find(e => e.id === empId);
+      if (emp) saveRecord('employes', emp, true).catch(() => {});
+      saveRecord('presences', updatedRecord, true).catch(() => {});
 
-    setPresences(updatedList);
-    await saveRecord('presences', updatedRecord);
+      return existing
+        ? prev.map(p => p.id === existing.id ? updatedRecord : p)
+        : [...prev, updatedRecord];
+    });
   }
 
   async function marquerSortie(empId: string) {
     const now = heureNow();
-    const existing = getPresence(empId);
-    if (!existing) return;
+    
+    setPresences(prev => {
+      const existing = prev.find(p => p.employeId === empId && p.date === selectedDate);
+      if (!existing) return prev;
 
-    const updatedRecord = { ...existing, heureSortie: now };
-    const updatedList = presences.map(p => p.id === existing.id ? updatedRecord : p);
+      const updatedRecord = { ...existing, heureSortie: now };
+      
+      // Async save (background)
+      const emp = employes.find(e => e.id === empId);
+      if (emp) saveRecord('employes', emp, true).catch(() => {});
+      saveRecord('presences', updatedRecord, true).catch(() => {});
 
-    setPresences(updatedList);
-    await saveRecord('presences', updatedRecord);
+      return prev.map(p => p.id === existing.id ? updatedRecord : p);
+    });
   }
 
   const empName = (e: Employe) => e.prenom ? `${e.prenom} ${e.nom}` : e.nom;
+  const empInitials = (e: Employe) => {
+    if (!e) return '??';
+    if (e.prenom && e.nom) return (e.prenom?.[0] || '') + (e.nom?.[0] || '');
+    return (e.nom || '??').substring(0, 2).toUpperCase();
+  };
 
   async function handleScan(text: string) {
     if (!text) return;
     if ('vibrate' in navigator) navigator.vibrate(50);
 
-    // Clean text (some scanners add prefix/suffix)
     const cleanText = text.trim();
-    const emp = employes.find(e => e.id === cleanText || e.cin === cleanText);
+    const searchId = cleanText.toLowerCase();
+    const emp = empsRef.current.find(e => 
+      e.id.toLowerCase() === searchId || 
+      (e.cin && e.cin.toLowerCase() === searchId)
+    );
 
     if (!emp) {
-      setScanStatus({ msg: isAr ? `غير موجود (${cleanText})` : `Ouvrier non trouvé (${cleanText})`, type: 'error' });
-      // Play error sound or visual feedback
-      setTimeout(() => setScanStatus(null), 3000);
+      setScanStatus({ 
+        msg: isAr ? `غير موجود (${cleanText})` : `Non trouvé (${cleanText})`, 
+        type: 'error' 
+      });
+      setTimeout(() => setScanStatus(null), 4000);
       return;
     }
 
-    const p = getPresence(emp.id);
-    if (!p || !p.heureEntree) {
-      await marquerEntree(emp.id);
-      setScanStatus({ msg: isAr ? `دخول: ${empName(emp)}` : `Entrée: ${empName(emp)}`, type: 'success' });
-    } else if (!p.heureSortie) {
-      await marquerSortie(emp.id);
-      setScanStatus({ msg: isAr ? `خروج: ${empName(emp)}` : `Sortie: ${empName(emp)}`, type: 'success' });
-    } else {
-      setScanStatus({ msg: isAr ? `انتهى اليوم لـ ${empName(emp)}` : `${empName(emp)} a déjà fini`, type: 'error' });
-    }
+    const now = heureNow();
+    const statut = now > HEURE_LIMITE_RETARD ? 'retard' : 'present';
 
-    // Auto-clear status
-    setTimeout(() => {
-      setScanStatus(null);
-      setShowScanner(false);
-    }, 2500);
+    setPresences(prev => {
+      const p = prev.find(x => x.employeId === emp.id && x.date === selectedDate);
+      let updated: Presence;
+      let msg = '';
+
+      if (!p || !p.heureEntree) {
+        updated = { id: genId(), employeId: emp.id, date: selectedDate, heureEntree: now, heureSortie: null, statut };
+        msg = isAr ? `دخول: ${empName(emp)}` : `Entrée: ${empName(emp)}`;
+      } else if (!p.heureSortie) {
+        updated = { ...p, heureSortie: now };
+        msg = isAr ? `خروج: ${empName(emp)}` : `Sortie: ${empName(emp)}`;
+      } else {
+        setScanStatus({ msg: isAr ? `انتهى اليوم` : `Déjà fini`, type: 'error' });
+        return prev;
+      }
+
+      setScanStatus({ msg, type: 'success' });
+      saveRecord('employes', emp, true).catch(() => {});
+      saveRecord('presences', updated, true).catch(() => {});
+
+      return p 
+        ? prev.map(x => x.id === p.id ? updated : x)
+        : [...prev, updated];
+    });
+
+    setTimeout(() => { setScanStatus(null); setShowScanner(false); }, 2500);
   }
 
   const handlePrintBadge = () => {
@@ -243,7 +313,7 @@ export default function Pointage({ onLogout }: { onLogout?: () => void }) {
           <div className={`fixed top-8 left-1/2 -translate-x-1/2 z-[300] px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-4 border-2 animate-in slide-in-from-top-full duration-300 ${
             scanStatus.type === 'success' ? 'bg-emerald-500 border-emerald-400 text-white' : 'bg-rose-500 border-rose-400 text-white'
           }`}>
-            {scanStatus.type === 'success' ? <CheckCircle2 className="w-6 h-6" /> : <AlertCircle className="w-6 h-6" />}
+            {scanStatus.type === 'success' ? <CheckCircle className="w-6 h-6" /> : <AlertTriangle className="w-6 h-6" />}
             <span className="font-black text-lg uppercase tracking-tight">{scanStatus.msg}</span>
           </div>
         )}
@@ -260,7 +330,7 @@ export default function Pointage({ onLogout }: { onLogout?: () => void }) {
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-white text-xl shadow-md ${
                     emp.type === 'atelier' ? 'bg-slate-900' : 'bg-indigo-600'
                   }`}>
-                    {emp.prenom ? emp.prenom[0] : emp.nom[0]}
+                    {emp.prenom ? (emp.prenom?.[0] || '') : (emp.nom?.[0] || '??')}
                   </div>
                   
                   <div className="flex-1 min-w-0">
@@ -287,7 +357,7 @@ export default function Pointage({ onLogout }: { onLogout?: () => void }) {
                       </button>
                     ) : (
                       <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center border-2 border-emerald-100">
-                        <CheckCircle2 className="w-5 h-5" />
+                        <CheckCircle className="w-5 h-5" />
                       </div>
                     ))}
                   </div>

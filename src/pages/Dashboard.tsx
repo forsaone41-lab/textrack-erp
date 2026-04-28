@@ -4,12 +4,12 @@ import {
   PieChart, Pie, Cell, Legend,
 } from 'recharts';
 import {
-  Shirt, TriangleAlert, Truck, TrendingUp, Package, Users, Activity,
-  Clock, CircleCheckBig, CircleX, Receipt, UserCheck, UserX, LogIn, LogOut,
+  Shirt, AlertTriangle, Truck, TrendingUp, Package, Users, Activity,
+  Clock, CheckCircle, XCircle, Receipt, UserCheck, UserX, LogIn, LogOut,
 } from 'lucide-react';
 import {
   loadData, Commande, StockTissu, Employe, Facture, PointageEntry, Presence,
-  PHASE_LABELS, PHASE_ORDER, User
+  PHASE_LABELS, PHASE_ORDER, User, safeStorage
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 
@@ -26,6 +26,7 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
   const [pointages, setPointages] = useState<PointageEntry[]>([]);
   const [presences, setPresences] = useState<Presence[]>([]);
   const [now, setNow] = useState(new Date());
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   function loadAll() {
     Promise.all([
@@ -38,10 +39,44 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
     ]).then(([cmds, tiss, emps, facs, pts, pres]) => {
       setCommandes(cmds);
       setTissus(tiss);
-      setEmployes(emps);
       setFactures(facs);
-      setPointages(pts);
-      setPresences(pres);
+      
+      // Robust Pointage Loading: Merge Remote with Local Storage
+      const localPtData = safeStorage.getItem('textrack_pointages');
+      let localPts: PointageEntry[] = [];
+      try {
+        const parsed = localPtData ? JSON.parse(localPtData) : [];
+        localPts = Array.isArray(parsed) ? parsed : [];
+      } catch (e) { localPts = []; }
+      
+      const allPtsMap = new Map();
+      [...localPts, ...pts].forEach(p => p && p.id && allPtsMap.set(p.id, p));
+      setPointages(Array.from(allPtsMap.values()));
+
+      // Robust Employee Loading: Merge Remote with Local Storage
+      const localEmpData = safeStorage.getItem('textrack_employes');
+      let localEmps: Employe[] = [];
+      try {
+        const parsed = localEmpData ? JSON.parse(localEmpData) : [];
+        localEmps = Array.isArray(parsed) ? parsed : [];
+      } catch (e) { localEmps = []; }
+
+      const allEmpsMap = new Map();
+      [...localEmps, ...emps].forEach(e => e && e.id && allEmpsMap.set(e.id, e));
+      setEmployes(Array.from(allEmpsMap.values()));
+
+      // Robust Presence Loading: Merge Remote with Local Storage
+      const localPresData = safeStorage.getItem('textrack_presences');
+      let localPres: Presence[] = [];
+      try {
+        const parsed = localPresData ? JSON.parse(localPresData) : [];
+        localPres = Array.isArray(parsed) ? parsed : [];
+      } catch (e) { localPres = []; }
+
+      const allPresMap = new Map();
+      [...localPres, ...pres].forEach(p => p && p.id && allPresMap.set(p.id, p));
+      setPresences(Array.from(allPresMap.values()));
+
       setNow(new Date());
     });
   }
@@ -107,7 +142,7 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
       title: isAr ? 'نسبة التالف' : 'Taux de Rebut',
       value: `${tauxRebut}%`,
       subtitle: isAr ? `${totalRebut} قطعة تالفة / ${totalPieces}` : `${totalRebut} pièces rebutées / ${totalPieces}`,
-      icon: TriangleAlert,
+      icon: AlertTriangle,
       color: 'from-amber-500 to-orange-600',
       bgLight: 'bg-amber-50',
       textColor: 'text-amber-600',
@@ -169,9 +204,14 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
                   coupeur: 'border-orange-500 bg-orange-50 text-orange-700',
                 };
                 const c = colors[u.role] || 'border-slate-300 bg-slate-50 text-slate-600';
-                const initials = u.nom.split(' ').map(n => n[0]).join('').toUpperCase();
+                const initials = (u.nom || 'User').split(' ').filter(Boolean).map(n => n?.[0] || '').join('').toUpperCase() || '??';
                 return (
-                  <div key={u.id} className={`w-10 h-10 rounded-full border-2 ${c} flex items-center justify-center text-[10px] font-black shadow-lg ring-2 ring-white transition-transform hover:-translate-y-1 cursor-pointer`} title={u.nom}>
+                  <div 
+                    key={u.id} 
+                    onClick={() => setSelectedUser(u)}
+                    className={`w-10 h-10 rounded-full border-2 ${c} flex items-center justify-center text-[10px] font-black shadow-lg ring-2 ring-white transition-transform hover:-translate-y-2 cursor-pointer active:scale-90`} 
+                    title={u.nom}
+                  >
                     {initials}
                   </div>
                 );
@@ -277,7 +317,7 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
           </h3>
           {lowStockTissus.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
-               <CircleCheckBig className="w-10 h-10 text-emerald-400 mb-3" />
+               <CheckCircle className="w-10 h-10 text-emerald-400 mb-3" />
                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Tous les stocks sont OK</p>
             </div>
           ) : (
@@ -369,7 +409,7 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
              <div className="flex -space-x-2">
                 {presents.slice(0, 5).map(e => (
                    <div key={e.id} className="w-8 h-8 rounded-full border-2 border-white bg-indigo-50 text-indigo-600 flex items-center justify-center text-[9px] font-black uppercase" title={empName(e)}>
-                      {e.nom[0]}
+                      {e.nom?.[0] || '??'}
                    </div>
                 ))}
                 {presents.length > 5 && <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-100 text-slate-600 flex items-center justify-center text-[9px] font-black">+{presents.length - 5}</div>}
@@ -428,7 +468,7 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
         {[
           { label: "Employés", val: employes.filter(e => e.actif).length, icon: <Users />, grad: "from-indigo-600 to-violet-700" },
           { label: "Types Tissu", val: tissus.length, icon: <Package />, grad: "from-blue-600 to-cyan-600" },
-          { label: "Pointages", val: pointages.length, icon: <CircleCheckBig />, grad: "from-emerald-600 to-teal-700" },
+          { label: "Pointages", val: pointages.length, icon: <CheckCircle />, grad: "from-emerald-600 to-teal-700" },
           { label: "Factures", val: factures.length, icon: <Receipt />, grad: "from-slate-800 to-slate-900" }
         ].map((stat, i) => (
           <div key={i} className={`relative overflow-hidden bg-gradient-to-br ${stat.grad} rounded-[2rem] p-6 text-white shadow-xl shadow-slate-200/50 group`}>
@@ -443,6 +483,47 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
           </div>
         ))}
       </div>
+
+      {/* User Detail Popover */}
+      {selectedUser && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
+           <div className="bg-white rounded-[3rem] p-10 max-w-sm w-full shadow-2xl border border-white relative overflow-hidden animate-in zoom-in-95 duration-300">
+              <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-indigo-500 to-purple-600" />
+              
+              <div className="flex flex-col items-center text-center">
+                 <div className="w-24 h-24 bg-indigo-50 rounded-[2.5rem] flex items-center justify-center text-indigo-600 text-2xl font-black mb-6 shadow-xl shadow-indigo-100 border-4 border-white">
+                    {(selectedUser.nom || 'User').split(' ').filter(Boolean).map(n => n?.[0] || '').join('').toUpperCase() || '??'}
+                 </div>
+                 
+                 <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-2">{selectedUser.nom}</h3>
+                 <p className="text-xs font-black text-indigo-600 bg-indigo-50 px-4 py-1.5 rounded-full uppercase tracking-widest mb-8 border border-indigo-100">
+                    {selectedUser.role}
+                 </p>
+                 
+                 <div className="w-full space-y-4 mb-10">
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'آخر ظهور' : 'Dernier accès'}</span>
+                       <span className="text-xs font-black text-slate-900">{selectedUser.lastActive ? new Date(selectedUser.lastActive).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100">
+                       <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">{isAr ? 'الحالة' : 'Statut'}</span>
+                       <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                          <span className="text-xs font-black text-emerald-700 uppercase tracking-widest">{isAr ? 'متصل الآن' : 'En ligne'}</span>
+                       </div>
+                    </div>
+                 </div>
+                 
+                 <button 
+                   onClick={() => setSelectedUser(null)}
+                   className="w-full py-4 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-xl shadow-slate-200"
+                 >
+                    {isAr ? 'إغلاق' : 'Fermer'}
+                 </button>
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 }

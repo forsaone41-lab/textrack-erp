@@ -1,5 +1,6 @@
 import { HashRouter, Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Menu, Package, Shirt } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Demandes from './pages/Demandes';
@@ -18,6 +19,7 @@ import Performance from './pages/Performance';
 import Charges from './pages/Charges';
 import BilanFinancier from './pages/BilanFinancier';
 import Settings from './pages/Settings';
+import Profil from './pages/Profil';
 import Login from './pages/Login';
 import LandingPage from './pages/LandingPage';
 import { initMockData, User, loadPermissions, AppPage, loadCompanyProfile, loadData, saveRecord } from './types';
@@ -38,7 +40,7 @@ function AdminLayout({
   onLogout: () => void;
   allUsers: User[];
 }) {
-  const { isAr } = useLang();
+  const { isAr, toggle } = useLang();
   const [mobileOpen, setMobileOpen] = useState(false);
   const company = loadCompanyProfile();
   const location = useLocation();
@@ -49,29 +51,22 @@ function AdminLayout({
 
   return (
     <div className="flex min-h-screen bg-slate-50/50" dir={isAr ? 'rtl' : 'ltr'}>
-      {/* Mobile Header - Premium Design */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-slate-900/95 backdrop-blur-md border-b border-white/5 z-40 flex items-center justify-between px-5 shadow-2xl">
-        <div className={`flex flex-col ${isAr ? 'text-right' : 'text-left'}`}>
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-base font-black tracking-tighter text-white uppercase leading-none">
-              {company.name.split(' ')[0]}
-            </span>
-            <span className="text-base font-light text-indigo-400 uppercase tracking-tight opacity-90">
-              {company.name.split(' ').slice(1).join(' ')}
-            </span>
+      {/* Mobile Header - Premium Glassy "Zaji" Design */}
+      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white/70 backdrop-blur-xl border-b border-slate-200/50 z-[140] flex items-center justify-between px-5 shadow-sm">
+        <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : 'flex-row'}`}>
+          <div className="w-8 h-8 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20">
+            <Package className="w-5 h-5 text-white" />
           </div>
-          <p className="text-[8px] text-slate-400 uppercase tracking-widest mt-1">
-            {company.subtitle}
-          </p>
+          <span className="text-sm font-black text-slate-900 uppercase tracking-tighter italic">
+            {company.name.split(' ')[0]} <span className="text-indigo-600 font-light italic ml-1">{company.name.split(' ').slice(1).join(' ')}</span>
+          </span>
         </div>
 
         <button
           onClick={() => setMobileOpen(true)}
-          className="relative w-10 h-10 flex items-center justify-center text-slate-300 hover:text-white transition-colors bg-white/5 rounded-xl border border-white/10 active:scale-95"
+          className="w-10 h-10 flex items-center justify-center text-slate-600 hover:text-indigo-600 transition-all bg-slate-100/50 rounded-xl border border-slate-200 active:scale-90"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-          </svg>
+          <Menu className="w-5 h-5" />
         </button>
       </div>
 
@@ -82,8 +77,13 @@ function AdminLayout({
         mobileOpen={mobileOpen}
         setMobileOpen={setMobileOpen}
       />
-      <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto mt-16 md:mt-0 w-full overflow-x-hidden min-h-screen">
-        <div className="max-w-[1600px] mx-auto">
+      
+      <main className="flex-1 overflow-y-auto mt-16 md:mt-0 w-full relative">
+        {/* Decorative background element */}
+        <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-indigo-500/5 blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-purple-500/5 blur-[120px] pointer-events-none" />
+        
+        <div className="p-4 md:p-8 lg:p-12 max-w-[1600px] mx-auto relative z-10">
           <Outlet />
         </div>
       </main>
@@ -102,6 +102,8 @@ function PointageLayout() {
 }
 
 function AppContent() {
+  const location = useLocation();
+  console.log("Current Path:", location.pathname);
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     try {
       const s = localStorage.getItem(AUTH_KEY);
@@ -114,8 +116,11 @@ function AppContent() {
   // Heartbeat for presence
   useEffect(() => {
     if (!currentUser) return;
-    
+
     const updateActivity = async () => {
+      // Skip activity sync for backdoor or default users (not in DB)
+      if (currentUser.id === 'master-admin' || currentUser.id.startsWith('default-')) return;
+      
       const now = new Date().toISOString();
       await saveRecord('users', { ...currentUser, lastActive: now });
     };
@@ -136,18 +141,6 @@ function AppContent() {
     return () => clearInterval(interval);
   }, [currentUser]);
 
-  useEffect(() => {
-    if (!localStorage.getItem('textrack_wiped_v2')) {
-      const adminUser = { id: 'u1', nom: 'Admin Général', role: 'admin', email: 'admin@texttrack.ma', password: 'Admin123' };
-      localStorage.setItem('textrack_users', JSON.stringify([adminUser]));
-
-      const keys = ['fiches', 'commandes', 'ordres', 'tissus', 'fournitures', 'employes', 'pointages', 'factures', 'charges', 'paiements_salaires'];
-      keys.forEach(k => localStorage.setItem(`textrack_${k}`, '[]'));
-
-      localStorage.setItem('textrack_wiped_v2', 'true');
-      window.location.reload();
-    }
-  }, []);
 
   function handleLogin(user: User) {
     localStorage.setItem(AUTH_KEY, JSON.stringify(user));
@@ -170,6 +163,7 @@ function AppContent() {
           <Route path="pointage" element={<Pointage onLogout={handleLogout} />} />
         </Route>
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
+        <Route path="/portal" element={<PortailClient />} />
         <Route path="/" element={<LandingPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -180,8 +174,10 @@ function AppContent() {
     return <PortailClient currentUser={currentUser} onLogout={handleLogout} />;
   }
 
-  const allowed = loadPermissions()[currentUser.role as 'admin' | 'pointeur' | 'client'] ?? [];
-  const can = (page: AppPage) => allowed.includes(page);
+  const permissions = loadPermissions();
+  const userRole = (currentUser.role || '').toLowerCase() as keyof typeof permissions;
+  const allowed = permissions[userRole] || [];
+  const can = (page: AppPage) => userRole === 'admin' || allowed.includes(page);
 
   if (showClientPortal) {
     return (
@@ -200,6 +196,7 @@ function AppContent() {
   return (
     <Routes>
       <Route
+        path="/"
         element={
           <AdminLayout
             onOpenClientPortal={() => setShowClientPortal(true)}
@@ -209,24 +206,33 @@ function AppContent() {
           />
         }
       >
-        {can('dashboard')
-          ? <Route index element={<Dashboard allUsers={allUsers} />} />
-          : <Route index element={<Navigate to={can('fiches') ? '/fiches-techniques' : can('ordres') ? '/ordres-de-coupe' : can('chaine') ? '/chaine-montage' : '/pointage'} replace />} />
-        }
-        {can('demandes') ? <Route path="demandes" element={<Demandes />} /> : <Route path="demandes" element={<Navigate to="/" replace />} />}
-        {can('fiches') ? <Route path="fiches-techniques" element={<FichesTechniques />} /> : <Route path="fiches-techniques" element={<Navigate to="/" replace />} />}
-        {can('ordres') ? <Route path="ordres-de-coupe" element={<OrdresDeCoupe />} /> : <Route path="ordres-de-coupe" element={<Navigate to="/" replace />} />}
-        {can('chaine') ? <Route path="chaine-montage" element={<ChaineDeMontage />} /> : <Route path="chaine-montage" element={<Navigate to="/" replace />} />}
-        {can('stocks') ? <Route path="stocks" element={<StockMateriaux />} /> : <Route path="stocks" element={<Navigate to="/" replace />} />}
-        {can('rh') ? <Route path="rh" element={<SuiviRH />} /> : <Route path="rh" element={<Navigate to="/" replace />} />}
-        {can('commandes') ? <Route path="commandes" element={<Commandes />} /> : <Route path="commandes" element={<Navigate to="/" replace />} />}
-        {can('clients') ? <Route path="clients" element={<Clients />} /> : <Route path="clients" element={<Navigate to="/" replace />} />}
-        {can('performance') ? <Route path="performance" element={<Performance />} /> : <Route path="performance" element={<Navigate to="/" replace />} />}
-        {can('factures') ? <Route path="factures" element={<Factures />} /> : <Route path="factures" element={<Navigate to="/" replace />} />}
-        {can('charges') ? <Route path="charges" element={<Charges />} /> : <Route path="charges" element={<Navigate to="/" replace />} />}
-        {can('bilan') ? <Route path="bilan" element={<BilanFinancier />} /> : <Route path="bilan" element={<Navigate to="/" replace />} />}
-        {can('utilisateurs') ? <Route path="utilisateurs" element={<Utilisateurs />} /> : <Route path="utilisateurs" element={<Navigate to="/" replace />} />}
-        {can('parametres') ? <Route path="parametres" element={<Settings />} /> : <Route path="parametres" element={<Navigate to="/" replace />} />}
+        <Route index element={can('dashboard') ? <Dashboard allUsers={allUsers} /> : <Navigate to="/profil" replace />} />
+        <Route path="dashboard" element={can('dashboard') ? <Dashboard allUsers={allUsers} /> : <Navigate to="/profil" replace />} />
+        
+        {/* User Profile */}
+        <Route path="profil" element={<Profil currentUser={currentUser} />} />
+        
+        {/* Protected Production Routes */}
+        <Route path="demandes" element={can('demandes') ? <Demandes /> : <Navigate to="/" replace />} />
+        <Route path="fiches-techniques" element={can('fiches') ? <FichesTechniques /> : <Navigate to="/" replace />} />
+        <Route path="ordres-de-coupe" element={can('ordres') ? <OrdresDeCoupe /> : <Navigate to="/" replace />} />
+        <Route path="chaine-montage" element={can('chaine') ? <ChaineDeMontage /> : <Navigate to="/" replace />} />
+        
+        {/* Protected Finance Routes */}
+        <Route path="factures" element={can('factures') ? <Factures /> : <Navigate to="/" replace />} />
+        <Route path="charges" element={can('charges') ? <Charges /> : <Navigate to="/" replace />} />
+        <Route path="bilan" element={can('bilan') ? <BilanFinancier /> : <Navigate to="/" replace />} />
+        
+        {/* Protected Admin & Other Routes */}
+        <Route path="utilisateurs" element={can('utilisateurs') ? <Utilisateurs /> : <Navigate to="/" replace />} />
+        <Route path="rh" element={can('rh') ? <SuiviRH /> : <Navigate to="/" replace />} />
+        <Route path="clients" element={can('clients') ? <Clients /> : <Navigate to="/" replace />} />
+        <Route path="performance" element={can('performance') ? <Performance /> : <Navigate to="/" replace />} />
+        <Route path="parametres" element={can('parametres') ? <Settings /> : <Navigate to="/" replace />} />
+        
+        {/* Shared / Public ERP Routes */}
+        <Route path="stocks" element={can('stocks') ? <StockMateriaux /> : <Navigate to="/" replace />} />
+        <Route path="commandes" element={can('commandes') ? <Commandes /> : <Navigate to="/" replace />} />
       </Route>
       <Route element={<PointageLayout />}>
         <Route path="pointage" element={<Pointage onLogout={handleLogout} />} />
@@ -236,12 +242,49 @@ function AppContent() {
   );
 }
 
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean, error: any }> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error("ErrorBoundary caught an error", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-slate-950 flex items-center justify-center p-8 text-center">
+          <div className="max-w-md w-full bg-white/5 border border-white/10 p-8 rounded-[40px] backdrop-blur-xl">
+            <h1 className="text-2xl font-black text-white mb-4">Oups! Une erreur est survenue</h1>
+            <p className="text-slate-400 mb-6 text-sm">Le composant a crashé. Voici l'erreur :</p>
+            <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl mb-8 text-left overflow-auto max-h-40">
+              <code className="text-red-400 text-xs whitespace-pre-wrap">{this.state.error?.toString()}</code>
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm hover:bg-indigo-500 transition-all"
+            >
+              Recharger la page
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   return (
-    <LangProvider>
-      <HashRouter>
-        <AppContent />
-      </HashRouter>
-    </LangProvider>
+    <ErrorBoundary>
+      <LangProvider>
+        <HashRouter>
+          <AppContent />
+        </HashRouter>
+      </LangProvider>
+    </ErrorBoundary>
   );
 }

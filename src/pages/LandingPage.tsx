@@ -1,4 +1,4 @@
-import { Play, ShieldCheck, Zap, Users, ArrowRight, MessageCircle, Star, Package, Factory, Globe, Shirt, Scissors, CheckCircle, ImageIcon, X, ChevronDown } from 'lucide-react';
+import { Play, ShieldCheck, Zap, Users, ArrowRight, MessageCircle, Star, Package, Factory, Globe, Shirt, Scissors, CheckCircle, Image as ImageIcon, X, ChevronDown, Search, LogOut } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
@@ -79,12 +79,19 @@ export default function LandingPage() {
     }
   }, [isAr]);
 
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const auth = localStorage.getItem('textrack_auth');
+    if (auth) setIsLoggedIn(true);
+  }, []);
+
   return (
     <div className={`min-h-screen bg-white relative overflow-hidden ${isAr ? 'font-sans' : ''}`} dir={isAr ? 'rtl' : 'ltr'}>
       {/* Success Modal */}
       {showSuccess && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="bg-white rounded-[3rem] p-12 max-w-lg w-full text-center shadow-[0_50px_100px_rgba(0,0,0,0.3)] border border-white/20 relative overflow-hidden">
+          <div className="bg-white rounded-3xl md:rounded-[3rem] p-6 md:p-12 max-w-lg w-full text-center shadow-[0_50px_100px_rgba(0,0,0,0.3)] border border-white/20 relative overflow-hidden">
             <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-emerald-400 to-teal-500" />
 
             <div className="w-24 h-24 bg-emerald-50 rounded-[2rem] flex items-center justify-center mx-auto mb-8 animate-bounce">
@@ -132,31 +139,48 @@ export default function LandingPage() {
       </div>
 
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/70 backdrop-blur-xl border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+      <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/80 backdrop-blur-xl border-b border-slate-100">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {company.logoUrl && company.logoUrl !== '/logo.png' ? (
-              <img src={company.logoUrl} alt="Logo" className="w-12 h-12 object-contain rounded-xl" />
-            ) : (
-              <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
+             <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
                 <Package className="w-6 h-6 text-white" />
-              </div>
-            )}
-            <div className="flex flex-col">
-              <span className="text-xl font-black text-slate-900 uppercase tracking-tighter italic leading-none">
-                {company.name.split(' ')[0]}<span className="text-indigo-600">{company.name.split(' ').slice(1).join(' ')}</span>
-              </span>
-              <span className="text-[8px] font-bold text-emerald-600 uppercase tracking-[0.2em] mt-0.5 flex items-center gap-1">🇲🇦 Made in Morocco</span>
-            </div>
+             </div>
+             <div className="flex flex-col">
+                <span className="text-lg md:text-xl font-black text-slate-900 uppercase tracking-tighter italic leading-none">BEYA<span className="text-indigo-600">CREATIVE</span></span>
+                <span className="text-[7px] md:text-[8px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic">Manufacturing Excellence</span>
+             </div>
           </div>
 
-          <div className="flex items-center gap-6">
-            <button onClick={toggle} className="text-xs font-black text-slate-500 hover:text-indigo-600 transition uppercase tracking-widest flex items-center gap-2">
-              <Globe className="w-4 h-4" />
-              {isAr ? 'Français' : 'العربية'}
+          <div className="flex items-center gap-2 md:gap-4">
+            <Link 
+              to="/portal"
+              className="hidden sm:flex items-center gap-2 px-5 py-2.5 text-slate-600 hover:text-indigo-600 font-black text-[10px] uppercase tracking-widest transition-all hover:bg-slate-50 rounded-xl"
+            >
+              <Search className="w-4 h-4" />
+              {isAr ? 'تتبع الطلبية' : 'Suivre ma commande'}
+            </Link>
+
+            <Link 
+              to="/login"
+              className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <LogOut className="w-4 h-4 rotate-180" />
+              {isAr ? 'دخول المشرف' : 'Connexion Admin'}
+            </Link>
+
+            <button 
+              onClick={toggle}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-100 text-slate-600 hover:bg-slate-100 transition-all"
+            >
+              <Globe className="w-4 h-4 text-indigo-600" />
+              <span className="text-[10px] font-black uppercase tracking-widest">{isAr ? 'FR' : 'العربية'}</span>
             </button>
-            <Link to="/login" className="px-8 py-3 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-xl shadow-slate-200">
-              {isAr ? 'دخول' : 'Connexion'}
+
+            <Link 
+              to={isLoggedIn ? "/dashboard" : "/login"}
+              className="px-4 md:px-8 py-2 md:py-3 bg-slate-900 text-white rounded-xl md:rounded-2xl text-[10px] md:text-xs font-black uppercase tracking-widest shadow-xl shadow-slate-200 hover:bg-indigo-600 transition-all"
+            >
+              {isLoggedIn ? (isAr ? 'لوحة التحكم' : 'Espace ERP') : (isAr ? 'دخول' : 'Connexion')}
             </Link>
           </div>
         </div>
@@ -181,9 +205,16 @@ export default function LandingPage() {
               : 'Votre partenaire stratégique en production de prêt-à-porter. Qualité internationale, respect des délais et expertise marocaine authentique.'}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link to="/login" className="w-full sm:w-auto px-10 py-5 bg-indigo-600 text-white rounded-[2rem] font-black uppercase tracking-widest shadow-2xl shadow-indigo-200 hover:scale-105 transition-all flex items-center justify-center gap-3">
-              {isAr ? 'ابدأ مشروعك معنا' : 'Démarrer votre projet'}
+            <Link 
+              to={isLoggedIn ? "/dashboard" : "/login"}
+              className="w-full sm:w-auto px-10 py-5 bg-indigo-600 text-white rounded-[2rem] font-black uppercase tracking-widest shadow-2xl shadow-indigo-200 hover:scale-105 transition-all flex items-center justify-center gap-3"
+            >
+              {isLoggedIn ? (isAr ? 'الدخول للوحة التحكم' : 'Accéder au Dashboard') : (isAr ? 'ابدأ مشروعك معنا' : 'Démarrer votre projet')}
               <ArrowRight className="w-5 h-5" />
+            </Link>
+            <Link to="/portal" className="w-full sm:w-auto px-10 py-5 bg-white text-slate-900 border-2 border-slate-100 rounded-[2rem] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center gap-3">
+              <Search className="w-5 h-5 text-indigo-500" />
+              {isAr ? 'تتبع طلبيتك' : 'Suivre votre commande'}
             </Link>
             <a href="https://wa.me/212600000000" target="_blank" className="w-full sm:w-auto px-10 py-5 bg-white text-slate-900 border-2 border-slate-100 rounded-[2rem] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center gap-3">
               <MessageCircle className="w-5 h-5 text-emerald-500" />
@@ -198,10 +229,10 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="relative group">
             {/* Background Decoration */}
-            <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-[3rem] opacity-20 blur-3xl group-hover:opacity-30 transition-opacity" />
+            <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl md:rounded-[3rem] opacity-20 blur-3xl group-hover:opacity-30 transition-opacity" />
 
             {/* Video Container */}
-            <div className="relative aspect-video bg-slate-900 rounded-[3rem] overflow-hidden shadow-[0_30px_100px_rgba(0,0,0,0.2)] border-8 border-white">
+            <div className="relative aspect-video bg-slate-900 rounded-3xl md:rounded-[3rem] overflow-hidden shadow-[0_30px_100px_rgba(0,0,0,0.2)] border-8 border-white">
               {embedUrl ? (
                 <iframe
                   src={embedUrl}
@@ -230,9 +261,9 @@ export default function LandingPage() {
           </div>
 
           {/* Lead Generation Form Section */}
-          <div className="mt-20 bg-white rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.1)] border border-slate-100 overflow-hidden">
+          <div className="mt-20 bg-white rounded-3xl md:rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.1)] border border-slate-100 overflow-hidden">
             <div className="grid grid-cols-1 lg:grid-cols-2">
-              <div className="p-12 lg:p-16 bg-slate-900 text-white relative overflow-hidden">
+              <div className="p-6 md:p-12 lg:p-16 bg-slate-900 text-white relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600 rounded-full blur-3xl opacity-20 -mr-32 -mt-32" />
                 <h3 className="text-4xl font-black uppercase tracking-tighter mb-6 relative z-10">
                   {isAr ? 'ابدأ مشروعك اليوم' : 'Lancez votre collection'}
@@ -265,7 +296,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <div className="p-12 lg:p-16">
+              <div className="p-6 md:p-12 lg:p-16">
                 <form
                   className="space-y-6"
                   onSubmit={(e) => {
@@ -274,7 +305,7 @@ export default function LandingPage() {
                     const countryCode = (e.currentTarget.querySelector('select') as HTMLSelectElement).value;
                     const rawPhone = formData.get('phone') as string;
                     const fullPhone = countryCode + (rawPhone.startsWith('0') ? rawPhone.substring(1) : rawPhone);
-                    
+
                     let finalType = formData.get('type') as string;
                     if (finalType === 'Autre' || finalType === 'آخر') {
                       finalType = formData.get('customType') as string;
@@ -331,8 +362,8 @@ export default function LandingPage() {
                       <div>
                         <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">{isAr ? 'نوع اللباس' : 'Type de Vêtement'}</label>
                         <div className="relative">
-                          <select 
-                            name="type" 
+                          <select
+                            name="type"
                             value={selectedType}
                             onChange={(e) => setSelectedType(e.target.value)}
                             className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors appearance-none"
@@ -357,12 +388,12 @@ export default function LandingPage() {
                       {(selectedType === 'Autre' || selectedType === 'آخر') && (
                         <div className="animate-in slide-in-from-top-2 duration-300">
                           <label className="block text-[13px] font-extrabold text-indigo-700 uppercase tracking-widest mb-3 italic">{isAr ? 'حدد النوع من فضلك' : 'Précisez le type svp'}</label>
-                          <input 
-                            type="text" 
-                            name="customType" 
-                            placeholder={isAr ? 'مثال: ملابس أطفال' : 'Ex: Vêtements enfants'} 
-                            className="w-full bg-indigo-50 border-2 border-indigo-200 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-all shadow-lg shadow-indigo-100" 
-                            required 
+                          <input
+                            type="text"
+                            name="customType"
+                            placeholder={isAr ? 'مثال: ملابس أطفال' : 'Ex: Vêtements enfants'}
+                            className="w-full bg-indigo-50 border-2 border-indigo-200 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-all shadow-lg shadow-indigo-100"
+                            required
                           />
                         </div>
                       )}
@@ -415,7 +446,7 @@ export default function LandingPage() {
       </section>
 
       {/* Services Section */}
-      <section className="py-32 px-6">
+      <section className="py-16 md:py-32 px-6">
         <div className="max-w-7xl mx-auto">
           <div className={`flex flex-col md:flex-row md:items-end justify-between gap-8 mb-20 ${isAr ? 'md:flex-row-reverse' : ''}`}>
             <div className={isAr ? 'text-right' : 'text-left'}>
@@ -433,7 +464,7 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {services.map((s, i) => (
-              <div key={i} className="group p-10 bg-white rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-100/50 hover:shadow-2xl hover:border-indigo-100 transition-all duration-500">
+              <div key={i} className="group p-10 bg-white rounded-3xl md:rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-100/50 hover:shadow-2xl hover:border-indigo-100 transition-all duration-500">
                 <div className={`w-16 h-16 rounded-[2rem] bg-gradient-to-br ${s.color} flex items-center justify-center text-white mb-8 shadow-lg transform group-hover:rotate-12 transition-transform`}>
                   <s.icon className="w-8 h-8" />
                 </div>
@@ -448,7 +479,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="py-20 px-6 border-t border-slate-100 bg-slate-900 text-white overflow-hidden relative">
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-12">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-6 md:p-12">
             <div className={isAr ? 'text-right' : 'text-left'}>
               <div className="flex items-center gap-3 mb-6 justify-center md:justify-start">
                 {company.logoUrl && company.logoUrl !== '/logo.png' ? (

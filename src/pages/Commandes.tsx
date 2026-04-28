@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import {
   Plus, Search, Edit2, Trash2, ShoppingCart, Calculator, ChevronDown,
   ChevronRight, Scissors, ClipboardCheck, Receipt, Link, X, TrendingUp,
-  Package, Truck, AlertCircle, Eye, TriangleAlert, Filter, ChevronUp, Clock, AlertTriangle, 
+  Package, Truck, AlertTriangle, Eye, Filter, ChevronUp, Clock,
   LayoutGrid, List, CheckCircle
 } from 'lucide-react';
 import {
   Commande, FicheTechnique, OrdreDeCoupe, PointageEntry, Facture, Employe, User, StockTissu,
   loadData, saveRecord, deleteRecord, genId, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, Phase,
-  CompanyProfile, loadCompanyProfile
+  CompanyProfile, loadCompanyProfile, safeStorage
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
@@ -75,13 +75,44 @@ export default function Commandes() {
       setCommandes(cmds);
       setFiches(fchs);
       setOrdres(ords);
-      setPointages(pts);
+      
+      // Robust Pointage Loading: Merge Remote with Local Storage
+      const localPtData = safeStorage.getItem('textrack_pointages');
+      let localPts: PointageEntry[] = [];
+      try {
+        const parsed = localPtData ? JSON.parse(localPtData) : [];
+        localPts = Array.isArray(parsed) ? parsed : [];
+      } catch (e) { localPts = []; }
+      
+      const allPtsMap = new Map();
+      [...localPts, ...pts].forEach(p => p && p.id && allPtsMap.set(p.id, p));
+      setPointages(Array.from(allPtsMap.values()));
+
       setFactures(facs);
-      setEmployes(emps);
       setUsers(usrs);
       setTissus(tiss);
+
+      // Robust Employee Loading: Merge Remote with Local Storage
+      const localEmpData = safeStorage.getItem('textrack_employes');
+      let localEmps: Employe[] = [];
+      try {
+        const parsed = localEmpData ? JSON.parse(localEmpData) : [];
+        localEmps = Array.isArray(parsed) ? parsed : [];
+      } catch (e) { localEmps = []; }
+      
+      // Combine and remove duplicates by ID
+      const allEmpsMap = new Map();
+      [...localEmps, ...emps].forEach(e => e && e.id && allEmpsMap.set(e.id, e));
+      setEmployes(Array.from(allEmpsMap.values()));
     });
   }, []);
+
+  // Auto-save Pointages to Local Storage
+  useEffect(() => {
+    if (pointages.length > 0) {
+      safeStorage.setItem('textrack_pointages', JSON.stringify(pointages));
+    }
+  }, [pointages]);
 
   const filtered = commandes.filter(c => {
     const q = search.toLowerCase();
@@ -156,7 +187,14 @@ export default function Commandes() {
     const entry = ptForm as PointageEntry;
     setPointages([...pointages, entry]);
     setShowPointageModal(false);
-    await saveRecord('pointages', entry);
+
+    // FIX: Ensure employee exists in DB first
+    const emp = employes.find(e => e.id === ptForm.employeId);
+    if (emp) {
+      await saveRecord('employes', emp, true).catch(() => {});
+    }
+
+    await saveRecord('pointages', entry, true);
   }
 
   async function save() {
@@ -359,7 +397,7 @@ export default function Commandes() {
           { label: "Chiffre d'Affaires", val: stats.ca.toLocaleString(), sub: `${stats.total} commandes`, icon: <TrendingUp />, color: "indigo" },
           { label: "En Production", val: stats.enCours, sub: "en cours", icon: <Package />, color: "blue" },
           { label: "Livrées", val: stats.livre, sub: "commandes livrées", icon: <Truck />, color: "emerald" },
-          { label: "Retard Critique", val: stats.urgent, sub: "délai dépassé", icon: <AlertCircle />, color: "rose", urgent: stats.urgent > 0 }
+          { label: "Retard Critique", val: stats.urgent, sub: "délai dépassé", icon: <AlertTriangle />, color: "rose", urgent: stats.urgent > 0 }
         ].map((kpi, i) => (
           <div key={i} className={`group relative bg-white p-6 rounded-[2rem] border-2 transition-all duration-300 hover:shadow-2xl hover:shadow-${kpi.color}-100/50 ${
             kpi.urgent ? 'border-rose-100 bg-rose-50/10' : 'border-slate-50'
@@ -388,8 +426,8 @@ export default function Commandes() {
                 <span className="text-3xl font-black text-slate-900 tracking-tight">{kpi.val}</span>
                 {kpi.color === 'indigo' && <span className="text-[10px] font-bold text-slate-400">MAD</span>}
               </div>
-              <p className={`text-[10px] font-bold mt-2 ${kpi.urgent ? 'text-rose-500' : 'text-slate-400'}`}>
-                {kpi.urgent && <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse mr-1" />}
+              <p className={`text-[11px] font-black mt-2 uppercase tracking-tight ${kpi.urgent ? 'text-rose-600' : 'text-slate-600'}`}>
+                {kpi.urgent && <span className="inline-block w-2 h-2 rounded-full bg-rose-500 animate-pulse mr-1" />}
                 {kpi.sub}
               </p>
             </div>
@@ -655,7 +693,7 @@ export default function Commandes() {
           <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden border border-red-100 animate-in fade-in zoom-in duration-300">
             <div className="bg-red-50 p-8 flex flex-col items-center text-center">
               <div className="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-red-200">
-                <TriangleAlert className="w-8 h-8 text-red-600" />
+                <AlertTriangle className="w-8 h-8 text-red-600" />
               </div>
               <h3 className="text-xl font-black text-slate-800 mb-2">Attention : Stock Insuffisant</h3>
               <p className="text-sm text-slate-500 font-medium leading-relaxed">
@@ -973,9 +1011,18 @@ export default function Commandes() {
                   onChange={e => setPtForm({ ...ptForm, employeId: e.target.value })}
                   className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl text-sm font-bold outline-none bg-slate-50 focus:bg-white focus:border-indigo-500 transition-all"
                 >
-                  <option value="">— Sélectionner —</option>
-                  {employes.map(e => <option key={e.id} value={e.id}>{e.prenom} {e.nom} ({e.poste})</option>)}
+                  <option value="">— {employes.length > 0 ? 'Sélectionner l\'ouvrier' : 'Aucun ouvrier trouvé'} —</option>
+                  {employes.filter(e => e.statut === 'actif' || !e.statut).map(e => (
+                    <option key={e.id} value={e.id}>
+                      {e.prenom} {e.nom} — {e.poste}
+                    </option>
+                  ))}
                 </select>
+                {employes.length === 0 && (
+                  <p className="text-[9px] text-rose-500 font-bold mt-2 ml-1 italic tracking-tight">
+                    * {isAr ? 'يجب إضافة العمال في صفحة Suivi RH أولاً' : 'Ajoutez des employés dans Suivi RH pour les voir ici'}
+                  </p>
+                )}
               </div>
 
               <div>

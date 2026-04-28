@@ -1,5 +1,15 @@
 import { supabase } from './supabase';
 
+// Safe LocalStorage wrapper for Private/Incognito modes
+export const safeStorage = {
+  getItem: (key: string): string | null => {
+    try { return localStorage.getItem(key); } catch (e) { return null; }
+  },
+  setItem: (key: string, value: string): void => {
+    try { localStorage.setItem(key, value); } catch (e) { /* ignore */ }
+  }
+};
+
 export type Phase = 'coupe' | 'montage' | 'finition' | 'repassage' | 'controle' | 'emballage' | 'livré';
 
 export const PHASE_LABELS: Record<Phase, string> = {
@@ -318,16 +328,17 @@ export const DEFAULT_COMPANY: CompanyProfile = {
 
 export function loadCompanyProfile(): CompanyProfile {
   try {
-    const data = localStorage.getItem('textrack_company');
-    return data ? JSON.parse(data) : DEFAULT_COMPANY;
-  } catch {
+    const data = safeStorage.getItem('textrack_profile');
+    const parsed = data ? JSON.parse(data) : null;
+    return parsed || DEFAULT_COMPANY;
+  } catch (e) {
     return DEFAULT_COMPANY;
   }
 }
 
 export function loadLeads(): Lead[] {
   try {
-    const data = localStorage.getItem('textrack_leads');
+    const data = safeStorage.getItem('textrack_leads');
     return data ? JSON.parse(data) : [];
   } catch {
     return [];
@@ -342,12 +353,12 @@ export function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'>) {
     date: new Date().toISOString(),
     status: 'new'
   };
-  localStorage.setItem('textrack_leads', JSON.stringify([newLead, ...leads]));
+  safeStorage.setItem('textrack_leads', JSON.stringify([newLead, ...leads]));
   return newLead;
 }
 
 export function saveCompanyProfile(profile: CompanyProfile): void {
-  localStorage.setItem('textrack_company', JSON.stringify(profile));
+  safeStorage.setItem('textrack_company', JSON.stringify(profile));
 }
 
 // ─── Storage Helpers ────────────────────────────────────────
@@ -355,17 +366,26 @@ export async function loadData<T>(table: string): Promise<T[]> {
   try {
     const { data, error } = await supabase.from(table).select('*');
     if (error) {
-      console.error(`Error loading data from ${table}:`, error.message);
+      console.warn(`Silently failed to load ${table}:`, error.message);
       return [];
     }
-    return data as T[];
+    return (data || []) as T[];
   } catch (err) {
-    console.error(err);
+    console.error(`Fatal load error for ${table}:`, err);
     return [];
   }
 }
 
-export async function saveRecord<T>(table: string, record: T): Promise<void> {
+export async function saveRecord<T>(table: string, record: T, silent: boolean = false): Promise<void> {
+  // Guard against non-UUID IDs for the 'users' table (e.g. master-admin)
+  if (table === 'users') {
+    const r = record as any;
+    if (r.id && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(r.id)) {
+      console.warn(`Skipping save for non-UUID user: ${r.id}`);
+      return;
+    }
+  }
+
   const { error } = await supabase.from(table).upsert(record as any);
   if (error) {
     console.error(`Error saving to ${table}:`, error.message);
@@ -381,7 +401,10 @@ export async function saveRecord<T>(table: string, record: T): Promise<void> {
         'tissu', 'tissuConsommation', 'type', 'client', 
         'commandeId', 'fournisseurTel', 'fournisseurEmail',
         'adresse', 'ville', 'notes', 'telephone', 'pinCode',
-        'avance', 'retouche', 'lastActive'
+        'avance', 'retouche', 'lastActive', 'statut', 'photo',
+        'composition', 'metrageTotal', 'largeur', 'zone', 'etagere',
+        'cin', 'rib', 'banque', 'salaireMensuel', 'remunerationType', 'actif', 'email',
+        'dateEntree', 'contrat', 'cnss', 'mutuelle', 'enfants', 'situation_familiale'
       ];
       newCols.forEach(col => delete fallbackRecord[col]);
       
@@ -394,7 +417,7 @@ export async function saveRecord<T>(table: string, record: T): Promise<void> {
     }
 
     // Only alert if it's NOT a missing column error (or if fallback failed)
-    alert(`Erreur de sauvegarde dans ${table} : ${error.message}`);
+    if (!silent) alert(`Erreur de sauvegarde dans ${table} : ${error.message}`);
   }
 }
 
