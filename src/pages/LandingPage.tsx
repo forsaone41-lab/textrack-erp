@@ -303,18 +303,28 @@ export default function LandingPage() {
                       finalType = formData.get('customType') as string;
                     }
 
-                    const leadData = {
-                      name: formData.get('name') as string,
-                      email: formData.get('email') as string,
-                      phone: fullPhone,
-                      type: finalType,
-                      quantity: Number(formData.get('quantity')),
-                      details: formData.get('details') as string,
-                      photo: selectedPhoto || undefined
-                    };
-                    await saveLead(leadData);
-                    setShowSuccess(true);
-                    setSelectedPhoto(null);
+                    // Diagnostic Alert
+                    alert("جاري إرسال طلبك... / Envoi en cours...");
+                    
+                    try {
+                      const leadData = {
+                        name: formData.get('name') as string,
+                        email: formData.get('email') as string,
+                        phone: fullPhone,
+                        type: finalType,
+                        quantity: Number(formData.get('quantity')),
+                        details: formData.get('details') as string,
+                        photo: selectedPhoto || undefined
+                      };
+                      
+                      await saveLead(leadData);
+                      
+                      alert("تم الإرسال بنجاح! / Envoyé avec succès !");
+                      setShowSuccess(true);
+                      setSelectedPhoto(null);
+                    } catch (err: any) {
+                      alert("Error in LandingPage: " + err.message);
+                    }
                     (e.currentTarget as HTMLFormElement).reset();
                   }}
                 >
