@@ -20,7 +20,10 @@ import {
   RefreshCw,
   Zap,
   ArrowRight,
-  PackageCheck
+  PackageCheck,
+  X,
+  Sparkles,
+  Trophy
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { 
@@ -65,6 +68,7 @@ export default function ChaineDetaillee() {
   // Planning state
   const [assignments, setAssignments] = useState<Record<string, AssignmentDetail>>({});
   const [syncing, setSyncing] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Form states
   const [showOpModal, setShowOpModal] = useState(false);
@@ -262,8 +266,7 @@ export default function ChaineDetaillee() {
     await Promise.all(promises);
     setSuivi(newSuiviEntries);
     setSyncing(false);
-    setActiveTab('suivi');
-    alert(isAr ? 'تم توزيع المهام بنجاح!' : 'Planning distribué avec succès !');
+    setShowSuccess(true);
   }
 
   const getProduction = (opId: string, heureDebut: string) => {
@@ -292,7 +295,7 @@ export default function ChaineDetaillee() {
   );
 
   return (
-    <div className="space-y-6 pb-20 -mx-4 md:mx-0 px-4 md:px-0">
+    <div className="space-y-6 pb-20 -mx-4 md:mx-0 px-4 md:px-0 relative">
       {/* Header & Selection */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] border border-slate-100 shadow-sm sticky top-0 z-[40] md:relative">
         <div className="flex items-center gap-4">
@@ -764,6 +767,31 @@ export default function ChaineDetaillee() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {showSuccess && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+           <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-md animate-in fade-in duration-500" onClick={() => setShowSuccess(false)} />
+           <div className="bg-white rounded-[3rem] p-10 max-w-sm w-full text-center relative z-10 shadow-2xl animate-in zoom-in-95 duration-300 border border-slate-100">
+              <div className="w-24 h-24 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl shadow-emerald-200 ring-8 ring-emerald-50">
+                 <Sparkles className="w-10 h-10 text-white animate-pulse" />
+              </div>
+              <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight italic mb-4">
+                {isAr ? 'تم بنجاح !' : 'Mission Accomplie !'}
+              </h2>
+              <p className="text-slate-500 text-sm font-bold leading-relaxed mb-8 uppercase tracking-widest">
+                {isAr ? 'تم توزيع المهام على العمال بنجاح. يوم عمل موفق !' : 'Le planning a été distribué. Bonne production !'}
+              </p>
+              <button 
+                onClick={() => setShowSuccess(false)}
+                className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-200 active:scale-95 transition-all flex items-center justify-center gap-3"
+              >
+                <Trophy className="w-4 h-4 text-amber-400" />
+                {isAr ? 'حسناً' : 'Super, let\'s go !'}
+              </button>
+           </div>
         </div>
       )}
 
