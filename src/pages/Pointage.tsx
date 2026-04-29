@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { LogIn, LogOut, UserCheck, UserX, Clock, Users, CalendarDays, QrCode, X, Search, CheckCircle, AlertTriangle, Download, Printer, Maximize2, Package } from 'lucide-react';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import { QRCodeSVG } from 'qrcode.react';
@@ -276,7 +277,7 @@ export default function Pointage({ onLogout }: { onLogout?: () => void }) {
             className="flex items-center gap-2 px-6 py-2.5 bg-white/80 backdrop-blur-md text-indigo-600 rounded-full border border-indigo-100 hover:bg-white hover:shadow-xl hover:shadow-indigo-500/10 transition-all text-xs font-black uppercase tracking-widest shadow-lg shadow-slate-900/5 group"
           >
             <Maximize2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
-            {isAr ? 'فتح وضع الماسح التلقائي (Kiosk)' : 'Ouvrir le Mode Kiosque'}
+            {isAr ? 'فتح الماسح الضوئي (PRO)' : 'POINTAGE PRO (KIOSK)'}
           </Link>
         </div>
         <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-900/10 p-2 md:p-3 mb-8">
