@@ -160,14 +160,6 @@ export default function LandingPage() {
               {isAr ? 'تتبع الطلبية' : 'Suivre ma commande'}
             </Link>
 
-            <Link 
-              to="/login"
-              className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <LogOut className="w-4 h-4 rotate-180" />
-              {isAr ? 'دخول المشرف' : 'Connexion Admin'}
-            </Link>
-
             <button 
               onClick={toggle}
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-100 text-slate-600 hover:bg-slate-100 transition-all"
