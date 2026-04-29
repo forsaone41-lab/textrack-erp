@@ -455,6 +455,7 @@ export default function Commandes() {
             value={search} 
             onChange={e => setSearch(e.target.value)} 
             dir={isAr ? 'rtl' : 'ltr'}
+          />
         </div>
         
         <div className="flex items-center gap-1.5 p-1 bg-slate-50 rounded-[1.5rem] w-full lg:w-auto overflow-x-auto no-scrollbar">
