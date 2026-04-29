@@ -59,6 +59,8 @@ export default function LandingPage() {
 
   const [showSuccess, setShowSuccess] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const [isSending, setIsSending] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [selectedType, setSelectedType] = useState('T-Shirt');
 
   // Dynamic SEO Title & Description
