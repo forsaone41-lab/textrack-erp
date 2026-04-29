@@ -18,7 +18,8 @@ import {
   Medal,
   Zap,
   Info,
-  LogOut
+  LogOut,
+  ShieldCheck
 } from 'lucide-react';
 import { 
   Employe, 
