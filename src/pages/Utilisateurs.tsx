@@ -133,13 +133,24 @@ export default function Utilisateurs() {
 
   useEffect(() => {
     async function loadAll() {
-      const [uList, eList] = await Promise.all([
+      // Helper to get local data (same logic as SuiviRH)
+      const getLocal = (key: string) => {
+        try {
+          const data = localStorage.getItem(`textrack_${key}`);
+          return data ? JSON.parse(data) : [];
+        } catch { return []; }
+      };
+
+      const [uList, eListRemote] = await Promise.all([
         loadData<User>('users'),
-        loadData<Employe>('employes')
+        loadData<Employe>('employes').catch(() => [])
       ]);
 
+      // Merge remote with local if remote fails or is empty for some reason
+      const eList = eListRemote.length > 0 ? eListRemote : getLocal('employes');
+
       // Transform employees with PIN into virtual users for display
-      const workerUsers: User[] = eList
+      const workerUsers: User[] = (eList as Employe[])
         .filter(e => e.pin_code && e.actif)
         .map(e => ({
           id: e.id,
