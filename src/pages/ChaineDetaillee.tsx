@@ -303,7 +303,7 @@ export default function ChaineDetaillee() {
             <Factory className="w-6 h-6 md:w-8 md:h-8 text-white" />
           </div>
           <div>
-            <h1 className="text-lg md:text-2xl font-black text-slate-900 tracking-tight uppercase">Pilotage Séquentiel</h1>
+            <h1 className="text-lg md:text-2xl font-black text-slate-900 tracking-tight uppercase">Pilotage Séquentiel <span className="text-[10px] text-indigo-500 bg-indigo-50 px-2 py-1 rounded-md ml-2">PRO v2.4</span></h1>
             <p className="hidden md:block text-slate-500 text-sm font-bold uppercase tracking-widest opacity-60">Gestion détaillée des postes de travail</p>
           </div>
         </div>
@@ -779,7 +779,7 @@ export default function ChaineDetaillee() {
                  <Sparkles className="w-10 h-10 text-white animate-pulse" />
               </div>
               <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight italic mb-4">
-                {isAr ? 'تم بنجاح !' : 'Mission Accomplie !'}
+                {isAr ? 'تحديث: تم بنجاح !' : 'Système à Jour : Succès !'}
               </h2>
               <p className="text-slate-500 text-sm font-bold leading-relaxed mb-8 uppercase tracking-widest">
                 {isAr ? 'تم توزيع المهام على العمال بنجاح. يوم عمل موفق !' : 'Le planning a été distribué. Bonne production !'}
