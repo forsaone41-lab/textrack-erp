@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Fragment } from 'react';
+import React, { useState, useEffect, Fragment, ElementType } from 'react';
 import {
   Plus, Search, Edit2, Trash2,
   ShieldCheck, HardHat, ShoppingBag,
@@ -62,7 +62,7 @@ const ROLE_CFG = {
 } as const;
 
 // ─── Pages Definition ──────────────────────────────────────
-interface PageDef { key: AppPage; label: string; icon: React.ElementType; group: string; labelAr: string; }
+interface PageDef { key: AppPage; label: string; icon: ElementType; group: string; labelAr: string; }
 const ALL_PAGES: PageDef[] = [
   { key: 'dashboard', label: 'Dashboard', labelAr: 'لوحة القيادة العامة', icon: LayoutDashboard, group: 'Général' },
   { key: 'demandes', label: 'Prospects (Leads)', labelAr: 'الزبناء المحتملون', icon: Users, group: 'Général' },

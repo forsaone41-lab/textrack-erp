@@ -1,5 +1,5 @@
 import { HashRouter, Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Component, ReactNode } from 'react';
 import { Menu, Package, Shirt } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
@@ -254,7 +254,7 @@ function AppContent() {
   );
 }
 
-class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean, error: any }> {
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean, error: any }> {
   constructor(props: any) {
     super(props);
     this.state = { hasError: false, error: null };
