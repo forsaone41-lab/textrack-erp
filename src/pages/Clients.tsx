@@ -158,54 +158,54 @@ export default function Clients() {
                 onClick={() => { setView('list'); setActiveClientId(null); }}
                 className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center hover:bg-slate-50 transition-colors shadow-sm"
               >
-                <X className="w-5 h-5 text-slate-400" />
+                <X className={`w-5 h-5 text-slate-400 ${isAr ? 'rotate-180' : ''}`} />
               </button>
-              <div>
-                <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Profil Client</h1>
-                <p className="text-slate-500 font-bold text-sm uppercase tracking-widest opacity-60">Historique & Transactions</p>
+              <div className={isAr ? 'text-right' : ''}>
+                <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">{isAr ? 'ملف الزبون' : 'Profil Client'}</h1>
+                <p className="text-slate-500 font-bold text-sm uppercase tracking-widest opacity-60">{isAr ? 'السجل والمعاملات' : 'Historique & Transactions'}</p>
               </div>
             </div>
-            <div className="flex gap-3">
+            <div className={`flex gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
               <button onClick={() => openEdit(activeClient)} className="flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
-                <Edit2 className="w-4 h-4" /> Modifier
+                <Edit2 className="w-4 h-4" /> {isAr ? 'تعديل' : 'Modifier'}
               </button>
               <button 
                 onClick={() => setSelectedClient(activeClient)}
                 className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg"
               >
-                <Printer className="w-4 h-4" /> Imprimer Situation
+                <Printer className="w-4 h-4" /> {isAr ? 'طبع الوضعية' : 'Imprimer Situation'}
               </button>
             </div>
           </div>
 
           {/* Client Top Card */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-1 bg-white p-8 rounded-[40px] border-2 border-slate-50 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-[80px] -z-0 opacity-50" />
+          <div className={`grid grid-cols-1 lg:grid-cols-3 gap-6 ${isAr ? 'flex-row-reverse' : ''}`}>
+            <div className={`lg:col-span-1 bg-white p-8 rounded-[40px] border-2 border-slate-50 shadow-sm relative overflow-hidden ${isAr ? 'text-right' : ''}`}>
+              <div className={`absolute top-0 w-32 h-32 bg-slate-50 rounded-bl-[80px] -z-0 opacity-50 ${isAr ? 'left-0 rounded-br-[80px] rounded-bl-none' : 'right-0'}`} />
               <div className="relative z-10">
-                <div className="w-20 h-20 bg-slate-900 rounded-3xl flex items-center justify-center text-white font-black text-3xl shadow-2xl mb-6">
+                <div className={`w-20 h-20 bg-slate-900 rounded-3xl flex items-center justify-center text-white font-black text-3xl shadow-2xl mb-6 ${isAr ? 'mr-0 ml-auto' : ''}`}>
                   {(activeClient.nom || 'C')[0].toUpperCase()}
                 </div>
                 <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-2">{activeClient.nom}</h2>
                 <div className="space-y-3 mt-6">
-                  <div className="flex items-center gap-3 text-slate-600">
+                  <div className={`flex items-center gap-3 text-slate-600 ${isAr ? 'flex-row-reverse' : ''}`}>
                     <Phone className="w-4 h-4 text-indigo-500" />
-                    <span className="font-bold text-sm">{activeClient.telephone || 'Non renseigné'}</span>
+                    <span className="font-bold text-sm tabular-nums">{activeClient.telephone || (isAr ? 'غير مسجل' : 'Non renseigné')}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-slate-600">
+                  <div className={`flex items-center gap-3 text-slate-600 ${isAr ? 'flex-row-reverse' : ''}`}>
                     <MapPin className="w-4 h-4 text-indigo-500" />
-                    <div className="flex items-center gap-2">
-                       <span className="font-bold text-sm uppercase">{activeClient.ville || 'Ville non spécifiée'}</span>
+                    <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                       <span className="font-bold text-sm uppercase">{activeClient.ville || (isAr ? 'مدينة غير محددة' : 'Ville non spécifiée')}</span>
                        {(activeClient as any).pinCode && (
                           <button 
                             onClick={() => copyPin((activeClient as any).pinCode, activeClient.id)}
-                            className={`text-[10px] font-black px-2 py-1 rounded-lg border transition-all ${
+                            className={`text-[10px] font-black px-2 py-1 rounded-lg border transition-all tabular-nums ${
                               copiedId === activeClient.id 
                                 ? 'bg-emerald-100 text-emerald-700 border-emerald-200' 
                                 : 'bg-amber-100 text-amber-700 border-amber-200 hover:scale-105 active:scale-95'
                             }`}
                           >
-                            {copiedId === activeClient.id ? 'Copié !' : `PIN: ${(activeClient as any).pinCode}`}
+                            {copiedId === activeClient.id ? (isAr ? 'تم النسخ!' : 'Copié !') : `PIN: ${(activeClient as any).pinCode}`}
                           </button>
                        )}
                     </div>
@@ -215,47 +215,47 @@ export default function Clients() {
             </div>
 
             <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-indigo-600 p-8 rounded-[40px] text-white shadow-xl shadow-indigo-200">
-                <p className="text-[10px] font-black text-indigo-200 uppercase tracking-[0.2em] mb-4">Volume d'Affaires</p>
-                <p className="text-4xl font-black">{(activeClient.totalAffaire || 0).toLocaleString()} <span className="text-sm">MAD</span></p>
-                <div className="mt-8 flex items-center gap-2">
-                  <div className="px-2 py-1 bg-white/10 rounded-lg text-[10px] font-black uppercase">{activeClient.cmdCount} Commandes</div>
+              <div className={`bg-indigo-600 p-8 rounded-[40px] text-white shadow-xl shadow-indigo-200 ${isAr ? 'text-right' : ''}`}>
+                <p className="text-[10px] font-black text-indigo-200 uppercase tracking-[0.2em] mb-4">{isAr ? 'حجم المعاملات' : "Volume d'Affaires"}</p>
+                <p className="text-4xl font-black tabular-nums">{(activeClient.totalAffaire || 0).toLocaleString()} <span className="text-sm">MAD</span></p>
+                <div className={`mt-8 flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                  <div className="px-2 py-1 bg-white/10 rounded-lg text-[10px] font-black uppercase tabular-nums">{activeClient.cmdCount} {isAr ? 'طلبيات' : 'Commandes'}</div>
                 </div>
               </div>
-              <div className="bg-emerald-500 p-8 rounded-[40px] text-white shadow-xl shadow-emerald-100">
-                <p className="text-[10px] font-black text-emerald-100 uppercase tracking-[0.2em] mb-4">Total Payé</p>
-                <p className="text-4xl font-black">{(activeClient.totalPaye || 0).toLocaleString()} <span className="text-sm">MAD</span></p>
+              <div className={`bg-emerald-500 p-8 rounded-[40px] text-white shadow-xl shadow-emerald-100 ${isAr ? 'text-right' : ''}`}>
+                <p className="text-[10px] font-black text-emerald-100 uppercase tracking-[0.2em] mb-4">{isAr ? 'مجموع المؤدى' : 'Total Payé'}</p>
+                <p className="text-4xl font-black tabular-nums">{(activeClient.totalPaye || 0).toLocaleString()} <span className="text-sm">MAD</span></p>
                 <div className="mt-8 h-1.5 bg-white/20 rounded-full overflow-hidden">
-                  <div className="h-full bg-white rounded-full" style={{ width: `${((activeClient.totalPaye || 0) / (activeClient.totalAffaire || 1)) * 100}%` }} />
+                  <div className={`h-full bg-white rounded-full ${isAr ? 'float-right' : ''}`} style={{ width: `${((activeClient.totalPaye || 0) / (activeClient.totalAffaire || 1)) * 100}%` }} />
                 </div>
               </div>
-              <div className="bg-rose-500 p-8 rounded-[40px] text-white shadow-xl shadow-rose-100">
-                <p className="text-[10px] font-black text-rose-100 uppercase tracking-[0.2em] mb-4">Reste à Payer</p>
-                <p className="text-4xl font-black">{(activeClient.totalDette || 0).toLocaleString()} <span className="text-sm">MAD</span></p>
-                <p className="mt-8 text-[10px] font-black uppercase opacity-60">Balance débitrice actuelle</p>
+              <div className={`bg-rose-500 p-8 rounded-[40px] text-white shadow-xl shadow-rose-100 ${isAr ? 'text-right' : ''}`}>
+                <p className="text-[10px] font-black text-rose-100 uppercase tracking-[0.2em] mb-4">{isAr ? 'الباقي للأداء' : 'Reste à Payer'}</p>
+                <p className="text-4xl font-black tabular-nums">{(activeClient.totalDette || 0).toLocaleString()} <span className="text-sm">MAD</span></p>
+                <p className="mt-8 text-[10px] font-black uppercase opacity-60">{isAr ? 'الرصيد الحالي المستحق' : 'Balance débitrice actuelle'}</p>
               </div>
             </div>
           </div>
 
           {/* Orders History */}
           <div className="bg-white rounded-[40px] border-2 border-slate-50 shadow-sm overflow-hidden">
-            <div className="p-8 border-b border-slate-50 flex items-center justify-between">
-              <h3 className="text-lg font-black text-slate-900 uppercase tracking-tighter">Historique des Commandes</h3>
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{(() => {
+            <div className={`p-8 border-b border-slate-50 flex items-center justify-between ${isAr ? 'flex-row-reverse' : ''}`}>
+              <h3 className="text-lg font-black text-slate-900 uppercase tracking-tighter">{isAr ? 'سجل الطلبيات' : 'Historique des Commandes'}</h3>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest tabular-nums">{(() => {
                 const clientCmds = (commandes || []).filter(c => (c.client || '').toLowerCase() === (activeClient.nom || '').toLowerCase());
                 return clientCmds.length;
-              })()} Transactions</span>
+              })()} {isAr ? 'معاملة' : 'Transactions'}</span>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left">
+              <table className={`w-full ${isAr ? 'text-right' : 'text-left'}`}>
                 <thead>
                   <tr className="bg-slate-50/50">
-                    <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Réf & Modèle</th>
-                    <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
-                    <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Quantité</th>
-                    <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Montant Total</th>
-                    <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Avance</th>
-                    <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Statut</th>
+                    <th className={`px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest ${isAr ? 'text-right' : ''}`}>{isAr ? 'المرجع والموديل' : 'Réf & Modèle'}</th>
+                    <th className={`px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest ${isAr ? 'text-right' : ''}`}>{isAr ? 'التاريخ' : 'Date'}</th>
+                    <th className={`px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest ${isAr ? 'text-right' : ''}`}>{isAr ? 'الكمية' : 'Quantité'}</th>
+                    <th className={`px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest ${isAr ? 'text-right' : ''}`}>{isAr ? 'المبلغ الإجمالي' : 'Montant Total'}</th>
+                    <th className={`px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest ${isAr ? 'text-right' : ''}`}>{isAr ? 'تسبيق' : 'Avance'}</th>
+                    <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">{isAr ? 'الحالة' : 'Statut'}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
@@ -282,14 +282,13 @@ export default function Clients() {
                             </div>
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{cmd.modele}</p>
                           </td>
-                          <td className="px-8 py-5 text-xs font-bold text-slate-500">{new Date(cmd.dateCommande).toLocaleDateString()}</td>
-                          <td className="px-8 py-5 text-sm font-black text-slate-700">{cmd.quantite} pcs</td>
+                          <td className="px-8 py-5 text-xs font-bold text-slate-500 tabular-nums">{new Date(cmd.dateCommande).toLocaleDateString(isAr ? 'ar-MA' : 'fr-FR')}</td>
                           <td className="px-8 py-5">
-                            <p className="text-sm font-black text-slate-900">{total.toLocaleString()} MAD</p>
+                            <p className="text-sm font-black text-slate-900 tabular-nums">{total.toLocaleString()} MAD</p>
                           </td>
                           <td className="px-8 py-5">
-                            <p className="text-xs font-black text-emerald-600">{cmd.avance?.toLocaleString() || 0} MAD</p>
-                            {remains > 0 && <p className="text-[9px] font-bold text-rose-400 mt-0.5">Reste: {remains.toLocaleString()} MAD</p>}
+                            <p className="text-xs font-black text-emerald-600 tabular-nums">{cmd.avance?.toLocaleString() || 0} MAD</p>
+                            {remains > 0 && <p className="text-[9px] font-bold text-rose-400 mt-0.5 tabular-nums">{isAr ? 'الباقي:' : 'Reste:'} {remains.toLocaleString()} MAD</p>}
                           </td>
                           <td className="px-8 py-5 text-center">
                             <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
@@ -310,7 +309,7 @@ export default function Clients() {
                 if (clientCmds.length === 0) return (
                   <div className="p-20 text-center">
                     <History className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-                    <p className="text-slate-400 font-bold uppercase text-xs tracking-widest">Aucune commande trouvée</p>
+                    <p className="text-slate-400 font-bold uppercase text-xs tracking-widest">{isAr ? 'لا توجد طلبيات مسجلة' : 'Aucune commande trouvée'}</p>
                   </div>
                 );
                 return null;
@@ -321,35 +320,35 @@ export default function Clients() {
       ) : (
         <div className="space-y-8">
           {/* Header & Stats */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Gestion Clients</h1>
-              <p className="text-sm text-slate-500 font-medium tracking-tight">Répertoire et suivi financier des clients</p>
+          <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ${isAr ? 'md:flex-row-reverse' : ''}`}>
+            <div className={isAr ? 'text-right' : ''}>
+              <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">{isAr ? 'إدارة الزبناء' : 'Gestion Clients'}</h1>
+              <p className="text-sm text-slate-500 font-medium tracking-tight">{isAr ? 'دليل ومتابعة مالية للزبناء' : 'Répertoire et suivi financier des clients'}</p>
             </div>
             <button 
               onClick={openCreate}
               className="bg-slate-900 text-white px-6 py-3 rounded-2xl flex items-center justify-center gap-2 font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-900/20 active:scale-95 transition-all"
             >
               <Plus className="w-4 h-4" />
-              Nouveau Client
+              {isAr ? 'زبون جديد' : 'Nouveau Client'}
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-white p-6 rounded-[32px] border-2 border-slate-50 shadow-sm">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Total Clients</p>
-              <p className="text-3xl font-black text-slate-900">{clients.length}</p>
-              <p className="text-[10px] text-slate-400 font-bold mt-1">{clientActifCount} actifs cette période</p>
+          <div className={`grid grid-cols-1 sm:grid-cols-3 gap-4 ${isAr ? 'flex-row-reverse' : ''}`}>
+            <div className={`bg-white p-6 rounded-[32px] border-2 border-slate-50 shadow-sm ${isAr ? 'text-right' : ''}`}>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{isAr ? 'مجموع الزبناء' : 'Total Clients'}</p>
+              <p className="text-3xl font-black text-slate-900 tabular-nums">{clients.length}</p>
+              <p className="text-[10px] text-slate-400 font-bold mt-1 tabular-nums">{clientActifCount} {isAr ? 'نشط هذا الشهر' : 'actifs cette période'}</p>
             </div>
-            <div className="bg-emerald-50 p-6 rounded-[32px] border-2 border-emerald-100 shadow-sm">
-              <p className="text-[10px] font-black text-emerald-600/60 uppercase tracking-[0.2em] mb-1">Chiffre d'Affaires</p>
-              <p className="text-3xl font-black text-emerald-700">
+            <div className={`bg-emerald-50 p-6 rounded-[32px] border-2 border-emerald-100 shadow-sm ${isAr ? 'text-right' : ''}`}>
+              <p className="text-[10px] font-black text-emerald-600/60 uppercase tracking-[0.2em] mb-1">{isAr ? 'رقم المعاملات' : "Chiffre d'Affaires"}</p>
+              <p className="text-3xl font-black text-emerald-700 tabular-nums">
                 {clientStats.reduce((sum, c) => sum + (c.totalAffaire || 0), 0).toLocaleString()} <span className="text-sm">MAD</span>
               </p>
             </div>
-            <div className="bg-rose-50 p-6 rounded-[32px] border-2 border-rose-100 shadow-sm">
-              <p className="text-[10px] font-black text-rose-600/60 uppercase tracking-[0.2em] mb-1">Dette Globale</p>
-              <p className="text-3xl font-black text-rose-700">
+            <div className={`bg-rose-50 p-6 rounded-[32px] border-2 border-rose-100 shadow-sm ${isAr ? 'text-right' : ''}`}>
+              <p className="text-[10px] font-black text-rose-600/60 uppercase tracking-[0.2em] mb-1">{isAr ? 'الديون الإجمالية' : 'Dette Globale'}</p>
+              <p className="text-3xl font-black text-rose-700 tabular-nums">
                 {(totalDetteGlobale || 0).toLocaleString()} <span className="text-sm">MAD</span>
               </p>
             </div>
@@ -357,13 +356,14 @@ export default function Clients() {
 
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <Search className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 ${isAr ? 'right-4' : 'left-4'}`} />
             <input 
               type="text"
-              placeholder="Rechercher un client (Nom, Tél...)"
+              placeholder={isAr ? 'بحث عن زبون (الاسم، الهاتف...)' : "Rechercher un client (Nom, Tél...)"}
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full bg-white border-2 border-slate-50 rounded-[20px] py-4 pl-12 pr-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-500 shadow-sm"
+              className={`w-full bg-white border-2 border-slate-50 rounded-[20px] py-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-500 shadow-sm ${isAr ? 'pr-12 pl-4 text-right' : 'pl-12 pr-4'}`}
+              dir={isAr ? 'rtl' : 'ltr'}
             />
           </div>
 
@@ -372,25 +372,25 @@ export default function Clients() {
             {filtered.map(c => (
               <div key={c.id} className="bg-white rounded-[32px] border-2 border-slate-50 shadow-sm hover:shadow-md transition-all overflow-hidden group">
                 <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-4">
+                  <div className={`flex items-start justify-between mb-4 ${isAr ? 'flex-row-reverse' : ''}`}>
+                    <div className={`flex items-center gap-4 ${isAr ? 'flex-row-reverse' : ''}`}>
                       <div className="w-14 h-14 bg-slate-900 rounded-[20px] flex items-center justify-center text-white font-black text-xl shadow-lg">
                         {(c.nom || 'C')[0].toUpperCase()}
                       </div>
-                      <div className="cursor-pointer group/name" onClick={() => { setActiveClientId(c.id); setView('detail'); }}>
-                        <h3 className="font-black text-slate-900 uppercase tracking-tighter truncate max-w-[150px] group-hover/name:text-indigo-600 transition-colors">{c.nom || 'Client Sans Nom'}</h3>
-                        <div className="flex items-center gap-2">
-                          <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{c.ville || 'Ville non spécifiée'}</p>
+                      <div className={`cursor-pointer group/name ${isAr ? 'text-right' : ''}`} onClick={() => { setActiveClientId(c.id); setView('detail'); }}>
+                        <h3 className="font-black text-slate-900 uppercase tracking-tighter truncate max-w-[150px] group-hover/name:text-indigo-600 transition-colors">{c.nom || (isAr ? 'زبون بدون اسم' : 'Client Sans Nom')}</h3>
+                        <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                          <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{c.ville || (isAr ? 'مدينة غير محددة' : 'Ville non spécifiée')}</p>
                           {(c as any).pinCode && (
                             <button 
                               onClick={(e) => { e.stopPropagation(); copyPin((c as any).pinCode, c.id); }}
-                              className={`text-[9px] font-black px-1.5 py-0.5 rounded-md border transition-all ${
+                              className={`text-[9px] font-black px-1.5 py-0.5 rounded-md border transition-all tabular-nums ${
                                 copiedId === c.id 
                                   ? 'bg-emerald-100 text-emerald-700 border-emerald-200' 
                                   : 'bg-amber-100 text-amber-700 border-amber-200 hover:scale-105 active:scale-95'
                               }`}
                             >
-                              {copiedId === c.id ? 'Copié !' : `PIN: ${(c as any).pinCode}`}
+                              {copiedId === c.id ? (isAr ? 'تم النسخ!' : 'Copié !') : `PIN: ${(c as any).pinCode}`}
                             </button>
                           )}
                         </div>
@@ -403,37 +403,37 @@ export default function Clients() {
 
                   <div className="space-y-2 mb-6">
                     {c.telephone && (
-                      <div className="flex items-center gap-3 text-slate-500">
+                      <div className={`flex items-center gap-3 text-slate-500 ${isAr ? 'flex-row-reverse' : ''}`}>
                         <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center"><Phone className="w-3.5 h-3.5" /></div>
-                        <span className="text-xs font-bold">{c.telephone}</span>
+                        <span className="text-xs font-bold tabular-nums">{c.telephone}</span>
                       </div>
                     )}
-                    <div className="flex items-center gap-3 text-slate-500">
+                    <div className={`flex items-center gap-3 text-slate-500 ${isAr ? 'flex-row-reverse' : ''}`}>
                       <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center"><TrendingUp className="w-3.5 h-3.5" /></div>
-                      <span className="text-xs font-bold">{c.cmdCount || 0} Commandes passées</span>
+                      <span className="text-xs font-bold tabular-nums">{c.cmdCount || 0} {isAr ? 'طلبيات سابقة' : 'Commandes passées'}</span>
                     </div>
                   </div>
 
                   {/* Mini Financial Summary */}
-                  <div className="grid grid-cols-2 gap-2 p-3 bg-slate-50 rounded-2xl mb-4">
+                  <div className={`grid grid-cols-2 gap-2 p-3 bg-slate-50 rounded-2xl mb-4 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
                     <div>
-                      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Réglé</p>
-                      <p className="text-xs font-black text-emerald-600">{(c.totalPaye || 0).toLocaleString()} MAD</p>
+                      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'المؤدى' : 'Réglé'}</p>
+                      <p className="text-xs font-black text-emerald-600 tabular-nums">{(c.totalPaye || 0).toLocaleString()} MAD</p>
                     </div>
                     <div>
-                      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Reste</p>
-                      <p className="text-xs font-black text-rose-600">{(c.totalDette || 0).toLocaleString()} MAD</p>
+                      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الباقي' : 'Reste'}</p>
+                      <p className="text-xs font-black text-rose-600 tabular-nums">{(c.totalDette || 0).toLocaleString()} MAD</p>
                     </div>
                   </div>
 
                   {/* Actions */}
-                  <div className="flex gap-2">
+                  <div className={`flex gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
                     <button 
                       onClick={() => { setActiveClientId(c.id); setView('detail'); }}
                       className="flex-1 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-slate-900/10"
                     >
                       <FileText className="w-3.5 h-3.5" />
-                      Dossier Client
+                      {isAr ? 'ملف الزبون' : 'Dossier Client'}
                     </button>
                     {c.telephone && (
                       <a 
@@ -456,60 +456,60 @@ export default function Clients() {
       {showModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-[150] p-4">
           <div className="bg-white rounded-[32px] w-full max-w-lg shadow-2xl animate-in zoom-in duration-300">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div className={`p-6 border-b border-slate-100 flex items-center justify-between ${isAr ? 'flex-row-reverse' : ''}`}>
               <h2 className="text-lg font-black text-slate-900 uppercase tracking-tighter">
-                {editId ? 'Modifier le Client' : 'Nouveau Client'}
+                {editId ? (isAr ? 'تعديل بيانات الزبون' : 'Modifier le Client') : (isAr ? 'زبون جديد' : 'Nouveau Client')}
               </h2>
               <button onClick={() => setShowModal(false)} className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center">
                 <X className="w-5 h-5 text-slate-900" />
               </button>
             </div>
-            <div className="p-8 space-y-4 max-h-[70vh] overflow-y-auto">
+            <div className={`p-8 space-y-4 max-h-[70vh] overflow-y-auto ${isAr ? 'text-right' : ''}`}>
               <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nom Complet / Société *</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'الاسم الكامل / الشركة *' : 'Nom Complet / Société *'}</label>
                 <input 
                   value={form.nom || ''} onChange={e => setForm({...form, nom: e.target.value})}
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-500"
+                  className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-500 ${isAr ? 'text-right' : ''}`}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className={`grid grid-cols-2 gap-4 ${isAr ? 'flex-row-reverse' : ''}`}>
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Téléphone</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'الهاتف' : 'Téléphone'}</label>
                   <input 
                     value={form.telephone || ''} onChange={e => setForm({...form, telephone: e.target.value})}
-                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-500"
+                    className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-500 ${isAr ? 'text-left tabular-nums' : ''}`}
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Ville</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'المدينة' : 'Ville'}</label>
                   <input 
                     value={form.ville || ''} onChange={e => setForm({...form, ville: e.target.value})}
-                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-500"
+                    className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-500 ${isAr ? 'text-right' : ''}`}
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Email</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'البريد الإلكتروني' : 'Email'}</label>
                 <input 
                   value={form.email || ''} onChange={e => setForm({...form, email: e.target.value})}
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-500"
+                  className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-500 ${isAr ? 'text-left' : ''}`}
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Adresse</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'العنوان' : 'Adresse'}</label>
                 <textarea 
                   value={form.adresse || ''} onChange={e => setForm({...form, adresse: e.target.value})}
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-500 h-20"
+                  className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-500 h-20 ${isAr ? 'text-right' : ''}`}
                 />
               </div>
             </div>
-            <div className="p-6 bg-slate-50 flex gap-3">
-              <button onClick={() => setShowModal(false)} className="flex-1 h-12 bg-white text-slate-900 border-2 border-slate-200 rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all">Annuler</button>
+            <div className={`p-6 bg-slate-50 flex gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
+              <button onClick={() => setShowModal(false)} className="flex-1 h-12 bg-white text-slate-900 border-2 border-slate-200 rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all">{isAr ? 'إلغاء' : 'Annuler'}</button>
               <button 
                 onClick={save}
                 className="flex-1 h-12 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all shadow-lg"
               >
-                Enregistrer
+                {isAr ? 'حفظ' : 'Enregistrer'}
               </button>
             </div>
           </div>
@@ -531,9 +531,9 @@ export default function Clients() {
             >
               <X className="w-6 h-6 group-hover:rotate-90 transition-transform" />
             </button>
-            <div className="p-8 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
-              <div>
-                <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Situation Client</h2>
+            <div className={`p-8 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10 ${isAr ? 'flex-row-reverse' : ''}`}>
+              <div className={isAr ? 'text-right' : ''}>
+                <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">{isAr ? 'وضعية الزبون' : 'Situation Client'}</h2>
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{selectedClient.nom || 'Client'}</p>
               </div>
               <button onClick={() => setSelectedClient(null)} className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center">
@@ -541,45 +541,45 @@ export default function Clients() {
               </button>
             </div>
 
-            <div className="py-24 px-12" id="printable-situation">
+            <div className={`py-24 px-12 bg-white ${isAr ? 'text-right' : ''}`} id="printable-situation">
               {/* Beya Header */}
-              <div className="flex justify-between items-start mb-12">
-                <div>
+              <div className={`flex justify-between items-start mb-12 ${isAr ? 'flex-row-reverse' : ''}`}>
+                <div className={isAr ? 'text-right' : ''}>
                   <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase mb-1">{company.name}</h1>
-                  <p className="text-[10px] font-bold text-indigo-600 tracking-[0.3em] uppercase">Rapport de Situation Financière</p>
+                  <p className="text-[10px] font-bold text-indigo-600 tracking-[0.3em] uppercase">{isAr ? 'تقرير الوضعية المالية' : 'Rapport de Situation Financière'}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-xs font-black text-slate-900 uppercase">Généré le</p>
-                  <p className="text-xs text-slate-400 font-bold">{new Date().toLocaleDateString('fr-FR')}</p>
+                <div className={isAr ? 'text-left' : 'text-right'}>
+                  <p className="text-xs font-black text-slate-900 uppercase">{isAr ? 'تم استخراجه في' : 'Généré le'}</p>
+                  <p className="text-xs text-slate-400 font-bold tabular-nums">{new Date().toLocaleDateString(isAr ? 'ar-MA' : 'fr-FR')}</p>
                 </div>
               </div>
 
               {/* Client Info Block */}
-              <div className="grid grid-cols-2 gap-8 mb-12">
-                <div className="bg-slate-50 p-6 rounded-3xl">
-                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Client</h3>
-                  <p className="text-xl font-black text-slate-900">{selectedClient.nom || 'Sans Nom'}</p>
-                  <p className="text-sm text-slate-500 font-bold mt-1">{selectedClient.telephone || 'N/A'}</p>
-                  <p className="text-xs text-slate-400 mt-2 italic">{selectedClient.adresse || 'Pas d\'adresse'}</p>
+              <div className={`grid grid-cols-2 gap-8 mb-12 ${isAr ? 'flex-row-reverse' : ''}`}>
+                <div className={`bg-slate-50 p-6 rounded-3xl ${isAr ? 'text-right' : ''}`}>
+                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">{isAr ? 'الزبون' : 'Client'}</h3>
+                  <p className="text-xl font-black text-slate-900">{selectedClient.nom || (isAr ? 'بدون اسم' : 'Sans Nom')}</p>
+                  <p className="text-sm text-slate-500 font-bold mt-1 tabular-nums">{selectedClient.telephone || 'N/A'}</p>
+                  <p className="text-xs text-slate-400 mt-2 italic">{selectedClient.adresse || (isAr ? 'لا يوجد عنوان' : 'Pas d\'adresse')}</p>
                 </div>
-                <div className="bg-slate-900 p-6 rounded-3xl text-white">
-                  <h3 className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-3">Balance Actuelle</h3>
-                  <p className="text-3xl font-black text-rose-400">
+                <div className={`bg-slate-900 p-6 rounded-3xl text-white ${isAr ? 'text-right' : ''}`}>
+                  <h3 className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-3">{isAr ? 'الرصيد الحالي' : 'Balance Actuelle'}</h3>
+                  <p className="text-3xl font-black text-rose-400 tabular-nums">
                     {((selectedClient as any).totalDette || 0).toLocaleString()} <span className="text-sm">MAD</span>
                   </p>
-                  <p className="text-[10px] font-bold text-white/60 mt-2 uppercase">Total Dû par le client</p>
+                  <p className="text-[10px] font-bold text-white/60 mt-2 uppercase">{isAr ? 'إجمالي المبالغ المستحقة' : 'Total Dû par le client'}</p>
                 </div>
               </div>
 
               {/* Summary Table */}
               <div className="mb-12">
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Récapitulatif des Commandes</h3>
+                <h3 className={`text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 ${isAr ? 'text-right' : ''}`}>{isAr ? 'ملخص الطلبيات' : 'Récapitulatif des Commandes'}</h3>
                 <div className="space-y-3">
                   {(commandes || [])
                     .filter(c => (c.client || '').toLowerCase() === (selectedClient.nom || '').toLowerCase())
                     .map(c => (
-                      <div key={c.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
-                        <div className="flex items-center gap-3">
+                      <div key={c.id} className={`flex items-center justify-between p-4 bg-slate-50 rounded-2xl ${isAr ? 'flex-row-reverse' : ''}`}>
+                        <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
                           <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-slate-100 shadow-sm">
                             <FileText className="w-4 h-4 text-slate-400" />
                           </div>
@@ -588,13 +588,13 @@ export default function Clients() {
                             <p className="text-[10px] font-bold text-slate-400 uppercase">{c.modele}</p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-xs font-black text-slate-900 tracking-tight">
+                        <div className={isAr ? 'text-left' : 'text-right'}>
+                          <p className="text-xs font-black text-slate-900 tracking-tight tabular-nums">
                             {((c.quantite || 0) * (c.prix || 0)).toLocaleString()} DH
                           </p>
-                          <div className="flex flex-col items-end gap-0.5">
-                            <p className="text-[8px] font-black text-emerald-600 uppercase">Payé: {(c.avance || 0).toLocaleString()} DH</p>
-                            <p className="text-[8px] font-black text-rose-600 uppercase">Reste: {(((c.quantite || 0) * (c.prix || 0)) - (c.avance || 0)).toLocaleString()} DH</p>
+                          <div className={`flex flex-col gap-0.5 ${isAr ? 'items-start' : 'items-end'}`}>
+                            <p className="text-[8px] font-black text-emerald-600 uppercase tabular-nums">{isAr ? 'مؤدى:' : 'Payé:'} {(c.avance || 0).toLocaleString()} DH</p>
+                            <p className="text-[8px] font-black text-rose-600 uppercase tabular-nums">{isAr ? 'الباقي:' : 'Reste:'} {(((c.quantite || 0) * (c.prix || 0)) - (c.avance || 0)).toLocaleString()} DH</p>
                           </div>
                         </div>
                       </div>
@@ -602,39 +602,39 @@ export default function Clients() {
                 </div>
               </div>
 
-              <div className="p-8 bg-indigo-50 rounded-[32px] border-2 border-indigo-100 flex justify-between items-center">
-                <div>
-                  <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">Total des Affaires</p>
-                  <p className="text-2xl font-black text-slate-900">{((selectedClient as any).totalAffaire || 0).toLocaleString()} MAD</p>
+              <div className={`p-8 bg-indigo-50 rounded-[32px] border-2 border-indigo-100 flex justify-between items-center ${isAr ? 'flex-row-reverse' : ''}`}>
+                <div className={isAr ? 'text-right' : ''}>
+                  <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">{isAr ? 'إجمالي المعاملات' : 'Total des Affaires'}</p>
+                  <p className="text-2xl font-black text-slate-900 tabular-nums">{((selectedClient as any).totalAffaire || 0).toLocaleString()} MAD</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">Total Déjà Réglé</p>
-                  <p className="text-2xl font-black text-emerald-600">{((selectedClient as any).totalPaye || 0).toLocaleString()} MAD</p>
+                <div className={isAr ? 'text-left' : 'text-right'}>
+                  <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">{isAr ? 'إجمالي المؤدى' : 'Total Déjà Réglé'}</p>
+                  <p className="text-2xl font-black text-emerald-600 tabular-nums">{((selectedClient as any).totalPaye || 0).toLocaleString()} MAD</p>
                 </div>
               </div>
             </div>
 
-            <div className="p-8 bg-slate-50 grid grid-cols-3 gap-4">
+            <div className={`p-8 bg-slate-50 grid grid-cols-3 gap-4 ${isAr ? 'flex-row-reverse' : ''}`}>
               <button 
                 onClick={() => window.print()}
                 className="h-14 bg-slate-900 text-white rounded-[20px] flex items-center justify-center gap-2 font-black text-xs uppercase tracking-widest active:scale-95 transition-all shadow-xl shadow-slate-900/20"
               >
                 <Printer className="w-5 h-5" />
-                Imprimer
+                {isAr ? 'طباعة' : 'Imprimer'}
               </button>
               <button 
                 onClick={() => generatePDF('printable-situation', `Situation_${selectedClient.nom.replace(/\s+/g, '_')}`)}
                 className="h-14 bg-white text-slate-900 border-2 border-slate-200 rounded-[20px] flex items-center justify-center gap-2 font-black text-xs uppercase tracking-widest active:scale-95 transition-all"
               >
                 <Download className="w-5 h-5" />
-                Exporter PDF
+                {isAr ? 'تصدير PDF' : 'Exporter PDF'}
               </button>
               <button 
                 onClick={() => setSelectedClient(null)}
                 className="h-14 bg-rose-50 text-rose-600 border-2 border-rose-100 rounded-[20px] flex items-center justify-center gap-2 font-black text-xs uppercase tracking-widest active:scale-95 transition-all hover:bg-rose-600 hover:text-white"
               >
                 <X className="w-5 h-5" />
-                Fermer
+                {isAr ? 'إغلاق' : 'Fermer'}
               </button>
             </div>
           </div>
