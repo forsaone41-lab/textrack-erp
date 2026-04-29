@@ -345,18 +345,19 @@ export default function ChaineDetaillee() {
             </div>
           </div>
 
-          <div className="overflow-x-auto scrollbar-hide">
-            <table className="w-full text-left border-collapse min-w-[800px] md:min-w-[1000px]">
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto scrollbar-hide">
+            <table className="w-full text-left border-collapse min-w-[1000px]">
               <thead>
                 <tr className="bg-slate-50/50 sticky top-0 z-[30]">
-                  <th className="px-4 md:px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 sticky left-0 bg-slate-50 z-10 w-32 md:w-48">
+                  <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 sticky left-0 bg-slate-50 z-10 w-48">
                     Heure
                   </th>
                   {modelOps.map(op => (
-                    <th key={op.id} className="px-3 md:px-4 py-5 text-[9px] md:text-[10px] font-black text-slate-800 uppercase tracking-widest border-b border-slate-100 border-l border-slate-100">
+                    <th key={op.id} className="px-4 py-5 text-[10px] font-black text-slate-800 uppercase tracking-widest border-b border-slate-100 border-l border-slate-100">
                       <div className="flex flex-col">
-                        <span className="truncate max-w-[80px] md:max-w-none">{op.nom_operation}</span>
-                        <span className="text-[8px] md:text-[9px] text-indigo-500 mt-0.5">Cible: {op.target_heure}</span>
+                        <span className="">{op.nom_operation}</span>
+                        <span className="text-[9px] text-indigo-500 mt-0.5">Cible: {op.target_heure}</span>
                       </div>
                     </th>
                   ))}
@@ -365,8 +366,8 @@ export default function ChaineDetaillee() {
               <tbody className="divide-y divide-slate-100">
                 {filteredHours.map(tranche => (
                   <tr key={tranche} className="hover:bg-slate-50/30 transition-colors">
-                    <td className="px-4 md:px-8 py-4 font-black text-slate-500 text-[10px] md:text-xs tabular-nums sticky left-0 bg-white z-10 border-r border-slate-100 shadow-sm">
-                      {tranche.split(' - ')[0]}
+                    <td className="px-8 py-4 font-black text-slate-500 text-xs tabular-nums sticky left-0 bg-white z-10 border-r border-slate-100 shadow-sm">
+                      {tranche}
                     </td>
                     {modelOps.map(op => {
                       const prod = getProduction(op.id, tranche.split(' - ')[0]);
@@ -423,6 +424,70 @@ export default function ChaineDetaillee() {
                 </tr>
               </tfoot>
             </table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="block md:hidden p-4 space-y-6">
+            {modelOps.map(op => {
+              const totalOp = todaySuivi
+                .filter(s => s.operation_id === op.id)
+                .reduce((a, b) => a + b.quantite_realisee, 0);
+              
+              return (
+                <div key={op.id} className="bg-slate-50 rounded-[2rem] border border-slate-200 overflow-hidden shadow-sm">
+                  {/* Card Header */}
+                  <div className="p-5 bg-white border-b border-slate-100 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">{op.nom_operation}</h3>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase">Cible: {op.target_heure} pcs/h</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[9px] font-black text-indigo-600 uppercase">Total</p>
+                      <p className="text-lg font-black text-slate-900">{totalOp}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Hours Horizontal Scroll */}
+                  <div className="p-4 overflow-x-auto flex gap-4 scrollbar-hide bg-slate-50/50">
+                    {filteredHours.map(tranche => {
+                      const prod = getProduction(op.id, tranche.split(' - ')[0]);
+                      const isBelowTarget = prod && prod.quantite_realisee < op.target_heure;
+                      
+                      return (
+                        <div key={tranche} className="flex-none w-32 space-y-3 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                          <p className="text-[10px] font-black text-slate-500 text-center border-b border-slate-50 pb-2 mb-2">
+                            {tranche.split(' - ')[0]}
+                          </p>
+                          
+                          <select 
+                            value={prod?.employe_id || ''}
+                            onChange={e => handleUpdateSuivi(op.id, e.target.value, tranche, prod?.quantite_realisee || 0)}
+                            className="w-full bg-slate-50 border-none rounded-xl text-[9px] font-bold text-slate-600 py-2 px-1 outline-none"
+                          >
+                            <option value="">Ouvrier</option>
+                            {employes.map(e => <option key={e.id} value={e.id}>{e.prenom}</option>)}
+                          </select>
+                          
+                          <input 
+                            type="number"
+                            value={prod?.quantite_realisee ?? ''}
+                            onChange={e => {
+                              const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+                              handleUpdateSuivi(op.id, prod?.employe_id || '', tranche, val);
+                            }}
+                            placeholder="Qté"
+                            className={`w-full px-3 py-2 rounded-xl text-center text-sm font-black tabular-nums outline-none border-2 ${
+                              !prod ? 'bg-slate-50 border-transparent text-slate-400' :
+                              isBelowTarget ? 'bg-red-50 border-red-100 text-red-600' : 'bg-emerald-50 border-emerald-100 text-emerald-600'
+                            }`}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
