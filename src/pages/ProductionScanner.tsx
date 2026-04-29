@@ -93,7 +93,7 @@ export default function ProductionScanner() {
     const now = new Date();
     const currentHour = now.getHours();
     const hDebut = `${String(currentHour).padStart(2, '0')}:00`;
-    const hFin = `${String(currentHour + 1).padStart(2, '0')}:00`;
+    const hFin = `${String((currentHour + 1) % 24).padStart(2, '0')}:00`;
 
     const newEntry: any = {
       id: genId(),
@@ -103,7 +103,7 @@ export default function ProductionScanner() {
       heure_debut: hDebut,
       heure_fin: hFin,
       quantite_realisee: form.quantite,
-      date_production: now.toISOString().split('T')[0]
+      date_production: now.toLocaleDateString('en-CA') // Local date YYYY-MM-DD
     };
 
     try {
