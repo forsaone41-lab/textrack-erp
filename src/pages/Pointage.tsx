@@ -212,7 +212,11 @@ export default function Pointage({ onLogout }: { onLogout?: () => void }) {
     setTimeout(() => { setScanStatus(null); setShowScanner(false); }, 2500);
   }
 
-  const handlePrintBadge = () =  const stats = [
+  const handlePrintBadge = () => {
+    window.print();
+  };
+
+  const stats = [
     { label: isAr ? 'حاضر' : 'Présents', count: actifs.filter(e => { const p = getPresence(e.id); return p && p.statut !== 'absent'; }).length, color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', icon: UserCheck },
     { label: isAr ? 'غائب' : 'Absents', count: actifs.filter(e => { const p = getPresence(e.id); return !p || p.statut === 'absent'; }).length, color: 'text-rose-500', bg: 'bg-rose-500/10', border: 'border-rose-500/20', icon: UserX },
   ];
