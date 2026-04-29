@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, FileText, Settings, LogOut, ShoppingCart, 
-  Package, Scissors, Activity, Receipt, CreditCard, PieChart, TrendingUp, UserCheck, Shirt, Globe, X, Menu, ClipboardCheck, Trophy, ShieldCheck, UserCircle, QrCode, User
+  Package, Scissors, Activity, Receipt, CreditCard, PieChart, TrendingUp, UserCheck, Shirt, Globe, X, Menu, ClipboardCheck, Trophy, ShieldCheck, UserCircle, QrCode, User as UserIcon
 } from 'lucide-react';
 import { User, loadCompanyProfile, loadPermissions, AppPage } from '../types';
 import { useLang } from '../contexts/LangContext';
@@ -81,7 +81,7 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
           </NavLink>
 
           <NavLink to="/worker-portal" className={linkClass} onClick={closeMobile}>
-            <User className="w-5 h-5 text-indigo-500" />
+            <UserIcon className="w-5 h-5 text-indigo-500" />
             <span className="font-black text-indigo-600">Espace Ouvrier</span>
           </NavLink>
           

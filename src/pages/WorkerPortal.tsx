@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { 
-  User, 
+  User as UserIcon, 
   Trophy, 
   Target, 
   Clock, 
@@ -77,7 +77,7 @@ export default function WorkerPortal() {
     return (
       <div className="min-h-screen bg-slate-950 p-6 flex flex-col items-center justify-center">
         <div className="w-20 h-20 bg-indigo-600 rounded-[2rem] flex items-center justify-center mb-8 shadow-2xl shadow-indigo-500/20">
-          <User className="w-10 h-10 text-white" />
+          <UserIcon className="w-10 h-10 text-white" />
         </div>
         <h1 className="text-2xl font-black text-white uppercase tracking-tight mb-8 text-center">Accès Espace Ouvrier</h1>
         <div className="w-full max-w-sm space-y-4">
