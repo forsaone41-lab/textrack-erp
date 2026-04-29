@@ -303,6 +303,7 @@ export default function LandingPage() {
                       finalType = formData.get('customType') as string;
                     }
 
+                    setIsSending(true);
                     try {
                       const leadData = {
                         name: formData.get('name') as string,
@@ -315,9 +316,11 @@ export default function LandingPage() {
                       };
                       
                       await saveLead(leadData);
+                      setIsSending(false);
                       setShowSuccess(true);
                       setSelectedPhoto(null);
                     } catch (err: any) {
+                      setIsSending(false);
                       console.error("Error in LandingPage:", err);
                     }
                     (e.currentTarget as HTMLFormElement).reset();
@@ -472,6 +475,37 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Premium Loading Modal */}
+      {isSending && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="bg-white/90 backdrop-blur-2xl rounded-[3rem] p-12 max-w-sm w-full shadow-2xl border border-white/50 relative overflow-hidden flex flex-col items-center text-center animate-in zoom-in-95 duration-300">
+            <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 animate-pulse" />
+            
+            <div className="relative mb-8">
+              <div className="w-24 h-24 bg-indigo-50 rounded-[2.5rem] flex items-center justify-center text-indigo-600 shadow-xl shadow-indigo-100 border-4 border-white animate-bounce duration-1000">
+                <RotateCw className="w-10 h-10 animate-spin" />
+              </div>
+              <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-emerald-500 rounded-full border-4 border-white flex items-center justify-center animate-pulse">
+                <div className="w-2 h-2 bg-white rounded-full" />
+              </div>
+            </div>
+
+            <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-3">
+              {isAr ? 'جاري الإرسال...' : 'Envoi en cours...'}
+            </h3>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
+              {isAr ? 'نحن نسجل طلبك، انتظر لحظة من فضلك' : 'Nous enregistrons votre demande, un instant s\'il vous plaît'}
+            </p>
+            
+            <div className="mt-8 flex gap-1">
+              <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce [animation-delay:-0.3s]" />
+              <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce [animation-delay:-0.15s]" />
+              <div className="w-2 h-2 bg-pink-600 rounded-full animate-bounce" />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="py-20 px-6 border-t border-slate-100 bg-slate-900 text-white overflow-hidden relative">
