@@ -220,6 +220,13 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
                 </div>
               </NavLink>
             )}
+            <NavLink to="/fast-scanner" className={linkClass} onClick={closeMobile}>
+              <div className="flex items-center gap-3">
+                <QrCode className="w-[18px] h-[18px] text-indigo-400" />
+                <span className="font-black">{isAr ? 'الماسح الضوئي (PRO)' : 'Scanner (PRO)'}</span>
+              </div>
+              <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse shadow-[0_0_10px_#4f46e5]" />
+            </NavLink>
             {can('utilisateurs') && (
               <NavLink to="/utilisateurs" className={linkClass} onClick={closeMobile}>
                 <div className="flex items-center gap-3">

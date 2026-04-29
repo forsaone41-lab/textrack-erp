@@ -26,6 +26,7 @@ import Profil from './pages/Profil';
 import Login from './pages/Login';
 import LandingPage from './pages/LandingPage';
 import KioskScanner from './pages/KioskScanner';
+import FastScanner from './pages/FastScanner';
 import { initMockData, User, loadPermissions, AppPage, loadCompanyProfile, loadData, saveRecord } from './types';
 import { LangProvider, useLang } from './contexts/LangContext';
 
@@ -166,6 +167,7 @@ function AppContent() {
         <Route element={<PointageLayout />}>
           <Route path="pointage" element={<Pointage onLogout={handleLogout} />} />
           <Route path="kiosk" element={<KioskScanner />} />
+          <Route path="fast-scanner" element={<FastScanner />} />
         </Route>
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
         <Route path="/portal" element={<PortailClient />} />
@@ -245,6 +247,7 @@ function AppContent() {
       <Route element={<PointageLayout />}>
         <Route path="pointage" element={<Pointage onLogout={handleLogout} />} />
         <Route path="kiosk" element={<KioskScanner />} />
+        <Route path="fast-scanner" element={<FastScanner />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

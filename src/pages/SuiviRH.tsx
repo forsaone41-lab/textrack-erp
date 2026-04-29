@@ -389,6 +389,12 @@ export default function SuiviRH() {
         </div>
         <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
           <button
+            onClick={() => window.open('#/fast-scanner', '_blank')}
+            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-2xl hover:bg-indigo-700 transition-all font-black text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-600/20"
+          >
+            <Zap className="w-4 h-4 fill-white" /> {isAr ? '(PRO) فتح الماسح الضوئي' : '(PRO) Ouvrir Scanner'}
+          </button>
+          <button
             onClick={() => setShowAllBadges(true)}
             className="flex items-center gap-2 bg-white border-2 border-slate-100 text-slate-600 px-4 py-2.5 rounded-2xl hover:bg-slate-50 transition-all font-black text-[10px] uppercase tracking-widest"
           >
