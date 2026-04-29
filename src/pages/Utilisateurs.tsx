@@ -8,7 +8,7 @@ import {
   Globe, Trophy, UserCircle, RotateCcw, Lock,
 } from 'lucide-react';
 import {
-  User, AppPage, RolePermMap,
+  User, Employe, AppPage, RolePermMap,
   loadData, saveRecord, deleteRecord, genId,
   loadPermissions, savePermissions, DEFAULT_PERMISSIONS,
 } from '../types';
@@ -131,7 +131,29 @@ export default function Utilisateurs() {
   const [perms, setPerms] = useState<RolePermMap>(loadPermissions);
   const [permsSaved, setPermsSaved] = useState(false);
 
-  useEffect(() => { loadData<User>('users').then(setUsers); }, []);
+  useEffect(() => {
+    async function loadAll() {
+      const [uList, eList] = await Promise.all([
+        loadData<User>('users'),
+        loadData<Employe>('employes')
+      ]);
+
+      // Transform employees with PIN into virtual users for display
+      const workerUsers: User[] = eList
+        .filter(e => e.pin_code && e.actif)
+        .map(e => ({
+          id: e.id,
+          nom: `${e.prenom || ''} ${e.nom || ''}`.trim(),
+          email: e.email || `${e.telephone || e.id}@beya.ma`,
+          role: 'worker',
+          password: e.pin_code,
+          lastActive: e.lastActive || new Date().toISOString()
+        }));
+
+      setUsers([...uList, ...workerUsers]);
+    }
+    loadAll();
+  }, []);
 
   // ── User helpers ──────────────────────────────────────────
   const filtered = users.filter(u => {
@@ -319,13 +341,22 @@ export default function Utilisateurs() {
                         </div>
                       </div>
                       <div className="flex gap-1 ml-2 flex-shrink-0">
-                        <button onClick={() => openEdit(u)} className="p-1.5 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => !isLastAdmin && confirmDelete(u.id)}
-                          className={`p-1.5 rounded-lg transition ${isLastAdmin ? 'text-slate-200 cursor-not-allowed' : 'text-slate-300 hover:text-red-600 hover:bg-red-50'}`}>
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {u.role !== 'worker' && (
+                          <>
+                            <button onClick={() => openEdit(u)} className="p-1.5 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => !isLastAdmin && confirmDelete(u.id)}
+                              className={`p-1.5 rounded-lg transition ${isLastAdmin ? 'text-slate-200 cursor-not-allowed' : 'text-slate-300 hover:text-red-600 hover:bg-red-50'}`}>
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
+                        {u.role === 'worker' && (
+                          <div className="text-[10px] font-black text-slate-300 uppercase tracking-widest bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                            Géré par RH
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl ${cfg.bg} border ${cfg.border} mb-3`}>
