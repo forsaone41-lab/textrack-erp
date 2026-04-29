@@ -15,6 +15,16 @@ import { t } from '../i18n';
 import { generatePDF, printElement } from '../utils/pdf';
 import { InvoicePRO } from '../components/InvoicePRO';
 
+const PHASE_LABELS_AR: Record<string, string> = {
+  coupe: 'الفصالة',
+  montage: 'الخياطة',
+  finition: 'التشطيب',
+  repassage: 'المصلوح',
+  controle: 'الرقابة',
+  emballage: 'التلفيف',
+  livré: 'تم التسليم',
+};
+
 export default function Commandes() {
   const { lang, isAr } = useLang();
   const [commandes, setCommandes] = useState<Commande[]>([]);
@@ -480,8 +490,8 @@ export default function Commandes() {
                 <th className={`${isAr ? 'text-right' : 'text-left'} text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3`}>{isAr ? 'الزبون / الموديل / الثوب' : 'Client / Modèle / Tissu'}</th>
                 <th className={`${isAr ? 'text-right' : 'text-left'} text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3`}>{isAr ? 'الكمية / القيمة' : 'Qté / Valeur'}</th>
                 <th className={`${isAr ? 'text-right' : 'text-left'} text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3`}>{isAr ? 'تتبع الإنتاج' : 'Suivi Production'}</th>
-                <th className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3`">{isAr ? 'التسليم' : 'Livraison'}</th>
-                <th className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3`">{isAr ? 'الحالة' : 'Statut'}</th>
+                <th className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3">{isAr ? 'التسليم' : 'Livraison'}</th>
+                <th className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3">{isAr ? 'الحالة' : 'Statut'}</th>
                 <th className={`${isAr ? 'text-left' : 'text-right'} text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3`}>{isAr ? 'إجراءات' : 'Actions'}</th>
               </tr>
             </thead>
@@ -546,7 +556,7 @@ export default function Commandes() {
                         <div className="flex flex-col gap-2">
                           <div className={`flex justify-between items-end ${isAr ? 'flex-row-reverse' : ''}`}>
                             <span className={`text-[9px] font-black uppercase tracking-widest ${isLivre ? 'text-emerald-600' : 'text-slate-400'}`}>
-                              {isLivre ? (isAr ? 'تم التسليم' : 'Livraison Terminée') : `${isAr ? 'المرحلة' : 'Phase'}: ${PHASE_LABELS[c.phase]}`}
+                              {isLivre ? (isAr ? 'تم التسليم' : 'Livraison Terminée') : `${isAr ? 'المرحلة' : 'Phase'}: ${isAr ? PHASE_LABELS_AR[c.phase] : PHASE_LABELS[c.phase]}`}
                             </span>
                             <span className="text-[10px] font-black text-slate-900">{progress}%</span>
                           </div>
@@ -566,7 +576,7 @@ export default function Commandes() {
                       {/* Delivery Date */}
                       <td className="px-4 py-4 text-center">
                         <div className={`inline-flex flex-col items-center px-3 py-1.5 rounded-2xl border ${urgent ? 'bg-red-50 border-red-100' : 'bg-slate-50 border-slate-100'}`}>
-                          <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter mb-0.5">Livraison</span>
+                          <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter mb-0.5">{isAr ? 'التسليم' : 'Livraison'}</span>
                           <span className={`text-[10px] font-black ${urgent ? 'text-red-600' : 'text-slate-700'}`}>{fmtDate(c.dateLivraisonPrevue)}</span>
                         </div>
                       </td>
