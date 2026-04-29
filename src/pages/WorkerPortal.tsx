@@ -30,8 +30,10 @@ import {
   loadData 
 } from '../types';
 import { QRCodeSVG } from 'qrcode.react';
+import { useLang } from '../contexts/LangContext';
 
 export default function WorkerPortal() {
+  const { isAr } = useLang();
   const [loading, setLoading] = useState(true);
   const [selectedWorkerId, setSelectedWorkerId] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'mission' | 'paiements' | 'profil'>('mission');
@@ -91,9 +93,9 @@ export default function WorkerPortal() {
 
   // Motivation / Rank Logic
   const getRank = (efficiency: number) => {
-    if (efficiency >= 90) return { label: 'Maître Artisan', color: 'text-amber-400', bg: 'bg-amber-400/10' };
-    if (efficiency >= 70) return { label: 'Expert', color: 'text-indigo-400', bg: 'bg-indigo-400/10' };
-    return { label: 'Professionnel', color: 'text-slate-400', bg: 'bg-slate-400/10' };
+    if (efficiency >= 90) return { label: isAr ? 'معلم حرفي' : 'Maître Artisan', color: 'text-amber-400', bg: 'bg-amber-400/10' };
+    if (efficiency >= 70) return { label: isAr ? 'خبير' : 'Expert', color: 'text-indigo-400', bg: 'bg-indigo-400/10' };
+    return { label: isAr ? 'محترف' : 'Professionnel', color: 'text-slate-400', bg: 'bg-slate-400/10' };
   };
   const rank = getRank(progressPercent);
 
@@ -101,7 +103,7 @@ export default function WorkerPortal() {
     <div className="min-h-screen bg-slate-950 flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
         <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-white font-bold uppercase tracking-widest animate-pulse">Initialisation...</p>
+        <p className="text-white font-bold uppercase tracking-widest animate-pulse">{isAr ? 'جاري التحميل...' : 'Initialisation...'}</p>
       </div>
     </div>
   );
@@ -112,8 +114,8 @@ export default function WorkerPortal() {
         <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-violet-700 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-2xl shadow-indigo-500/20 ring-4 ring-slate-900">
           <UserIcon className="w-10 h-10 text-white" />
         </div>
-        <h1 className="text-3xl font-bold text-white uppercase tracking-tighter mb-2 text-center">Bienvenue</h1>
-        <p className="text-slate-400 text-sm font-bold mb-10 uppercase tracking-widest">Portail Personnel BEYA</p>
+        <h1 className="text-3xl font-bold text-white uppercase tracking-tighter mb-2 text-center">{isAr ? 'مرحباً بك' : 'Bienvenue'}</h1>
+        <p className="text-slate-400 text-sm font-bold mb-10 uppercase tracking-widest">{isAr ? 'فضاء العامل - بيا كرييتيف' : 'Portail Personnel BEYA'}</p>
         
         <div className="w-full max-w-sm space-y-6">
           <div className="relative">
@@ -122,7 +124,7 @@ export default function WorkerPortal() {
               onChange={e => setSelectedWorkerId(e.target.value)}
               className="w-full bg-slate-900 border-2 border-slate-800 text-white p-6 rounded-[2rem] font-bold appearance-none outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all shadow-2xl"
             >
-              <option value="">Sélectionnez votre nom</option>
+              <option value="">{isAr ? 'اختر اسمك من القائمة' : 'Sélectionnez votre nom'}</option>
               {data.employes.map(e => (
                 <option key={e.id} value={e.id}>{e.prenom} {e.nom}</option>
               ))}
@@ -131,7 +133,7 @@ export default function WorkerPortal() {
               <ChevronRight className="w-6 h-6 text-slate-500 rotate-90" />
             </div>
           </div>
-          <p className="text-slate-500 text-center text-[10px] font-bold uppercase tracking-[0.2em]">Identifiez-vous pour accéder à vos données</p>
+          <p className="text-slate-500 text-center text-[10px] font-bold uppercase tracking-[0.2em]">{isAr ? 'سجل دخولك للوصول إلى بياناتك' : 'Identifiez-vous pour accéder à vos données'}</p>
         </div>
       </div>
     );
@@ -167,9 +169,9 @@ export default function WorkerPortal() {
       {/* Tabs Navigation */}
       <div className="flex p-2 gap-2 bg-slate-900 mx-6 mt-6 rounded-2xl border border-white/5">
         {[
-          { id: 'mission', icon: <Target className="w-4 h-4" />, label: 'Missions' },
-          { id: 'paiements', icon: <Wallet className="w-4 h-4" />, label: 'Paiements' },
-          { id: 'profil', icon: <UserIcon className="w-4 h-4" />, label: 'Profil' }
+          { id: 'mission', icon: <Target className="w-4 h-4" />, label: isAr ? 'المهام' : 'Missions' },
+          { id: 'paiements', icon: <Wallet className="w-4 h-4" />, label: isAr ? 'الأداء' : 'Paiements' },
+          { id: 'profil', icon: <UserIcon className="w-4 h-4" />, label: isAr ? 'حسابي' : 'Profil' }
         ].map(tab => (
           <button
             key={tab.id}
@@ -190,8 +192,8 @@ export default function WorkerPortal() {
           <>
             {/* Greeting */}
             <div className="space-y-1">
-              <h1 className="text-2xl font-bold tracking-tight italic">Bonjour {currentWorker?.prenom} !</h1>
-              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Bonne journée de travail chez BEYA</p>
+              <h1 className="text-2xl font-bold tracking-tight italic">{isAr ? 'مرحباً' : 'Bonjour'} {currentWorker?.prenom} !</h1>
+              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">{isAr ? 'أتمنى لك يوماً موفقاً في العمل' : 'Bonne journée de travail chez BEYA'}</p>
             </div>
 
             {/* Mission Status Card */}
@@ -202,7 +204,7 @@ export default function WorkerPortal() {
                 <div className="flex items-center justify-between mb-8">
                   <div className="px-4 py-1.5 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-2">
                     <Zap className="w-3 h-3 fill-white" />
-                    Mission en Cours
+                    {isAr ? 'المهمة الحالية' : 'Mission en Cours'}
                   </div>
                   <div className="flex -space-x-2">
                     {[1,2,3].map(i => <div key={i} className="w-6 h-6 rounded-full border-2 border-indigo-700 bg-indigo-500" />)}
@@ -235,11 +237,11 @@ export default function WorkerPortal() {
                   <div className="space-y-3 bg-black/10 p-6 rounded-[2rem] border border-white/10 backdrop-blur-sm">
                     <div className="flex justify-between items-end">
                       <div className="space-y-1">
-                        <p className="text-[10px] font-bold text-indigo-200 uppercase opacity-60">Progression</p>
+                        <p className="text-[10px] font-bold text-indigo-200 uppercase opacity-60">{isAr ? 'التقدم' : 'Progression'}</p>
                         <p className="text-2xl font-bold">{progressPercent}%</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-[10px] font-bold text-indigo-200 uppercase opacity-60">Produit</p>
+                        <p className="text-[10px] font-bold text-indigo-200 uppercase opacity-60">{isAr ? 'المحقق' : 'Produit'}</p>
                         <p className="text-2xl font-bold text-emerald-400">{totalPcsToday}</p>
                       </div>
                     </div>
@@ -251,10 +253,10 @@ export default function WorkerPortal() {
                     </div>
                     <div className="flex justify-between items-center pt-2">
                        <span className="text-[9px] font-bold text-indigo-100 uppercase opacity-60 flex items-center gap-1">
-                          <Target className="w-3 h-3" /> Objectif: {totalTarget}
+                          <Target className="w-3 h-3" /> {isAr ? 'الهدف' : 'Objectif'}: {totalTarget}
                        </span>
                        <span className="text-[9px] font-bold text-indigo-100 uppercase opacity-60 flex items-center gap-1">
-                          <Clock className="w-3 h-3" /> {activeOp.target_heure} pcs/h
+                          <Clock className="w-3 h-3" /> {activeOp.target_heure} {isAr ? 'قطعة/ساعة' : 'pcs/h'}
                        </span>
                     </div>
                   </div>
@@ -265,9 +267,9 @@ export default function WorkerPortal() {
                 <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Layout className="w-10 h-10 text-slate-600" />
                 </div>
-                <h3 className="text-xl font-bold uppercase mb-3">En attente</h3>
+                <h3 className="text-xl font-bold uppercase mb-3">{isAr ? 'في الانتظار' : 'En attente'}</h3>
                 <p className="text-sm text-slate-500 font-bold max-w-[200px] mx-auto leading-relaxed">
-                  Votre superviseur n'a pas encore assigné de mission.
+                  {isAr ? 'لم يتم تعيين أي مهمة لك من طرف المشرف بعد' : "Votre superviseur n'a pas encore assigné de mission."}
                 </p>
               </div>
             )}
@@ -280,7 +282,7 @@ export default function WorkerPortal() {
                 <div className="absolute bottom-4 left-4 w-2 h-2 rounded-full bg-slate-200" />
                 <div className="absolute bottom-4 right-4 w-2 h-2 rounded-full bg-slate-200" />
                 
-                <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-6">QR Poste Numérique</h4>
+                <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-6">{isAr ? 'رمز المركز الرقمي' : 'QR Poste Numérique'}</h4>
                 <div className="p-5 bg-white rounded-[2rem] shadow-inner border border-slate-100 mb-6">
                   <QRCodeSVG 
                     value={`beya-prod://${activeCmd?.id}/${activeOp.id}`} 
@@ -290,7 +292,7 @@ export default function WorkerPortal() {
                   />
                 </div>
                 <p className="text-center text-xs font-bold uppercase text-slate-900 px-4 leading-relaxed">
-                  Scannez ce code au terminal pour valider vos pièces
+                  {isAr ? 'امسح هذا الرمز عند الجهاز لتأكيد قطعك' : 'Scannez ce code au terminal pour valider vos pièces'}
                 </p>
               </div>
             )}
@@ -300,7 +302,7 @@ export default function WorkerPortal() {
         {activeTab === 'paiements' && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
              <div className="flex items-center justify-between px-2">
-                <h1 className="text-2xl font-bold tracking-tight">Mes Paiements</h1>
+                <h1 className="text-2xl font-bold tracking-tight">{isAr ? 'سجل الأداء' : 'Mes Paiements'}</h1>
                 <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500">
                    <Wallet className="w-5 h-5" />
                 </div>
@@ -308,7 +310,7 @@ export default function WorkerPortal() {
 
              {workerPaiements.length === 0 ? (
                <div className="bg-slate-900 rounded-[2.5rem] p-12 text-center border border-dashed border-slate-800">
-                 <p className="text-slate-500 font-bold uppercase text-xs">Aucun paiement enregistré pour le moment.</p>
+                 <p className="text-slate-500 font-bold uppercase text-xs">{isAr ? 'لا يوجد سجل للأداء حالياً' : 'Aucun paiement enregistré pour le moment.'}</p>
                </div>
              ) : (
                <div className="space-y-4">
@@ -345,10 +347,10 @@ export default function WorkerPortal() {
                    <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-500">
                       <Trophy className="w-5 h-5" />
                    </div>
-                   <h3 className="text-sm font-bold uppercase tracking-widest text-white">Récompense Bonus</h3>
+                   <h3 className="text-sm font-bold uppercase tracking-widest text-white">{isAr ? 'مكافأة الأداء' : 'Récompense Bonus'}</h3>
                 </div>
                 <p className="text-xs text-slate-400 font-bold leading-relaxed mb-4">
-                  Terminez vos objectifs à 100% pendant 5 jours consécutifs pour recevoir une prime de performance !
+                  {isAr ? 'أكمل أهدافك بنسبة 100٪ لمدة 5 أيام متتالية للحصول على مكافأة أداء!' : 'Terminez vos objectifs à 100% pendant 5 jours consécutifs pour recevoir une prime de performance !'}
                 </p>
                 <div className="w-full h-2 bg-black/20 rounded-full overflow-hidden">
                    <div className="w-[40%] h-full bg-amber-500" />
@@ -400,8 +402,8 @@ export default function WorkerPortal() {
                          <Medal className="w-5 h-5" />
                       </div>
                       <div>
-                         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Type de Rémunération</p>
-                         <p className="text-sm font-bold uppercase">{currentWorker?.remunerationType || 'À la tâche'}</p>
+                         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{isAr ? 'طريقة الأداء' : 'Type de Rémunération'}</p>
+                         <p className="text-sm font-bold uppercase">{currentWorker?.remunerationType || (isAr ? 'بالقطعة' : 'À la tâche')}</p>
                       </div>
                    </div>
                 </div>
@@ -414,8 +416,8 @@ export default function WorkerPortal() {
                          <ShieldCheck className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                         <p className="text-sm font-bold text-white uppercase tracking-tight">Badge de Sécurité</p>
-                         <p className="text-[10px] text-indigo-100 font-bold uppercase opacity-80">Afficher mon badge digital</p>
+                         <p className="text-sm font-bold text-white uppercase tracking-tight">{isAr ? 'شارة الأمان' : 'Badge de Sécurité'}</p>
+                         <p className="text-[10px] text-indigo-100 font-bold uppercase opacity-80">{isAr ? 'عرض بطاقتي الرقمية' : 'Afficher mon badge digital'}</p>
                       </div>
                    </div>
                    <ArrowRight className="w-5 h-5 text-white/50 group-hover:translate-x-1 transition-transform" />
