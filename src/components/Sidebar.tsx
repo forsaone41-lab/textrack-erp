@@ -93,7 +93,7 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
             <NavLink to="/profil" className={linkClass} onClick={closeMobile}>
               <div className="flex items-center gap-3">
                 <UserCircle className="w-[18px] h-[18px]" />
-                <span>Mon Profil</span>
+                <span>{isAr ? 'حسابي' : 'Mon Profil'}</span>
               </div>
               <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-40 transition-opacity" />
             </NavLink>
@@ -101,14 +101,14 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
             <NavLink to="/worker-portal" className="group flex items-center justify-between px-5 py-3.5 rounded-2xl text-[13px] font-bold transition-all duration-500 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/20 mb-4" onClick={closeMobile}>
               <div className="flex items-center gap-3">
                 <UserIcon className="w-[18px] h-[18px]" />
-                <span className="font-extrabold">Espace Ouvrier</span>
+                <span className="font-extrabold">{isAr ? 'فضاء العامل' : 'Espace Ouvrier'}</span>
               </div>
               <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
             </NavLink>
           </div>
           
           {(can('demandes') || can('fiches') || can('ordres') || can('chaine')) && (
-            <SectionTitle title="Production" isAr={isAr} />
+            <SectionTitle title={isAr ? 'الإنتاج' : 'Production'} isAr={isAr} />
           )}
           
           <div className="space-y-1">
@@ -116,7 +116,7 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
               <NavLink to="/demandes" className={linkClass} onClick={closeMobile}>
                 <div className="flex items-center gap-3">
                   <Users className="w-[18px] h-[18px]" />
-                  <span>Prospects</span>
+                  <span>{isAr ? 'الزبناء المحتملون' : 'Prospects'}</span>
                 </div>
               </NavLink>
             )}
@@ -124,7 +124,7 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
               <NavLink to="/commandes" className={linkClass} onClick={closeMobile}>
                 <div className="flex items-center gap-3">
                   <ShoppingCart className="w-[18px] h-[18px]" />
-                  <span>Commandes</span>
+                  <span>{isAr ? 'الطلبيات' : 'Commandes'}</span>
                 </div>
               </NavLink>
             )}
@@ -132,7 +132,7 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
               <NavLink to="/fiches-techniques" className={linkClass} onClick={closeMobile}>
                 <div className="flex items-center gap-3">
                   <FileText className="w-[18px] h-[18px]" />
-                  <span>Fiches Tech.</span>
+                  <span>{isAr ? 'البطاقات التقنية' : 'Fiches Tech.'}</span>
                 </div>
               </NavLink>
             )}
@@ -140,7 +140,7 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
               <NavLink to="/ordres-de-coupe" className={linkClass} onClick={closeMobile}>
                 <div className="flex items-center gap-3">
                   <Scissors className="w-[18px] h-[18px]" />
-                  <span>Ordres de Coupe</span>
+                  <span>{isAr ? 'أوامر القص' : 'Ordres de Coupe'}</span>
                 </div>
               </NavLink>
             )}
@@ -149,13 +149,13 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
                 <NavLink to="/chaine-montage" className={linkClass} onClick={closeMobile}>
                   <div className="flex items-center gap-3">
                     <Activity className="w-[18px] h-[18px]" />
-                    <span>Suivi Montage</span>
+                    <span>{isAr ? 'تتبع التركيب' : 'Suivi Montage'}</span>
                   </div>
                 </NavLink>
                 <NavLink to="/pilotage-chaine" className={linkClass} onClick={closeMobile}>
                   <div className="flex items-center gap-3">
                     <TrendingUp className="w-[18px] h-[18px]" />
-                    <span>Pilotage</span>
+                    <span>{isAr ? 'لوحة القيادة' : 'Pilotage'}</span>
                   </div>
                 </NavLink>
               </>
@@ -163,7 +163,7 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
           </div>
 
           {(can('bilan') || can('factures') || can('charges')) && (
-            <SectionTitle title="Finance" isAr={isAr} />
+            <SectionTitle title={isAr ? 'المالية' : 'Finance'} isAr={isAr} />
           )}
 
           <div className="space-y-1">
@@ -171,7 +171,7 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
               <NavLink to="/bilan" className={linkClass} onClick={closeMobile}>
                 <div className="flex items-center gap-3">
                   <PieChart className="w-[18px] h-[18px]" />
-                  <span>Tableau de Bord</span>
+                  <span>{isAr ? 'جدول البيانات' : 'Tableau de Bord'}</span>
                 </div>
               </NavLink>
             )}
@@ -179,7 +179,7 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
               <NavLink to="/factures" className={linkClass} onClick={closeMobile}>
                 <div className="flex items-center gap-3">
                   <Receipt className="w-[18px] h-[18px]" />
-                  <span>Factures</span>
+                  <span>{isAr ? 'الفواتير' : 'Factures'}</span>
                 </div>
               </NavLink>
             )}
@@ -187,20 +187,20 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
               <NavLink to="/charges" className={linkClass} onClick={closeMobile}>
                 <div className="flex items-center gap-3">
                   <TrendingUp className="w-[18px] h-[18px]" />
-                  <span>Charges</span>
+                  <span>{isAr ? 'المصاريف' : 'Charges'}</span>
                 </div>
               </NavLink>
             )}
           </div>
 
-          <SectionTitle title="Système" isAr={isAr} />
+          <SectionTitle title={isAr ? 'النظام' : 'Système'} isAr={isAr} />
 
           <div className="space-y-1">
             {can('rh') && (
               <NavLink to="/rh" className={linkClass} onClick={closeMobile}>
                 <div className="flex items-center gap-3">
                   <Users className="w-[18px] h-[18px]" />
-                  <span>RH & Employés</span>
+                  <span>{isAr ? 'الموارد البشرية' : 'RH & Employés'}</span>
                 </div>
               </NavLink>
             )}
@@ -208,7 +208,7 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
               <NavLink to="/pointage" className={linkClass} onClick={closeMobile}>
                 <div className="flex items-center gap-3">
                   <ClipboardCheck className="w-[18px] h-[18px]" />
-                  <span>Pointage</span>
+                  <span>{isAr ? 'تسجيل الحضور' : 'Pointage'}</span>
                 </div>
               </NavLink>
             )}
@@ -216,7 +216,7 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
               <NavLink to="/utilisateurs" className={linkClass} onClick={closeMobile}>
                 <div className="flex items-center gap-3">
                   <ShieldCheck className="w-[18px] h-[18px]" />
-                  <span>Gestion Utilisateurs</span>
+                  <span>{isAr ? 'إدارة المستخدمين' : 'Gestion Utilisateurs'}</span>
                 </div>
               </NavLink>
             )}
@@ -224,7 +224,7 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
               <NavLink to="/parametres" className={linkClass} onClick={closeMobile}>
                 <div className="flex items-center gap-3">
                   <Settings className="w-[18px] h-[18px]" />
-                  <span>Paramètres</span>
+                  <span>{isAr ? 'الإعدادات' : 'Paramètres'}</span>
                 </div>
               </NavLink>
             )}
@@ -271,7 +271,7 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
               className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest border border-indigo-500/20 mb-2"
             >
               <RotateCw className="w-3.5 h-3.5" />
-              <span>Forcer la mise à jour</span>
+              <span>{isAr ? 'تحديث إجباري' : 'Forcer la mise à jour'}</span>
             </button>
 
             <button 
@@ -279,7 +279,7 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
               className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all text-[11px] font-bold border border-rose-500/20"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span>Quitter la session</span>
+              <span>{isAr ? 'تسجيل الخروج' : 'Quitter la session'}</span>
             </button>
           </div>
         </div>
