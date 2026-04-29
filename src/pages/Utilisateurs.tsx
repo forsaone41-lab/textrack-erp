@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Plus, Search, Edit2, Trash2,
   ShieldCheck, HardHat, ShoppingBag,
