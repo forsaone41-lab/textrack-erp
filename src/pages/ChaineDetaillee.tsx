@@ -263,10 +263,16 @@ export default function ChaineDetaillee() {
       }
     }
 
-    await Promise.all(promises);
-    setSuivi(newSuiviEntries);
-    setSyncing(false);
-    setShowSuccess(true);
+    try {
+      await Promise.all(promises);
+      setSuivi(newSuiviEntries);
+      setSyncing(false);
+      setShowSuccess(true);
+    } catch (err) {
+      console.error("Planning Error:", err);
+      setSyncing(false);
+      alert("Erreur lors de la distribution. Vérifiez votre connexion.");
+    }
   }
 
   const getProduction = (opId: string, heureDebut: string) => {
