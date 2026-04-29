@@ -315,32 +315,33 @@ export default function ChaineDetaillee() {
 
       {activeTab === 'suivi' && (
         <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-          <div className="px-8 py-6 border-b border-slate-50 bg-slate-50/30 flex items-center justify-between">
-            <h2 className="text-lg font-black text-slate-800 uppercase tracking-tight flex items-center gap-3">
-              <Clock className="w-6 h-6 text-indigo-600" />
-              Saisie de Production par Heure ({today})
+          <div className="px-6 md:px-8 py-6 border-b border-slate-50 bg-slate-50/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <h2 className="text-sm md:text-lg font-black text-slate-800 uppercase tracking-tight flex items-center gap-3">
+              <Clock className="w-5 h-5 md:w-6 md:h-6 text-indigo-600" />
+              Saisie par Heure ({today})
             </h2>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
               <div className="flex bg-white border border-slate-200 p-1 rounded-xl shadow-sm">
                 <button
                   onClick={() => setActiveShift('jour')}
-                  className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
+                  className={`px-3 md:px-4 py-2 rounded-lg text-[8px] md:text-[9px] font-black uppercase tracking-widest transition-all ${
                     activeShift === 'jour' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'
                   }`}
                 >
-                  {isAr ? 'فريق النهار' : 'Équipe Jour'}
+                  {isAr ? 'النهار' : 'Jour'}
                 </button>
                 <button
                   onClick={() => setActiveShift('nuit')}
-                  className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
+                  className={`px-3 md:px-4 py-2 rounded-lg text-[8px] md:text-[9px] font-black uppercase tracking-widest transition-all ${
                     activeShift === 'nuit' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'
                   }`}
                 >
-                  {isAr ? 'فريق الليل' : 'Équipe Nuit'}
+                  {isAr ? 'الليل' : 'Nuit'}
                 </button>
               </div>
-              <span className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase border border-indigo-100">
-                Live Monitoring
+              <span className="px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-[8px] md:text-[10px] font-black uppercase border border-emerald-100 flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                Live
               </span>
             </div>
           </div>
