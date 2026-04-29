@@ -11,6 +11,34 @@ import {
   deleteRecord,
   genId,
 } from '../types';
+import { useLang } from '../contexts/LangContext';
+
+const CATEGORIE_LABELS_AR: Record<string, string> = {
+  salaires: "الرواتب واليد العاملة",
+  achats_matieres: 'شراء المواد الأولية',
+  loyer: 'الكراء والواجبات الكرائية',
+  electricite: 'الكهرباء',
+  eau: 'الماء',
+  telephone: 'الهاتف والإنترنت',
+  transport: 'النقل والتوصيل',
+  maintenance: 'صيانة الآلات',
+  fournitures_bureau: 'لوازم المكتب',
+  assurance: 'التأمين',
+  sous_traitance: 'التعاقد من الباطن',
+  autre: 'أخرى',
+};
+
+const STATUT_LABEL_AR: Record<string, string> = {
+  payé: 'مؤدى',
+  en_attente: 'في الانتظار',
+  impayé: 'غير مؤدى',
+};
+
+const RECURRENCE_LABEL_AR: Record<string, string> = {
+  mensuel: 'شهري',
+  annuel: 'سنوي',
+  ponctuel: 'استثنائي',
+};
 
 const CATEGORIES: ChargeCategorie[] = [
   'salaires', 'achats_matieres', 'loyer', 'electricite', 'eau', 'telephone',
@@ -52,6 +80,7 @@ const RECURRENCE_LABEL: Record<string, string> = {
 };
 
 export default function Charges() {
+  const { isAr } = useLang();
   const [charges, setCharges] = useState<Charge[]>([]);
   const [search, setSearch] = useState('');
   const [filterCategorie, setFilterCategorie] = useState<string>('all');
@@ -106,10 +135,10 @@ export default function Charges() {
     return Object.entries(byMois)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([mois, total]) => ({
-        mois: new Date(mois + '-01').toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }),
+        mois: new Date(mois + '-01').toLocaleDateString(isAr ? 'ar-MA' : 'fr-FR', { month: 'short', year: '2-digit' }),
         total,
       }));
-  }, [charges]);
+  }, [charges, isAr]);
 
   function openCreate() {
     setEditId(null);
@@ -160,68 +189,68 @@ export default function Charges() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">Charges & Dépenses</h1>
-          <p className="text-slate-500 text-sm">Gestion des charges d'exploitation de l'atelier</p>
+      <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${isAr ? 'sm:flex-row-reverse' : ''}`}>
+        <div className={isAr ? 'text-right' : ''}>
+          <h1 className="text-2xl font-bold text-slate-800">{isAr ? 'المصاريف والتكاليف' : 'Charges & Dépenses'}</h1>
+          <p className="text-slate-500 text-sm">{isAr ? 'إدارة التكاليف التشغيلية للمعمل' : "Gestion des charges d'exploitation de l'atelier"}</p>
         </div>
         <button
           onClick={openCreate}
           className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-lg hover:bg-indigo-700 transition text-sm font-medium shadow-sm"
         >
-          <Plus className="w-4 h-4" /> Nouvelle Charge
+          <Plus className="w-4 h-4" /> {isAr ? 'إضافة مصاريف' : 'Nouvelle Charge'}
         </button>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
-          <div className="flex items-center gap-2 mb-2">
+      <div className={`grid grid-cols-2 lg:grid-cols-4 gap-4 ${isAr ? 'flex-row-reverse' : ''}`}>
+        <div className={`bg-white rounded-xl border border-slate-200 p-4 ${isAr ? 'text-right' : ''}`}>
+          <div className={`flex items-center gap-2 mb-2 ${isAr ? 'flex-row-reverse' : ''}`}>
             <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
               <TrendingDown className="w-4 h-4 text-slate-600" />
             </div>
-            <p className="text-xs text-slate-500">Total charges</p>
+            <p className="text-xs text-slate-500">{isAr ? 'إجمالي المصاريف' : 'Total charges'}</p>
           </div>
-          <p className="text-2xl font-bold text-slate-800">{totalFiltered.toLocaleString()}</p>
-          <p className="text-xs text-slate-400 mt-0.5">MAD</p>
+          <p className="text-2xl font-bold text-slate-800 tabular-nums">{totalFiltered.toLocaleString()}</p>
+          <p className="text-xs text-slate-400 mt-0.5">{isAr ? 'درهم' : 'MAD'}</p>
         </div>
-        <div className="bg-green-50 rounded-xl border border-green-200 p-4">
-          <div className="flex items-center gap-2 mb-2">
+        <div className={`bg-green-50 rounded-xl border border-green-200 p-4 ${isAr ? 'text-right' : ''}`}>
+          <div className={`flex items-center gap-2 mb-2 ${isAr ? 'flex-row-reverse' : ''}`}>
             <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
               <CheckCircle className="w-4 h-4 text-green-600" />
             </div>
-            <p className="text-xs text-green-600">Payé</p>
+            <p className="text-xs text-green-600">{isAr ? 'مؤدى' : 'Payé'}</p>
           </div>
-          <p className="text-2xl font-bold text-green-700">{totalPaye.toLocaleString()}</p>
-          <p className="text-xs text-green-400 mt-0.5">MAD</p>
+          <p className="text-2xl font-bold text-green-700 tabular-nums">{totalPaye.toLocaleString()}</p>
+          <p className="text-xs text-green-400 mt-0.5">{isAr ? 'درهم' : 'MAD'}</p>
         </div>
-        <div className="bg-amber-50 rounded-xl border border-amber-200 p-4">
-          <div className="flex items-center gap-2 mb-2">
+        <div className={`bg-amber-50 rounded-xl border border-amber-200 p-4 ${isAr ? 'text-right' : ''}`}>
+          <div className={`flex items-center gap-2 mb-2 ${isAr ? 'flex-row-reverse' : ''}`}>
             <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
               <Clock className="w-4 h-4 text-amber-600" />
             </div>
-            <p className="text-xs text-amber-600">En attente</p>
+            <p className="text-xs text-amber-600">{isAr ? 'في الانتظار' : 'En attente'}</p>
           </div>
-          <p className="text-2xl font-bold text-amber-700">{totalEnAttente.toLocaleString()}</p>
-          <p className="text-xs text-amber-400 mt-0.5">MAD</p>
+          <p className="text-2xl font-bold text-amber-700 tabular-nums">{totalEnAttente.toLocaleString()}</p>
+          <p className="text-xs text-amber-400 mt-0.5">{isAr ? 'درهم' : 'MAD'}</p>
         </div>
-        <div className="bg-red-50 rounded-xl border border-red-200 p-4">
-          <div className="flex items-center gap-2 mb-2">
+        <div className={`bg-red-50 rounded-xl border border-red-200 p-4 ${isAr ? 'text-right' : ''}`}>
+          <div className={`flex items-center gap-2 mb-2 ${isAr ? 'flex-row-reverse' : ''}`}>
             <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
               <XCircle className="w-4 h-4 text-red-600" />
             </div>
-            <p className="text-xs text-red-600">Impayé</p>
+            <p className="text-xs text-red-600">{isAr ? 'غير مؤدى' : 'Impayé'}</p>
           </div>
-          <p className="text-2xl font-bold text-red-700">{totalImpaye.toLocaleString()}</p>
-          <p className="text-xs text-red-400 mt-0.5">MAD</p>
+          <p className="text-2xl font-bold text-red-700 tabular-nums">{totalImpaye.toLocaleString()}</p>
+          <p className="text-xs text-red-400 mt-0.5">{isAr ? 'درهم' : 'MAD'}</p>
         </div>
       </div>
 
       {/* Charts */}
       {charges.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl border border-slate-200 p-5">
-            <h3 className="text-sm font-semibold text-slate-700 mb-4">Répartition par catégorie</h3>
+          <div className={`bg-white rounded-xl border border-slate-200 p-5 ${isAr ? 'text-right' : ''}`}>
+            <h3 className="text-sm font-semibold text-slate-700 mb-4">{isAr ? 'التوزيع حسب الفئة' : 'Répartition par catégorie'}</h3>
             {pieData.length > 0 ? (
               <div className="flex items-center gap-4">
                 <ResponsiveContainer width="45%" height={180}>
@@ -237,11 +266,11 @@ export default function Charges() {
                 <div className="flex-1 space-y-1.5">
                   {pieData.slice(0, 7).map((entry, i) => (
                     <div key={i} className="flex items-center justify-between text-xs gap-2">
-                      <div className="flex items-center gap-1.5 min-w-0">
+                      <div className={`flex items-center gap-1.5 min-w-0 ${isAr ? 'flex-row-reverse' : ''}`}>
                         <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: entry.color }} />
-                        <span className="text-slate-600 truncate">{entry.name}</span>
+                        <span className="text-slate-600 truncate">{isAr ? CATEGORIE_LABELS_AR[pieData.find(d => d.name === entry.name)?.name || 'autre'] || entry.name : entry.name}</span>
                       </div>
-                      <span className="font-medium text-slate-700 flex-shrink-0">{entry.value.toLocaleString()}</span>
+                      <span className="font-medium text-slate-700 flex-shrink-0 tabular-nums">{entry.value.toLocaleString()}</span>
                     </div>
                   ))}
                 </div>
@@ -251,8 +280,8 @@ export default function Charges() {
             )}
           </div>
 
-          <div className="bg-white rounded-xl border border-slate-200 p-5">
-            <h3 className="text-sm font-semibold text-slate-700 mb-4">Évolution mensuelle des charges</h3>
+          <div className={`bg-white rounded-xl border border-slate-200 p-5 ${isAr ? 'text-right' : ''}`}>
+            <h3 className="text-sm font-semibold text-slate-700 mb-4">{isAr ? 'التطور الشهري للمصاريف' : 'Évolution mensuelle des charges'}</h3>
             {barData.length > 0 ? (
               <ResponsiveContainer width="100%" height={180}>
                 <BarChart data={barData} barSize={32}>
@@ -279,12 +308,13 @@ export default function Charges() {
       <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
         <div className="relative flex-1 min-w-[180px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
+            <input
             type="text"
-            placeholder="Rechercher désignation, fournisseur..."
+            placeholder={isAr ? 'بحث عن التسمية أو المورد...' : "Rechercher désignation, fournisseur..."}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+            className={`w-full ${isAr ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none`}
+            dir={isAr ? 'rtl' : 'ltr'}
           />
         </div>
         <select
@@ -292,10 +322,10 @@ export default function Charges() {
           onChange={e => setFilterMois(e.target.value)}
           className="px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
         >
-          <option value="all">Tous les mois</option>
+          <option value="all">{isAr ? 'كل الشهور' : 'Tous les mois'}</option>
           {availableMois.map(m => (
             <option key={m} value={m}>
-              {new Date(m + '-01').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+              {new Date(m + '-01').toLocaleDateString(isAr ? 'ar-MA' : 'fr-FR', { month: 'long', year: 'numeric' })}
             </option>
           ))}
         </select>
@@ -304,9 +334,9 @@ export default function Charges() {
           onChange={e => setFilterCategorie(e.target.value)}
           className="px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
         >
-          <option value="all">Toutes catégories</option>
+          <option value="all">{isAr ? 'كل الفئات' : 'Toutes catégories'}</option>
           {CATEGORIES.map(c => (
-            <option key={c} value={c}>{CATEGORIE_LABELS[c]}</option>
+            <option key={c} value={c}>{isAr ? CATEGORIE_LABELS_AR[c] : CATEGORIE_LABELS[c]}</option>
           ))}
         </select>
         <select
@@ -314,10 +344,10 @@ export default function Charges() {
           onChange={e => setFilterStatut(e.target.value)}
           className="px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
         >
-          <option value="all">Tous les statuts</option>
-          <option value="payé">Payé</option>
-          <option value="en_attente">En attente</option>
-          <option value="impayé">Impayé</option>
+          <option value="all">{isAr ? 'كل الحالات' : 'Tous les statuts'}</option>
+          <option value="payé">{isAr ? 'مؤدى' : 'Payé'}</option>
+          <option value="en_attente">{isAr ? 'في الانتظار' : 'En attente'}</option>
+          <option value="impayé">{isAr ? 'غير مؤدى' : 'Impayé'}</option>
         </select>
       </div>
 
@@ -326,37 +356,37 @@ export default function Charges() {
         <table className="w-full">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200">
-              <th className="text-left text-xs font-semibold text-slate-500 uppercase px-5 py-3">Date</th>
-              <th className="text-left text-xs font-semibold text-slate-500 uppercase px-5 py-3">Désignation</th>
-              <th className="text-left text-xs font-semibold text-slate-500 uppercase px-5 py-3">Catégorie</th>
-              <th className="text-left text-xs font-semibold text-slate-500 uppercase px-5 py-3 hidden md:table-cell">Fournisseur</th>
-              <th className="text-center text-xs font-semibold text-slate-500 uppercase px-5 py-3 hidden sm:table-cell">Récurrence</th>
-              <th className="text-right text-xs font-semibold text-slate-500 uppercase px-5 py-3">Montant</th>
-              <th className="text-center text-xs font-semibold text-slate-500 uppercase px-5 py-3">Statut</th>
-              <th className="text-center text-xs font-semibold text-slate-500 uppercase px-5 py-3">Actions</th>
+              <th className={`text-xs font-semibold text-slate-500 uppercase px-5 py-3 ${isAr ? 'text-right' : 'text-left'}`}>{isAr ? 'التاريخ' : 'Date'}</th>
+              <th className={`text-xs font-semibold text-slate-500 uppercase px-5 py-3 ${isAr ? 'text-right' : 'text-left'}`}>{isAr ? 'التسمية' : 'Désignation'}</th>
+              <th className={`text-xs font-semibold text-slate-500 uppercase px-5 py-3 ${isAr ? 'text-right' : 'text-left'}`}>{isAr ? 'الفئة' : 'Catégorie'}</th>
+              <th className={`text-xs font-semibold text-slate-500 uppercase px-5 py-3 hidden md:table-cell ${isAr ? 'text-right' : 'text-left'}`}>{isAr ? 'المورد' : 'Fournisseur'}</th>
+              <th className="text-center text-xs font-semibold text-slate-500 uppercase px-5 py-3 hidden sm:table-cell">{isAr ? 'التكرار' : 'Récurrence'}</th>
+              <th className={`text-xs font-semibold text-slate-500 uppercase px-5 py-3 ${isAr ? 'text-left' : 'text-right'}`}>{isAr ? 'المبلغ' : 'Montant'}</th>
+              <th className="text-center text-xs font-semibold text-slate-500 uppercase px-5 py-3">{isAr ? 'الحالة' : 'Statut'}</th>
+              <th className="text-center text-xs font-semibold text-slate-500 uppercase px-5 py-3">{isAr ? 'إجراءات' : 'Actions'}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {filtered.map(c => (
               <tr key={c.id} className="hover:bg-slate-50/50 transition-colors">
-                <td className="px-5 py-3 text-sm text-slate-500 whitespace-nowrap">{c.date}</td>
-                <td className="px-5 py-3">
+                <td className={`px-5 py-3 text-sm text-slate-500 whitespace-nowrap ${isAr ? 'text-right' : ''}`}>{c.date}</td>
+                <td className={`px-5 py-3 ${isAr ? 'text-right' : ''}`}>
                   <p className="text-sm font-medium text-slate-700">{c.designation}</p>
                   {c.notes && <p className="text-xs text-slate-400 mt-0.5 truncate max-w-[220px]">{c.notes}</p>}
                 </td>
-                <td className="px-5 py-3">
+                <td className={`px-5 py-3 ${isAr ? 'text-right' : ''}`}>
                   <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${CATEGORIE_BADGE[c.categorie]}`}>
-                    {CATEGORIE_LABELS[c.categorie]}
+                    {isAr ? CATEGORIE_LABELS_AR[c.categorie] : CATEGORIE_LABELS[c.categorie]}
                   </span>
                 </td>
-                <td className="px-5 py-3 text-sm text-slate-500 hidden md:table-cell">{c.fournisseur || '—'}</td>
-                <td className="px-5 py-3 text-center text-xs text-slate-400 hidden sm:table-cell">{RECURRENCE_LABEL[c.recurrence]}</td>
-                <td className="px-5 py-3 text-right text-sm font-semibold text-slate-800 whitespace-nowrap">
-                  {c.montant.toLocaleString()} MAD
+                <td className={`px-5 py-3 text-sm text-slate-500 hidden md:table-cell ${isAr ? 'text-right' : ''}`}>{c.fournisseur || '—'}</td>
+                <td className="px-5 py-3 text-center text-xs text-slate-400 hidden sm:table-cell">{isAr ? RECURRENCE_LABEL_AR[c.recurrence] : RECURRENCE_LABEL[c.recurrence]}</td>
+                <td className={`px-5 py-3 text-sm font-semibold text-slate-800 whitespace-nowrap tabular-nums ${isAr ? 'text-left' : 'text-right'}`}>
+                  {c.montant.toLocaleString()} {isAr ? 'درهم' : 'MAD'}
                 </td>
                 <td className="px-5 py-3 text-center">
                   <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${STATUT_BADGE[c.statut]}`}>
-                    {STATUT_LABEL[c.statut]}
+                    {isAr ? STATUT_LABEL_AR[c.statut] : STATUT_LABEL[c.statut]}
                   </span>
                 </td>
                 <td className="px-5 py-3 text-center">
@@ -382,7 +412,7 @@ export default function Charges() {
         {filtered.length === 0 && (
           <div className="text-center py-10 text-slate-400 text-sm">
             <TrendingDown className="w-8 h-8 mx-auto mb-2 opacity-30" />
-            <p>Aucune charge trouvée</p>
+            <p>{isAr ? 'لم يتم العثور على أي مصاريف' : 'Aucune charge trouvée'}</p>
           </div>
         )}
       </div>
@@ -391,114 +421,114 @@ export default function Charges() {
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl">
-            <div className="p-6 border-b border-slate-100">
+            <div className={`p-6 border-b border-slate-100 ${isAr ? 'text-right' : ''}`}>
               <h2 className="text-lg font-bold text-slate-800">
-                {editId ? 'Modifier la charge' : 'Nouvelle Charge'}
+                {editId ? (isAr ? 'تعديل المصاريف' : 'Modifier la charge') : (isAr ? 'مصاريف جديدة' : 'Nouvelle Charge')}
               </h2>
             </div>
             <div className="p-6 space-y-4 max-h-[65vh] overflow-y-auto">
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Désignation *</label>
+              <div className={isAr ? 'text-right' : ''}>
+                <label className="block text-xs font-medium text-slate-600 mb-1">{isAr ? 'التسمية *' : 'Désignation *'}</label>
                 <input
                   value={form.designation || ''}
                   onChange={e => setForm({ ...form, designation: e.target.value })}
-                  placeholder="Ex: Loyer atelier mois de Mars"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                  placeholder={isAr ? 'مثال: كراء المعمل لشهر مارس' : "Ex: Loyer atelier mois de Mars"}
+                  className={`w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none ${isAr ? 'text-right' : ''}`}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Catégorie *</label>
+                <div className={isAr ? 'text-right' : ''}>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">{isAr ? 'الفئة *' : 'Catégorie *'}</label>
                   <select
                     value={form.categorie || 'autre'}
                     onChange={e => setForm({ ...form, categorie: e.target.value as ChargeCategorie })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                    className={`w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none ${isAr ? 'text-right' : ''}`}
                   >
                     {CATEGORIES.map(c => (
-                      <option key={c} value={c}>{CATEGORIE_LABELS[c]}</option>
+                      <option key={c} value={c}>{isAr ? CATEGORIE_LABELS_AR[c] : CATEGORIE_LABELS[c]}</option>
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Montant (MAD) *</label>
+                <div className={isAr ? 'text-right' : ''}>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">{isAr ? 'المبلغ (درهم) *' : 'Montant (MAD) *'}</label>
                   <input
                     type="number"
                     min="0"
                     value={form.montant || ''}
                     onChange={e => setForm({ ...form, montant: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                    className={`w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none ${isAr ? 'text-right' : ''}`}
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Date *</label>
+                <div className={isAr ? 'text-right' : ''}>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">{isAr ? 'التاريخ *' : 'Date *'}</label>
                   <input
                     type="date"
                     value={form.date || ''}
                     onChange={e => setForm({ ...form, date: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                    className={`w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none ${isAr ? 'text-right' : ''}`}
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Récurrence</label>
+                <div className={isAr ? 'text-right' : ''}>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">{isAr ? 'التكرار' : 'Récurrence'}</label>
                   <select
                     value={form.recurrence || 'mensuel'}
                     onChange={e => setForm({ ...form, recurrence: e.target.value as Charge['recurrence'] })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                    className={`w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none ${isAr ? 'text-right' : ''}`}
                   >
-                    <option value="mensuel">Mensuel</option>
-                    <option value="annuel">Annuel</option>
-                    <option value="ponctuel">Ponctuel</option>
+                    <option value="mensuel">{isAr ? 'شهري' : 'Mensuel'}</option>
+                    <option value="annuel">{isAr ? 'سنوي' : 'Annuel'}</option>
+                    <option value="ponctuel">{isAr ? 'استثنائي' : 'Ponctuel'}</option>
                   </select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Statut</label>
+                <div className={isAr ? 'text-right' : ''}>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">{isAr ? 'الحالة' : 'Statut'}</label>
                   <select
                     value={form.statut || 'en_attente'}
                     onChange={e => setForm({ ...form, statut: e.target.value as Charge['statut'] })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                    className={`w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none ${isAr ? 'text-right' : ''}`}
                   >
-                    <option value="en_attente">En attente</option>
-                    <option value="payé">Payé</option>
-                    <option value="impayé">Impayé</option>
+                    <option value="en_attente">{isAr ? 'في الانتظار' : 'En attente'}</option>
+                    <option value="payé">{isAr ? 'مؤدى' : 'Payé'}</option>
+                    <option value="impayé">{isAr ? 'غير مؤدى' : 'Impayé'}</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Fournisseur</label>
+                <div className={isAr ? 'text-right' : ''}>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">{isAr ? 'المورد' : 'Fournisseur'}</label>
                   <input
                     value={form.fournisseur || ''}
                     onChange={e => setForm({ ...form, fournisseur: e.target.value })}
-                    placeholder="Optionnel"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                    placeholder={isAr ? 'اختياري' : "Optionnel"}
+                    className={`w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none ${isAr ? 'text-right' : ''}`}
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Notes</label>
+              <div className={isAr ? 'text-right' : ''}>
+                <label className="block text-xs font-medium text-slate-600 mb-1">{isAr ? 'ملاحظات' : 'Notes'}</label>
                 <textarea
                   value={form.notes || ''}
                   onChange={e => setForm({ ...form, notes: e.target.value })}
                   rows={2}
-                  placeholder="Notes complémentaires..."
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
+                  placeholder={isAr ? 'ملاحظات إضافية...' : "Notes complémentaires..."}
+                  className={`w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none ${isAr ? 'text-right' : ''}`}
                 />
               </div>
             </div>
-            <div className="p-6 border-t border-slate-100 flex justify-end gap-3">
+            <div className={`p-6 border-t border-slate-100 flex justify-end gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
               <button
                 onClick={() => setShowModal(false)}
                 className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition"
               >
-                Annuler
+                {isAr ? 'إلغاء' : 'Annuler'}
               </button>
               <button
                 onClick={save}
                 className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium"
               >
-                {editId ? 'Modifier' : 'Enregistrer'}
+                {editId ? (isAr ? 'تعديل' : 'Modifier') : (isAr ? 'حفظ' : 'Enregistrer')}
               </button>
             </div>
           </div>
