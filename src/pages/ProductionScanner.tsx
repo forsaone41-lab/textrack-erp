@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import { 
-  Camera, 
+  QrCode, 
   CheckCircle2, 
   AlertCircle, 
   X, 
@@ -142,7 +142,7 @@ export default function ProductionScanner() {
           <div className="flex-1 flex flex-col">
             <div className="mb-8 text-center">
               <div className="w-20 h-20 bg-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-2xl shadow-indigo-500/20">
-                <Camera className="w-10 h-10 text-white" />
+                <QrCode className="w-10 h-10 text-white" />
               </div>
               <h2 className="text-2xl font-black mb-2">Prêt à scanner</h2>
               <p className="text-slate-400 text-sm">Veuillez scanner le code QR du poste de travail</p>

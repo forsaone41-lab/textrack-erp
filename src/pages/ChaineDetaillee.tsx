@@ -11,12 +11,10 @@ import {
   TrendingUp, 
   AlertCircle,
   LayoutDashboard,
-  LayoutDashboard,
   CheckCircle2,
   Timer,
   QrCode,
-  Printer,
-  Camera
+  Printer
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { 
