@@ -24,7 +24,7 @@ export default function Profil({ currentUser }: ProfilProps) {
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (e) {
-      alert('Erreur lors de la sauvegarde');
+      alert(isAr ? 'خطأ أثناء الحفظ' : 'Erreur lors de la sauvegarde');
     } finally {
       setLoading(false);
     }
@@ -67,41 +67,44 @@ export default function Profil({ currentUser }: ProfilProps) {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Nom Complet</label>
+                <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">{isAr ? 'الاسم الكامل' : 'Nom Complet'}</label>
                 <div className="relative">
-                  <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <UserIcon className={`absolute ${isAr ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400`} />
                   <input 
                     type="text" 
                     value={formData.nom}
                     onChange={(e) => setFormData({...formData, nom: e.target.value})}
-                    className="w-full pl-12 pr-4 py-4 bg-slate-50 border-none rounded-[1.2rem] text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all"
+                    className={`w-full ${isAr ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-4 bg-slate-50 border-none rounded-[1.2rem] text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all`}
+                    dir={isAr ? 'rtl' : 'ltr'}
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Email</label>
+                <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">{isAr ? 'البريد الإلكتروني' : 'Email'}</label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Mail className={`absolute ${isAr ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400`} />
                   <input 
                     type="email" 
                     value={formData.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className="w-full pl-12 pr-4 py-4 bg-slate-50 border-none rounded-[1.2rem] text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all"
+                    className={`w-full ${isAr ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-4 bg-slate-50 border-none rounded-[1.2rem] text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all`}
+                    dir={isAr ? 'rtl' : 'ltr'}
                   />
                 </div>
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Téléphone</label>
+                <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">{isAr ? 'رقم الهاتف' : 'Téléphone'}</label>
                 <div className="relative">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Phone className={`absolute ${isAr ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400`} />
                   <input 
                     type="tel" 
                     value={formData.telephone}
                     onChange={(e) => setFormData({...formData, telephone: e.target.value})}
                     placeholder="+212 600 000 000"
-                    className="w-full pl-12 pr-4 py-4 bg-slate-50 border-none rounded-[1.2rem] text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all"
+                    className={`w-full ${isAr ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-4 bg-slate-50 border-none rounded-[1.2rem] text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all`}
+                    dir={isAr ? 'rtl' : 'ltr'}
                   />
                 </div>
               </div>
@@ -125,19 +128,19 @@ export default function Profil({ currentUser }: ProfilProps) {
           <div className="bg-[#0f172a] rounded-[2.5rem] p-8 text-white shadow-xl space-y-6">
             <h2 className="text-xl font-black flex items-center gap-3">
               <Shield className="w-5 h-5 text-indigo-400" />
-              Sécurité
+              {isAr ? 'الأمن' : 'Sécurité'}
             </h2>
             <div className="space-y-4">
               <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Rôle Actuel</p>
+                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">{isAr ? 'الدور الحالي' : 'Rôle Actuel'}</p>
                 <p className="text-sm font-bold">{currentUser.role.toUpperCase()}</p>
               </div>
               <button className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/5 transition-all group">
                 <div className="flex items-center gap-3">
                   <Lock className="w-4 h-4 text-slate-400" />
-                  <span className="text-sm font-bold">Changer le mot de passe</span>
+                  <span className="text-sm font-bold">{isAr ? 'تغيير كلمة المرور' : 'Changer le mot de passe'}</span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-slate-600 group-hover:translate-x-1 transition-transform" />
+                <ChevronRight className={`w-4 h-4 text-slate-600 group-hover:translate-x-1 transition-transform ${isAr ? 'rotate-180' : ''}`} />
               </button>
             </div>
           </div>
@@ -145,10 +148,10 @@ export default function Profil({ currentUser }: ProfilProps) {
           <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 space-y-4">
             <div className="flex items-center gap-3 text-slate-400">
               <Calendar className="w-4 h-4" />
-              <p className="text-xs font-bold uppercase tracking-widest">Dernière Connexion</p>
+              <p className="text-xs font-bold uppercase tracking-widest">{isAr ? 'آخر اتصال' : 'Dernière Connexion'}</p>
             </div>
             <p className="text-sm font-black text-slate-800">
-              {currentUser.lastActive ? new Date(currentUser.lastActive).toLocaleString() : 'Jamais'}
+              {currentUser.lastActive ? new Date(currentUser.lastActive).toLocaleString(isAr ? 'ar-MA' : 'fr-FR') : (isAr ? 'أبداً' : 'Jamais')}
             </p>
           </div>
         </div>
