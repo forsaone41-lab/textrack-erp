@@ -368,9 +368,12 @@ export async function loadLeads(): Promise<Lead[]> {
   try {
     // Try Supabase first
     const data = await loadData<Lead>('leads');
-    if (data && data.length > 0) return data;
     
-    // Fallback to local (for transition)
+    // If data is null, it means the request failed (fallback to local)
+    // If data is [], it means the table is empty (don't fallback)
+    if (data !== null) return data;
+    
+    // Fallback to local only if remote call failed
     const local = safeStorage.getItem('textrack_leads');
     return local ? JSON.parse(local) : [];
   } catch {
@@ -386,8 +389,8 @@ export async function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'>) {
     status: 'new'
   };
   
-  // Save to Supabase (primary)
-  await saveRecord('leads', newLead, true);
+  // Save to Supabase (primary) - setting silent to false to see errors
+  await saveRecord('leads', newLead, false);
   
   // Also save to local (legacy fallback)
   const leads = await loadLeads();
@@ -401,17 +404,17 @@ export function saveCompanyProfile(profile: CompanyProfile): void {
 }
 
 // ─── Storage Helpers ────────────────────────────────────────
-export async function loadData<T>(table: string): Promise<T[]> {
+export async function loadData<T>(table: string): Promise<T[] | null> {
   try {
     const { data, error } = await supabase.from(table).select('*');
     if (error) {
-      console.warn(`Silently failed to load ${table}:`, error.message);
-      return [];
+      console.warn(`Failed to load ${table}:`, error.message);
+      return null;
     }
     return (data || []) as T[];
   } catch (err) {
     console.error(`Fatal load error for ${table}:`, err);
-    return [];
+    return null;
   }
 }
 

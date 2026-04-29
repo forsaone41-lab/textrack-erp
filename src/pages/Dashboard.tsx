@@ -40,9 +40,9 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
       loadData<Presence>('presences'),
       loadLeads()
     ]).then(([cmds, tiss, emps, facs, pts, pres, lds]) => {
-      setCommandes(cmds);
-      setTissus(tiss);
-      setFactures(facs);
+      setCommandes(cmds || []);
+      setTissus(tiss || []);
+      setFactures(facs || []);
       setLeads(lds || []);
       setPointages(pts || []);
       setEmployes(emps || []);
