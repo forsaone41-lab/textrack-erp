@@ -15,6 +15,7 @@ import { loadData, Facture, Charge, Commande, FicheTechnique, StockTissu } from 
 import { useLang } from '../contexts/LangContext';
 
 const MONTHS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+const MONTHS_AR = ['يناير', 'فبراير', 'مارس', 'أبريل', 'ماي', 'يونيو', 'يوليوز', 'غشت', 'شتنبر', 'أكتوبر', 'نونبر', 'دجنبر'];
 
 function KpiCard({
   label, value, sub, icon: Icon, color, trend, onClick,
@@ -26,7 +27,7 @@ function KpiCard({
   return (
     <button
       onClick={onClick}
-      className={`bg-white rounded-3xl border p-6 shadow-sm text-left w-full transition-all hover:shadow-xl hover:-translate-y-1 border-slate-100 ${color}`}
+      className={`bg-white rounded-3xl border p-6 shadow-sm ${isAr ? 'text-right' : 'text-left'} w-full transition-all hover:shadow-xl hover:-translate-y-1 border-slate-100 ${color}`}
     >
       <div className="flex items-start justify-between mb-4">
         <p className="text-[10px] font-black text-current opacity-60 uppercase tracking-[0.2em]">{label}</p>
@@ -156,7 +157,7 @@ export default function BilanFinancier() {
   }, [factures, charges, orderProfits]);
 
   const monthlyData = useMemo(() => {
-    return MONTHS_FR.map((month, i) => {
+    return (isAr ? MONTHS_AR : MONTHS_FR).map((month, i) => {
       const mStr = String(i + 1).padStart(2, '0');
       const prefix = `${currentYear}-${mStr}`;
 
@@ -177,23 +178,23 @@ export default function BilanFinancier() {
   return (
     <div className="space-y-8 pb-20 animate-in fade-in duration-500">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-        <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Tableau de Bord Financier</h1>
-          <p className="text-slate-500 font-bold uppercase tracking-[0.25em] text-[10px] mt-2">Vue d'ensemble de la rentabilité · {currentYear}</p>
+      <div className={`flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 ${isAr ? 'lg:flex-row-reverse' : ''}`}>
+        <div className={isAr ? 'text-right' : ''}>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">{isAr ? 'لوحة القيادة المالية' : 'Tableau de Bord Financier'}</h1>
+          <p className="text-slate-500 font-bold uppercase tracking-[0.25em] text-[10px] mt-2">{isAr ? 'نظرة عامة على الربحية' : "Vue d'ensemble de la rentabilité"} · {currentYear}</p>
         </div>
-        <div className="flex gap-3 flex-wrap">
+        <div className={`flex gap-3 flex-wrap ${isAr ? 'flex-row-reverse' : ''}`}>
           <button onClick={() => navigate('/factures')} className="flex items-center gap-2 text-xs bg-white border border-slate-200 text-slate-700 px-5 py-3 rounded-2xl font-black hover:bg-slate-50 transition shadow-sm">
-            <Receipt className="w-4 h-4 text-indigo-500" /> FACTURES
+            <Receipt className="w-4 h-4 text-indigo-500" /> {isAr ? 'الفواتير' : 'FACTURES'}
           </button>
           <button onClick={() => navigate('/charges')} className="flex items-center gap-2 text-xs bg-white border border-slate-200 text-slate-700 px-5 py-3 rounded-2xl font-black hover:bg-slate-50 transition shadow-sm">
-            <TrendingDown className="w-4 h-4 text-red-500" /> CHARGES
+            <TrendingDown className="w-4 h-4 text-red-500" /> {isAr ? 'المصاريف' : 'CHARGES'}
           </button>
           <button
             onClick={() => generatePDF('bilan-capture', `Rapport_Financier_${currentYear}`)}
             className="flex items-center gap-2 text-xs bg-slate-900 text-white px-6 py-3 rounded-2xl font-black hover:bg-slate-800 transition shadow-xl shadow-slate-200"
           >
-            <Download className="w-4 h-4" /> EXPORTER RAPPORT
+            <Download className="w-4 h-4" /> {isAr ? 'تصدير التقرير' : 'EXPORTER RAPPORT'}
           </button>
         </div>
       </div>
@@ -201,40 +202,40 @@ export default function BilanFinancier() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <KpiCard
-          label="Chiffre d'Affaires"
+          label={isAr ? 'رقم المعاملات' : "Chiffre d'Affaires"}
           value={`${totalRevenue.toLocaleString()} DH`}
-          sub={`${totalDettes.toLocaleString()} DH non encaissés`}
+          sub={isAr ? `${totalDettes.toLocaleString()} DH غير محصلة` : `${totalDettes.toLocaleString()} DH non encaissés`}
           icon={TrendingUp}
           color="text-indigo-600 border-indigo-100"
           trend="up"
         />
         <KpiCard
-          label="Dettes Fournisseurs"
+          label={isAr ? 'ديون الموردين' : 'Dettes Fournisseurs'}
           value={`${fmt(stats.totalChargesPending)} MAD`}
-          sub="Charges en attente de paiement"
+          sub={isAr ? 'مصاريف في انتظار الأداء' : 'Charges en attente de paiement'}
           icon={AlertCircle}
           color="text-orange-600 border-orange-100"
         />
         <KpiCard
-          label="Profit Réel (Cash-Flow)"
+          label={isAr ? 'الربح الفعلي (السيولة)' : 'Profit Réel (Cash-Flow)'}
           value={`${fmt(stats.globalProfit)} MAD`}
-          sub="Basé sur l'encaissé vs payé"
+          sub={isAr ? 'بناءً على المحصل مقابل المؤدى' : "Basé sur l'encaissé vs payé"}
           icon={DollarSign}
           color={stats.globalProfit >= 0 ? "text-emerald-600 border-emerald-100" : "text-red-600 border-red-100"}
           trend={stats.globalProfit >= 0 ? "up" : "down"}
         />
         <KpiCard
-          label="Restes à Recouvrer"
+          label={isAr ? 'بقايا الاستخلاص' : 'Restes à Recouvrer'}
           value={`${totalDettes.toLocaleString()} DH`}
-          sub="Somme due par les clients"
+          sub={isAr ? 'المبالغ المستحقة من طرف الزبناء' : 'Somme due par les clients'}
           icon={Clock}
           color="text-rose-600 border-rose-100"
           trend="down"
         />
         <KpiCard
-          label="Marge Nette"
+          label={isAr ? 'الهامش الصافي' : 'Marge Nette'}
           value={`${stats.marge}%`}
-          sub="Rentabilité globale"
+          sub={isAr ? 'الربحية الإجمالية' : 'Rentabilité globale'}
           icon={Percent}
           color="text-amber-600 border-amber-100"
         />
@@ -243,26 +244,26 @@ export default function BilanFinancier() {
       {/* NEW: Detailed Cash-Flow Summary */}
       <div className="bg-slate-900 rounded-[2.5rem] p-10 text-white shadow-2xl shadow-slate-200 overflow-hidden relative">
         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
-          <div className="flex-1">
-            <h2 className="text-2xl font-black uppercase tracking-tighter mb-2">Bilan Net de Trésorerie</h2>
-            <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Calcul précis entre l'encaissé réel et les dépenses payées</p>
+        <div className={`relative z-10 flex flex-col md:flex-row items-center justify-between gap-10 ${isAr ? 'md:flex-row-reverse' : ''}`}>
+          <div className={`flex-1 ${isAr ? 'text-right' : ''}`}>
+            <h2 className="text-2xl font-black uppercase tracking-tighter mb-2">{isAr ? 'الحصيلة الصافية للسيولة' : 'Bilan Net de Trésorerie'}</h2>
+            <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">{isAr ? 'حساب دقيق بين المبالغ المحصلة والمصاريف المؤداة' : "Calcul précis entre l'encaissé réel et les dépenses payées"}</p>
             
-            <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-8">
-              <div className="border-l-2 border-emerald-500/30 pl-6">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Missions Encaissées (+)</p>
+            <div className={`mt-8 grid grid-cols-1 sm:grid-cols-3 gap-8 ${isAr ? 'flex-row-reverse' : ''}`}>
+              <div className={`${isAr ? 'border-r-2 pr-6' : 'border-l-2 pl-6'} border-emerald-500/30`}>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{isAr ? 'مهام محصلة (+)' : 'Missions Encaissées (+)'}</p>
                 <p className="text-2xl font-black text-emerald-400">{fmt(stats.ca)} MAD</p>
               </div>
-              <div className="border-l-2 border-red-500/30 pl-6">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Dépenses Payées (-)</p>
+              <div className={`${isAr ? 'border-r-2 pr-6' : 'border-l-2 pl-6'} border-red-500/30`}>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{isAr ? 'مصاريف مؤداة (-)' : 'Dépenses Payées (-)'}</p>
                 <p className="text-2xl font-black text-red-400">{fmt(stats.totalCharges)} MAD</p>
               </div>
-              <div className="border-l-2 border-orange-500/30 pl-6">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Dépenses en Attente</p>
+              <div className={`${isAr ? 'border-r-2 pr-6' : 'border-l-2 pl-6'} border-orange-500/30`}>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{isAr ? 'مصاريف في الانتظار' : 'Dépenses en Attente'}</p>
                 <p className="text-2xl font-black text-orange-400">{fmt(stats.totalChargesPending)} MAD</p>
               </div>
-              <div className="border-l-2 border-indigo-500 pl-6">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Bénéfice Réel Disponbile</p>
+              <div className={`${isAr ? 'border-r-2 pr-6' : 'border-l-2 pl-6'} border-indigo-500`}>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{isAr ? 'الربح الفعلي المتوفر' : 'Bénéfice Réel Disponbile'}</p>
                 <p className="text-3xl font-black text-white">{fmt(stats.globalProfit)} MAD</p>
               </div>
             </div>
@@ -277,10 +278,10 @@ export default function BilanFinancier() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-8">
-          <div className="flex items-center justify-between mb-10">
-            <div>
-              <h2 className="text-xl font-black text-slate-800">Flux de Trésorerie</h2>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Revenus vs Dépenses mensuelles</p>
+          <div className={`flex items-center justify-between mb-10 ${isAr ? 'flex-row-reverse' : ''}`}>
+            <div className={isAr ? 'text-right' : ''}>
+              <h2 className="text-xl font-black text-slate-800">{isAr ? 'تدفق السيولة' : 'Flux de Trésorerie'}</h2>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">{isAr ? 'المداخيل مقابل المصاريف الشهرية' : 'Revenus vs Dépenses mensuelles'}</p>
             </div>
           </div>
           <ResponsiveContainer width="100%" height={300}>
@@ -293,8 +294,8 @@ export default function BilanFinancier() {
                 return (
                   <div className="bg-white border border-slate-100 p-4 rounded-2xl shadow-2xl">
                     <p className="text-xs font-black text-slate-400 uppercase mb-2">{payload[0].payload.month}</p>
-                    <p className="text-sm font-black text-emerald-600">Revenu: {fmt(payload[0].value as number)} MAD</p>
-                    <p className="text-sm font-black text-red-500">Charge: {fmt(payload[1].value as number)} MAD</p>
+                    <p className="text-sm font-black text-emerald-600">{isAr ? 'المداخيل' : 'Revenu'}: {fmt(payload[0].value as number)} MAD</p>
+                    <p className="text-sm font-black text-red-500">{isAr ? 'المصاريف' : 'Charge'}: {fmt(payload[1].value as number)} MAD</p>
                   </div>
                 );
               }} />
@@ -304,14 +305,14 @@ export default function BilanFinancier() {
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-8">
-          <h2 className="text-xl font-black text-slate-800 mb-2">Analyse des Coûts</h2>
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8">Répartition des dépenses directes</p>
+        <div className={`bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-8 ${isAr ? 'text-right' : ''}`}>
+          <h2 className="text-xl font-black text-slate-800 mb-2">{isAr ? 'تحليل التكاليف' : 'Analyse des Coûts'}</h2>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8">{isAr ? 'توزيع المصاريف المباشرة' : 'Répartition des dépenses directes'}</p>
 
           <div className="space-y-6">
             <div>
-              <div className="flex justify-between text-xs font-black uppercase mb-2">
-                <span className="text-slate-500">Tissu (Maison)</span>
+              <div className={`flex justify-between text-xs font-black uppercase mb-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                <span className="text-slate-500">{isAr ? 'الثوب (من المعمل)' : 'Tissu (Maison)'}</span>
                 <span className="text-slate-900">{fmt(orderProfits.reduce((a, o) => a + o.fabricCost, 0))} MAD</span>
               </div>
               <div className="w-full bg-slate-100 rounded-full h-2">
@@ -319,8 +320,8 @@ export default function BilanFinancier() {
               </div>
             </div>
             <div>
-              <div className="flex justify-between text-xs font-black uppercase mb-2">
-                <span className="text-slate-500">Main d'œuvre</span>
+              <div className={`flex justify-between text-xs font-black uppercase mb-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                <span className="text-slate-500">{isAr ? 'اليد العاملة' : "Main d'œuvre"}</span>
                 <span className="text-slate-900">{fmt(orderProfits.reduce((a, o) => a + o.laborCost, 0))} MAD</span>
               </div>
               <div className="w-full bg-slate-100 rounded-full h-2">
@@ -328,8 +329,8 @@ export default function BilanFinancier() {
               </div>
             </div>
             <div>
-              <div className="flex justify-between text-xs font-black uppercase mb-2">
-                <span className="text-slate-500">Charges Fixes</span>
+              <div className={`flex justify-between text-xs font-black uppercase mb-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                <span className="text-slate-500">{isAr ? 'مصاريف قارة' : 'Charges Fixes'}</span>
                 <span className="text-slate-900">{fmt(stats.totalCharges)} MAD</span>
               </div>
               <div className="w-full bg-slate-100 rounded-full h-2">
@@ -339,37 +340,37 @@ export default function BilanFinancier() {
           </div>
 
           <div className="mt-12 p-6 bg-indigo-50 rounded-3xl border border-indigo-100">
-            <h4 className="text-sm font-black text-indigo-900 mb-1">Observation</h4>
+            <h4 className="text-sm font-black text-indigo-900 mb-1">{isAr ? 'ملاحظة' : 'Observation'}</h4>
             <p className="text-xs text-indigo-700 font-medium leading-relaxed">
-              Vos coûts de production directs représentent environ {stats.ca > 0 ? Math.round((stats.totalOrderCosts / stats.ca) * 100) : 0}% de votre CA encaissé.
+              {isAr ? `تمثل تكاليف الإنتاج المباشرة حوالي ${stats.ca > 0 ? Math.round((stats.totalOrderCosts / stats.ca) * 100) : 0}% من رقم معاملاتكم المحصل.` : `Vos coûts de production directs représentent environ ${stats.ca > 0 ? Math.round((stats.totalOrderCosts / stats.ca) * 100) : 0}% de votre CA encaissé.`}
             </p>
           </div>
         </div>
       </div>
 
       <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden" id="bilan-capture">
-        <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
-          <div>
-            <h2 className="text-xl font-black text-slate-800">Rentabilité par Commande</h2>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Détails précis de la marge nette</p>
+        <div className={`p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/30 ${isAr ? 'flex-row-reverse' : ''}`}>
+          <div className={isAr ? 'text-right' : ''}>
+            <h2 className="text-xl font-black text-slate-800">{isAr ? 'الربحية حسب الطلبية' : 'Rentabilité par Commande'}</h2>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">{isAr ? 'تفاصيل دقيقة للهامش الصافي' : 'Détails précis de la marge nette'}</p>
           </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-white border-b border-slate-100">
-                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Commande / Client</th>
-                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Source</th>
-                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Matière</th>
-                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Main d'œuvre</th>
-                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right text-indigo-600">Bénéfice Net</th>
-                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Marge %</th>
+                <th className={`px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest ${isAr ? 'text-right' : ''}`}>{isAr ? 'الطلبية / الزبون' : 'Commande / Client'}</th>
+                <th className={`px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest ${isAr ? 'text-right' : ''}`}>{isAr ? 'المصدر' : 'Source'}</th>
+                <th className={`px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest ${isAr ? 'text-left' : 'text-right'}`}>{isAr ? 'الثوب' : 'Matière'}</th>
+                <th className={`px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest ${isAr ? 'text-left' : 'text-right'}`}>{isAr ? 'اليد العاملة' : "Main d'œuvre"}</th>
+                <th className={`px-6 py-5 text-[10px] font-black uppercase tracking-widest text-indigo-600 ${isAr ? 'text-left' : 'text-right'}`}>{isAr ? 'الربح الصافي' : 'Bénéfice Net'}</th>
+                <th className={`px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest ${isAr ? 'text-left' : 'text-right'}`}>{isAr ? 'الهامش %' : 'Marge %'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {orderProfits.map((op) => (
                 <tr key={op.id} className="hover:bg-slate-50/50 transition-colors group">
-                  <td className="px-8 py-5">
+                  <td className={`px-8 py-5 ${isAr ? 'text-right' : ''}`}>
                     <div className="flex flex-col">
                       <span className="text-sm font-black text-slate-800 group-hover:text-indigo-600 transition-colors">{op.reference}</span>
                       <span className="text-xs font-bold text-slate-400">{op.client} · {op.modele}</span>
@@ -377,7 +378,7 @@ export default function BilanFinancier() {
                   </td>
                   <td className="px-6 py-5">
                     <span className={`inline-block px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter ${op.tissuSourcing === 'client' ? 'bg-amber-100 text-amber-600 border border-amber-200' : 'bg-indigo-100 text-indigo-600 border border-indigo-200'}`}>
-                      {op.tissuSourcing === 'client' ? 'Client' : 'Maison'}
+                      {op.tissuSourcing === 'client' ? (isAr ? 'الزبون' : 'Client') : (isAr ? 'المعمل' : 'Maison')}
                     </span>
                   </td>
                   <td className="px-6 py-5 text-right font-bold text-slate-600 text-xs">-{fmt(op.fabricCost)} MAD</td>
@@ -385,8 +386,8 @@ export default function BilanFinancier() {
                   <td className={`px-6 py-5 text-right font-black text-sm ${op.profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
                     {fmt(op.profit)} MAD
                   </td>
-                  <td className="px-8 py-5 text-right">
-                    <div className="flex items-center justify-end gap-3">
+                  <td className={`px-8 py-5 ${isAr ? 'text-left' : 'text-right'}`}>
+                    <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : 'justify-end'}`}>
                       <div className="w-16 bg-slate-100 rounded-full h-1.5 overflow-hidden">
                         <div className={`h-full rounded-full ${op.margin >= 30 ? 'bg-emerald-500' : op.margin >= 15 ? 'bg-blue-500' : 'bg-red-500'}`} style={{ width: `${Math.max(0, Math.min(100, op.margin))}%` }} />
                       </div>
