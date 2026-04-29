@@ -118,6 +118,10 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
                 <TrendingUp className="w-5 h-5" />
                 <span>Pilotage Chaîne</span>
               </NavLink>
+              <NavLink to="/scan-production" className={linkClass} onClick={closeMobile}>
+                <Camera className="w-5 h-5" />
+                <span>Scanner QR</span>
+              </NavLink>
             </>
           )}
 

@@ -11,9 +11,14 @@ import {
   TrendingUp, 
   AlertCircle,
   LayoutDashboard,
+  LayoutDashboard,
   CheckCircle2,
-  Timer
+  Timer,
+  QrCode,
+  Printer,
+  Camera
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { 
   Commande, 
   Employe, 
@@ -51,6 +56,8 @@ export default function ChaineDetaillee() {
   // Form states
   const [showOpModal, setShowOpModal] = useState(false);
   const [opForm, setOpForm] = useState<Partial<OperationModele>>({});
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [qrPost, setQrPost] = useState<OperationModele | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -210,12 +217,24 @@ export default function ChaineDetaillee() {
                   <Settings className="w-6 h-6 text-indigo-600" />
                   Gamme Opératoire : {selectedCmd?.modele}
                 </h2>
-                <button 
-                  onClick={() => setShowOpModal(true)}
-                  className="px-6 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
-                >
-                  Ajouter un poste
-                </button>
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => {
+                      setQrPost(null);
+                      setShowQrModal(true);
+                    }}
+                    className="px-6 py-3 bg-slate-100 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center gap-2"
+                  >
+                    <Printer className="w-4 h-4" />
+                    Imprimer QR
+                  </button>
+                  <button 
+                    onClick={() => setShowOpModal(true)}
+                    className="px-6 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+                  >
+                    Ajouter un poste
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-3">
@@ -236,12 +255,24 @@ export default function ChaineDetaillee() {
                           <p className="text-[10px] font-bold text-slate-400 uppercase">Cible : {op.target_heure} pcs / heure</p>
                         </div>
                       </div>
-                      <button 
-                        onClick={() => handleDeleteOp(op.id)}
-                        className="p-3 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => {
+                            setQrPost(op);
+                            setShowQrModal(true);
+                          }}
+                          className="p-3 text-slate-400 hover:text-indigo-600 transition-colors"
+                          title="Générer QR"
+                        >
+                          <QrCode className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteOp(op.id)}
+                          className="p-3 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   ))
                 )}
@@ -459,6 +490,59 @@ export default function ChaineDetaillee() {
                 className="w-full h-16 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-200 active:scale-95 transition-all"
               >
                 Confirmer le poste
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* QR Modal */}
+      {showQrModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-[250] p-4">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-2xl shadow-2xl animate-in zoom-in duration-300 overflow-hidden">
+            <div className="p-8 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Codes QR de Production</h2>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Scannez pour enregistrer la production</p>
+              </div>
+              <button onClick={() => setShowQrModal(false)} className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-8 max-h-[60vh] overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-6 bg-slate-50/50" id="qr-print-area">
+              {(qrPost ? [qrPost] : modelOps).map(op => (
+                <div key={op.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 flex flex-col items-center text-center shadow-sm">
+                  <div className="mb-4 p-4 bg-slate-50 rounded-[1.5rem] border border-slate-100">
+                    <QRCodeSVG 
+                      value={`beya-prod://${selectedCmdId}/${op.id}`} 
+                      size={150}
+                      level="H"
+                      includeMargin={true}
+                    />
+                  </div>
+                  <p className="text-xs font-black text-slate-800 uppercase mb-1">{op.nom_operation}</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase mb-3">{selectedCmd?.reference} — {selectedCmd?.modele}</p>
+                  <div className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-[8px] font-black uppercase tracking-widest border border-indigo-100">
+                    ID: {op.id.slice(0,8)}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="p-8 bg-white border-t border-slate-100 flex gap-4">
+              <button 
+                onClick={() => window.print()}
+                className="flex-1 h-16 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-200 flex items-center justify-center gap-3"
+              >
+                <Printer className="w-5 h-5" />
+                Imprimer les codes
+              </button>
+              <button 
+                onClick={() => setShowQrModal(false)}
+                className="flex-1 h-16 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs uppercase tracking-widest"
+              >
+                Fermer
               </button>
             </div>
           </div>

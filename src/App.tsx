@@ -8,6 +8,7 @@ import FichesTechniques from './pages/FichesTechniques';
 import OrdresDeCoupe from './pages/OrdresDeCoupe';
 import ChaineDeMontage from './pages/ChaineDeMontage';
 import ChaineDetaillee from './pages/ChaineDetaillee';
+import ProductionScanner from './pages/ProductionScanner';
 import StockMateriaux from './pages/StockMateriaux';
 import SuiviRH from './pages/SuiviRH';
 import Clients from './pages/Clients';
@@ -219,6 +220,7 @@ function AppContent() {
         <Route path="ordres-de-coupe" element={can('ordres') ? <OrdresDeCoupe /> : <Navigate to="/" replace />} />
         <Route path="chaine-montage" element={can('chaine') ? <ChaineDeMontage /> : <Navigate to="/" replace />} />
         <Route path="pilotage-chaine" element={can('chaine') ? <ChaineDetaillee /> : <Navigate to="/" replace />} />
+        <Route path="scan-production" element={can('chaine') ? <ProductionScanner /> : <Navigate to="/" replace />} />
         
         {/* Protected Finance Routes */}
         <Route path="factures" element={can('factures') ? <Factures /> : <Navigate to="/" replace />} />
