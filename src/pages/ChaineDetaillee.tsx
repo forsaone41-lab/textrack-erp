@@ -14,7 +14,11 @@ import {
   CheckCircle2,
   Timer,
   QrCode,
-  Printer
+  Printer,
+  Calendar,
+  UserPlus,
+  RefreshCw,
+  Zap
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { 
@@ -46,9 +50,13 @@ export default function ChaineDetaillee() {
   const [suivi, setSuivi] = useState<SuiviHoraire[]>([]);
   
   const [selectedCmdId, setSelectedCmdId] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'config' | 'suivi' | 'stats'>('suivi');
+  const [activeTab, setActiveTab] = useState<'config' | 'suivi' | 'stats' | 'planning'>('planning');
   const [activeShift, setActiveShift] = useState<'jour' | 'nuit'>('jour');
   const [loading, setLoading] = useState(true);
+
+  // Planning state
+  const [assignments, setAssignments] = useState<Record<string, string>>({});
+  const [syncing, setSyncing] = useState(false);
 
   // Form states
   const [showOpModal, setShowOpModal] = useState(false);
@@ -103,6 +111,18 @@ export default function ChaineDetaillee() {
     }
   }, [activeShift]);
 
+  // Load current assignments from existing suivi
+  useEffect(() => {
+    if (modelOps.length > 0 && todaySuivi.length > 0) {
+      const currentMap: Record<string, string> = {};
+      modelOps.forEach(op => {
+        const entry = todaySuivi.find(s => s.operation_id === op.id && s.employe_id);
+        if (entry) currentMap[op.id] = entry.employe_id;
+      });
+      setAssignments(currentMap);
+    }
+  }, [modelOps, todaySuivi]);
+
   async function handleAddOperation() {
     if (!selectedCmd || !opForm.nom_operation) return;
     
@@ -146,7 +166,6 @@ export default function ChaineDetaillee() {
       date_production: today
     };
 
-    // If both employee and quantity are empty/zero, delete the record to clean up
     if (!empId && (!qte || qte === 0)) {
       if (existing) {
         setSuivi(suivi.filter(s => s.id !== existing.id));
@@ -160,9 +179,50 @@ export default function ChaineDetaillee() {
       : [...suivi, newEntry];
     
     setSuivi(updatedSuivi);
-    
-    // Save to DB (now allows null if employee is cleared)
     await saveRecord('suivi_horaire', newEntry);
+  }
+
+  async function applyPlanning() {
+    if (!selectedCmdId) return;
+    setSyncing(true);
+    
+    const promises: Promise<void>[] = [];
+    const newSuiviEntries: SuiviHoraire[] = [...suivi];
+
+    for (const opId of Object.keys(assignments)) {
+      const empId = assignments[opId];
+      if (!empId) continue;
+
+      // For each hour of the current shift, update or create entry
+      for (const tranche of filteredHours) {
+        const [hDebut, hFin] = tranche.split(' - ');
+        const existing = todaySuivi.find(s => s.operation_id === opId && s.heure_debut === hDebut);
+        
+        const entry: SuiviHoraire = {
+          id: existing?.id || genId(),
+          commande_id: selectedCmdId,
+          employe_id: empId,
+          operation_id: opId,
+          heure_debut: hDebut,
+          heure_fin: hFin,
+          quantite_realisee: existing?.quantite_realisee || 0,
+          date_production: today
+        };
+
+        promises.push(saveRecord('suivi_horaire', entry));
+        
+        // Update local state efficiently
+        const idx = newSuiviEntries.findIndex(s => s.id === entry.id);
+        if (idx !== -1) newSuiviEntries[idx] = entry;
+        else newSuiviEntries.push(entry);
+      }
+    }
+
+    await Promise.all(promises);
+    setSuivi(newSuiviEntries);
+    setSyncing(false);
+    setActiveTab('suivi');
+    alert(isAr ? 'تم توزيع المهام بنجاح!' : 'Planning distribué avec succès !');
   }
 
   const getProduction = (opId: string, heureDebut: string) => {
@@ -200,16 +260,17 @@ export default function ChaineDetaillee() {
             ))}
           </select>
           
-          <div className="flex bg-slate-100 p-1 rounded-xl md:rounded-2xl w-full sm:w-auto">
-            {(['suivi', 'config', 'stats'] as const).map(t => (
+          <div className="flex bg-slate-100 p-1 rounded-xl md:rounded-2xl w-full sm:w-auto overflow-x-auto scrollbar-hide">
+            {(['planning', 'suivi', 'config', 'stats'] as const).map(t => (
               <button
                 key={t}
                 onClick={() => setActiveTab(t)}
-                className={`flex-1 sm:flex-none px-4 md:px-6 py-2.5 md:py-3 rounded-lg md:rounded-[1rem] text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${
+                className={`flex-none px-4 md:px-6 py-2.5 md:py-3 rounded-lg md:rounded-[1rem] text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${
                   activeTab === t ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
                 }`}
               >
-                {t === 'suivi' ? (isAr ? 'تتبع' : 'Pointage') : 
+                {t === 'planning' ? (isAr ? 'توزيع المهام' : 'Planning') :
+                 t === 'suivi' ? (isAr ? 'تتبع' : 'Pointage') : 
                  t === 'config' ? (isAr ? 'إعداد' : 'Config') : 
                  (isAr ? 'أداء' : 'Perf')}
               </button>
@@ -218,9 +279,80 @@ export default function ChaineDetaillee() {
         </div>
       </div>
 
+      {activeTab === 'planning' && (
+        <div className="space-y-6">
+          <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm relative overflow-hidden">
+             <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl -mr-32 -mt-32" />
+             
+             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10 mb-10">
+                <div>
+                   <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase italic">{isAr ? 'توزيع المهام اليومية' : 'Distribution des Missions'}</h2>
+                   <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">Assignez un ouvrier à chaque poste pour la journée</p>
+                </div>
+                <div className="flex items-center gap-4">
+                   <div className="flex bg-slate-100 p-1 rounded-xl">
+                      <button onClick={() => setActiveShift('jour')} className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase transition-all ${activeShift === 'jour' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400'}`}>Jour</button>
+                      <button onClick={() => setActiveShift('nuit')} className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase transition-all ${activeShift === 'nuit' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400'}`}>Nuit</button>
+                   </div>
+                   <button 
+                     onClick={applyPlanning}
+                     disabled={syncing}
+                     className="px-8 py-4 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 flex items-center gap-3 disabled:opacity-50"
+                   >
+                      {syncing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-white" />}
+                      {isAr ? 'تفعيل التوزيع' : 'Lancer la Production'}
+                   </button>
+                </div>
+             </div>
+
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {modelOps.map((op, idx) => (
+                  <div key={op.id} className="group p-6 bg-slate-50 rounded-[2rem] border border-transparent hover:border-indigo-100 hover:bg-white transition-all shadow-sm hover:shadow-xl relative overflow-hidden">
+                     <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl -mr-12 -mt-12 group-hover:bg-indigo-500/10" />
+                     
+                     <div className="flex items-start justify-between mb-6 relative z-10">
+                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-sm font-black text-indigo-600 shadow-sm">
+                           {idx + 1}
+                        </div>
+                        <div className="text-right">
+                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Cible Horaire</p>
+                           <p className="text-lg font-black text-slate-900">{op.target_heure} <span className="text-[10px]">pcs/h</span></p>
+                        </div>
+                     </div>
+
+                     <h3 className="text-base font-black text-slate-900 uppercase tracking-tight mb-6 relative z-10">{op.nom_operation}</h3>
+                     
+                     <div className="space-y-4 relative z-10">
+                        <div className="relative">
+                           <select 
+                             value={assignments[op.id] || ''}
+                             onChange={e => setAssignments({...assignments, [op.id]: e.target.value})}
+                             className="w-full bg-white border-2 border-slate-100 rounded-xl py-4 px-4 text-xs font-black text-slate-800 appearance-none outline-none focus:border-indigo-500 transition-all shadow-sm"
+                           >
+                              <option value="">-- Choisir un ouvrier --</option>
+                              {employes.map(e => <option key={e.id} value={e.id}>{e.prenom} {e.nom}</option>)}
+                           </select>
+                           <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                              <UserPlus className="w-4 h-4 text-slate-300" />
+                           </div>
+                        </div>
+                        
+                        {assignments[op.id] && (
+                          <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-lg text-emerald-600 text-[8px] font-black uppercase animate-in slide-in-from-top-1">
+                             <div className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse" />
+                             Mission Assignée
+                          </div>
+                        )}
+                     </div>
+                  </div>
+                ))}
+             </div>
+          </div>
+        </div>
+      )}
+
       {activeTab === 'config' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* List of operations */}
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
               <div className="flex items-center justify-between mb-8">
@@ -291,7 +423,6 @@ export default function ChaineDetaillee() {
             </div>
           </div>
 
-          {/* Quick Stats sidebar */}
           <div className="space-y-6">
             <div className="bg-[#0f172a] rounded-[2.5rem] p-8 text-white shadow-xl shadow-slate-200">
               <h3 className="text-lg font-black mb-6 flex items-center gap-3">
@@ -346,7 +477,6 @@ export default function ChaineDetaillee() {
             </div>
           </div>
 
-          {/* Desktop Table View */}
           <div className="hidden md:block overflow-x-auto scrollbar-hide">
             <table className="w-full text-left border-collapse min-w-[1000px]">
               <thead>
@@ -427,7 +557,6 @@ export default function ChaineDetaillee() {
             </table>
           </div>
 
-          {/* Mobile Card View */}
           <div className="block md:hidden p-4 space-y-6">
             {modelOps.map(op => {
               const totalOp = todaySuivi
@@ -436,7 +565,6 @@ export default function ChaineDetaillee() {
               
               return (
                 <div key={op.id} className="bg-slate-50 rounded-[2rem] border border-slate-200 overflow-hidden shadow-sm">
-                  {/* Card Header */}
                   <div className="p-5 bg-white border-b-2 border-slate-100 flex items-center justify-between">
                     <div>
                       <h3 className="text-base font-black text-slate-900 uppercase tracking-tighter">{op.nom_operation}</h3>
@@ -448,7 +576,6 @@ export default function ChaineDetaillee() {
                     </div>
                   </div>
                   
-                  {/* Hours Horizontal Scroll */}
                   <div className="p-4 overflow-x-auto flex gap-4 scrollbar-hide bg-slate-50/50">
                     {filteredHours.map(tranche => {
                       const prod = getProduction(op.id, tranche.split(' - ')[0]);
@@ -554,7 +681,7 @@ export default function ChaineDetaillee() {
             <div className="p-8 border-b border-slate-100 flex items-center justify-between">
               <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Nouveau Poste</h2>
               <button onClick={() => setShowOpModal(false)} className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
-                <X className="w-5 h-5" />
+                <XIcon className="w-5 h-5" />
               </button>
             </div>
             <div className="p-8 space-y-6">
@@ -601,7 +728,7 @@ export default function ChaineDetaillee() {
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Scannez pour enregistrer la production</p>
               </div>
               <button onClick={() => setShowQrModal(false)} className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
-                <X className="w-5 h-5" />
+                <XIcon className="w-5 h-5" />
               </button>
             </div>
             
@@ -647,7 +774,7 @@ export default function ChaineDetaillee() {
   );
 }
 
-function X({ className }: { className?: string }) {
+function XIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
