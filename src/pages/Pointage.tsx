@@ -1,19 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { LogIn, LogOut, UserCheck, UserX, Clock, Users, CalendarDays, QrCode, X, Search, CheckCircle, AlertTriangle, Download, Printer } from 'lucide-react';
+import { LogIn, LogOut, UserCheck, UserX, Clock, Users, CalendarDays, QrCode, X, Search, CheckCircle, AlertTriangle, Download, Printer, Maximize2, Package } from 'lucide-react';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import { QRCodeSVG } from 'qrcode.react';
-import { Employe, Presence, loadData, saveRecord, genId, loadCompanyProfile, safeStorage } from '../types';
+import { Employe, Presence, loadData, saveRecord, genId, loadCompanyProfile, safeStorage, heureNow, dateNow } from '../types';
 import { useLang } from '../contexts/LangContext';
 
 const HEURE_LIMITE_RETARD = '08:30';
-
-function heureNow() {
-  return new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-}
-
-function dateNow() {
-  return new Date().toISOString().split('T')[0];
-}
 
 export default function Pointage({ onLogout }: { onLogout?: () => void }) {
   const { isAr } = useLang();

@@ -1,5 +1,13 @@
 import { supabase } from './supabase';
 
+export function heureNow() {
+  return new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+}
+
+export function dateNow() {
+  return new Date().toISOString().split('T')[0];
+}
+
 // Safe LocalStorage wrapper for Private/Incognito modes
 export const safeStorage = {
   getItem: (key: string): string | null => {

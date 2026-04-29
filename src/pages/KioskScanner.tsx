@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { QrCode, X, Clock, CheckCircle, AlertTriangle, ArrowLeft, Maximize2 } from 'lucide-react';
+import { QrCode, X, Clock, CheckCircle, AlertTriangle, ArrowLeft, Maximize2, Package } from 'lucide-react';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import { Link } from 'react-router-dom';
 import { Employe, Presence, loadData, saveRecord, genId, heureNow, dateNow } from '../types';
