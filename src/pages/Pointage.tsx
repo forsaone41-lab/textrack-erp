@@ -278,6 +278,15 @@ export default function Pointage({ onLogout }: { onLogout?: () => void }) {
 
       {/* Main Controls & Search */}
       <div className="max-w-4xl mx-auto w-full px-6 -mt-12 relative z-20 pb-20">
+        <div className="mb-6 flex justify-center">
+          <Link 
+            to="/kiosk" 
+            className="flex items-center gap-2 px-6 py-2.5 bg-white/80 backdrop-blur-md text-indigo-600 rounded-full border border-indigo-100 hover:bg-white hover:shadow-xl hover:shadow-indigo-500/10 transition-all text-xs font-black uppercase tracking-widest shadow-lg shadow-slate-900/5 group"
+          >
+            <Maximize2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+            {isAr ? 'فتح وضع الماسح التلقائي (Kiosk)' : 'Ouvrir le Mode Kiosque'}
+          </Link>
+        </div>
         <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-900/10 p-2 md:p-3 mb-8">
           <div className="flex flex-col md:flex-row gap-2">
             {/* Massive Scan Button */}
