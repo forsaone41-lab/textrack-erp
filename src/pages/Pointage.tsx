@@ -516,10 +516,5 @@ export default function Pointage({ onLogout }: { onLogout?: () => void }) {
         }
       `}</style>
     </div>
-  );ع الرمز في المربع' : 'Place code inside the frame'}</p>
-          </div>
-        </div>
-      )}
-    </div>
   );
 }
