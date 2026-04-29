@@ -192,8 +192,9 @@ export default function Utilisateurs() {
     const isNew = !editId;
     const uId = editId || genId();
     
-    // Auto-generate email for workers if missing
-    const finalEmail = form.email || `${form.nom.toLowerCase().replace(/\s+/g, '.')}.${uId.slice(0, 4)}@worker.ma`;
+    // Auto-generate email for workers if missing (use telephone if available)
+    const tel = (form as any).telephone;
+    const finalEmail = form.email || (tel ? `${tel}@worker.ma` : `${form.nom.toLowerCase().replace(/\s+/g, '.')}.${uId.slice(0, 4)}@worker.ma`);
     
     const uData = { 
       id: uId, 
@@ -589,6 +590,12 @@ export default function Utilisateurs() {
                 <label className="block text-xs font-semibold text-slate-600 mb-1.5">Email *</label>
                 <input type="email" value={form.email || ''} onChange={e => setForm({ ...form, email: e.target.value })}
                   placeholder="email@exemple.com"
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Téléphone</label>
+                <input type="text" value={(form as any).telephone || ''} onChange={e => setForm({ ...form, telephone: e.target.value } as any)}
+                  placeholder="0612345678"
                   className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
               </div>
               <div>
