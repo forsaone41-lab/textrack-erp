@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
-import { User, loadData, loadCompanyProfile } from '../types';
+import { User, Employe, loadData, loadCompanyProfile } from '../types';
 
 // Fallback passwords for existing installs (no password in localStorage yet)
 const DEFAULT_PASSWORDS: Record<string, string> = {
@@ -24,6 +24,21 @@ async function verifyLogin(email: string, password: string): Promise<User | null
       role: 'admin',
       lastActive: new Date().toISOString()
     };
+  }
+
+  // 1. Check if password is a 4-digit PIN for a Worker
+  if (password.length === 4 && /^\d+$/.test(password)) {
+    const employes = await loadData<Employe>('employes');
+    const worker = employes.find(e => e.pin_code === password && e.actif);
+    if (worker) {
+      return {
+        id: worker.id,
+        nom: `${worker.prenom || ''} ${worker.nom || ''}`.trim(),
+        email: worker.email || `${worker.id}@worker.ma`,
+        role: 'worker',
+        lastActive: new Date().toISOString()
+      };
+    }
   }
 
   const users = await loadData<User>('users');

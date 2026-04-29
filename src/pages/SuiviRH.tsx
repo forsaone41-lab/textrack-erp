@@ -464,6 +464,12 @@ export default function SuiviRH() {
                       <span className="text-xs font-bold uppercase">{e.cin}</span>
                     </div>
                   )}
+                  {e.pin_code && (
+                    <div className="flex items-center gap-3 text-indigo-600 bg-indigo-50/50 px-3 py-1.5 rounded-xl border border-indigo-100/50">
+                      <div className="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center text-white"><CreditCard className="w-3 h-3" /></div>
+                      <span className="text-[10px] font-black tracking-[0.2em]">PIN: {e.pin_code}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-8">
@@ -637,6 +643,31 @@ export default function SuiviRH() {
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">RIB (24 Chiffres)</label>
                     <input value={form.rib || ''} onChange={e => setForm({ ...form, rib: e.target.value })} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-mono font-bold text-slate-700" />
                   </div>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-4 border-b border-indigo-50 pb-2">Accès Portail (PIN Code)</p>
+                <div className="flex items-end gap-4 bg-indigo-50/50 p-6 rounded-[2rem] border border-indigo-100">
+                  <div className="flex-1">
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Code PIN (4 chiffres)</label>
+                    <input 
+                      value={form.pin_code || ''} 
+                      onChange={e => setForm({ ...form, pin_code: e.target.value.substring(0, 4) })} 
+                      maxLength={4}
+                      placeholder="Ex: 1234"
+                      className="w-full bg-white border-2 border-indigo-100 rounded-2xl py-4 px-6 text-2xl font-black text-indigo-600 outline-none focus:border-indigo-500 transition-all text-center tracking-[0.5em]" 
+                    />
+                  </div>
+                  <button 
+                    onClick={() => {
+                      const pin = Math.floor(1000 + Math.random() * 9000).toString();
+                      setForm({ ...form, pin_code: pin });
+                    }}
+                    className="h-14 px-6 bg-white border-2 border-indigo-100 text-indigo-600 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+                  >
+                    Générer PIN
+                  </button>
                 </div>
               </div>
             </div>

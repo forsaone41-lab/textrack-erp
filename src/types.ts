@@ -130,6 +130,7 @@ export interface Employe {
   banque?: string;
   salaireMensuel?: number;
   remunerationType?: 'mensuel' | 'hebdomadaire' | 'tache';
+  pin_code?: string;
 }
 
 export interface PaiementSalaire {
