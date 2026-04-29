@@ -101,7 +101,7 @@ export default function WorkerPortal() {
     <div className="min-h-screen bg-slate-950 flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
         <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-white font-black uppercase tracking-widest animate-pulse">Initialisation...</p>
+        <p className="text-white font-bold uppercase tracking-widest animate-pulse">Initialisation...</p>
       </div>
     </div>
   );
@@ -112,7 +112,7 @@ export default function WorkerPortal() {
         <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-violet-700 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-2xl shadow-indigo-500/20 ring-4 ring-slate-900">
           <UserIcon className="w-10 h-10 text-white" />
         </div>
-        <h1 className="text-3xl font-black text-white uppercase tracking-tighter mb-2 text-center">Bienvenue</h1>
+        <h1 className="text-3xl font-bold text-white uppercase tracking-tighter mb-2 text-center">Bienvenue</h1>
         <p className="text-slate-400 text-sm font-bold mb-10 uppercase tracking-widest">Portail Personnel BEYA</p>
         
         <div className="w-full max-w-sm space-y-6">
@@ -120,7 +120,7 @@ export default function WorkerPortal() {
             <select 
               value={selectedWorkerId}
               onChange={e => setSelectedWorkerId(e.target.value)}
-              className="w-full bg-slate-900 border-2 border-slate-800 text-white p-6 rounded-[2rem] font-black appearance-none outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all shadow-2xl"
+              className="w-full bg-slate-900 border-2 border-slate-800 text-white p-6 rounded-[2rem] font-bold appearance-none outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all shadow-2xl"
             >
               <option value="">Sélectionnez votre nom</option>
               {data.employes.map(e => (
@@ -131,7 +131,7 @@ export default function WorkerPortal() {
               <ChevronRight className="w-6 h-6 text-slate-500 rotate-90" />
             </div>
           </div>
-          <p className="text-slate-500 text-center text-[10px] font-black uppercase tracking-[0.2em]">Identifiez-vous pour accéder à vos données</p>
+          <p className="text-slate-500 text-center text-[10px] font-bold uppercase tracking-[0.2em]">Identifiez-vous pour accéder à vos données</p>
         </div>
       </div>
     );
@@ -143,15 +143,15 @@ export default function WorkerPortal() {
       <div className="bg-slate-950/80 backdrop-blur-2xl border-b border-white/5 px-6 py-5 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-4">
           <div className="relative">
-            <div className="w-12 h-12 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-2xl flex items-center justify-center font-black text-lg shadow-lg shadow-indigo-500/20">
+            <div className="w-12 h-12 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-2xl flex items-center justify-center font-bold text-lg shadow-lg shadow-indigo-500/20">
               {currentWorker?.prenom[0]}{currentWorker?.nom[0]}
             </div>
             <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-slate-950 rounded-full" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-               <h2 className="text-sm font-black uppercase tracking-tight">{currentWorker?.prenom} {currentWorker?.nom}</h2>
-               <span className={`text-[8px] px-1.5 py-0.5 rounded ${rank.bg} ${rank.color} font-black uppercase`}>{rank.label}</span>
+               <h2 className="text-sm font-bold uppercase tracking-tight">{currentWorker?.prenom} {currentWorker?.nom}</h2>
+               <span className={`text-[8px] px-1.5 py-0.5 rounded ${rank.bg} ${rank.color} font-bold uppercase`}>{rank.label}</span>
             </div>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{currentWorker?.poste}</p>
           </div>
@@ -174,7 +174,7 @@ export default function WorkerPortal() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
               activeTab === tab.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:bg-white/5'
             }`}
           >
@@ -190,7 +190,7 @@ export default function WorkerPortal() {
           <>
             {/* Greeting */}
             <div className="space-y-1">
-              <h1 className="text-2xl font-black tracking-tight italic">Bonjour {currentWorker?.prenom} !</h1>
+              <h1 className="text-2xl font-bold tracking-tight italic">Bonjour {currentWorker?.prenom} !</h1>
               <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Bonne journée de travail chez BEYA</p>
             </div>
 
@@ -200,7 +200,7 @@ export default function WorkerPortal() {
                 <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:scale-110 transition-transform" />
                 
                 <div className="flex items-center justify-between mb-8">
-                  <div className="px-4 py-1.5 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2">
+                  <div className="px-4 py-1.5 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-2">
                     <Zap className="w-3 h-3 fill-white" />
                     Mission en Cours
                   </div>
@@ -212,10 +212,10 @@ export default function WorkerPortal() {
                 <div className="space-y-8">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <h3 className="text-4xl font-black uppercase tracking-tighter leading-none mb-3">{activeOp.nom_operation}</h3>
+                      <h3 className="text-4xl font-bold uppercase tracking-tighter leading-none mb-3">{activeOp.nom_operation}</h3>
                       <div className="flex items-center gap-2 text-indigo-100/70">
                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                         <span className="text-[10px] font-black uppercase tracking-widest">Réf: {activeCmd?.reference}</span>
+                         <span className="text-[10px] font-bold uppercase tracking-widest">Réf: {activeCmd?.reference}</span>
                       </div>
                     </div>
                     {activeCmd?.photo ? (
@@ -235,12 +235,12 @@ export default function WorkerPortal() {
                   <div className="space-y-3 bg-black/10 p-6 rounded-[2rem] border border-white/10 backdrop-blur-sm">
                     <div className="flex justify-between items-end">
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black text-indigo-200 uppercase opacity-60">Progression</p>
-                        <p className="text-2xl font-black">{progressPercent}%</p>
+                        <p className="text-[10px] font-bold text-indigo-200 uppercase opacity-60">Progression</p>
+                        <p className="text-2xl font-bold">{progressPercent}%</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-[10px] font-black text-indigo-200 uppercase opacity-60">Produit</p>
-                        <p className="text-2xl font-black text-emerald-400">{totalPcsToday}</p>
+                        <p className="text-[10px] font-bold text-indigo-200 uppercase opacity-60">Produit</p>
+                        <p className="text-2xl font-bold text-emerald-400">{totalPcsToday}</p>
                       </div>
                     </div>
                     <div className="h-3 bg-white/10 rounded-full overflow-hidden p-0.5">
@@ -250,10 +250,10 @@ export default function WorkerPortal() {
                       />
                     </div>
                     <div className="flex justify-between items-center pt-2">
-                       <span className="text-[9px] font-black text-indigo-100 uppercase opacity-60 flex items-center gap-1">
+                       <span className="text-[9px] font-bold text-indigo-100 uppercase opacity-60 flex items-center gap-1">
                           <Target className="w-3 h-3" /> Objectif: {totalTarget}
                        </span>
-                       <span className="text-[9px] font-black text-indigo-100 uppercase opacity-60 flex items-center gap-1">
+                       <span className="text-[9px] font-bold text-indigo-100 uppercase opacity-60 flex items-center gap-1">
                           <Clock className="w-3 h-3" /> {activeOp.target_heure} pcs/h
                        </span>
                     </div>
@@ -265,7 +265,7 @@ export default function WorkerPortal() {
                 <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Layout className="w-10 h-10 text-slate-600" />
                 </div>
-                <h3 className="text-xl font-black uppercase mb-3">En attente</h3>
+                <h3 className="text-xl font-bold uppercase mb-3">En attente</h3>
                 <p className="text-sm text-slate-500 font-bold max-w-[200px] mx-auto leading-relaxed">
                   Votre superviseur n'a pas encore assigné de mission.
                 </p>
@@ -280,7 +280,7 @@ export default function WorkerPortal() {
                 <div className="absolute bottom-4 left-4 w-2 h-2 rounded-full bg-slate-200" />
                 <div className="absolute bottom-4 right-4 w-2 h-2 rounded-full bg-slate-200" />
                 
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">QR Poste Numérique</h4>
+                <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-6">QR Poste Numérique</h4>
                 <div className="p-5 bg-white rounded-[2rem] shadow-inner border border-slate-100 mb-6">
                   <QRCodeSVG 
                     value={`beya-prod://${activeCmd?.id}/${activeOp.id}`} 
@@ -289,7 +289,7 @@ export default function WorkerPortal() {
                     includeMargin
                   />
                 </div>
-                <p className="text-center text-xs font-black uppercase text-slate-900 px-4 leading-relaxed">
+                <p className="text-center text-xs font-bold uppercase text-slate-900 px-4 leading-relaxed">
                   Scannez ce code au terminal pour valider vos pièces
                 </p>
               </div>
@@ -300,7 +300,7 @@ export default function WorkerPortal() {
         {activeTab === 'paiements' && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
              <div className="flex items-center justify-between px-2">
-                <h1 className="text-2xl font-black tracking-tight">Mes Paiements</h1>
+                <h1 className="text-2xl font-bold tracking-tight">Mes Paiements</h1>
                 <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500">
                    <Wallet className="w-5 h-5" />
                 </div>
@@ -320,13 +320,13 @@ export default function WorkerPortal() {
                                 <Calendar className="w-6 h-6" />
                              </div>
                              <div>
-                                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{p.mois}</p>
-                                <p className="text-base font-black text-white">{new Date(p.date).toLocaleDateString()}</p>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{p.mois}</p>
+                                <p className="text-base font-bold text-white">{new Date(p.date).toLocaleDateString()}</p>
                              </div>
                           </div>
                           <div className="text-right">
-                             <p className="text-xl font-black text-emerald-400">{p.montant} <span className="text-[10px]">MAD</span></p>
-                             <span className="text-[9px] px-2 py-0.5 rounded bg-white/10 text-slate-400 font-black uppercase">{p.methode}</span>
+                             <p className="text-xl font-bold text-emerald-400">{p.montant} <span className="text-[10px]">MAD</span></p>
+                             <span className="text-[9px] px-2 py-0.5 rounded bg-white/10 text-slate-400 font-bold uppercase">{p.methode}</span>
                           </div>
                        </div>
                        {p.notes && (
@@ -345,7 +345,7 @@ export default function WorkerPortal() {
                    <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-500">
                       <Trophy className="w-5 h-5" />
                    </div>
-                   <h3 className="text-sm font-black uppercase tracking-widest text-white">Récompense Bonus</h3>
+                   <h3 className="text-sm font-bold uppercase tracking-widest text-white">Récompense Bonus</h3>
                 </div>
                 <p className="text-xs text-slate-400 font-bold leading-relaxed mb-4">
                   Terminez vos objectifs à 100% pendant 5 jours consécutifs pour recevoir une prime de performance !
@@ -360,11 +360,11 @@ export default function WorkerPortal() {
         {activeTab === 'profil' && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
              <div className="flex flex-col items-center text-center pb-8 border-b border-white/5">
-                <div className="w-28 h-28 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-[2.5rem] flex items-center justify-center text-4xl font-black shadow-2xl shadow-indigo-500/20 mb-6 border-4 border-slate-900 ring-2 ring-indigo-500/20">
+                <div className="w-28 h-28 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-[2.5rem] flex items-center justify-center text-4xl font-bold shadow-2xl shadow-indigo-500/20 mb-6 border-4 border-slate-900 ring-2 ring-indigo-500/20">
                   {currentWorker?.prenom[0]}{currentWorker?.nom[0]}
                 </div>
-                <h2 className="text-2xl font-black uppercase tracking-tight">{currentWorker?.prenom} {currentWorker?.nom}</h2>
-                <div className="mt-2 px-4 py-1 bg-indigo-500/10 text-indigo-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-indigo-500/20">
+                <h2 className="text-2xl font-bold uppercase tracking-tight">{currentWorker?.prenom} {currentWorker?.nom}</h2>
+                <div className="mt-2 px-4 py-1 bg-indigo-500/10 text-indigo-400 rounded-full text-[10px] font-bold uppercase tracking-widest border border-indigo-500/20">
                    {currentWorker?.poste}
                 </div>
              </div>
@@ -376,8 +376,8 @@ export default function WorkerPortal() {
                          <CreditCard className="w-5 h-5" />
                       </div>
                       <div>
-                         <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">CIN</p>
-                         <p className="text-sm font-black">{currentWorker?.cin || '---'}</p>
+                         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">CIN</p>
+                         <p className="text-sm font-bold">{currentWorker?.cin || '---'}</p>
                       </div>
                    </div>
                 </div>
@@ -388,8 +388,8 @@ export default function WorkerPortal() {
                          <Info className="w-5 h-5" />
                       </div>
                       <div>
-                         <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">RIB Bancaire</p>
-                         <p className="text-sm font-black font-mono tracking-tighter">{currentWorker?.rib || '---'}</p>
+                         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">RIB Bancaire</p>
+                         <p className="text-sm font-bold font-mono tracking-tighter">{currentWorker?.rib || '---'}</p>
                       </div>
                    </div>
                 </div>
@@ -400,8 +400,8 @@ export default function WorkerPortal() {
                          <Medal className="w-5 h-5" />
                       </div>
                       <div>
-                         <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Type de Rémunération</p>
-                         <p className="text-sm font-black uppercase">{currentWorker?.remunerationType || 'À la tâche'}</p>
+                         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Type de Rémunération</p>
+                         <p className="text-sm font-bold uppercase">{currentWorker?.remunerationType || 'À la tâche'}</p>
                       </div>
                    </div>
                 </div>
@@ -414,7 +414,7 @@ export default function WorkerPortal() {
                          <ShieldCheck className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                         <p className="text-sm font-black text-white uppercase tracking-tight">Badge de Sécurité</p>
+                         <p className="text-sm font-bold text-white uppercase tracking-tight">Badge de Sécurité</p>
                          <p className="text-[10px] text-indigo-100 font-bold uppercase opacity-80">Afficher mon badge digital</p>
                       </div>
                    </div>
