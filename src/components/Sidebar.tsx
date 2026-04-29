@@ -77,7 +77,7 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
         </div>
 
         {/* Navigation Links - Refined Groups */}
-        <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto no-scrollbar py-4">
+        <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto scrollbar-hide py-4">
           <div className="space-y-1">
             {can('dashboard') && (
               <NavLink to="/" className={linkClass} onClick={closeMobile} end>
