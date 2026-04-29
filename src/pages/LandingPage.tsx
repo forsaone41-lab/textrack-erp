@@ -303,9 +303,6 @@ export default function LandingPage() {
                       finalType = formData.get('customType') as string;
                     }
 
-                    // Diagnostic Alert
-                    alert("جاري إرسال طلبك... / Envoi en cours...");
-                    
                     try {
                       const leadData = {
                         name: formData.get('name') as string,
@@ -318,12 +315,10 @@ export default function LandingPage() {
                       };
                       
                       await saveLead(leadData);
-                      
-                      alert("تم الإرسال بنجاح! / Envoyé avec succès !");
                       setShowSuccess(true);
                       setSelectedPhoto(null);
                     } catch (err: any) {
-                      alert("Error in LandingPage: " + err.message);
+                      console.error("Error in LandingPage:", err);
                     }
                     (e.currentTarget as HTMLFormElement).reset();
                   }}
