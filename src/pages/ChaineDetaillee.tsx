@@ -19,7 +19,8 @@ import {
   UserPlus,
   RefreshCw,
   Zap,
-  ArrowRight
+  ArrowRight,
+  PackageCheck
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { 
@@ -119,9 +120,7 @@ export default function ChaineDetaillee() {
   }, [activeShift]);
 
   const availableHours = useMemo(() => {
-    const hours = filteredHours.map(h => h.split(' - ')[0]);
-    // Add the final end hour if needed, but for range 08:00 to 18:00, we need the slots
-    return hours;
+    return filteredHours.map(h => h.split(' - ')[0]);
   }, [filteredHours]);
 
   // Load current assignments from existing suivi
@@ -131,16 +130,14 @@ export default function ChaineDetaillee() {
       modelOps.forEach(op => {
         const entries = todaySuivi.filter(s => s.operation_id === op.id && s.employe_id);
         if (entries.length > 0) {
-          // Sort by time to find range
           const sorted = entries.sort((a, b) => a.heure_debut.localeCompare(b.heure_debut));
           currentMap[op.id] = {
             empId: sorted[0].employe_id!,
             startHour: sorted[0].heure_debut,
-            endHour: sorted[sorted.length - 1].heure_debut // simplified for now
+            endHour: sorted[sorted.length - 1].heure_debut
           };
         }
       });
-      // Merge with default values for ops not found
       modelOps.forEach(op => {
         if (!currentMap[op.id]) {
           currentMap[op.id] = {
@@ -234,7 +231,6 @@ export default function ChaineDetaillee() {
       const detail = assignments[opId];
       if (!detail.empId) continue;
 
-      // Filter hours within the selected range
       const hoursInRange = filteredHours.filter(tranche => {
         const start = tranche.split(' - ')[0];
         return start >= detail.startHour && start <= detail.endHour;
@@ -272,6 +268,21 @@ export default function ChaineDetaillee() {
 
   const getProduction = (opId: string, heureDebut: string) => {
     return todaySuivi.find(s => s.operation_id === opId && s.heure_debut === heureDebut);
+  };
+
+  const calculateTotalExpected = (opId: string) => {
+    const detail = assignments[opId];
+    if (!detail) return 0;
+    const op = modelOps.find(o => o.id === opId);
+    if (!op) return 0;
+
+    const startIndex = availableHours.indexOf(detail.startHour);
+    const endIndex = availableHours.indexOf(detail.endHour);
+    
+    if (startIndex === -1 || endIndex === -1 || startIndex > endIndex) return 0;
+    
+    const hoursCount = (endIndex - startIndex) + 1;
+    return hoursCount * op.target_heure;
   };
 
   if (loading) return (
@@ -351,71 +362,83 @@ export default function ChaineDetaillee() {
              </div>
 
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {modelOps.map((op, idx) => (
-                  <div key={op.id} className="group p-6 bg-slate-50 rounded-[2rem] border border-transparent hover:border-indigo-100 hover:bg-white transition-all shadow-sm hover:shadow-xl relative overflow-hidden">
-                     <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl -mr-12 -mt-12 group-hover:bg-indigo-500/10" />
-                     
-                     <div className="flex items-start justify-between mb-6 relative z-10">
-                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-sm font-black text-indigo-600 shadow-sm">
-                           {idx + 1}
-                        </div>
-                        <div className="text-right">
-                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Cible Horaire</p>
-                           <p className="text-lg font-black text-slate-900">{op.target_heure} <span className="text-[10px]">pcs/h</span></p>
-                        </div>
-                     </div>
-
-                     <h3 className="text-base font-black text-slate-900 uppercase tracking-tight mb-6 relative z-10">{op.nom_operation}</h3>
-                     
-                     <div className="space-y-4 relative z-10">
-                        <div className="relative">
-                           <select 
-                             value={assignments[op.id]?.empId || ''}
-                             onChange={e => setAssignments({...assignments, [op.id]: { ...assignments[op.id], empId: e.target.value }})}
-                             className="w-full bg-white border-2 border-slate-100 rounded-xl py-4 px-4 text-xs font-black text-slate-800 appearance-none outline-none focus:border-indigo-500 transition-all shadow-sm"
-                           >
-                              <option value="">-- Choisir un ouvrier --</option>
-                              {employes.map(e => <option key={e.id} value={e.id}>{e.prenom} {e.nom}</option>)}
-                           </select>
-                           <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                              <UserPlus className="w-4 h-4 text-slate-300" />
-                           </div>
-                        </div>
-
-                        {/* Range Selectors */}
-                        <div className="flex items-center gap-2 bg-slate-100 p-2 rounded-xl">
-                           <div className="flex-1">
-                              <p className="text-[7px] font-black text-slate-400 uppercase mb-1 ml-1">Début</p>
-                              <select 
-                                value={assignments[op.id]?.startHour || '08:00'}
-                                onChange={e => setAssignments({...assignments, [op.id]: { ...assignments[op.id], startHour: e.target.value }})}
-                                className="w-full bg-white border-none rounded-lg py-2 px-2 text-[10px] font-black text-slate-700 outline-none shadow-sm"
-                              >
-                                {availableHours.map(h => <option key={h} value={h}>{h}</option>)}
-                              </select>
-                           </div>
-                           <ArrowRight className="w-4 h-4 text-slate-300 mt-4" />
-                           <div className="flex-1">
-                              <p className="text-[7px] font-black text-slate-400 uppercase mb-1 ml-1">Fin</p>
-                              <select 
-                                value={assignments[op.id]?.endHour || '18:00'}
-                                onChange={e => setAssignments({...assignments, [op.id]: { ...assignments[op.id], endHour: e.target.value }})}
-                                className="w-full bg-white border-none rounded-lg py-2 px-2 text-[10px] font-black text-slate-700 outline-none shadow-sm"
-                              >
-                                {availableHours.map(h => <option key={h} value={h}>{h}</option>)}
-                              </select>
-                           </div>
-                        </div>
-                        
-                        {assignments[op.id]?.empId && (
-                          <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-lg text-emerald-600 text-[8px] font-black uppercase animate-in slide-in-from-top-1">
-                             <div className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse" />
-                             Mission Assignée ({assignments[op.id].startHour} - {assignments[op.id].endHour})
+                {modelOps.map((op, idx) => {
+                  const totalExpected = calculateTotalExpected(op.id);
+                  return (
+                    <div key={op.id} className="group p-6 bg-slate-50 rounded-[2rem] border border-transparent hover:border-indigo-100 hover:bg-white transition-all shadow-sm hover:shadow-xl relative overflow-hidden">
+                       <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl -mr-12 -mt-12 group-hover:bg-indigo-500/10" />
+                       
+                       <div className="flex items-start justify-between mb-6 relative z-10">
+                          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-sm font-black text-indigo-600 shadow-sm">
+                             {idx + 1}
                           </div>
-                        )}
-                     </div>
-                  </div>
-                ))}
+                          <div className="text-right">
+                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Cible Horaire</p>
+                             <p className="text-lg font-black text-slate-900">{op.target_heure} <span className="text-[10px]">pcs/h</span></p>
+                          </div>
+                       </div>
+
+                       <h3 className="text-base font-black text-slate-900 uppercase tracking-tight mb-6 relative z-10">{op.nom_operation}</h3>
+                       
+                       <div className="space-y-4 relative z-10">
+                          <div className="relative">
+                             <select 
+                               value={assignments[op.id]?.empId || ''}
+                               onChange={e => setAssignments({...assignments, [op.id]: { ...assignments[op.id], empId: e.target.value }})}
+                               className="w-full bg-white border-2 border-slate-100 rounded-xl py-4 px-4 text-xs font-black text-slate-800 appearance-none outline-none focus:border-indigo-500 transition-all shadow-sm"
+                             >
+                                <option value="">-- Choisir un ouvrier --</option>
+                                {employes.map(e => <option key={e.id} value={e.id}>{e.prenom} {e.nom}</option>)}
+                             </select>
+                             <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                <UserPlus className="w-4 h-4 text-slate-300" />
+                             </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 bg-slate-100 p-2 rounded-xl">
+                             <div className="flex-1">
+                                <p className="text-[7px] font-black text-slate-400 uppercase mb-1 ml-1">Début</p>
+                                <select 
+                                  value={assignments[op.id]?.startHour || '08:00'}
+                                  onChange={e => setAssignments({...assignments, [op.id]: { ...assignments[op.id], startHour: e.target.value }})}
+                                  className="w-full bg-white border-none rounded-lg py-2 px-2 text-[10px] font-black text-slate-700 outline-none shadow-sm"
+                                >
+                                  {availableHours.map(h => <option key={h} value={h}>{h}</option>)}
+                                </select>
+                             </div>
+                             <ArrowRight className="w-4 h-4 text-slate-300 mt-4" />
+                             <div className="flex-1">
+                                <p className="text-[7px] font-black text-slate-400 uppercase mb-1 ml-1">Fin</p>
+                                <select 
+                                  value={assignments[op.id]?.endHour || '18:00'}
+                                  onChange={e => setAssignments({...assignments, [op.id]: { ...assignments[op.id], endHour: e.target.value }})}
+                                  className="w-full bg-white border-none rounded-lg py-2 px-2 text-[10px] font-black text-slate-700 outline-none shadow-sm"
+                                >
+                                  {availableHours.map(h => <option key={h} value={h}>{h}</option>)}
+                                </select>
+                             </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-between gap-2 p-4 bg-indigo-50 rounded-2xl border border-indigo-100/50">
+                             <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-indigo-600 shadow-sm">
+                                   <PackageCheck className="w-4 h-4" />
+                                </div>
+                                <div>
+                                   <p className="text-[8px] font-black text-indigo-400 uppercase">Objectif Total</p>
+                                   <p className="text-sm font-black text-indigo-700">{totalExpected} <span className="text-[8px]">PC</span></p>
+                                </div>
+                             </div>
+                             {assignments[op.id]?.empId && (
+                                <div className="text-[7px] font-black text-emerald-600 uppercase bg-emerald-50 px-2 py-1 rounded-md">
+                                   Prêt
+                                </div>
+                             )}
+                          </div>
+                       </div>
+                    </div>
+                  );
+                })}
              </div>
           </div>
         </div>
@@ -747,7 +770,7 @@ export default function ChaineDetaillee() {
       {/* Operation Modal */}
       {showOpModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-[250] p-4">
-          <div className="bg-white rounded-[2.5rem] w-full max-md shadow-2xl animate-in zoom-in duration-300">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl animate-in zoom-in duration-300">
             <div className="p-8 border-b border-slate-100 flex items-center justify-between">
               <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Nouveau Poste</h2>
               <button onClick={() => setShowOpModal(false)} className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
