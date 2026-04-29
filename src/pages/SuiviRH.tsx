@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useLang } from '../contexts/LangContext';
-import { Plus, Search, Edit2, Trash2, Users, CreditCard, DollarSign, Home, Image as ImageIcon, X, Printer, Download, File, Phone, Mail, RotateCw } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Users, CreditCard, DollarSign, Home, Image as ImageIcon, X, Printer, Download, File, Phone, Mail, RotateCw, Copy, Check } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Employe, PaiementSalaire, Charge, Commande, loadData, genId, loadCompanyProfile, saveRecord, safeStorage } from '../types';
 import { generatePDF, printElement } from '../utils/pdf';
@@ -82,6 +82,7 @@ export default function SuiviRH() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const company = loadCompanyProfile();
 
@@ -465,9 +466,23 @@ export default function SuiviRH() {
                     </div>
                   )}
                   {e.pin_code && (
-                    <div className="flex items-center gap-3 text-indigo-600 bg-indigo-50/50 px-3 py-1.5 rounded-xl border border-indigo-100/50">
-                      <div className="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center text-white"><CreditCard className="w-3 h-3" /></div>
-                      <span className="text-[10px] font-black tracking-[0.2em]">PIN: {e.pin_code}</span>
+                    <div className="flex items-center justify-between gap-3 text-indigo-600 bg-indigo-50/50 px-3 py-1.5 rounded-xl border border-indigo-100/50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center text-white"><CreditCard className="w-3 h-3" /></div>
+                        <span className="text-[10px] font-black tracking-[0.2em]">PIN: {e.pin_code}</span>
+                      </div>
+                      <button 
+                        onClick={(e_ui) => {
+                          e_ui.stopPropagation();
+                          navigator.clipboard.writeText(e.pin_code || '');
+                          setCopiedId(e.id);
+                          setTimeout(() => setCopiedId(null), 2000);
+                        }}
+                        className="p-1 hover:bg-indigo-100 rounded-lg transition-colors"
+                        title="Copier le code PIN"
+                      >
+                        {copiedId === e.id ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3 text-indigo-400" />}
+                      </button>
                     </div>
                   )}
                 </div>
