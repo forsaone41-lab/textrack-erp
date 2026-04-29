@@ -363,11 +363,11 @@ export default function Commandes() {
               <ShoppingCart className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-tight">{t('commandes_title', lang)}</h1>
+              <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-tight">{isAr ? 'طلبيات الزبناء' : t('commandes_title', lang)}</h1>
               <div className="flex items-center gap-2 mt-1">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest">{commandes.length} {t('commandes_count', lang)}</span>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest">{commandes.length} {isAr ? 'طلبية' : t('commandes_count', lang)}</span>
                 <span className="text-slate-300">/</span>
-                <span className="text-sm font-bold text-slate-500">{t('ca_total', lang)} <span className="text-indigo-600 font-black">{stats.ca.toLocaleString()} MAD</span></span>
+                <span className="text-sm font-bold text-slate-500">{isAr ? 'إجمالي المعاملات' : t('ca_total', lang)} <span className="text-indigo-600 font-black">{stats.ca.toLocaleString()} MAD</span></span>
               </div>
             </div>
           </div>
@@ -378,14 +378,14 @@ export default function Commandes() {
               className="group flex items-center gap-2 bg-white border-2 border-slate-100 text-slate-600 px-6 py-3.5 rounded-2xl hover:border-indigo-600 hover:text-indigo-600 transition-all duration-300 font-black text-xs uppercase tracking-widest shadow-sm active:scale-95"
             >
               <Calculator className="w-4 h-4 transition-transform group-hover:rotate-12" />
-              Calculateur
+              {isAr ? 'حاسبة التكاليف' : 'Calculateur'}
             </button>
             <button 
               onClick={openCreate} 
               className="flex items-center gap-2 bg-slate-900 text-white px-8 py-3.5 rounded-2xl hover:bg-indigo-600 hover:shadow-xl hover:shadow-indigo-200 transition-all duration-300 font-black text-xs uppercase tracking-widest active:scale-95 ring-offset-2 focus:ring-2 focus:ring-slate-900"
             >
               <Plus className="w-5 h-5" />
-              Nouvelle Commande
+              {isAr ? 'طلبية جديدة' : 'Nouvelle Commande'}
             </button>
           </div>
         </div>
@@ -394,10 +394,10 @@ export default function Commandes() {
       {/* KPI Cards - Modern Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-1">
         {[
-          { label: "Chiffre d'Affaires", val: stats.ca.toLocaleString(), sub: `${stats.total} commandes`, icon: <TrendingUp />, color: "indigo" },
-          { label: "En Production", val: stats.enCours, sub: "en cours", icon: <Package />, color: "blue" },
-          { label: "Livrées", val: stats.livre, sub: "commandes livrées", icon: <Truck />, color: "emerald" },
-          { label: "Retard Critique", val: stats.urgent, sub: "délai dépassé", icon: <AlertTriangle />, color: "rose", urgent: stats.urgent > 0 }
+          { label: isAr ? "رقم المعاملات" : "Chiffre d'Affaires", val: stats.ca.toLocaleString(), sub: isAr ? `${stats.total} طلبية` : `${stats.total} commandes`, icon: <TrendingUp />, color: "indigo" },
+          { label: isAr ? "قيد الإنتاج" : "En Production", val: stats.enCours, sub: isAr ? "قيد التنفيذ" : "en cours", icon: <Package />, color: "blue" },
+          { label: isAr ? "تم التسليم" : "Livrées", val: stats.livre, sub: isAr ? "طلبيات سلمت" : "commandes livrées", icon: <Truck />, color: "emerald" },
+          { label: isAr ? "تأخير حرج" : "Retard Critique", val: stats.urgent, sub: isAr ? "تجاوز الآجال" : "délai dépassé", icon: <AlertTriangle />, color: "rose", urgent: stats.urgent > 0 }
         ].map((kpi, i) => (
           <div key={i} className={`group relative bg-white p-6 rounded-[2rem] border-2 transition-all duration-300 hover:shadow-2xl hover:shadow-${kpi.color}-100/50 ${
             kpi.urgent ? 'border-rose-100 bg-rose-50/10' : 'border-slate-50'
@@ -441,11 +441,10 @@ export default function Commandes() {
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
           <input 
             type="text" 
-            placeholder="Rechercher une commande, un client ou un modèle..." 
+            placeholder={isAr ? 'بحث عن طلبية، زبون أو موديل...' : "Rechercher une commande, un client ou un modèle..."} 
             value={search} 
             onChange={e => setSearch(e.target.value)} 
-            className="w-full pl-12 pr-6 py-3.5 bg-slate-50 border-transparent rounded-2xl text-sm font-bold text-slate-900 focus:bg-white focus:ring-4 focus:ring-indigo-100/50 focus:border-indigo-500 transition-all outline-none" 
-          />
+            dir={isAr ? 'rtl' : 'ltr'}
         </div>
         
         <div className="flex items-center gap-1.5 p-1 bg-slate-50 rounded-[1.5rem] w-full lg:w-auto overflow-x-auto no-scrollbar">
@@ -477,13 +476,13 @@ export default function Commandes() {
             <thead>
               <tr className="bg-slate-900/5 border-b border-slate-100">
                 <th className="w-10 px-2 py-3" />
-                <th className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3">Réf</th>
-                <th className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3">Client / Modèle / Tissu</th>
-                <th className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3">Qté / Valeur</th>
-                <th className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3">Suivi Production</th>
-                <th className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3">Livraison</th>
-                <th className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3">Statut</th>
-                <th className="text-right text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3">Actions</th>
+                <th className={`${isAr ? 'text-right' : 'text-left'} text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3`}>{isAr ? 'المرجع' : 'Réf'}</th>
+                <th className={`${isAr ? 'text-right' : 'text-left'} text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3`}>{isAr ? 'الزبون / الموديل / الثوب' : 'Client / Modèle / Tissu'}</th>
+                <th className={`${isAr ? 'text-right' : 'text-left'} text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3`}>{isAr ? 'الكمية / القيمة' : 'Qté / Valeur'}</th>
+                <th className={`${isAr ? 'text-right' : 'text-left'} text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3`}>{isAr ? 'تتبع الإنتاج' : 'Suivi Production'}</th>
+                <th className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3`">{isAr ? 'التسليم' : 'Livraison'}</th>
+                <th className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3`">{isAr ? 'الحالة' : 'Statut'}</th>
+                <th className={`${isAr ? 'text-left' : 'text-right'} text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3`}>{isAr ? 'إجراءات' : 'Actions'}</th>
               </tr>
             </thead>
             <tbody>
@@ -512,10 +511,10 @@ export default function Commandes() {
                       </td>
                       
                       {/* ID & Type */}
-                      <td className="px-4 py-4">
+                      <td className={`${isAr ? 'text-right' : 'text-left'} px-4 py-4`}>
                         <div className="flex flex-col">
                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-0.5">{c.reference}</span>
-                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${urgent ? 'bg-red-50' : 'bg-slate-50'}`}>
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${urgent ? 'bg-red-50' : 'bg-slate-50'} ${isAr ? 'mr-0 ml-auto' : ''}`}>
                             <ShoppingCart className={`w-3 h-3 ${urgent ? 'text-red-500' : 'text-slate-400'}`} />
                           </div>
                         </div>
@@ -534,20 +533,20 @@ export default function Commandes() {
                       {/* Quantity & Value */}
                       <td className="px-4 py-4">
                         <div className="flex flex-col">
-                          <div className="flex items-baseline gap-1">
+                          <div className={`flex items-baseline gap-1 ${isAr ? 'flex-row-reverse' : ''}`}>
                             <span className="text-sm font-black text-slate-900">{c.quantite}</span>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase">pcs</span>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase">{isAr ? 'قطعة' : 'pcs'}</span>
                           </div>
-                          <p className="text-[10px] font-black text-emerald-600">{(c.quantite * c.prix).toLocaleString()} MAD</p>
+                          <p className="text-[10px] font-black text-emerald-600">{isAr ? 'درهم' : ''} {(c.quantite * c.prix).toLocaleString()} {isAr ? '' : 'MAD'}</p>
                         </div>
                       </td>
 
                       {/* Production Tracking - Pro Integrated Line */}
                       <td className="px-4 py-4 min-w-[240px]">
                         <div className="flex flex-col gap-2">
-                          <div className="flex justify-between items-end">
+                          <div className={`flex justify-between items-end ${isAr ? 'flex-row-reverse' : ''}`}>
                             <span className={`text-[9px] font-black uppercase tracking-widest ${isLivre ? 'text-emerald-600' : 'text-slate-400'}`}>
-                              {isLivre ? 'Livraison Terminée' : `Phase: ${PHASE_LABELS[c.phase]}`}
+                              {isLivre ? (isAr ? 'تم التسليم' : 'Livraison Terminée') : `${isAr ? 'المرحلة' : 'Phase'}: ${PHASE_LABELS[c.phase]}`}
                             </span>
                             <span className="text-[10px] font-black text-slate-900">{progress}%</span>
                           </div>
@@ -617,7 +616,7 @@ export default function Commandes() {
                             <div className="bg-white rounded-xl border border-slate-100 p-3 shadow-sm">
                               <div className="flex items-center gap-2 mb-3">
                                 <div className="w-6 h-6 bg-orange-50 rounded-lg flex items-center justify-center text-orange-500"><Scissors className="w-3.5 h-3.5" /></div>
-                                <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Coupe</span>
+                                <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">{isAr ? 'الفصالة' : 'Coupe'}</span>
                               </div>
                               <div className="space-y-1.5">
                                 {cmdOrdres.map(o => (
@@ -660,7 +659,7 @@ export default function Commandes() {
                             <div className="bg-white rounded-xl border border-slate-100 p-3 shadow-sm">
                               <div className="flex items-center gap-2 mb-3">
                                 <div className="w-6 h-6 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-500"><Receipt className="w-3.5 h-3.5" /></div>
-                                <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Facture</span>
+                                <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">{isAr ? 'الفاتورة' : 'Facture'}</span>
                               </div>
                               {cmdFacture ? (
                                 <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-100">
@@ -671,7 +670,7 @@ export default function Commandes() {
                                 </div>
                               ) : (
                                 <button onClick={() => createFacture(c)} className="w-full py-2.5 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all">
-                                  Éditer Facture
+                                  {isAr ? 'إصدار فاتورة' : 'Éditer Facture'}
                                 </button>
                               )}
                             </div>
