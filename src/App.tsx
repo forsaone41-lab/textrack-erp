@@ -184,7 +184,7 @@ function AppContent() {
   const permissions = loadPermissions();
   const userRole = (currentUser.role || '').toLowerCase() as keyof typeof permissions;
   const allowed = permissions[userRole] || [];
-  const can = (page: AppPage) => userRole === 'admin' || allowed.includes(page);
+  const can = (page: AppPage) => allowed.includes(page);
 
   if (showClientPortal) {
     return (
@@ -224,8 +224,8 @@ function AppContent() {
         <Route path="fiches-techniques" element={can('fiches') ? <FichesTechniques /> : <Navigate to="/" replace />} />
         <Route path="ordres-de-coupe" element={can('ordres') ? <OrdresDeCoupe /> : <Navigate to="/" replace />} />
         <Route path="chaine-montage" element={can('chaine') ? <ChaineDeMontage /> : <Navigate to="/" replace />} />
-        <Route path="pilotage-chaine" element={can('chaine') ? <ChaineDetaillee /> : <Navigate to="/" replace />} />
-        <Route path="scan-production" element={can('chaine') ? <ProductionScanner /> : <Navigate to="/" replace />} />
+        <Route path="pilotage-chaine" element={can('pilotage') ? <ChaineDetaillee /> : <Navigate to="/" replace />} />
+        <Route path="scan-production" element={can('scan_production') ? <ProductionScanner /> : <Navigate to="/" replace />} />
         <Route path="worker-portal" element={<WorkerPortal />} />
         
         {/* Protected Finance Routes */}
@@ -245,9 +245,9 @@ function AppContent() {
         <Route path="commandes" element={can('commandes') ? <Commandes /> : <Navigate to="/" replace />} />
       </Route>
       <Route element={<PointageLayout />}>
-        <Route path="pointage" element={<Pointage onLogout={handleLogout} />} />
+        <Route path="pointage" element={can('pointage') ? <Pointage onLogout={handleLogout} /> : <Navigate to="/" replace />} />
         <Route path="kiosk" element={<KioskScanner />} />
-        <Route path="fast-scanner" element={<FastScanner />} />
+        <Route path="fast-scanner" element={can('fast_scanner') ? <FastScanner /> : <Navigate to="/" replace />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

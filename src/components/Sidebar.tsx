@@ -26,7 +26,7 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
   const userRole = (currentUser.role || '').toLowerCase() as keyof typeof permissions;
   const allowedPages = permissions[userRole] || [];
   
-  const can = (page: AppPage) => userRole === 'admin' || allowedPages.includes(page);
+  const can = (page: AppPage) => allowedPages.includes(page);
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `group flex items-center justify-between px-5 py-3.5 rounded-2xl text-[13px] font-bold transition-all duration-500 relative overflow-hidden ${
