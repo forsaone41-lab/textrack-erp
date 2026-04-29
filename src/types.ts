@@ -277,7 +277,7 @@ export const DEFAULT_PERMISSIONS: RolePermMap = {
   modeliste: ['fiches'],
 };
 
-const PERMISSIONS_VERSION = 3;
+const PERMISSIONS_VERSION = 4;
 
 export function loadPermissions(): RolePermMap {
   try {
