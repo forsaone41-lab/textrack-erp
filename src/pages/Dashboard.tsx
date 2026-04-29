@@ -12,6 +12,7 @@ import {
   PHASE_LABELS, PHASE_ORDER, User, safeStorage
 } from '../types';
 import { useLang } from '../contexts/LangContext';
+import { NavLink } from 'react-router-dom';
 
 interface DashboardProps {
   allUsers?: User[];
@@ -41,7 +42,6 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
       setTissus(tiss);
       setFactures(facs);
       
-      // Robust Pointage Loading: Merge Remote with Local Storage
       const localPtData = safeStorage.getItem('textrack_pointages');
       let localPts: PointageEntry[] = [];
       try {
@@ -53,7 +53,6 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
       [...localPts, ...pts].forEach(p => p && p.id && allPtsMap.set(p.id, p));
       setPointages(Array.from(allPtsMap.values()));
 
-      // Robust Employee Loading: Merge Remote with Local Storage
       const localEmpData = safeStorage.getItem('textrack_employes');
       let localEmps: Employe[] = [];
       try {
@@ -65,7 +64,6 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
       [...localEmps, ...emps].forEach(e => e && e.id && allEmpsMap.set(e.id, e));
       setEmployes(Array.from(allEmpsMap.values()));
 
-      // Robust Presence Loading: Merge Remote with Local Storage
       const localPresData = safeStorage.getItem('textrack_presences');
       let localPres: Presence[] = [];
       try {
@@ -87,7 +85,6 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
     return () => clearInterval(interval);
   }, []);
 
-  // KPI Calculations
   const commandesEnCours = commandes.filter(c => c.statut === 'en_cours');
   const totalPiecesEnCours = commandesEnCours.reduce((a, c) => a + c.quantite, 0);
   const totalRebut = commandes.reduce((a, c) => a + c.rebut, 0);
@@ -105,17 +102,15 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
 
   const lowStockTissus = tissus.filter(t => t.metrage <= t.seuilAlerte);
 
-  // Présences du jour
-  const today = now.toISOString().split('T')[0];
+  const todayStr = now.toISOString().split('T')[0];
   const actifs = employes.filter(e => e.actif);
-  const presencesAujourdhui = presences.filter(p => p.date === today);
+  const presencesAujourdhui = presences.filter(p => p.date === todayStr);
   const presents = actifs.filter(e => presencesAujourdhui.some(p => p.employeId === e.id && p.statut !== 'absent'));
   const absents = actifs.filter(e => !presencesAujourdhui.some(p => p.employeId === e.id && p.statut !== 'absent'));
   const retards = actifs.filter(e => presencesAujourdhui.some(p => p.employeId === e.id && p.statut === 'retard'));
   const enCoursPresence = actifs.filter(e => presencesAujourdhui.some(p => p.employeId === e.id && p.heureEntree && !p.heureSortie));
   const empName = (e: Employe) => e.prenom ? `${e.prenom} ${e.nom}` : e.nom;
 
-  // Chart data
   const phaseData = PHASE_ORDER.filter(p => p !== 'livré').map(phase => ({
     name: PHASE_LABELS[phase],
     commandes: commandesEnCours.filter(c => c.phase === phase).length,
@@ -135,7 +130,6 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
       subtitle: isAr ? `${commandesEnCours.length} طلبيات نشطة` : `${commandesEnCours.length} commandes actives`,
       icon: Shirt,
       color: 'from-indigo-500 to-blue-600',
-      bgLight: 'bg-indigo-50',
       textColor: 'text-indigo-600',
     },
     {
@@ -144,7 +138,6 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
       subtitle: isAr ? `${totalRebut} قطعة تالفة / ${totalPieces}` : `${totalRebut} pièces rebutées / ${totalPieces}`,
       icon: AlertTriangle,
       color: 'from-amber-500 to-orange-600',
-      bgLight: 'bg-amber-50',
       textColor: 'text-amber-600',
     },
     {
@@ -153,7 +146,6 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
       subtitle: commandesEnRetard.length === 0 ? (isAr ? 'الكل في الوقت المحدد!' : 'Tout est dans les temps !') : (isAr ? 'انتبه للمواعيد' : 'Attention aux délais'),
       icon: Truck,
       color: commandesEnRetard.length > 0 ? 'from-red-500 to-rose-600' : 'from-green-500 to-emerald-600',
-      bgLight: commandesEnRetard.length > 0 ? 'bg-red-50' : 'bg-green-50',
       textColor: commandesEnRetard.length > 0 ? 'text-red-600' : 'text-green-600',
     },
     {
@@ -162,7 +154,6 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
       subtitle: isAr ? `${(caPaye / 1000).toFixed(0)}K مدفوع · ${(caImpaye / 1000).toFixed(0)}K غير مدفوع` : `${(caPaye / 1000).toFixed(0)}K encaissé · ${(caImpaye / 1000).toFixed(0)}K impayé`,
       icon: TrendingUp,
       color: 'from-emerald-500 to-teal-600',
-      bgLight: 'bg-emerald-50',
       textColor: 'text-emerald-600',
     },
   ];
@@ -423,93 +414,6 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
             })}
           </div>
         </div>
-      </div>
-
-      {/* Modern Presence Section */}
-      <div className="bg-white/70 backdrop-blur-sm rounded-[2.5rem] border border-white p-8 shadow-2xl shadow-slate-200/50">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-          <h3 className="text-base font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]" />
-            Présences du Jour
-            <span className="text-xs text-slate-400 font-bold ml-2 opacity-60">/ {today}</span>
-          </h3>
-          <div className="flex items-center gap-4">
-             <div className="flex -space-x-2">
-                {presents.slice(0, 5).map(e => (
-                   <div key={e.id} className="w-8 h-8 rounded-full border-2 border-white bg-indigo-50 text-indigo-600 flex items-center justify-center text-[9px] font-black uppercase" title={empName(e)}>
-                      {e.nom?.[0] || '??'}
-                   </div>
-                ))}
-                {presents.length > 5 && <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-100 text-slate-600 flex items-center justify-center text-[9px] font-black">+{presents.length - 5}</div>}
-             </div>
-             <span className="flex items-center gap-2 text-[10px] text-emerald-600 bg-emerald-50 px-4 py-2 rounded-2xl font-black uppercase tracking-widest">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Live Monitoring
-             </span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {[
-            { label: "Présents", val: presents.length, color: "emerald", icon: <UserCheck /> },
-            { label: "Absents", val: absents.length, color: "rose", icon: <UserX /> },
-            { label: "Retards", val: retards.length, color: "amber", icon: <Clock /> },
-            { label: "Actifs", val: enCoursPresence.length, color: "blue", icon: <Activity /> }
-          ].map((stat, i) => (
-            <div key={i} className={`p-5 rounded-3xl border border-${stat.color}-100 bg-${stat.color}-50/30 flex items-center justify-between`}>
-               <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
-                  <p className={`text-2xl font-black text-${stat.color}-600 tracking-tight`}>{stat.val}</p>
-               </div>
-               <div className={`w-10 h-10 rounded-xl bg-${stat.color}-100 flex items-center justify-center text-${stat.color}-600`}>
-                  {stat.icon}
-               </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {actifs.map(emp => {
-            const p = presencesAujourdhui.find(x => x.employeId === emp.id);
-            const isAbsent = !p || p.statut === 'absent';
-            const isRetard = p?.statut === 'retard';
-            const hasEntree = p?.heureEntree;
-            return (
-              <div key={emp.id} className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all ${
-                isAbsent ? 'bg-slate-50/50 border-slate-100 grayscale opacity-60' : 
-                isRetard ? 'bg-amber-50/50 border-amber-100 shadow-sm shadow-amber-100/50' : 
-                'bg-white border-slate-50 shadow-sm'
-              }`}>
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className={`w-2 h-2 rounded-full ${isAbsent ? 'bg-slate-300' : isRetard ? 'bg-amber-400 animate-pulse' : 'bg-emerald-500'}`} />
-                  <span className="text-xs font-black text-slate-700 truncate tracking-tight">{empName(emp)}</span>
-                </div>
-                {hasEntree && <span className="text-[9px] font-black text-slate-400 bg-slate-50 px-2 py-1 rounded-lg">{p!.heureEntree}</span>}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Premium Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        {[
-          { label: "Employés", val: employes.filter(e => e.actif).length, icon: <Users />, grad: "from-indigo-600 to-violet-700" },
-          { label: "Types Tissu", val: tissus.length, icon: <Package />, grad: "from-blue-600 to-cyan-600" },
-          { label: "Pointages", val: pointages.length, icon: <CheckCircle />, grad: "from-emerald-600 to-teal-700" },
-          { label: "Factures", val: factures.length, icon: <Receipt />, grad: "from-slate-800 to-slate-900" }
-        ].map((stat, i) => (
-          <div key={i} className={`relative overflow-hidden bg-gradient-to-br ${stat.grad} rounded-[2rem] p-6 text-white shadow-xl shadow-slate-200/50 group`}>
-            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10 group-hover:scale-125 transition-transform duration-500" />
-            <div className="relative z-10">
-               <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm shadow-inner">
-                  {stat.icon}
-               </div>
-               <p className="text-3xl font-black tracking-tight">{stat.val}</p>
-               <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 mt-1">{stat.label}</p>
-            </div>
-          </div>
-        ))}
       </div>
 
       {/* User Detail Popover */}
