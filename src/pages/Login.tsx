@@ -182,7 +182,7 @@ export default function Login({ onLogin }: LoginProps) {
               <button
                 onClick={handleLogin}
                 disabled={loading}
-                className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 active:bg-indigo-800 transition shadow-lg shadow-indigo-500/30 disabled:opacity-60 mt-2"
+                className="w-full bg-indigo-900 text-white py-3 rounded-xl font-bold hover:bg-indigo-950 active:bg-black transition shadow-lg shadow-indigo-500/30 disabled:opacity-60 mt-2"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
