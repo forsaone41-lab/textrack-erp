@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, FileText, Settings, LogOut, ShoppingCart, 
-  Package, Scissors, Activity, Receipt, CreditCard, PieChart, TrendingUp, UserCheck, Shirt, Globe, X, Menu, ClipboardCheck, Trophy, ShieldCheck, UserCircle
+  Package, Scissors, Activity, Receipt, CreditCard, PieChart, TrendingUp, UserCheck, Shirt, Globe, X, Menu, ClipboardCheck, Trophy, ShieldCheck, UserCircle, QrCode
 } from 'lucide-react';
 import { User, loadCompanyProfile, loadPermissions, AppPage } from '../types';
 import { useLang } from '../contexts/LangContext';
