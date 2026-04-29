@@ -211,6 +211,14 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
                 </div>
               </NavLink>
             )}
+            {can('utilisateurs') && (
+              <NavLink to="/utilisateurs" className={linkClass} onClick={closeMobile}>
+                <div className="flex items-center gap-3">
+                  <ShieldCheck className="w-[18px] h-[18px]" />
+                  <span>Gestion Utilisateurs</span>
+                </div>
+              </NavLink>
+            )}
             {can('parametres') && (
               <NavLink to="/parametres" className={linkClass} onClick={closeMobile}>
                 <div className="flex items-center gap-3">
