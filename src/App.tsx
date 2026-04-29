@@ -1,5 +1,6 @@
 import { HashRouter, Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom';
-import React, { useState, useEffect, Component, ReactNode } from 'react';
+import * as React from 'react';
+import { useState, useEffect, Component, ReactNode } from 'react';
 import { Menu, Package, Shirt } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';

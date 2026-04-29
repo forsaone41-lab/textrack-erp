@@ -1,11 +1,12 @@
-import React, { useState, useEffect, Fragment, ElementType } from 'react';
+import * as React from 'react';
+import { useState, useEffect, Fragment, ElementType } from 'react';
 import {
   Plus, Search, Edit2, Trash2,
   ShieldCheck, HardHat, ShoppingBag,
   Eye, EyeOff, Copy, RefreshCw, KeyRound, UserX,
   LayoutDashboard, FileText, Scissors, Factory, Package,
   Users, ShoppingCart, Receipt, TrendingDown, ClipboardCheck,
-  Globe, Trophy, UserCircle, RotateCcw, Lock, Zap, MousePointer2, UserCheck, BarChart3, Settings
+  Globe, Trophy, UserCircle, RotateCcw, Lock, Zap, MousePointer2, UserCheck, BarChart3, Settings, X
 } from 'lucide-react';
 import {
   User, Employe, AppPage, RolePermMap,
