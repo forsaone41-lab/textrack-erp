@@ -176,16 +176,16 @@ export default function ChaineDetaillee() {
   );
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-6 pb-20 -mx-4 md:mx-0 px-4 md:px-0">
       {/* Header & Selection */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] border border-slate-100 shadow-sm sticky top-0 z-[40] md:relative">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-slate-900 to-indigo-950 rounded-[1.5rem] flex items-center justify-center shadow-xl shadow-slate-200">
-            <Factory className="w-8 h-8 text-white" />
+          <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-slate-900 to-indigo-950 rounded-[1rem] md:rounded-[1.5rem] flex items-center justify-center shadow-xl shadow-slate-200">
+            <Factory className="w-6 h-6 md:w-8 md:h-8 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Pilotage Séquentiel</h1>
-            <p className="text-slate-500 text-sm font-bold uppercase tracking-widest opacity-60">Gestion détaillée des postes de travail</p>
+            <h1 className="text-lg md:text-2xl font-black text-slate-900 tracking-tight uppercase">Pilotage Séquentiel</h1>
+            <p className="hidden md:block text-slate-500 text-sm font-bold uppercase tracking-widest opacity-60">Gestion détaillée des postes de travail</p>
           </div>
         </div>
 
@@ -193,25 +193,25 @@ export default function ChaineDetaillee() {
           <select 
             value={selectedCmdId}
             onChange={e => setSelectedCmdId(e.target.value)}
-            className="w-full sm:w-64 px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-black text-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+            className="w-full sm:w-64 px-4 py-3 md:py-4 bg-slate-50 border-none rounded-xl text-sm font-black text-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
           >
             {commandes.map(c => (
               <option key={c.id} value={c.id}>{c.reference} — {c.modele}</option>
             ))}
           </select>
           
-          <div className="flex bg-slate-100 p-1.5 rounded-2xl">
+          <div className="flex bg-slate-100 p-1 rounded-xl md:rounded-2xl w-full sm:w-auto">
             {(['suivi', 'config', 'stats'] as const).map(t => (
               <button
                 key={t}
                 onClick={() => setActiveTab(t)}
-                className={`px-6 py-3 rounded-[1rem] text-[10px] font-black uppercase tracking-widest transition-all ${
+                className={`flex-1 sm:flex-none px-4 md:px-6 py-2.5 md:py-3 rounded-lg md:rounded-[1rem] text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${
                   activeTab === t ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
                 }`}
               >
-                {t === 'suivi' ? (isAr ? 'تتبع الإنتاج' : 'Pointage Horaire') : 
-                 t === 'config' ? (isAr ? 'الإعدادات' : 'Configuration') : 
-                 (isAr ? 'إحصائيات' : 'Performance')}
+                {t === 'suivi' ? (isAr ? 'تتبع' : 'Pointage') : 
+                 t === 'config' ? (isAr ? 'إعداد' : 'Config') : 
+                 (isAr ? 'أداء' : 'Perf')}
               </button>
             ))}
           </div>
@@ -345,18 +345,18 @@ export default function ChaineDetaillee() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[1000px]">
+          <div className="overflow-x-auto scrollbar-hide">
+            <table className="w-full text-left border-collapse min-w-[800px] md:min-w-[1000px]">
               <thead>
-                <tr className="bg-slate-50/50">
-                  <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 sticky left-0 bg-slate-50 z-10 w-48">
-                    Heure / Tranche
+                <tr className="bg-slate-50/50 sticky top-0 z-[30]">
+                  <th className="px-4 md:px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 sticky left-0 bg-slate-50 z-10 w-32 md:w-48">
+                    Heure
                   </th>
                   {modelOps.map(op => (
-                    <th key={op.id} className="px-4 py-5 text-[10px] font-black text-slate-800 uppercase tracking-widest border-b border-slate-100 border-l border-slate-100">
+                    <th key={op.id} className="px-3 md:px-4 py-5 text-[9px] md:text-[10px] font-black text-slate-800 uppercase tracking-widest border-b border-slate-100 border-l border-slate-100">
                       <div className="flex flex-col">
-                        <span>{op.nom_operation}</span>
-                        <span className="text-[9px] text-indigo-500 mt-0.5">Cible: {op.target_heure}</span>
+                        <span className="truncate max-w-[80px] md:max-w-none">{op.nom_operation}</span>
+                        <span className="text-[8px] md:text-[9px] text-indigo-500 mt-0.5">Cible: {op.target_heure}</span>
                       </div>
                     </th>
                   ))}
@@ -365,8 +365,8 @@ export default function ChaineDetaillee() {
               <tbody className="divide-y divide-slate-100">
                 {filteredHours.map(tranche => (
                   <tr key={tranche} className="hover:bg-slate-50/30 transition-colors">
-                    <td className="px-8 py-4 font-black text-slate-500 text-xs tabular-nums sticky left-0 bg-white z-10 border-r border-slate-100 shadow-sm">
-                      {tranche}
+                    <td className="px-4 md:px-8 py-4 font-black text-slate-500 text-[10px] md:text-xs tabular-nums sticky left-0 bg-white z-10 border-r border-slate-100 shadow-sm">
+                      {tranche.split(' - ')[0]}
                     </td>
                     {modelOps.map(op => {
                       const prod = getProduction(op.id, tranche.split(' - ')[0]);
