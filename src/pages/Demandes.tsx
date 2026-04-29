@@ -46,7 +46,11 @@ export default function Demandes() {
   });
 
   useEffect(() => {
-    setLeads(loadLeads());
+    async function init() {
+      const data = await loadLeads();
+      setLeads(data);
+    }
+    init();
   }, []);
 
   const saveTemplates = (newTemplates: any) => {
@@ -86,17 +90,20 @@ export default function Demandes() {
     }
   };
 
-  const updateStatus = (id: string, status: Lead['status']) => {
-    const updated = leads.map(l => l.id === id ? { ...l, status } : l);
-    setLeads(updated);
-    localStorage.setItem('textrack_leads', JSON.stringify(updated));
+  const updateStatus = async (id: string, status: Lead['status']) => {
+    const lead = leads.find(l => l.id === id);
+    if (!lead) return;
+    const updatedLead = { ...lead, status };
+    const updatedList = leads.map(l => l.id === id ? updatedLead : l);
+    setLeads(updatedList);
+    await saveRecord('leads', updatedLead, true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!deleteId) return;
     const updated = leads.filter(l => l.id !== deleteId);
     setLeads(updated);
-    localStorage.setItem('textrack_leads', JSON.stringify(updated));
+    await deleteRecord('leads', deleteId);
     setDeleteId(null);
   };
 
@@ -175,7 +182,8 @@ export default function Demandes() {
     } : l);
     
     setLeads(updated);
-    localStorage.setItem('textrack_leads', JSON.stringify(updated));
+    setLeads(updated);
+    await saveRecord('leads', updated.find(l => l.id === lead.id), true);
     
     // Slight delay before closing to show feedback
     setTimeout(() => {

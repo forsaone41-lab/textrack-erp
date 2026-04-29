@@ -312,7 +312,7 @@ export default function LandingPage() {
                       details: formData.get('details') as string,
                       photo: selectedPhoto || undefined
                     };
-                    saveLead(leadData);
+                    await saveLead(leadData);
                     setShowSuccess(true);
                     setSelectedPhoto(null);
                     (e.currentTarget as HTMLFormElement).reset();

@@ -364,24 +364,35 @@ export function loadCompanyProfile(): CompanyProfile {
   }
 }
 
-export function loadLeads(): Lead[] {
+export async function loadLeads(): Promise<Lead[]> {
   try {
-    const data = safeStorage.getItem('textrack_leads');
-    return data ? JSON.parse(data) : [];
+    // Try Supabase first
+    const data = await loadData<Lead>('leads');
+    if (data && data.length > 0) return data;
+    
+    // Fallback to local (for transition)
+    const local = safeStorage.getItem('textrack_leads');
+    return local ? JSON.parse(local) : [];
   } catch {
     return [];
   }
 }
 
-export function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'>) {
-  const leads = loadLeads();
+export async function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'>) {
   const newLead: Lead = {
     ...lead,
-    id: Math.random().toString(36).substr(2, 9),
+    id: genId(),
     date: new Date().toISOString(),
     status: 'new'
   };
+  
+  // Save to Supabase (primary)
+  await saveRecord('leads', newLead, true);
+  
+  // Also save to local (legacy fallback)
+  const leads = await loadLeads();
   safeStorage.setItem('textrack_leads', JSON.stringify([newLead, ...leads]));
+  
   return newLead;
 }
 

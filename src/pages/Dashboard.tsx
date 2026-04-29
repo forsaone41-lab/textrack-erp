@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import {
   loadData, Commande, StockTissu, Employe, Facture, PointageEntry, Presence,
-  PHASE_LABELS, PHASE_ORDER, User, safeStorage
+  PHASE_LABELS, PHASE_ORDER, User, safeStorage, Lead, loadLeads
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { NavLink } from 'react-router-dom';
@@ -26,6 +26,7 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
   const [factures, setFactures] = useState<Facture[]>([]);
   const [pointages, setPointages] = useState<PointageEntry[]>([]);
   const [presences, setPresences] = useState<Presence[]>([]);
+  const [leads, setLeads] = useState<Lead[]>([]);
   const [now, setNow] = useState(new Date());
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
@@ -36,45 +37,16 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
       loadData<Employe>('employes'),
       loadData<Facture>('factures'),
       loadData<PointageEntry>('pointages'),
-      loadData<Presence>('presences')
-    ]).then(([cmds, tiss, emps, facs, pts, pres]) => {
+      loadData<Presence>('presences'),
+      loadLeads()
+    ]).then(([cmds, tiss, emps, facs, pts, pres, lds]) => {
       setCommandes(cmds);
       setTissus(tiss);
       setFactures(facs);
-      
-      const localPtData = safeStorage.getItem('textrack_pointages');
-      let localPts: PointageEntry[] = [];
-      try {
-        const parsed = localPtData ? JSON.parse(localPtData) : [];
-        localPts = Array.isArray(parsed) ? parsed : [];
-      } catch (e) { localPts = []; }
-      
-      const allPtsMap = new Map();
-      [...localPts, ...pts].forEach(p => p && p.id && allPtsMap.set(p.id, p));
-      setPointages(Array.from(allPtsMap.values()));
-
-      const localEmpData = safeStorage.getItem('textrack_employes');
-      let localEmps: Employe[] = [];
-      try {
-        const parsed = localEmpData ? JSON.parse(localEmpData) : [];
-        localEmps = Array.isArray(parsed) ? parsed : [];
-      } catch (e) { localEmps = []; }
-
-      const allEmpsMap = new Map();
-      [...localEmps, ...emps].forEach(e => e && e.id && allEmpsMap.set(e.id, e));
-      setEmployes(Array.from(allEmpsMap.values()));
-
-      const localPresData = safeStorage.getItem('textrack_presences');
-      let localPres: Presence[] = [];
-      try {
-        const parsed = localPresData ? JSON.parse(localPresData) : [];
-        localPres = Array.isArray(parsed) ? parsed : [];
-      } catch (e) { localPres = []; }
-
-      const allPresMap = new Map();
-      [...localPres, ...pres].forEach(p => p && p.id && allPresMap.set(p.id, p));
-      setPresences(Array.from(allPresMap.values()));
-
+      setLeads(lds || []);
+      setPointages(pts || []);
+      setEmployes(emps || []);
+      setPresences(pres || []);
       setNow(new Date());
     });
   }
@@ -155,6 +127,14 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
       icon: TrendingUp,
       color: 'from-emerald-500 to-teal-600',
       textColor: 'text-emerald-600',
+    },
+    {
+      title: isAr ? 'طلبات جديدة' : 'Nouveaux Prospects',
+      value: isAr ? `${leads.filter(l => l.status === 'new').length} طلب` : `${leads.filter(l => l.status === 'new').length} Leads`,
+      subtitle: isAr ? 'من الصفحة الرئيسية' : 'Depuis la Landing Page',
+      icon: Users,
+      color: 'from-purple-500 to-pink-600',
+      textColor: 'text-purple-600',
     },
   ];
 
