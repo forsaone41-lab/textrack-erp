@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { QrCode, X, Clock, CheckCircle2, AlertCircle, ArrowLeft, Factory, Users, Zap, ShieldCheck, Camera } from 'lucide-react';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import { useNavigate } from 'react-router-dom';

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Fragment } from 'react';
 import {
   Plus, Search, Edit2, Trash2,
   ShieldCheck, HardHat, ShoppingBag,
@@ -369,7 +369,7 @@ export default function Utilisateurs() {
               </thead>
               <tbody>
                 {PAGE_GROUPS.map(group => (
-                  <React.Fragment key={group}>
+                  <Fragment key={group}>
                     <tr className="bg-slate-50/30">
                       <td colSpan={7} className={`px-6 py-2 text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] ${isAr ? 'text-right' : 'text-left'}`}>
                         {isAr ? PAGE_GROUPS_AR[group] : group}
@@ -397,7 +397,7 @@ export default function Utilisateurs() {
                         })}
                       </tr>
                     ))}
-                  </React.Fragment>
+                  </Fragment>
                 ))}
               </tbody>
             </table>
