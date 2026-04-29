@@ -297,14 +297,14 @@ export default function ChaineDetaillee() {
   return (
     <div className="space-y-6 pb-20 -mx-4 md:mx-0 px-4 md:px-0 relative">
       {/* Header & Selection */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] border border-slate-100 shadow-sm sticky top-0 z-[40] md:relative">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-900 p-6 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] border border-slate-800 shadow-2xl sticky top-0 z-[40] md:relative">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-slate-900 to-indigo-950 rounded-[1rem] md:rounded-[1.5rem] flex items-center justify-center shadow-xl shadow-slate-200">
+          <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-[1rem] md:rounded-[1.5rem] flex items-center justify-center shadow-xl shadow-indigo-500/20">
             <Factory className="w-6 h-6 md:w-8 md:h-8 text-white" />
           </div>
           <div>
-            <h1 className="text-lg md:text-2xl font-black text-slate-900 tracking-tight uppercase">Pilotage Séquentiel <span className="text-[10px] text-indigo-500 bg-indigo-50 px-2 py-1 rounded-md ml-2">PRO v2.4</span></h1>
-            <p className="hidden md:block text-slate-500 text-sm font-bold uppercase tracking-widest opacity-60">Gestion détaillée des postes de travail</p>
+            <h1 className="text-lg md:text-2xl font-black text-white tracking-tight uppercase">Pilotage Séquentiel <span className="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-md ml-2">PRO v2.5 FINAL</span></h1>
+            <p className="hidden md:block text-slate-400 text-sm font-bold uppercase tracking-widest opacity-60">Gestion détaillée des postes de travail</p>
           </div>
         </div>
 
