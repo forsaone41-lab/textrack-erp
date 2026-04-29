@@ -129,6 +129,12 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
             <SectionTitle title="GESTION FINANCIÈRE" isAr={isAr} />
           )}
 
+          <SectionTitle title="ESPACE PERSONNEL" isAr={isAr} />
+          <NavLink to="/worker-portal" className={linkClass} onClick={closeMobile}>
+            <User className="w-5 h-5" />
+            <span>Espace Ouvrier</span>
+          </NavLink>
+
           {can('bilan') && (
             <NavLink to="/bilan" className={linkClass} onClick={closeMobile}>
               <PieChart className="w-5 h-5" />
