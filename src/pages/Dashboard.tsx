@@ -428,27 +428,28 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
                  </div>
                  
                  <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-2">{selectedUser.nom}</h3>
-                 <p className="text-xs font-black text-indigo-600 bg-indigo-50 px-4 py-1.5 rounded-full uppercase tracking-widest mb-8 border border-indigo-100">
+                 <h3 className="text-2xl font-bold text-slate-900 uppercase tracking-tighter mb-2">{selectedUser.nom}</h3>
+                 <p className="text-xs font-bold text-indigo-600 bg-indigo-50 px-4 py-1.5 rounded-full uppercase tracking-widest mb-8 border border-indigo-100">
                     {selectedUser.role}
                  </p>
                  
                  <div className="w-full space-y-4 mb-10">
                     <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'آخر ظهور' : 'Dernier accès'}</span>
-                       <span className="text-xs font-black text-slate-900">{selectedUser.lastActive ? new Date(selectedUser.lastActive).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}</span>
+                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{isAr ? 'آخر ظهور' : 'Dernier accès'}</span>
+                       <span className="text-xs font-bold text-slate-900">{selectedUser.lastActive ? new Date(selectedUser.lastActive).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}</span>
                     </div>
                     <div className="flex items-center justify-between p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100">
-                       <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">{isAr ? 'الحالة' : 'Statut'}</span>
+                       <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">{isAr ? 'الحالة' : 'Statut'}</span>
                        <div className="flex items-center gap-2">
                           <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                          <span className="text-xs font-black text-emerald-700 uppercase tracking-widest">{isAr ? 'متصل الآن' : 'En ligne'}</span>
+                          <span className="text-xs font-bold text-emerald-700 uppercase tracking-widest">{isAr ? 'متصل الآن' : 'En ligne'}</span>
                        </div>
                     </div>
                  </div>
                  
                  <button 
                    onClick={() => setSelectedUser(null)}
-                   className="w-full py-4 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-xl shadow-slate-200"
+                   className="w-full py-4 bg-slate-900 text-white rounded-2xl text-xs font-bold uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-xl shadow-slate-200"
                  >
                     {isAr ? 'إغلاق' : 'Fermer'}
                  </button>
