@@ -47,6 +47,7 @@ export default function ChaineDetaillee() {
   
   const [selectedCmdId, setSelectedCmdId] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'config' | 'suivi' | 'stats'>('suivi');
+  const [activeShift, setActiveShift] = useState<'jour' | 'nuit'>('jour');
   const [loading, setLoading] = useState(true);
 
   // Form states
@@ -87,6 +88,20 @@ export default function ChaineDetaillee() {
   const todaySuivi = useMemo(() => 
     suivi.filter(s => s.commande_id === selectedCmdId && s.date_production === today), 
     [suivi, selectedCmdId, today]);
+
+  const filteredHours = useMemo(() => {
+    if (activeShift === 'jour') {
+      return HEURES_TRAVAIL.filter(h => {
+        const hour = parseInt(h.split(':')[0]);
+        return hour >= 8 && hour < 20;
+      });
+    } else {
+      return HEURES_TRAVAIL.filter(h => {
+        const hour = parseInt(h.split(':')[0]);
+        return hour >= 20 || hour < 8;
+      });
+    }
+  }, [activeShift]);
 
   async function handleAddOperation() {
     if (!selectedCmd || !opForm.nom_operation) return;
@@ -305,7 +320,25 @@ export default function ChaineDetaillee() {
               <Clock className="w-6 h-6 text-indigo-600" />
               Saisie de Production par Heure ({today})
             </h2>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
+              <div className="flex bg-white border border-slate-200 p-1 rounded-xl shadow-sm">
+                <button
+                  onClick={() => setActiveShift('jour')}
+                  className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
+                    activeShift === 'jour' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                  {isAr ? 'فريق النهار' : 'Équipe Jour'}
+                </button>
+                <button
+                  onClick={() => setActiveShift('nuit')}
+                  className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
+                    activeShift === 'nuit' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                  {isAr ? 'فريق الليل' : 'Équipe Nuit'}
+                </button>
+              </div>
               <span className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase border border-indigo-100">
                 Live Monitoring
               </span>
@@ -330,7 +363,7 @@ export default function ChaineDetaillee() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {HEURES_TRAVAIL.map(tranche => (
+                {filteredHours.map(tranche => (
                   <tr key={tranche} className="hover:bg-slate-50/30 transition-colors">
                     <td className="px-8 py-4 font-black text-slate-500 text-xs tabular-nums sticky left-0 bg-white z-10 border-r border-slate-100 shadow-sm">
                       {tranche}
