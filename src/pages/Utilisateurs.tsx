@@ -186,10 +186,20 @@ export default function Utilisateurs() {
     setShowModal(true);
   }
   async function save() {
-    if (!form.nom || !form.email) return;
+    const isWorker = form.role === 'worker';
+    if (!form.nom || (!form.email && !isWorker)) return;
+    
     const isNew = !editId;
     const uId = editId || genId();
-    const uData = { id: uId, ...form } as User;
+    
+    // Auto-generate email for workers if missing
+    const finalEmail = form.email || `${form.nom.toLowerCase().replace(/\s+/g, '.')}.${uId.slice(0, 4)}@worker.ma`;
+    
+    const uData = { 
+      id: uId, 
+      ...form, 
+      email: finalEmail 
+    } as User;
 
     const updated = isNew
       ? [...users, uData]
