@@ -96,15 +96,24 @@ export default function Demandes() {
     const updatedLead = { ...lead, status };
     const updatedList = leads.map(l => l.id === id ? updatedLead : l);
     setLeads(updatedList);
-    await saveRecord('leads', updatedLead, true);
+    try {
+      await saveRecord('leads', updatedLead, true);
+    } catch (err) {
+      console.error("Status update failed:", err);
+    }
   };
 
   const handleConfirmDelete = async () => {
     if (!deleteId) return;
-    const updated = leads.filter(l => l.id !== deleteId);
-    setLeads(updated);
-    await deleteRecord('leads', deleteId);
-    setDeleteId(null);
+    try {
+      const updated = leads.filter(l => l.id !== deleteId);
+      setLeads(updated);
+      await deleteRecord('leads', deleteId);
+    } catch (err) {
+      console.error("Delete failed:", err);
+    } finally {
+      setDeleteId(null);
+    }
   };
 
   const sendDevis = (isPDF: boolean = false) => {
