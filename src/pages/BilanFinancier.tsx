@@ -24,12 +24,13 @@ function KpiCard({
   icon: React.ElementType; color: string; trend?: 'up' | 'down' | 'neutral';
   onClick?: () => void;
 }) {
+  const { isAr } = useLang();
   return (
     <button
       onClick={onClick}
       className={`bg-white rounded-3xl border p-6 shadow-sm ${isAr ? 'text-right' : 'text-left'} w-full transition-all hover:shadow-xl hover:-translate-y-1 border-slate-100 ${color}`}
     >
-      <div className="flex items-start justify-between mb-4">
+      <div className={`flex items-start justify-between mb-4 ${isAr ? 'flex-row-reverse' : ''}`}>
         <p className="text-[10px] font-black text-current opacity-60 uppercase tracking-[0.2em]">{label}</p>
         <div className="w-12 h-12 rounded-2xl bg-current/10 flex items-center justify-center flex-shrink-0">
           <Icon className="w-5 h-5" />
