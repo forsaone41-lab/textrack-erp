@@ -221,6 +221,34 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
         </div>
       </div>
 
+      {/* Quick Access Worker Portal */}
+      <div className="grid grid-cols-1 gap-6 px-1">
+        <NavLink to="/worker-portal" className="group relative overflow-hidden bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-800 rounded-[2.5rem] p-8 shadow-2xl shadow-indigo-200/50 flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all hover:scale-[1.01] active:scale-95">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20 group-hover:scale-110 transition-transform duration-700" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full blur-3xl -ml-20 -mb-20" />
+          
+          <div className="flex items-center gap-6 relative z-10">
+            <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-3xl flex items-center justify-center shadow-inner border border-white/30">
+              <UserCheck className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-black text-white uppercase tracking-tight leading-tight">
+                {isAr ? 'فضاء الخدامة' : 'Espace Ouvrier'}
+              </h2>
+              <p className="text-indigo-100 text-sm font-bold opacity-80 uppercase tracking-widest mt-1">
+                {isAr ? 'تتبع مهامك وأدائك اليومي' : 'Suivez vos missions et votre performance'}
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="px-6 py-3 bg-white text-indigo-700 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl group-hover:bg-indigo-50 transition-colors">
+              {isAr ? 'دخول الآن' : 'Accéder Maintenant'}
+            </div>
+          </div>
+        </NavLink>
+      </div>
+
       {/* KPI Cards - High Fidelity Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 px-1">
         {kpiCards.map((kpi, i) => (

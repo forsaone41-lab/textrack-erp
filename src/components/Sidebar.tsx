@@ -79,6 +79,11 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
             <UserCircle className="w-5 h-5" />
             <span>Mon Profil</span>
           </NavLink>
+
+          <NavLink to="/worker-portal" className={linkClass} onClick={closeMobile}>
+            <User className="w-5 h-5 text-indigo-500" />
+            <span className="font-black text-indigo-600">Espace Ouvrier</span>
+          </NavLink>
           
           {(can('demandes') || can('fiches') || can('ordres') || can('chaine')) && (
             <SectionTitle title="GESTION DE PRODUCTION" isAr={isAr} />
@@ -128,12 +133,6 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
           {(can('bilan') || can('factures') || can('charges')) && (
             <SectionTitle title="GESTION FINANCIÈRE" isAr={isAr} />
           )}
-
-          <SectionTitle title="ESPACE PERSONNEL" isAr={isAr} />
-          <NavLink to="/worker-portal" className={linkClass} onClick={closeMobile}>
-            <User className="w-5 h-5" />
-            <span>Espace Ouvrier</span>
-          </NavLink>
 
           {can('bilan') && (
             <NavLink to="/bilan" className={linkClass} onClick={closeMobile}>
