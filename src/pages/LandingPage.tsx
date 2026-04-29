@@ -291,7 +291,7 @@ export default function LandingPage() {
               <div className="p-6 md:p-12 lg:p-16">
                 <form
                   className="space-y-6"
-                  onSubmit={(e) => {
+                  onSubmit={async (e) => {
                     e.preventDefault();
                     const formData = new FormData(e.currentTarget);
                     const countryCode = (e.currentTarget.querySelector('select') as HTMLSelectElement).value;

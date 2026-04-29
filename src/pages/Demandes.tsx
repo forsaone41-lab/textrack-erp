@@ -155,7 +155,7 @@ export default function Demandes() {
     }
   };
 
-  const handleContact = (lead: Lead, typeId: string, customMsg?: string) => {
+  const handleContact = async (lead: Lead, typeId: string, customMsg?: string) => {
     const rawPhone = lead.phone.replace(/\D/g, '');
     let formattedPhone = rawPhone;
     if (rawPhone.startsWith('2120')) {
