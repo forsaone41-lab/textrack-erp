@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { User, Employe, loadData, loadCompanyProfile } from '../types';
+import { useLang } from '../contexts/LangContext';
 
 // Fallback passwords for existing installs (no password in localStorage yet)
 const DEFAULT_PASSWORDS: Record<string, string> = {
@@ -74,6 +75,7 @@ interface LoginProps {
 }
 
 export default function Login({ onLogin }: LoginProps) {
+  const { isAr } = useLang();
   const company = loadCompanyProfile();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -82,7 +84,11 @@ export default function Login({ onLogin }: LoginProps) {
   const [loading, setLoading] = useState(false);
 
   async function handleLogin() {
-    if (!email || !password) { setError('Veuillez remplir tous les champs.'); return; }
+    const isPin = password.length === 4 && /^\d+$/.test(password);
+    if ((!email && !isPin) || !password) { 
+      setError(isAr ? 'المرجو إدخال البريد الإلكتروني والقن السري (أو كود PIN فقط للعمال).' : 'Veuillez remplir les champs (ou PIN seul pour les ouvriers).'); 
+      return; 
+    }
     setError('');
     setLoading(true);
 
@@ -133,13 +139,15 @@ export default function Login({ onLogin }: LoginProps) {
             {/* Form */}
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Email</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                  {isAr ? 'البريد الإلكتروني (أو اتركه فارغاً لـ PIN)' : 'Email (ou vide pour PIN)'}
+                </label>
                 <input
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                  placeholder="votre@email.com"
+                  placeholder={isAr ? 'votre@email.com' : 'votre@email.com'}
                   className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 focus:border-slate-800 outline-none transition"
                 />
               </div>
