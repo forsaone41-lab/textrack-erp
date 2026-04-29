@@ -18,7 +18,8 @@ import {
   Calendar,
   UserPlus,
   RefreshCw,
-  Zap
+  Zap,
+  ArrowRight
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { 
@@ -42,6 +43,12 @@ const HEURES_TRAVAIL = [
   '20:00 - 21:00', '21:00 - 22:00', '22:00 - 23:00', '23:00 - 00:00'
 ];
 
+interface AssignmentDetail {
+  empId: string;
+  startHour: string;
+  endHour: string;
+}
+
 export default function ChaineDetaillee() {
   const { isAr } = useLang();
   const [commandes, setCommandes] = useState<Commande[]>([]);
@@ -55,7 +62,7 @@ export default function ChaineDetaillee() {
   const [loading, setLoading] = useState(true);
 
   // Planning state
-  const [assignments, setAssignments] = useState<Record<string, string>>({});
+  const [assignments, setAssignments] = useState<Record<string, AssignmentDetail>>({});
   const [syncing, setSyncing] = useState(false);
 
   // Form states
@@ -111,17 +118,51 @@ export default function ChaineDetaillee() {
     }
   }, [activeShift]);
 
+  const availableHours = useMemo(() => {
+    const hours = filteredHours.map(h => h.split(' - ')[0]);
+    // Add the final end hour if needed, but for range 08:00 to 18:00, we need the slots
+    return hours;
+  }, [filteredHours]);
+
   // Load current assignments from existing suivi
   useEffect(() => {
     if (modelOps.length > 0 && todaySuivi.length > 0) {
-      const currentMap: Record<string, string> = {};
+      const currentMap: Record<string, AssignmentDetail> = {};
       modelOps.forEach(op => {
-        const entry = todaySuivi.find(s => s.operation_id === op.id && s.employe_id);
-        if (entry) currentMap[op.id] = entry.employe_id;
+        const entries = todaySuivi.filter(s => s.operation_id === op.id && s.employe_id);
+        if (entries.length > 0) {
+          // Sort by time to find range
+          const sorted = entries.sort((a, b) => a.heure_debut.localeCompare(b.heure_debut));
+          currentMap[op.id] = {
+            empId: sorted[0].employe_id!,
+            startHour: sorted[0].heure_debut,
+            endHour: sorted[sorted.length - 1].heure_debut // simplified for now
+          };
+        }
+      });
+      // Merge with default values for ops not found
+      modelOps.forEach(op => {
+        if (!currentMap[op.id]) {
+          currentMap[op.id] = {
+            empId: '',
+            startHour: availableHours[0] || '08:00',
+            endHour: availableHours[availableHours.length - 1] || '18:00'
+          };
+        }
       });
       setAssignments(currentMap);
+    } else if (modelOps.length > 0) {
+       const initial: Record<string, AssignmentDetail> = {};
+       modelOps.forEach(op => {
+         initial[op.id] = {
+           empId: '',
+           startHour: availableHours[0] || '08:00',
+           endHour: availableHours[availableHours.length - 1] || '18:00'
+         };
+       });
+       setAssignments(initial);
     }
-  }, [modelOps, todaySuivi]);
+  }, [modelOps, todaySuivi, availableHours]);
 
   async function handleAddOperation() {
     if (!selectedCmd || !opForm.nom_operation) return;
@@ -190,18 +231,23 @@ export default function ChaineDetaillee() {
     const newSuiviEntries: SuiviHoraire[] = [...suivi];
 
     for (const opId of Object.keys(assignments)) {
-      const empId = assignments[opId];
-      if (!empId) continue;
+      const detail = assignments[opId];
+      if (!detail.empId) continue;
 
-      // For each hour of the current shift, update or create entry
-      for (const tranche of filteredHours) {
+      // Filter hours within the selected range
+      const hoursInRange = filteredHours.filter(tranche => {
+        const start = tranche.split(' - ')[0];
+        return start >= detail.startHour && start <= detail.endHour;
+      });
+
+      for (const tranche of hoursInRange) {
         const [hDebut, hFin] = tranche.split(' - ');
         const existing = todaySuivi.find(s => s.operation_id === opId && s.heure_debut === hDebut);
         
         const entry: SuiviHoraire = {
           id: existing?.id || genId(),
           commande_id: selectedCmdId,
-          employe_id: empId,
+          employe_id: detail.empId,
           operation_id: opId,
           heure_debut: hDebut,
           heure_fin: hFin,
@@ -211,7 +257,6 @@ export default function ChaineDetaillee() {
 
         promises.push(saveRecord('suivi_horaire', entry));
         
-        // Update local state efficiently
         const idx = newSuiviEntries.findIndex(s => s.id === entry.id);
         if (idx !== -1) newSuiviEntries[idx] = entry;
         else newSuiviEntries.push(entry);
@@ -287,7 +332,7 @@ export default function ChaineDetaillee() {
              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10 mb-10">
                 <div>
                    <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase italic">{isAr ? 'توزيع المهام اليومية' : 'Distribution des Missions'}</h2>
-                   <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">Assignez un ouvrier à chaque poste pour la journée</p>
+                   <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">Assignez un ouvrier et une plage horaire à chaque poste</p>
                 </div>
                 <div className="flex items-center gap-4">
                    <div className="flex bg-slate-100 p-1 rounded-xl">
@@ -325,8 +370,8 @@ export default function ChaineDetaillee() {
                      <div className="space-y-4 relative z-10">
                         <div className="relative">
                            <select 
-                             value={assignments[op.id] || ''}
-                             onChange={e => setAssignments({...assignments, [op.id]: e.target.value})}
+                             value={assignments[op.id]?.empId || ''}
+                             onChange={e => setAssignments({...assignments, [op.id]: { ...assignments[op.id], empId: e.target.value }})}
                              className="w-full bg-white border-2 border-slate-100 rounded-xl py-4 px-4 text-xs font-black text-slate-800 appearance-none outline-none focus:border-indigo-500 transition-all shadow-sm"
                            >
                               <option value="">-- Choisir un ouvrier --</option>
@@ -336,11 +381,36 @@ export default function ChaineDetaillee() {
                               <UserPlus className="w-4 h-4 text-slate-300" />
                            </div>
                         </div>
+
+                        {/* Range Selectors */}
+                        <div className="flex items-center gap-2 bg-slate-100 p-2 rounded-xl">
+                           <div className="flex-1">
+                              <p className="text-[7px] font-black text-slate-400 uppercase mb-1 ml-1">Début</p>
+                              <select 
+                                value={assignments[op.id]?.startHour || '08:00'}
+                                onChange={e => setAssignments({...assignments, [op.id]: { ...assignments[op.id], startHour: e.target.value }})}
+                                className="w-full bg-white border-none rounded-lg py-2 px-2 text-[10px] font-black text-slate-700 outline-none shadow-sm"
+                              >
+                                {availableHours.map(h => <option key={h} value={h}>{h}</option>)}
+                              </select>
+                           </div>
+                           <ArrowRight className="w-4 h-4 text-slate-300 mt-4" />
+                           <div className="flex-1">
+                              <p className="text-[7px] font-black text-slate-400 uppercase mb-1 ml-1">Fin</p>
+                              <select 
+                                value={assignments[op.id]?.endHour || '18:00'}
+                                onChange={e => setAssignments({...assignments, [op.id]: { ...assignments[op.id], endHour: e.target.value }})}
+                                className="w-full bg-white border-none rounded-lg py-2 px-2 text-[10px] font-black text-slate-700 outline-none shadow-sm"
+                              >
+                                {availableHours.map(h => <option key={h} value={h}>{h}</option>)}
+                              </select>
+                           </div>
+                        </div>
                         
-                        {assignments[op.id] && (
+                        {assignments[op.id]?.empId && (
                           <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-lg text-emerald-600 text-[8px] font-black uppercase animate-in slide-in-from-top-1">
                              <div className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse" />
-                             Mission Assignée
+                             Mission Assignée ({assignments[op.id].startHour} - {assignments[op.id].endHour})
                           </div>
                         )}
                      </div>
@@ -677,7 +747,7 @@ export default function ChaineDetaillee() {
       {/* Operation Modal */}
       {showOpModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-[250] p-4">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl animate-in zoom-in duration-300">
+          <div className="bg-white rounded-[2.5rem] w-full max-md shadow-2xl animate-in zoom-in duration-300">
             <div className="p-8 border-b border-slate-100 flex items-center justify-between">
               <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Nouveau Poste</h2>
               <button onClick={() => setShowOpModal(false)} className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
