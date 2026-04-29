@@ -17,7 +17,8 @@ import {
   CreditCard,
   Medal,
   Zap,
-  Info
+  Info,
+  LogOut
 } from 'lucide-react';
 import { 
   Employe, 
