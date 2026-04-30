@@ -90,6 +90,7 @@ export interface Commande {
   tissuPrix?: number;
   coutMainOeuvre?: number;
   avance?: number;
+  planningReady?: boolean;
 }
 
 export interface StockTissu {

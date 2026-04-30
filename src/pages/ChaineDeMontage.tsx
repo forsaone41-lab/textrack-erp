@@ -462,9 +462,41 @@ export default function ChaineDeMontage() {
                       <span className="text-2xl font-black text-amber-500 tabular-nums">{retoucheTotal}</span>
                     </div>
                   </div>
-
-                  {/* Action Center */}
                   <div className="space-y-4 pt-2">
+                    {/* Montage Planning Box (White Box as requested) */}
+                    {cmd.phase === 'montage' && (
+                      <div className={`p-5 rounded-[2rem] border-2 border-dashed transition-all ${
+                        cmd.planningReady ? 'bg-emerald-50/30 border-emerald-200' : 'bg-white border-slate-100 opacity-60'
+                      }`}>
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-xl ${cmd.planningReady ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-50 text-slate-300'}`}>
+                              <ClipboardCheck className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <p className={`text-[10px] font-black uppercase tracking-widest ${cmd.planningReady ? 'text-emerald-700' : 'text-slate-400'}`}>
+                                {isAr ? 'تخطيط الورشة' : 'Planning Atelier'}
+                              </p>
+                              <p className="text-[9px] font-bold text-slate-400">
+                                {cmd.planningReady ? (isAr ? 'التخطيط جاهز' : 'Planning Prêt') : (isAr ? 'في انتظار التخطيط' : 'En attente de Pilotage')}
+                              </p>
+                            </div>
+                          </div>
+                          <button 
+                            disabled={!cmd.planningReady}
+                            onClick={() => window.location.hash = '#/pilotage-chaine'}
+                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                              cmd.planningReady 
+                                ? 'bg-slate-900 text-white shadow-lg hover:bg-indigo-600' 
+                                : 'bg-slate-50 text-slate-200 cursor-not-allowed'
+                            }`}
+                          >
+                            {isAr ? 'عرض' : 'Voir'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="flex items-center justify-between px-2">
                        <div className="flex items-center gap-2">
                           <div className={`w-2 h-2 rounded-full ${jRest < 0 ? 'bg-red-500' : 'bg-green-500'} animate-pulse`} />
@@ -479,7 +511,12 @@ export default function ChaineDeMontage() {
 
                     <button 
                       onClick={() => openPointage(cmd)}
-                      className="group/btn w-full flex items-center justify-center gap-3 py-5 bg-slate-900 text-white rounded-[1.5rem] text-xs font-black uppercase tracking-[0.2em] shadow-2xl shadow-slate-200 hover:bg-indigo-600 hover:shadow-indigo-200 transition-all active:scale-[0.98]"
+                      disabled={cmd.phase === 'montage' && !cmd.planningReady}
+                      className={`group/btn w-full flex items-center justify-center gap-3 py-5 rounded-[1.5rem] text-xs font-black uppercase tracking-[0.2em] transition-all ${
+                        cmd.phase === 'montage' && !cmd.planningReady
+                        ? 'bg-slate-50 text-slate-300 border border-slate-100 cursor-not-allowed'
+                        : 'bg-slate-900 text-white shadow-2xl shadow-slate-200 hover:bg-indigo-600 hover:shadow-indigo-200 active:scale-[0.98]'
+                      }`}
                     >
                       <ClipboardCheck className="w-5 h-5 group-hover/btn:rotate-12 transition-transform" />
                       {isAr ? 'تسجيل الإنتاج اليومي' : 'Saisir Production'}
@@ -497,7 +534,12 @@ export default function ChaineDeMontage() {
                       {canAdvance && (
                         <button
                           onClick={() => updatePhase(cmd.id, nextPhase!)}
-                          className="flex-1 flex items-center justify-center gap-3 py-5 bg-white border-2 border-slate-900 text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-[0.98]"
+                          disabled={cmd.phase === 'montage' && !cmd.planningReady}
+                          className={`flex-1 flex items-center justify-center gap-3 py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                            cmd.phase === 'montage' && !cmd.planningReady
+                            ? 'bg-slate-50 text-slate-200 border border-slate-100 cursor-not-allowed'
+                            : 'bg-white border-2 border-slate-900 text-slate-900 hover:bg-slate-50 active:scale-[0.98]'
+                          }`}
                         >
                           {isAr ? `الانتقال إلى ${PHASE_LABELS_AR[nextPhase!]}` : `Étape Suivante: ${PHASE_LABELS[nextPhase!]}`} 
                           <ArrowRight className="w-4 h-4" />
