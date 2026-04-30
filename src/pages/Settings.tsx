@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, Image as ImageIcon, Building2, FileText, Phone, Play, Zap } from 'lucide-react';
+import { Save, Image as ImageIcon, Building2, FileText, Phone, Play, Zap, Globe, Settings as SettingsIcon } from 'lucide-react';
 import { CompanyProfile, loadCompanyProfile, saveCompanyProfile } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
@@ -88,7 +88,7 @@ export default function Settings() {
             {/* Logo Admin */}
             <div className="bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100 shadow-sm">
               <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                <Settings className="w-4 h-4 text-slate-900" />
+                <SettingsIcon className="w-4 h-4 text-slate-900" />
                 {isAr ? 'لوغو لوحة الإدارة' : 'Logo Menu Admin'}
               </label>
               <div className="flex flex-col gap-4">
