@@ -88,6 +88,7 @@ export interface Commande {
   suivi: { phase: Phase; date: string; note: string }[];
   couleurs?: string[];
   tailles?: Record<string, number>;
+  tissuPhoto?: string;
   tissuSourcing?: 'maison' | 'client';
   tissuPrix?: number;
   coutMainOeuvre?: number;

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, Clock, UserPlus, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RotateCw, RefreshCw, Scissors, MapPin } from 'lucide-react';
+import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, Clock, UserPlus, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RotateCw, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon } from 'lucide-react';
 import { Lead, loadLeads, saveRecord, User, genId, deleteRecord, loadData } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { generatePDF } from '../utils/pdf';
@@ -28,7 +28,8 @@ export default function Demandes() {
   const [confirmDetails, setConfirmDetails] = useState({
     tissu: '',
     couleurs: '',
-    tailles: { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0 } as Record<string, number>
+    tailles: { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0 } as Record<string, number>,
+    tissuPhoto: ''
   });
   const [successLead, setSuccessLead] = useState<Lead | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -108,6 +109,7 @@ export default function Demandes() {
         client: lead.name,
         modele: lead.type,
         tissu: confirmDetails.tissu || 'À définir',
+        tissuPhoto: confirmDetails.tissuPhoto || undefined,
         couleurs: confirmDetails.couleurs.split(',').map(c => c.trim()).filter(c => c),
         tailles: confirmDetails.tailles,
         quantite: lead.quantity,
@@ -129,7 +131,8 @@ export default function Demandes() {
       setConfirmDetails({
         tissu: '',
         couleurs: '',
-        tailles: { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0 }
+        tailles: { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0 },
+        tissuPhoto: ''
       });
     } catch (e: any) {
       alert(isAr ? 'مشكل: ' + e.message : 'Erreur: ' + e.message);
@@ -437,6 +440,53 @@ export default function Demandes() {
                   />
                   <p className="text-[9px] text-slate-400 font-bold mt-1 uppercase tracking-widest">{isAr ? 'افصل بين الألوان بفاصلة' : 'Séparés par une virgule'}</p>
                 </div>
+
+              <div>
+                <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-2">{isAr ? 'صورة الثوب أو تشكيلة الألوان (اختياري)' : 'Photo Tissu / Gamme Couleurs (Optionnel)'}</label>
+                <div className="flex items-center gap-4">
+                  {confirmDetails.tissuPhoto ? (
+                    <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-indigo-100 shadow-md group shrink-0">
+                      <img src={confirmDetails.tissuPhoto} alt="Tissu" className="w-full h-full object-cover" />
+                      <button 
+                        onClick={() => setConfirmDetails({...confirmDetails, tissuPhoto: ''})}
+                        className="absolute inset-0 bg-rose-500/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Trash2 className="w-6 h-6 text-white" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="w-24 h-24 rounded-2xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 hover:border-indigo-400 transition-all shrink-0">
+                      <Upload className="w-6 h-6 text-slate-400 mb-1" />
+                      <span className="text-[9px] font-bold text-slate-400 uppercase">{isAr ? 'صورة' : 'Photo'}</span>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setConfirmDetails({...confirmDetails, tissuPhoto: reader.result as string});
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                  )}
+                  <div className="flex-1 bg-blue-50/50 p-4 rounded-2xl border border-blue-100/50">
+                    <div className="flex items-start gap-3">
+                      <ImageIcon className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+                      <p className="text-[10px] font-bold text-blue-800 leading-relaxed">
+                        {isAr 
+                          ? 'قم بإرفاق صورة للثوب أو لتشكيلة الألوان (La gamme) كدليل (Preuve) للرجوع إليها في الإنتاج لتفادي الأخطاء.' 
+                          : 'Joignez une photo du tissu ou de la gamme de couleurs comme preuve pour la production.'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
               </div>
 
               <div>
