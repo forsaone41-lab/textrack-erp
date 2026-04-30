@@ -132,6 +132,14 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
                 </div>
               </NavLink>
             )}
+            {can('demandes') && (
+              <NavLink to="/echantillons" className={linkClass} onClick={closeMobile}>
+                <div className="flex items-center gap-3">
+                  <Scissors className="w-[18px] h-[18px]" />
+                  <span>{isAr ? 'العينات' : 'Échantillons'}</span>
+                </div>
+              </NavLink>
+            )}
             {can('clients') && (
               <NavLink to="/clients" className={linkClass} onClick={closeMobile}>
                 <div className="flex items-center gap-3">

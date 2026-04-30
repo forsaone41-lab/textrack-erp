@@ -13,6 +13,7 @@ import ProductionScanner from './pages/ProductionScanner';
 import WorkerPortal from './pages/WorkerPortal';
 import StockMateriaux from './pages/StockMateriaux';
 import SuiviRH from './pages/SuiviRH';
+import Echantillons from './pages/Echantillons';
 import Clients from './pages/Clients';
 import Commandes from './pages/Commandes';
 import Factures from './pages/Factures';
@@ -235,6 +236,7 @@ function AppContent() {
         
         {/* Protected Production Routes */}
         <Route path="demandes" element={can('demandes') ? <Demandes /> : <Navigate to="/" replace />} />
+        <Route path="echantillons" element={can('demandes') ? <Echantillons /> : <Navigate to="/" replace />} />
         <Route path="fiches-techniques" element={can('fiches') ? <FichesTechniques /> : <Navigate to="/" replace />} />
         <Route path="ordres-de-coupe" element={can('ordres') ? <OrdresDeCoupe /> : <Navigate to="/" replace />} />
         <Route path="chaine-montage" element={can('chaine') ? <ChaineDeMontage /> : <Navigate to="/" replace />} />
