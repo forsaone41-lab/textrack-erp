@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useLang } from '../contexts/LangContext';
 import { Commande, loadData, saveRecord } from '../types';
-import { Scissors, CheckCircle, Package, Clock, Palette, Ruler, FileText, Image as ImageIcon } from 'lucide-react';
+import { Scissors, CheckCircle, Package, Clock, Palette, Ruler, FileText, Image as ImageIcon, MessageSquare, PhoneCall, Handshake, Globe, X } from 'lucide-react';
 
 export default function Echantillons() {
   const { isAr } = useLang();
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Validation Modal State
+  const [validateModal, setValidateModal] = useState<{ open: boolean, commande: Commande | null }>({ open: false, commande: null });
+  const [validateMethod, setValidateMethod] = useState<'whatsapp' | 'phone' | 'in_person' | 'portal'>('whatsapp');
+  const [validateNote, setValidateNote] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -23,17 +28,33 @@ export default function Echantillons() {
     }
   };
 
-  const handleAccept = async (c: Commande) => {
-    if (!window.confirm(isAr ? 'هل وافق الكليان على العينة؟' : 'Le client a-t-il validé l\'échantillon ?')) return;
+  const handleAccept = (c: Commande) => {
+    setValidateModal({ open: true, commande: c });
+  };
+
+  const confirmValidation = async () => {
+    if (!validateModal.commande) return;
+    const c = validateModal.commande;
     
+    let methodText = '';
+    if (validateMethod === 'whatsapp') methodText = 'WhatsApp';
+    if (validateMethod === 'phone') methodText = 'Téléphone';
+    if (validateMethod === 'in_person') methodText = 'En personne';
+    if (validateMethod === 'portal') methodText = 'Portail Client';
+
+    const finalNote = `Échantillon validé par le client (Via: ${methodText})${validateNote ? ' - Preuve: ' + validateNote : ''}`;
+
     const updated = {
       ...c,
       statut: 'echantillon_valide',
-      suivi: [...c.suivi, { phase: c.phase, date: new Date().toISOString(), note: 'Échantillon validé par le client' }]
+      suivi: [...c.suivi, { phase: c.phase, date: new Date().toISOString(), note: finalNote }]
     };
     
     await saveRecord('commandes', updated as any);
     setCommandes(prev => prev.map(cmd => cmd.id === c.id ? updated as Commande : cmd));
+    
+    setValidateModal({ open: false, commande: null });
+    setValidateNote('');
   };
 
   const handleLaunch = async (c: Commande) => {
@@ -62,6 +83,97 @@ export default function Echantillons() {
           {isAr ? 'تتبع عينات الكليان قبل الإنتاج الشامل' : 'Suivi des échantillons avant production'}
         </p>
       </div>
+
+      {/* Validation Modal */}
+      {validateModal.open && validateModal.commande && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="p-8 border-b border-slate-50 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-fuchsia-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-fuchsia-200">
+                  <CheckCircle className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">
+                    {isAr ? 'تأكيد الموافقة' : 'Validation de l\'Échantillon'}
+                  </h3>
+                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">{validateModal.commande.client}</p>
+                </div>
+              </div>
+              <button onClick={() => setValidateModal({ open: false, commande: null })} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+                <X className="w-6 h-6 text-slate-300" />
+              </button>
+            </div>
+
+            <div className="p-8 space-y-6">
+              <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest">
+                {isAr ? 'كيف تمت الموافقة؟' : 'Comment l\'échantillon a-t-il été validé ?'}
+              </label>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <button 
+                  onClick={() => setValidateMethod('whatsapp')}
+                  className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${validateMethod === 'whatsapp' ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-md' : 'border-slate-100 text-slate-500 hover:bg-slate-50'}`}
+                >
+                  <MessageSquare className={`w-6 h-6 ${validateMethod === 'whatsapp' ? 'text-emerald-500' : 'text-slate-400'}`} />
+                  <span className="text-[10px] font-black uppercase tracking-widest">WhatsApp</span>
+                </button>
+                
+                <button 
+                  onClick={() => setValidateMethod('phone')}
+                  className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${validateMethod === 'phone' ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-md' : 'border-slate-100 text-slate-500 hover:bg-slate-50'}`}
+                >
+                  <PhoneCall className={`w-6 h-6 ${validateMethod === 'phone' ? 'text-indigo-500' : 'text-slate-400'}`} />
+                  <span className="text-[10px] font-black uppercase tracking-widest">{isAr ? 'مكالمة هاتفية' : 'Appel Téléphonique'}</span>
+                </button>
+
+                <button 
+                  onClick={() => setValidateMethod('in_person')}
+                  className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${validateMethod === 'in_person' ? 'border-amber-500 bg-amber-50 text-amber-700 shadow-md' : 'border-slate-100 text-slate-500 hover:bg-slate-50'}`}
+                >
+                  <Handshake className={`w-6 h-6 ${validateMethod === 'in_person' ? 'text-amber-500' : 'text-slate-400'}`} />
+                  <span className="text-[10px] font-black uppercase tracking-widest">{isAr ? 'حضورياً' : 'En Personne'}</span>
+                </button>
+
+                <button 
+                  onClick={() => setValidateMethod('portal')}
+                  className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${validateMethod === 'portal' ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md' : 'border-slate-100 text-slate-500 hover:bg-slate-50'}`}
+                >
+                  <Globe className={`w-6 h-6 ${validateMethod === 'portal' ? 'text-blue-500' : 'text-slate-400'}`} />
+                  <span className="text-[10px] font-black uppercase tracking-widest">{isAr ? 'فضاء الزبون' : 'Portail Client'}</span>
+                </button>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-2">
+                  {isAr ? 'ملاحظة أو دليل (مثال: رسالة الواتساب)' : 'Note / Preuve (Optionnel)'}
+                </label>
+                <textarea 
+                  value={validateNote}
+                  onChange={(e) => setValidateNote(e.target.value)}
+                  placeholder={isAr ? "الصق رسالة الكليان هنا أو أضف ملاحظة..." : "Collez le message du client ici..."}
+                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-4 text-sm font-medium h-24 focus:border-fuchsia-500 outline-none transition-all resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+              <button 
+                onClick={() => setValidateModal({ open: false, commande: null })}
+                className="px-6 py-3 text-xs font-black text-slate-500 uppercase tracking-widest hover:text-slate-800 transition-colors"
+              >
+                {isAr ? 'إلغاء' : 'Annuler'}
+              </button>
+              <button 
+                onClick={confirmValidation}
+                className="px-8 py-3 bg-fuchsia-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-fuchsia-700 transition-all shadow-lg shadow-fuchsia-200"
+              >
+                {isAr ? 'تأكيد الموافقة' : 'Confirmer Validation'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {commandes.length === 0 ? (
