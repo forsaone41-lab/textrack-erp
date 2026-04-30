@@ -321,11 +321,12 @@ export default function LandingPage() {
                       setIsSending(false);
                       setShowSuccess(true);
                       setSelectedPhoto(null);
+                      setSelectedType('T-Shirt');
+                      (e.currentTarget as HTMLFormElement).reset();
                     } catch (err: any) {
                       setIsSending(false);
                       console.error("Error in LandingPage:", err);
                     }
-                    (e.currentTarget as HTMLFormElement).reset();
                   }}
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
