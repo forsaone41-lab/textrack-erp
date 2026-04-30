@@ -25,6 +25,11 @@ export default function Demandes() {
   const [filter, setFilter] = useState<'all' | 'new' | 'completed'>('all');
 
   const [confirmLead, setConfirmLead] = useState<Lead | null>(null);
+  const [confirmDetails, setConfirmDetails] = useState({
+    tissu: '',
+    couleurs: '',
+    tailles: { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0 } as Record<string, number>
+  });
   const [successLead, setSuccessLead] = useState<Lead | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [devisLead, setDevisLead] = useState<Lead | null>(null);
@@ -102,7 +107,9 @@ export default function Demandes() {
         reference: `CMD-${Date.now().toString().slice(-6)}`,
         client: lead.name,
         modele: lead.type,
-        tissu: 'À définir',
+        tissu: confirmDetails.tissu || 'À définir',
+        couleurs: confirmDetails.couleurs.split(',').map(c => c.trim()).filter(c => c),
+        tailles: confirmDetails.tailles,
         quantite: lead.quantity,
         quantiteLivre: 0,
         dateCommande: new Date().toISOString().split('T')[0],
@@ -119,6 +126,11 @@ export default function Demandes() {
       updateStatus(lead.id, 'completed');
       setSuccessLead(confirmLead);
       setConfirmLead(null);
+      setConfirmDetails({
+        tissu: '',
+        couleurs: '',
+        tailles: { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0 }
+      });
     } catch (e: any) {
       alert(isAr ? 'مشكل: ' + e.message : 'Erreur: ' + e.message);
     }
@@ -367,41 +379,110 @@ export default function Demandes() {
 
       {/* Custom Confirmation Modal */}
       {confirmLead && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-white rounded-[2.5rem] p-10 max-w-md w-full shadow-[0_50px_100px_rgba(0,0,0,0.3)] border border-slate-100 relative overflow-hidden">
-            <div className="absolute top-0 inset-x-0 h-1.5 bg-indigo-600" />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300 overflow-y-auto">
+          <div className="bg-white rounded-[2.5rem] md:rounded-[3rem] p-6 md:p-10 max-w-2xl w-full shadow-[0_50px_100px_rgba(0,0,0,0.3)] border border-slate-100 relative my-8">
+            <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-indigo-500 to-purple-600" />
             <button 
               onClick={() => setConfirmLead(null)}
-              className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-600 transition-colors"
+              className="absolute top-6 right-6 p-2 text-slate-400 hover:text-rose-500 bg-slate-50 hover:bg-rose-50 rounded-full transition-all"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="w-20 h-20 bg-indigo-50 rounded-3xl flex items-center justify-center mb-6">
-              <UserPlus className="w-10 h-10 text-indigo-600" />
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center shrink-0">
+                <FileText className="w-8 h-8 text-indigo-600" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">
+                  {isAr ? 'تأكيد التفاصيل التقنية' : 'Détails Techniques'}
+                </h3>
+                <p className="text-slate-500 font-bold text-xs uppercase tracking-widest mt-1">
+                  {isAr ? 'قبل تحويل الطلبية للإنتاج' : 'Avant conversion en production'}
+                </p>
+              </div>
             </div>
 
-            <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-2">
-              {isAr ? 'تأكيد الطلبية؟' : 'Confirmer la Commande ?'}
-            </h3>
-            <p className="text-slate-500 font-medium leading-relaxed mb-8">
-              {isAr 
-                ? `هل تريد تأكيد طلبية "${confirmLead.name}" وتحويلها إلى قسم الإنتاج؟ سيتم إنشاء حساب للزبون تلقائياً إذا لم يكن موجوداً.`
-                : `Voulez-vous confirmer la commande de "${confirmLead.name}" et l'envoyer en production ? Un compte client sera créé automatiquement s'il n'existe pas.`}
-            </p>
+            <div className="bg-slate-50 rounded-2xl p-4 mb-6 border border-slate-100 flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الزبون' : 'Client'}</p>
+                <p className="text-sm font-black text-slate-900">{confirmLead.name}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الكمية الأولية' : 'Qté Initiale'}</p>
+                <p className="text-sm font-black text-indigo-600">{confirmLead.quantity} pcs</p>
+              </div>
+            </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-2">{isAr ? 'نوع الثوب (Tissu)' : 'Type de Tissu'}</label>
+                  <input 
+                    type="text" 
+                    placeholder="Ex: Coton 100%, 280g..." 
+                    value={confirmDetails.tissu}
+                    onChange={e => setConfirmDetails({...confirmDetails, tissu: e.target.value})}
+                    className="w-full bg-white border-2 border-slate-100 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-2">{isAr ? 'الألوان (Couleurs)' : 'Couleurs'}</label>
+                  <input 
+                    type="text" 
+                    placeholder="Ex: Noir, Blanc, Bleu..." 
+                    value={confirmDetails.couleurs}
+                    onChange={e => setConfirmDetails({...confirmDetails, couleurs: e.target.value})}
+                    className="w-full bg-white border-2 border-slate-100 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
+                  />
+                  <p className="text-[9px] text-slate-400 font-bold mt-1 uppercase tracking-widest">{isAr ? 'افصل بين الألوان بفاصلة' : 'Séparés par une virgule'}</p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-4">{isAr ? 'توزيع المقاسات' : 'Répartition des Tailles'}</label>
+                <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+                  {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map(t => (
+                    <div key={t} className="space-y-1 text-center bg-slate-50 p-2 rounded-xl border border-slate-100">
+                      <span className="text-[10px] font-black text-slate-500 uppercase">{t}</span>
+                      <input 
+                        type="number"
+                        min="0"
+                        value={confirmDetails.tailles[t] || ''}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value) || 0;
+                          setConfirmDetails({
+                            ...confirmDetails,
+                            tailles: { ...confirmDetails.tailles, [t]: val }
+                          });
+                        }}
+                        className="w-full bg-white border border-slate-200 rounded-lg py-1.5 text-center text-xs font-black focus:border-indigo-600 outline-none transition-colors shadow-sm"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 flex justify-between items-center bg-indigo-50 px-4 py-2 rounded-xl text-indigo-800">
+                  <span className="text-xs font-black uppercase tracking-widest">{isAr ? 'المجموع المؤكد:' : 'Total Confirmé :'}</span>
+                  <span className="text-lg font-black">
+                    {Object.values(confirmDetails.tailles).reduce((a, b) => a + b, 0)} <span className="text-[10px] text-indigo-400">pcs</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col-reverse md:flex-row gap-4">
               <button 
                 onClick={() => setConfirmLead(null)}
-                className="py-4 bg-slate-50 text-slate-500 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-100 transition-all"
+                className="w-full py-4 bg-slate-50 text-slate-600 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-100 transition-all border border-slate-200"
               >
                 {isAr ? 'إلغاء' : 'Annuler'}
               </button>
               <button 
                 onClick={handleConvert}
-                className="py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100"
+                className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 flex items-center justify-center gap-2"
               >
-                {isAr ? 'تأكيد الطلبية' : 'Confirmer la Commande'}
+                <CheckCircle className="w-4 h-4" />
+                {isAr ? 'حفظ وإنشاء بطاقة تقنية' : 'Valider & Créer Fiche Technique'}
               </button>
             </div>
           </div>

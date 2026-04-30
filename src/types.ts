@@ -86,6 +86,8 @@ export interface Commande {
   rebut: number;
   statut: 'en_cours' | 'terminé' | 'livré';
   suivi: { phase: Phase; date: string; note: string }[];
+  couleurs?: string[];
+  tailles?: Record<string, number>;
   tissuSourcing?: 'maison' | 'client';
   tissuPrix?: number;
   coutMainOeuvre?: number;
