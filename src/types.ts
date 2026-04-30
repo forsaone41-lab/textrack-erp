@@ -316,6 +316,10 @@ export interface CompanyProfile {
   name: string;
   subtitle: string;
   logoUrl: string;
+  logoLanding?: string;
+  logoAdmin?: string;
+  logoClient?: string;
+  logoInvoice?: string;
   address: string;
   ice: string;
   rc: string;
@@ -346,6 +350,10 @@ export const DEFAULT_COMPANY: CompanyProfile = {
   name: 'BEYA CREATIVE',
   subtitle: 'Confection de vêtement',
   logoUrl: '/logo.png',
+  logoLanding: '/logo.png',
+  logoAdmin: '/logo.png',
+  logoClient: '/logo.png',
+  logoInvoice: '/logo.png',
   address: 'Zone Industrielle, Casablanca',
   ice: '000000000000000',
   rc: '123456',

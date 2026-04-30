@@ -58,12 +58,7 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
         <div className="px-8 pt-10 pb-6 space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                <Sparkles className="w-6 h-6 text-white" />
-              </div>
-              <h1 className="text-2xl font-black text-white tracking-tighter italic">
-                BEYA<span className="text-slate-500 font-medium not-italic ml-0.5">.</span>
-              </h1>
+              <img src={company.logoAdmin || company.logoUrl} className="h-10 object-contain" alt={company.name} />
             </div>
             <button onClick={closeMobile} className="lg:hidden w-8 h-8 flex items-center justify-center bg-white/5 rounded-lg text-slate-400 hover:text-white transition-colors">
               <X className="w-5 h-5" />

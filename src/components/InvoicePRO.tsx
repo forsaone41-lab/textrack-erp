@@ -20,7 +20,8 @@ export const InvoicePRO: React.FC<InvoicePROProps> = ({ facture, commande, compa
       {/* Invoice Header */}
       <div className="flex justify-between items-start mb-12">
         <div>
-          <h1 className="text-3xl font-black text-emerald-600 mb-2">{company.name}</h1>
+        <div className="flex flex-col gap-4">
+          <img src={company.logoInvoice || company.logoUrl} className="h-16 object-contain self-start" alt={company.name} />
           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{company.subtitle}</p>
           <div className="mt-6 space-y-1 text-sm font-medium text-slate-500">
             <p>{company.address}</p>
