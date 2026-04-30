@@ -42,6 +42,7 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
   const [loading, setLoading] = useState(true);
   const [selectedWorkerId, setSelectedWorkerId] = useState<string>(currentUser?.employeId || '');
   const [activeTab, setActiveTab] = useState<'mission' | 'paiements' | 'profil'>('mission');
+  const [expandedMissionId, setExpandedMissionId] = useState<string | null>(null);
   const [data, setData] = useState<{
     employes: Employe[];
     commandes: Commande[];
@@ -243,13 +244,16 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
 
                   return (
                     <div key={opId} className="space-y-4">
-                      <div className={`bg-gradient-to-br ${isDone ? 'from-emerald-600 to-teal-800' : 'from-indigo-600 to-violet-800'} rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden group transition-all`}>
+                      <div 
+                        onClick={() => setExpandedMissionId(expandedMissionId === opId ? null : opId)}
+                        className={`bg-gradient-to-br ${isDone ? 'from-emerald-600 to-teal-800' : 'from-indigo-600 to-violet-800'} rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden group transition-all cursor-pointer hover:scale-[0.99] active:scale-[0.97]`}
+                      >
                         <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:scale-110 transition-transform" />
                         
                         <div className="flex items-center justify-between mb-8">
                           <div className="px-4 py-1.5 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-2">
                             {isDone ? <CheckCircle2 className="w-3 h-3 text-emerald-300" /> : <Zap className="w-3 h-3 fill-white" />}
-                            {isDone ? (isAr ? 'مهمة مكتملة' : 'Mission Terminée') : (isAr ? 'مهمة جارية' : 'Mission en Cours')}
+                            {isDone ? (isAr ? 'مكتملة' : 'Terminée') : (isAr ? 'اضغط للعرض' : 'Cliquez pour voir QR')}
                           </div>
                           <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">
                             {opEntries[0].heure_debut} — {opEntries[opEntries.length - 1].heure_fin}
@@ -267,7 +271,7 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
                             </div>
                             {cmd?.photo && (
                               <div className="relative">
-                                <img src={cmd.photo} className="w-20 h-20 rounded-3xl object-cover border-4 border-white/20 shadow-2xl rotate-3 hover:rotate-0 transition-transform" alt="Modèle" />
+                                <img src={cmd.photo} className="w-20 h-20 rounded-3xl object-cover border-4 border-white/20 shadow-2xl rotate-3" alt="Modèle" />
                               </div>
                             )}
                           </div>
@@ -301,12 +305,18 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
                         </div>
                       </div>
 
-                      {/* QR for this specific mission */}
-                      {!isDone && (
-                        <div className="bg-white rounded-[2rem] p-6 text-slate-900 flex flex-col items-center shadow-lg border border-slate-100">
-                          <h4 className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-4">{isAr ? 'رمز التحقق لهذا المركز' : 'QR Validation pour ce Poste'}</h4>
-                          <QRCodeSVG value={`beya-prod://${cmd?.id}/${op.id}`} size={120} level="H" includeMargin />
+                      {/* QR for this specific mission - Show only if expanded */}
+                      {!isDone && expandedMissionId === opId && (
+                        <div className="bg-white rounded-[2rem] p-6 text-slate-900 flex flex-col items-center shadow-lg border border-slate-100 animate-in zoom-in-95 duration-200">
+                          <h4 className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-4">{isAr ? 'رمز التحقق النشط' : 'QR Validation Actif'}</h4>
+                          <QRCodeSVG value={`beya-prod://${cmd?.id}/${op.id}`} size={160} level="H" includeMargin />
                           <p className="mt-4 text-[9px] font-black text-slate-400 uppercase tracking-tighter">{op.nom_operation}</p>
+                          <button 
+                            onClick={() => setExpandedMissionId(null)}
+                            className="mt-6 text-[10px] font-bold text-indigo-600 uppercase tracking-widest py-2 px-4 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
+                          >
+                            {isAr ? 'إخفاء الرمز' : 'Masquer le QR'}
+                          </button>
                         </div>
                       )}
                     </div>
