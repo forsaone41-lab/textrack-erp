@@ -308,7 +308,12 @@ export default function LandingPage() {
                         alert(isAr ? '⚠️ من فضلك أضف صورة الموديل (إجباري)' : '⚠️ Veuillez ajouter une photo du modèle (Obligatoire)');
                         return;
                       }
-
+                      const leadData = {
+                        name: formData.get('name') as string,
+                        email: formData.get('email') as string,
+                        phone: fullPhone,
+                        ville: formData.get('ville') as string,
+                        type: finalType,
                         quantity: Number(formData.get('quantity')),
                         details: formData.get('details') as string,
                         photo: selectedPhoto
