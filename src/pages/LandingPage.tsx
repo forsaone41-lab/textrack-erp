@@ -332,20 +332,27 @@ export default function LandingPage() {
                       <input type="text" name="ville" placeholder={isAr ? 'مثال: الدار البيضاء' : 'Ex: Casablanca'} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" required />
                     </div>
                     <div>
+                      <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">Email</label>
+                      <input type="email" name="email" placeholder="email@example.com" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" required />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-6">
+                    <div>
                       <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">{isAr ? 'رقم الهاتف' : 'Téléphone / WhatsApp'}</label>
-                      <div className="flex gap-2">
-                        <div className="relative w-[90px] flex-shrink-0">
-                          <select className="w-full appearance-none bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 pl-3 pr-8 text-xs font-black outline-none focus:border-indigo-600 transition-colors h-full">
+                      <div className="flex gap-3">
+                        <div className="relative w-[100px] flex-shrink-0">
+                          <select className="w-full appearance-none bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 pl-4 pr-8 text-xs font-black outline-none focus:border-indigo-600 transition-colors h-[58px]">
                             <option value="+212">🇲🇦 212</option>
                             <option value="+33">🇫🇷 33</option>
                             <option value="+34">🇪🇸 34</option>
                             <option value="+1">🇺🇸 1</option>
                           </select>
-                          <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none text-slate-400">
-                            <ChevronDown className="w-3 h-3" />
+                          <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400">
+                            <ChevronDown className="w-4 h-4" />
                           </div>
                         </div>
-                        <input type="tel" name="phone" placeholder="6XXXXXXXX" className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" required />
+                        <input type="tel" name="phone" placeholder="6XXXXXXXX" className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold outline-none focus:border-indigo-600 transition-colors h-[58px]" required />
                       </div>
                     </div>
                   </div>
