@@ -417,7 +417,7 @@ export async function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'>) {
 }
 
 export function saveCompanyProfile(profile: CompanyProfile): void {
-  safeStorage.setItem('textrack_company', JSON.stringify(profile));
+  safeStorage.setItem('textrack_profile', JSON.stringify(profile));
 }
 
 // ─── Storage Helpers ────────────────────────────────────────
