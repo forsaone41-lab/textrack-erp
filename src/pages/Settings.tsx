@@ -213,6 +213,38 @@ export default function Settings() {
               </div>
             </div>
 
+            {/* Logo Mobile Header */}
+            <div className="bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                <Globe className="w-4 h-4 text-sky-500" />
+                {isAr ? 'لوغو رأس الصفحة (Mobile)' : 'Logo Header (Mobile)'}
+              </label>
+              <div className="flex flex-col gap-4">
+                <div className="h-20 bg-white rounded-2xl border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden">
+                  {profile.logoMobileHeader ? (
+                    <img src={profile.logoMobileHeader} className="h-10 object-contain" alt="Logo Mobile Header" />
+                  ) : (
+                    <ImageIcon className="w-8 h-8 text-slate-200" />
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <input type="text" value={profile.logoMobileHeader || ''} onChange={e => handleChange('logoMobileHeader', e.target.value)} placeholder="/logo-mobile.png" className="flex-1 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500" dir="ltr" />
+                  <label className="cursor-pointer bg-slate-900 text-white p-2.5 rounded-xl hover:bg-indigo-600 transition shadow-lg shadow-slate-200 flex items-center justify-center">
+                    <ImageIcon className="w-4 h-4" />
+                    <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => handleChange('logoMobileHeader', reader.result as string);
+                        reader.readAsDataURL(file);
+                      }
+                    }} />
+                  </label>
+                </div>
+                <p className="text-[9px] font-bold text-indigo-600 italic tracking-tight">{isAr ? 'القياس الموصى به: 150x40 px' : 'Dim. Recommandée : 150x40 px'}</p>
+              </div>
+            </div>
+
             {/* Video Section (Part of the same grid) */}
             <div className="md:col-span-2">
               <label className="block text-sm font-semibold text-slate-700 mb-1 flex items-center gap-2">

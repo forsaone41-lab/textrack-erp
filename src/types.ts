@@ -321,6 +321,7 @@ export interface CompanyProfile {
   logoClient?: string;
   logoInvoice?: string;
   logoLogin?: string;
+  logoMobileHeader?: string;
   address: string;
   ice: string;
   rc: string;
@@ -356,6 +357,7 @@ export const DEFAULT_COMPANY: CompanyProfile = {
   logoClient: '/logo.png',
   logoInvoice: '/logo.png',
   logoLogin: '/logo.png',
+  logoMobileHeader: '/logo.png',
   address: 'Zone Industrielle, Casablanca',
   ice: '000000000000000',
   rc: '123456',
@@ -377,6 +379,7 @@ export function loadCompanyProfile(): CompanyProfile {
     if (!merged.logoClient) merged.logoClient = merged.logoUrl;
     if (!merged.logoInvoice) merged.logoInvoice = merged.logoUrl;
     if (!merged.logoLogin) merged.logoLogin = merged.logoUrl;
+    if (!merged.logoMobileHeader) merged.logoMobileHeader = merged.logoUrl;
     
     return merged;
   } catch (e) {

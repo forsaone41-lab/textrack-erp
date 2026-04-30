@@ -77,7 +77,7 @@ function AdminLayout({
       {/* Mobile Header - Premium Glassy "Zaji" Design */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white/70 backdrop-blur-xl border-b border-slate-200/50 z-[140] flex items-center justify-between px-5 shadow-sm">
         <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : 'flex-row'}`}>
-          <MobileLogoWithFallback src={company.logoAdmin || company.logoUrl} alt={company.name} />
+          <MobileLogoWithFallback src={company.logoMobileHeader || company.logoUrl} alt={company.name} />
         </div>
 
         <button
