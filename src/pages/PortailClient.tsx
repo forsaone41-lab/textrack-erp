@@ -103,30 +103,26 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 
   const submitNewOrder = async () => {
     if (!newOrderForm.modele || !newOrderForm.quantite || !currentUser) return;
+    
+    if (!newOrderForm.photo) {
+      alert(isAr ? "من فضلك أضف صورة الموديل (إجباري)" : "Veuillez ajouter une photo du modèle (Obligatoire)");
+      return;
+    }
+
     setSendingOrder(true);
     
     try {
-      // Use saveLead which handles both Supabase and LocalStorage
-      // and shows alerts if there are errors (silent: false)
       const leadPayload = {
         name: currentUser.nom,
         email: currentUser.email || '',
         phone: currentUser.telephone || '',
         type: newOrderForm.modele,
         quantity: parseInt(newOrderForm.quantite),
-        photo: newOrderForm.photo || undefined,
+        photo: newOrderForm.photo,
         details: newOrderForm.details
       };
-
-      // Add a safety timeout in case Supabase hangs
-      const timeout = setTimeout(() => {
-        if (sendingOrder) {
-          alert(isAr ? "السيرفر كيتعطل شوية، غنحاولو نسيفيو فالمتصفح دبا." : "Le serveur prend du temps, sauvegarde locale en cours.");
-        }
-      }, 8000);
-
+      
       await saveLead(leadPayload);
-      clearTimeout(timeout);
       
       setOrderSent(true);
       setTimeout(() => {
@@ -884,7 +880,11 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                       />
                     </div>
                     <div>
-                      <label className={`block text-xs font-black text-slate-500 uppercase tracking-widest mb-2 ${isAr ? 'text-right' : ''}`}>{isAr ? 'صورة الموديل (اختياري)' : 'Photo du Modèle (Optionnel)'}</label>
+                    <div>
+                      <label className={`block text-xs font-black text-slate-500 uppercase tracking-widest mb-2 ${isAr ? 'text-right' : ''}`}>
+                        {isAr ? 'صورة الموديل' : 'Photo du Modèle'}
+                        <span className="text-rose-500 ml-2">({isAr ? 'إجباري' : 'Obligatoire'} *)</span>
+                      </label>
                       <div className="relative h-32 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center overflow-hidden hover:border-indigo-400 transition-colors cursor-pointer">
                         {newOrderForm.photo ? (
                           <>
@@ -912,9 +912,9 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                   </div>
 
                   <button 
-                    disabled={sendingOrder || !newOrderForm.modele || !newOrderForm.quantite}
+                    disabled={sendingOrder || !newOrderForm.modele || !newOrderForm.quantite || !newOrderForm.photo}
                     onClick={submitNewOrder}
-                    className="w-full py-5 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-indigo-600 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                    className="w-full py-5 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-indigo-600 transition-all flex items-center justify-center gap-3 disabled:opacity-50 shadow-xl shadow-slate-100"
                   >
                     {sendingOrder ? <RotateCw className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
                     {isAr ? 'إرسال الطلب' : 'Envoyer la Commande'}
