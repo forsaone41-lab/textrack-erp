@@ -19,7 +19,8 @@ import {
   Zap,
   Info,
   LogOut,
-  ShieldCheck
+  ShieldCheck,
+  Camera
 } from 'lucide-react';
 import { 
   Employe, 
