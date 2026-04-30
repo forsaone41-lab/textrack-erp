@@ -74,21 +74,54 @@ export default function Demandes() {
     const lead = confirmLead;
     
     try {
-      const newClient: User = {
+      // 1. Check if user already exists
+      const allUsers = await loadData<User>('users');
+      let existingUser = allUsers?.find(u => u.email === lead.email);
+      
+      let clientId = '';
+      
+      if (existingUser) {
+        clientId = existingUser.id;
+      } else {
+        // 2. Create new user if not exists
+        const newClient: User = {
+          id: genId(),
+          nom: lead.name,
+          role: 'client',
+          email: lead.email || `${lead.name.toLowerCase().replace(/\s/g, '.')}@client.ma`,
+          password: 'Client' + lead.phone.slice(-4),
+          pinCode: lead.phone.slice(-4),
+        };
+        clientId = newClient.id;
+        await saveRecord('users', newClient);
+      }
+
+      // 3. Create a real Commande record
+      const newOrder = {
         id: genId(),
-        nom: lead.name,
-        role: 'client',
-        email: lead.email || `${lead.name.toLowerCase().replace(/\s/g, '.')}@client.ma`,
-        password: 'Client' + lead.phone.slice(-4),
-        pinCode: lead.phone.slice(-4),
+        reference: `CMD-${Date.now().toString().slice(-6)}`,
+        client: lead.name,
+        clientId: clientId,
+        modele: lead.type,
+        tissu: 'À définir',
+        quantite: lead.quantity,
+        quantiteLivre: 0,
+        dateCommande: new Date().toISOString().split('T')[0],
+        dateLivraisonPrevue: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        phase: 'coupe',
+        prix: 0,
+        rebut: 0,
+        statut: 'en_cours',
+        suivi: [{ phase: 'coupe', date: new Date().toISOString(), note: 'Commande validée depuis les prospects' }]
       };
 
-      await saveRecord('users', newClient);
+      await saveRecord('commandes', newOrder);
+      
       updateStatus(lead.id, 'completed');
       setSuccessLead(confirmLead);
       setConfirmLead(null);
-    } catch (e) {
-      alert('Error creating client');
+    } catch (e: any) {
+      alert(isAr ? 'مشكل: ' + e.message : 'Erreur: ' + e.message);
     }
   };
 
@@ -547,6 +580,7 @@ export default function Demandes() {
                     <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-1">{lead.name}</h3>
                     <div className="flex flex-wrap gap-4 text-xs font-bold text-slate-500">
                       <span className="flex items-center gap-1.5"><Phone className="w-4 h-4 text-indigo-500" /> {lead.phone}</span>
+                      <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-rose-500" /> {lead.ville || '-'}</span>
                       {lead.email && <span className="flex items-center gap-1.5"><Mail className="w-4 h-4 text-slate-400" /> {lead.email}</span>}
                       <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-slate-400" /> {new Date(lead.date).toLocaleDateString()}</span>
                       <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full">
