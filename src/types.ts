@@ -366,8 +366,8 @@ export const DEFAULT_COMPANY: CompanyProfile = {
 export function loadCompanyProfile(): CompanyProfile {
   try {
     const data = safeStorage.getItem('textrack_profile');
-    const parsed = data ? JSON.parse(data) : null;
-    return parsed || DEFAULT_COMPANY;
+    const parsed = data ? JSON.parse(data) : {};
+    return { ...DEFAULT_COMPANY, ...parsed };
   } catch (e) {
     return DEFAULT_COMPANY;
   }
