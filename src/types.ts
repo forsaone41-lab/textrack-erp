@@ -367,7 +367,15 @@ export function loadCompanyProfile(): CompanyProfile {
   try {
     const data = safeStorage.getItem('textrack_profile');
     const parsed = data ? JSON.parse(data) : {};
-    return { ...DEFAULT_COMPANY, ...parsed };
+    const merged = { ...DEFAULT_COMPANY, ...parsed };
+    
+    // Strong fallback: if specific logos are missing or empty, use the main logoUrl
+    if (!merged.logoLanding) merged.logoLanding = merged.logoUrl;
+    if (!merged.logoAdmin) merged.logoAdmin = merged.logoUrl;
+    if (!merged.logoClient) merged.logoClient = merged.logoUrl;
+    if (!merged.logoInvoice) merged.logoInvoice = merged.logoUrl;
+    
+    return merged;
   } catch (e) {
     return DEFAULT_COMPANY;
   }
