@@ -167,7 +167,7 @@ export default function LandingPage() {
               to={isLoggedIn ? "/dashboard" : "/login"}
               className="px-4 md:px-8 py-2 md:py-3 bg-slate-900 text-white rounded-xl md:rounded-2xl text-[10px] md:text-xs font-black uppercase tracking-widest shadow-xl shadow-slate-200 hover:bg-indigo-600 transition-all"
             >
-              {isLoggedIn ? (isAr ? 'لوحة التحكم' : 'Espace ERP') : (isAr ? 'Login Client' : 'Login Client')}
+              {isLoggedIn ? (isAr ? 'لوحة التحكم' : 'Espace ERP') : (isAr ? 'Connexion' : 'Connexion')}
             </Link>
           </div>
         </div>

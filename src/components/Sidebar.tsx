@@ -220,13 +220,15 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
                 </div>
               </NavLink>
             )}
-            <NavLink to="/fast-scanner" className={linkClass} onClick={closeMobile}>
-              <div className="flex items-center gap-3">
-                <QrCode className="w-[18px] h-[18px] text-indigo-400" />
-                <span className="font-black">{isAr ? 'الماسح الضوئي (PRO)' : 'Scanner (PRO)'}</span>
-              </div>
-              <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse shadow-[0_0_10px_#4f46e5]" />
-            </NavLink>
+            {can('fast_scanner') && (
+              <NavLink to="/fast-scanner" className={linkClass} onClick={closeMobile}>
+                <div className="flex items-center gap-3">
+                  <QrCode className="w-[18px] h-[18px] text-indigo-400" />
+                  <span className="font-black">{isAr ? 'الماسح الضوئي (PRO)' : 'Scanner (PRO)'}</span>
+                </div>
+                <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse shadow-[0_0_10px_#4f46e5]" />
+              </NavLink>
+            )}
             {can('utilisateurs') && (
               <NavLink to="/utilisateurs" className={linkClass} onClick={closeMobile}>
                 <div className="flex items-center gap-3">
@@ -278,16 +280,18 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
               </div>
             </div>
             
-            <button 
-              onClick={() => {
-                localStorage.removeItem('textrack_auth');
-                window.location.reload();
-              }}
-              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest border border-indigo-500/20 mb-2"
-            >
-              <RotateCw className="w-3.5 h-3.5" />
-              <span>{isAr ? 'تحديث إجباري' : 'Forcer la mise à jour'}</span>
-            </button>
+            {currentUser.role === 'admin' && (
+              <button 
+                onClick={() => {
+                  localStorage.removeItem('textrack_auth');
+                  window.location.reload();
+                }}
+                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest border border-indigo-500/20 mb-2"
+              >
+                <RotateCw className="w-3.5 h-3.5" />
+                <span>{isAr ? 'تحديث إجباري' : 'Forcer la mise à jour'}</span>
+              </button>
+            )}
 
             <button 
               onClick={onLogout}
