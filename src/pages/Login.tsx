@@ -136,7 +136,7 @@ export default function Login({ onLogin }: LoginProps) {
           ) : (
             <img 
               src={company.logoLogin} 
-              className="h-20 object-contain mx-auto mb-4" 
+              className="h-32 md:h-40 object-contain mx-auto mb-6" 
               alt={company.name}
               onError={() => setLogoError(true)}
             />
