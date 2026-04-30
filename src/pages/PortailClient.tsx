@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, Settings, ChevronDown, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw } from 'lucide-react';
 import {
-  Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile
+  Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { printElement } from '../utils/pdf';
@@ -105,29 +105,41 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     if (!newOrderForm.modele || !newOrderForm.quantite || !currentUser) return;
     setSendingOrder(true);
     
-    // Create a new Lead/Demande for the admin
-    const newLead = {
-      id: `lead-${Date.now()}`,
-      name: currentUser.nom,
-      email: currentUser.email || '',
-      phone: currentUser.telephone || '',
-      type: newOrderForm.modele,
-      quantity: parseInt(newOrderForm.quantite),
-      date: new Date().toISOString(),
-      status: 'new' as const,
-      photo: newOrderForm.photo || undefined,
-      notes: newOrderForm.details
-    };
+    try {
+      // Use saveLead which handles both Supabase and LocalStorage
+      // and shows alerts if there are errors (silent: false)
+      const leadPayload = {
+        name: currentUser.nom,
+        email: currentUser.email || '',
+        phone: currentUser.telephone || '',
+        type: newOrderForm.modele,
+        quantity: parseInt(newOrderForm.quantite),
+        photo: newOrderForm.photo || undefined,
+        details: newOrderForm.details
+      };
 
-    await saveRecord('leads', newLead, true);
-    
-    setSendingOrder(false);
-    setOrderSent(true);
-    setTimeout(() => {
-      setOrderSent(false);
-      setShowNewOrderModal(false);
-      setNewOrderForm({ modele: '', quantite: '', details: '', photo: null });
-    }, 2000);
+      // Add a safety timeout in case Supabase hangs
+      const timeout = setTimeout(() => {
+        if (sendingOrder) {
+          alert(isAr ? "السيرفر كيتعطل شوية، غنحاولو نسيفيو فالمتصفح دبا." : "Le serveur prend du temps, sauvegarde locale en cours.");
+        }
+      }, 8000);
+
+      await saveLead(leadPayload);
+      clearTimeout(timeout);
+      
+      setOrderSent(true);
+      setTimeout(() => {
+        setOrderSent(false);
+        setShowNewOrderModal(false);
+        setNewOrderForm({ modele: '', quantite: '', details: '', photo: null });
+      }, 2000);
+    } catch (err: any) {
+      console.error("Order submission failed:", err);
+      alert(isAr ? "وقع خطأ فإرسال الطلب: " + err.message : "Erreur lors de l'envoi : " + err.message);
+    } finally {
+      setSendingOrder(false);
+    }
   };
 
   function getPhaseIndex(phase: string): number {
