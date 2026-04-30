@@ -140,7 +140,6 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
 
   return (
     <div className={`space-y-8 pb-10 ${isAr ? 'text-right' : ''}`}>
-      {/* Premium Header */}
       <div className="relative overflow-hidden bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/50 p-8 shadow-2xl shadow-indigo-100/20">
         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl -mr-20 -mt-20" />
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/5 rounded-full blur-3xl -ml-20 -mb-20" />
@@ -307,8 +306,8 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
       </div>
 
       {/* Bottom Row - Alerts & Orders */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Alertes Stock */}
+      <div className="max-w-7-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header Section */}
         <div className="bg-white/70 backdrop-blur-sm rounded-[2.5rem] border border-white p-8 shadow-2xl shadow-amber-100/20">
           <h3 className="text-base font-black text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-3">
             <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.5)]" />

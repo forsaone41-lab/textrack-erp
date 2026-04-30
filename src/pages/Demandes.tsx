@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, Clock, UserPlus, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RotateCw, RefreshCw } from 'lucide-react';
-import { Lead, loadLeads, saveRecord, User, genId } from '../types';
+import { Lead, loadLeads, saveRecord, User, genId, deleteRecord } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { generatePDF } from '../utils/pdf';
 
@@ -110,7 +110,7 @@ export default function Demandes() {
       const updated = leads.filter(l => l.id !== deleteId);
       setLeads(updated);
       await deleteRecord('leads', deleteId, leadToDelete?.email);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Delete failed:", err);
     } finally {
       setDeleteId(null);

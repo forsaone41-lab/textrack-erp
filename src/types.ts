@@ -478,20 +478,9 @@ export async function deleteRecord(table: string, id: string, email?: string): P
     
     // Fallback to Email if provided
     if (email && table === 'leads') {
-      const { error: emailError } = await supabase.from(table).delete().eq('email', email);
-      if (!emailError) {
-        alert(`✅ تم المسح من السيرفر بنجاح (باستعمال الإيميل)!`);
-        return;
-      }
+      await supabase.from(table).delete().eq('email', email);
     }
-
-    const msg = `خطأ في المسح (Error)!\nTable: ${table}\nID: ${id}\nMessage: ${error.message}\nDetails: ${error.details || 'None'}`;
-    console.error(msg, error);
-    alert(msg);
-    return;
   }
-  
-  alert(`✅ تم المسح بنجاح من السيرفر!\nID: ${id}`);
 }
 
 // Keeping this for backwards compatibility, but it should be avoided
