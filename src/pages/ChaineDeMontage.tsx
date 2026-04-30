@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Factory, ArrowRight, ArrowLeft, Clock, Package, TriangleAlert, ClipboardCheck, X } from 'lucide-react';
+import { Factory, ArrowRight, ArrowLeft, Clock, Package, TriangleAlert, ClipboardCheck, X, TrendingUp, Trophy } from 'lucide-react';
 import {
   Commande, PointageEntry, Employe, loadData, saveRecord, genId, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, Phase,
 } from '../types';
@@ -107,59 +107,93 @@ export default function ChaineDeMontage() {
 
   return (
     <div className="space-y-6">
-      <div className={isAr ? 'text-right' : ''}>
-        <h1 className="text-2xl font-bold text-slate-800">{isAr ? 'سلسلة الإنتاج' : 'Chaîne de Montage'}</h1>
-        <p className="text-slate-500 text-sm">{isAr ? 'تتبع الإنتاج حسب كل مركز عمل' : 'Suivi de la production poste par poste'}</p>
+      <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ${isAr ? 'flex-row-reverse' : ''}`}>
+        <div className={isAr ? 'text-right' : ''}>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight uppercase italic flex items-center gap-2">
+            <Factory className="w-6 h-6 text-indigo-600" />
+            {isAr ? 'سلسلة الإنتاج' : 'Chaîne de Montage'}
+          </h1>
+          <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">{isAr ? 'تتبع الإنتاج حسب كل مركز عمل' : 'Suivi de la production poste par poste'}</p>
+        </div>
+        
+        <div className="flex items-center gap-3">
+           <button 
+             onClick={() => window.location.hash = '#/pilotage-chaine'}
+             className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-lg shadow-slate-200"
+           >
+             <TrendingUp className="w-4 h-4" />
+             {isAr ? 'لوحة القيادة' : 'Vue Pilotage'}
+           </button>
+           <button 
+             onClick={() => window.location.hash = '#/performance'}
+             className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm"
+           >
+             <Trophy className="w-4 h-4 text-amber-500" />
+             {isAr ? 'الأداء' : 'Performance'}
+           </button>
+        </div>
       </div>
 
-      {/* KPI Cards - Redesigned PRO */}
+      {/* KPI Cards - Redesigned PRO Glassy */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-[1.5rem] border border-slate-100 p-5 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
-          <div className="absolute -right-2 -top-2 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
-             <Factory className="w-20 h-20 text-indigo-600" />
+        <div className="bg-white/60 backdrop-blur-md rounded-3xl border border-white/50 p-6 shadow-xl shadow-slate-200/50 relative overflow-hidden group">
+          <div className="absolute -right-2 -top-2 opacity-[0.05] group-hover:scale-110 transition-transform duration-500">
+             <Factory className="w-24 h-24 text-indigo-600" />
           </div>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'قيد الإنتاج' : 'En Production'}</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'قيد الإنتاج' : 'En Production'}</p>
           <div className={`flex items-baseline gap-1.5 ${isAr ? 'flex-row-reverse' : ''}`}>
-            <p className="text-3xl font-black text-slate-800 tabular-nums">{enCours.length}</p>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{isAr ? 'طلبيات' : 'Commandes'}</span>
+            <p className="text-4xl font-black text-slate-900 tabular-nums">{enCours.length}</p>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{isAr ? 'طلبيات' : 'Cmds'}</span>
           </div>
-          <div className="mt-3 w-10 h-1 bg-indigo-500 rounded-full" />
+          <div className="mt-4 flex items-center gap-2">
+            <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse" />
+            <span className="text-[9px] font-bold text-indigo-600 uppercase tracking-tight">Temps réel</span>
+          </div>
         </div>
 
-        <div className="bg-white rounded-[1.5rem] border border-slate-100 p-5 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
-          <div className="absolute -right-2 -top-2 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
-             <Package className="w-20 h-20 text-blue-600" />
+        <div className="bg-white/60 backdrop-blur-md rounded-3xl border border-white/50 p-6 shadow-xl shadow-slate-200/50 relative overflow-hidden group">
+          <div className="absolute -right-2 -top-2 opacity-[0.05] group-hover:scale-110 transition-transform duration-500">
+             <Package className="w-24 h-24 text-blue-600" />
           </div>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'قطع قيد التنفيذ' : 'Pièces en cours'}</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'قطع قيد التنفيذ' : 'Volume Global'}</p>
           <div className={`flex items-baseline gap-1.5 ${isAr ? 'flex-row-reverse' : ''}`}>
-            <p className="text-3xl font-black text-blue-600 tabular-nums">{totalPiecesEnCours}</p>
+            <p className="text-4xl font-black text-blue-600 tabular-nums">{totalPiecesEnCours}</p>
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{isAr ? 'وحدة' : 'Unités'}</span>
           </div>
-          <div className="mt-3 w-10 h-1 bg-blue-500 rounded-full" />
+          <div className="mt-4 flex items-center gap-2">
+            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+            <span className="text-[9px] font-bold text-blue-600 uppercase tracking-tight">Flux Actif</span>
+          </div>
         </div>
 
-        <div className={`rounded-[1.5rem] border p-5 shadow-sm transition-all relative overflow-hidden group ${retardees > 0 ? 'bg-red-50/50 border-red-100' : 'bg-white border-slate-100'}`}>
+        <div className={`rounded-3xl border p-6 shadow-xl transition-all relative overflow-hidden group ${retardees > 0 ? 'bg-red-50/80 border-red-100 shadow-red-100/50' : 'bg-white/60 backdrop-blur-md border-white/50 shadow-slate-200/50'}`}>
           <div className="absolute -right-2 -top-2 opacity-[0.05]">
-             <TriangleAlert className={`w-20 h-20 ${retardees > 0 ? 'text-red-500' : 'text-slate-200'}`} />
+             <TriangleAlert className={`w-24 h-24 ${retardees > 0 ? 'text-red-500' : 'text-slate-200'}`} />
           </div>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'متأخرة' : 'En Retard'}</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'متأخرة' : 'Retard Critique'}</p>
           <div className={`flex items-baseline gap-1.5 ${isAr ? 'flex-row-reverse' : ''}`}>
-            <p className={`text-3xl font-black tabular-nums ${retardees > 0 ? 'text-red-600' : 'text-slate-300'}`}>{retardees}</p>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{isAr ? 'تأخير' : 'Retards'}</span>
+            <p className={`text-4xl font-black tabular-nums ${retardees > 0 ? 'text-red-600' : 'text-slate-300'}`}>{retardees}</p>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{isAr ? 'تأخير' : 'Alertes'}</span>
           </div>
-          <div className={`mt-3 w-10 h-1 rounded-full ${retardees > 0 ? 'bg-red-500' : 'bg-slate-200'}`} />
+          <div className="mt-4 flex items-center gap-2">
+            <div className={`w-1.5 h-1.5 rounded-full ${retardees > 0 ? 'bg-red-500 animate-bounce' : 'bg-slate-200'}`} />
+            <span className={`text-[9px] font-bold uppercase tracking-tight ${retardees > 0 ? 'text-red-600' : 'text-slate-300'}`}>Priorité Haute</span>
+          </div>
         </div>
 
-        <div className={`rounded-[1.5rem] border p-5 shadow-sm transition-all relative overflow-hidden group ${urgentes > 0 ? 'bg-amber-50/50 border-amber-100' : 'bg-white border-slate-100'}`}>
+        <div className={`rounded-3xl border p-6 shadow-xl transition-all relative overflow-hidden group ${urgentes > 0 ? 'bg-amber-50/80 border-amber-100 shadow-amber-100/50' : 'bg-white/60 backdrop-blur-md border-white/50 shadow-slate-200/50'}`}>
           <div className="absolute -right-2 -top-2 opacity-[0.05]">
-             <Clock className={`w-20 h-20 ${urgentes > 0 ? 'text-amber-500' : 'text-slate-200'}`} />
+             <Clock className={`w-24 h-24 ${urgentes > 0 ? 'text-amber-500' : 'text-slate-200'}`} />
           </div>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'عاجلة' : 'Urgentes'}</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'عاجلة' : 'Délai < 3j'}</p>
           <div className={`flex items-baseline gap-1.5 ${isAr ? 'flex-row-reverse' : ''}`}>
-            <p className={`text-3xl font-black tabular-nums ${urgentes > 0 ? 'text-amber-600' : 'text-slate-300'}`}>{urgentes}</p>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{isAr ? 'قريبة' : 'Proches'}</span>
+            <p className={`text-4xl font-black tabular-nums ${urgentes > 0 ? 'text-amber-600' : 'text-slate-300'}`}>{urgentes}</p>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{isAr ? 'قريبة' : 'Urgent'}</span>
           </div>
-          <div className={`mt-3 w-10 h-1 rounded-full ${urgentes > 0 ? 'bg-amber-500' : 'bg-slate-200'}`} />
+          <div className="mt-4 flex items-center gap-2">
+            <div className={`w-1.5 h-1.5 rounded-full ${urgentes > 0 ? 'bg-amber-500' : 'bg-slate-200'}`} />
+            <span className={`text-[9px] font-bold uppercase tracking-tight ${urgentes > 0 ? 'text-amber-600' : 'text-slate-300'}`}>Livraison Proche</span>
+          </div>
         </div>
       </div>
 
@@ -342,17 +376,17 @@ export default function ChaineDeMontage() {
 
       {/* Commandes dans la phase */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className={`text-sm font-semibold text-slate-700 ${isAr ? 'text-right' : ''}`}>
-            {selectedPhase === 'all' ? (isAr ? 'كافة الطلبيات قيد التنفيذ' : 'Toutes les commandes en cours') : `${isAr ? 'المرحلة' : 'Phase'}: ${isAr ? PHASE_LABELS_AR[selectedPhase] : PHASE_LABELS[selectedPhase as Phase]}`}
-            <span className="ml-2 text-slate-400 font-normal">({filtered.length} {isAr ? 'طلبيات' : 'commandes'})</span>
+        <div className="flex items-center justify-between px-2">
+          <h3 className={`text-xs font-black text-slate-500 uppercase tracking-widest ${isAr ? 'text-right' : ''}`}>
+            {selectedPhase === 'all' ? (isAr ? 'كافة الطلبيات قيد التنفيذ' : 'Flux Global Production') : `${isAr ? 'المرحلة' : 'Focus Phase'}: ${isAr ? PHASE_LABELS_AR[selectedPhase] : PHASE_LABELS[selectedPhase as Phase]}`}
+            <span className="ml-2 text-indigo-500 font-black">({filtered.length})</span>
           </h3>
           {selectedPhase !== 'all' && (
-            <button onClick={() => setSelectedPhase('all')} className="text-xs text-indigo-600 hover:text-indigo-700">{isAr ? 'عرض الكل' : 'Voir tout'}</button>
+            <button onClick={() => setSelectedPhase('all')} className="text-[10px] font-black text-indigo-600 hover:text-indigo-700 uppercase tracking-widest">{isAr ? 'عرض الكل' : 'Voir tout'}</button>
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filtered.map(cmd => {
             const phaseIdx = PHASE_ORDER.indexOf(cmd.phase);
             const canAdvance = phaseIdx < PHASE_ORDER.length - 1;
@@ -361,9 +395,6 @@ export default function ChaineDeMontage() {
             const prevPhase = canGoBack ? PHASE_ORDER[phaseIdx - 1] : null;
             const jPhase = joursEnPhase(cmd);
             const jRest = joursRestants(cmd);
-            const attenteCouleur = jPhase >= 14 ? 'bg-red-100 text-red-700 border-red-200'
-              : jPhase >= 7 ? 'bg-amber-100 text-amber-700 border-amber-200'
-                : 'bg-green-100 text-green-700 border-green-200';
             
             const cmdPointages = pointages.filter(p => p.commandeId === cmd.id && p.phase === cmd.phase);
             const piecesProduites = cmdPointages.reduce((a, p) => a + p.piecesCompletees, 0);
@@ -371,127 +402,119 @@ export default function ChaineDeMontage() {
             const retoucheTotal = cmdPointages.reduce((a, p) => a + p.retouche, 0);
 
             return (
-              <div key={cmd.id} className={`bg-white rounded-2xl border shadow-sm p-4 md:p-6 ${jRest < 0 ? 'border-red-300' : 'border-slate-200'}`}>
-                <div className="flex flex-col gap-5">
+              <div key={cmd.id} className={`group bg-white rounded-[2.5rem] border transition-all duration-500 hover:shadow-2xl hover:shadow-slate-200/50 p-6 md:p-8 ${jRest < 0 ? 'border-red-200 bg-red-50/10' : 'border-slate-100'}`}>
+                <div className="space-y-6">
+                  {/* Card Top: Info & Deadline */}
                   <div className="flex justify-between items-start gap-4">
-                    <div className="min-w-0">
-                      <div className={`flex items-center gap-2 mb-1.5 flex-wrap ${isAr ? 'flex-row-reverse' : ''}`}>
-                        <span className="text-sm md:text-base font-bold text-slate-800 truncate">{cmd.reference}</span>
-                        <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${PHASE_COLORS[cmd.phase]} text-white shadow-sm`}>
+                    <div className="space-y-2">
+                      <div className={`flex items-center gap-2 flex-wrap ${isAr ? 'flex-row-reverse' : ''}`}>
+                        <span className="text-xl font-black text-slate-900 tracking-tight">{cmd.reference}</span>
+                        <div className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest ${PHASE_COLORS[cmd.phase]} text-white shadow-lg shadow-indigo-100`}>
                           {isAr ? PHASE_LABELS_AR[cmd.phase] : PHASE_LABELS[cmd.phase]}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-500 font-medium truncate">{cmd.modele} · {cmd.client}</p>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className={`px-4 py-2 rounded-2xl border-2 flex flex-col items-center justify-center animate-pulse-slow ${
-                        jRest < 0 ? 'bg-red-50 border-red-500 text-red-600' :
-                        jRest <= 3 ? 'bg-amber-50 border-amber-500 text-amber-600' :
-                        'bg-emerald-50 border-emerald-500 text-emerald-600'
-                      }`}>
-                        <span className="text-[10px] font-black uppercase tracking-tighter leading-none">{isAr ? 'أجل التسليم' : 'Délai Final'}</span>
-                        <p className="text-lg font-black leading-none mt-1">{cmd.dateLivraisonPrevue}</p>
-                        <div className={`mt-1 flex items-center gap-1 ${isAr ? 'flex-row-reverse' : ''}`}>
-                          <Clock className="w-3 h-3" />
-                          <span className="text-xs font-bold uppercase tracking-tight">
-                            {jRest < 0 ? (isAr ? `تأخير: ${Math.abs(jRest)}ي` : `Retard: ${Math.abs(jRest)}j`) : jRest === 0 ? (isAr ? 'اليوم !' : "Aujourd'hui !") : (isAr ? `بقي ${jRest}ي` : `${jRest}j restants`)}
-                          </span>
                         </div>
                       </div>
+                      <div className={`flex items-center gap-2 text-slate-400 text-[10px] font-bold uppercase tracking-[0.1em] ${isAr ? 'flex-row-reverse' : ''}`}>
+                        <Package className="w-3 h-3" />
+                        <span>{cmd.modele}</span>
+                        <span className="opacity-30">•</span>
+                        <span>{cmd.client}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="text-right">
+                       <div className={`inline-flex flex-col items-end p-3 rounded-2xl border ${
+                         jRest < 0 ? 'bg-red-600 border-red-500 text-white shadow-lg shadow-red-100' :
+                         jRest <= 3 ? 'bg-amber-500 border-amber-400 text-white shadow-lg shadow-amber-100' :
+                         'bg-slate-50 border-slate-100 text-slate-800'
+                       }`}>
+                          <span className="text-[8px] font-black uppercase tracking-widest opacity-80">{isAr ? 'موعد التسليم' : 'Deadline'}</span>
+                          <span className="text-sm font-black tabular-nums mt-0.5">{cmd.dateLivraisonPrevue}</span>
+                       </div>
                     </div>
                   </div>
 
-                  {/* Mobile Progress Bar */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-1">
+                  {/* Pipeline Step Progress */}
+                  <div className="relative pt-2">
+                    <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden flex gap-1">
                       {PHASE_ORDER.map((p, i) => (
-                        <div key={p} className={`h-1.5 flex-1 rounded-full ${i <= phaseIdx ? PHASE_COLORS[p] : 'bg-slate-100'}`} />
+                        <div key={p} className={`h-full flex-1 transition-all duration-1000 ${i <= phaseIdx ? PHASE_COLORS[p] : 'bg-slate-100'}`} />
                       ))}
                     </div>
-                    <div className="flex justify-between text-[8px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                      <span>{isAr ? PHASE_LABELS_AR[PHASE_ORDER[0]] : PHASE_LABELS[PHASE_ORDER[0]]}</span>
-                      <span>{isAr ? PHASE_LABELS_AR[PHASE_ORDER[PHASE_ORDER.length-1]] : PHASE_LABELS[PHASE_ORDER[PHASE_ORDER.length-1]]}</span>
+                    <div className="flex justify-between mt-2">
+                       <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">{isAr ? 'البداية' : 'Start'}</span>
+                       <span className="text-[8px] font-black text-indigo-600 uppercase tracking-widest">{isAr ? 'المرحلة الحالية' : 'Active'}</span>
+                       <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">{isAr ? 'النهاية' : 'End'}</span>
                     </div>
                   </div>
 
-                  {/* Quality Scorecard - Redesigned PRO */}
-                  <div className="bg-slate-50/80 rounded-[1.5rem] border border-slate-100 p-4 shadow-inner">
-                    <div className="flex items-center justify-between gap-2">
-                       <div className="flex-1 text-center py-2">
-                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">{isAr ? 'جيدة' : 'Bonnes'}</span>
-                         <span className="text-xl font-black text-indigo-600 tabular-nums leading-none">{piecesProduites}</span>
-                       </div>
-                       <div className="w-px h-8 bg-slate-200" />
-                       <div className="flex-1 text-center py-2">
-                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">{isAr ? 'ضياع' : 'Rebut'}</span>
-                         <span className="text-xl font-black text-red-600 tabular-nums leading-none">{rebutTotal}</span>
-                       </div>
-                       <div className="w-px h-8 bg-slate-200" />
-                       <div className="flex-1 text-center py-2">
-                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">{isAr ? 'إصلاح' : 'Retouche'}</span>
-                         <span className="text-xl font-black text-amber-600 tabular-nums leading-none">{retoucheTotal}</span>
-                       </div>
-                       <div className="w-px h-8 bg-indigo-200" />
-                       <div className="flex-[1.3] text-center bg-indigo-600 rounded-xl py-2 shadow-lg shadow-indigo-100 border border-indigo-500">
-                         <span className="text-[8px] font-black text-indigo-100 uppercase tracking-widest mb-1 block">{isAr ? 'إجمالي المرحلة' : 'Total Phase'}</span>
-                         <span className="text-xl font-black text-white tabular-nums leading-none">{piecesProduites + rebutTotal + retoucheTotal}</span>
-                       </div>
+                  {/* Quality Matrix: Modern Grid */}
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="bg-slate-50/50 rounded-3xl p-4 border border-slate-100 text-center hover:bg-white hover:shadow-lg transition-all duration-300">
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">{isAr ? 'جيدة' : 'Conformes'}</span>
+                      <span className="text-2xl font-black text-indigo-600 tabular-nums">{piecesProduites}</span>
+                    </div>
+                    <div className="bg-slate-50/50 rounded-3xl p-4 border border-slate-100 text-center hover:bg-white hover:shadow-lg transition-all duration-300">
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">{isAr ? 'ضياع' : 'Rebut'}</span>
+                      <span className="text-2xl font-black text-red-500 tabular-nums">{rebutTotal}</span>
+                    </div>
+                    <div className="bg-slate-50/50 rounded-3xl p-4 border border-slate-100 text-center hover:bg-white hover:shadow-lg transition-all duration-300">
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">{isAr ? 'إصلاح' : 'Retouche'}</span>
+                      <span className="text-2xl font-black text-amber-500 tabular-nums">{retoucheTotal}</span>
                     </div>
                   </div>
 
-                  <div className="space-y-4 pt-2 border-t border-slate-100">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                         <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold border ${attenteCouleur}`}>
-                          <Clock className="w-3 h-3" />
-                          {jPhase === 0 ? (isAr ? "اليوم" : "Aujourd'hui") : `${jPhase}${isAr ? 'ي في المرحلة' : 'j en phase'}`}
-                        </span>
-                        <span className="text-xs font-bold text-indigo-600">{cmd.quantite} <span className="text-[10px] text-slate-400 uppercase tracking-tight">{isAr ? 'إجمالي القطع' : 'Pièces Total'}</span></span>
-                      </div>
+                  {/* Action Center */}
+                  <div className="space-y-4 pt-2">
+                    <div className="flex items-center justify-between px-2">
+                       <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${jRest < 0 ? 'bg-red-500' : 'bg-green-500'} animate-pulse`} />
+                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                            {jPhase === 0 ? "Aujourd'hui" : `${jPhase} jours en phase`}
+                          </span>
+                       </div>
+                       <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 px-3 py-1 rounded-lg">
+                         Objectif: {cmd.quantite} pcs
+                       </span>
                     </div>
 
-                    {/* Pointage Button - Premium & Breathable */}
                     <button 
                       onClick={() => openPointage(cmd)}
-                      className="w-full flex items-center justify-center gap-3 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-blue-100 hover:shadow-blue-200 hover:-translate-y-0.5 active:translate-y-0 transition-all border border-blue-400/20 px-6"
+                      className="group/btn w-full flex items-center justify-center gap-3 py-5 bg-slate-900 text-white rounded-[1.5rem] text-xs font-black uppercase tracking-[0.2em] shadow-2xl shadow-slate-200 hover:bg-indigo-600 hover:shadow-indigo-200 transition-all active:scale-[0.98]"
                     >
-                      <div className="bg-white/20 p-1.5 rounded-lg">
-                        <ClipboardCheck className="w-4 h-4" />
-                      </div>
-                      {isAr ? 'تسجيل الإنتاج' : 'POINTAGE PRODUCTION'}
+                      <ClipboardCheck className="w-5 h-5 group-hover/btn:rotate-12 transition-transform" />
+                      {isAr ? 'تسجيل الإنتاج اليومي' : 'Saisir Production'}
                     </button>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                       {canGoBack && (
                         <button
                           onClick={() => updatePhase(cmd.id, prevPhase!)}
-                          className="flex-1 flex items-center justify-center gap-1.5 py-4 border-2 border-slate-200 text-slate-500 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all"
-                          title={`Retour en ${PHASE_LABELS[prevPhase!]}`}
+                          className="p-5 border-2 border-slate-100 text-slate-300 rounded-2xl hover:border-slate-300 hover:text-slate-600 transition-all active:scale-90"
                         >
-                          <ArrowLeft className="w-4 h-4" />
+                          <ArrowLeft className="w-5 h-5" />
                         </button>
                       )}
                       {canAdvance && (
                         <button
                           onClick={() => updatePhase(cmd.id, nextPhase!)}
-                          className={`flex-[3] flex items-center justify-center gap-2 py-4 bg-slate-900 text-white rounded-xl text-xs font-black shadow-lg shadow-slate-200 hover:bg-black transition-all uppercase tracking-widest ${isAr ? 'flex-row-reverse' : ''}`}
+                          className="flex-1 flex items-center justify-center gap-3 py-5 bg-white border-2 border-slate-900 text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-[0.98]"
                         >
-                          {isAr ? `بدء ${PHASE_LABELS_AR[nextPhase!]}` : `Démarrer ${PHASE_LABELS[nextPhase!]}`} <ArrowRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
+                          {isAr ? `الانتقال إلى ${PHASE_LABELS_AR[nextPhase!]}` : `Étape Suivante: ${PHASE_LABELS[nextPhase!]}`} 
+                          <ArrowRight className="w-4 h-4" />
                         </button>
                       )}
                     </div>
                   </div>
 
-                  {/* Production History Summary */}
+                  {/* History Preview */}
                   {cmd.suivi.length > 0 && (
                     <div className="pt-4 border-t border-slate-50">
-                      <p className={`text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-widest ${isAr ? 'text-right' : ''}`}>{isAr ? 'مسار الإنتاج' : 'Parcours de production'}</p>
                       <div className={`flex flex-wrap gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
-                        {cmd.suivi.map((s, i) => (
-                           <div key={i} className={`flex items-center gap-2 bg-slate-50 rounded-lg px-2.5 py-1 text-[10px] border border-slate-100 ${isAr ? 'flex-row-reverse' : ''}`}>
-                            <div className={`w-1.5 h-1.5 rounded-full ${PHASE_COLORS[s.phase]}`} />
-                            <span className="font-bold text-slate-600">{isAr ? PHASE_LABELS_AR[s.phase] : PHASE_LABELS[s.phase]}</span>
-                            <span className="text-slate-400 tabular-nums">{s.date}</span>
+                        {cmd.suivi.slice(-2).map((s, i) => (
+                           <div key={i} className="flex items-center gap-2 bg-slate-50/50 rounded-lg px-2 py-1 text-[8px] border border-slate-100">
+                            <div className={`w-1 h-1 rounded-full ${PHASE_COLORS[s.phase]}`} />
+                            <span className="font-bold text-slate-400">{isAr ? PHASE_LABELS_AR[s.phase] : PHASE_LABELS[s.phase]}</span>
+                            <span className="text-slate-300 tabular-nums">{s.date}</span>
                           </div>
                         ))}
                       </div>
@@ -502,7 +525,6 @@ export default function ChaineDeMontage() {
             );
           })}
         </div>
-
         {filtered.length === 0 && (
           <div className="text-center py-12 text-slate-400 bg-white rounded-2xl border border-slate-200">
             <Factory className="w-12 h-12 mx-auto mb-3 opacity-50" />
