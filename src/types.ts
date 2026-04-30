@@ -468,16 +468,17 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
 
 // Helper to delete a single record
 export async function deleteRecord(table: string, id: string): Promise<void> {
-  console.log(`Attempting to delete from ${table} with id: ${id}`);
-  const { error, count } = await supabase.from(table).delete().eq('id', id);
+  console.log(`[DEBUG] Deleting from ${table} | ID: ${id}`);
+  const { error } = await supabase.from(table).delete().eq('id', id);
   
   if (error) {
-    console.error(`Error deleting from ${table}:`, error.message);
-    alert(`Erreur: ${error.message}`);
+    const msg = `خطأ في المسح (Error)!\nTable: ${table}\nID: ${id}\nMessage: ${error.message}\nDetails: ${error.details || 'None'}`;
+    console.error(msg, error);
+    alert(msg);
     return;
   }
   
-  alert(`تم المسح من السيرفر بنجاح!\nID: ${id}`);
+  alert(`✅ تم المسح بنجاح من السيرفر!\nالجدول: ${table}\nالرقم: ${id}`);
 }
 
 // Keeping this for backwards compatibility, but it should be avoided
