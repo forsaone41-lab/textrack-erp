@@ -83,8 +83,10 @@ export interface Commande {
   dateLivraisonPrevue: string;
   phase: Phase;
   prix: number;
+  prixUnitaire?: number;
+  avance?: number;
   rebut: number;
-  statut: 'en_cours' | 'terminé' | 'livré';
+  statut: 'echantillon_en_cours' | 'echantillon_valide' | 'en_cours' | 'terminé' | 'livré';
   suivi: { phase: Phase; date: string; note: string }[];
   couleurs?: string[];
   tailles?: Record<string, number>;

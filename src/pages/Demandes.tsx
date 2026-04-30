@@ -29,7 +29,10 @@ export default function Demandes() {
     tissu: '',
     couleurs: '',
     tailles: { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0 } as Record<string, number>,
-    tissuPhoto: ''
+    tissuPhoto: '',
+    prixUnitaire: '',
+    avance: '',
+    dateLivraisonPrevue: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   });
   const [successLead, setSuccessLead] = useState<Lead | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -115,12 +118,14 @@ export default function Demandes() {
         quantite: lead.quantity,
         quantiteLivre: 0,
         dateCommande: new Date().toISOString().split('T')[0],
-        dateLivraisonPrevue: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        dateLivraisonPrevue: confirmDetails.dateLivraisonPrevue,
         phase: 'coupe',
-        prix: 0,
+        prix: Number(confirmDetails.prixUnitaire) || 0,
+        prixUnitaire: Number(confirmDetails.prixUnitaire) || 0,
+        avance: Number(confirmDetails.avance) || 0,
         rebut: 0,
-        statut: 'en_cours',
-        suivi: [{ phase: 'coupe', date: new Date().toISOString(), note: 'Commande validée depuis les prospects' }]
+        statut: 'echantillon_en_cours',
+        suivi: [{ phase: 'coupe', date: new Date().toISOString(), note: 'Demande d\'échantillon lancée' }]
       };
 
       await saveRecord('commandes', newOrder);
@@ -132,7 +137,10 @@ export default function Demandes() {
         tissu: '',
         couleurs: '',
         tailles: { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0 },
-        tissuPhoto: ''
+        tissuPhoto: '',
+        prixUnitaire: '',
+        avance: '',
+        dateLivraisonPrevue: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       });
     } catch (e: any) {
       alert(isAr ? 'مشكل: ' + e.message : 'Erreur: ' + e.message);
@@ -398,10 +406,10 @@ export default function Demandes() {
               </div>
               <div>
                 <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">
-                  {isAr ? 'تأكيد التفاصيل التقنية' : 'Détails Techniques'}
+                  {isAr ? 'طلب عينة (Échantillon)' : 'Demande d\'Échantillon'}
                 </h3>
                 <p className="text-slate-500 font-bold text-xs uppercase tracking-widest mt-1">
-                  {isAr ? 'قبل تحويل الطلبية للإنتاج' : 'Avant conversion en production'}
+                  {isAr ? 'مرحلة الموافقة قبل الإنتاج الشامل' : 'Phase de validation avant production'}
                 </p>
               </div>
             </div>
@@ -518,6 +526,55 @@ export default function Demandes() {
                   </span>
                 </div>
               </div>
+
+              <div className="bg-emerald-50/50 rounded-2xl p-6 border border-emerald-100">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600">
+                    <Calculator className="w-4 h-4" />
+                  </div>
+                  <h4 className="text-sm font-black text-emerald-900 uppercase tracking-widest">
+                    {isAr ? 'المالية والتخطيط' : 'Finance & Planning'}
+                  </h4>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-1">{isAr ? 'الثمن للقطعة' : 'Prix Unitaire'}</label>
+                    <div className="relative">
+                      <input 
+                        type="number"
+                        placeholder="0.00"
+                        value={confirmDetails.prixUnitaire}
+                        onChange={e => setConfirmDetails({...confirmDetails, prixUnitaire: e.target.value})}
+                        className="w-full bg-white border border-emerald-200 rounded-xl py-2 px-3 pl-8 text-sm font-black text-emerald-900 outline-none focus:border-emerald-500 transition-colors"
+                      />
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500 text-xs font-black">MAD</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-1">{isAr ? 'التسبيق (العربون)' : 'Avance payée'}</label>
+                    <div className="relative">
+                      <input 
+                        type="number"
+                        placeholder="0.00"
+                        value={confirmDetails.avance}
+                        onChange={e => setConfirmDetails({...confirmDetails, avance: e.target.value})}
+                        className="w-full bg-white border border-emerald-200 rounded-xl py-2 px-3 pl-8 text-sm font-black text-emerald-900 outline-none focus:border-emerald-500 transition-colors"
+                      />
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500 text-xs font-black">MAD</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-1">{isAr ? 'تاريخ التسليم' : 'Date de Livraison'}</label>
+                    <input 
+                      type="date"
+                      value={confirmDetails.dateLivraisonPrevue}
+                      onChange={e => setConfirmDetails({...confirmDetails, dateLivraisonPrevue: e.target.value})}
+                      className="w-full bg-white border border-emerald-200 rounded-xl py-2 px-3 text-sm font-black text-emerald-900 outline-none focus:border-emerald-500 transition-colors"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="flex flex-col-reverse md:flex-row gap-4">
@@ -529,10 +586,10 @@ export default function Demandes() {
               </button>
               <button 
                 onClick={handleConvert}
-                className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 flex items-center justify-center gap-2"
+                className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-200 flex items-center justify-center gap-2"
               >
-                <CheckCircle className="w-4 h-4" />
-                {isAr ? 'حفظ وإنشاء بطاقة تقنية' : 'Valider & Créer Fiche Technique'}
+                <Scissors className="w-4 h-4" />
+                {isAr ? 'إطلاق العينة (Échantillon)' : 'Lancer l\'Échantillon'}
               </button>
             </div>
           </div>
@@ -554,8 +611,8 @@ export default function Demandes() {
             </h3>
             <p className="text-slate-500 font-medium leading-relaxed mb-8">
               {isAr 
-                ? `لقد تم تأكيد طلبية "${successLead.name}" بنجاح. سيتمكن الزبون من متابعة مراحل الإنتاج في فضاءه الخاص.`
-                : `La commande de "${successLead.name}" a été confirmée. Le client peut désormais suivre la production dans son espace.`}
+                ? `لقد تم طلب العينة لـ "${successLead.name}" بنجاح. بمجرد موافقة الزبون على العينة، يمكنك إطلاق الإنتاج الشامل واقتطاع الثوب من الستوك.`
+                : `La demande d'échantillon pour "${successLead.name}" a été lancée. Une fois validée par le client, vous pourrez lancer la production globale et déduire le tissu du stock.`}
             </p>
 
             <div className="bg-amber-50 rounded-2xl p-4 mb-10 border border-amber-100">
