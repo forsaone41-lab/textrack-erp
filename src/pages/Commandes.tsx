@@ -311,6 +311,8 @@ export default function Commandes() {
 
   const getDynamicStatus = (c: Partial<Commande>) => {
     if (c.statut === 'livré') return { label: t('status_livree', lang), color: 'bg-emerald-50 text-emerald-700 border-emerald-100', icon: '✓' };
+    if (c.statut === 'echantillon_en_cours') return { label: isAr ? 'عينة قيد الإنجاز' : 'Échantillon en cours', color: 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-100', icon: '✨' };
+    if (c.statut === 'echantillon_valide') return { label: isAr ? 'عينة مقبولة' : 'Échantillon Validé', color: 'bg-teal-50 text-teal-700 border-teal-100', icon: '✓' };
 
     const phase = c.phase || 'coupe';
     const cmdOrdre = ordres.find(o => o.commandeId === c.id);
@@ -461,6 +463,7 @@ export default function Commandes() {
         <div className="flex items-center gap-1.5 p-1 bg-slate-50 rounded-[1.5rem] w-full lg:w-auto overflow-x-auto no-scrollbar">
           {[
             { key: 'all', label: t('all', lang) }, 
+            { key: 'echantillon_en_cours', label: isAr ? 'عينات' : 'Échantillons' },
             { key: 'en_cours', label: t('status_en_cours', lang) }, 
             { key: 'terminé', label: t('status_terminee', lang) }, 
             { key: 'livré', label: t('status_livree', lang) }
