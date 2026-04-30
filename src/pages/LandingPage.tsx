@@ -290,9 +290,11 @@ export default function LandingPage() {
                       finalType = formData.get('customType') as string;
                     }
 
+                    setIsSending(true);
                     try {
                       if (!selectedPhoto) {
-                        alert(isAr ? 'من فضلك أضف صورة الموديل' : 'Veuillez ajouter une photo du modèle');
+                        setIsSending(false);
+                        alert(isAr ? '⚠️ من فضلك أضف صورة الموديل (إجباري)' : '⚠️ Veuillez ajouter une photo du modèle (Obligatoire)');
                         return;
                       }
 
@@ -308,7 +310,6 @@ export default function LandingPage() {
                       };
                       
                       await saveLead(leadData);
-                      setIsSending(true); // Re-triggering state if needed, though already true
                       setIsSending(false);
                       setShowSuccess(true);
                       setSelectedPhoto(null);
@@ -411,8 +412,11 @@ export default function LandingPage() {
                       <textarea name="details" rows={4} placeholder={isAr ? 'اشرح لينا شنو باغي تصاوب...' : 'Décrivez votre projet...'} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors resize-none" />
                     </div>
                     <div>
-                      <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">{isAr ? 'صورة الموديل' : 'Photo du Modèle'}</label>
-                      <div className="relative group h-[120px]">
+                      <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">
+                        {isAr ? 'صورة الموديل' : 'Photo du Modèle'} 
+                        <span className="text-rose-500 ml-2 font-black">({isAr ? 'إجباري' : 'Obligatoire'} *)</span>
+                      </label>
+                      <div className={`relative group h-[120px] transition-all ${!selectedPhoto ? 'ring-2 ring-indigo-100 ring-offset-4 rounded-2xl' : ''}`}>
                         {selectedPhoto ? (
                           <div className="relative h-full w-full rounded-2xl overflow-hidden border-2 border-indigo-100 shadow-md">
                             <img src={selectedPhoto} alt="Preview" className="w-full h-full object-cover" />
