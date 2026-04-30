@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, Clock, UserPlus, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RotateCw, RefreshCw } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, Clock, UserPlus, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RotateCw, RefreshCw, Scissors } from 'lucide-react';
 import { Lead, loadLeads, saveRecord, User, genId, deleteRecord } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { generatePDF } from '../utils/pdf';
@@ -19,6 +20,7 @@ const DEFAULT_TEMPLATES = {
 
 export default function Demandes() {
   const { isAr } = useLang();
+  const navigate = useNavigate();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [filter, setFilter] = useState<'all' | 'new' | 'completed'>('all');
 
@@ -583,6 +585,14 @@ export default function Demandes() {
                       {isAr ? (lead.contactedAt ? 'تم التواصل' : '1. تواصل') : (lead.contactedAt ? 'Contacté' : '1. Contact')}
                     </button>
                   </div>
+
+                  <button 
+                    onClick={() => navigate('/fiches-techniques', { state: { fromLead: lead } })}
+                    className="px-4 py-3 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-indigo-100 transition-all flex items-center justify-center gap-2"
+                    title={isAr ? 'إنشاء بطاقة تقنية' : 'Créer Fiche Technique'}
+                  >
+                    <FileText className="w-4 h-4" /> {isAr ? 'بطاقة' : 'Fiche'}
+                  </button>
 
                   {lead.status !== 'completed' && (
                     <button 

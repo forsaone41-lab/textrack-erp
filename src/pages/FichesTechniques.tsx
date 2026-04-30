@@ -222,6 +222,23 @@ export default function FichesTechniques() {
       setFiches(f);
       setTissus(t);
       setClients(u.filter((x: any) => x.role === 'client'));
+
+      // Check for lead pre-filling from location state (via HashRouter)
+      const state = (window as any).history.state?.usr;
+      if (state && state.fromLead) {
+        setForm({
+          modele: state.fromLead.type,
+          client: state.fromLead.name,
+          photo: state.fromLead.photo,
+          description: `Demande reçue via Landing Page (${state.fromLead.phone})`,
+          tailles: [],
+          mesures: [],
+          tissuConsommation: 0
+        });
+        setShowModal(true);
+        // Clear history state to avoid re-opening on refresh
+        window.history.replaceState({}, document.title);
+      }
     });
   }, []);
 
