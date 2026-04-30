@@ -79,8 +79,6 @@ export default function LandingPage() {
   const [isSending, setIsSending] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [selectedType, setSelectedType] = useState('T-Shirt');
-  const [tailles, setTailles] = useState<Record<string, number>>({ XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0 });
-  const [totalQuantity, setTotalQuantity] = useState('');
 
   // Dynamic SEO Title & Description
   useEffect(() => {
@@ -311,16 +309,9 @@ export default function LandingPage() {
                         return;
                       }
 
-                      const leadData = {
-                        name: formData.get('name') as string,
-                        email: formData.get('email') as string,
-                        phone: fullPhone,
-                        ville: formData.get('ville') as string,
-                        type: finalType,
-                        quantity: Number(totalQuantity || formData.get('quantity')),
+                        quantity: Number(formData.get('quantity')),
                         details: formData.get('details') as string,
-                        photo: selectedPhoto,
-                        tailles: tailles
+                        photo: selectedPhoto
                       };
                       
                       await saveLead(leadData);
@@ -416,44 +407,8 @@ export default function LandingPage() {
                     </div>
                     <div>
                       <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">{isAr ? 'الكمية التقديرية' : 'Quantité Estimeé'}</label>
-                      <input 
-                        type="number" 
-                        name="quantity" 
-                        placeholder="100" 
-                        min="1" 
-                        value={totalQuantity}
-                        onChange={(e) => setTotalQuantity(e.target.value)}
-                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors h-[58px]" 
-                        required 
-                      />
+                      <input type="number" name="quantity" placeholder="100" min="1" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors h-[58px]" required />
                     </div>
-                  </div>
-
-                  {/* Sizes Grid */}
-                  <div className="bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100 animate-in fade-in duration-500">
-                     <label className="block text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 text-center">
-                       {isAr ? 'توزيع الكمية على المقاسات' : 'Répartition de la quantité par tailles'}
-                     </label>
-                     <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-                       {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map(t => (
-                         <div key={t} className="space-y-1.5 text-center">
-                           <span className="text-[10px] font-black text-slate-400 uppercase">{t}</span>
-                           <input 
-                             type="number"
-                             min="0"
-                             value={tailles[t] || ''}
-                             onChange={(e) => {
-                               const val = parseInt(e.target.value) || 0;
-                               const newTailles = { ...tailles, [t]: val };
-                               setTailles(newTailles);
-                               const newTotal = Object.values(newTailles).reduce((a, b) => a + b, 0);
-                               if (newTotal > 0) setTotalQuantity(newTotal.toString());
-                             }}
-                             className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-center text-xs font-black focus:border-indigo-600 outline-none transition-all shadow-sm"
-                           />
-                         </div>
-                       ))}
-                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
