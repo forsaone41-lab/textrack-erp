@@ -330,6 +330,7 @@ export interface Lead {
   id: string;
   name: string;
   phone: string;
+  ville: string;
   type: string;
   quantity: number;
   details: string;

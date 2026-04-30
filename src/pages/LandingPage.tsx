@@ -296,6 +296,7 @@ export default function LandingPage() {
                         name: formData.get('name') as string,
                         email: formData.get('email') as string,
                         phone: fullPhone,
+                        ville: formData.get('ville') as string,
                         type: finalType,
                         quantity: Number(formData.get('quantity')),
                         details: formData.get('details') as string,
@@ -325,7 +326,11 @@ export default function LandingPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">{isAr ? 'المدينة' : 'Ville'}</label>
+                      <input type="text" name="ville" placeholder={isAr ? 'مثال: الدار البيضاء' : 'Ex: Casablanca'} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" required />
+                    </div>
                     <div>
                       <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">{isAr ? 'رقم الهاتف' : 'Téléphone / WhatsApp'}</label>
                       <div className="flex gap-2">
@@ -388,7 +393,7 @@ export default function LandingPage() {
                     </div>
                     <div>
                       <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">{isAr ? 'الكمية التقديرية' : 'Quantité Estimeé'}</label>
-                      <input type="number" name="quantity" defaultValue="100" min="1" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors h-[58px]" required />
+                      <input type="number" name="quantity" placeholder="100" min="1" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors h-[58px]" required />
                     </div>
                   </div>
 
@@ -398,7 +403,7 @@ export default function LandingPage() {
                       <textarea name="details" rows={4} placeholder={isAr ? 'اشرح لينا شنو باغي تصاوب...' : 'Décrivez votre projet...'} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors resize-none" />
                     </div>
                     <div>
-                      <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">{isAr ? 'صورة الموديل (اختياري)' : 'Photo du Modèle (Optionnel)'}</label>
+                      <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">{isAr ? 'صورة الموديل' : 'Photo du Modèle'}</label>
                       <div className="relative group h-[120px]">
                         {selectedPhoto ? (
                           <div className="relative h-full w-full rounded-2xl overflow-hidden border-2 border-indigo-100 shadow-md">
@@ -415,7 +420,7 @@ export default function LandingPage() {
                           <label className="flex flex-col items-center justify-center h-full w-full bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-100 hover:border-indigo-300 transition-all group">
                             <ImageIcon className="w-8 h-8 text-slate-300 group-hover:text-indigo-400 transition-colors mb-2" />
                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest group-hover:text-indigo-600">{isAr ? 'إضافة صورة' : 'Ajouter une Photo'}</span>
-                            <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
+                            <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" required={!selectedPhoto} />
                           </label>
                         )}
                       </div>
