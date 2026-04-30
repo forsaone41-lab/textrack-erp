@@ -223,74 +223,95 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
             {/* Greeting */}
             <div className="space-y-1">
               <h1 className="text-2xl font-bold tracking-tight italic">{isAr ? 'مرحباً' : 'Bonjour'} {currentWorker?.prenom} !</h1>
-              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">{isAr ? 'أتمنى لك يوماً موفقاً في العمل' : 'Bonne journée de travail chez BEYA'}</p>
+              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">{isAr ? 'قائمة مهامك لهذا اليوم' : 'Vos missions pour aujourd\'hui'}</p>
             </div>
 
-            {/* Mission Status Card */}
-            {activeOp ? (
-              <div className="bg-gradient-to-br from-indigo-600 to-violet-800 rounded-[2.5rem] p-8 shadow-2xl shadow-indigo-500/30 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:scale-110 transition-transform" />
-                
-                <div className="flex items-center justify-between mb-8">
-                  <div className="px-4 py-1.5 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-2">
-                    <Zap className="w-3 h-3 fill-white" />
-                    {isAr ? 'المهمة الحالية' : 'Mission en Cours'}
-                  </div>
-                  <div className="flex -space-x-2">
-                    {[1,2,3].map(i => <div key={i} className="w-6 h-6 rounded-full border-2 border-indigo-700 bg-indigo-500" />)}
-                  </div>
-                </div>
+            {/* Missions List */}
+            {workerSuiviToday.length > 0 ? (
+              <div className="space-y-8">
+                {Array.from(new Set(workerSuiviToday.map(s => s.operation_id))).map(opId => {
+                  const op = data.operations.find(o => o.id === opId);
+                  const cmd = data.commandes.find(c => c.id === workerSuiviToday.find(s => s.operation_id === opId)?.commande_id);
+                  
+                  const opEntries = workerSuiviToday.filter(s => s.operation_id === opId);
+                  const opPcs = opEntries.reduce((acc, curr) => acc + curr.quantite_realisee, 0);
+                  const opTarget = op ? op.target_heure * opEntries.length : 0;
+                  const opProgress = opTarget > 0 ? Math.min(Math.round((opPcs / opTarget) * 100), 100) : 0;
+                  const isDone = opProgress >= 100;
 
-                <div className="space-y-8">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <h3 className="text-4xl font-bold uppercase tracking-tighter leading-none mb-3">{activeOp.nom_operation}</h3>
-                      <div className="flex items-center gap-2 text-indigo-100/70">
-                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                         <span className="text-[10px] font-bold uppercase tracking-widest">Réf: {activeCmd?.reference}</span>
-                      </div>
-                    </div>
-                    {activeCmd?.photo ? (
-                      <div className="relative">
-                        <img src={activeCmd.photo} className="w-24 h-24 rounded-3xl object-cover border-4 border-white/20 shadow-2xl rotate-3 hover:rotate-0 transition-transform cursor-pointer" alt="Modèle" />
-                        <div className="absolute -bottom-2 -right-2 bg-white text-indigo-700 p-2 rounded-xl shadow-lg">
-                           <ImageIcon className="w-4 h-4" />
+                  if (!op) return null;
+
+                  return (
+                    <div key={opId} className="space-y-4">
+                      <div className={`bg-gradient-to-br ${isDone ? 'from-emerald-600 to-teal-800' : 'from-indigo-600 to-violet-800'} rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden group transition-all`}>
+                        <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:scale-110 transition-transform" />
+                        
+                        <div className="flex items-center justify-between mb-8">
+                          <div className="px-4 py-1.5 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-2">
+                            {isDone ? <CheckCircle2 className="w-3 h-3 text-emerald-300" /> : <Zap className="w-3 h-3 fill-white" />}
+                            {isDone ? (isAr ? 'مهمة مكتملة' : 'Mission Terminée') : (isAr ? 'مهمة جارية' : 'Mission en Cours')}
+                          </div>
+                          <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">
+                            {opEntries[0].heure_debut} — {opEntries[opEntries.length - 1].heure_fin}
+                          </span>
+                        </div>
+
+                        <div className="space-y-8">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <h3 className="text-3xl font-bold uppercase tracking-tighter leading-none mb-3">{op.nom_operation}</h3>
+                              <div className="flex items-center gap-2 text-white/70">
+                                 <div className={`w-1.5 h-1.5 rounded-full ${isDone ? 'bg-emerald-300' : 'bg-emerald-400 animate-ping'}`} />
+                                 <span className="text-[10px] font-bold uppercase tracking-widest">Réf: {cmd?.reference}</span>
+                              </div>
+                            </div>
+                            {cmd?.photo && (
+                              <div className="relative">
+                                <img src={cmd.photo} className="w-20 h-20 rounded-3xl object-cover border-4 border-white/20 shadow-2xl rotate-3 hover:rotate-0 transition-transform" alt="Modèle" />
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="space-y-3 bg-black/10 p-6 rounded-[2rem] border border-white/10 backdrop-blur-sm">
+                            <div className="flex justify-between items-end">
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-white/60 uppercase">{isAr ? 'التقدم' : 'Progression'}</p>
+                                <p className="text-2xl font-bold">{opProgress}%</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-[10px] font-bold text-white/60 uppercase">{isAr ? 'المحقق' : 'Produit'}</p>
+                                <p className={`text-2xl font-bold ${isDone ? 'text-emerald-300' : 'text-emerald-400'}`}>{opPcs}</p>
+                              </div>
+                            </div>
+                            <div className="h-3 bg-white/10 rounded-full overflow-hidden p-0.5">
+                              <div 
+                                className={`h-full ${isDone ? 'bg-white' : 'bg-gradient-to-r from-emerald-400 to-cyan-300'} rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(52,211,153,0.5)]`} 
+                                style={{ width: `${opProgress}%` }}
+                              />
+                            </div>
+                            <div className="flex justify-between items-center pt-2">
+                               <span className="text-[9px] font-bold text-white/60 uppercase flex items-center gap-1">
+                                  <Target className="w-3 h-3" /> {isAr ? 'الهدف' : 'Objectif'}: {opTarget}
+                               </span>
+                               <span className="text-[9px] font-bold text-white/60 uppercase flex items-center gap-1">
+                                  <Clock className="w-3 h-3" /> {op.target_heure} {isAr ? 'قطعة/ساعة' : 'pcs/h'}
+                               </span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    ) : (
-                      <div className="w-24 h-24 bg-white/10 rounded-3xl flex items-center justify-center border-2 border-white/10 backdrop-blur-sm">
-                        <ImageIcon className="w-8 h-8 text-white/50" />
-                      </div>
-                    )}
-                  </div>
 
-                  <div className="space-y-3 bg-black/10 p-6 rounded-[2rem] border border-white/10 backdrop-blur-sm">
-                    <div className="flex justify-between items-end">
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-bold text-indigo-200 uppercase opacity-60">{isAr ? 'التقدم' : 'Progression'}</p>
-                        <p className="text-2xl font-bold">{progressPercent}%</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-[10px] font-bold text-indigo-200 uppercase opacity-60">{isAr ? 'المحقق' : 'Produit'}</p>
-                        <p className="text-2xl font-bold text-emerald-400">{totalPcsToday}</p>
-                      </div>
+                      {/* QR for this specific mission */}
+                      {!isDone && (
+                        <div className="bg-white rounded-[2rem] p-6 text-slate-900 flex flex-col items-center shadow-lg border border-slate-100">
+                          <h4 className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-4">{isAr ? 'رمز التحقق لهذا المركز' : 'QR Validation pour ce Poste'}</h4>
+                          <QRCodeSVG value={`beya-prod://${cmd?.id}/${op.id}`} size={120} level="H" includeMargin />
+                          <p className="mt-4 text-[9px] font-black text-slate-400 uppercase tracking-tighter">{op.nom_operation}</p>
+                        </div>
+                      )}
                     </div>
-                    <div className="h-3 bg-white/10 rounded-full overflow-hidden p-0.5">
-                      <div 
-                        className="h-full bg-gradient-to-r from-emerald-400 to-cyan-300 rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(52,211,153,0.5)]" 
-                        style={{ width: `${progressPercent}%` }}
-                      />
-                    </div>
-                    <div className="flex justify-between items-center pt-2">
-                       <span className="text-[9px] font-bold text-indigo-100 uppercase opacity-60 flex items-center gap-1">
-                          <Target className="w-3 h-3" /> {isAr ? 'الهدف' : 'Objectif'}: {totalTarget}
-                       </span>
-                       <span className="text-[9px] font-bold text-indigo-100 uppercase opacity-60 flex items-center gap-1">
-                          <Clock className="w-3 h-3" /> {activeOp.target_heure} {isAr ? 'قطعة/ساعة' : 'pcs/h'}
-                       </span>
-                    </div>
-                  </div>
-                </div>
+                  );
+                })}
               </div>
             ) : (
               <div className="bg-slate-900 rounded-[2.5rem] p-12 text-center border border-dashed border-slate-800">
@@ -300,29 +321,6 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
                 <h3 className="text-xl font-bold uppercase mb-3">{isAr ? 'في الانتظار' : 'En attente'}</h3>
                 <p className="text-sm text-slate-500 font-bold max-w-[200px] mx-auto leading-relaxed">
                   {isAr ? 'لم يتم تعيين أي مهمة لك من طرف المشرف بعد' : "Votre superviseur n'a pas encore assigné de mission."}
-                </p>
-              </div>
-            )}
-
-            {/* Digital QR Access */}
-            {activeOp && (
-              <div className="group relative bg-white rounded-[2.5rem] p-8 text-slate-900 flex flex-col items-center shadow-xl shadow-slate-200/50 hover:scale-[1.02] transition-transform">
-                <div className="absolute top-4 left-4 w-2 h-2 rounded-full bg-slate-200" />
-                <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-slate-200" />
-                <div className="absolute bottom-4 left-4 w-2 h-2 rounded-full bg-slate-200" />
-                <div className="absolute bottom-4 right-4 w-2 h-2 rounded-full bg-slate-200" />
-                
-                <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-6">{isAr ? 'رمز المركز الرقمي' : 'QR Poste Numérique'}</h4>
-                <div className="p-5 bg-white rounded-[2rem] shadow-inner border border-slate-100 mb-6">
-                  <QRCodeSVG 
-                    value={`beya-prod://${activeCmd?.id}/${activeOp.id}`} 
-                    size={160}
-                    level="H"
-                    includeMargin
-                  />
-                </div>
-                <p className="text-center text-xs font-bold uppercase text-slate-900 px-4 leading-relaxed">
-                  {isAr ? 'امسح هذا الرمز عند الجهاز لتأكيد قطعك' : 'Scannez ce code au terminal pour valider vos pièces'}
                 </p>
               </div>
             )}
