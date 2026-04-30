@@ -101,7 +101,6 @@ export default function Demandes() {
         id: genId(),
         reference: `CMD-${Date.now().toString().slice(-6)}`,
         client: lead.name,
-        clientId: clientId,
         modele: lead.type,
         tissu: 'À définir',
         quantite: lead.quantity,
