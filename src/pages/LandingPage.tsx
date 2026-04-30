@@ -290,8 +290,12 @@ export default function LandingPage() {
                       finalType = formData.get('customType') as string;
                     }
 
-                    setIsSending(true);
                     try {
+                      if (!selectedPhoto) {
+                        alert(isAr ? 'من فضلك أضف صورة الموديل' : 'Veuillez ajouter une photo du modèle');
+                        return;
+                      }
+
                       const leadData = {
                         name: formData.get('name') as string,
                         email: formData.get('email') as string,
@@ -300,10 +304,11 @@ export default function LandingPage() {
                         type: finalType,
                         quantity: Number(formData.get('quantity')),
                         details: formData.get('details') as string,
-                        photo: selectedPhoto || undefined
+                        photo: selectedPhoto
                       };
                       
                       await saveLead(leadData);
+                      setIsSending(true); // Re-triggering state if needed, though already true
                       setIsSending(false);
                       setShowSuccess(true);
                       setSelectedPhoto(null);
@@ -326,14 +331,10 @@ export default function LandingPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 gap-6">
                     <div>
                       <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">{isAr ? 'المدينة' : 'Ville'}</label>
                       <input type="text" name="ville" placeholder={isAr ? 'مثال: الدار البيضاء' : 'Ex: Casablanca'} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" required />
-                    </div>
-                    <div>
-                      <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">Email</label>
-                      <input type="email" name="email" placeholder="email@example.com" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" required />
                     </div>
                   </div>
 
