@@ -467,18 +467,31 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
 }
 
 // Helper to delete a single record
-export async function deleteRecord(table: string, id: string): Promise<void> {
-  console.log(`[DEBUG] Deleting from ${table} | ID: ${id}`);
+export async function deleteRecord(table: string, id: string, email?: string): Promise<void> {
+  console.log(`[DEBUG] Deleting from ${table} | ID: ${id} | Email: ${email}`);
+  
+  // Try ID first
   const { error } = await supabase.from(table).delete().eq('id', id);
   
   if (error) {
+    console.warn("Delete by ID failed, trying by email...", error.message);
+    
+    // Fallback to Email if provided
+    if (email && table === 'leads') {
+      const { error: emailError } = await supabase.from(table).delete().eq('email', email);
+      if (!emailError) {
+        alert(`✅ تم المسح من السيرفر بنجاح (باستعمال الإيميل)!`);
+        return;
+      }
+    }
+
     const msg = `خطأ في المسح (Error)!\nTable: ${table}\nID: ${id}\nMessage: ${error.message}\nDetails: ${error.details || 'None'}`;
     console.error(msg, error);
     alert(msg);
     return;
   }
   
-  alert(`✅ تم المسح بنجاح من السيرفر!\nالجدول: ${table}\nالرقم: ${id}`);
+  alert(`✅ تم المسح بنجاح من السيرفر!\nID: ${id}`);
 }
 
 // Keeping this for backwards compatibility, but it should be avoided

@@ -106,9 +106,10 @@ export default function Demandes() {
   const handleConfirmDelete = async () => {
     if (!deleteId) return;
     try {
+      const leadToDelete = leads.find(l => l.id === deleteId);
       const updated = leads.filter(l => l.id !== deleteId);
       setLeads(updated);
-      await deleteRecord('leads', deleteId);
+      await deleteRecord('leads', deleteId, leadToDelete?.email);
     } catch (err) {
       console.error("Delete failed:", err);
     } finally {
