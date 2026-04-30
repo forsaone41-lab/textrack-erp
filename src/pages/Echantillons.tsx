@@ -101,11 +101,20 @@ export default function Echantillons() {
                   <div>
                     <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الثوب والألوان' : 'Tissu & Couleurs'}</span>
                     <span className="text-xs font-bold text-slate-700">{c.tissu}</span>
-                    {c.couleurs && c.couleurs.length > 0 && (
+                    {c.couleurs && (
                       <div className="flex flex-wrap gap-1 mt-1.5">
-                        {c.couleurs.map((color, i) => (
-                          <span key={i} className="px-1.5 py-0.5 bg-white text-rose-600 rounded text-[9px] font-black uppercase border border-rose-100">{color}</span>
-                        ))}
+                        {(Array.isArray(c.couleurs) 
+                          ? c.couleurs 
+                          : String(c.couleurs).replace(/[{}[\]"]/g, '').split(',')
+                        ).map((color: string, i: number) => {
+                          const cleanColor = color.trim();
+                          if (!cleanColor) return null;
+                          return (
+                            <span key={i} className="px-1.5 py-0.5 bg-white text-rose-600 rounded text-[9px] font-black uppercase border border-rose-100">
+                              {cleanColor}
+                            </span>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
