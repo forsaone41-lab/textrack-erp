@@ -441,14 +441,13 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
       const fallbackRecord = { ...record as any };
       const newCols = [
         'tissuPrix', 'coutMainOeuvre', 'tissuSourcing', 
-        'tissu', 'tissuConsommation', 'type', 'client', 
-        'commandeId', 'fournisseurTel', 'fournisseurEmail',
-        'adresse', 'ville', 'notes', 'telephone', 'pinCode',
-        'avance', 'retouche', 'lastActive', 'statut', 'photo',
+        'tissu', 'tissuConsommation', 'commandeId', 'fournisseurTel', 'fournisseurEmail',
+        'adresse', 'notes', 'pinCode',
+        'avance', 'retouche', 'lastActive', 'photo',
         'composition', 'metrageTotal', 'largeur', 'zone', 'etagere',
-        'cin', 'rib', 'banque', 'salaireMensuel', 'remunerationType', 'actif', 'email', 'prenom',
+        'cin', 'rib', 'banque', 'salaireMensuel', 'remunerationType', 'actif', 'prenom',
         'dateEntree', 'contrat', 'cnss', 'mutuelle', 'enfants', 'situation_familiale',
-        'clientId', 'reference', 'prix', 'rebut', 'dateCommande', 'dateLivraisonPrevue', 'suivi'
+        'clientId', 'rebut', 'suivi'
       ];
       newCols.forEach(col => delete fallbackRecord[col]);
       
