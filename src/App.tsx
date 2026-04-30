@@ -35,6 +35,23 @@ initMockData();
 
 const AUTH_KEY = 'textrack_auth';
 
+const MobileLogoWithFallback = ({ src, alt }: { src: string; alt: string }) => {
+  const [error, setError] = React.useState(false);
+  if (error || !src) {
+    return (
+      <>
+        <div className="w-8 h-8 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <Package className="w-5 h-5 text-white" />
+        </div>
+        <span className="text-sm font-black text-slate-900 uppercase tracking-tighter italic">
+          {alt.split(' ')[0]} <span className="text-indigo-600 font-light italic ml-1">{alt.split(' ').slice(1).join(' ')}</span>
+        </span>
+      </>
+    );
+  }
+  return <img src={src} className="h-8 object-contain" alt={alt} onError={() => setError(true)} />;
+};
+
 function AdminLayout({
   onOpenClientPortal,
   currentUser,
@@ -60,12 +77,7 @@ function AdminLayout({
       {/* Mobile Header - Premium Glassy "Zaji" Design */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white/70 backdrop-blur-xl border-b border-slate-200/50 z-[140] flex items-center justify-between px-5 shadow-sm">
         <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : 'flex-row'}`}>
-          <div className="w-8 h-8 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20">
-            <Package className="w-5 h-5 text-white" />
-          </div>
-          <span className="text-sm font-black text-slate-900 uppercase tracking-tighter italic">
-            {company.name.split(' ')[0]} <span className="text-indigo-600 font-light italic ml-1">{company.name.split(' ').slice(1).join(' ')}</span>
-          </span>
+          <MobileLogoWithFallback src={company.logoAdmin || company.logoUrl} alt={company.name} />
         </div>
 
         <button
