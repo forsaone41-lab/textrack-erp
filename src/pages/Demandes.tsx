@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, Clock, UserPlus, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RotateCw, RefreshCw, Scissors, MapPin } from 'lucide-react';
-import { Lead, loadLeads, saveRecord, User, genId, deleteRecord } from '../types';
+import { Lead, loadLeads, saveRecord, User, genId, deleteRecord, loadData } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { generatePDF } from '../utils/pdf';
 
@@ -350,12 +350,12 @@ export default function Demandes() {
             </div>
 
             <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-2">
-              {isAr ? 'تحويل لزبون رسمي؟' : 'Convertir en Client ?'}
+              {isAr ? 'تأكيد الطلبية؟' : 'Confirmer la Commande ?'}
             </h3>
             <p className="text-slate-500 font-medium leading-relaxed mb-8">
               {isAr 
-                ? `هل أنت متأكد من تحويل "${confirmLead.name}" إلى قائمة الزبناء؟ سيتم إنشاء حساب له تلقائياً.`
-                : `Voulez-vous transformer "${confirmLead.name}" en client officiel ? Un compte sera créé automatiquement.`}
+                ? `هل تريد تأكيد طلبية "${confirmLead.name}" وتحويلها إلى قسم الإنتاج؟ سيتم إنشاء حساب للزبون تلقائياً إذا لم يكن موجوداً.`
+                : `Voulez-vous confirmer la commande de "${confirmLead.name}" et l'envoyer en production ? Un compte client sera créé automatiquement s'il n'existe pas.`}
             </p>
 
             <div className="grid grid-cols-2 gap-4">
@@ -369,7 +369,7 @@ export default function Demandes() {
                 onClick={handleConvert}
                 className="py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100"
               >
-                {isAr ? 'تأكيد التحويل' : 'Confirmer'}
+                {isAr ? 'تأكيد الطلبية' : 'Confirmer la Commande'}
               </button>
             </div>
           </div>
@@ -391,8 +391,8 @@ export default function Demandes() {
             </h3>
             <p className="text-slate-500 font-medium leading-relaxed mb-8">
               {isAr 
-                ? `لقد أصبح "${successLead.name}" زبوناً رسمياً للمصنع. يمكنه الآن الدخول باستعمال رمز PIN الخاص به.`
-                : `"${successLead.name}" est désormais un client officiel. Il peut accéder à son espace avec son code PIN.`}
+                ? `لقد تم تأكيد طلبية "${successLead.name}" بنجاح. سيتمكن الزبون من متابعة مراحل الإنتاج في فضاءه الخاص.`
+                : `La commande de "${successLead.name}" a été confirmée. Le client peut désormais suivre la production dans son espace.`}
             </p>
 
             <div className="bg-amber-50 rounded-2xl p-4 mb-10 border border-amber-100">
@@ -599,7 +599,7 @@ export default function Demandes() {
                       onClick={() => setConfirmLead(lead)}
                       className="px-6 py-3 bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-100"
                     >
-                      <UserPlus className="w-4 h-4" /> {isAr ? 'تحويل لزبون' : 'Client'}
+                      <UserPlus className="w-4 h-4" /> {isAr ? 'تأكيد الطلب' : 'Confirmer'}
                     </button>
                   )}
                   
