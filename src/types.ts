@@ -343,7 +343,8 @@ export interface Lead {
   ville: string;
   type: string;
   quantity: number;
-  details: string;
+  details?: string;
+  tailles?: Record<string, number>;
   date: string;
   status: 'new' | 'completed';
   photo?: string;

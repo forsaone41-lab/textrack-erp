@@ -51,7 +51,8 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     modele: '',
     quantite: '',
     details: '',
-    photo: null as string | null
+    photo: null as string | null,
+    tailles: { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0 } as Record<string, number>
   });
   const [sendingOrder, setSendingOrder] = useState(false);
   const [orderSent, setOrderSent] = useState(false);
@@ -136,7 +137,8 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
         type: newOrderForm.modele,
         quantity: parseInt(newOrderForm.quantite),
         photo: newOrderForm.photo,
-        details: newOrderForm.details
+        details: newOrderForm.details,
+        tailles: newOrderForm.tailles
       };
       
       await saveLead(leadPayload);
@@ -911,6 +913,34 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                             <input type="file" accept="image/*" className="hidden" onChange={handleOrderPhoto} />
                           </label>
                         )}
+                      </div>
+                    </div>
+                    <div>
+                      <label className={`block text-xs font-black text-slate-500 uppercase tracking-widest mb-4 ${isAr ? 'text-right' : ''}`}>
+                        {isAr ? 'توزيع المقاسات' : 'Répartition par Tailles'}
+                      </label>
+                      <div className="grid grid-cols-3 gap-3">
+                        {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map(t => (
+                          <div key={t} className="space-y-1">
+                            <label className="text-[10px] font-black text-slate-400 uppercase text-center block">{t}</label>
+                            <input 
+                              type="number"
+                              min="0"
+                              value={newOrderForm.tailles[t] || ''}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value) || 0;
+                                const newTailles = { ...newOrderForm.tailles, [t]: val };
+                                const newTotal = Object.values(newTailles).reduce((a, b) => a + b, 0);
+                                setNewOrderForm({ 
+                                  ...newOrderForm, 
+                                  tailles: newTailles,
+                                  quantite: newTotal > 0 ? newTotal.toString() : newOrderForm.quantite
+                                });
+                              }}
+                              className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-center text-xs font-black focus:border-indigo-600 outline-none transition-all"
+                            />
+                          </div>
+                        ))}
                       </div>
                     </div>
                     <div>
