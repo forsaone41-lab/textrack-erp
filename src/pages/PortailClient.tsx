@@ -880,7 +880,6 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                       />
                     </div>
                     <div>
-                    <div>
                       <label className={`block text-xs font-black text-slate-500 uppercase tracking-widest mb-2 ${isAr ? 'text-right' : ''}`}>
                         {isAr ? 'صورة الموديل' : 'Photo du Modèle'}
                         <span className="text-rose-500 ml-2">({isAr ? 'إجباري' : 'Obligatoire'} *)</span>
