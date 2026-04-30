@@ -107,6 +107,8 @@ export default function Login({ onLogin }: LoginProps) {
   }
 
 
+  const [logoError, setLogoError] = useState(false);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex items-center justify-center p-4">
       {/* Background decoration */}
@@ -116,16 +118,29 @@ export default function Login({ onLogin }: LoginProps) {
       </div>
 
       <div className="w-full max-w-md relative z-10">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-indigo-500/40 mx-auto mb-4">
-            <h1 className="text-3xl font-black text-white">B</h1>
-          </div>
-          <h1 className="text-3xl font-black text-white tracking-tight uppercase">
-            {company.name.split(' ')[0]}
-            <span className="font-light text-indigo-400"> {company.name.split(' ').slice(1).join(' ')}</span>
-          </h1>
-          <p className="text-indigo-200/80 text-xs mt-1 uppercase tracking-widest">{company.subtitle}</p>
+        {/* Logo Section */}
+        <div className="text-center mb-10">
+          {(logoError || !company.logoLogin) ? (
+            <div className="space-y-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-indigo-500/40 mx-auto">
+                <h1 className="text-3xl font-black text-white">{company.name[0]}</h1>
+              </div>
+              <div>
+                <h1 className="text-3xl font-black text-white tracking-tight uppercase">
+                  {company.name.split(' ')[0]}
+                  <span className="font-light text-indigo-400"> {company.name.split(' ').slice(1).join(' ')}</span>
+                </h1>
+                <p className="text-indigo-200/80 text-[10px] mt-1 uppercase tracking-[0.3em] font-bold">{company.subtitle}</p>
+              </div>
+            </div>
+          ) : (
+            <img 
+              src={company.logoLogin} 
+              className="h-20 object-contain mx-auto mb-4" 
+              alt={company.name}
+              onError={() => setLogoError(true)}
+            />
+          )}
         </div>
 
         {/* Card */}
