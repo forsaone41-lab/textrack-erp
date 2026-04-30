@@ -265,6 +265,14 @@ export default function ChaineDetaillee() {
 
     try {
       await Promise.all(promises);
+      
+      // Update command planning status
+      if (selectedCmd) {
+        const updatedCmd = { ...selectedCmd, planningReady: true };
+        await saveRecord('commandes', updatedCmd);
+        setCommandes(commandes.map(c => c.id === selectedCmd.id ? updatedCmd : c));
+      }
+
       setSuivi(newSuiviEntries);
       setSyncing(false);
       setShowSuccess(true);
