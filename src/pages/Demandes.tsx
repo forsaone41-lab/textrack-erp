@@ -78,6 +78,16 @@ export default function Demandes() {
     }
   };
 
+  const toggleColor = (color: string) => {
+    let currentColors = confirmDetails.couleurs.split(',').map(c => c.trim()).filter(c => c);
+    if (currentColors.includes(color)) {
+      currentColors = currentColors.filter(c => c !== color);
+    } else {
+      currentColors.push(color);
+    }
+    setConfirmDetails({...confirmDetails, couleurs: currentColors.join(', ')});
+  };
+
   const handleConvert = async () => {
     if (!confirmLead) return;
     const lead = confirmLead;
@@ -390,19 +400,19 @@ export default function Demandes() {
 
       {/* Custom Confirmation Modal */}
       {confirmLead && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300 overflow-y-auto">
-          <div className="bg-white rounded-[2.5rem] md:rounded-[3rem] p-6 md:p-10 max-w-2xl w-full shadow-[0_50px_100px_rgba(0,0,0,0.3)] border border-slate-100 relative my-8">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300 overflow-y-auto">
+          <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 max-w-2xl w-full shadow-[0_50px_100px_rgba(0,0,0,0.3)] border border-slate-100 relative my-4 sm:my-8">
             <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-indigo-500 to-purple-600" />
             <button 
               onClick={() => setConfirmLead(null)}
-              className="absolute top-6 right-6 p-2 text-slate-400 hover:text-rose-500 bg-slate-50 hover:bg-rose-50 rounded-full transition-all"
+              className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 text-slate-400 hover:text-rose-500 bg-slate-50 hover:bg-rose-50 rounded-full transition-all"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="flex items-center gap-4 mb-8">
-              <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center shrink-0">
-                <FileText className="w-8 h-8 text-indigo-600" />
+            <div className="flex items-center gap-3 sm:gap-4 mb-6">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-indigo-50 rounded-2xl flex items-center justify-center shrink-0">
+                <FileText className="w-6 h-6 sm:w-7 sm:h-7 text-indigo-600" />
               </div>
               <div>
                 <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">
@@ -425,28 +435,58 @@ export default function Demandes() {
               </div>
             </div>
 
-            <div className="space-y-6 mb-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4 sm:space-y-6 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div>
                   <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-2">{isAr ? 'نوع الثوب (Tissu)' : 'Type de Tissu'}</label>
                   <input 
                     type="text" 
-                    placeholder="Ex: Coton 100%, 280g..." 
+                    list="tissus-list"
+                    placeholder={isAr ? "اختر أو اكتب..." : "Choisir ou taper..."}
                     value={confirmDetails.tissu}
                     onChange={e => setConfirmDetails({...confirmDetails, tissu: e.target.value})}
-                    className="w-full bg-white border-2 border-slate-100 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
+                    className="w-full bg-white border-2 border-slate-100 rounded-xl py-2 px-3 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
                   />
+                  <datalist id="tissus-list">
+                    <option value="Coton 100%" />
+                    <option value="Molleton / 3 Fils" />
+                    <option value="Jersey" />
+                    <option value="Polyester" />
+                    <option value="Denim / Jean" />
+                    <option value="Lin" />
+                    <option value="Viscose" />
+                    <option value="Gabardine" />
+                    <option value="Toile" />
+                  </datalist>
                 </div>
                 <div>
                   <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-2">{isAr ? 'الألوان (Couleurs)' : 'Couleurs'}</label>
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {['Noir', 'Blanc', 'Gris', 'Bleu Marine', 'Rouge', 'Beige'].map(color => {
+                      const isSelected = confirmDetails.couleurs.includes(color);
+                      return (
+                        <button
+                          key={color}
+                          type="button"
+                          onClick={() => toggleColor(color)}
+                          className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase transition-all ${
+                            isSelected 
+                              ? 'bg-indigo-600 text-white shadow-sm' 
+                              : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                          }`}
+                        >
+                          {color}
+                        </button>
+                      );
+                    })}
+                  </div>
                   <input 
                     type="text" 
-                    placeholder="Ex: Noir, Blanc, Bleu..." 
+                    placeholder={isAr ? "ألوان أخرى..." : "Autres couleurs..."}
                     value={confirmDetails.couleurs}
                     onChange={e => setConfirmDetails({...confirmDetails, couleurs: e.target.value})}
-                    className="w-full bg-white border-2 border-slate-100 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
+                    className="w-full bg-white border-2 border-slate-100 rounded-xl py-2 px-3 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
                   />
-                  <p className="text-[9px] text-slate-400 font-bold mt-1 uppercase tracking-widest">{isAr ? 'افصل بين الألوان بفاصلة' : 'Séparés par une virgule'}</p>
                 </div>
 
               <div>
