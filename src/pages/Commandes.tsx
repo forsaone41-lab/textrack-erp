@@ -16,6 +16,7 @@ import { generatePDF, printElement } from '../utils/pdf';
 import { InvoicePRO } from '../components/InvoicePRO';
 
 const PHASE_LABELS_AR: Record<string, string> = {
+  patronage: 'الپاتروناج',
   coupe: 'الفصالة',
   montage: 'الخياطة',
   finition: 'التشطيب',
@@ -318,6 +319,8 @@ export default function Commandes() {
     const cmdOrdre = ordres.find(o => o.commandeId === c.id);
 
     switch (phase) {
+      case 'patronage':
+        return { label: lang === 'fr' ? 'Modélisme / Patronage' : 'الپاتروناج', color: 'bg-pink-50 text-pink-700 border-pink-100', icon: '📐' };
       case 'coupe':
         if (!cmdOrdre || cmdOrdre.statut === 'planifié') {
           return { label: lang === 'fr' ? 'En Attente (Coupe)' : 'في انتظار الفصالة', color: 'bg-slate-50 text-slate-500 border-slate-100', icon: '⏳' };

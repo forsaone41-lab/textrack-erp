@@ -129,13 +129,13 @@ export default function Demandes() {
         quantiteLivre: 0,
         dateCommande: new Date().toISOString().split('T')[0],
         dateLivraisonPrevue: confirmDetails.dateLivraisonPrevue,
-        phase: 'coupe',
+        phase: 'patronage',
         prix: Number(confirmDetails.prixUnitaire) || 0,
         prixUnitaire: Number(confirmDetails.prixUnitaire) || 0,
         avance: Number(confirmDetails.avance) || 0,
         rebut: 0,
         statut: 'echantillon_en_cours',
-        suivi: [{ phase: 'coupe', date: new Date().toISOString(), note: 'Demande d\'échantillon lancée' }]
+        suivi: [{ phase: 'patronage', date: new Date().toISOString(), note: 'Demande d\'échantillon envoyée au modélisme' }]
       };
 
       await saveRecord('commandes', newOrder);

@@ -18,9 +18,10 @@ export const safeStorage = {
   }
 };
 
-export type Phase = 'coupe' | 'montage' | 'finition' | 'repassage' | 'controle' | 'emballage' | 'livré';
+export type Phase = 'patronage' | 'coupe' | 'montage' | 'finition' | 'repassage' | 'controle' | 'emballage' | 'livré';
 
 export const PHASE_LABELS: Record<Phase, string> = {
+  patronage: 'Patronage',
   coupe: 'Coupe',
   montage: 'Montage',
   finition: 'Finition',
@@ -30,9 +31,10 @@ export const PHASE_LABELS: Record<Phase, string> = {
   livré: 'Livré',
 };
 
-export const PHASE_ORDER: Phase[] = ['coupe', 'montage', 'finition', 'repassage', 'controle', 'emballage', 'livré'];
+export const PHASE_ORDER: Phase[] = ['patronage', 'coupe', 'montage', 'finition', 'repassage', 'controle', 'emballage', 'livré'];
 
 export const PHASE_COLORS: Record<Phase, string> = {
+  patronage: 'bg-pink-500',
   coupe: 'bg-orange-500',
   montage: 'bg-blue-500',
   finition: 'bg-purple-500',
