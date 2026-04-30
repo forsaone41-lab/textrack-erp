@@ -148,6 +148,14 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
                 </div>
               </NavLink>
             )}
+            {can('stocks') && (
+              <NavLink to="/stocks" className={linkClass} onClick={closeMobile}>
+                <div className="flex items-center gap-3">
+                  <Package className="w-[18px] h-[18px]" />
+                  <span>{isAr ? 'مخزون السلع' : 'Stock Matières'}</span>
+                </div>
+              </NavLink>
+            )}
             {can('fiches') && (
               <NavLink to="/fiches-techniques" className={linkClass} onClick={closeMobile}>
                 <div className="flex items-center gap-3">
