@@ -470,7 +470,7 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
         'composition', 'metrageTotal', 'largeur', 'zone', 'etagere',
         'cin', 'rib', 'banque', 'salaireMensuel', 'remunerationType', 'actif', 'prenom',
         'dateEntree', 'contrat', 'cnss', 'mutuelle', 'enfants', 'situation_familiale',
-        'clientId', 'rebut', 'suivi'
+        'clientId', 'rebut', 'suivi', 'planningReady'
       ];
       newCols.forEach(col => delete fallbackRecord[col]);
       

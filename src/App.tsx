@@ -28,6 +28,7 @@ import Login from './pages/Login';
 import LandingPage from './pages/LandingPage';
 import KioskScanner from './pages/KioskScanner';
 import FastScanner from './pages/FastScanner';
+import PlanningView from './pages/PlanningView';
 import { initMockData, User, loadPermissions, AppPage, loadCompanyProfile, loadData, saveRecord } from './types';
 import { LangProvider, useLang } from './contexts/LangContext';
 
@@ -256,6 +257,7 @@ function AppContent() {
         {/* Shared / Public ERP Routes */}
         <Route path="stocks" element={can('stocks') ? <StockMateriaux /> : <Navigate to="/" replace />} />
         <Route path="commandes" element={can('commandes') ? <Commandes /> : <Navigate to="/" replace />} />
+        <Route path="planning-view/:id" element={<PlanningView />} />
       </Route>
       <Route element={<PointageLayout />}>
         <Route path="pointage" element={can('pointage') ? <Pointage onLogout={handleLogout} /> : <Navigate to="/" replace />} />

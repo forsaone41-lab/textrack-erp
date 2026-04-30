@@ -484,7 +484,7 @@ export default function ChaineDeMontage() {
                           </div>
                           <button 
                             disabled={!cmd.planningReady}
-                            onClick={() => window.location.hash = '#/pilotage-chaine'}
+                            onClick={() => window.location.hash = `#/planning-view/${cmd.id}`}
                             className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                               cmd.planningReady 
                                 ? 'bg-slate-900 text-white shadow-lg hover:bg-indigo-600' 
