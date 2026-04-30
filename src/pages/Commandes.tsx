@@ -277,6 +277,42 @@ export default function Commandes() {
     setTimeout(() => setShowSuccess(null), 3000);
   };
 
+  const handleAcceptEchantillon = async (c: Commande) => {
+    if (!window.confirm(isAr ? 'هل أنت متأكد أن الكليان وافق على هذه العينة؟' : 'Êtes-vous sûr que le client a validé cet échantillon ?')) return;
+    
+    const updatedCmd: Commande = {
+      ...c,
+      statut: 'echantillon_valide',
+      suivi: [...c.suivi, { phase: c.phase, date: new Date().toISOString(), note: 'Échantillon validé par le client' }]
+    };
+    
+    setCommandes(prev => prev.map(cmd => cmd.id === c.id ? updatedCmd : cmd));
+    await saveRecord('commandes', updatedCmd);
+    
+    setShowSuccess({
+      message: isAr ? 'تمت الموافقة!' : 'Échantillon Validé !',
+      sub: isAr ? 'يمكنك الآن إطلاق الإنتاج الشامل.' : 'Vous pouvez maintenant lancer la production globale.'
+    });
+    setTimeout(() => setShowSuccess(null), 3000);
+  };
+
+  const handleLancerProductionGlobale = async (c: Commande) => {
+    if (!window.confirm(isAr ? 'هل تريد إطلاق الإنتاج الشامل لهذه الطلبية وإرسالها للفصالة؟ (سيتم خصم الثوب من المخزون)' : 'Voulez-vous lancer la production globale et envoyer à la coupe ? (Le tissu sera déduit du stock)')) return;
+    
+    const updatedCmd: Commande = {
+      ...c,
+      statut: 'en_cours',
+      phase: 'coupe',
+      suivi: [...c.suivi, { phase: 'coupe', date: new Date().toISOString(), note: 'Production globale lancée' }]
+    };
+    
+    setCommandes(prev => prev.map(cmd => cmd.id === c.id ? updatedCmd : cmd));
+    await saveRecord('commandes', updatedCmd);
+    
+    // Auto-trigger stock deduction & order creation
+    await handleSendToCutter(updatedCmd, false);
+  };
+
   async function remove(id: string) {
     setCommandes(commandes.filter(c => c.id !== id));
     setConfirmDelete(null);
@@ -604,7 +640,25 @@ export default function Commandes() {
                       {/* Pro Actions - Clean & Sleek */}
                       <td className="px-4 py-4" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-1.5">
-                          {c.phase === 'coupe' && (
+                          {c.statut === 'echantillon_en_cours' && (
+                            <button
+                              onClick={() => handleAcceptEchantillon(c)}
+                              title={isAr ? "موافقة الكليان على العينة" : "Valider l'échantillon par le client"}
+                              className="w-9 h-9 bg-fuchsia-50 text-fuchsia-600 hover:bg-fuchsia-600 hover:text-white rounded-xl transition-all flex items-center justify-center hover:shadow-lg hover:shadow-fuchsia-200"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </button>
+                          )}
+                          {c.statut === 'echantillon_valide' && (
+                            <button
+                              onClick={() => handleLancerProductionGlobale(c)}
+                              title={isAr ? "إطلاق الإنتاج الشامل" : "Lancer Production Globale"}
+                              className="w-9 h-9 bg-teal-50 text-teal-600 hover:bg-teal-600 hover:text-white rounded-xl transition-all flex items-center justify-center hover:shadow-lg hover:shadow-teal-200"
+                            >
+                              <Package className="w-4 h-4" />
+                            </button>
+                          )}
+                          {c.statut === 'en_cours' && c.phase === 'coupe' && (
                             <button
                               onClick={() => handleSendToCutter(c)}
                               className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${ordres.some(o => o.commandeId === c.id)
