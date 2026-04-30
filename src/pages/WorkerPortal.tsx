@@ -224,8 +224,56 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
             {/* Greeting */}
             <div className="space-y-1">
               <h1 className="text-2xl font-bold tracking-tight italic">{isAr ? 'مرحباً' : 'Bonjour'} {currentWorker?.prenom} !</h1>
-              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">{isAr ? 'قائمة مهامك لهذا اليوم' : 'Vos missions pour aujourd\'hui'}</p>
+              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">{isAr ? 'تتبع مسار عملك اليومي' : 'Suivi de votre roadmap aujourd\'hui'}</p>
             </div>
+
+            {/* Roadmap Stepper */}
+            {workerSuiviToday.length > 0 && (
+              <div className="bg-slate-900/50 p-6 rounded-[2rem] border border-white/5 relative overflow-hidden">
+                <div className="flex items-center justify-between relative z-10">
+                  {(() => {
+                    const sortedOpIds = Array.from(new Set(workerSuiviToday.map(s => s.operation_id)))
+                      .sort((a, b) => {
+                         const entryA = workerSuiviToday.find(s => s.operation_id === a);
+                         const entryB = workerSuiviToday.find(s => s.operation_id === b);
+                         return (entryA?.heure_debut || '').localeCompare(entryB?.heure_debut || '');
+                      });
+
+                    return sortedOpIds.map((opId, idx) => {
+                      const op = data.operations.find(o => o.id === opId);
+                      const opEntries = workerSuiviToday.filter(s => s.operation_id === opId);
+                      const opPcs = opEntries.reduce((acc, curr) => acc + curr.quantite_realisee, 0);
+                      const opTarget = op ? op.target_heure * opEntries.length : 0;
+                      const opProgress = opTarget > 0 ? Math.min(Math.round((opPcs / opTarget) * 100), 100) : 0;
+                      const isDone = opProgress >= 100;
+                      const isActive = !isDone && (idx === 0 || (sortedOpIds[idx-1] && workerSuiviToday.filter(s => s.operation_id === sortedOpIds[idx-1]).reduce((a,b) => a+b.quantite_realisee,0) >= (data.operations.find(o => o.id === sortedOpIds[idx-1])?.target_heure || 0) * workerSuiviToday.filter(s => s.operation_id === sortedOpIds[idx-1]).length));
+
+                      return (
+                        <div key={opId} className="flex flex-col items-center gap-3 relative z-10 flex-1">
+                          {/* Line between steps */}
+                          {idx < sortedOpIds.length - 1 && (
+                            <div className="absolute left-1/2 w-full h-[2px] bg-white/10 top-4 -z-10" />
+                          )}
+                          
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black transition-all duration-500 shadow-lg ${
+                            isDone ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 
+                            isActive ? 'bg-indigo-600 text-white ring-4 ring-indigo-500/20 animate-pulse' : 
+                            'bg-slate-800 text-slate-500'
+                          }`}>
+                            {isDone ? <CheckCircle2 className="w-4 h-4" /> : idx + 1}
+                          </div>
+                          <span className={`text-[8px] font-bold uppercase tracking-tighter text-center max-w-[60px] truncate ${
+                            isActive ? 'text-indigo-400' : isDone ? 'text-emerald-400' : 'text-slate-500'
+                          }`}>
+                            {op?.nom_operation}
+                          </span>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+            )}
 
             {/* Missions List */}
             {workerSuiviToday.length > 0 ? (
