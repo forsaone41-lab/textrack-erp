@@ -240,7 +240,7 @@ function AppContent() {
         <Route path="chaine-montage" element={can('chaine') ? <ChaineDeMontage /> : <Navigate to="/" replace />} />
         <Route path="pilotage-chaine" element={can('pilotage') ? <ChaineDetaillee /> : <Navigate to="/" replace />} />
         <Route path="scan-production" element={can('scan_production') ? <ProductionScanner /> : <Navigate to="/" replace />} />
-        <Route path="worker-portal" element={<WorkerPortal />} />
+        <Route path="worker-portal" element={<WorkerPortal currentUser={currentUser} />} />
         
         {/* Protected Finance Routes */}
         <Route path="factures" element={can('factures') ? <Factures /> : <Navigate to="/" replace />} />

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { User as UserIcon, Mail, Phone, Shield, Calendar, Save, Camera, Lock } from 'lucide-react';
 import { User, saveRecord } from '../types';
 import { useLang } from '../contexts/LangContext';
+import WorkerPortal from './WorkerPortal';
 
 interface ProfilProps {
   currentUser: User;
@@ -9,6 +10,12 @@ interface ProfilProps {
 
 export default function Profil({ currentUser }: ProfilProps) {
   const { isAr } = useLang();
+  
+  // Redirect workers to specialized Espace Ouvrier
+  if (currentUser.role === 'worker') {
+    return <WorkerPortal currentUser={currentUser} />;
+  }
+
   const [formData, setFormData] = useState({
     nom: currentUser.nom,
     email: currentUser.email,

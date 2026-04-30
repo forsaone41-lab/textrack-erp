@@ -140,6 +140,7 @@ export interface Employe {
   salaireMensuel?: number;
   remunerationType?: 'mensuel' | 'hebdomadaire' | 'tache';
   pin_code?: string;
+  photo?: string;
 }
 
 export interface PaiementSalaire {
@@ -211,6 +212,8 @@ export interface User {
   password?: string;
   pinCode?: string;
   lastActive?: string;
+  employeId?: string;
+  photo?: string;
 }
 
 export type ChargeCategorie =

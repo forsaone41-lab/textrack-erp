@@ -32,10 +32,14 @@ import {
 import { QRCodeSVG } from 'qrcode.react';
 import { useLang } from '../contexts/LangContext';
 
-export default function WorkerPortal() {
+interface WorkerPortalProps {
+  currentUser?: any;
+}
+
+export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
   const { isAr } = useLang();
   const [loading, setLoading] = useState(true);
-  const [selectedWorkerId, setSelectedWorkerId] = useState<string>('');
+  const [selectedWorkerId, setSelectedWorkerId] = useState<string>(currentUser?.employeId || '');
   const [activeTab, setActiveTab] = useState<'mission' | 'paiements' | 'profil'>('mission');
   const [data, setData] = useState<{
     employes: Employe[];
@@ -50,6 +54,8 @@ export default function WorkerPortal() {
     suivi: [],
     paiements: []
   });
+
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -71,13 +77,32 @@ export default function WorkerPortal() {
   }, []);
 
   const currentWorker = data.employes.find(e => e.id === selectedWorkerId);
+  
+  const handlePhotoChange = async () => {
+    if (!currentWorker) return;
+    const url = prompt(isAr ? 'أدخل رابط الصورة الجديدة:' : 'Entrez l\'URL de la nouvelle photo:');
+    if (url) {
+      setIsUploading(true);
+      const updated = { ...currentWorker, photo: url };
+      // Save to employees table
+      const { saveRecord } = await import('../types');
+      await saveRecord('employes', updated);
+      
+      // Update local state
+      setData(prev => ({
+        ...prev,
+        employes: prev.employes.map(e => e.id === updated.id ? updated : e)
+      }));
+      setIsUploading(false);
+    }
+  };
+
   const workerPaiements = data.paiements
     .filter(p => p.employeId === selectedWorkerId)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const today = new Date().toLocaleDateString('en-CA');
 
-  // Find worker's current active mission (last entry today)
   const workerSuiviToday = useMemo(() => 
     data.suivi.filter(s => s.employe_id === selectedWorkerId && s.date_production === today),
   [data.suivi, selectedWorkerId, today]);
@@ -86,12 +111,10 @@ export default function WorkerPortal() {
   const activeOp = data.operations.find(o => o.id === lastEntry?.operation_id);
   const activeCmd = data.commandes.find(c => c.id === lastEntry?.commande_id);
 
-  // Stats
   const totalPcsToday = workerSuiviToday.reduce((acc, curr) => acc + curr.quantite_realisee, 0);
   const totalTarget = activeOp ? activeOp.target_heure * 8 : 0; 
   const progressPercent = totalTarget > 0 ? Math.min(Math.round((totalPcsToday / totalTarget) * 100), 100) : 0;
 
-  // Motivation / Rank Logic
   const getRank = (efficiency: number) => {
     if (efficiency >= 90) return { label: isAr ? 'معلم حرفي' : 'Maître Artisan', color: 'text-amber-400', bg: 'bg-amber-400/10' };
     if (efficiency >= 70) return { label: isAr ? 'خبير' : 'Expert', color: 'text-indigo-400', bg: 'bg-indigo-400/10' };
@@ -108,7 +131,7 @@ export default function WorkerPortal() {
     </div>
   );
 
-  if (!selectedWorkerId) {
+  if (!selectedWorkerId && !currentUser?.employeId) {
     return (
       <div className="min-h-screen bg-slate-950 p-6 flex flex-col items-center justify-center">
         <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-violet-700 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-2xl shadow-indigo-500/20 ring-4 ring-slate-900">
@@ -133,7 +156,7 @@ export default function WorkerPortal() {
               <ChevronRight className="w-6 h-6 text-slate-500 rotate-90" />
             </div>
           </div>
-          <p className="text-slate-500 text-center text-[10px] font-bold uppercase tracking-[0.2em]">{isAr ? 'سجل دخولك للوصول إلى بياناتك' : 'Identifiez-vous pour accéder à vos données'}</p>
+          <p className="text-slate-500 text-center text-[10px] font-bold uppercase tracking-[0.2em]">{isAr ? 'سجل دخولك للوصول إلى بياناتك' : 'Identifiez-vous pour accéder à vos بياناتك'}</p>
         </div>
       </div>
     );
@@ -145,9 +168,13 @@ export default function WorkerPortal() {
       <div className="bg-slate-950/80 backdrop-blur-2xl border-b border-white/5 px-6 py-5 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-4">
           <div className="relative">
-            <div className="w-12 h-12 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-2xl flex items-center justify-center font-bold text-lg shadow-lg shadow-indigo-500/20">
-              {currentWorker?.prenom[0]}{currentWorker?.nom[0]}
-            </div>
+            {currentWorker?.photo ? (
+              <img src={currentWorker.photo} className="w-12 h-12 rounded-2xl object-cover shadow-lg shadow-indigo-500/20 border-2 border-indigo-500" alt="Avatar" />
+            ) : (
+              <div className="w-12 h-12 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-2xl flex items-center justify-center font-bold text-lg shadow-lg shadow-indigo-500/20">
+                {currentWorker?.prenom[0]}{currentWorker?.nom[0]}
+              </div>
+            )}
             <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-slate-950 rounded-full" />
           </div>
           <div>
@@ -158,12 +185,14 @@ export default function WorkerPortal() {
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{currentWorker?.poste}</p>
           </div>
         </div>
-        <button 
-          onClick={() => setSelectedWorkerId('')} 
-          className="w-10 h-10 bg-white/5 hover:bg-rose-500/20 hover:text-rose-500 transition-all rounded-xl flex items-center justify-center"
-        >
-          <LogOut className="w-5 h-5" />
-        </button>
+        {!currentUser?.employeId && (
+          <button 
+            onClick={() => setSelectedWorkerId('')} 
+            className="w-10 h-10 bg-white/5 hover:bg-rose-500/20 hover:text-rose-500 transition-all rounded-xl flex items-center justify-center"
+          >
+            <LogOut className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       {/* Tabs Navigation */}
@@ -361,9 +390,21 @@ export default function WorkerPortal() {
 
         {activeTab === 'profil' && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-             <div className="flex flex-col items-center text-center pb-8 border-b border-white/5">
-                <div className="w-28 h-28 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-[2.5rem] flex items-center justify-center text-4xl font-bold shadow-2xl shadow-indigo-500/20 mb-6 border-4 border-slate-900 ring-2 ring-indigo-500/20">
-                  {currentWorker?.prenom[0]}{currentWorker?.nom[0]}
+             <div className="flex flex-col items-center text-center pb-8 border-b border-white/5 relative">
+                <div className="relative group">
+                  <div className="w-28 h-28 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-[2.5rem] flex items-center justify-center text-4xl font-bold shadow-2xl shadow-indigo-500/20 mb-6 border-4 border-slate-900 ring-2 ring-indigo-500/20 overflow-hidden">
+                    {currentWorker?.photo ? (
+                      <img src={currentWorker.photo} className="w-full h-full object-cover" alt="Profile" />
+                    ) : (
+                      <span>{currentWorker?.prenom[0]}{currentWorker?.nom[0]}</span>
+                    )}
+                  </div>
+                  <button 
+                    onClick={handlePhotoChange}
+                    className="absolute bottom-4 right-0 w-10 h-10 bg-indigo-600 rounded-2xl shadow-xl flex items-center justify-center text-white hover:bg-indigo-500 transition-all border-4 border-slate-900"
+                  >
+                    <Camera className="w-5 h-5" />
+                  </button>
                 </div>
                 <h2 className="text-2xl font-bold uppercase tracking-tight">{currentWorker?.prenom} {currentWorker?.nom}</h2>
                 <div className="mt-2 px-4 py-1 bg-indigo-500/10 text-indigo-400 rounded-full text-[10px] font-bold uppercase tracking-widest border border-indigo-500/20">
