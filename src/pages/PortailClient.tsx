@@ -13,6 +13,23 @@ interface PortailClientProps {
   onLogout?: () => void;
 }
 
+const LogoWithFallback = ({ src, alt }: { src: string; alt: string }) => {
+  const [error, setError] = useState(false);
+  if (error || !src) {
+    return (
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <Package className="w-6 h-6 text-white" />
+        </div>
+        <span className="text-xl font-black uppercase tracking-tighter italic flex-1">
+          {alt.split(' ')[0]}<span className="text-indigo-400">Portal</span>
+        </span>
+      </div>
+    );
+  }
+  return <img src={src} className="h-10 object-contain" alt={alt} onError={() => setError(true)} />;
+};
+
 export default function PortailClient({ currentUser, onLogout }: PortailClientProps) {
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [factures, setFactures] = useState<Facture[]>([]);
@@ -159,7 +176,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
         <div className="flex flex-col h-full">
           <div className="p-6 md:p-8">
             <div className="flex items-center gap-3 mb-10">
-              <img src={company.logoClient || company.logoUrl} className="h-10 object-contain" alt={company.name} />
+              <LogoWithFallback src={company.logoClient || company.logoUrl} alt={company.name} />
               <button 
                 onClick={() => setMobileOpen(false)}
                 className="lg:hidden p-2 text-slate-400 hover:text-white"

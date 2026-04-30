@@ -18,6 +18,23 @@ interface SidebarProps {
   setMobileOpen?: (val: boolean) => void;
 }
 
+const LogoWithFallback = ({ src, alt }: { src: string; alt: string }) => {
+  const [error, setError] = React.useState(false);
+  if (error || !src) {
+    return (
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <Sparkles className="w-6 h-6 text-white" />
+        </div>
+        <h1 className="text-2xl font-black text-white tracking-tighter italic">
+          {alt.split(' ')[0]}<span className="text-slate-500 font-medium not-italic ml-0.5">.</span>
+        </h1>
+      </div>
+    );
+  }
+  return <img src={src} className="h-10 object-contain" alt={alt} onError={() => setError(true)} />;
+};
+
 export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mobileOpen, setMobileOpen }: SidebarProps) {
   const { lang, isAr, toggle } = useLang();
   const company = loadCompanyProfile();
@@ -58,7 +75,7 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
         <div className="px-8 pt-10 pb-6 space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <img src={company.logoAdmin || company.logoUrl} className="h-10 object-contain" alt={company.name} />
+              <LogoWithFallback src={company.logoAdmin || company.logoUrl} alt={company.name} />
             </div>
             <button onClick={closeMobile} className="lg:hidden w-8 h-8 flex items-center justify-center bg-white/5 rounded-lg text-slate-400 hover:text-white transition-colors">
               <X className="w-5 h-5" />
@@ -200,12 +217,22 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
 
           <div className="space-y-1">
             {can('rh') && (
-              <NavLink to="/rh" className={linkClass} onClick={closeMobile}>
-                <div className="flex items-center gap-3">
-                  <Users className="w-[18px] h-[18px]" />
-                  <span>{isAr ? 'الموارد البشرية' : 'RH & Employés'}</span>
-                </div>
-              </NavLink>
+              <>
+                <NavLink to="/rh" className={linkClass} onClick={closeMobile}>
+                  <div className="flex items-center gap-3">
+                    <Users className="w-[18px] h-[18px]" />
+                    <span>{isAr ? 'الموارد البشرية' : 'RH & Employés'}</span>
+                  </div>
+                </NavLink>
+                {can('performance') && (
+                  <NavLink to="/performance" className={linkClass} onClick={closeMobile}>
+                    <div className="flex items-center gap-3">
+                      <Trophy className="w-[18px] h-[18px]" />
+                      <span>{isAr ? 'أداء العمال' : 'Performance'}</span>
+                    </div>
+                  </NavLink>
+                )}
+              </>
             )}
             {can('pointage') && (
               <NavLink to="/pointage" className={linkClass} onClick={closeMobile}>

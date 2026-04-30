@@ -4,6 +4,23 @@ import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { loadCompanyProfile, saveLead } from '../types';
 
+const LogoWithFallback = ({ src, alt, isAr }: { src: string; alt: string; isAr: boolean }) => {
+  const [error, setError] = useState(false);
+  if (error || !src) {
+    return (
+      <div className="flex flex-col">
+        <span className="text-lg md:text-xl font-black text-slate-900 uppercase tracking-tighter italic leading-none">
+          {alt.split(' ')[0]}<span className="text-indigo-600">CREATIVE</span>
+        </span>
+        <span className="text-[7px] md:text-[8px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic">
+          Manufacturing Excellence
+        </span>
+      </div>
+    );
+  }
+  return <img src={src} className="h-10 md:h-12 object-contain" alt={alt} onError={() => setError(true)} />;
+};
+
 export default function LandingPage() {
   const { isAr, toggle } = useLang();
   const [company] = useState(loadCompanyProfile());
@@ -136,7 +153,7 @@ export default function LandingPage() {
       <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/80 backdrop-blur-xl border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-             <img src={company.logoLanding || company.logoUrl} className="h-10 md:h-12 object-contain" alt={company.name} />
+             <LogoWithFallback src={company.logoLanding || company.logoUrl} alt={company.name} isAr={isAr} />
           </div>
 
           <div className="flex items-center gap-2 md:gap-4">
