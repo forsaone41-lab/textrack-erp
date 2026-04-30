@@ -180,7 +180,8 @@ export default function Settings() {
                 <p className="text-[9px] font-bold text-indigo-600 italic tracking-tight">{isAr ? 'القياس الموصى به: 250x60 px' : 'Dim. Recommandée : 250x60 px'}</p>
               </div>
             </div>
-          </div>
+
+            {/* Video Section (Part of the same grid) */}
             <div className="md:col-span-2">
               <label className="block text-sm font-semibold text-slate-700 mb-1 flex items-center gap-2">
                 <Play className="w-4 h-4 text-slate-400" />

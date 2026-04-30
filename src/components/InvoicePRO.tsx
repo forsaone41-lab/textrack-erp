@@ -29,6 +29,7 @@ export const InvoicePRO: React.FC<InvoicePROProps> = ({ facture, commande, compa
             <p>IF: {company.if_tax} · Patente: {company.patente}</p>
             <p>Tél: {company.phone}</p>
           </div>
+          </div>
         </div>
         <div className="text-right">
           <div className="bg-slate-900 text-white px-6 py-4 rounded-2xl mb-6">
