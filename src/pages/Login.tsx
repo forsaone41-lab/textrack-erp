@@ -29,46 +29,12 @@ async function verifyLogin(identifier: string, password: string): Promise<User |
     };
   }
 
-  // ✅ WORKER LOGIN: Name + PIN (no @ = name, not email)
-  if (!trimId.includes('@') && password.length === 4 && /^\d+$/.test(password)) {
-    const employes = await loadData<Employe>('employes');
-    if (Array.isArray(employes)) {
-      const worker = employes.find(e => {
-        if (!e.actif || e.pin_code !== password) return false;
-        // STRICT matching: only exact full name, first name, or last name
-        const fullName = `${e.prenom || ''} ${e.nom || ''}`.toLowerCase().trim();
-        const prenom   = (e.prenom || '').toLowerCase().trim();
-        const nom      = (e.nom || '').toLowerCase().trim();
-        return (
-          fullName === trimId ||
-          prenom   === trimId ||
-          nom      === trimId
-        );
-      });
-      if (worker) {
-        const users = await loadData<User>('users');
-        const linkedUser = Array.isArray(users)
-          ? users.find(u => u.employeId === worker.id)
-          : null;
-        return {
-          id: linkedUser?.id || worker.id,
-          nom: `${worker.prenom || ''} ${worker.nom || ''}`.trim(),
-          email: worker.email || `${worker.id}@worker.ma`,
-          role: 'worker',
-          employeId: worker.id,
-          lastActive: new Date().toISOString()
-        };
-      }
-    }
-    // Name entered but no match found → block access
-    return null;
-  }
-
   // STANDARD EMAIL LOGIN (admins, clients, etc.)
   const users = await loadData<User>('users');
   if (!Array.isArray(users)) return null;
 
   const user = users.find(u => u.email?.toLowerCase() === trimId);
+
   
   if (!user) {
     if (DEFAULT_PASSWORDS[trimId] === password) {
@@ -103,12 +69,8 @@ export default function Login({ onLogin }: LoginProps) {
   const [loading, setLoading] = useState(false);
   const [logoError, setLogoError] = useState(false);
 
-  // Auto-detect: if no @ → worker mode (name + PIN)
-  const isWorkerMode = identifier.trim() !== '' && !identifier.includes('@');
-
-  async function handleLogin() {
     if (!identifier || !password) {
-      setError(isAr ? 'المرجو إدخال الاسم/الإيميل وكلمة المرور.' : 'Veuillez remplir tous les champs.');
+      setError(isAr ? 'المرجو إدخال البريد الإلكتروني وكلمة المرور.' : 'Veuillez remplir tous les champs.');
       return;
     }
     setError('');
@@ -118,11 +80,7 @@ export default function Login({ onLogin }: LoginProps) {
       if (user) {
         onLogin(user);
       } else {
-        setError(
-          isWorkerMode
-            ? (isAr ? '❌ الاسم أو رمز PIN غير صحيح.' : '❌ Nom ou code PIN incorrect.')
-            : (isAr ? '❌ البريد الإلكتروني أو كلمة المرور غير صحيحة.' : '❌ Email ou mot de passe incorrect.')
-        );
+        setError(isAr ? '❌ البريد الإلكتروني أو كلمة المرور غير صحيحة.' : '❌ Email ou mot de passe incorrect.');
       }
     } catch {
       setError('Erreur de connexion. Réessayez.');
@@ -172,21 +130,15 @@ export default function Login({ onLogin }: LoginProps) {
           <div className="px-8 pt-8 pb-6">
             {/* Mode header */}
             <div className="flex items-center gap-3 mb-6">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${isWorkerMode ? 'bg-indigo-100' : 'bg-slate-100'}`}>
-                {isWorkerMode
-                  ? <UserCircle className="w-5 h-5 text-indigo-600" />
-                  : <ShieldCheck className="w-5 h-5 text-slate-600" />
-                }
+              <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                <ShieldCheck className="w-5 h-5 text-slate-600" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-slate-800 transition-all">
-                  {isWorkerMode ? (isAr ? 'دخول الخادم' : 'Espace Ouvrier') : 'Connexion'}
+                <h2 className="text-xl font-bold text-slate-800">
+                  {isAr ? 'تسجيل الدخول' : 'Connexion'}
                 </h2>
                 <p className="text-slate-400 text-xs">
-                  {isWorkerMode
-                    ? (isAr ? 'الاسم + رمز PIN' : 'Nom + Code PIN')
-                    : (isAr ? 'بريد إلكتروني + كلمة السر' : 'Email + Mot de passe')
-                  }
+                  {isAr ? 'بريد إلكتروني + كلمة السر' : 'Email + Mot de passe'}
                 </p>
               </div>
             </div>
@@ -196,43 +148,31 @@ export default function Login({ onLogin }: LoginProps) {
               {/* Identifier field */}
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-                  {isAr ? 'الاسم أو البريد الإلكتروني' : 'Nom ou Email'}
+                  {isAr ? 'البريد الإلكتروني' : 'Email'}
                 </label>
                 <input
                   type="text"
                   value={identifier}
                   onChange={e => setIdentifier(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                  placeholder={isAr ? 'مثال: ياسين أو admin@beya.ma' : 'Ex: Yassine ou admin@beya.ma'}
-                  className={`w-full px-4 py-3 border rounded-xl text-sm focus:ring-2 outline-none transition-all ${
-                    isWorkerMode
-                      ? 'border-indigo-200 focus:ring-indigo-400 focus:border-indigo-400'
-                      : 'border-slate-200 focus:ring-slate-800 focus:border-slate-800'
-                  }`}
+                  placeholder={isAr ? 'مثال: admin@beya.ma' : 'Ex: admin@beya.ma'}
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 focus:border-slate-800 outline-none transition-all"
                 />
               </div>
 
               {/* Password / PIN field */}
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-                  {isWorkerMode
-                    ? (isAr ? 'رمز PIN (4 أرقام)' : 'Code PIN (4 chiffres)')
-                    : 'Mot de passe'
-                  }
+                  {isAr ? 'كلمة السر' : 'Mot de passe'}
                 </label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
-                    onChange={e => setPassword(isWorkerMode ? e.target.value.replace(/\D/g, '').substring(0, 4) : e.target.value)}
+                    onChange={e => setPassword(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                    placeholder={isWorkerMode ? '• • • •' : 'Mot de passe'}
-                    inputMode={isWorkerMode ? 'numeric' : 'text'}
-                    className={`w-full px-4 py-3 pr-11 border rounded-xl text-sm focus:ring-2 outline-none transition-all ${
-                      isWorkerMode
-                        ? 'border-indigo-200 focus:ring-indigo-400 focus:border-indigo-400 text-center text-2xl tracking-[0.5em] font-black text-indigo-700'
-                        : 'border-slate-200 focus:ring-slate-800 focus:border-slate-800'
-                    }`}
+                    placeholder={isAr ? 'كلمة السر' : 'Mot de passe'}
+                    className="w-full px-4 py-3 pr-11 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 focus:border-slate-800 outline-none transition-all"
                   />
                   <button
                     type="button"
@@ -254,11 +194,7 @@ export default function Login({ onLogin }: LoginProps) {
               <button
                 onClick={handleLogin}
                 disabled={loading}
-                className={`w-full text-white py-3 rounded-xl font-bold active:scale-95 transition shadow-lg disabled:opacity-60 mt-2 ${
-                  isWorkerMode
-                    ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/30'
-                    : 'bg-slate-900 hover:bg-black shadow-slate-500/20'
-                }`}
+                className="w-full text-white py-3 rounded-xl font-bold active:scale-95 transition shadow-lg disabled:opacity-60 mt-2 bg-slate-900 hover:bg-black shadow-slate-500/20"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
@@ -268,16 +204,10 @@ export default function Login({ onLogin }: LoginProps) {
                 ) : (isAr ? 'دخول' : 'Se connecter')}
               </button>
 
-              {/* Helper hint */}
-              <p className="text-center text-[10px] text-slate-400 font-medium pt-1">
-                {isAr
-                  ? 'خادم؟ اكتب اسمك ثم رمز PIN ديالك من 4 أرقام'
-                  : 'Ouvrier ? Tapez votre prénom puis votre PIN à 4 chiffres'
-                }
-              </p>
             </div>
           </div>
         </div>
+
 
         <p className="text-center text-slate-600 text-xs mt-6">© {new Date().getFullYear()} {company.name} ERP</p>
       </div>
