@@ -1464,7 +1464,6 @@ export default function FichesTechniques() {
               <button 
                 onClick={() => {
                   navigator.clipboard.writeText(newClientCode.code);
-                  alert(isAr ? 'تم نسخ الكود!' : 'Code copié !');
                 }}
                 className="w-14 h-14 flex items-center justify-center bg-white border-2 border-slate-200 text-slate-400 rounded-xl shadow-sm hover:bg-emerald-500 hover:border-emerald-500 hover:text-white transition-all hover:scale-105 active:scale-95"
                 title={isAr ? 'نسخ الكود' : 'Copier le code'}
