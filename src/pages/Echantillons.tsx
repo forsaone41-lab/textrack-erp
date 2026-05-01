@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useLang } from '../contexts/LangContext';
 import { Commande, loadData, saveRecord } from '../types';
 import { Scissors, CheckCircle, Package, Clock, Palette, Ruler, FileText, Image as ImageIcon, MessageSquare, PhoneCall, Handshake, Globe, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Echantillons() {
   const { isAr } = useLang();
+  const navigate = useNavigate();
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -61,6 +63,9 @@ export default function Echantillons() {
     setValidateModal({ open: false, commande: null });
     setValidateNote('');
     setPreuveFile('');
+    
+    // Redirect directly to the client's profile
+    navigate('/clients', { state: { openClientName: c.client } });
   };
 
   const handleLaunch = async (c: Commande) => {

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Search, Plus, User, Phone, Mail, MapPin, ExternalLink, MessageSquare, DollarSign, ChevronRight, TrendingUp, History, FileText, X, Printer, Download, Edit2, Copy, Check } from 'lucide-react';
 import { Commande, loadData, genId, loadCompanyProfile } from '../types';
 import { generatePDF } from '../utils/pdf';
@@ -38,7 +39,11 @@ export default function Clients() {
   const [view, setView] = useState<'list' | 'detail'>('list');
   const [factures, setFactures] = useState<any[]>([]);
   const [activeClientId, setActiveClientId] = useState<string | null>(null);
+  const [selectedOrderDoc, setSelectedOrderDoc] = useState<Commande | null>(null);
   const company = loadCompanyProfile();
+  
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Load remote users (role client), orders, and invoices
@@ -55,6 +60,18 @@ export default function Clients() {
       console.error("Error loading clients/orders/factures data:", err);
     });
   }, []);
+
+  useEffect(() => {
+    if (location.state?.openClientName && clients.length > 0) {
+      const c = clients.find(cl => cl.nom.toLowerCase() === location.state.openClientName.toLowerCase());
+      if (c) {
+        setActiveClientId(c.id);
+        setView('detail');
+        // Clear state so it doesn't reopen if we navigate back
+        navigate('/clients', { replace: true, state: {} });
+      }
+    }
+  }, [location.state, clients, navigate]);
 
   const clientStats = useMemo(() => {
     if (!clients) return [];
@@ -265,12 +282,12 @@ export default function Clients() {
                       const total = (cmd.quantite || 0) * (cmd.prix || 0);
                       const remains = total - (cmd.avance || 0);
                       return (
-                        <tr key={cmd.id} className="hover:bg-slate-50/30 transition-colors">
+                        <tr key={cmd.id} className="hover:bg-slate-50/50 transition-colors cursor-pointer group/row" onClick={() => setSelectedOrderDoc(cmd)}>
                           <td className="px-8 py-5">
                             <div className="flex items-center gap-2 group/ref">
-                               <p className="text-lg font-black text-slate-900 uppercase tracking-tighter">{cmd.reference}</p>
+                               <p className="text-lg font-black text-slate-900 uppercase tracking-tighter group-hover/row:text-indigo-600 transition-colors">{cmd.reference}</p>
                                <button 
-                                 onClick={() => copyPin(cmd.reference, cmd.id)}
+                                 onClick={(e) => { e.stopPropagation(); copyPin(cmd.reference, cmd.id); }}
                                  className={`p-1.5 rounded-lg transition-all ${
                                    copiedId === cmd.id 
                                      ? 'bg-emerald-100 text-emerald-600' 
@@ -638,6 +655,62 @@ export default function Clients() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Modal: Order Documents */}
+      {selectedOrderDoc && (
+        <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+           <div className="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+              <div className={`p-8 border-b border-slate-50 flex items-center justify-between ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                 <div className="flex items-center gap-4">
+                   <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600">
+                     <FileText className="w-6 h-6" />
+                   </div>
+                   <div>
+                     <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">{isAr ? 'وثائق الطلبية' : 'Documents de la Commande'}</h3>
+                     <p className="text-indigo-600 text-[10px] font-black tracking-widest uppercase">{selectedOrderDoc.reference}</p>
+                   </div>
+                 </div>
+                 <button onClick={() => setSelectedOrderDoc(null)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+                   <X className="w-6 h-6 text-slate-300" />
+                 </button>
+              </div>
+              <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+                {selectedOrderDoc.tissuPhoto && (
+                  <div>
+                    <h4 className={`text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ${isAr ? 'text-right' : ''}`}>{isAr ? 'صورة الثوب المختار' : 'Photo du Tissu Choisi'}</h4>
+                    <img src={selectedOrderDoc.tissuPhoto} alt="Tissu" className="w-full h-48 object-cover rounded-[1.5rem] border-2 border-slate-100 shadow-sm" />
+                  </div>
+                )}
+                {selectedOrderDoc.preuveValidation && (
+                  <div>
+                    <h4 className={`text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ${isAr ? 'text-right' : ''}`}>{isAr ? 'دليل موافقة الكليان' : 'Preuve de Validation du Client'}</h4>
+                    {selectedOrderDoc.preuveValidation.startsWith('data:audio') ? (
+                      <div className="bg-slate-50 p-6 rounded-[1.5rem] border-2 border-slate-100 flex items-center justify-center">
+                        <audio controls src={selectedOrderDoc.preuveValidation} className="w-full" />
+                      </div>
+                    ) : (
+                      <img src={selectedOrderDoc.preuveValidation} alt="Preuve" className="w-full h-auto max-h-64 object-contain rounded-[1.5rem] border-2 border-slate-100 bg-slate-50 shadow-sm" />
+                    )}
+                  </div>
+                )}
+                {!selectedOrderDoc.tissuPhoto && !selectedOrderDoc.preuveValidation && (
+                  <div className="bg-slate-50 rounded-[1.5rem] border-2 border-dashed border-slate-200 p-12 text-center">
+                    <FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                    <p className="text-sm text-slate-400 font-bold tracking-widest uppercase">{isAr ? 'لا توجد وثائق مرفقة' : 'Aucun document attaché'}</p>
+                  </div>
+                )}
+              </div>
+              <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end">
+                <button 
+                  onClick={() => setSelectedOrderDoc(null)}
+                  className="px-8 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-100 transition-colors shadow-sm"
+                >
+                  {isAr ? 'إغلاق' : 'Fermer'}
+                </button>
+              </div>
+           </div>
         </div>
       )}
     </div>
