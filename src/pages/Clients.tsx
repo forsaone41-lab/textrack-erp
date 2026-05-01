@@ -677,12 +677,20 @@ export default function Clients() {
                  </button>
               </div>
               <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
-                {selectedOrderDoc.tissuPhoto && (
-                  <div>
-                    <h4 className={`text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ${isAr ? 'text-right' : ''}`}>{isAr ? 'صورة الثوب المختار' : 'Photo du Tissu Choisi'}</h4>
-                    <img src={selectedOrderDoc.tissuPhoto} alt="Tissu" className="w-full h-48 object-cover rounded-[1.5rem] border-2 border-slate-100 shadow-sm" />
-                  </div>
-                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {selectedOrderDoc.tissuPhoto && (
+                    <div>
+                      <h4 className={`text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ${isAr ? 'text-right' : ''}`}>{isAr ? 'صورة الثوب المختار' : 'Photo du Tissu Choisi'}</h4>
+                      <img src={selectedOrderDoc.tissuPhoto} alt="Tissu" className="w-full h-48 object-cover rounded-[1.5rem] border-2 border-slate-100 shadow-sm" />
+                    </div>
+                  )}
+                  {selectedOrderDoc.modelePhoto && (
+                    <div>
+                      <h4 className={`text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ${isAr ? 'text-right' : ''}`}>{isAr ? 'صورة الموديل المطلوب' : 'Photo du Modèle Demandé'}</h4>
+                      <img src={selectedOrderDoc.modelePhoto} alt="Modele" className="w-full h-48 object-cover rounded-[1.5rem] border-2 border-slate-100 shadow-sm" />
+                    </div>
+                  )}
+                </div>
                 {selectedOrderDoc.preuveValidation && (
                   <div>
                     <h4 className={`text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ${isAr ? 'text-right' : ''}`}>{isAr ? 'دليل موافقة الكليان' : 'Preuve de Validation du Client'}</h4>
@@ -695,7 +703,7 @@ export default function Clients() {
                     )}
                   </div>
                 )}
-                {!selectedOrderDoc.tissuPhoto && !selectedOrderDoc.preuveValidation && (
+                {!selectedOrderDoc.tissuPhoto && !selectedOrderDoc.modelePhoto && !selectedOrderDoc.preuveValidation && (
                   <div className="bg-slate-50 rounded-[1.5rem] border-2 border-dashed border-slate-200 p-12 text-center">
                     <FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                     <p className="text-sm text-slate-400 font-bold tracking-widest uppercase">{isAr ? 'لا توجد وثائق مرفقة' : 'Aucun document attaché'}</p>

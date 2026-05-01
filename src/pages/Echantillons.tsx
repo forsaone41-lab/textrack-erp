@@ -323,14 +323,28 @@ export default function Echantillons() {
                 </div>
               </div>
 
-              {c.tissuPhoto && (
-                <div className="mb-6 rounded-xl overflow-hidden border border-slate-100 h-32 relative group/img">
-                  <div className="absolute inset-0 bg-slate-900/10 z-10" />
-                  <img src={c.tissuPhoto} alt="Tissu" className="w-full h-full object-cover" />
-                  <div className="absolute bottom-2 left-2 z-20 flex items-center gap-1.5 bg-white/90 backdrop-blur px-2 py-1 rounded-lg">
-                    <ImageIcon className="w-3 h-3 text-indigo-600" />
-                    <span className="text-[9px] font-black text-indigo-900 uppercase tracking-widest">{isAr ? 'صورة الثوب' : 'Photo'}</span>
-                  </div>
+              {(c.tissuPhoto || c.modelePhoto) && (
+                <div className="mb-6 grid grid-cols-2 gap-2">
+                  {c.tissuPhoto && (
+                    <div className="rounded-xl overflow-hidden border border-slate-100 h-32 relative group/img">
+                      <div className="absolute inset-0 bg-slate-900/10 z-10" />
+                      <img src={c.tissuPhoto} alt="Tissu" className="w-full h-full object-cover" />
+                      <div className="absolute bottom-2 left-2 z-20 flex items-center gap-1.5 bg-white/90 backdrop-blur px-2 py-1 rounded-lg">
+                        <ImageIcon className="w-3 h-3 text-indigo-600" />
+                        <span className="text-[9px] font-black text-indigo-900 uppercase tracking-widest">{isAr ? 'الثوب' : 'Tissu'}</span>
+                      </div>
+                    </div>
+                  )}
+                  {c.modelePhoto && (
+                    <div className="rounded-xl overflow-hidden border border-slate-100 h-32 relative group/img">
+                      <div className="absolute inset-0 bg-slate-900/10 z-10" />
+                      <img src={c.modelePhoto} alt="Modele" className="w-full h-full object-cover" />
+                      <div className="absolute bottom-2 left-2 z-20 flex items-center gap-1.5 bg-white/90 backdrop-blur px-2 py-1 rounded-lg">
+                        <ImageIcon className="w-3 h-3 text-fuchsia-600" />
+                        <span className="text-[9px] font-black text-fuchsia-900 uppercase tracking-widest">{isAr ? 'الموديل' : 'Modèle'}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

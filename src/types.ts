@@ -93,6 +93,8 @@ export interface Commande {
   couleurs?: string[];
   tailles?: Record<string, number>;
   tissuPhoto?: string;
+  modelePhoto?: string;
+  preuveValidation?: string;
   tissuSourcing?: 'maison' | 'client';
   tissuPrix?: number;
   coutMainOeuvre?: number;

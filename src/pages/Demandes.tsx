@@ -30,6 +30,7 @@ export default function Demandes() {
     couleurs: '',
     tailles: { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0 } as Record<string, number>,
     tissuPhoto: '',
+    modelePhoto: '',
     prixUnitaire: '',
     avance: '',
     dateLivraisonPrevue: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
@@ -123,6 +124,7 @@ export default function Demandes() {
         modele: lead.type,
         tissu: confirmDetails.tissu || 'À définir',
         tissuPhoto: confirmDetails.tissuPhoto || undefined,
+        modelePhoto: confirmDetails.modelePhoto || undefined,
         couleurs: confirmDetails.couleurs.split(',').map(c => c.trim()).filter(c => c),
         tailles: confirmDetails.tailles,
         quantite: lead.quantity,
@@ -148,6 +150,7 @@ export default function Demandes() {
         couleurs: '',
         tailles: { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0 },
         tissuPhoto: '',
+        modelePhoto: '',
         prixUnitaire: '',
         avance: '',
         dateLivraisonPrevue: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
@@ -505,7 +508,7 @@ export default function Demandes() {
                   ) : (
                     <label className="w-24 h-24 rounded-2xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 hover:border-indigo-400 transition-all shrink-0">
                       <Upload className="w-6 h-6 text-slate-400 mb-1" />
-                      <span className="text-[9px] font-bold text-slate-400 uppercase">{isAr ? 'صورة' : 'Photo'}</span>
+                      <span className="text-[9px] font-bold text-slate-400 uppercase text-center leading-tight">{isAr ? 'صورة الثوب' : 'Photo Tissu'}</span>
                       <input 
                         type="file" 
                         accept="image/*" 
@@ -523,13 +526,47 @@ export default function Demandes() {
                       />
                     </label>
                   )}
+
+                  {/* Modele Photo Upload */}
+                  {confirmDetails.modelePhoto ? (
+                    <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-fuchsia-100 shadow-md group shrink-0">
+                      <img src={confirmDetails.modelePhoto} alt="Modele" className="w-full h-full object-cover" />
+                      <button 
+                        onClick={() => setConfirmDetails({...confirmDetails, modelePhoto: ''})}
+                        className="absolute inset-0 bg-rose-500/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Trash2 className="w-6 h-6 text-white" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="w-24 h-24 rounded-2xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 hover:border-fuchsia-400 transition-all shrink-0">
+                      <ImageIcon className="w-6 h-6 text-slate-400 mb-1" />
+                      <span className="text-[9px] font-bold text-slate-400 uppercase text-center leading-tight">{isAr ? 'صورة الموديل' : 'Photo Modèle'}</span>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setConfirmDetails({...confirmDetails, modelePhoto: reader.result as string});
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                  )}
+
                   <div className="flex-1 bg-blue-50/50 p-4 rounded-2xl border border-blue-100/50">
                     <div className="flex items-start gap-3">
                       <ImageIcon className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
                       <p className="text-[10px] font-bold text-blue-800 leading-relaxed">
                         {isAr 
-                          ? 'قم بإرفاق صورة للثوب أو لتشكيلة الألوان (La gamme) كدليل (Preuve) للرجوع إليها في الإنتاج لتفادي الأخطاء.' 
-                          : 'Joignez une photo du tissu ou de la gamme de couleurs comme preuve pour la production.'}
+                          ? 'قم بإرفاق صورة للثوب أو لتشكيلة الألوان كدليل، وصورة للموديل (Design) المطلوب لتفادي الأخطاء في الإنتاج.' 
+                          : 'Joignez une photo du tissu et du modèle demandé comme preuve pour la production.'}
                       </p>
                     </div>
                   </div>
