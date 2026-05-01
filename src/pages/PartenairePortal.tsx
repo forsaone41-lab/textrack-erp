@@ -28,6 +28,12 @@ export default function PartenairePortal({ currentUser, onLogout }: PartenairePo
     typeof Notification !== 'undefined' ? Notification.permission : 'default'
   );
 
+  // Mock notifications state
+  const [notifications, setNotifications] = useState([
+    { id: 1, title: isAr ? 'تم تعيين مهمة جديدة' : 'Nouvelle mission assignée', desc: isAr ? 'تم تعيين مهمة خياطة جديدة لك (REF-2024-001).' : 'Une nouvelle mission de couture vous a été assignée.', time: isAr ? 'منذ ساعتين' : 'Il y a 2 heures', icon: Package, color: 'indigo', urgent: false, read: false },
+    { id: 2, title: isAr ? 'اقتراب الموعد النهائي' : 'Délai proche', desc: isAr ? 'المهمة (REF-2024-005) تنتهي غداً.' : 'La mission arrive à échéance demain.', time: isAr ? 'منذ 5 ساعات' : 'Il y a 5 heures', icon: Clock, color: 'amber', urgent: true, read: false },
+  ]);
+
   // Settings state
   const [profileForm, setProfileForm] = useState({ nom: currentUser.nom, email: currentUser.email });
 
@@ -36,10 +42,13 @@ export default function PartenairePortal({ currentUser, onLogout }: PartenairePo
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'notifications') {
-      setHasUnread(false);
-    }
-  }, [activeTab]);
+    const unread = notifications.some(n => !n.read);
+    setHasUnread(unread);
+  }, [notifications]);
+
+  const markNotifRead = (id: number) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  };
 
   const fetchData = async () => {
     try {
@@ -329,26 +338,29 @@ export default function PartenairePortal({ currentUser, onLogout }: PartenairePo
               )}
 
               <div className="space-y-4">
-                {[
-                  { id: 1, title: isAr ? 'تم تعيين مهمة جديدة' : 'Nouvelle mission assignée', desc: isAr ? 'تم تعيين مهمة خياطة جديدة لك (REF-2024-001).' : 'Une nouvelle mission de couture vous a été assignée.', time: isAr ? 'منذ ساعتين' : 'Il y a 2 heures', icon: Package, color: 'indigo', urgent: false },
-                  { id: 2, title: isAr ? 'اقتراب الموعد النهائي' : 'Délai proche', desc: isAr ? 'المهمة (REF-2024-005) تنتهي غداً.' : 'La mission arrive à échéance demain.', time: isAr ? 'منذ 5 ساعات' : 'Il y a 5 heures', icon: Clock, color: 'amber', urgent: true },
-                ].map(notif => (
-                  <div key={notif.id} className={`bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-start gap-4 hover:border-indigo-200 transition-colors cursor-pointer group ${isAr ? 'flex-row-reverse' : ''} ${notif.urgent ? 'border-l-4 border-l-rose-500 animate-in fade-in slide-in-from-right duration-500' : ''}`}>
+                {notifications.map(notif => (
+                  <div 
+                    key={notif.id} 
+                    onClick={() => markNotifRead(notif.id)}
+                    className={`bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-start gap-4 hover:border-indigo-200 transition-all cursor-pointer group ${isAr ? 'flex-row-reverse' : ''} ${notif.urgent && !notif.read ? 'border-l-4 border-l-rose-500 animate-in fade-in slide-in-from-right duration-500' : ''} ${notif.read ? 'opacity-60' : ''}`}
+                  >
                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
-                      notif.urgent ? 'bg-rose-50 text-rose-500 animate-pulse' :
+                      notif.urgent && !notif.read ? 'bg-rose-50 text-rose-500 animate-pulse' :
                       notif.color === 'indigo' ? 'bg-indigo-50 text-indigo-500' : 'bg-amber-50 text-amber-500'
                     }`}>
-                      <notif.icon className={`w-6 h-6 ${notif.urgent ? 'animate-bounce' : ''}`} />
+                      <notif.icon className={`w-6 h-6 ${notif.urgent && !notif.read ? 'animate-bounce' : ''}`} />
                     </div>
                     <div className={`flex-1 ${isAr ? 'text-right' : ''}`}>
-                      <h4 className={`font-black uppercase tracking-tighter text-sm group-hover:text-indigo-600 transition-colors ${notif.urgent ? 'text-rose-600' : 'text-slate-900'}`}>
+                      <h4 className={`font-black uppercase tracking-tighter text-sm group-hover:text-indigo-600 transition-colors ${notif.urgent && !notif.read ? 'text-rose-600' : 'text-slate-900'}`}>
                         {notif.title}
-                        {notif.urgent && <span className="mx-2 px-2 py-0.5 bg-rose-500 text-white text-[8px] rounded-full animate-pulse inline-block align-middle">{isAr ? 'عاجل' : 'URGENT'}</span>}
+                        {notif.urgent && !notif.read && <span className="mx-2 px-2 py-0.5 bg-rose-500 text-white text-[8px] rounded-full animate-pulse inline-block align-middle">{isAr ? 'عاجل' : 'URGENT'}</span>}
                       </h4>
                       <p className="text-slate-500 text-xs font-bold mt-1">{notif.desc}</p>
                       <p className="text-slate-400 text-[10px] font-bold uppercase mt-3 tracking-widest">{notif.time}</p>
                     </div>
-                    <div className={`w-2 h-2 rounded-full mt-2 ${notif.urgent ? 'bg-rose-500 animate-ping' : 'bg-indigo-500'}`}></div>
+                    {!notif.read && (
+                      <div className={`w-2 h-2 rounded-full mt-2 ${notif.urgent ? 'bg-rose-500 animate-ping' : 'bg-indigo-500'}`}></div>
+                    )}
                   </div>
                 ))}
               </div>
