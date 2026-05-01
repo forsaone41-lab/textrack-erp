@@ -213,6 +213,7 @@ export default function Demandes() {
         actif: true
       };
       await saveRecord('users', newClient);
+      setUsers(prev => [...prev, newClient]);
       setNewClientCode({ name: lead.name, code: autoCode });
     } catch (e: any) {
       alert(isAr ? 'مشكل: ' + e.message : 'Erreur: ' + e.message);
@@ -913,28 +914,50 @@ export default function Demandes() {
                   </div>
 
                   {/* Secondary Tools: Devis, Fiche, Convert Client */}
-                  <div className="flex items-center gap-1.5 bg-slate-50 p-1.5 rounded-xl border border-slate-100">
-                    <button 
-                      onClick={() => convertToClient(lead)}
-                      className="w-8 h-8 flex items-center justify-center text-emerald-500 hover:bg-emerald-100 rounded-lg transition-colors"
-                      title={isAr ? 'تسجيل كزبون' : 'Enregistrer comme client'}
-                    >
-                      <UserPlus className="w-4 h-4" />
-                    </button>
+                  <div className="flex items-center gap-2 bg-slate-50/50 p-1.5 rounded-2xl border border-slate-100 shadow-inner">
+                    {/* Convert to Client Button - Disappears if already a client */}
+                    {!users.some(u => u.nom.toLowerCase() === lead.name.toLowerCase() && u.role === 'client') ? (
+                      <button 
+                        onClick={() => convertToClient(lead)}
+                        className="w-9 h-9 flex items-center justify-center bg-white text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-xl transition-all shadow-sm border border-emerald-100 group/btn"
+                        title={isAr ? 'تسجيل كزبون جديد' : 'Enregistrer comme nouveau client'}
+                      >
+                        <UserPlus className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                      </button>
+                    ) : (
+                      <div className="w-9 h-9 flex items-center justify-center bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100" title={isAr ? 'زبون مسجل' : 'Client déjà enregistré'}>
+                        <CheckCircle className="w-4 h-4" />
+                      </div>
+                    )}
+
                     <button 
                       onClick={() => setDevisLead(lead)}
-                      className="w-8 h-8 flex items-center justify-center text-amber-500 hover:bg-amber-100 rounded-lg transition-colors"
+                      className="w-9 h-9 flex items-center justify-center bg-white text-amber-500 hover:bg-amber-500 hover:text-white rounded-xl transition-all shadow-sm border border-amber-100 group/btn"
                       title={isAr ? 'حساب التكلفة' : 'Devis'}
                     >
-                      <Calculator className="w-4 h-4" />
+                      <Calculator className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
                     </button>
-                    <button 
-                      onClick={() => navigate('/fiches-techniques', { state: { fromLead: lead } })}
-                      className="w-8 h-8 flex items-center justify-center text-indigo-500 hover:bg-indigo-100 rounded-lg transition-colors"
-                      title={isAr ? 'إنشاء بطاقة تقنية' : 'Créer Fiche Technique'}
-                    >
-                      <FileText className="w-4 h-4" />
-                    </button>
+
+                    {/* Fiche Technique Button - Only active if client is registered */}
+                    {(() => {
+                      const clientExists = users.some(u => u.nom.toLowerCase() === lead.name.toLowerCase() && u.role === 'client');
+                      return (
+                        <button 
+                          onClick={() => clientExists && navigate('/fiches-techniques', { state: { fromLead: lead } })}
+                          disabled={!clientExists}
+                          className={`h-9 px-3 flex items-center justify-center gap-2 rounded-xl transition-all shadow-sm border font-black text-[9px] uppercase tracking-widest ${
+                            clientExists 
+                              ? 'bg-indigo-50 text-indigo-600 border-indigo-100 hover:bg-indigo-600 hover:text-white hover:shadow-indigo-100 group/btn' 
+                              : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed opacity-60'
+                          }`}
+                          title={!clientExists ? (isAr ? 'يجب تسجيل الزبون أولاً' : 'Enregistrez le client d\'abord') : (isAr ? 'إنشاء بطاقة تقنية' : 'Créer Fiche Technique')}
+                        >
+                          <FileText className={`w-3.5 h-3.5 ${clientExists ? 'group-hover/btn:scale-110 transition-transform' : ''}`} />
+                          {!isAr && "Fiche"}
+                          {isAr && "بطاقة"}
+                        </button>
+                      );
+                    })()}
                   </div>
 
                   {/* Delete Action */}
