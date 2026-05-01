@@ -40,7 +40,8 @@ interface WorkerPortalProps {
 export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
   const { isAr } = useLang();
   const [loading, setLoading] = useState(true);
-  const [selectedWorkerId, setSelectedWorkerId] = useState<string>(currentUser?.employeId || '');
+  // Auto-detect worker from logged-in user account
+  const selectedWorkerId = currentUser?.employeId || '';
   const [activeTab, setActiveTab] = useState<'mission' | 'paiements' | 'profil'>('mission');
   const [expandedMissionId, setExpandedMissionId] = useState<string | null>(null);
   const [data, setData] = useState<{
@@ -133,33 +134,22 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
     </div>
   );
 
-  if (!selectedWorkerId && !currentUser?.employeId) {
+  // If user has no linked employee profile, show a clear message
+  if (!selectedWorkerId) {
     return (
       <div className="min-h-screen bg-slate-950 p-6 flex flex-col items-center justify-center">
-        <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-violet-700 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-2xl shadow-indigo-500/20 ring-4 ring-slate-900">
-          <UserIcon className="w-10 h-10 text-white" />
+        <div className="w-24 h-24 bg-gradient-to-br from-slate-700 to-slate-800 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-2xl ring-4 ring-slate-900">
+          <ShieldCheck className="w-10 h-10 text-slate-400" />
         </div>
-        <h1 className="text-3xl font-bold text-white uppercase tracking-tighter mb-2 text-center">{isAr ? 'مرحباً بك' : 'Bienvenue'}</h1>
-        <p className="text-slate-400 text-sm font-bold mb-10 uppercase tracking-widest">{isAr ? 'فضاء العامل - بيا كرييتيف' : 'Portail Personnel BEYA'}</p>
-        
-        <div className="w-full max-w-sm space-y-6">
-          <div className="relative">
-            <select 
-              value={selectedWorkerId}
-              onChange={e => setSelectedWorkerId(e.target.value)}
-              className="w-full bg-slate-900 border-2 border-slate-800 text-white p-6 rounded-[2rem] font-bold appearance-none outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all shadow-2xl"
-            >
-              <option value="">{isAr ? 'اختر اسمك من القائمة' : 'Sélectionnez votre nom'}</option>
-              {data.employes.map(e => (
-                <option key={e.id} value={e.id}>{e.prenom} {e.nom}</option>
-              ))}
-            </select>
-            <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none">
-              <ChevronRight className="w-6 h-6 text-slate-500 rotate-90" />
-            </div>
-          </div>
-          <p className="text-slate-500 text-center text-[10px] font-bold uppercase tracking-[0.2em]">{isAr ? 'سجل دخولك للوصول إلى بياناتك' : 'Identifiez-vous pour accéder à vos بياناتك'}</p>
-        </div>
+        <h1 className="text-2xl font-bold text-white uppercase tracking-tighter mb-3 text-center">
+          {isAr ? 'الحساب غير مرتبط' : 'Compte non associé'}
+        </h1>
+        <p className="text-slate-400 text-sm font-bold text-center max-w-xs leading-relaxed">
+          {isAr 
+            ? 'حسابك غير مرتبط بأي موظف. يرجى التواصل مع المدير لإضافة معرف الموظف لحسابك.'
+            : "Votre compte n'est pas lié à un employé. Contactez l'administrateur pour associer votre profil."
+          }
+        </p>
       </div>
     );
   }
@@ -187,14 +177,7 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{currentWorker?.poste}</p>
           </div>
         </div>
-        {!currentUser?.employeId && (
-          <button 
-            onClick={() => setSelectedWorkerId('')} 
-            className="w-10 h-10 bg-white/5 hover:bg-rose-500/20 hover:text-rose-500 transition-all rounded-xl flex items-center justify-center"
-          >
-            <LogOut className="w-5 h-5" />
-          </button>
-        )}
+
       </div>
 
       {/* Tabs Navigation */}
