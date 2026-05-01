@@ -342,20 +342,30 @@ export default function PartenairePortal({ currentUser, onLogout }: PartenairePo
                   <div 
                     key={notif.id} 
                     onClick={() => markNotifRead(notif.id)}
-                    className={`bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-start gap-4 hover:border-indigo-200 transition-all cursor-pointer group ${isAr ? 'flex-row-reverse' : ''} ${notif.urgent && !notif.read ? 'border-l-4 border-l-rose-500 animate-in fade-in slide-in-from-right duration-500' : ''} ${notif.read ? 'opacity-60' : ''}`}
+                    className={`bg-white p-6 rounded-3xl border shadow-sm flex items-start gap-4 transition-all cursor-pointer group ${isAr ? 'flex-row-reverse' : ''} ${
+                      notif.read 
+                        ? 'opacity-50 border-slate-100 bg-slate-50/30' 
+                        : notif.urgent 
+                          ? 'border-rose-200 bg-rose-50/10 border-l-4 border-l-rose-500 animate-in fade-in duration-500' 
+                          : 'border-slate-200 hover:border-indigo-200'
+                    }`}
                   >
                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
-                      notif.urgent && !notif.read ? 'bg-rose-50 text-rose-500 animate-pulse' :
+                      !notif.read && notif.urgent ? 'bg-rose-50 text-rose-500 animate-pulse' :
+                      notif.read ? 'bg-slate-100 text-slate-400' :
                       notif.color === 'indigo' ? 'bg-indigo-50 text-indigo-500' : 'bg-amber-50 text-amber-500'
                     }`}>
-                      <notif.icon className={`w-6 h-6 ${notif.urgent && !notif.read ? 'animate-bounce' : ''}`} />
+                      <notif.icon className={`w-6 h-6 ${!notif.read && notif.urgent ? 'animate-bounce' : ''}`} />
                     </div>
                     <div className={`flex-1 ${isAr ? 'text-right' : ''}`}>
-                      <h4 className={`font-black uppercase tracking-tighter text-sm group-hover:text-indigo-600 transition-colors ${notif.urgent && !notif.read ? 'text-rose-600' : 'text-slate-900'}`}>
+                      <h4 className={`font-black uppercase tracking-tighter text-sm transition-colors ${
+                        notif.read ? 'text-slate-400' :
+                        notif.urgent ? 'text-rose-600' : 'text-slate-900 group-hover:text-indigo-600'
+                      }`}>
                         {notif.title}
-                        {notif.urgent && !notif.read && <span className="mx-2 px-2 py-0.5 bg-rose-500 text-white text-[8px] rounded-full animate-pulse inline-block align-middle">{isAr ? 'عاجل' : 'URGENT'}</span>}
+                        {!notif.read && notif.urgent && <span className="mx-2 px-2 py-0.5 bg-rose-500 text-white text-[8px] rounded-full animate-pulse inline-block align-middle">{isAr ? 'عاجل' : 'URGENT'}</span>}
                       </h4>
-                      <p className="text-slate-500 text-xs font-bold mt-1">{notif.desc}</p>
+                      <p className={`text-xs font-bold mt-1 ${notif.read ? 'text-slate-400' : 'text-slate-500'}`}>{notif.desc}</p>
                       <p className="text-slate-400 text-[10px] font-bold uppercase mt-3 tracking-widest">{notif.time}</p>
                     </div>
                     {!notif.read && (
