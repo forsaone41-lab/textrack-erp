@@ -123,12 +123,23 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
                 >
                   <MessageCircle className="w-3.5 h-3.5" /> {isAr ? 'إرسال للزبون' : 'ENVOYER AU CLIENT'}
                 </button>
-                <button
-                  onClick={() => onLaunchSample(f)}
-                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl text-[10px] font-bold hover:shadow-lg hover:shadow-indigo-500/30 transition-all mt-1"
-                >
-                  <Calculator className="w-3.5 h-3.5" /> {isAr ? 'إطلاق العينة' : 'LANCER ÉCHANTILLON'}
-                </button>
+                {(() => {
+                  const isReadyForSample = f.patronagePhoto && f.tailles.length > 0 && f.mesures.length > 0;
+                  return (
+                    <button
+                      onClick={() => isReadyForSample && onLaunchSample(f)}
+                      disabled={!isReadyForSample}
+                      title={!isReadyForSample ? (isAr ? 'يجب إرفاق الباترون وإدخال المقاسات والقياسات أولاً' : 'Veuillez uploader le patron et définir les mesures d\'abord') : ''}
+                      className={`w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-[10px] font-bold transition-all mt-1 ${
+                        isReadyForSample 
+                          ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:shadow-lg hover:shadow-indigo-500/30' 
+                          : 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-70 grayscale'
+                      }`}
+                    >
+                      <Calculator className="w-3.5 h-3.5" /> {isAr ? 'إطلاق العينة' : 'LANCER ÉCHANTILLON'}
+                    </button>
+                  );
+                })()}
               </div>
             </div>
 
