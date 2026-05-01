@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, Ruler, Calculator, Camera, FileText, Download, MessageCircle, X, ChevronRight } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Ruler, Calculator, Camera, FileText, Download, MessageCircle, X, ChevronRight, Upload, ImageIcon } from 'lucide-react';
 import {
   FicheTechnique, StockTissu, loadData, saveRecord, deleteRecord, genId,
 } from '../types';
@@ -15,6 +15,7 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
   printFicheTechnique: (f: FicheTechnique) => void;
   onViewMesures: (f: FicheTechnique) => void;
   onShare: (f: FicheTechnique) => void;
+  onLaunchSample: (f: FicheTechnique) => void;
 }) {
   const { lang, isAr } = useLang();
   return (
@@ -122,6 +123,12 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
                 >
                   <MessageCircle className="w-3.5 h-3.5" /> {isAr ? 'إرسال للزبون' : 'ENVOYER AU CLIENT'}
                 </button>
+                <button
+                  onClick={() => onLaunchSample(f)}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl text-[10px] font-bold hover:shadow-lg hover:shadow-indigo-500/30 transition-all mt-1"
+                >
+                  <Calculator className="w-3.5 h-3.5" /> {isAr ? 'إطلاق العينة' : 'LANCER ÉCHANTILLON'}
+                </button>
               </div>
             </div>
 
@@ -173,6 +180,14 @@ export default function FichesTechniques() {
   const [editId, setEditId] = useState<string | null>(null);
   const [viewMesuresFiche, setViewMesuresFiche] = useState<FicheTechnique | null>(null);
   const [showShareModal, setShowShareModal] = useState<FicheTechnique | null>(null);
+  const [confirmFiche, setConfirmFiche] = useState<FicheTechnique | null>(null);
+  const [confirmDetails, setConfirmDetails] = useState({
+    tissu: '',
+    couleurs: '',
+    tailles: {} as Record<string, number>,
+    tissuPhoto: '',
+    modelePhoto: ''
+  });
   const [clients, setClients] = useState<any[]>([]);
   const [clientSearch, setClientSearch] = useState('');
   const [form, setForm] = useState<Partial<FicheTechnique>>({
@@ -342,6 +357,43 @@ export default function FichesTechniques() {
     }
   }
 
+  async function handleLaunchEchantillon() {
+    if (!confirmFiche) return;
+    const totalSizes = Object.values(confirmDetails.tailles).reduce((a, b) => a + b, 0);
+    const newCommande = {
+      id: genId(),
+      reference: `CMD-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+      client: confirmFiche.client,
+      modele: confirmFiche.modele,
+      tissu: confirmDetails.tissu,
+      quantite: totalSizes > 0 ? totalSizes : 1,
+      quantiteLivre: 0,
+      dateCommande: new Date().toISOString(),
+      dateLivraisonPrevue: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      phase: 'patronage' as const,
+      prix: 0,
+      rebut: 0,
+      statut: 'echantillon_en_cours' as const,
+      suivi: [{ phase: 'patronage' as const, date: new Date().toISOString(), note: 'Échantillon lancé par modéliste' }],
+      couleurs: confirmDetails.couleurs.split(',').map(c => c.trim()).filter(Boolean),
+      tailles: confirmDetails.tailles,
+      tissuPhoto: confirmDetails.tissuPhoto,
+      modelePhoto: confirmDetails.modelePhoto || confirmFiche.photo,
+    };
+    await saveRecord('commandes', newCommande);
+    setConfirmFiche(null);
+    alert(isAr ? 'تم إطلاق العينة بنجاح!' : 'Échantillon lancé avec succès !');
+  }
+
+  function toggleColor(c: string) {
+    const current = confirmDetails.couleurs.split(',').map(x => x.trim()).filter(Boolean);
+    if (current.includes(c)) {
+      setConfirmDetails({ ...confirmDetails, couleurs: current.filter(x => x !== c).join(', ') });
+    } else {
+      setConfirmDetails({ ...confirmDetails, couleurs: [...current, c].join(', ') });
+    }
+  }
+
   function removeMesure(idx: number) {
     setForm({ ...form, mesures: (form.mesures || []).filter((_, i) => i !== idx) });
   }
@@ -406,7 +458,24 @@ export default function FichesTechniques() {
             </div>
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
               {filtered.filter(f => f.patronagePhoto).map(f => (
-                <FicheCard key={f.id} f={f} openEdit={openEdit} remove={remove} downloadFile={downloadFile} printFicheTechnique={printFT} onViewMesures={setViewMesuresFiche} onShare={setShowShareModal} />
+                <FicheCard 
+                  key={f.id} 
+                  f={f} 
+                  openEdit={openEdit} 
+                  remove={remove} 
+                  downloadFile={downloadFile} 
+                  printFicheTechnique={printFT} 
+                  onViewMesures={setViewMesuresFiche} 
+                  onShare={setShowShareModal} 
+                  onLaunchSample={(fiche) => {
+                    setConfirmFiche(fiche);
+                    setConfirmDetails(prev => ({
+                      ...prev,
+                      modelePhoto: fiche.photo || '',
+                      tailles: fiche.tailles.reduce((acc, t) => ({...acc, [t]: 0}), {})
+                    }));
+                  }}
+                />
               ))}
             </div>
           </div>
@@ -426,7 +495,24 @@ export default function FichesTechniques() {
             </div>
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
               {filtered.filter(f => !f.patronagePhoto).map(f => (
-                <FicheCard key={f.id} f={f} openEdit={openEdit} remove={remove} downloadFile={downloadFile} printFicheTechnique={printFT} onViewMesures={setViewMesuresFiche} shareOnWhatsApp={shareOnWhatsApp} />
+                <FicheCard 
+                  key={f.id} 
+                  f={f} 
+                  openEdit={openEdit} 
+                  remove={remove} 
+                  downloadFile={downloadFile} 
+                  printFicheTechnique={printFT} 
+                  onViewMesures={setViewMesuresFiche} 
+                  onShare={setShowShareModal} 
+                  onLaunchSample={(fiche) => {
+                    setConfirmFiche(fiche);
+                    setConfirmDetails(prev => ({
+                      ...prev,
+                      modelePhoto: fiche.photo || '',
+                      tailles: fiche.tailles.reduce((acc, t) => ({...acc, [t]: 0}), {})
+                    }));
+                  }}
+                />
               ))}
             </div>
           </div>

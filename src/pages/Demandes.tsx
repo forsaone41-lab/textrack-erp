@@ -856,21 +856,7 @@ export default function Demandes() {
 
                 <div className="flex flex-col sm:flex-row items-center gap-3">
                   
-                  {/* Primary Action: Launch Sample */}
-                  {lead.status !== 'completed' && (
-                    <button 
-                      onClick={() => {
-                        setConfirmLead(lead);
-                        setConfirmDetails(prev => ({
-                          ...prev,
-                          modelePhoto: lead.photo || ''
-                        }));
-                      }}
-                      className="w-full sm:w-auto h-11 px-6 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:shadow-xl hover:shadow-indigo-500/30 transition-all flex items-center justify-center gap-2"
-                    >
-                      <Scissors className="w-4 h-4" /> {isAr ? 'إطلاق العينة' : 'Lancer Échantillon'}
-                    </button>
-                  )}
+                  {/* Primary Action Removed: Sample Launch now handled in FichesTechniques */}
 
                   {/* Contact Actions */}
                   <div className="flex items-center gap-2">
