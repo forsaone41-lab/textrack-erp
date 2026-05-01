@@ -127,7 +127,7 @@ export default function Login({ onLogin }: LoginProps) {
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-2xl shadow-black/40 overflow-hidden">
           {/* Mode color bar */}
-          <div className={`h-1 w-full transition-all duration-500 ${isWorkerMode ? 'bg-gradient-to-r from-indigo-500 to-violet-500' : 'bg-gradient-to-r from-slate-700 to-slate-900'}`} />
+          <div className="h-1 w-full transition-all duration-500 bg-gradient-to-r from-slate-700 to-slate-900" />
 
           <div className="px-8 pt-8 pb-6">
             {/* Mode header */}
