@@ -1504,10 +1504,11 @@ export default function FichesTechniques() {
               {isAr ? 'إغلاق النافذة' : 'Fermer'}
             </button>
         </div>
-      )}
+      </div>
+    )}
 
-      {/* Success Notification Modal */}
-      {showSuccess && (
+    {/* Success Notification Modal */}
+    {showSuccess && (
         <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-500">
           <div className="bg-white rounded-[2.5rem] p-10 max-w-sm w-full shadow-[0_30px_70px_rgba(0,0,0,0.2)] text-center relative overflow-hidden border border-white animate-in zoom-in-95 duration-300">
             <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-600" />
