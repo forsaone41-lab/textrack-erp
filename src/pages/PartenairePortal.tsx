@@ -19,6 +19,7 @@ export default function PartenairePortal({ currentUser, onLogout }: PartenairePo
   const [activeTab, setActiveTab] = useState<'tasks' | 'history'>('tasks');
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'active' | 'done'>('all');
+  const [selectedCmd, setSelectedCmd] = useState<Commande | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -39,11 +40,37 @@ export default function PartenairePortal({ currentUser, onLogout }: PartenairePo
     }
   };
 
+  const updateStatus = async (cmdId: string, newStatus: Commande['statut']) => {
+    const cmd = commandes.find(c => c.id === cmdId);
+    if (!cmd) return;
+    
+    const updated = {
+      ...cmd,
+      statut: newStatus,
+      suivi: [...(cmd.suivi || []), { 
+        phase: cmd.phase, 
+        date: new Date().toISOString(), 
+        note: `Mis à jour via Portail Partenaire (Statut: ${newStatus})` 
+      }]
+    };
+    await saveRecord('commandes', updated);
+    setCommandes(prev => prev.map(c => c.id === cmdId ? updated : c));
+    setSelectedCmd(updated);
+  };
+
   const filtered = commandes.filter(c => {
     const matchSearch = c.reference.toLowerCase().includes(search.toLowerCase()) || 
                        c.modele.toLowerCase().includes(search.toLowerCase());
+    
+    // Tab filtering
+    if (activeTab === 'history') {
+      return matchSearch && (c.statut === 'terminé' || c.statut === 'livré');
+    }
+    
+    // Quick filter (within current tab context)
     if (filter === 'active') return matchSearch && c.statut === 'en_cours';
     if (filter === 'done') return matchSearch && (c.statut === 'terminé' || c.statut === 'livré');
+    
     return matchSearch;
   });
 
@@ -161,7 +188,7 @@ export default function PartenairePortal({ currentUser, onLogout }: PartenairePo
                 </div>
               ) : (
                 filtered.map(cmd => (
-                  <div key={cmd.id} className="p-6 hover:bg-slate-50 transition-all group">
+                  <div key={cmd.id} onClick={() => setSelectedCmd(cmd)} className="p-6 hover:bg-slate-50 transition-all group cursor-pointer">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                       <div className="flex items-center gap-5">
                         <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-sm border border-slate-100 shrink-0 bg-slate-50">
@@ -195,13 +222,15 @@ export default function PartenairePortal({ currentUser, onLogout }: PartenairePo
                         <div className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 ${
                           cmd.statut === 'en_cours' 
                             ? 'bg-amber-50 border-amber-500/20 text-amber-600' 
-                            : 'bg-emerald-50 border-emerald-500/20 text-emerald-600'
+                            : cmd.statut === 'terminé' || cmd.statut === 'livré'
+                            ? 'bg-emerald-50 border-emerald-500/20 text-emerald-600'
+                            : 'bg-slate-50 border-slate-200 text-slate-500'
                         }`}>
                           {cmd.statut.replace('_', ' ')}
                         </div>
-                        <button className="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center hover:bg-indigo-600 transition-all shadow-lg active:scale-95">
+                        <div className="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center hover:bg-indigo-600 transition-all shadow-lg active:scale-95">
                           <ExternalLink className="w-4 h-4" />
-                        </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -211,6 +240,77 @@ export default function PartenairePortal({ currentUser, onLogout }: PartenairePo
           </div>
         </main>
       </div>
+
+      {/* Detail Modal */}
+      {selectedCmd && (
+        <div className="fixed inset-0 z-[300] bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in duration-300">
+            <div className="p-8 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Détails de la Mission</h3>
+                <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{selectedCmd.reference}</p>
+              </div>
+              <button onClick={() => setSelectedCmd(null)} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center hover:bg-slate-100 transition-colors">
+                <LogOut className="w-5 h-5 text-slate-400 rotate-180" />
+              </button>
+            </div>
+
+            <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="aspect-square rounded-3xl overflow-hidden bg-slate-50 border border-slate-100">
+                {selectedCmd.modelePhoto ? (
+                  <img src={selectedCmd.modelePhoto} className="w-full h-full object-cover" alt="" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-slate-300 font-black text-2xl uppercase tracking-widest italic">BEYA</div>
+                )}
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Modèle / Client</label>
+                  <p className="text-2xl font-black text-slate-900 uppercase tracking-tight">{selectedCmd.modele}</p>
+                  <p className="text-sm font-bold text-slate-500 uppercase">{selectedCmd.client}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-slate-50 rounded-2xl">
+                    <label className="text-[9px] font-black text-slate-400 uppercase block mb-1">Quantité</label>
+                    <p className="text-lg font-black text-slate-900">{selectedCmd.quantite} pcs</p>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-2xl">
+                    <label className="text-[9px] font-black text-slate-400 uppercase block mb-1">Délai</label>
+                    <p className="text-lg font-black text-slate-900">{new Date(selectedCmd.dateLivraisonPrevue).toLocaleDateString()}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Mettre à jour le statut</label>
+                  <div className="grid grid-cols-1 gap-2">
+                    {selectedCmd.statut !== 'terminé' && selectedCmd.statut !== 'livré' ? (
+                      <button 
+                        onClick={() => updateStatus(selectedCmd.id, 'terminé')}
+                        className="w-full py-4 bg-emerald-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:bg-emerald-600 transition-all flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle className="w-4 h-4" /> Marquer comme Terminé
+                      </button>
+                    ) : (
+                      <div className="p-4 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-2xl flex items-center justify-center gap-2 font-black text-xs uppercase tracking-widest">
+                        <CheckCircle className="w-4 h-4" /> Travail Terminé
+                      </div>
+                    )}
+                    
+                    <button 
+                      onClick={() => setSelectedCmd(null)}
+                      className="w-full py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all"
+                    >
+                      Fermer
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
