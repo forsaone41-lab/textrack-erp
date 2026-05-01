@@ -398,19 +398,31 @@ export default function FichesTechniques() {
     const existingClient = clients.find(c => (c.nom || '').toLowerCase() === clientName.toLowerCase());
     
     if (!existingClient && clientName) {
-      const autoCode = Math.floor(100000 + Math.random() * 900000).toString();
-      const newClient = {
-        id: genId(),
-        nom: clientName,
-        role: 'client',
-        email: `${clientName.replace(/\s+/g, '').toLowerCase() || 'client'}@beya.ma`,
-        telephone: '',
-        password: autoCode,
-        actif: true
-      };
-      await saveRecord('users', newClient);
-      setClients(prev => [...prev, newClient]);
-      setNewClientCode({ name: clientName, code: autoCode });
+      // 1. Double check by email to be safe (since clients state might not be 100% synced)
+      const allUsers = await loadData<User>('users') || [];
+      const baseEmail = `${clientName.replace(/\s+/g, '').toLowerCase() || 'client'}@beya.ma`;
+      
+      const existingByEmail = allUsers.find(u => u.email.toLowerCase() === baseEmail.toLowerCase());
+      if (existingByEmail) {
+        // If they exist by email but not by name in our local state, just use them
+        // (but we don't have a way to show their password easily here without a specific modal)
+        // For now, let's just use the existing one and skip creation
+      } else {
+        const autoCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const newId = genId();
+        const newClient = {
+          id: newId,
+          nom: clientName,
+          role: 'client',
+          email: `${clientName.replace(/\s+/g, '').toLowerCase()}_${newId.slice(0, 4)}@beya.ma`,
+          telephone: '',
+          password: autoCode,
+          actif: true
+        };
+        await saveRecord('users', newClient);
+        setClients(prev => [...prev, newClient]);
+        setNewClientCode({ name: clientName, code: autoCode });
+      }
     }
 
     const totalSizes = Object.values(confirmDetails.tailles).reduce((a, b) => a + b, 0);

@@ -190,12 +190,24 @@ export default function Demandes() {
 
   const convertToClient = async (lead: Lead) => {
     try {
+      // 1. Check if user already exists (by email) to avoid constraint error
+      const allUsers = await loadData<User>('users') || [];
+      const emailToUse = (lead.email || `${lead.name.replace(/\s+/g, '').toLowerCase()}@beya.ma`).toLowerCase();
+      
+      const existing = allUsers.find(u => u.email.toLowerCase() === emailToUse);
+      if (existing) {
+        alert(isAr ? 'هذا الزبون مسجل مسبقاً في النظام بنفس البريد الإلكتروني.' : 'Ce client est déjà enregistré avec cet email.');
+        return;
+      }
+
       const autoCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const newId = genId();
       const newClient = {
-        id: genId(),
+        id: newId,
         nom: lead.name,
         role: 'client' as const,
-        email: lead.email || `${lead.name.replace(/\s+/g, '').toLowerCase() || 'client'}@beya.ma`,
+        // Make email more unique if it was auto-generated to avoid future collisions
+        email: lead.email || `${lead.name.replace(/\s+/g, '').toLowerCase()}_${newId.slice(0, 4)}@beya.ma`,
         telephone: lead.phone,
         password: autoCode,
         actif: true
