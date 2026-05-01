@@ -73,6 +73,7 @@ const ALL_PAGES: PageDef[] = [
   { key: 'chaine', label: 'Chaîne de Montage', labelAr: 'تتبع التركيب', icon: Factory, group: 'Production' },
   { key: 'pilotage', label: 'Pilotage & Chaine', labelAr: 'قيادة خط الإنتاج', icon: MousePointer2, group: 'Production' },
   { key: 'scan_production', label: 'Scan Production', labelAr: 'سكانير تتبع القطع', icon: Zap, group: 'Production' },
+  { key: 'controle_qualite', label: 'Contrôle Qualité', labelAr: 'مراقبة الجودة', icon: ShieldCheck, group: 'Production' },
   
   { key: 'stocks', label: 'Stock Matériaux', labelAr: 'مخزن السلع', icon: Package, group: 'Stocks' },
   
