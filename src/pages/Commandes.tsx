@@ -128,7 +128,13 @@ export default function Commandes() {
   const filtered = commandes.filter(c => {
     const q = search.toLowerCase();
     const ok = c.reference.toLowerCase().includes(q) || c.client.toLowerCase().includes(q) || c.modele.toLowerCase().includes(q);
-    return ok && (filterStatut === 'all' || c.statut === filterStatut);
+    
+    // If 'all' filter is active, exclude samples that are still in progress (not yet validated)
+    if (filterStatut === 'all') {
+      return ok && c.statut !== 'echantillon_en_cours';
+    }
+    
+    return ok && c.statut === filterStatut;
   });
 
   const today = new Date().toISOString().split('T')[0];
