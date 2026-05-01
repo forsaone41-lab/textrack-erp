@@ -269,11 +269,32 @@ export default function PartenairePortal({ currentUser, onLogout }: PartenairePo
               </div>
             </>
           ) : activeTab === 'notifications' ? (
-            <div className="max-w-3xl mx-auto space-y-4">
-              {[
-                { id: 1, title: isAr ? 'تم تعيين مهمة جديدة' : 'Nouvelle mission assignée', desc: isAr ? 'تم تعيين مهمة خياطة جديدة لك (REF-2024-001).' : 'Une nouvelle mission de couture vous a été assignée.', time: isAr ? 'منذ ساعتين' : 'Il y a 2 heures', icon: Package, color: 'indigo' },
-                { id: 2, title: isAr ? 'اقتراب الموعد النهائي' : 'Délai proche', desc: isAr ? 'المهمة (REF-2024-005) تنتهي غداً.' : 'La mission arrive à échéance demain.', time: isAr ? 'منذ 5 ساعات' : 'Il y a 5 heures', icon: Clock, color: 'amber' },
-              ].map(notif => (
+            <div className="max-w-3xl mx-auto space-y-6">
+              <div className="bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-indigo-600/20 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative group">
+                <div className="relative z-10 text-center md:text-left">
+                  <h3 className="text-xl font-black uppercase tracking-tighter mb-2">{isAr ? 'فعل التنبيهات على هاتفك' : 'Activez les notifications'}</h3>
+                  <p className="text-indigo-100 text-xs font-bold max-w-xs">{isAr ? 'توصل بكل جديد (مهام، مواعيد) مباشرة على شاشة هاتفك في الحين.' : 'Recevez les nouvelles missions et les alertes de délai directement sur votre écran.'}</p>
+                </div>
+                <button 
+                  onClick={() => {
+                    if ('Notification' in window) {
+                      Notification.requestPermission().then(res => {
+                        if (res === 'granted') alert(isAr ? 'تم تفعيل التنبيهات بنجاح!' : 'Notifications activées !');
+                      });
+                    }
+                  }}
+                  className="relative z-10 bg-white text-indigo-600 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg hover:scale-105 transition-all active:scale-95"
+                >
+                  {isAr ? 'تفعيل الآن' : 'Activer maintenant'}
+                </button>
+                <Bell className="absolute -right-4 -bottom-4 w-32 h-32 text-white/10 rotate-12 group-hover:rotate-0 transition-transform duration-700" />
+              </div>
+
+              <div className="space-y-4">
+                {[
+                  { id: 1, title: isAr ? 'تم تعيين مهمة جديدة' : 'Nouvelle mission assignée', desc: isAr ? 'تم تعيين مهمة خياطة جديدة لك (REF-2024-001).' : 'Une nouvelle mission de couture vous a été assignée.', time: isAr ? 'منذ ساعتين' : 'Il y a 2 heures', icon: Package, color: 'indigo' },
+                  { id: 2, title: isAr ? 'اقتراب الموعد النهائي' : 'Délai proche', desc: isAr ? 'المهمة (REF-2024-005) تنتهي غداً.' : 'La mission arrive à échéance demain.', time: isAr ? 'منذ 5 ساعات' : 'Il y a 5 heures', icon: Clock, color: 'amber' },
+                ].map(notif => (
                 <div key={notif.id} className={`bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-start gap-4 hover:border-indigo-200 transition-colors cursor-pointer group ${isAr ? 'flex-row-reverse' : ''}`}>
                   <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
                     notif.color === 'indigo' ? 'bg-indigo-50 text-indigo-500' : 'bg-amber-50 text-amber-500'
