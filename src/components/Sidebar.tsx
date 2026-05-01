@@ -208,6 +208,14 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
                     <span>{isAr ? 'لوحة القيادة' : 'Pilotage'}</span>
                   </div>
                 </NavLink>
+                {can('controle_qualite') && (
+                  <NavLink to="/quality-control" className={linkClass} onClick={closeMobile}>
+                    <div className="flex items-center gap-3">
+                      <ShieldCheck className="w-[18px] h-[18px]" />
+                      <span>{isAr ? 'مراقبة الجودة' : 'Contrôle Qualité'}</span>
+                    </div>
+                  </NavLink>
+                )}
               </>
             )}
           </div>

@@ -23,14 +23,14 @@ const ROLE_CFG = {
     bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200',
     ring: 'ring-indigo-400', avatar: 'from-indigo-500 to-purple-600', dot: 'bg-indigo-500',
     desc: 'ولوج كامل لجميع الميزات والوظائف',
-    access: ['Dashboard', 'Production', 'RH', 'Finance', 'Outils'],
+    access: ['Dashboard', 'Production', 'RH', 'Finance', 'Contrôle Qualité'],
   },
   pointeur: {
     label: 'رئيس ورشة (Chef)', icon: HardHat,
     bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200',
     ring: 'ring-blue-400', avatar: 'from-blue-500 to-cyan-600', dot: 'bg-blue-500',
     desc: 'إدارة الإنتاج، العمال، والطلبيات',
-    access: ['Production', 'Pointage', 'Performance'],
+    access: ['Production', 'Pointage', 'Contrôle Qualité'],
   },
   client: {
     label: 'زبون (Client)', icon: ShoppingBag,
@@ -44,8 +44,9 @@ const ROLE_CFG = {
     bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200',
     ring: 'ring-purple-400', avatar: 'from-purple-500 to-indigo-600', dot: 'bg-purple-500',
     desc: 'الولوج لأدوات تسجيل الحضور والسكانير',
-    access: ['Pointage', 'Fast Scanner'],
+    access: ['Pointage', 'Espace Ouvrier'],
   },
+
   coupeur: {
     label: 'فصّال (Coupeur)', icon: Scissors,
     bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200',
