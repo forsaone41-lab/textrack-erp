@@ -15,6 +15,7 @@ export default function Echantillons() {
   const [validateMethod, setValidateMethod] = useState<'whatsapp' | 'phone' | 'in_person' | 'portal'>('whatsapp');
   const [validateNote, setValidateNote] = useState('');
   const [preuveFile, setPreuveFile] = useState<string>('');
+  const [isValidating, setIsValidating] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -39,33 +40,44 @@ export default function Echantillons() {
   };
 
   const confirmValidation = async () => {
-    if (!validateModal.commande) return;
-    const c = validateModal.commande;
+    if (!validateModal.commande || isValidating) return;
+    setIsValidating(true);
     
-    let methodText = '';
-    if (validateMethod === 'whatsapp') methodText = 'WhatsApp';
-    if (validateMethod === 'phone') methodText = 'Téléphone';
-    if (validateMethod === 'in_person') methodText = 'En personne';
-    if (validateMethod === 'portal') methodText = 'Portail Client';
+    try {
+      const c = validateModal.commande;
+      
+      let methodText = '';
+      if (validateMethod === 'whatsapp') methodText = 'WhatsApp';
+      if (validateMethod === 'phone') methodText = 'Téléphone';
+      if (validateMethod === 'in_person') methodText = 'En personne';
+      if (validateMethod === 'portal') methodText = 'Portail Client';
 
-    const finalNote = `Échantillon validé par le client (Via: ${methodText})${validateNote ? ' - Preuve: ' + validateNote : ''}`;
+      const finalNote = `Échantillon validé par le client (Via: ${methodText})${validateNote ? ' - Preuve: ' + validateNote : ''}`;
 
-    const updated = {
-      ...c,
-      statut: 'echantillon_valide',
-      preuveValidation: preuveFile || undefined,
-      suivi: [...c.suivi, { phase: c.phase, date: new Date().toISOString(), note: finalNote }]
-    };
-    
-    await saveRecord('commandes', updated as any);
-    setCommandes(prev => prev.map(cmd => cmd.id === c.id ? updated as Commande : cmd));
-    
-    setValidateModal({ open: false, commande: null });
-    setValidateNote('');
-    setPreuveFile('');
-    
-    // Redirect directly to the client's profile
-    navigate('/clients', { state: { openClientName: c.client } });
+      const updated = {
+        ...c,
+        statut: 'echantillon_valide',
+        preuveValidation: preuveFile || undefined,
+        suivi: [...(c.suivi || []), { phase: c.phase, date: new Date().toISOString(), note: finalNote }]
+      };
+      
+      await saveRecord('commandes', updated as any);
+      setCommandes(prev => prev.map(cmd => cmd.id === c.id ? updated as Commande : cmd));
+      
+      setValidateModal({ open: false, commande: null });
+      setValidateNote('');
+      setPreuveFile('');
+      
+      // Redirect to the client's profile with a small delay for the modal to close smoothly
+      setTimeout(() => {
+        navigate('/clients', { state: { openClientName: c.client } });
+      }, 300);
+    } catch (error) {
+      console.error("Validation error:", error);
+      alert(isAr ? 'حدث خطأ أثناء التأكيد' : 'Erreur lors de la validation');
+    } finally {
+      setIsValidating(false);
+    }
   };
 
   const handleLaunch = async (c: Commande) => {
@@ -227,15 +239,22 @@ export default function Echantillons() {
                 {isAr ? 'إلغاء' : 'Annuler'}
               </button>
               <button 
-                disabled={validateMethod === 'whatsapp' && !preuveFile}
+                disabled={(validateMethod === 'whatsapp' && !preuveFile) || isValidating}
                 onClick={confirmValidation}
-                className={`px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg ${
-                  validateMethod === 'whatsapp' && !preuveFile
+                className={`px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg flex items-center justify-center gap-2 ${
+                  (validateMethod === 'whatsapp' && !preuveFile) || isValidating
                     ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none'
                     : 'bg-fuchsia-600 text-white hover:bg-fuchsia-700 shadow-fuchsia-200'
                 }`}
               >
-                {isAr ? 'تأكيد الموافقة' : 'Confirmer Validation'}
+                {isValidating ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    {isAr ? 'جاري التأكيد...' : 'Validation...'}
+                  </>
+                ) : (
+                  <>{isAr ? 'تأكيد الموافقة' : 'Confirmer Validation'}</>
+                )}
               </button>
             </div>
           </div>
