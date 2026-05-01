@@ -8,7 +8,7 @@ import { printFicheTechnique as printFT } from '../utils/print';
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
 
-function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onViewMesures, onShare, onLaunchSample }: {
+function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onViewMesures, onShare, onLaunchSample, isSampleWaiting }: {
   f: FicheTechnique;
   openEdit: (f: FicheTechnique) => void;
   remove: (id: string) => void;
@@ -17,10 +17,15 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
   onViewMesures: (f: FicheTechnique) => void;
   onShare: (f: FicheTechnique) => void;
   onLaunchSample: (f: FicheTechnique) => void;
+  isSampleWaiting?: boolean;
 }) {
   const { lang, isAr } = useLang();
   return (
-    <div className={`bg-white rounded-3xl border border-slate-200/60 shadow-sm hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 overflow-hidden group flex flex-col ${isAr ? 'text-right' : 'text-left'}`}>
+    <div className={`bg-white rounded-3xl border transition-all duration-300 overflow-hidden group flex flex-col ${isAr ? 'text-right' : 'text-left'} ${
+      isSampleWaiting 
+        ? 'border-amber-300 shadow-xl shadow-amber-100 ring-2 ring-amber-400/20 bg-amber-50/10' 
+        : 'border-slate-200/60 shadow-sm hover:shadow-2xl hover:shadow-indigo-500/10'
+    }`}>
       {/* Main Content Area */}
       <div className={`flex flex-col sm:flex-row flex-1 ${isAr ? 'sm:flex-row-reverse' : ''}`}>
         {/* Photo Section */}
@@ -61,6 +66,15 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
 
         {/* Info Section */}
         <div className="flex-1 p-6 flex flex-col relative overflow-hidden">
+          {/* Waiting for Client Overlay */}
+          {isSampleWaiting && (
+            <div className="absolute inset-0 z-30 bg-amber-500/10 backdrop-blur-[1px] flex items-center justify-center pointer-events-none">
+              <div className="bg-amber-500 text-white px-6 py-2 rounded-full font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-amber-500/40 animate-pulse border-2 border-white/30">
+                {isAr ? 'في انتظار رد الزبون' : 'QYD LITIDA RAD ZABOUN'}
+              </div>
+            </div>
+          )}
+
           {/* Glassmorphism Overlay for New/Incomplete Fiches */}
           {!f.patronagePhoto && (
             <div className="absolute inset-0 z-20 backdrop-blur-md bg-white/60 flex flex-col items-center justify-center p-6 text-center">
@@ -208,6 +222,7 @@ export default function FichesTechniques() {
   const [editId, setEditId] = useState<string | null>(null);
   const [viewMesuresFiche, setViewMesuresFiche] = useState<FicheTechnique | null>(null);
   const [showShareModal, setShowShareModal] = useState<FicheTechnique | null>(null);
+  const [commandes, setCommandes] = useState<Commande[]>([]);
   const [newClientCode, setNewClientCode] = useState<{name: string, code: string} | null>(null);
   const [confirmFiche, setConfirmFiche] = useState<FicheTechnique | null>(null);
   const [confirmDetails, setConfirmDetails] = useState({
@@ -261,11 +276,13 @@ export default function FichesTechniques() {
     Promise.all([
       loadData<FicheTechnique>('fiches'),
       loadData<StockTissu>('tissus'),
-      loadData<any>('users')
-    ]).then(([f, t, u]) => {
+      loadData<any>('users'),
+      loadData<Commande>('commandes')
+    ]).then(([f, t, u, c]) => {
       setFiches(f);
       setTissus(t);
       setClients(u.filter((x: any) => x.role === 'client'));
+      setCommandes(c);
 
       // Check for lead pre-filling from location state (via HashRouter)
       const state = (window as any).history.state?.usr;
@@ -447,6 +464,7 @@ export default function FichesTechniques() {
       modelePhoto: confirmDetails.modelePhoto || confirmFiche.photo,
     };
     await saveRecord('commandes', newCommande);
+    setCommandes(prev => [...prev, newCommande]);
     setConfirmFiche(null);
     alert(isAr ? 'تم إطلاق العينة بنجاح!' : 'Échantillon lancé avec succès !');
     navigate('/echantillons');
@@ -528,6 +546,7 @@ export default function FichesTechniques() {
                 <FicheCard 
                   key={f.id} 
                   f={f} 
+                  isSampleWaiting={commandes.some(c => c.modele === f.modele && c.statut === 'echantillon_en_cours')}
                   openEdit={openEdit} 
                   remove={remove} 
                   downloadFile={downloadFile} 
@@ -565,6 +584,7 @@ export default function FichesTechniques() {
                 <FicheCard 
                   key={f.id} 
                   f={f} 
+                  isSampleWaiting={commandes.some(c => c.modele === f.modele && c.statut === 'echantillon_en_cours')}
                   openEdit={openEdit} 
                   remove={remove} 
                   downloadFile={downloadFile} 

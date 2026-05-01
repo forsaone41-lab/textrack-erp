@@ -22,6 +22,7 @@ export default function Demandes() {
   const { isAr } = useLang();
   const navigate = useNavigate();
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [filter, setFilter] = useState<'all' | 'new' | 'completed'>('all');
 
   const [confirmLead, setConfirmLead] = useState<Lead | null>(null);
@@ -60,8 +61,12 @@ export default function Demandes() {
 
   useEffect(() => {
     async function init() {
-      const data = await loadLeads();
-      setLeads(data);
+      const [leadsData, usersData] = await Promise.all([
+        loadLeads(),
+        loadData<User>('users')
+      ]);
+      setLeads(leadsData);
+      setUsers(usersData || []);
     }
     init();
   }, []);
