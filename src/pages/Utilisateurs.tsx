@@ -76,7 +76,7 @@ const ROLE_CFG = {
     access: ['Pointage', 'Suivi RH'],
   },
   partenaire: {
-    label: 'شريك (Partenaire)', icon: Globe,
+    label: 'فاصونيي (Façonnier)', icon: Globe,
     bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200',
     ring: 'ring-indigo-400', avatar: 'from-slate-700 to-slate-900', dot: 'bg-slate-700',
     desc: 'الولوج لبوابة الشركاء والفاصونيي',
@@ -285,7 +285,7 @@ export default function Utilisateurs() {
       {tab === 'users' && (
         <div className="space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'controleur', 'agent_pointage'] as const).map(role => {
+            {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'controleur', 'agent_pointage', 'partenaire'] as const).map(role => {
               const cfg = ROLE_CFG[role];
               const Icon = cfg.icon;
               const active = filterRole === role;
