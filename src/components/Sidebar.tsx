@@ -102,21 +102,35 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
               </NavLink>
             )}
 
-            <NavLink to="/profil" className={linkClass} onClick={closeMobile}>
-              <div className="flex items-center gap-3">
-                <UserCircle className="w-[18px] h-[18px]" />
-                <span>{isAr ? 'حسابي' : 'Mon Profil'}</span>
-              </div>
-              <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-40 transition-opacity" />
-            </NavLink>
+            {currentUser.role === 'worker' ? (
+              <NavLink to="/worker-portal" className={linkClass} onClick={closeMobile}>
+                <div className="flex items-center gap-3">
+                  <UserCircle className="w-[18px] h-[18px]" />
+                  <span>{isAr ? 'حسابي' : 'Mon Profil'}</span>
+                </div>
+                <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
+              </NavLink>
+            ) : (
+              <>
+                <NavLink to="/profil" className={linkClass} onClick={closeMobile}>
+                  <div className="flex items-center gap-3">
+                    <UserCircle className="w-[18px] h-[18px]" />
+                    <span>{isAr ? 'حسابي' : 'Mon Profil'}</span>
+                  </div>
+                  <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-40 transition-opacity" />
+                </NavLink>
 
-            <NavLink to="/worker-portal" className="group flex items-center justify-between px-5 py-3.5 rounded-2xl text-[13px] font-bold transition-all duration-500 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/20 mb-4" onClick={closeMobile}>
-              <div className="flex items-center gap-3">
-                <UserIcon className="w-[18px] h-[18px]" />
-                <span className="font-extrabold">{isAr ? 'فضاء العامل' : 'Espace Ouvrier'}</span>
-              </div>
-              <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
-            </NavLink>
+                {can('worker_portal') && (
+                  <NavLink to="/worker-portal" className="group flex items-center justify-between px-5 py-3.5 rounded-2xl text-[13px] font-bold transition-all duration-500 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/20 mb-4" onClick={closeMobile}>
+                    <div className="flex items-center gap-3">
+                      <UserIcon className="w-[18px] h-[18px]" />
+                      <span className="font-extrabold">{isAr ? 'فضاء العامل' : 'Espace Ouvrier'}</span>
+                    </div>
+                    <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-40 transition-opacity" />
+                  </NavLink>
+                )}
+              </>
+            )}
           </div>
           
           {(can('demandes') || can('fiches') || can('ordres') || can('chaine')) && (
