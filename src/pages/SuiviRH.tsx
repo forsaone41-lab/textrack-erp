@@ -231,6 +231,37 @@ export default function SuiviRH() {
     // Sync with Supabase so other modules (like Commandes) can see them
     await saveRecord('employes', empData);
 
+    // ✅ AUTO-CREATE USER ACCOUNT for new employees
+    if (isNew) {
+      const pinCode = empData.pin_code || Math.floor(1000 + Math.random() * 9000).toString();
+      const newUser = {
+        id: genId(),
+        nom: `${empData.prenom || ''} ${empData.nom}`.trim(),
+        role: 'worker' as const,
+        email: empData.email || `${empData.nom.toLowerCase().replace(/\s/g, '')}.worker@beya.local`,
+        telephone: empData.telephone || '',
+        password: pinCode,
+        pinCode: pinCode,
+        employeId: eId,
+        photo: empData.photo || '',
+        lastActive: new Date().toISOString(),
+      };
+      await saveRecord('users', newUser);
+      
+      // Update local users list in storage
+      try {
+        const localUsersRaw = localStorage.getItem('textrack_users');
+        const localUsers = localUsersRaw ? JSON.parse(localUsersRaw) : [];
+        localStorage.setItem('textrack_users', JSON.stringify([...localUsers, newUser]));
+      } catch { /* ignore */ }
+
+      alert(
+        isAr
+          ? `✅ تم إنشاء حساب تلقائياً!\n\nالاسم: ${newUser.nom}\nالدور: Worker\nكلمة المرور: ${pinCode}\n\nيمكن للموظف الدخول بهذه البيانات من صفحة Gestion Utilisateurs.`
+          : `✅ Compte utilisateur créé automatiquement!\n\nNom: ${newUser.nom}\nRôle: Worker\nMot de passe: ${pinCode}\n\nL'employé peut se connecter avec ces identifiants depuis Gestion Utilisateurs.`
+      );
+    }
+
     setShowModal(false);
   }
 
