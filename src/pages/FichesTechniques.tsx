@@ -223,6 +223,7 @@ export default function FichesTechniques() {
   const [viewMesuresFiche, setViewMesuresFiche] = useState<FicheTechnique | null>(null);
   const [showShareModal, setShowShareModal] = useState<FicheTechnique | null>(null);
   const [commandes, setCommandes] = useState<Commande[]>([]);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [newClientCode, setNewClientCode] = useState<{name: string, code: string} | null>(null);
   const [confirmFiche, setConfirmFiche] = useState<FicheTechnique | null>(null);
   const [confirmDetails, setConfirmDetails] = useState({
@@ -466,8 +467,12 @@ export default function FichesTechniques() {
     await saveRecord('commandes', newCommande);
     setCommandes(prev => [...prev, newCommande]);
     setConfirmFiche(null);
-    alert(isAr ? 'تم إطلاق العينة بنجاح!' : 'Échantillon lancé avec succès !');
-    navigate('/echantillons');
+    setShowSuccess(true);
+    // After a delay, navigate
+    setTimeout(() => {
+      setShowSuccess(false);
+      navigate('/echantillons');
+    }, 2000);
   }
 
   function toggleColor(c: string) {
@@ -1498,6 +1503,33 @@ export default function FichesTechniques() {
             >
               {isAr ? 'إغلاق النافذة' : 'Fermer'}
             </button>
+          </div>
+        </div>
+      {/* Success Notification Modal */}
+      {showSuccess && (
+        <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-500">
+          <div className="bg-white rounded-[2.5rem] p-10 max-w-sm w-full shadow-[0_30px_70px_rgba(0,0,0,0.2)] text-center relative overflow-hidden border border-white animate-in zoom-in-95 duration-300">
+            <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-600" />
+            
+            <div className="w-24 h-24 bg-emerald-50 text-emerald-500 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-sm border border-emerald-100/50 relative">
+              <div className="absolute inset-0 bg-emerald-400/20 rounded-[2rem] animate-ping" />
+              <CheckCircle className="w-12 h-12 relative z-10" />
+            </div>
+            
+            <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tighter mb-3">
+              {isAr ? 'عملية ناجحة!' : 'Lancement Réussi!'}
+            </h3>
+            <p className="text-sm font-bold text-slate-500 leading-relaxed uppercase tracking-widest">
+              {isAr ? 'تم إطلاق العينة وربطها بالطلب بنجاح' : 'L\'échantillon a été lancé avec succès'}
+            </p>
+            
+            <div className="mt-8 flex justify-center">
+              <div className="flex gap-1">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" />
+              </div>
+            </div>
           </div>
         </div>
       )}
