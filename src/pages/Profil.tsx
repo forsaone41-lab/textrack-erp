@@ -40,26 +40,15 @@ export default function Profil({ currentUser }: ProfilProps) {
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-8 pb-20">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end gap-6">
-        <div className="relative group">
-          <div className="w-24 h-24 md:w-32 md:h-32 rounded-[2rem] bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-4xl font-black shadow-2xl shadow-indigo-200">
-            {currentUser.nom[0].toUpperCase()}
-          </div>
-          <button className="absolute bottom-0 right-0 w-10 h-10 bg-white rounded-2xl shadow-xl flex items-center justify-center text-slate-600 hover:text-indigo-600 transition-all border border-slate-100">
-            <Camera className="w-5 h-5" />
-          </button>
-        </div>
-        
-        <div className="flex-1 space-y-2">
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">{currentUser.nom}</h1>
-          <div className="flex flex-wrap gap-3">
-            <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-black uppercase tracking-widest border border-indigo-100">
-              {currentUser.role}
-            </span>
-            <span className="px-3 py-1 bg-slate-50 text-slate-500 rounded-lg text-xs font-black uppercase tracking-widest border border-slate-100">
-              ID: {currentUser.id.substring(0, 8)}
-            </span>
-          </div>
+      <div className={`space-y-2 ${isAr ? 'text-right' : 'text-left'}`}>
+        <h1 className="text-4xl font-black text-slate-900 tracking-tighter">{currentUser.nom}</h1>
+        <div className={`flex flex-wrap gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
+          <span className="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest border border-indigo-100 shadow-sm shadow-indigo-100/50">
+            {currentUser.role.toUpperCase()}
+          </span>
+          <span className="px-4 py-1.5 bg-slate-50 text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-widest border border-slate-100">
+            ID: {currentUser.id.substring(0, 8)}
+          </span>
         </div>
       </div>
 
