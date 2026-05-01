@@ -578,54 +578,18 @@ export default function FichesTechniques() {
                   printFicheTechnique={printFT} 
                   onViewMesures={setViewMesuresFiche} 
                   onShare={setShowShareModal} 
-                  onLaunchSample={async (fiche) => {
-                    // --- Quick Launch logic ---
-                    // 1. Register client if needed
-                    const clientName = (fiche.client || '').trim();
-                    const allUsers = await loadData<User>('users') || [];
-                    const existingClient = allUsers.find(u => (u.nom || '').toLowerCase() === clientName.toLowerCase() && u.role === 'client');
-                    
-                    if (!existingClient && clientName) {
-                      const newId = genId();
-                      const autoCode = Math.floor(100000 + Math.random() * 900000).toString();
-                      const newClient = {
-                        id: newId, nom: clientName, role: 'client' as const,
-                        email: `${clientName.replace(/\s+/g, '').toLowerCase()}_${newId.slice(0, 4)}@beya.ma`,
-                        telephone: '', password: autoCode, actif: true
-                      };
-                      await saveRecord('users', newClient);
-                      setClients(prev => [...prev, newClient]);
-                    }
-
-                    // 2. Create sample record with ALL sizes from the pattern
-                    const sampleTailles = fiche.tailles.reduce((acc, t) => ({ ...acc, [t]: 1 }), {} as Record<string, number>);
-                    const newCommande = {
-                      id: genId(),
-                      reference: `ECH-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
-                      client: fiche.client,
-                      modele: fiche.modele,
-                      tissu: 'À définir',
-                      quantite: fiche.tailles.length || 1,
-                      quantiteLivre: 0,
-                      dateCommande: new Date().toISOString(),
-                      dateLivraisonPrevue: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-                      phase: 'patronage' as const,
-                      prix: 0,
-                      rebut: 0,
-                      statut: 'echantillon_en_cours' as const,
-                      suivi: [{ phase: 'patronage' as const, date: new Date().toISOString(), note: 'Échantillon lancé automatiquement' }],
-                      couleurs: [],
-                      tailles: sampleTailles,
-                      modelePhoto: fiche.photo,
-                    };
-
-                    await saveRecord('commandes', newCommande);
-                    setCommandes(prev => [...prev, newCommande as any]);
-                    
-                    // 3. Jump to samples page
-                    navigate('/echantillons');
+                  onLaunchSample={(fiche) => {
+                    setConfirmFiche(fiche);
+                    setConfirmDetails({
+                      tissu: '',
+                      couleurs: '',
+                      tailles: fiche.tailles.reduce((acc, t) => ({ ...acc, [t]: 0 }), {}),
+                      tissuPhoto: '',
+                      modelePhoto: fiche.photo || ''
+                    });
                   }}
                 />
+
 
               ))}
             </div>
@@ -1489,22 +1453,35 @@ export default function FichesTechniques() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-4">{isAr ? 'توزيع المقاسات' : 'Répartition des Tailles'}</label>
-                <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-                  {confirmFiche.tailles.length > 0 ? confirmFiche.tailles.map(t => (
-                    <div key={t} className="space-y-1 text-center bg-slate-50 p-2 rounded-xl border border-slate-100">
-                      <span className="text-[10px] font-black text-slate-500 uppercase">{t}</span>
-                      <input 
-                        type="number"
-                        min="0"
-                        value={confirmDetails.tailles[t] || ''}
-                        onChange={(e) => setConfirmDetails({...confirmDetails, tailles: { ...confirmDetails.tailles, [t]: parseInt(e.target.value) || 0 }})}
-                        className="w-full bg-white border border-slate-200 rounded-lg py-1.5 text-center text-xs font-black focus:border-indigo-600 outline-none transition-colors shadow-sm"
-                      />
-                    </div>
-                  )) : (
-                    <div className="col-span-full p-4 bg-orange-50 text-orange-600 rounded-xl text-xs font-bold text-center">
+                <div>
+                <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-4">
+                  {isAr ? 'اختيار مقاس العينة' : 'Sélectionner la Taille de l\'Échantillon'}
+                </label>
+                <div className="flex flex-wrap gap-3">
+                  {confirmFiche.tailles.length > 0 ? confirmFiche.tailles.map(t => {
+                    const isSelected = confirmDetails.tailles[t] > 0;
+                    return (
+                      <button 
+                        key={t}
+                        onClick={() => setConfirmDetails({
+                          ...confirmDetails, 
+                          tailles: { ...confirmDetails.tailles, [t]: isSelected ? 0 : 1 }
+                        })}
+                        className={`min-w-[70px] py-4 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-1 ${
+                          isSelected 
+                            ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200 scale-105' 
+                            : 'bg-white border-slate-100 text-slate-400 hover:border-indigo-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        <span className="text-lg font-black">{t}</span>
+                        <span className="text-[8px] font-bold uppercase tracking-widest opacity-80">
+                          {isSelected ? (isAr ? 'مختار' : 'SÉLECTIONNÉ') : (isAr ? 'اختيار' : 'CHOISIR')}
+                        </span>
+                      </button>
+                    );
+                  }) : (
+                    <div className="w-full p-6 bg-orange-50 text-orange-600 rounded-2xl text-xs font-bold text-center border-2 border-dashed border-orange-200">
+                      <Ruler className="w-6 h-6 mx-auto mb-2 opacity-50" />
                       {isAr ? 'يرجى تحديد المقاسات في البطاقة التقنية أولاً' : 'Veuillez définir les tailles dans la fiche technique d\'abord'}
                     </div>
                   )}
@@ -1514,7 +1491,7 @@ export default function FichesTechniques() {
 
             <button 
               onClick={handleLaunchEchantillon}
-              disabled={confirmFiche.tailles.length === 0}
+              disabled={Object.values(confirmDetails.tailles).every(v => v === 0)}
               className="w-full h-14 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:shadow-xl hover:shadow-indigo-500/30 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Calculator className="w-5 h-5" />
