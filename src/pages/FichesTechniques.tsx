@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, Ruler, Calculator, Camera, FileText, Download, MessageCircle, X, ChevronRight, Upload, ImageIcon } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import {
   FicheTechnique, StockTissu, loadData, saveRecord, deleteRecord, genId,
 } from '../types';
@@ -117,12 +118,7 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
                 >
                   <Ruler className="w-3.5 h-3.5" /> {t('voir_mesures', lang)}
                 </button>
-                <button
-                  onClick={() => onShare(f)}
-                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-xl text-[10px] font-bold hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all shadow-sm"
-                >
-                  <MessageCircle className="w-3.5 h-3.5" /> {isAr ? 'إرسال للزبون' : 'ENVOYER AU CLIENT'}
-                </button>
+                {/* Button 'ENVOYER AU CLIENT' removed as per user request */}
                 {(() => {
                   const isReadyForSample = f.patronagePhoto && f.tailles.length > 0 && f.mesures.length > 0;
                   return (
@@ -185,6 +181,7 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
 
 export default function FichesTechniques() {
   const { lang, isAr } = useLang();
+  const navigate = useNavigate();
   const [fiches, setFiches] = useState<FicheTechnique[]>([]);
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -397,6 +394,7 @@ export default function FichesTechniques() {
     await saveRecord('commandes', newCommande);
     setConfirmFiche(null);
     alert(isAr ? 'تم إطلاق العينة بنجاح!' : 'Échantillon lancé avec succès !');
+    navigate('/echantillons');
   }
 
   function toggleColor(c: string) {
