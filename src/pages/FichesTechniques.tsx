@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, Ruler, Calculator, Camera, FileText, Download, MessageCircle, X, ChevronRight, Upload, ImageIcon, Copy, CheckCircle } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Ruler, Calculator, Camera, FileText, Download, MessageCircle, X, ChevronRight, Upload, ImageIcon, Copy, CheckCircle, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
   FicheTechnique, StockTissu, loadData, saveRecord, deleteRecord, genId,
