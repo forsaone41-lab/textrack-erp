@@ -8,7 +8,7 @@ import { printFicheTechnique as printFT } from '../utils/print';
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
 
-function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onViewMesures, onShare, onLaunchSample, isSampleWaiting }: {
+function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onViewMesures, onShare, onLaunchSample, isSampleWaiting, isSampleValidated }: {
   f: FicheTechnique;
   openEdit: (f: FicheTechnique) => void;
   remove: (id: string) => void;
@@ -18,6 +18,7 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
   onShare: (f: FicheTechnique) => void;
   onLaunchSample: (f: FicheTechnique) => void;
   isSampleWaiting?: boolean;
+  isSampleValidated?: boolean;
 }) {
   const { lang, isAr } = useLang();
   return (
@@ -162,6 +163,15 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
                 </button>
                 {/* Button 'ENVOYER AU CLIENT' removed as per user request */}
                 {(() => {
+                  if (isSampleValidated) {
+                    return (
+                      <div className="w-full flex items-center justify-center gap-2 px-3 py-3 bg-emerald-50 border-2 border-emerald-500/20 text-emerald-600 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] mt-1 shadow-sm">
+                        <CheckCircle className="w-4 h-4" />
+                        {isAr ? 'موديل مقبول' : 'MODÈLE VALIDÉ'}
+                      </div>
+                    );
+                  }
+                  
                   const isReadyForSample = f.patronagePhoto && f.tailles.length > 0 && f.mesures.length > 0;
                   return (
                     <button
@@ -561,6 +571,7 @@ export default function FichesTechniques() {
                   key={f.id} 
                   f={f} 
                   isSampleWaiting={commandes.some(c => c.modele === f.modele && c.statut === 'echantillon_en_cours')}
+                  isSampleValidated={commandes.some(c => c.modele === f.modele && c.statut === 'echantillon_valide')}
                   openEdit={openEdit} 
                   remove={remove} 
                   downloadFile={downloadFile} 
@@ -599,6 +610,7 @@ export default function FichesTechniques() {
                   key={f.id} 
                   f={f} 
                   isSampleWaiting={commandes.some(c => c.modele === f.modele && c.statut === 'echantillon_en_cours')}
+                  isSampleValidated={commandes.some(c => c.modele === f.modele && c.statut === 'echantillon_valide')}
                   openEdit={openEdit} 
                   remove={remove} 
                   downloadFile={downloadFile} 
