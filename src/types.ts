@@ -412,7 +412,7 @@ export async function syncCompanyProfile(): Promise<CompanyProfile> {
     }
 
     // 2. Fallback to a special record in 'leads' table if 'settings' doesn't exist
-    const { data: lData, error: lError } = await supabase.from('leads').select('*').eq('id', 'system_config_v1').single();
+    const { data: lData, error: lError } = await supabase.from('leads').select('*').eq('id', '00000000-0000-0000-0000-000000000000').single();
     if (lData && !lError && lData.details) {
       try {
         const remoteProfile = JSON.parse(lData.details) as CompanyProfile;
@@ -435,13 +435,13 @@ export async function loadLeads(): Promise<Lead[]> {
     // If data is null, it means the request failed (fallback to local)
     if (data !== null) {
       // Filter out system config records
-      return data.filter(l => l.id !== 'system_config_v1');
+      return data.filter(l => l.id !== '00000000-0000-0000-0000-000000000000');
     }
     
     // Fallback to local only if remote call failed
     const local = safeStorage.getItem('textrack_leads');
     const parsed = local ? JSON.parse(local) : [];
-    return Array.isArray(parsed) ? parsed.filter((l: any) => l.id !== 'system_config_v1') : [];
+    return Array.isArray(parsed) ? parsed.filter((l: any) => l.id !== '00000000-0000-0000-0000-000000000000') : [];
   } catch {
     return [];
   }
@@ -478,7 +478,7 @@ export async function saveCompanyProfile(profile: CompanyProfile): Promise<void>
       console.warn("[DEBUG] Settings table fail, trying leads fallback...", sError.message);
       // Fallback: Save to 'leads' table as a hidden system record
       const configLead = {
-        id: 'system_config_v1',
+        id: '00000000-0000-0000-0000-000000000000',
         name: '__SYSTEM_CONFIG__',
         phone: '0000',
         ville: 'SYSTEM',
