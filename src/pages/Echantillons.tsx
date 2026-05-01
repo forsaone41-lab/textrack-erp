@@ -12,6 +12,7 @@ export default function Echantillons() {
   const [validateModal, setValidateModal] = useState<{ open: boolean, commande: Commande | null }>({ open: false, commande: null });
   const [validateMethod, setValidateMethod] = useState<'whatsapp' | 'phone' | 'in_person' | 'portal'>('whatsapp');
   const [validateNote, setValidateNote] = useState('');
+  const [preuveFile, setPreuveFile] = useState<string>('');
 
   useEffect(() => {
     fetchData();
@@ -29,6 +30,9 @@ export default function Echantillons() {
   };
 
   const handleAccept = (c: Commande) => {
+    setValidateMethod('whatsapp');
+    setValidateNote('');
+    setPreuveFile('');
     setValidateModal({ open: true, commande: c });
   };
 
@@ -47,6 +51,7 @@ export default function Echantillons() {
     const updated = {
       ...c,
       statut: 'echantillon_valide',
+      preuveValidation: preuveFile || undefined,
       suivi: [...c.suivi, { phase: c.phase, date: new Date().toISOString(), note: finalNote }]
     };
     
@@ -55,6 +60,7 @@ export default function Echantillons() {
     
     setValidateModal({ open: false, commande: null });
     setValidateNote('');
+    setPreuveFile('');
   };
 
   const handleLaunch = async (c: Commande) => {
@@ -146,14 +152,55 @@ export default function Echantillons() {
 
               <div>
                 <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-2">
-                  {isAr ? 'ملاحظة أو دليل (مثال: رسالة الواتساب)' : 'Note / Preuve (Optionnel)'}
+                  {isAr ? 'ملاحظة أو دليل نصي (اختياري)' : 'Note (Optionnel)'}
                 </label>
                 <textarea 
                   value={validateNote}
                   onChange={(e) => setValidateNote(e.target.value)}
-                  placeholder={isAr ? "الصق رسالة الكليان هنا أو أضف ملاحظة..." : "Collez le message du client ici..."}
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-4 text-sm font-medium h-24 focus:border-fuchsia-500 outline-none transition-all resize-none"
+                  placeholder={isAr ? "أضف ملاحظة أو الصق نصاً هنا..." : "Collez une note ici..."}
+                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-4 text-sm font-medium h-20 focus:border-fuchsia-500 outline-none transition-all resize-none mb-4"
                 />
+
+                <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-2">
+                  {isAr ? 'إرفاق دليل مرئي أو صوتي (إجباري للواتساب)' : 'Preuve visuelle/audio (Obligatoire pour WhatsApp)'}
+                </label>
+                {preuveFile ? (
+                  <div className="relative w-full h-24 bg-slate-100 rounded-xl border border-slate-200 flex items-center justify-center overflow-hidden group">
+                    {preuveFile.startsWith('data:audio') ? (
+                      <audio controls src={preuveFile} className="w-full px-4" />
+                    ) : (
+                      <img src={preuveFile} alt="Preuve" className="h-full object-contain" />
+                    )}
+                    <button 
+                      onClick={() => setPreuveFile('')}
+                      className="absolute inset-0 bg-rose-500/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <span className="text-white font-black uppercase text-[10px] tracking-widest">{isAr ? 'حذف' : 'Supprimer'}</span>
+                    </button>
+                  </div>
+                ) : (
+                  <label className={`w-full h-20 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all ${
+                    validateMethod === 'whatsapp' ? 'border-rose-300 hover:border-rose-500 hover:bg-rose-50 bg-rose-50/30' : 'border-slate-300 hover:border-fuchsia-400 hover:bg-slate-50'
+                  }`}>
+                    <ImageIcon className={`w-6 h-6 mb-1 ${validateMethod === 'whatsapp' ? 'text-rose-400' : 'text-slate-400'}`} />
+                    <span className={`text-[9px] font-black uppercase tracking-widest ${validateMethod === 'whatsapp' ? 'text-rose-500' : 'text-slate-500'}`}>
+                      {isAr ? 'رفع صورة (Screenshot) أو ملف صوتي' : 'Uploader Image/Audio'}
+                    </span>
+                    <input 
+                      type="file" 
+                      accept="image/*,audio/*" 
+                      className="hidden" 
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => setPreuveFile(reader.result as string);
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </label>
+                )}
               </div>
             </div>
 
@@ -165,8 +212,13 @@ export default function Echantillons() {
                 {isAr ? 'إلغاء' : 'Annuler'}
               </button>
               <button 
+                disabled={validateMethod === 'whatsapp' && !preuveFile}
                 onClick={confirmValidation}
-                className="px-8 py-3 bg-fuchsia-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-fuchsia-700 transition-all shadow-lg shadow-fuchsia-200"
+                className={`px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg ${
+                  validateMethod === 'whatsapp' && !preuveFile
+                    ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none'
+                    : 'bg-fuchsia-600 text-white hover:bg-fuchsia-700 shadow-fuchsia-200'
+                }`}
               >
                 {isAr ? 'تأكيد الموافقة' : 'Confirmer Validation'}
               </button>
