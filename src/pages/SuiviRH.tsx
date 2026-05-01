@@ -234,29 +234,33 @@ export default function SuiviRH() {
 
     // ✅ AUTO-CREATE USER ACCOUNT for new employees
     if (isNew) {
-      const pinCode = empData.pin_code || Math.floor(1000 + Math.random() * 9000).toString();
+      const generatedPin = Math.floor(1000 + Math.random() * 9000).toString();
+      const finalPin = empData.pin_code || generatedPin;
+      
       const newUser = {
         id: genId(),
         nom: `${empData.prenom || ''} ${empData.nom}`.trim(),
         role: 'worker' as const,
-        email: empData.email || `${empData.nom.toLowerCase().replace(/\s/g, '')}.worker@beya.local`,
+        email: empData.email || `${empData.nom.toLowerCase().replace(/\s/g, '')}.${genId().split('-')[0]}@beya.local`,
         telephone: empData.telephone || '',
-        password: pinCode,
-        pinCode: pinCode,
+        password: finalPin, // Use PIN as password for workers
+        pinCode: finalPin,
         employeId: eId,
         photo: empData.photo || '',
         lastActive: new Date().toISOString(),
       };
+      
+      // Save to Supabase (users table)
       await saveRecord('users', newUser);
       
-      // Update local users list in storage
+      // Update local users list in storage for immediate UI sync
       try {
         const localUsersRaw = localStorage.getItem('textrack_users');
         const localUsers = localUsersRaw ? JSON.parse(localUsersRaw) : [];
         localStorage.setItem('textrack_users', JSON.stringify([...localUsers, newUser]));
       } catch { /* ignore */ }
 
-      setToast({ nom: newUser.nom, pin: pinCode });
+      setToast({ nom: newUser.nom, pin: finalPin });
       setTimeout(() => setToast(null), 6000);
     }
 
