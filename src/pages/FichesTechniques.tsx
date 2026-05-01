@@ -242,11 +242,14 @@ export default function FichesTechniques() {
       const state = (window as any).history.state?.usr;
       if (state && state.fromLead) {
         setForm({
-          modele: state.fromLead.type,
+          modele: `${state.fromLead.type} - ${state.fromLead.name.split(' ')[0]}`,
+          type: state.fromLead.type,
           client: state.fromLead.name,
           photo: state.fromLead.photo,
-          description: `Demande reçue via Landing Page (${state.fromLead.phone})`,
-          tailles: [],
+          description: `Demande reçue via Landing Page (${state.fromLead.phone}).\n${state.fromLead.details ? `Détails du client : ${state.fromLead.details}` : ''}`,
+          tailles: state.fromLead.tailles 
+            ? Object.entries(state.fromLead.tailles as Record<string, number>).filter(([_, v]) => v > 0).map(([k]) => k) 
+            : [],
           mesures: [],
           tissuConsommation: 0
         });
