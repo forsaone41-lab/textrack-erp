@@ -859,7 +859,13 @@ export default function Demandes() {
                   {/* Primary Action: Launch Sample */}
                   {lead.status !== 'completed' && (
                     <button 
-                      onClick={() => setConfirmLead(lead)}
+                      onClick={() => {
+                        setConfirmLead(lead);
+                        setConfirmDetails(prev => ({
+                          ...prev,
+                          modelePhoto: lead.photo || ''
+                        }));
+                      }}
                       className="w-full sm:w-auto h-11 px-6 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:shadow-xl hover:shadow-indigo-500/30 transition-all flex items-center justify-center gap-2"
                     >
                       <Scissors className="w-4 h-4" /> {isAr ? 'إطلاق العينة' : 'Lancer Échantillon'}
