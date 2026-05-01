@@ -403,6 +403,7 @@ export default function FichesTechniques() {
         role: 'client',
         email: `${clientName.replace(/\s+/g, '').toLowerCase() || 'client'}@beya.ma`,
         telephone: '',
+        password: '123456', // Default password required by Supabase
         actif: true
       };
       await saveRecord('users', newClient);

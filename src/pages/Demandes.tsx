@@ -195,6 +195,7 @@ export default function Demandes() {
         role: 'client' as const,
         email: lead.email || `${lead.name.replace(/\s+/g, '').toLowerCase() || 'client'}@beya.ma`,
         telephone: lead.phone,
+        password: '123456', // Default password required by Supabase
         actif: true
       };
       await saveRecord('users', newClient);
