@@ -441,17 +441,18 @@ export async function loadLeads(): Promise<Lead[]> {
     // Try Supabase first
     const data = await loadData<Lead>('leads');
     
-    // If data is null, it means the request failed (fallback to local)
-    if (data !== null) {
+    // Defensive check: ensure data is an array before filtering
+    if (Array.isArray(data)) {
       // Filter out system config records
-      return data.filter(l => l.name !== '__SYSTEM_CONFIG__');
+      return data.filter(l => l && l.name !== '__SYSTEM_CONFIG__');
     }
     
-    // Fallback to local only if remote call failed
+    // Fallback to local only if remote call failed or returned non-array
     const local = safeStorage.getItem('textrack_leads');
     const parsed = local ? JSON.parse(local) : [];
-    return Array.isArray(parsed) ? parsed.filter((l: any) => l.name !== '__SYSTEM_CONFIG__') : [];
-  } catch {
+    return Array.isArray(parsed) ? parsed.filter((l: any) => l && l.name !== '__SYSTEM_CONFIG__') : [];
+  } catch (err) {
+    console.error("Error in loadLeads:", err);
     return [];
   }
 }
@@ -509,7 +510,8 @@ export async function loadData<T>(table: string): Promise<T[] | null> {
       console.warn(`Failed to load ${table}:`, error.message);
       return null;
     }
-    return (data || []) as T[];
+    // Ensure we always return an array if no error, even if data is null
+    return Array.isArray(data) ? data : [];
   } catch (err) {
     console.error(`Fatal load error for ${table}:`, err);
     return null;

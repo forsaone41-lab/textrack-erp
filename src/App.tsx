@@ -155,7 +155,7 @@ function AppContent() {
 
     const fetchUsers = async () => {
       const users = await loadData<User>('users');
-      setAllUsers(users);
+      setAllUsers(users || []);
     };
 
     syncSettings();

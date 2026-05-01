@@ -161,12 +161,12 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
           <div className="flex items-center gap-4 bg-white/60 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white shadow-xl shadow-indigo-100/20">
             <div className="flex flex-col items-end mr-2">
               <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">{isAr ? 'الفريق المتصل' : 'Équipe en ligne'}</span>
-              <span className="text-[10px] text-emerald-600 font-black uppercase">
-                {allUsers.filter(u => u.lastActive && (Date.now() - new Date(u.lastActive).getTime() < 120000)).length} {isAr ? 'نشط الآن' : 'actifs'}
+               <span className="text-[10px] text-emerald-600 font-black uppercase">
+                {Array.isArray(allUsers) ? allUsers.filter(u => u && u.lastActive && (Date.now() - new Date(u.lastActive).getTime() < 120000)).length : 0} {isAr ? 'نشط الآن' : 'actifs'}
               </span>
             </div>
             <div className="flex -space-x-3">
-              {allUsers.filter(u => u.lastActive && (Date.now() - new Date(u.lastActive).getTime() < 120000)).map(u => {
+              {Array.isArray(allUsers) && allUsers.filter(u => u && u.lastActive && (Date.now() - new Date(u.lastActive).getTime() < 120000)).map(u => {
                 const colors: Record<string, string> = { 
                   admin: 'border-indigo-500 bg-indigo-50 text-indigo-700', 
                   pointeur: 'border-blue-500 bg-blue-50 text-blue-700',
