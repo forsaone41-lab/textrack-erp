@@ -19,67 +19,66 @@ import { t } from '../i18n';
 // ─── Role Config ───────────────────────────────────────────
 const ROLE_CFG = {
   admin: {
-    label: 'مدير (Admin)', icon: ShieldCheck,
+    label: 'Administrateur', labelAr: 'مدير (Admin)', icon: ShieldCheck,
     bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200',
     ring: 'ring-indigo-400', avatar: 'from-indigo-500 to-purple-600', dot: 'bg-indigo-500',
-    desc: 'ولوج كامل لجميع الميزات والوظائف',
+    desc: 'Accès complet à toutes les fonctionnalités',
     access: ['Dashboard', 'Production', 'RH', 'Finance', 'Contrôle Qualité'],
   },
   pointeur: {
-    label: 'رئيس ورشة (Chef)', icon: HardHat,
+    label: 'Chef de Production', labelAr: 'رئيس ورشة (Chef)', icon: HardHat,
     bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200',
     ring: 'ring-blue-400', avatar: 'from-blue-500 to-cyan-600', dot: 'bg-blue-500',
-    desc: 'إدارة الإنتاج، العمال، والطلبيات',
+    desc: 'Gestion de production, ouvriers et commandes',
     access: ['Production', 'Pointage', 'Contrôle Qualité'],
   },
   client: {
-    label: 'زبون (Client)', icon: ShoppingBag,
+    label: 'Client', labelAr: 'زبون (Client)', icon: ShoppingBag,
     bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200',
     ring: 'ring-emerald-400', avatar: 'from-emerald-500 to-teal-600', dot: 'bg-emerald-500',
-    desc: 'الولوج لبوابة الزبون فقط',
+    desc: 'Accès au portail client uniquement',
     access: ['Portail Client'],
   },
   worker: {
-    label: 'عامل (Employé)', icon: Users,
+    label: 'Ouvrier', labelAr: 'عامل (Employé)', icon: Users,
     bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200',
     ring: 'ring-purple-400', avatar: 'from-purple-500 to-indigo-600', dot: 'bg-purple-500',
-    desc: 'الولوج لأدوات تسجيل الحضور والسكانير',
+    desc: 'Accès aux outils de pointage et scanner',
     access: ['Pointage', 'Espace Ouvrier'],
   },
-
   coupeur: {
-    label: 'فصّال (Coupeur)', icon: Scissors,
+    label: 'Coupeur', labelAr: 'فصّال (Coupeur)', icon: Scissors,
     bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200',
     ring: 'ring-orange-400', avatar: 'from-orange-500 to-amber-600', dot: 'bg-orange-500',
-    desc: 'إدارة أوامر القص فقط',
+    desc: 'Gestion des ordres de coupe uniquement',
     access: ['Ordres de Coupe'],
   },
   modeliste: {
-    label: 'موديليست (Modéliste)', icon: FileText,
+    label: 'Modéliste', labelAr: 'موديليست (Modéliste)', icon: FileText,
     bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200',
     ring: 'ring-blue-400', avatar: 'from-blue-500 to-indigo-600', dot: 'bg-blue-500',
-    desc: 'إدارة البطاقات التقنية',
+    desc: 'Gestion des fiches techniques',
     access: ['Fiches Techniques'],
   },
   controleur: {
-    label: 'مراقبة الجودة (QC)', icon: ShieldCheck,
+    label: 'Contrôleur Qualité', labelAr: 'مراقبة الجودة (QC)', icon: ShieldCheck,
     bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200',
     ring: 'ring-rose-400', avatar: 'from-rose-500 to-orange-600', dot: 'bg-rose-500',
-    desc: 'مراقبة الجودة وتتبع القطع',
+    desc: 'Contrôle qualité et suivi des pièces',
     access: ['Contrôle Qualité', 'Scan Production'],
   },
   agent_pointage: {
-    label: 'مكلف بالpointage', icon: Clock,
+    label: 'Agent Pointage', labelAr: 'مكلف بالpointage', icon: Clock,
     bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200',
     ring: 'ring-emerald-400', avatar: 'from-emerald-500 to-teal-600', dot: 'bg-emerald-500',
-    desc: 'تسجيل الحضور والغياب للعمال',
+    desc: 'Enregistrement des présences',
     access: ['Pointage', 'Suivi RH'],
   },
   partenaire: {
-    label: 'فاصونيي (Façonnier)', icon: Globe,
+    label: 'Façonnier', labelAr: 'فاصونيي (Façonnier)', icon: Globe,
     bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200',
     ring: 'ring-indigo-400', avatar: 'from-slate-700 to-slate-900', dot: 'bg-slate-700',
-    desc: 'الولوج لبوابة الشركاء والفاصونيي',
+    desc: 'Accès au portail partenaires',
     access: ['Portail Partenaire'],
   },
 } as const;
@@ -298,7 +297,7 @@ export default function Utilisateurs() {
                     </div>
                   </div>
                   <p className="text-2xl font-black text-slate-900 tabular-nums">{users.filter(u => u.role === role).length}</p>
-                  <p className={`text-[10px] font-black uppercase tracking-widest ${cfg.text}`}>{cfg.label}</p>
+                  <p className={`text-[10px] font-black uppercase tracking-widest ${cfg.text}`}>{isAr ? cfg.labelAr : cfg.label}</p>
                 </button>
               );
             })}
@@ -335,7 +334,7 @@ export default function Utilisateurs() {
                   </div>
                   <div className={`flex items-center gap-3 p-3 rounded-2xl ${cfg.bg} border ${cfg.border} mb-4 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
                     <Icon className={`w-4 h-4 ${cfg.text}`} />
-                    <p className={`text-[10px] font-black uppercase tracking-widest ${cfg.text}`}>{cfg.label}</p>
+                    <p className={`text-[10px] font-black uppercase tracking-widest ${cfg.text}`}>{isAr ? cfg.labelAr : cfg.label}</p>
                   </div>
                   <div className={`flex items-center justify-between bg-slate-50 rounded-2xl px-4 py-3 border border-slate-100 ${isAr ? 'flex-row-reverse' : ''}`}>
                     <div className={`flex items-center gap-3 flex-1 min-w-0 ${isAr ? 'flex-row-reverse' : ''}`}>
@@ -388,7 +387,9 @@ export default function Utilisateurs() {
                   {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'partenaire'] as const).map(role => (
                     <th key={role} className="p-6 border-b border-slate-100 border-l border-slate-50 min-w-[120px]">
                       <div className="flex flex-col items-center gap-2">
-                        <span className={`text-[10px] font-black uppercase tracking-widest ${ROLE_CFG[role].text}`}>{ROLE_CFG[role].label.split(' ')[0]}</span>
+                        <span className={`text-[10px] font-black uppercase tracking-widest ${ROLE_CFG[role].text}`}>
+                          {isAr ? ROLE_CFG[role].labelAr.split(' ')[0] : ROLE_CFG[role].label.split(' ')[0]}
+                        </span>
                         <button onClick={() => resetRole(role)} className="p-1 hover:bg-slate-100 rounded-lg"><RotateCcw className="w-3 h-3 text-slate-300" /></button>
                       </div>
                     </th>
@@ -474,7 +475,9 @@ export default function Utilisateurs() {
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${form.role === r ? 'bg-indigo-600 text-white' : 'bg-white text-slate-400'}`}>
                         {(() => { const Icon = ROLE_CFG[r].icon; return <Icon className="w-5 h-5" />; })()}
                       </div>
-                      <span className={`text-[10px] font-black uppercase tracking-widest ${form.role === r ? 'text-indigo-900' : 'text-slate-400'}`}>{ROLE_CFG[r].label.split(' ')[0]}</span>
+                      <span className={`text-[10px] font-black uppercase tracking-widest ${form.role === r ? 'text-indigo-900' : 'text-slate-400'}`}>
+                        {isAr ? ROLE_CFG[r].labelAr.split(' ')[0] : ROLE_CFG[r].label.split(' ')[0]}
+                      </span>
                     </button>
                   ))}
                 </div>
