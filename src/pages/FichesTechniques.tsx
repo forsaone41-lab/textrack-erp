@@ -1368,12 +1368,19 @@ export default function FichesTechniques() {
                   </div>
                   <input 
                     type="text" 
+                    list="fabric-types"
                     placeholder={isAr ? "اكتب نوع الثوب..." : "Taper type de tissu..."}
                     value={confirmDetails.tissu}
                     onChange={e => setConfirmDetails({...confirmDetails, tissu: e.target.value})}
                     className="w-full bg-white border-2 border-slate-100 rounded-xl py-2 px-3 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
                   />
+                  <datalist id="fabric-types">
+                    {['Jersey', 'Popeline', 'Fleece', 'Gabardine', 'Denim', 'Viscose', 'Satin', 'Mousseline', 'Crêpe', 'Velours', 'Lin', 'Coton', 'Polyester', 'Lycra', 'Piqué', 'Interlock'].map(t => (
+                      <option key={t} value={t} />
+                    ))}
+                  </datalist>
                 </div>
+
 
                 <div>
                   <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-2">{isAr ? 'الألوان (Couleurs)' : 'Couleurs'}</label>
