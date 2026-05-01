@@ -451,12 +451,21 @@ export async function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'>) {
 }
 
 export async function saveCompanyProfile(profile: CompanyProfile): Promise<void> {
+  console.log("[DEBUG] Saving profile locally...");
   safeStorage.setItem('textrack_profile', JSON.stringify(profile));
-  // Also save to Supabase
+  
+  console.log("[DEBUG] Saving profile to cloud...");
   try {
-    await supabase.from('settings').upsert({ id: 'company-profile', value: profile });
-  } catch (e) {
-    console.error("Failed to sync settings to cloud:", e);
+    const { error } = await supabase.from('settings').upsert({ id: 'company-profile', value: profile });
+    if (error) {
+      console.error("[DEBUG] Cloud save error:", error.message);
+      alert("⚠️ Erreur de synchronisation Cloud : " + error.message + "\n\nVos paramètres sont sauvegardés localement sur ce PC, mais ne seront pas visibles sur les autres PC tant que le tableau 'settings' n'est pas créé dans Supabase.");
+    } else {
+      console.log("[DEBUG] Cloud save success!");
+    }
+  } catch (e: any) {
+    console.error("[DEBUG] Cloud save fatal error:", e);
+    alert("⚠️ Erreur fatale Cloud : " + e.message);
   }
 }
 
