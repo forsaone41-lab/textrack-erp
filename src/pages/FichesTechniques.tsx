@@ -390,6 +390,25 @@ export default function FichesTechniques() {
 
   async function handleLaunchEchantillon() {
     if (!confirmFiche) return;
+
+    // --- Auto-Register Client ---
+    // If the client doesn't exist in the database, register them automatically
+    const clientName = (confirmFiche.client || '').trim();
+    const existingClient = clients.find(c => (c.nom || '').toLowerCase() === clientName.toLowerCase());
+    
+    if (!existingClient && clientName) {
+      const newClient = {
+        id: genId(),
+        nom: clientName,
+        role: 'client',
+        email: `${clientName.replace(/\s+/g, '').toLowerCase() || 'client'}@beya.ma`,
+        telephone: '',
+        actif: true
+      };
+      await saveRecord('users', newClient);
+      setClients(prev => [...prev, newClient]);
+    }
+
     const totalSizes = Object.values(confirmDetails.tailles).reduce((a, b) => a + b, 0);
     const newCommande = {
       id: genId(),
