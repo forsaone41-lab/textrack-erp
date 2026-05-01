@@ -69,7 +69,9 @@ export default function Login({ onLogin }: LoginProps) {
   const [loading, setLoading] = useState(false);
   const [logoError, setLogoError] = useState(false);
 
+  async function handleLogin() {
     if (!identifier || !password) {
+
       setError(isAr ? 'المرجو إدخال البريد الإلكتروني وكلمة المرور.' : 'Veuillez remplir tous les champs.');
       return;
     }
