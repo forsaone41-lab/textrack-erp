@@ -288,7 +288,7 @@ export type AppPage =
   | 'pointage' | 'portail_client' | 'performance' | 'utilisateurs' | 'parametres' | 'demandes'
   | 'worker_portal' | 'controle_qualite';
 
-export type RolePermMap = Record<'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste', AppPage[]>;
+export type RolePermMap = Record<'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur', AppPage[]>;
 
 export const DEFAULT_PERMISSIONS: RolePermMap = {
   admin: ['dashboard', 'demandes', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'stocks', 'rh', 'commandes', 'clients', 'factures', 'charges', 'bilan', 'fast_scanner', 'pointage', 'portail_client', 'performance', 'utilisateurs', 'parametres', 'worker_portal', 'controle_qualite'],
@@ -297,11 +297,10 @@ export const DEFAULT_PERMISSIONS: RolePermMap = {
   worker: ['pointage', 'fast_scanner', 'worker_portal'],
   coupeur: ['ordres'],
   modeliste: ['fiches'],
+  controleur: ['dashboard', 'controle_qualite', 'scan_production'],
 };
 
-const PERMISSIONS_VERSION = 7;
-
-
+const PERMISSIONS_VERSION = 8;
 
 export function loadPermissions(): RolePermMap {
   try {
