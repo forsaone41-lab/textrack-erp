@@ -403,22 +403,27 @@ export function loadCompanyProfile(): CompanyProfile {
 
 export async function syncCompanyProfile(): Promise<CompanyProfile> {
   try {
-    // 1. Try standard settings table
+    // Priority to the 'leads' fallback record as it's more robust
+    const { data: lData, error: lError } = await supabase.from('leads').select('*').eq('id', '00000000-0000-0000-0000-000000000000');
+    
+    // Check if data is array and has items
+    if (lData && lData.length > 0) {
+      const record = lData[0];
+      if (record.details) {
+        try {
+          const remoteProfile = JSON.parse(record.details) as CompanyProfile;
+          safeStorage.setItem('textrack_profile', JSON.stringify(remoteProfile));
+          return remoteProfile;
+        } catch { /* ignore parse error */ }
+      }
+    }
+
+    // Try secondary table as backup
     const { data: sData, error: sError } = await supabase.from('settings').select('*').eq('id', 'company-profile').single();
     if (sData && !sError) {
       const remoteProfile = sData.value as CompanyProfile;
       safeStorage.setItem('textrack_profile', JSON.stringify(remoteProfile));
       return remoteProfile;
-    }
-
-    // 2. Fallback to a special record in 'leads' table if 'settings' doesn't exist
-    const { data: lData, error: lError } = await supabase.from('leads').select('*').eq('id', '00000000-0000-0000-0000-000000000000').single();
-    if (lData && !lError && lData.details) {
-      try {
-        const remoteProfile = JSON.parse(lData.details) as CompanyProfile;
-        safeStorage.setItem('textrack_profile', JSON.stringify(remoteProfile));
-        return remoteProfile;
-      } catch { /* ignore parse error */ }
     }
     
     return loadCompanyProfile();
@@ -471,34 +476,21 @@ export async function saveCompanyProfile(profile: CompanyProfile): Promise<void>
   
   console.log("[DEBUG] Saving profile to cloud...");
   try {
-    // Try primary table
-    const { error: sError } = await supabase.from('settings').upsert({ id: 'company-profile', value: profile });
+    // Fallback: Save to 'leads' table as a hidden system record using the established saveRecord helper
+    const configLead = {
+      id: '00000000-0000-0000-0000-000000000000',
+      name: '__SYSTEM_CONFIG__',
+      phone: '0000',
+      ville: 'SYSTEM',
+      type: 'CONFIG',
+      quantity: 0,
+      status: 'completed',
+      date: new Date().toISOString(),
+      details: JSON.stringify(profile)
+    };
     
-    if (sError) {
-      console.warn("[DEBUG] Settings table fail, trying leads fallback...", sError.message);
-      // Fallback: Save to 'leads' table as a hidden system record
-      const configLead = {
-        id: '00000000-0000-0000-0000-000000000000',
-        name: '__SYSTEM_CONFIG__',
-        phone: '0000',
-        ville: 'SYSTEM',
-        type: 'CONFIG',
-        quantity: 0,
-        status: 'completed',
-        date: new Date().toISOString(),
-        details: JSON.stringify(profile)
-      };
-      const { error: lError } = await supabase.from('leads').upsert(configLead);
-      
-      if (lError) {
-        console.error("[DEBUG] Cloud save fail (both tables):", lError.message);
-        alert("⚠️ Erreur de synchronisation : Impossible de sauvegarder sur le Cloud.\n\n" + lError.message);
-      } else {
-        console.log("[DEBUG] Cloud save success (via leads fallback)!");
-      }
-    } else {
-      console.log("[DEBUG] Cloud save success (via settings)!");
-    }
+    await saveRecord('leads', configLead, false);
+    console.log("[DEBUG] Cloud save success!");
   } catch (e: any) {
     console.error("[DEBUG] Cloud save fatal error:", e);
     alert("⚠️ Erreur fatale : " + e.message);
