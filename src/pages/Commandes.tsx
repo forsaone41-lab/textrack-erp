@@ -1008,6 +1008,25 @@ export default function Commandes() {
             <div className="grid grid-cols-2 gap-4">
               <div><label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">{t('phase', lang)}</label><select value={form.phase || 'coupe'} onChange={e => setForm({ ...form, phase: e.target.value as Phase })} className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none">{PHASE_ORDER.map(p => <option key={p} value={p}>{PHASE_LABELS[p]}</option>)}</select></div>
               <div>
+                <label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">Partenaire / Sous-traitant</label>
+                <select 
+                  value={form.partenaireId || ''} 
+                  onChange={e => setForm({ ...form, partenaireId: e.target.value })} 
+                  className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none bg-indigo-50/20"
+                >
+                  <option value="">— {isAr ? 'داخلي (L\'Atelier)' : 'Interne (Atelier)'} —</option>
+                  {employes.filter(e => e.type === 'sous_traitance').map(e => (
+                    <option key={e.id} value={e.id}>{e.prenom} {e.nom} ({e.poste})</option>
+                  ))}
+                  {/* Fallback for partners that are users but not employees */}
+                  {users.filter(u => u.role === 'partenaire').map(u => (
+                    <option key={u.id} value={u.id}>{u.nom} (Accès Portail)</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+              <div>
                 <label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">{t('statut', lang)} (Auto)</label>
                 <div className="px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl">
                   {(() => {
@@ -1022,6 +1041,7 @@ export default function Commandes() {
                 </div>
               </div>
             </div>
+
             {(() => {
               const fiche = fiches.find(f => f.modele === form.modele);
               const matieres = (fiche?.tissuConsommation || 0) * (form.tissuPrix || 0) * (form.quantite || 0);

@@ -75,6 +75,13 @@ const ROLE_CFG = {
     desc: 'تسجيل الحضور والغياب للعمال',
     access: ['Pointage', 'Suivi RH'],
   },
+  partenaire: {
+    label: 'شريك (Partenaire)', icon: Globe,
+    bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200',
+    ring: 'ring-indigo-400', avatar: 'from-slate-700 to-slate-900', dot: 'bg-slate-700',
+    desc: 'الولوج لبوابة الشركاء والفاصونيي',
+    access: ['Portail Partenaire'],
+  },
 } as const;
 
 
@@ -103,8 +110,9 @@ const ALL_PAGES: PageDef[] = [
   
   { key: 'fast_scanner', label: 'Fast Scanner (PRO)', labelAr: 'الماسح السريع (PRO)', icon: Zap, group: 'Outils' },
   { key: 'pointage', label: 'Pointage', labelAr: 'تسجيل الحضور', icon: ClipboardCheck, group: 'Outils' },
-  { key: 'portail_client', label: 'Portail Client', labelAr: 'بوابة الزبناء', icon: Globe, group: 'Outils' },
-  { key: 'worker_portal', label: 'Espace Ouvrier', labelAr: 'فضاء العامل', icon: UserCircle, group: 'Outils' },
+  { key: 'portail_client', label: 'Portail Client', labelAr: 'بوابة الزبون', icon: ShoppingBag, group: 'Portails' },
+  { key: 'worker_portal', label: 'Espace Ouvrier', labelAr: 'فضاء العامل', icon: UserCircle, group: 'Portails' },
+  { key: 'partenaire_portal', label: 'Portail Partenaire', labelAr: 'بوابة الشركاء', icon: Globe, group: 'Portails' },
   { key: 'performance', label: 'Performance', labelAr: 'أداء العمال', icon: Trophy, group: 'Outils' },
   { key: 'utilisateurs', label: 'Gestion Utilisateurs', labelAr: 'إدارة المستخدمين', icon: UserCircle, group: 'Outils' },
   { key: 'parametres', label: 'Paramètres', labelAr: 'الإعدادات', icon: Settings, group: 'Outils' },
@@ -215,7 +223,7 @@ export default function Utilisateurs() {
   }
 
   // ── Permissions helpers ───────────────────────────────────
-  function togglePerm(role: 'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste', page: AppPage) {
+  function togglePerm(role: 'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'partenaire', page: AppPage) {
     const locked = LOCKED[role] || [];
     if (locked.includes(page)) return;
     const current = perms[role];
@@ -231,7 +239,7 @@ export default function Utilisateurs() {
     setTimeout(() => setPermsSaved(false), 2000);
   }
 
-  function resetRole(role: 'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste') {
+  function resetRole(role: 'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'partenaire') {
     const updated: RolePermMap = { ...perms, [role]: [...DEFAULT_PERMISSIONS[role]] };
     setPerms(updated);
     savePermissions(updated);
@@ -377,7 +385,7 @@ export default function Utilisateurs() {
               <thead>
                 <tr className="bg-slate-50/50">
                   <th className={`p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 ${isAr ? 'text-right' : 'text-left'}`}>{isAr ? 'الصفحة / الوحدة' : 'Module / Page'}</th>
-                  {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste'] as const).map(role => (
+                  {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'partenaire'] as const).map(role => (
                     <th key={role} className="p-6 border-b border-slate-100 border-l border-slate-50 min-w-[120px]">
                       <div className="flex flex-col items-center gap-2">
                         <span className={`text-[10px] font-black uppercase tracking-widest ${ROLE_CFG[role].text}`}>{ROLE_CFG[role].label.split(' ')[0]}</span>
@@ -403,7 +411,7 @@ export default function Utilisateurs() {
                             <span className="text-xs font-bold text-slate-700">{isAr ? page.labelAr : page.label}</span>
                           </div>
                         </td>
-                        {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'controleur', 'agent_pointage'] as const).map(role => {
+                        {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'partenaire'] as const).map(role => {
                           const locked = (LOCKED[role] || []).includes(page.key);
                           const active = perms[role].includes(page.key);
                           return (
@@ -460,7 +468,7 @@ export default function Utilisateurs() {
               <div className={isAr ? 'text-right' : ''}>
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">{isAr ? 'الدور الوظيفي' : 'Rôle'}</label>
                 <div className="grid grid-cols-2 gap-3">
-                  {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'controleur', 'agent_pointage'] as const).map(r => (
+                  {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'controleur', 'agent_pointage', 'partenaire'] as const).map(r => (
                     <button key={r} onClick={() => setForm({ ...form, role: r })} 
                       className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${form.role === r ? 'border-indigo-600 bg-indigo-50' : 'border-slate-50 bg-slate-50/50 hover:bg-slate-50'}`}>
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${form.role === r ? 'bg-indigo-600 text-white' : 'bg-white text-slate-400'}`}>

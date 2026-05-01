@@ -100,6 +100,7 @@ export interface Commande {
   coutMainOeuvre?: number;
   avance?: number;
   planningReady?: boolean;
+  partenaireId?: string;
 }
 
 export interface StockTissu {
@@ -215,7 +216,7 @@ export interface Presence {
 export interface User {
   id: string;
   nom: string;
-  role: 'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage';
+  role: 'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire';
   email: string;
   telephone?: string;
   password?: string;
@@ -286,9 +287,9 @@ export type AppPage =
   | 'dashboard' | 'fiches' | 'ordres' | 'chaine' | 'stocks' | 'pilotage' | 'scan_production'
   | 'rh' | 'commandes' | 'clients' | 'factures' | 'charges' | 'bilan' | 'fast_scanner'
   | 'pointage' | 'portail_client' | 'performance' | 'utilisateurs' | 'parametres' | 'demandes'
-  | 'worker_portal' | 'controle_qualite';
+  | 'worker_portal' | 'controle_qualite' | 'partenaire_portal';
 
-export type RolePermMap = Record<'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage', AppPage[]>;
+export type RolePermMap = Record<'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire', AppPage[]>;
 
 export const DEFAULT_PERMISSIONS: RolePermMap = {
   admin: ['dashboard', 'demandes', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'stocks', 'rh', 'commandes', 'clients', 'factures', 'charges', 'bilan', 'fast_scanner', 'pointage', 'portail_client', 'performance', 'utilisateurs', 'parametres', 'worker_portal', 'controle_qualite'],
@@ -299,6 +300,7 @@ export const DEFAULT_PERMISSIONS: RolePermMap = {
   modeliste: ['fiches'],
   controleur: ['dashboard', 'controle_qualite', 'scan_production'],
   agent_pointage: ['dashboard', 'pointage', 'rh'],
+  partenaire: ['partenaire_portal'],
 };
 
 const PERMISSIONS_VERSION = 9;

@@ -32,6 +32,7 @@ const LandingPage      = lazy(() => import('./pages/LandingPage'));
 const KioskScanner     = lazy(() => import('./pages/KioskScanner'));
 const FastScanner      = lazy(() => import('./pages/FastScanner'));
 const PlanningView     = lazy(() => import('./pages/PlanningView'));
+const PartenairePortal = lazy(() => import('./pages/PartenairePortal'));
 
 // Loading spinner for Suspense fallback
 const PageLoader = () => (
@@ -219,6 +220,10 @@ function AppContent() {
     return <PortailClient currentUser={currentUser} onLogout={handleLogout} />;
   }
 
+  if (currentUser.role === 'partenaire') {
+    return <PartenairePortal currentUser={currentUser} onLogout={handleLogout} />;
+  }
+
   const permissions = loadPermissions();
   const userRole = (currentUser.role || '').toLowerCase() as keyof typeof permissions;
   const allowed = permissions[userRole] || [];
@@ -268,6 +273,7 @@ function AppContent() {
         <Route path="pilotage-chaine" element={can('pilotage') ? <ChaineDetaillee /> : <Navigate to="/" replace />} />
         <Route path="scan-production" element={can('scan_production') ? <ProductionScanner /> : <Navigate to="/" replace />} />
         <Route path="worker-portal" element={<WorkerPortal currentUser={currentUser} />} />
+        <Route path="partenaire-portal" element={<PartenairePortal currentUser={currentUser} onLogout={handleLogout} />} />
         
         {/* Protected Finance Routes */}
         <Route path="factures" element={can('factures') ? <Factures /> : <Navigate to="/" replace />} />
