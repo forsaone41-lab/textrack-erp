@@ -291,8 +291,9 @@ export default function LandingPage() {
                   className="space-y-6"
                   onSubmit={async (e) => {
                     e.preventDefault();
-                    const formData = new FormData(e.currentTarget);
-                    const countryCode = (e.currentTarget.querySelector('select') as HTMLSelectElement).value;
+                    const formElement = e.currentTarget;
+                    const formData = new FormData(formElement);
+                    const countryCode = (formElement.querySelector('select') as HTMLSelectElement).value;
                     const rawPhone = formData.get('phone') as string;
                     const fullPhone = countryCode + (rawPhone.startsWith('0') ? rawPhone.substring(1) : rawPhone);
 
@@ -324,7 +325,7 @@ export default function LandingPage() {
                       setShowSuccess(true);
                       setSelectedPhoto(null);
                       setSelectedType('T-Shirt');
-                      (e.currentTarget as HTMLFormElement).reset();
+                      formElement.reset();
                     } catch (err: any) {
                       setIsSending(false);
                       console.error("Error in LandingPage:", err);
