@@ -403,12 +403,24 @@ export function loadCompanyProfile(): CompanyProfile {
 
 export async function syncCompanyProfile(): Promise<CompanyProfile> {
   try {
-    const { data, error } = await supabase.from('settings').select('*').eq('id', 'company-profile').single();
-    if (data && !error) {
-      const remoteProfile = data.value as CompanyProfile;
+    // 1. Try standard settings table
+    const { data: sData, error: sError } = await supabase.from('settings').select('*').eq('id', 'company-profile').single();
+    if (sData && !sError) {
+      const remoteProfile = sData.value as CompanyProfile;
       safeStorage.setItem('textrack_profile', JSON.stringify(remoteProfile));
       return remoteProfile;
     }
+
+    // 2. Fallback to a special record in 'leads' table if 'settings' doesn't exist
+    const { data: lData, error: lError } = await supabase.from('leads').select('*').eq('id', 'system_config_v1').single();
+    if (lData && !lError && lData.details) {
+      try {
+        const remoteProfile = JSON.parse(lData.details) as CompanyProfile;
+        safeStorage.setItem('textrack_profile', JSON.stringify(remoteProfile));
+        return remoteProfile;
+      } catch { /* ignore parse error */ }
+    }
+    
     return loadCompanyProfile();
   } catch (e) {
     return loadCompanyProfile();
@@ -421,12 +433,15 @@ export async function loadLeads(): Promise<Lead[]> {
     const data = await loadData<Lead>('leads');
     
     // If data is null, it means the request failed (fallback to local)
-    // If data is [], it means the table is empty (don't fallback)
-    if (data !== null) return data;
+    if (data !== null) {
+      // Filter out system config records
+      return data.filter(l => l.id !== 'system_config_v1');
+    }
     
     // Fallback to local only if remote call failed
     const local = safeStorage.getItem('textrack_leads');
-    return local ? JSON.parse(local) : [];
+    const parsed = local ? JSON.parse(local) : [];
+    return Array.isArray(parsed) ? parsed.filter((l: any) => l.id !== 'system_config_v1') : [];
   } catch {
     return [];
   }
@@ -456,16 +471,37 @@ export async function saveCompanyProfile(profile: CompanyProfile): Promise<void>
   
   console.log("[DEBUG] Saving profile to cloud...");
   try {
-    const { error } = await supabase.from('settings').upsert({ id: 'company-profile', value: profile });
-    if (error) {
-      console.error("[DEBUG] Cloud save error:", error.message);
-      alert("⚠️ Erreur de synchronisation Cloud : " + error.message + "\n\nVos paramètres sont sauvegardés localement sur ce PC, mais ne seront pas visibles sur les autres PC tant que le tableau 'settings' n'est pas créé dans Supabase.");
+    // Try primary table
+    const { error: sError } = await supabase.from('settings').upsert({ id: 'company-profile', value: profile });
+    
+    if (sError) {
+      console.warn("[DEBUG] Settings table fail, trying leads fallback...", sError.message);
+      // Fallback: Save to 'leads' table as a hidden system record
+      const configLead = {
+        id: 'system_config_v1',
+        name: '__SYSTEM_CONFIG__',
+        phone: '0000',
+        ville: 'SYSTEM',
+        type: 'CONFIG',
+        quantity: 0,
+        status: 'completed',
+        date: new Date().toISOString(),
+        details: JSON.stringify(profile)
+      };
+      const { error: lError } = await supabase.from('leads').upsert(configLead);
+      
+      if (lError) {
+        console.error("[DEBUG] Cloud save fail (both tables):", lError.message);
+        alert("⚠️ Erreur de synchronisation : Impossible de sauvegarder sur le Cloud.\n\n" + lError.message);
+      } else {
+        console.log("[DEBUG] Cloud save success (via leads fallback)!");
+      }
     } else {
-      console.log("[DEBUG] Cloud save success!");
+      console.log("[DEBUG] Cloud save success (via settings)!");
     }
   } catch (e: any) {
     console.error("[DEBUG] Cloud save fatal error:", e);
-    alert("⚠️ Erreur fatale Cloud : " + e.message);
+    alert("⚠️ Erreur fatale : " + e.message);
   }
 }
 
