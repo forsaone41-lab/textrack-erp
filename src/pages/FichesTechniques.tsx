@@ -1222,6 +1222,186 @@ export default function FichesTechniques() {
             </div>
           </div>
         </div>
+        </div>
+      )}
+
+      {/* Modal Confirmation Echantillon */}
+      {confirmFiche && (
+        <div className="fixed inset-0 z-[400] flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300 overflow-y-auto" dir={isAr ? 'rtl' : 'ltr'}>
+          <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 max-w-2xl w-full shadow-[0_50px_100px_rgba(0,0,0,0.3)] border border-slate-100 relative my-4 sm:my-8">
+            <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-indigo-500 to-violet-600" />
+            <button 
+              onClick={() => setConfirmFiche(null)}
+              className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 text-slate-400 hover:text-rose-500 bg-slate-50 hover:bg-rose-50 rounded-full transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 sm:gap-4 mb-6">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-indigo-50 rounded-2xl flex items-center justify-center shrink-0">
+                <Calculator className="w-6 h-6 sm:w-7 sm:h-7 text-indigo-600" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">
+                  {isAr ? 'إطلاق عينة جديدة' : 'Lancer un Échantillon'}
+                </h3>
+                <p className="text-slate-500 font-bold text-xs uppercase tracking-widest mt-1">
+                  {isAr ? 'من البطاقة التقنية إلى الإنتاج' : 'De la Fiche Technique vers la production'}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 rounded-2xl p-4 mb-6 border border-slate-100 flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الموديل' : 'Modèle'}</p>
+                <p className="text-sm font-black text-slate-900">{confirmFiche.modele}</p>
+              </div>
+              <div className={isAr ? 'text-left' : 'text-right'}>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الزبون' : 'Client'}</p>
+                <p className="text-sm font-black text-indigo-600">{confirmFiche.client}</p>
+              </div>
+            </div>
+
+            <div className="space-y-4 sm:space-y-6 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <div>
+                  <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-2">{isAr ? 'نوع الثوب (Tissu)' : 'Type de Tissu'}</label>
+                  <input 
+                    type="text" 
+                    placeholder={isAr ? "اكتب نوع الثوب..." : "Taper type de tissu..."}
+                    value={confirmDetails.tissu}
+                    onChange={e => setConfirmDetails({...confirmDetails, tissu: e.target.value})}
+                    className="w-full bg-white border-2 border-slate-100 rounded-xl py-2 px-3 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-2">{isAr ? 'الألوان (Couleurs)' : 'Couleurs'}</label>
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {['Noir', 'Blanc', 'Gris', 'Bleu Marine'].map(color => (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() => toggleColor(color)}
+                        className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase transition-all ${
+                          confirmDetails.couleurs.includes(color)
+                            ? 'bg-indigo-600 text-white shadow-sm' 
+                            : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                        }`}
+                      >
+                        {color}
+                      </button>
+                    ))}
+                  </div>
+                  <input 
+                    type="text" 
+                    placeholder={isAr ? "ألوان أخرى..." : "Autres couleurs..."}
+                    value={confirmDetails.couleurs}
+                    onChange={e => setConfirmDetails({...confirmDetails, couleurs: e.target.value})}
+                    className="w-full bg-white border-2 border-slate-100 rounded-xl py-2 px-3 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-2">{isAr ? 'الصور المرجعية' : 'Photos de Référence'}</label>
+                <div className="flex items-center gap-4">
+                  {/* Photo Tissu */}
+                  {confirmDetails.tissuPhoto ? (
+                    <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-indigo-100 shadow-md group shrink-0">
+                      <img src={confirmDetails.tissuPhoto} alt="Tissu" className="w-full h-full object-cover" />
+                      <button 
+                        onClick={() => setConfirmDetails({...confirmDetails, tissuPhoto: ''})}
+                        className="absolute inset-0 bg-rose-500/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Trash2 className="w-6 h-6 text-white" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="w-24 h-24 rounded-2xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 hover:border-indigo-400 transition-all shrink-0">
+                      <Upload className="w-6 h-6 text-slate-400 mb-1" />
+                      <span className="text-[9px] font-bold text-slate-400 uppercase text-center leading-tight">{isAr ? 'صورة الثوب' : 'Photo Tissu'}</span>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => setConfirmDetails({...confirmDetails, tissuPhoto: reader.result as string});
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                  )}
+
+                  {/* Photo Modele */}
+                  {confirmDetails.modelePhoto ? (
+                    <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-fuchsia-100 shadow-md group shrink-0">
+                      <img src={confirmDetails.modelePhoto} alt="Modele" className="w-full h-full object-cover" />
+                      <button 
+                        onClick={() => setConfirmDetails({...confirmDetails, modelePhoto: ''})}
+                        className="absolute inset-0 bg-rose-500/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Trash2 className="w-6 h-6 text-white" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="w-24 h-24 rounded-2xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 hover:border-fuchsia-400 transition-all shrink-0">
+                      <ImageIcon className="w-6 h-6 text-slate-400 mb-1" />
+                      <span className="text-[9px] font-bold text-slate-400 uppercase text-center leading-tight">{isAr ? 'صورة الموديل' : 'Photo Modèle'}</span>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => setConfirmDetails({...confirmDetails, modelePhoto: reader.result as string});
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-4">{isAr ? 'توزيع المقاسات' : 'Répartition des Tailles'}</label>
+                <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+                  {confirmFiche.tailles.length > 0 ? confirmFiche.tailles.map(t => (
+                    <div key={t} className="space-y-1 text-center bg-slate-50 p-2 rounded-xl border border-slate-100">
+                      <span className="text-[10px] font-black text-slate-500 uppercase">{t}</span>
+                      <input 
+                        type="number"
+                        min="0"
+                        value={confirmDetails.tailles[t] || ''}
+                        onChange={(e) => setConfirmDetails({...confirmDetails, tailles: { ...confirmDetails.tailles, [t]: parseInt(e.target.value) || 0 }})}
+                        className="w-full bg-white border border-slate-200 rounded-lg py-1.5 text-center text-xs font-black focus:border-indigo-600 outline-none transition-colors shadow-sm"
+                      />
+                    </div>
+                  )) : (
+                    <div className="col-span-full p-4 bg-orange-50 text-orange-600 rounded-xl text-xs font-bold text-center">
+                      {isAr ? 'يرجى تحديد المقاسات في البطاقة التقنية أولاً' : 'Veuillez définir les tailles dans la fiche technique d\'abord'}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <button 
+              onClick={handleLaunchEchantillon}
+              disabled={confirmFiche.tailles.length === 0}
+              className="w-full h-14 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:shadow-xl hover:shadow-indigo-500/30 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Calculator className="w-5 h-5" />
+              {isAr ? 'تأكيد وإطلاق العينة' : 'Confirmer et Lancer l\'Échantillon'}
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
