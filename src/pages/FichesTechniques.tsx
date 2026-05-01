@@ -60,8 +60,27 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
         </div>
 
         {/* Info Section */}
-        <div className="flex-1 p-6 flex flex-col">
-          <div className={`flex justify-between items-start mb-4 ${isAr ? 'flex-row-reverse' : ''}`}>
+        <div className="flex-1 p-6 flex flex-col relative overflow-hidden">
+          {/* Glassmorphism Overlay for New/Incomplete Fiches */}
+          {!f.patronagePhoto && (
+            <div className="absolute inset-0 z-20 backdrop-blur-md bg-white/60 flex flex-col items-center justify-center p-6 text-center">
+              <span className="px-3 py-1 bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest rounded-full mb-4 animate-pulse shadow-lg shadow-amber-500/30">
+                {isAr ? 'طلب جديد' : 'NOUVELLE DEMANDE'}
+              </span>
+              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-1">{f.type || f.modele}</h3>
+              <p className="text-sm font-bold text-slate-500 mb-8">{f.client}</p>
+              <button 
+                onClick={() => openEdit(f)}
+                className="w-full max-w-[200px] py-4 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:scale-105 hover:shadow-xl hover:shadow-indigo-500/30 transition-all flex flex-col items-center justify-center gap-2"
+              >
+                <Edit2 className="w-5 h-5" />
+                {isAr ? 'تصميم الباترون' : 'CRÉER LE PATRON'}
+              </button>
+            </div>
+          )}
+
+          <div className={`flex flex-col flex-1 transition-all duration-300 ${!f.patronagePhoto ? 'opacity-20 blur-[3px] pointer-events-none select-none' : ''}`}>
+            <div className={`flex justify-between items-start mb-4 ${isAr ? 'flex-row-reverse' : ''}`}>
             <div className={`space-y-1 ${isAr ? 'text-right' : 'text-left'}`}>
               <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
                 <h3 className="font-extrabold text-slate-900 text-xl tracking-tight leading-tight group-hover:text-indigo-600 transition-colors">{f.modele}</h3>
@@ -159,6 +178,7 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
           </div>
         </div>
       </div>
+    </div>
 
       {/* Bottom Footer Area: Tailles Chips only */}
       <div className={`bg-slate-50/50 border-t border-slate-100 overflow-hidden px-5 py-4 ${isAr ? 'text-right' : 'text-left'}`}>
