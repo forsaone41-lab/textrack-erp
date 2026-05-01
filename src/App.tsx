@@ -1,39 +1,53 @@
 import { HashRouter, Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom';
 import * as React from 'react';
-import { useState, useEffect, Component, ReactNode } from 'react';
-import { Menu, Package, Shirt } from 'lucide-react';
+import { useState, useEffect, Component, ReactNode, lazy, Suspense } from 'react';
+import { Menu, Package } from 'lucide-react';
 import Sidebar from './components/Sidebar';
-import Dashboard from './pages/Dashboard';
-import Demandes from './pages/Demandes';
-import FichesTechniques from './pages/FichesTechniques';
-import OrdresDeCoupe from './pages/OrdresDeCoupe';
-import ChaineDeMontage from './pages/ChaineDeMontage';
-import ChaineDetaillee from './pages/ChaineDetaillee';
-import ProductionScanner from './pages/ProductionScanner';
-import WorkerPortal from './pages/WorkerPortal';
-import StockMateriaux from './pages/StockMateriaux';
-import SuiviRH from './pages/SuiviRH';
-import Echantillons from './pages/Echantillons';
-import Clients from './pages/Clients';
-import Commandes from './pages/Commandes';
-import Factures from './pages/Factures';
-import Pointage from './pages/Pointage';
-import PortailClient from './pages/PortailClient';
-import Utilisateurs from './pages/Utilisateurs';
-import Performance from './pages/Performance';
-import Charges from './pages/Charges';
-import BilanFinancier from './pages/BilanFinancier';
-import Settings from './pages/Settings';
-import Profil from './pages/Profil';
-import Login from './pages/Login';
-import LandingPage from './pages/LandingPage';
-import KioskScanner from './pages/KioskScanner';
-import FastScanner from './pages/FastScanner';
-import PlanningView from './pages/PlanningView';
+
+// ✅ Lazy load all pages - each page loads only when visited
+const Dashboard        = lazy(() => import('./pages/Dashboard'));
+const Demandes         = lazy(() => import('./pages/Demandes'));
+const FichesTechniques = lazy(() => import('./pages/FichesTechniques'));
+const OrdresDeCoupe    = lazy(() => import('./pages/OrdresDeCoupe'));
+const ChaineDeMontage  = lazy(() => import('./pages/ChaineDeMontage'));
+const ChaineDetaillee  = lazy(() => import('./pages/ChaineDetaillee'));
+const ProductionScanner= lazy(() => import('./pages/ProductionScanner'));
+const WorkerPortal     = lazy(() => import('./pages/WorkerPortal'));
+const StockMateriaux   = lazy(() => import('./pages/StockMateriaux'));
+const SuiviRH          = lazy(() => import('./pages/SuiviRH'));
+const Echantillons     = lazy(() => import('./pages/Echantillons'));
+const Clients          = lazy(() => import('./pages/Clients'));
+const Commandes        = lazy(() => import('./pages/Commandes'));
+const Factures         = lazy(() => import('./pages/Factures'));
+const Pointage         = lazy(() => import('./pages/Pointage'));
+const PortailClient    = lazy(() => import('./pages/PortailClient'));
+const Utilisateurs     = lazy(() => import('./pages/Utilisateurs'));
+const Performance      = lazy(() => import('./pages/Performance'));
+const Charges          = lazy(() => import('./pages/Charges'));
+const BilanFinancier   = lazy(() => import('./pages/BilanFinancier'));
+const Settings         = lazy(() => import('./pages/Settings'));
+const Profil           = lazy(() => import('./pages/Profil'));
+const Login            = lazy(() => import('./pages/Login'));
+const LandingPage      = lazy(() => import('./pages/LandingPage'));
+const KioskScanner     = lazy(() => import('./pages/KioskScanner'));
+const FastScanner      = lazy(() => import('./pages/FastScanner'));
+const PlanningView     = lazy(() => import('./pages/PlanningView'));
+
+// Loading spinner for Suspense fallback
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-slate-50">
+    <div className="flex flex-col items-center gap-3">
+      <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+      <p className="text-xs font-black text-slate-400 uppercase tracking-widest animate-pulse">Chargement...</p>
+    </div>
+  </div>
+);
+
 import { initMockData, User, loadPermissions, AppPage, loadCompanyProfile, loadData, saveRecord } from './types';
 import { LangProvider, useLang } from './contexts/LangContext';
 
 initMockData();
+
 
 const AUTH_KEY = 'textrack_auth';
 
@@ -225,6 +239,7 @@ function AppContent() {
   }
 
   return (
+    <Suspense fallback={<PageLoader />}>
     <Routes>
       <Route
         path="/"
@@ -278,6 +293,7 @@ function AppContent() {
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </Suspense>
   );
 }
 
