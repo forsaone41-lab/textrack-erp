@@ -578,15 +578,55 @@ export default function FichesTechniques() {
                   printFicheTechnique={printFT} 
                   onViewMesures={setViewMesuresFiche} 
                   onShare={setShowShareModal} 
-                  onLaunchSample={(fiche) => {
-                    setConfirmFiche(fiche);
-                    setConfirmDetails(prev => ({
-                      ...prev,
-                      modelePhoto: fiche.photo || '',
-                      tailles: fiche.tailles.reduce((acc, t) => ({...acc, [t]: 0}), {})
-                    }));
+                  onLaunchSample={async (fiche) => {
+                    // --- Quick Launch logic ---
+                    // 1. Register client if needed
+                    const clientName = (fiche.client || '').trim();
+                    const allUsers = await loadData<User>('users') || [];
+                    const existingClient = allUsers.find(u => (u.nom || '').toLowerCase() === clientName.toLowerCase() && u.role === 'client');
+                    
+                    if (!existingClient && clientName) {
+                      const newId = genId();
+                      const autoCode = Math.floor(100000 + Math.random() * 900000).toString();
+                      const newClient = {
+                        id: newId, nom: clientName, role: 'client' as const,
+                        email: `${clientName.replace(/\s+/g, '').toLowerCase()}_${newId.slice(0, 4)}@beya.ma`,
+                        telephone: '', password: autoCode, actif: true
+                      };
+                      await saveRecord('users', newClient);
+                      setClients(prev => [...prev, newClient]);
+                    }
+
+                    // 2. Create sample record with ALL sizes from the pattern
+                    const sampleTailles = fiche.tailles.reduce((acc, t) => ({ ...acc, [t]: 1 }), {} as Record<string, number>);
+                    const newCommande = {
+                      id: genId(),
+                      reference: `ECH-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+                      client: fiche.client,
+                      modele: fiche.modele,
+                      tissu: 'À définir',
+                      quantite: fiche.tailles.length || 1,
+                      quantiteLivre: 0,
+                      dateCommande: new Date().toISOString(),
+                      dateLivraisonPrevue: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+                      phase: 'patronage' as const,
+                      prix: 0,
+                      rebut: 0,
+                      statut: 'echantillon_en_cours' as const,
+                      suivi: [{ phase: 'patronage' as const, date: new Date().toISOString(), note: 'Échantillon lancé automatiquement' }],
+                      couleurs: [],
+                      tailles: sampleTailles,
+                      modelePhoto: fiche.photo,
+                    };
+
+                    await saveRecord('commandes', newCommande);
+                    setCommandes(prev => [...prev, newCommande as any]);
+                    
+                    // 3. Jump to samples page
+                    navigate('/echantillons');
                   }}
                 />
+
               ))}
             </div>
           </div>
