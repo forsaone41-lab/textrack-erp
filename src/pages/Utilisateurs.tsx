@@ -86,6 +86,7 @@ const ALL_PAGES: PageDef[] = [
   { key: 'fast_scanner', label: 'Fast Scanner (PRO)', labelAr: 'الماسح السريع (PRO)', icon: Zap, group: 'Outils' },
   { key: 'pointage', label: 'Pointage', labelAr: 'تسجيل الحضور', icon: ClipboardCheck, group: 'Outils' },
   { key: 'portail_client', label: 'Portail Client', labelAr: 'بوابة الزبناء', icon: Globe, group: 'Outils' },
+  { key: 'worker_portal', label: 'Espace Ouvrier', labelAr: 'فضاء العامل', icon: UserCircle, group: 'Outils' },
   { key: 'performance', label: 'Performance', labelAr: 'أداء العمال', icon: Trophy, group: 'Outils' },
   { key: 'utilisateurs', label: 'Gestion Utilisateurs', labelAr: 'إدارة المستخدمين', icon: UserCircle, group: 'Outils' },
   { key: 'parametres', label: 'Paramètres', labelAr: 'الإعدادات', icon: Settings, group: 'Outils' },
