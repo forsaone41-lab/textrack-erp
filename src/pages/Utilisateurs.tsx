@@ -68,7 +68,15 @@ const ROLE_CFG = {
     desc: 'مراقبة الجودة وتتبع القطع',
     access: ['Contrôle Qualité', 'Scan Production'],
   },
+  agent_pointage: {
+    label: 'مكلف بالpointage', icon: Clock,
+    bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200',
+    ring: 'ring-emerald-400', avatar: 'from-emerald-500 to-teal-600', dot: 'bg-emerald-500',
+    desc: 'تسجيل الحضور والغياب للعمال',
+    access: ['Pointage', 'Suivi RH'],
+  },
 } as const;
+
 
 
 // ─── Pages Definition ──────────────────────────────────────
@@ -269,7 +277,7 @@ export default function Utilisateurs() {
       {tab === 'users' && (
         <div className="space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'controleur'] as const).map(role => {
+            {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'controleur', 'agent_pointage'] as const).map(role => {
               const cfg = ROLE_CFG[role];
               const Icon = cfg.icon;
               const active = filterRole === role;
@@ -395,7 +403,7 @@ export default function Utilisateurs() {
                             <span className="text-xs font-bold text-slate-700">{isAr ? page.labelAr : page.label}</span>
                           </div>
                         </td>
-                        {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'controleur'] as const).map(role => {
+                        {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'controleur', 'agent_pointage'] as const).map(role => {
                           const locked = (LOCKED[role] || []).includes(page.key);
                           const active = perms[role].includes(page.key);
                           return (
@@ -452,7 +460,7 @@ export default function Utilisateurs() {
               <div className={isAr ? 'text-right' : ''}>
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">{isAr ? 'الدور الوظيفي' : 'Rôle'}</label>
                 <div className="grid grid-cols-2 gap-3">
-                  {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'controleur'] as const).map(r => (
+                  {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'controleur', 'agent_pointage'] as const).map(r => (
                     <button key={r} onClick={() => setForm({ ...form, role: r })} 
                       className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${form.role === r ? 'border-indigo-600 bg-indigo-50' : 'border-slate-50 bg-slate-50/50 hover:bg-slate-50'}`}>
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${form.role === r ? 'bg-indigo-600 text-white' : 'bg-white text-slate-400'}`}>

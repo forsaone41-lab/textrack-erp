@@ -215,7 +215,7 @@ export interface Presence {
 export interface User {
   id: string;
   nom: string;
-  role: 'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste';
+  role: 'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage';
   email: string;
   telephone?: string;
   password?: string;
@@ -288,7 +288,7 @@ export type AppPage =
   | 'pointage' | 'portail_client' | 'performance' | 'utilisateurs' | 'parametres' | 'demandes'
   | 'worker_portal' | 'controle_qualite';
 
-export type RolePermMap = Record<'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur', AppPage[]>;
+export type RolePermMap = Record<'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage', AppPage[]>;
 
 export const DEFAULT_PERMISSIONS: RolePermMap = {
   admin: ['dashboard', 'demandes', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'stocks', 'rh', 'commandes', 'clients', 'factures', 'charges', 'bilan', 'fast_scanner', 'pointage', 'portail_client', 'performance', 'utilisateurs', 'parametres', 'worker_portal', 'controle_qualite'],
@@ -298,9 +298,10 @@ export const DEFAULT_PERMISSIONS: RolePermMap = {
   coupeur: ['ordres'],
   modeliste: ['fiches'],
   controleur: ['dashboard', 'controle_qualite', 'scan_production'],
+  agent_pointage: ['dashboard', 'pointage', 'rh'],
 };
 
-const PERMISSIONS_VERSION = 8;
+const PERMISSIONS_VERSION = 9;
 
 export function loadPermissions(): RolePermMap {
   try {
