@@ -8,6 +8,8 @@ export default function Settings() {
   const { lang, isAr } = useLang();
   const [profile, setProfile] = useState<CompanyProfile | null>(null);
   const [saved, setSaved] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<string>('');
+  const [showDebug, setShowDebug] = useState(false);
 
   useEffect(() => {
     setProfile(loadCompanyProfile());
@@ -21,18 +23,34 @@ export default function Settings() {
   };
 
   const handleSave = async () => {
-    await saveCompanyProfile(profile);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
-    // Reload the page to apply changes everywhere
-    window.location.reload();
+    setDebugInfo('Syncing to Cloud...');
+    try {
+      await saveCompanyProfile(profile);
+      setDebugInfo('Cloud Sync Success!');
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+      // Reload the page to apply changes everywhere
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (err: any) {
+      setDebugInfo('Sync Failed: ' + err.message);
+    }
   };
 
   return (
     <div className={`space-y-6 max-w-4xl mx-auto ${isAr ? 'text-right' : 'text-left'}`} dir={isAr ? 'rtl' : 'ltr'}>
-      <div>
-        <h1 className="text-2xl font-bold text-slate-800">{t('parametres', lang)}</h1>
-        <p className="text-slate-500 text-sm mt-1">{t('parametres_desc', lang)}</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800 cursor-help" onClick={() => setShowDebug(!showDebug)}>
+            {t('parametres', lang)}
+          </h1>
+          <p className="text-slate-500 text-sm mt-1">{t('parametres_desc', lang)}</p>
+        </div>
+        {showDebug && (
+          <div className="bg-slate-900 text-slate-300 p-4 rounded-xl text-[10px] font-mono max-w-xs animate-in fade-in zoom-in">
+            <p className="font-bold text-indigo-400 mb-1 tracking-widest uppercase">Debug Mode</p>
+            <p className="whitespace-pre-wrap">{debugInfo || 'No logs yet...'}</p>
+          </div>
+        )}
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
