@@ -4,8 +4,10 @@ import {
   Package, Scissors, Activity, Receipt, CreditCard, PieChart, TrendingUp, UserCheck, Shirt, Globe, X, Menu, ClipboardCheck, Trophy, ShieldCheck, UserCircle, QrCode, User as UserIcon,
   Sparkles,
   ChevronRight,
-  RotateCw
+  RotateCw,
+  RefreshCw
 } from 'lucide-react';
+
 import { User, loadCompanyProfile, loadPermissions, AppPage } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
