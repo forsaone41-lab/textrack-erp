@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, Clock, UserPlus, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RotateCw, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon } from 'lucide-react';
+import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, Clock, UserPlus, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RotateCw, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy } from 'lucide-react';
 import { Lead, loadLeads, saveRecord, User, genId, deleteRecord, loadData } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { generatePDF } from '../utils/pdf';
@@ -42,6 +42,7 @@ export default function Demandes() {
   const [matierePrice, setMatierePrice] = useState<string>('');
   const [laborPrice, setLaborPrice] = useState<string>('');
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
+  const [newClientCode, setNewClientCode] = useState<{name: string, code: string} | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [templates, setTemplates] = useState(() => {
     try {
@@ -200,7 +201,7 @@ export default function Demandes() {
         actif: true
       };
       await saveRecord('users', newClient);
-      alert(isAr ? `تم تسجيل الزبون بنجاح!\n\nالكود السري ديالو هو: ${autoCode}` : `Client enregistré avec succès !\n\nSon mot de passe est: ${autoCode}`);
+      setNewClientCode({ name: lead.name, code: autoCode });
     } catch (e: any) {
       alert(isAr ? 'مشكل: ' + e.message : 'Erreur: ' + e.message);
     }
@@ -1274,6 +1275,51 @@ export default function Demandes() {
               <AlertTriangle className="w-4 h-4" />
               <p className="text-[10px] font-black uppercase tracking-widest">سيتم فتح WhatsApp تلقائياً وتحديث حالة الطلب</p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* New Client Code Modal */}
+      {newClientCode && (
+        <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300" dir={isAr ? 'rtl' : 'ltr'}>
+          <div className="bg-white rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl text-center relative overflow-hidden border border-slate-100">
+            <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-emerald-400 to-emerald-600" />
+            <button 
+              onClick={() => setNewClientCode(null)}
+              className="absolute top-6 right-6 p-2 text-slate-400 hover:text-rose-500 bg-slate-50 hover:bg-rose-50 rounded-full transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-[1.5rem] flex items-center justify-center mx-auto mb-6 shadow-sm border border-emerald-100/50">
+              <CheckCircle className="w-10 h-10" />
+            </div>
+            <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-2">
+              {isAr ? 'تم التسجيل بنجاح' : 'Client Enregistré'}
+            </h3>
+            <p className="text-sm font-bold text-slate-500 mb-8">
+              {isAr ? 'تم إنشاء الحساب، يرجى مشاركة هذا الرقم السري مع الكليان:' : 'Le compte a été créé. Voici le mot de passe à partager :'}
+            </p>
+            
+            <div className="bg-slate-50 p-3 rounded-2xl flex items-center justify-between border-2 border-slate-100 mb-8 group hover:border-emerald-200 transition-colors">
+              <span className="text-4xl font-black tracking-[0.2em] text-slate-900 font-mono ml-3">{newClientCode.code}</span>
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(newClientCode.code);
+                  alert(isAr ? 'تم نسخ الكود!' : 'Code copié !');
+                }}
+                className="w-14 h-14 flex items-center justify-center bg-white border-2 border-slate-200 text-slate-400 rounded-xl shadow-sm hover:bg-emerald-500 hover:border-emerald-500 hover:text-white transition-all hover:scale-105 active:scale-95"
+                title={isAr ? 'نسخ الكود' : 'Copier le code'}
+              >
+                <Copy className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <button 
+              onClick={() => setNewClientCode(null)}
+              className="w-full h-14 bg-slate-900 text-white rounded-xl font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200 active:scale-95"
+            >
+              {isAr ? 'إغلاق النافذة' : 'Fermer'}
+            </button>
           </div>
         </div>
       )}
