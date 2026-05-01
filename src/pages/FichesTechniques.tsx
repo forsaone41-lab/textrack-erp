@@ -1350,6 +1350,22 @@ export default function FichesTechniques() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div>
                   <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-2">{isAr ? 'نوع الثوب (Tissu)' : 'Type de Tissu'}</label>
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {['Jersey', 'Popeline', 'Fleece', 'Gabardine', 'Denim', 'Viscose'].map(type => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => setConfirmDetails({...confirmDetails, tissu: type})}
+                        className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase transition-all ${
+                          confirmDetails.tissu === type
+                            ? 'bg-indigo-600 text-white shadow-sm' 
+                            : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
                   <input 
                     type="text" 
                     placeholder={isAr ? "اكتب نوع الثوب..." : "Taper type de tissu..."}
@@ -1358,6 +1374,7 @@ export default function FichesTechniques() {
                     className="w-full bg-white border-2 border-slate-100 rounded-xl py-2 px-3 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
                   />
                 </div>
+
                 <div>
                   <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-2">{isAr ? 'الألوان (Couleurs)' : 'Couleurs'}</label>
                   <div className="flex flex-wrap gap-1.5 mb-2">
