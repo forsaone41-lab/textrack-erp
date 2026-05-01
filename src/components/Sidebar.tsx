@@ -123,10 +123,20 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
                 </NavLink>
 
                 {can('worker_portal') && (
-                  <NavLink to="/worker-portal" className="group flex items-center justify-between px-5 py-3.5 rounded-2xl text-[13px] font-bold transition-all duration-500 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/20 mb-4" onClick={closeMobile}>
+                  <NavLink to="/worker-portal" className="group flex items-center justify-between px-5 py-3.5 rounded-2xl text-[13px] font-bold transition-all duration-500 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/20" onClick={closeMobile}>
                     <div className="flex items-center gap-3">
                       <UserIcon className="w-[18px] h-[18px]" />
                       <span className="font-extrabold">{isAr ? 'فضاء العامل' : 'Espace Ouvrier'}</span>
+                    </div>
+                    <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-40 transition-opacity" />
+                  </NavLink>
+                )}
+
+                {can('partenaire_portal') && (
+                  <NavLink to="/partenaire-portal" className="group flex items-center justify-between px-5 py-3.5 rounded-2xl text-[13px] font-bold transition-all duration-500 bg-indigo-600/10 border border-indigo-600/20 text-indigo-400 hover:bg-indigo-600/20 mt-2 mb-4" onClick={closeMobile}>
+                    <div className="flex items-center gap-3">
+                      <Globe className="w-[18px] h-[18px]" />
+                      <span className="font-extrabold">{isAr ? 'بوابة الشركاء' : 'Portail Partenaire'}</span>
                     </div>
                     <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-40 transition-opacity" />
                   </NavLink>
