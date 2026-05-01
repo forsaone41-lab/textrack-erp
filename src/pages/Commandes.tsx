@@ -893,25 +893,7 @@ export default function Commandes() {
               <div><label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">{t('client', lang)} *</label><select value={form.client || ''} onChange={e => setForm({ ...form, client: e.target.value })} className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none"><option value="">— {t('search', lang)} —</option>{users.filter(u => u.role === 'client').map(u => <option key={u.id} value={u.nom}>{u.nom}</option>)}</select></div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">{t('modele_label', lang)}</label>
-                <select 
-                  value={form.modele || ''} 
-                  onChange={e => { 
-                    const fiche = fiches.find(f => f.modele === e.target.value); 
-                    setForm({ ...form, modele: e.target.value, tissu: fiche?.type || form.tissu }); 
-                  }} 
-                  className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
-                >
-                  <option value="">— {t('search', lang)} —</option>
-                  {fiches
-                    .filter(f => !commandes.some(c => c.modele === f.modele && c.statut === 'echantillon_en_cours'))
-                    .map(f => (
-                      <option key={f.id} value={f.modele}>{f.modele}</option>
-                    ))
-                  }
-                </select>
-              </div>
+              <div><label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">{t('modele_label', lang)}</label><select value={form.modele || ''} onChange={e => { const fiche = fiches.find(f => f.modele === e.target.value); setForm({ ...form, modele: e.target.value, tissu: fiche?.type || form.tissu }); }} className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold outline-none"><option value="">— {t('search', lang)} —</option>{fiches.filter(f => !commandes.some(c => c.modele === f.modele && c.statut === 'echantillon_en_cours')).map(f => <option key={f.id} value={f.modele}>{f.modele}</option>)}</select></div>
               <div>
                 <label className="block text-xs font-black text-slate-400 uppercase mb-2 ml-1">{t('tissu_required_stock', lang)}</label>
                 <select
