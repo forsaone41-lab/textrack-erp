@@ -18,6 +18,7 @@ export default function PartenairePortal({ currentUser, onLogout }: PartenairePo
   const company = loadCompanyProfile();
   const [activeTab, setActiveTab] = useState<'tasks' | 'history'>('tasks');
   const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<'all' | 'active' | 'done'>('all');
 
   useEffect(() => {
     fetchData();
@@ -26,7 +27,6 @@ export default function PartenairePortal({ currentUser, onLogout }: PartenairePo
   const fetchData = async () => {
     try {
       const allCmds = await loadData<Commande>('commandes') || [];
-      // Filter commands assigned to this partner (by ID or Email/Name match as fallback)
       const assigned = allCmds.filter(c => 
         c.partenaireId === currentUser.id || 
         c.partenaireId === currentUser.employeId
@@ -39,25 +39,13 @@ export default function PartenairePortal({ currentUser, onLogout }: PartenairePo
     }
   };
 
-  const updateStatus = async (cmd: Commande, newStatus: Commande['statut']) => {
-    // Subcontractors usually mark their part as finished
-    // For now, let's just update the main status or add a tracking note
-    const updated = {
-      ...cmd,
-      suivi: [...(cmd.suivi || []), { 
-        phase: cmd.phase, 
-        date: new Date().toISOString(), 
-        note: `Mise à jour par partenaire (${currentUser.nom})` 
-      }]
-    };
-    await saveRecord('commandes', updated);
-    setCommandes(prev => prev.map(c => c.id === cmd.id ? updated : c));
-  };
-
-  const filtered = commandes.filter(c => 
-    c.reference.toLowerCase().includes(search.toLowerCase()) || 
-    c.modele.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = commandes.filter(c => {
+    const matchSearch = c.reference.toLowerCase().includes(search.toLowerCase()) || 
+                       c.modele.toLowerCase().includes(search.toLowerCase());
+    if (filter === 'active') return matchSearch && c.statut === 'en_cours';
+    if (filter === 'done') return matchSearch && (c.statut === 'terminé' || c.statut === 'livré');
+    return matchSearch;
+  });
 
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans">
@@ -145,14 +133,17 @@ export default function PartenairePortal({ currentUser, onLogout }: PartenairePo
 
           {/* List Section */}
           <div className="bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/50">
               <h3 className="font-black text-slate-900 uppercase tracking-tighter flex items-center gap-2">
                 <FileText className="w-5 h-5 text-indigo-500" />
                 Liste des Missions
               </h3>
-              <button className="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
-                <Filter className="w-5 h-5" />
-              </button>
+              
+              <div className="flex items-center gap-1.5 p-1 bg-white rounded-xl border border-slate-200">
+                <FilterBtn active={filter === 'all'} onClick={() => setFilter('all')} label="Toutes" />
+                <FilterBtn active={filter === 'active'} onClick={() => setFilter('active')} label="En cours" />
+                <FilterBtn active={filter === 'done'} onClick={() => setFilter('done')} label="Terminées" />
+              </div>
             </div>
 
             <div className="divide-y divide-slate-100">
@@ -165,7 +156,7 @@ export default function PartenairePortal({ currentUser, onLogout }: PartenairePo
                   </div>
                   <div>
                     <p className="text-slate-900 font-black uppercase tracking-tight">Aucune mission trouvée</p>
-                    <p className="text-slate-500 text-xs mt-1 font-bold">Vous n'avez pas de travaux assignés pour le moment.</p>
+                    <p className="text-slate-500 text-xs mt-1 font-bold">Rien à afficher ici.</p>
                   </div>
                 </div>
               ) : (
@@ -173,11 +164,11 @@ export default function PartenairePortal({ currentUser, onLogout }: PartenairePo
                   <div key={cmd.id} className="p-6 hover:bg-slate-50 transition-all group">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                       <div className="flex items-center gap-5">
-                        <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-sm border border-slate-100 shrink-0">
+                        <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-sm border border-slate-100 shrink-0 bg-slate-50">
                           {cmd.modelePhoto ? (
-                            <img src={cmd.modelePhoto} className="w-full h-full object-cover" alt="" />
+                            <img src={cmd.modelePhoto} className="w-full h-full object-cover" alt="" loading="lazy" />
                           ) : (
-                            <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-300 font-black">?</div>
+                            <div className="w-full h-full flex items-center justify-center text-slate-300 font-black text-xs uppercase">BEYA</div>
                           )}
                         </div>
                         <div>
@@ -235,6 +226,21 @@ function NavBtn({ active, onClick, icon, label }: { active: boolean, onClick: ()
       }`}
     >
       {icon}
+      {label}
+    </button>
+  );
+}
+
+function FilterBtn({ active, onClick, label }: { active: boolean, onClick: () => void, label: string }) {
+  return (
+    <button 
+      onClick={onClick}
+      className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+        active 
+          ? 'bg-slate-900 text-white shadow-sm' 
+          : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'
+      }`}
+    >
       {label}
     </button>
   );
