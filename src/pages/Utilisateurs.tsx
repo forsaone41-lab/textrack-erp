@@ -5,7 +5,7 @@ import {
   ShieldCheck, HardHat, ShoppingBag,
   Eye, EyeOff, Copy, RefreshCw, KeyRound, UserX,
   LayoutDashboard, FileText, Scissors, Factory, Package,
-  Users, ShoppingCart, Receipt, TrendingDown, ClipboardCheck,
+  Users, ShoppingCart, Receipt, TrendingDown, ClipboardCheck, Clock,
   Globe, Trophy, UserCircle, RotateCcw, Lock, Zap, MousePointer2, UserCheck, BarChart3, Settings, X
 } from 'lucide-react';
 import {
