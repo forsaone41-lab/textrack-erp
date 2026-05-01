@@ -18,6 +18,7 @@ export default function Echantillons() {
   const [isValidating, setIsValidating] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [confirmLaunch, setConfirmLaunch] = useState<Commande | null>(null);
+  const [showSuccess, setShowSuccess] = useState<{ message: string, sub?: string } | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -100,6 +101,12 @@ export default function Echantillons() {
     await saveRecord('commandes', updated as any);
     setCommandes(prev => prev.filter(cmd => cmd.id !== c.id));
     setConfirmLaunch(null);
+
+    setShowSuccess({
+      message: isAr ? 'تم إطلاق الإنتاج!' : 'Production Lancée !',
+      sub: isAr ? 'الطلبية الآن في مرحلة الفصالة.' : 'La commande est maintenant en phase de coupe.'
+    });
+    setTimeout(() => setShowSuccess(null), 3000);
   };
 
   const handleDelete = (id: string) => {
@@ -464,6 +471,23 @@ export default function Echantillons() {
                 {isAr ? 'رجوع' : 'Retour / Annuler'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Success Notification */}
+      {showSuccess && (
+        <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[400] animate-in slide-in-from-top duration-500">
+          <div className="bg-white rounded-3xl shadow-2xl shadow-emerald-200/50 border-2 border-emerald-100 p-2 pl-6 pr-6 flex items-center gap-4 min-w-[320px]">
+            <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 shadow-sm border border-emerald-200">
+              <CheckCircle className="w-7 h-7" />
+            </div>
+            <div>
+              <p className="text-sm font-black text-slate-800 leading-none mb-1">{showSuccess.message}</p>
+              {showSuccess.sub && <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{showSuccess.sub}</p>}
+            </div>
+            <button onClick={() => setShowSuccess(null)} className="ml-4 w-8 h-8 hover:bg-slate-50 rounded-xl flex items-center justify-center transition-colors">
+              <X className="w-4 h-4 text-slate-400" />
+            </button>
           </div>
         </div>
       )}
