@@ -326,6 +326,24 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
             </div>
           </button>
 
+          {/* Sync / Update Button */}
+          <button 
+            onClick={() => {
+              localStorage.removeItem('textrack_permissions');
+              window.location.reload();
+            }}
+            className="w-full flex items-center gap-3 p-3 rounded-2xl bg-indigo-500/10 hover:bg-indigo-500/20 transition-all border border-indigo-500/20 group"
+          >
+            <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 group-hover:rotate-180 transition-transform duration-500">
+              <RefreshCw className="w-4 h-4 text-white" />
+            </div>
+            <div className="flex flex-col items-start min-w-0">
+              <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">{isAr ? 'تحديث النظام' : 'Mise à jour'}</span>
+              <span className="text-[9px] font-bold text-slate-500 truncate">{isAr ? 'مزامنة البيانات والصلاحيات' : 'Sync. Données & Perms'}</span>
+            </div>
+          </button>
+
+
           {/* Premium Profile Card */}
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-4 border border-white/5 shadow-xl">
             <div className="flex items-center gap-3 mb-4">
