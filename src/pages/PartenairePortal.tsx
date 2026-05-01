@@ -23,6 +23,9 @@ export default function PartenairePortal({ currentUser, onLogout }: PartenairePo
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'active' | 'done'>('all');
   const [selectedCmd, setSelectedCmd] = useState<Commande | null>(null);
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission>(
+    typeof Notification !== 'undefined' ? Notification.permission : 'default'
+  );
 
   // Settings state
   const [profileForm, setProfileForm] = useState({ nom: currentUser.nom, email: currentUser.email });
@@ -43,6 +46,21 @@ export default function PartenairePortal({ currentUser, onLogout }: PartenairePo
       console.error(e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRequestPermission = () => {
+    if ('Notification' in window) {
+      Notification.requestPermission().then(permission => {
+        setNotifPermission(permission);
+        if (permission === 'granted') {
+          // Optional: Show a nice native notification as a test
+          new Notification(isAr ? 'تم تفعيل التنبيهات!' : 'Notifications activées !', {
+            body: isAr ? 'ستصلك التنبيهات هنا مباشرة.' : 'Vous recevrez les alertes ici.',
+            icon: '/logo192.png'
+          });
+        }
+      });
     }
   };
 
@@ -270,25 +288,21 @@ export default function PartenairePortal({ currentUser, onLogout }: PartenairePo
             </>
           ) : activeTab === 'notifications' ? (
             <div className="max-w-3xl mx-auto space-y-6">
-              <div className="bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-indigo-600/20 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative group">
-                <div className="relative z-10 text-center md:text-left">
-                  <h3 className="text-xl font-black uppercase tracking-tighter mb-2">{isAr ? 'فعل التنبيهات على هاتفك' : 'Activez les notifications'}</h3>
-                  <p className="text-indigo-100 text-xs font-bold max-w-xs">{isAr ? 'توصل بكل جديد (مهام، مواعيد) مباشرة على شاشة هاتفك في الحين.' : 'Recevez les nouvelles missions et les alertes de délai directement sur votre écran.'}</p>
+              {notifPermission !== 'granted' && (
+                <div className="bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-indigo-600/20 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative group">
+                  <div className="relative z-10 text-center md:text-left">
+                    <h3 className="text-xl font-black uppercase tracking-tighter mb-2">{isAr ? 'فعل التنبيهات على هاتفك' : 'Activez les notifications'}</h3>
+                    <p className="text-indigo-100 text-xs font-bold max-w-xs">{isAr ? 'توصل بكل جديد (مهام، مواعيد) مباشرة على شاشة هاتفك في الحين.' : 'Recevez les nouvelles missions et les alertes de délai directement sur votre écran.'}</p>
+                  </div>
+                  <button 
+                    onClick={handleRequestPermission}
+                    className="relative z-10 bg-white text-indigo-600 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg hover:scale-105 transition-all active:scale-95"
+                  >
+                    {isAr ? 'تفعيل الآن' : 'Activer maintenant'}
+                  </button>
+                  <Bell className="absolute -right-4 -bottom-4 w-32 h-32 text-white/10 rotate-12 group-hover:rotate-0 transition-transform duration-700" />
                 </div>
-                <button 
-                  onClick={() => {
-                    if ('Notification' in window) {
-                      Notification.requestPermission().then(res => {
-                        if (res === 'granted') alert(isAr ? 'تم تفعيل التنبيهات بنجاح!' : 'Notifications activées !');
-                      });
-                    }
-                  }}
-                  className="relative z-10 bg-white text-indigo-600 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg hover:scale-105 transition-all active:scale-95"
-                >
-                  {isAr ? 'تفعيل الآن' : 'Activer maintenant'}
-                </button>
-                <Bell className="absolute -right-4 -bottom-4 w-32 h-32 text-white/10 rotate-12 group-hover:rotate-0 transition-transform duration-700" />
-              </div>
+              )}
 
               <div className="space-y-4">
                 {[
