@@ -213,17 +213,22 @@ export default function Clients() {
                     <MapPin className="w-4 h-4 text-indigo-500" />
                     <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
                        <span className="font-bold text-sm uppercase">{activeClient.ville || (isAr ? 'مدينة غير محددة' : 'Ville non spécifiée')}</span>
-                       {(activeClient as any).pinCode && (
-                          <button 
-                            onClick={() => copyPin((activeClient as any).pinCode, activeClient.id)}
-                            className={`text-[10px] font-black px-2 py-1 rounded-lg border transition-all tabular-nums ${
-                              copiedId === activeClient.id 
-                                ? 'bg-emerald-100 text-emerald-700 border-emerald-200' 
-                                : 'bg-amber-100 text-amber-700 border-amber-200 hover:scale-105 active:scale-95'
-                            }`}
-                          >
-                            {copiedId === activeClient.id ? (isAr ? 'تم النسخ!' : 'Copié !') : `PIN: ${(activeClient as any).pinCode}`}
-                          </button>
+                       {(activeClient as any).password && (
+                            <button 
+                              onClick={() => {
+                                navigator.clipboard.writeText((activeClient as any).password);
+                                setCopiedId(activeClient.id);
+                                setTimeout(() => setCopiedId(null), 2000);
+                              }}
+                              className={`text-[10px] font-black px-3 py-1 rounded-lg border transition-all flex items-center gap-2 tabular-nums ${
+                                copiedId === activeClient.id 
+                                  ? 'bg-emerald-100 text-emerald-700 border-emerald-200' 
+                                  : 'bg-indigo-50 text-indigo-600 border-indigo-100 hover:bg-indigo-100'
+                              }`}
+                            >
+                              {copiedId === activeClient.id ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                              {copiedId === activeClient.id ? (isAr ? 'تم النسخ!' : 'Copié !') : (activeClient as any).password}
+                            </button>
                        )}
                     </div>
                   </div>
@@ -396,19 +401,28 @@ export default function Clients() {
                       </div>
                       <div className={`cursor-pointer group/name ${isAr ? 'text-right' : ''}`} onClick={() => { setActiveClientId(c.id); setView('detail'); }}>
                         <h3 className="font-black text-slate-900 uppercase tracking-tighter truncate max-w-[150px] group-hover/name:text-indigo-600 transition-colors">{c.nom || (isAr ? 'زبون بدون اسم' : 'Client Sans Nom')}</h3>
-                        <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
-                          <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{c.ville || (isAr ? 'مدينة غير محددة' : 'Ville non spécifiée')}</p>
-                          {(c as any).pinCode && (
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); copyPin((c as any).pinCode, c.id); }}
-                              className={`text-[9px] font-black px-1.5 py-0.5 rounded-md border transition-all tabular-nums ${
-                                copiedId === c.id 
-                                  ? 'bg-emerald-100 text-emerald-700 border-emerald-200' 
-                                  : 'bg-amber-100 text-amber-700 border-amber-200 hover:scale-105 active:scale-95'
-                              }`}
-                            >
-                              {copiedId === c.id ? (isAr ? 'تم النسخ!' : 'Copié !') : `PIN: ${(c as any).pinCode}`}
-                            </button>
+                        <div className={`flex items-center gap-2 mt-0.5 ${isAr ? 'flex-row-reverse' : ''}`}>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{c.ville || (isAr ? 'مدينة غير محددة' : 'Ville non spécifiée')}</p>
+                          {(c as any).password && (
+                            <div className={`flex items-center gap-1.5 px-2 py-0.5 bg-indigo-50 border border-indigo-100 rounded-lg group/copy relative ${isAr ? 'flex-row-reverse' : ''}`}>
+                              <span className="text-[10px] font-black text-indigo-600 tabular-nums">{(c as any).password}</span>
+                              <button 
+                                onClick={(e) => { 
+                                  e.stopPropagation(); 
+                                  navigator.clipboard.writeText((c as any).password);
+                                  setCopiedId(c.id);
+                                  setTimeout(() => setCopiedId(null), 2000);
+                                }}
+                                className="text-indigo-400 hover:text-indigo-700 transition-colors"
+                              >
+                                {copiedId === c.id ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                              </button>
+                              {copiedId === c.id && (
+                                <span className="absolute -top-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[8px] px-2 py-1 rounded shadow-xl animate-in fade-in slide-in-from-bottom-1 uppercase font-black tracking-widest">
+                                  {isAr ? 'تم النسخ' : 'Copié'}
+                                </span>
+                              )}
+                            </div>
                           )}
                         </div>
                       </div>
