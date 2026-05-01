@@ -16,6 +16,8 @@ export default function Echantillons() {
   const [validateNote, setValidateNote] = useState('');
   const [preuveFile, setPreuveFile] = useState<string>('');
   const [isValidating, setIsValidating] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [confirmLaunch, setConfirmLaunch] = useState<Commande | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -81,26 +83,38 @@ export default function Echantillons() {
   };
 
   const handleLaunch = async (c: Commande) => {
-    if (!window.confirm(isAr ? 'إطلاق الإنتاج وإرسال الطلبية إلى الفصالة؟' : 'Lancer la production globale ?')) return;
+    setConfirmLaunch(c);
+  };
+
+  const confirmLaunchProduction = async () => {
+    if (!confirmLaunch) return;
+    const c = confirmLaunch;
     
     const updated = {
       ...c,
       statut: 'en_cours',
       phase: 'coupe',
-      suivi: [...c.suivi, { phase: 'coupe', date: new Date().toISOString(), note: 'Production globale lancée' }]
+      suivi: [...(c.suivi || []), { phase: 'coupe', date: new Date().toISOString(), note: 'Production globale lancée' }]
     };
     
     await saveRecord('commandes', updated as any);
-    setCommandes(prev => prev.filter(cmd => cmd.id !== c.id)); // Remove from echantillons view
+    setCommandes(prev => prev.filter(cmd => cmd.id !== c.id));
+    setConfirmLaunch(null);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm(isAr ? 'هل أنت متأكد من حذف هذه العينة نهائياً؟' : 'Supprimer cet échantillon définitivement ?')) return;
+  const handleDelete = (id: string) => {
+    setConfirmDeleteId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!confirmDeleteId) return;
     try {
-      await deleteRecord('commandes', id);
-      setCommandes(prev => prev.filter(c => c.id !== id));
+      await deleteRecord('commandes', confirmDeleteId);
+      setCommandes(prev => prev.filter(c => c.id !== confirmDeleteId));
     } catch (e) {
       console.error(e);
+    } finally {
+      setConfirmDeleteId(null);
     }
   };
 
@@ -407,6 +421,52 @@ export default function Echantillons() {
           ))
         )}
       </div>
+      {/* Confirm Delete Modal */}
+      {confirmDeleteId && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[300] p-4">
+          <div className="bg-white rounded-[2rem] w-full max-w-sm shadow-2xl p-8 text-center animate-in zoom-in duration-300">
+            <div className="w-20 h-20 bg-rose-50 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-rose-100 shadow-sm shadow-rose-100">
+              <Trash2 className="w-10 h-10 text-rose-500" />
+            </div>
+            <h3 className="text-xl font-black text-slate-800 mb-2">{isAr ? 'حذف العينة؟' : 'Supprimer l\'échantillon ?'}</h3>
+            <p className="text-sm text-slate-500 font-medium mb-8 leading-relaxed">
+              {isAr ? 'هل أنت متأكد من حذف هذه العينة نهائياً؟ لا يمكن التراجع عن هذا الإجراء.' : 'Cette action est irréversible. Voulez-vous vraiment supprimer cet échantillon ?'}
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmDeleteId(null)} className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-colors">
+                {isAr ? 'إلغاء' : 'Annuler'}
+              </button>
+              <button onClick={confirmDelete} className="flex-1 py-4 bg-rose-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-rose-700 shadow-xl shadow-rose-200 transition-all">
+                {isAr ? 'تأكيد الحذف' : 'Supprimer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Launch Modal */}
+      {confirmLaunch && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[300] p-4">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl p-10 text-center animate-in zoom-in duration-300 border border-emerald-100">
+            <div className="w-24 h-24 bg-emerald-50 rounded-[2rem] flex items-center justify-center mx-auto mb-8 border border-emerald-100 shadow-xl shadow-emerald-100/50">
+              <Package className="w-12 h-12 text-emerald-600 animate-bounce" />
+            </div>
+            <h3 className="text-2xl font-black text-slate-900 mb-2">{isAr ? 'إطلاق الإنتاج الشامل' : 'Lancer la Production'}</h3>
+            <p className="text-sm text-slate-500 font-bold mb-8 leading-relaxed uppercase tracking-tight">
+              {isAr ? 'سيتم تحويل هذه العينة إلى طلبية إنتاج فعلية وإرسالها إلى مرحلة الفصالة.' : 'Voulez-vous transformer cet échantillon en commande de production et l\'envoyer à la coupe ?'}
+            </p>
+            <div className="flex flex-col gap-3">
+              <button onClick={confirmLaunchProduction} className="w-full py-5 bg-emerald-600 text-white rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] hover:bg-emerald-700 shadow-2xl shadow-emerald-200 transition-all flex items-center justify-center gap-3">
+                <CheckCircle className="w-5 h-5" />
+                {isAr ? 'تأكيد إطلاق الإنتاج' : 'Confirmer le Lancement'}
+              </button>
+              <button onClick={() => setConfirmLaunch(null)} className="w-full py-4 bg-slate-100 text-slate-400 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest hover:text-slate-600 transition-colors">
+                {isAr ? 'رجوع' : 'Retour / Annuler'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
