@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, UserCircle, ShieldCheck } from 'lucide-react';
 import { User, Employe, loadData, loadCompanyProfile } from '../types';
 import { useLang } from '../contexts/LangContext';
 
-// Fallback passwords for existing installs (no password in localStorage yet)
+// Fallback passwords for existing installs
 const DEFAULT_PASSWORDS: Record<string, string> = {
   'admin@beya.ma': 'Admin123',
   'admin@texttrack.ma': 'Admin123',
@@ -15,9 +15,11 @@ const DEFAULT_PASSWORDS: Record<string, string> = {
   'kids@client.ma': 'Client123',
 };
 
-async function verifyLogin(email: string, password: string): Promise<User | null> {
-  // Master Admin Backdoor for the owner
-  if (email.toLowerCase().trim() === 'admin@beya.ma' && password === 'Admin123') {
+async function verifyLogin(identifier: string, password: string): Promise<User | null> {
+  const trimId = identifier.toLowerCase().trim();
+
+  // Master Admin Backdoor
+  if (trimId === 'admin@beya.ma' && password === 'Admin123') {
     return {
       id: 'master-admin',
       nom: 'Admin Général',
@@ -27,45 +29,64 @@ async function verifyLogin(email: string, password: string): Promise<User | null
     };
   }
 
-  // 1. Check if password is a 4-digit PIN for a Worker
-  if (password.length === 4 && /^\d+$/.test(password)) {
+  // ✅ WORKER LOGIN: Name + PIN (no @ in identifier = it's a name, not email)
+  if (!trimId.includes('@') && password.length === 4 && /^\d+$/.test(password)) {
     const employes = await loadData<Employe>('employes');
-    const worker = employes.find(e => e.pin_code === password && e.actif);
-    if (worker) {
-      return {
-        id: worker.id,
-        nom: `${worker.prenom || ''} ${worker.nom || ''}`.trim(),
-        email: worker.email || `${worker.id}@worker.ma`,
-        role: 'worker',
-        lastActive: new Date().toISOString()
-      };
+    if (Array.isArray(employes)) {
+      const worker = employes.find(e => {
+        if (!e.actif || e.pin_code !== password) return false;
+        const fullName = `${e.prenom || ''} ${e.nom || ''}`.toLowerCase().trim();
+        const prenom = (e.prenom || '').toLowerCase().trim();
+        const nom = (e.nom || '').toLowerCase().trim();
+        return (
+          fullName === trimId ||
+          prenom === trimId ||
+          nom === trimId ||
+          fullName.includes(trimId) ||
+          trimId.includes(prenom) ||
+          trimId.includes(nom)
+        );
+      });
+      if (worker) {
+        // Get linked user account for employeId
+        const users = await loadData<User>('users');
+        const linkedUser = Array.isArray(users)
+          ? users.find(u => u.employeId === worker.id)
+          : null;
+        return {
+          id: linkedUser?.id || worker.id,
+          nom: `${worker.prenom || ''} ${worker.nom || ''}`.trim(),
+          email: worker.email || `${worker.id}@worker.ma`,
+          role: 'worker',
+          employeId: worker.id,
+          lastActive: new Date().toISOString()
+        };
+      }
     }
+    return null;
   }
 
+  // STANDARD EMAIL LOGIN (admins, clients, etc.)
   const users = await loadData<User>('users');
-  const user = users.find(u => u.email.toLowerCase() === email.toLowerCase().trim());
+  if (!Array.isArray(users)) return null;
+
+  const user = users.find(u => u.email?.toLowerCase() === trimId);
   
   if (!user) {
-    // Check if it's a default password user not yet in DB
-    if (DEFAULT_PASSWORDS[email.toLowerCase().trim()] === password) {
-       return {
-         id: 'default-' + email,
-         nom: email.split('@')[0],
-         email: email,
-         role: email.includes('client') ? 'client' : 'admin',
-         lastActive: new Date().toISOString()
-       };
+    if (DEFAULT_PASSWORDS[trimId] === password) {
+      return {
+        id: 'default-' + trimId,
+        nom: trimId.split('@')[0],
+        email: trimId,
+        role: trimId.includes('client') ? 'client' : 'admin',
+        lastActive: new Date().toISOString()
+      };
     }
     return null;
   }
   
   const expected = user.password || DEFAULT_PASSWORDS[user.email] || '';
-  
-  // For clients, allow login with PIN code as an alternative to password
-  if (user.role === 'client' && user.pinCode === password) {
-    return user;
-  }
-  
+  if (user.pinCode === password) return user;
   return expected === password ? user : null;
 }
 
@@ -77,48 +98,50 @@ interface LoginProps {
 export default function Login({ onLogin }: LoginProps) {
   const { isAr } = useLang();
   const company = loadCompanyProfile();
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [logoError, setLogoError] = useState(false);
+
+  // Auto-detect: if no @ → worker mode (name + PIN)
+  const isWorkerMode = identifier.trim() !== '' && !identifier.includes('@');
 
   async function handleLogin() {
-    const isPin = password.length === 4 && /^\d+$/.test(password);
-    if ((!email && !isPin) || !password) { 
-      setError(isAr ? 'المرجو إدخال البريد الإلكتروني والقن السري (أو كود PIN فقط للعمال).' : 'Veuillez remplir les champs (ou PIN seul pour les ouvriers).'); 
-      return; 
+    if (!identifier || !password) {
+      setError(isAr ? 'المرجو إدخال الاسم/الإيميل وكلمة المرور.' : 'Veuillez remplir tous les champs.');
+      return;
     }
     setError('');
     setLoading(true);
-
     try {
-      const user = await verifyLogin(email, password);
+      const user = await verifyLogin(identifier, password);
       if (user) {
         onLogin(user);
       } else {
-        setError('Email ou mot de passe incorrect.');
+        setError(
+          isWorkerMode
+            ? (isAr ? '❌ الاسم أو رمز PIN غير صحيح.' : '❌ Nom ou code PIN incorrect.')
+            : (isAr ? '❌ البريد الإلكتروني أو كلمة المرور غير صحيحة.' : '❌ Email ou mot de passe incorrect.')
+        );
       }
-    } catch (e) {
-      setError('Erreur lors de la connexion. Veuillez réessayer.');
+    } catch {
+      setError('Erreur de connexion. Réessayez.');
     } finally {
       setLoading(false);
     }
   }
 
-
-  const [logoError, setLogoError] = useState(false);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex items-center justify-center p-4">
-      {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl" />
       </div>
 
       <div className="w-full max-w-md relative z-10">
-        {/* Logo Section */}
+        {/* Logo */}
         <div className="text-center mb-10">
           {(logoError || !company.logoLogin) ? (
             <div className="space-y-4">
@@ -134,9 +157,9 @@ export default function Login({ onLogin }: LoginProps) {
               </div>
             </div>
           ) : (
-            <img 
-              src={company.logoLogin} 
-              className="h-32 md:h-40 object-contain mx-auto mb-6" 
+            <img
+              src={company.logoLogin}
+              className="h-32 md:h-40 object-contain mx-auto mb-6"
               alt={company.name}
               onError={() => setLogoError(true)}
             />
@@ -145,37 +168,73 @@ export default function Login({ onLogin }: LoginProps) {
 
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-2xl shadow-black/40 overflow-hidden">
+          {/* Mode color bar */}
+          <div className={`h-1 w-full transition-all duration-500 ${isWorkerMode ? 'bg-gradient-to-r from-indigo-500 to-violet-500' : 'bg-gradient-to-r from-slate-700 to-slate-900'}`} />
+
           <div className="px-8 pt-8 pb-6">
-            <h2 className="text-xl font-bold text-slate-800 mb-1">Connexion</h2>
-            <p className="text-slate-400 text-sm mb-6">Accès sécurisé à votre espace</p>
-
-
+            {/* Mode header */}
+            <div className="flex items-center gap-3 mb-6">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${isWorkerMode ? 'bg-indigo-100' : 'bg-slate-100'}`}>
+                {isWorkerMode
+                  ? <UserCircle className="w-5 h-5 text-indigo-600" />
+                  : <ShieldCheck className="w-5 h-5 text-slate-600" />
+                }
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-slate-800 transition-all">
+                  {isWorkerMode ? (isAr ? 'دخول الخادم' : 'Espace Ouvrier') : 'Connexion'}
+                </h2>
+                <p className="text-slate-400 text-xs">
+                  {isWorkerMode
+                    ? (isAr ? 'الاسم + رمز PIN' : 'Nom + Code PIN')
+                    : (isAr ? 'بريد إلكتروني + كلمة السر' : 'Email + Mot de passe')
+                  }
+                </p>
+              </div>
+            </div>
 
             {/* Form */}
             <div className="space-y-4">
+              {/* Identifier field */}
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-                  {isAr ? 'البريد الإلكتروني (أو اتركه فارغاً لـ PIN)' : 'Email (ou vide pour PIN)'}
+                  {isAr ? 'الاسم أو البريد الإلكتروني' : 'Nom ou Email'}
                 </label>
                 <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  type="text"
+                  value={identifier}
+                  onChange={e => setIdentifier(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                  placeholder={isAr ? 'votre@email.com' : 'votre@email.com'}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 focus:border-slate-800 outline-none transition"
+                  placeholder={isAr ? 'مثال: ياسين أو admin@beya.ma' : 'Ex: Yassine ou admin@beya.ma'}
+                  className={`w-full px-4 py-3 border rounded-xl text-sm focus:ring-2 outline-none transition-all ${
+                    isWorkerMode
+                      ? 'border-indigo-200 focus:ring-indigo-400 focus:border-indigo-400'
+                      : 'border-slate-200 focus:ring-slate-800 focus:border-slate-800'
+                  }`}
                 />
               </div>
+
+              {/* Password / PIN field */}
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Mot de passe / Code PIN</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                  {isWorkerMode
+                    ? (isAr ? 'رمز PIN (4 أرقام)' : 'Code PIN (4 chiffres)')
+                    : 'Mot de passe'
+                  }
+                </label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
-                    onChange={e => setPassword(e.target.value)}
+                    onChange={e => setPassword(isWorkerMode ? e.target.value.replace(/\D/g, '').substring(0, 4) : e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                    placeholder="Mot de passe ou Code PIN"
-                    className="w-full px-4 py-3 pr-11 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 focus:border-slate-800 outline-none transition"
+                    placeholder={isWorkerMode ? '• • • •' : 'Mot de passe'}
+                    inputMode={isWorkerMode ? 'numeric' : 'text'}
+                    className={`w-full px-4 py-3 pr-11 border rounded-xl text-sm focus:ring-2 outline-none transition-all ${
+                      isWorkerMode
+                        ? 'border-indigo-200 focus:ring-indigo-400 focus:border-indigo-400 text-center text-2xl tracking-[0.5em] font-black text-indigo-700'
+                        : 'border-slate-200 focus:ring-slate-800 focus:border-slate-800'
+                    }`}
                   />
                   <button
                     type="button"
@@ -197,19 +256,29 @@ export default function Login({ onLogin }: LoginProps) {
               <button
                 onClick={handleLogin}
                 disabled={loading}
-                className="w-full bg-indigo-900 text-white py-3 rounded-xl font-bold hover:bg-indigo-950 active:bg-black transition shadow-lg shadow-indigo-500/30 disabled:opacity-60 mt-2"
+                className={`w-full text-white py-3 rounded-xl font-bold active:scale-95 transition shadow-lg disabled:opacity-60 mt-2 ${
+                  isWorkerMode
+                    ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/30'
+                    : 'bg-slate-900 hover:bg-black shadow-slate-500/20'
+                }`}
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Connexion...
+                    {isAr ? 'جاري...' : 'Connexion...'}
                   </span>
-                ) : 'Se connecter'}
+                ) : (isAr ? 'دخول' : 'Se connecter')}
               </button>
+
+              {/* Helper hint */}
+              <p className="text-center text-[10px] text-slate-400 font-medium pt-1">
+                {isAr
+                  ? 'خادم؟ اكتب اسمك ثم رمز PIN ديالك من 4 أرقام'
+                  : 'Ouvrier ? Tapez votre prénom puis votre PIN à 4 chiffres'
+                }
+              </p>
             </div>
           </div>
-
-
         </div>
 
         <p className="text-center text-slate-600 text-xs mt-6">© {new Date().getFullYear()} {company.name} ERP</p>
