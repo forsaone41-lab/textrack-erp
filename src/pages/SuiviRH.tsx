@@ -119,6 +119,7 @@ export default function SuiviRH() {
   const [syncing, setSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ nom: string; pin: string } | null>(null);
 
   const company = loadCompanyProfile();
 
@@ -255,11 +256,8 @@ export default function SuiviRH() {
         localStorage.setItem('textrack_users', JSON.stringify([...localUsers, newUser]));
       } catch { /* ignore */ }
 
-      alert(
-        isAr
-          ? `✅ تم إنشاء حساب تلقائياً!\n\nالاسم: ${newUser.nom}\nالدور: Worker\nكلمة المرور: ${pinCode}\n\nيمكن للموظف الدخول بهذه البيانات من صفحة Gestion Utilisateurs.`
-          : `✅ Compte utilisateur créé automatiquement!\n\nNom: ${newUser.nom}\nRôle: Worker\nMot de passe: ${pinCode}\n\nL'employé peut se connecter avec ces identifiants depuis Gestion Utilisateurs.`
-      );
+      setToast({ nom: newUser.nom, pin: pinCode });
+      setTimeout(() => setToast(null), 6000);
     }
 
     setShowModal(false);
@@ -412,6 +410,29 @@ export default function SuiviRH() {
 
   return (
     <div className="space-y-6 relative">
+
+      {/* ✅ Toast Notification - Auto User Created */}
+      {toast && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[999] animate-in slide-in-from-top-4 duration-300">
+          <div className="bg-slate-900 text-white rounded-2xl shadow-2xl shadow-black/40 px-6 py-4 flex items-center gap-4 min-w-[320px] border border-white/10">
+            <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shrink-0">
+              <Check className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs font-black uppercase tracking-widest text-emerald-400 mb-0.5">
+                {isAr ? 'حساب جديد تلقائي ✅' : 'Compte créé automatiquement ✅'}
+              </p>
+              <p className="text-sm font-bold text-white">{toast.nom}</p>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                {isAr ? 'كلمة السر / PIN:' : 'Mot de passe / PIN:'} <span className="text-indigo-400 font-black tracking-[0.3em]">{toast.pin}</span>
+              </p>
+            </div>
+            <button onClick={() => setToast(null)} className="w-7 h-7 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center transition-colors">
+              <X className="w-4 h-4 text-slate-400" />
+            </button>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${isAr ? 'sm:flex-row-reverse' : ''}`}>
         <div className={isAr ? 'text-right' : ''}>
