@@ -218,8 +218,6 @@ export default function PartenairePortal({ currentUser, onLogout }: PartenairePo
                             <div>
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{cmd.reference}</span>
-                                <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{cmd.client}</span>
                               </div>
                               <h4 className="text-lg font-black text-slate-900 uppercase tracking-tighter leading-none group-hover:text-indigo-600 transition-colors">{cmd.modele}</h4>
                               <div className="flex items-center gap-4 mt-2">
@@ -382,9 +380,8 @@ export default function PartenairePortal({ currentUser, onLogout }: PartenairePo
 
               <div className="space-y-6">
                 <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block ml-1">Modèle / Client</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block ml-1">Nom du Modèle</label>
                   <p className="text-2xl font-black text-slate-900 uppercase tracking-tight">{selectedCmd.modele}</p>
-                  <p className="text-sm font-bold text-slate-500 uppercase">{selectedCmd.client}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
