@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLang } from '../contexts/LangContext';
-import { Commande, loadData, saveRecord } from '../types';
-import { Scissors, CheckCircle, Package, Clock, Palette, Ruler, FileText, Image as ImageIcon, MessageSquare, PhoneCall, Handshake, Globe, X } from 'lucide-react';
+import { Commande, loadData, saveRecord, deleteRecord } from '../types';
+import { Scissors, CheckCircle, Package, Clock, Palette, Ruler, FileText, Image as ImageIcon, MessageSquare, PhoneCall, Handshake, Globe, X, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Echantillons() {
@@ -80,6 +80,16 @@ export default function Echantillons() {
     
     await saveRecord('commandes', updated as any);
     setCommandes(prev => prev.filter(cmd => cmd.id !== c.id)); // Remove from echantillons view
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm(isAr ? 'هل أنت متأكد من حذف هذه العينة نهائياً؟' : 'Supprimer cet échantillon définitivement ?')) return;
+    try {
+      await deleteRecord('commandes', id);
+      setCommandes(prev => prev.filter(c => c.id !== id));
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   if (loading) return <div className="p-8 text-center text-slate-500">Chargement...</div>;
@@ -246,10 +256,18 @@ export default function Echantillons() {
           commandes.map(c => (
             <div key={c.id} className="bg-white rounded-[2rem] border-2 border-indigo-50 p-6 shadow-sm hover:shadow-xl transition-all relative overflow-hidden group">
               {/* Status Badge */}
-              <div className={`absolute top-0 ${isAr ? 'left-0 rounded-br-2xl' : 'right-0 rounded-bl-2xl'} px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-white ${
-                c.statut === 'echantillon_valide' ? 'bg-emerald-500' : 'bg-fuchsia-500'
-              }`}>
-                {c.statut === 'echantillon_valide' ? (isAr ? 'مقبولة' : 'Validé') : (isAr ? 'في الانتظار' : 'En Attente')}
+              <div className={`absolute top-0 ${isAr ? 'left-0 rounded-br-2xl' : 'right-0 rounded-bl-2xl'} flex items-center gap-2`}>
+                <button 
+                  onClick={() => handleDelete(c.id)}
+                  className="p-1.5 bg-rose-500 text-white hover:bg-rose-600 transition-colors shadow-lg"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+                <div className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-white ${
+                  c.statut === 'echantillon_valide' ? 'bg-emerald-500' : 'bg-fuchsia-500'
+                }`}>
+                  {c.statut === 'echantillon_valide' ? (isAr ? 'مقبولة' : 'Validé') : (isAr ? 'في الانتظار' : 'En Attente')}
+                </div>
               </div>
 
               <div className="flex items-start gap-4 mb-6">
