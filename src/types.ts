@@ -403,10 +403,14 @@ export function loadCompanyProfile(): CompanyProfile {
 
 export async function syncCompanyProfile(): Promise<CompanyProfile> {
   try {
-    // Priority to the 'leads' fallback record as it's more robust
-    const { data: lData, error: lError } = await supabase.from('leads').select('*').eq('id', '00000000-0000-0000-0000-000000000000');
+    // 1. Try to find the LATEST system config record in 'leads' table
+    const { data: lData, error: lError } = await supabase
+      .from('leads')
+      .select('*')
+      .eq('name', '__SYSTEM_CONFIG__')
+      .order('date', { ascending: false })
+      .limit(1);
     
-    // Check if data is array and has items
     if (lData && lData.length > 0) {
       const record = lData[0];
       if (record.details) {
@@ -418,7 +422,7 @@ export async function syncCompanyProfile(): Promise<CompanyProfile> {
       }
     }
 
-    // Try secondary table as backup
+    // 2. Backup: Try standard settings table
     const { data: sData, error: sError } = await supabase.from('settings').select('*').eq('id', 'company-profile').single();
     if (sData && !sError) {
       const remoteProfile = sData.value as CompanyProfile;
@@ -440,13 +444,13 @@ export async function loadLeads(): Promise<Lead[]> {
     // If data is null, it means the request failed (fallback to local)
     if (data !== null) {
       // Filter out system config records
-      return data.filter(l => l.id !== '00000000-0000-0000-0000-000000000000');
+      return data.filter(l => l.name !== '__SYSTEM_CONFIG__');
     }
     
     // Fallback to local only if remote call failed
     const local = safeStorage.getItem('textrack_leads');
     const parsed = local ? JSON.parse(local) : [];
-    return Array.isArray(parsed) ? parsed.filter((l: any) => l.id !== '00000000-0000-0000-0000-000000000000') : [];
+    return Array.isArray(parsed) ? parsed.filter((l: any) => l.name !== '__SYSTEM_CONFIG__') : [];
   } catch {
     return [];
   }
@@ -476,9 +480,9 @@ export async function saveCompanyProfile(profile: CompanyProfile): Promise<void>
   
   console.log("[DEBUG] Saving profile to cloud...");
   try {
-    // Fallback: Save to 'leads' table as a hidden system record using the established saveRecord helper
+    // Save to 'leads' table as a NEW system record every time (guarantees INSERT works if UPDATE is blocked)
     const configLead = {
-      id: '00000000-0000-0000-0000-000000000000',
+      id: genId(), // NEW ID every time
       name: '__SYSTEM_CONFIG__',
       phone: '0000',
       ville: 'SYSTEM',
@@ -490,7 +494,7 @@ export async function saveCompanyProfile(profile: CompanyProfile): Promise<void>
     };
     
     await saveRecord('leads', configLead, false);
-    console.log("[DEBUG] Cloud save success!");
+    console.log("[DEBUG] Cloud save success (versioned)!");
   } catch (e: any) {
     console.error("[DEBUG] Cloud save fatal error:", e);
     alert("⚠️ Erreur fatale : " + e.message);

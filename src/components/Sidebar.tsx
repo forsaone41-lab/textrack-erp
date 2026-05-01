@@ -320,14 +320,14 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
             
             {currentUser.role === 'admin' && (
               <button 
-                onClick={() => {
-                  localStorage.removeItem('textrack_auth');
+                onClick={async () => {
+                  await syncCompanyProfile();
                   window.location.reload();
                 }}
                 className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest border border-indigo-500/20 mb-2"
               >
                 <RotateCw className="w-3.5 h-3.5" />
-                <span>{isAr ? 'تحديث إجباري' : 'Forcer la mise à jour'}</span>
+                <span>{isAr ? 'تحديث البيانات' : 'Actualiser les données'}</span>
               </button>
             )}
 
