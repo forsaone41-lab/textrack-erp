@@ -397,17 +397,19 @@ export default function FichesTechniques() {
     const existingClient = clients.find(c => (c.nom || '').toLowerCase() === clientName.toLowerCase());
     
     if (!existingClient && clientName) {
+      const autoCode = Math.floor(100000 + Math.random() * 900000).toString();
       const newClient = {
         id: genId(),
         nom: clientName,
         role: 'client',
         email: `${clientName.replace(/\s+/g, '').toLowerCase() || 'client'}@beya.ma`,
         telephone: '',
-        password: '123456', // Default password required by Supabase
+        password: autoCode,
         actif: true
       };
       await saveRecord('users', newClient);
       setClients(prev => [...prev, newClient]);
+      alert(isAr ? `تم تسجيل كليان جديد!\n\nالكود السري ديالو هو: ${autoCode}` : `Nouveau client enregistré!\n\nSon mot de passe est: ${autoCode}`);
     }
 
     const totalSizes = Object.values(confirmDetails.tailles).reduce((a, b) => a + b, 0);

@@ -189,17 +189,18 @@ export default function Demandes() {
 
   const convertToClient = async (lead: Lead) => {
     try {
+      const autoCode = Math.floor(100000 + Math.random() * 900000).toString();
       const newClient = {
         id: genId(),
         nom: lead.name,
         role: 'client' as const,
         email: lead.email || `${lead.name.replace(/\s+/g, '').toLowerCase() || 'client'}@beya.ma`,
         telephone: lead.phone,
-        password: '123456', // Default password required by Supabase
+        password: autoCode,
         actif: true
       };
       await saveRecord('users', newClient);
-      alert(isAr ? 'تم تسجيل الزبون في النظام بنجاح!' : 'Client enregistré dans le système avec succès!');
+      alert(isAr ? `تم تسجيل الزبون بنجاح!\n\nالكود السري ديالو هو: ${autoCode}` : `Client enregistré avec succès !\n\nSon mot de passe est: ${autoCode}`);
     } catch (e: any) {
       alert(isAr ? 'مشكل: ' + e.message : 'Erreur: ' + e.message);
     }
