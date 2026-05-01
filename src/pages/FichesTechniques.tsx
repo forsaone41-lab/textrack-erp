@@ -104,28 +104,20 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
 
           <div className={`flex flex-col flex-1 transition-all duration-300 ${!f.patronagePhoto ? 'opacity-20 blur-[3px] pointer-events-none select-none' : ''}`}>
             <div className={`flex justify-between items-start mb-4 ${isAr ? 'flex-row-reverse' : ''}`}>
-            <div className={`space-y-1 ${isAr ? 'text-right' : 'text-left'}`}>
-              <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
-                <h3 className="font-extrabold text-slate-900 text-xl tracking-tight leading-tight group-hover:text-indigo-600 transition-colors">{f.modele}</h3>
-                {f.type && (
-                  <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded-md uppercase tracking-wider">{f.type}</span>
-                )}
+              <div className={`space-y-1 ${isAr ? 'text-right' : 'text-left'}`}>
+                <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                  <h3 className="font-extrabold text-slate-900 text-xl tracking-tight leading-tight group-hover:text-indigo-600 transition-colors">{f.modele}</h3>
+                  {f.type && (
+                    <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded-md uppercase tracking-wider">{f.type}</span>
+                  )}
+                </div>
+                <p className={`text-sm font-medium text-slate-500 flex items-center gap-1.5 ${isAr ? 'flex-row-reverse' : ''}`}>
+                  <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full"></span>
+                  {f.client}
+                </p>
               </div>
-              <p className={`text-sm font-medium text-slate-500 flex items-center gap-1.5 ${isAr ? 'flex-row-reverse' : ''}`}>
-                <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full"></span>
-                {f.client}
-              </p>
             </div>
 
-            <div className={`flex gap-1 ${isAr ? 'flex-row-reverse' : ''}`}>
-              <button onClick={() => openEdit(f)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all">
-                <Edit2 className="w-4 h-4" />
-              </button>
-              <button onClick={() => remove(f.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
 
           {f.description && (
             <p className="text-xs text-slate-400 line-clamp-2 italic mb-6 leading-relaxed">"{f.description}"</p>
@@ -171,6 +163,16 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
                     );
                   }
                   
+                  if (isSampleWaiting) {
+                    return (
+
+                      <div className="w-full flex items-center justify-center gap-2 px-3 py-3 bg-rose-50 border-2 border-rose-500/20 text-rose-600 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] mt-1 shadow-sm">
+                        <Clock className="w-4 h-4 animate-pulse" />
+                        {isAr ? 'قيد التجربة' : 'MODÈLE EN TEST'}
+                      </div>
+                    );
+                  }
+
                   const isReadyForSample = f.patronagePhoto && f.tailles.length > 0 && f.mesures.length > 0;
                   return (
                     <button
@@ -187,6 +189,7 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
                     </button>
                   );
                 })()}
+
               </div>
             </div>
 
@@ -213,20 +216,32 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
     </div>
 
       {/* Bottom Footer Area: Tailles Chips only */}
-      <div className={`bg-slate-50/50 border-t border-slate-100 overflow-hidden px-5 py-4 ${isAr ? 'text-right' : 'text-left'}`}>
-        {f.tailles.length > 0 ? (
-          <div className={`flex flex-wrap items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mr-1">{t('tailles', lang)}:</span>
-            {f.tailles.map(t => (
-              <span key={t} className="px-2.5 py-1 bg-white border border-slate-200 text-slate-700 text-[10px] font-bold rounded-lg shadow-sm">{t}</span>
-            ))}
-          </div>
-        ) : (
-          <div className={`flex items-center gap-2 text-slate-400 italic text-[10px] ${isAr ? 'flex-row-reverse' : ''}`}>
-            <Ruler className="w-3 h-3 opacity-30" /> {t('ready_production', lang)}
-          </div>
-        )}
+      <div className={`bg-slate-50/50 border-t border-slate-100 overflow-hidden px-5 py-4 flex items-center justify-between ${isAr ? 'flex-row-reverse' : 'flex-row'}`}>
+        <div className="flex-1 overflow-hidden">
+          {f.tailles.length > 0 ? (
+            <div className={`flex flex-wrap items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mr-1">{t('tailles', lang)}:</span>
+              {f.tailles.map(t => (
+                <span key={t} className="px-2.5 py-1 bg-white border border-slate-200 text-slate-700 text-[10px] font-bold rounded-lg shadow-sm">{t}</span>
+              ))}
+            </div>
+          ) : (
+            <div className={`flex items-center gap-2 text-slate-400 italic text-[10px] ${isAr ? 'flex-row-reverse' : ''}`}>
+              <Ruler className="w-3 h-3 opacity-30" /> {t('ready_production', lang)}
+            </div>
+          )}
+        </div>
+        
+        <div className={`flex items-center gap-2 pl-4 border-l border-slate-200 ${isAr ? 'flex-row-reverse pr-4 pl-0 border-l-0 border-r' : ''}`}>
+          <button onClick={() => openEdit(f)} className="p-2.5 bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50 rounded-xl transition-all shadow-sm">
+            <Edit2 className="w-4 h-4" />
+          </button>
+          <button onClick={() => remove(f.id)} className="p-2.5 bg-white border border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-100 hover:bg-red-50 rounded-xl transition-all shadow-sm">
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
       </div>
+
     </div>
   );
 }
@@ -1401,12 +1416,19 @@ export default function FichesTechniques() {
                   </div>
                   <input 
                     type="text" 
+                    list="color-types"
                     placeholder={isAr ? "ألوان أخرى..." : "Autres couleurs..."}
                     value={confirmDetails.couleurs}
                     onChange={e => setConfirmDetails({...confirmDetails, couleurs: e.target.value})}
                     className="w-full bg-white border-2 border-slate-100 rounded-xl py-2 px-3 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
                   />
+                  <datalist id="color-types">
+                    {['Noir', 'Blanc', 'Gris', 'Bleu Marine', 'Rouge', 'Vert', 'Jaune', 'Orange', 'Rose', 'Violet', 'Marron', 'Beige', 'Bordeaux', 'Kaki', 'Moutarde', 'Turquoise', 'Anthracite', 'Fuchsia'].map(c => (
+                      <option key={c} value={c} />
+                    ))}
+                  </datalist>
                 </div>
+
               </div>
 
               <div>
