@@ -232,15 +232,18 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
           )}
         </div>
         
-        <div className={`flex items-center gap-2 pl-4 border-l border-slate-200 ${isAr ? 'flex-row-reverse pr-4 pl-0 border-l-0 border-r' : ''}`}>
-          <button onClick={() => openEdit(f)} className="p-2.5 bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50 rounded-xl transition-all shadow-sm">
-            <Edit2 className="w-4 h-4" />
-          </button>
-          <button onClick={() => remove(f.id)} className="p-2.5 bg-white border border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-100 hover:bg-red-50 rounded-xl transition-all shadow-sm">
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
+        {!isSampleWaiting && (
+          <div className={`flex items-center gap-2 pl-4 border-l border-slate-200 ${isAr ? 'flex-row-reverse pr-4 pl-0 border-l-0 border-r' : ''}`}>
+            <button onClick={() => openEdit(f)} className="p-2.5 bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50 rounded-xl transition-all shadow-sm">
+              <Edit2 className="w-4 h-4" />
+            </button>
+            <button onClick={() => remove(f.id)} className="p-2.5 bg-white border border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-100 hover:bg-red-50 rounded-xl transition-all shadow-sm">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
+
 
     </div>
   );
