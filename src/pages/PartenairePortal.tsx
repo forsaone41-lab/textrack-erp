@@ -190,23 +190,30 @@ export default function PartenairePortal({ currentUser, onLogout }: PartenairePo
                 className={`w-64 py-2 bg-slate-100 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-indigo-500 outline-none transition-all ${isAr ? 'pr-10 pl-4 text-right' : 'pl-10 pr-4'}`}
               />
             </div>
-            <div 
-              onClick={() => setActiveTab('notifications')}
-              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all relative cursor-pointer ${
-                activeTab === 'notifications' 
-                  ? 'bg-indigo-600 text-white shadow-lg' 
-                  : hasUnread 
-                    ? 'bg-indigo-50 text-indigo-600 animate-pulse border-2 border-indigo-200' 
-                    : 'bg-slate-100 text-slate-500 hover:text-indigo-600'
-              }`}
-            >
-              <Bell className={`w-5 h-5 ${hasUnread ? 'animate-bounce' : ''}`} />
+            <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
               {hasUnread && (
-                <span className={`absolute top-2 ${isAr ? 'left-2' : 'right-2'} w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white shadow-sm shadow-rose-500/50 animate-ping`}></span>
+                <div className="bg-rose-500 text-white text-[9px] font-black px-2.5 py-1 rounded-full animate-pulse shadow-lg shadow-rose-500/40 tracking-widest">
+                  {isAr ? 'انتباه' : 'ATTENTION'}
+                </div>
               )}
-              {hasUnread && (
-                <span className={`absolute top-2 ${isAr ? 'left-2' : 'right-2'} w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white shadow-sm shadow-rose-500/50`}></span>
-              )}
+              <div 
+                onClick={() => setActiveTab('notifications')}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all relative cursor-pointer ${
+                  activeTab === 'notifications' 
+                    ? 'bg-indigo-600 text-white shadow-lg' 
+                    : hasUnread 
+                      ? 'bg-indigo-50 text-indigo-600 animate-pulse border-2 border-indigo-200' 
+                      : 'bg-slate-100 text-slate-500 hover:text-indigo-600'
+                }`}
+              >
+                <Bell className={`w-5 h-5 ${hasUnread ? 'animate-bounce' : ''}`} />
+                {hasUnread && (
+                  <span className={`absolute top-2 ${isAr ? 'left-2' : 'right-2'} w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white shadow-sm shadow-rose-500/50 animate-ping`}></span>
+                )}
+                {hasUnread && (
+                  <span className={`absolute top-2 ${isAr ? 'left-2' : 'right-2'} w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white shadow-sm shadow-rose-500/50`}></span>
+                )}
+              </div>
             </div>
           </div>
         </header>
