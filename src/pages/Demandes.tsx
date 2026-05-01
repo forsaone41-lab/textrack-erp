@@ -187,6 +187,23 @@ export default function Demandes() {
     }
   };
 
+  const convertToClient = async (lead: Lead) => {
+    try {
+      const newClient = {
+        id: genId(),
+        nom: lead.name,
+        role: 'client' as const,
+        email: lead.email || `${lead.name.replace(/\s+/g, '').toLowerCase() || 'client'}@beya.ma`,
+        telephone: lead.phone,
+        actif: true
+      };
+      await saveRecord('users', newClient);
+      alert(isAr ? 'تم تسجيل الزبون في النظام بنجاح!' : 'Client enregistré dans le système avec succès!');
+    } catch (e: any) {
+      alert(isAr ? 'مشكل: ' + e.message : 'Erreur: ' + e.message);
+    }
+  };
+
   const sendDevis = (isPDF: boolean = false) => {
     if (!devisLead || (!matierePrice && !laborPrice)) return;
     const unitPrice = Number(matierePrice || 0) + Number(laborPrice || 0);
@@ -880,8 +897,15 @@ export default function Demandes() {
                     </button>
                   </div>
 
-                  {/* Secondary Tools: Devis, Fiche */}
+                  {/* Secondary Tools: Devis, Fiche, Convert Client */}
                   <div className="flex items-center gap-1.5 bg-slate-50 p-1.5 rounded-xl border border-slate-100">
+                    <button 
+                      onClick={() => convertToClient(lead)}
+                      className="w-8 h-8 flex items-center justify-center text-emerald-500 hover:bg-emerald-100 rounded-lg transition-colors"
+                      title={isAr ? 'تسجيل كزبون' : 'Enregistrer comme client'}
+                    >
+                      <UserPlus className="w-4 h-4" />
+                    </button>
                     <button 
                       onClick={() => setDevisLead(lead)}
                       className="w-8 h-8 flex items-center justify-center text-amber-500 hover:bg-amber-100 rounded-lg transition-colors"
