@@ -2,7 +2,7 @@ import { Play, ShieldCheck, Zap, Users, ArrowRight, MessageCircle, Star, Package
 import { useLang } from '../contexts/LangContext';
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { loadCompanyProfile, saveLead } from '../types';
+import { loadCompanyProfile, saveLead, syncCompanyProfile, CompanyProfile } from '../types';
 
 const LogoWithFallback = ({ src, alt, isAr }: { src: string; alt: string; isAr: boolean }) => {
   const [error, setError] = useState(false);
@@ -23,7 +23,15 @@ const LogoWithFallback = ({ src, alt, isAr }: { src: string; alt: string; isAr: 
 
 export default function LandingPage() {
   const { isAr, toggle } = useLang();
-  const [company] = useState(loadCompanyProfile());
+  const [company, setCompany] = useState<CompanyProfile>(loadCompanyProfile());
+
+  useEffect(() => {
+    const sync = async () => {
+      const remote = await syncCompanyProfile();
+      setCompany(remote);
+    };
+    sync();
+  }, []);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

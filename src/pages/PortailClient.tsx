@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, Settings, ChevronDown, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw } from 'lucide-react';
 import {
-  Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead
+  Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { printElement } from '../utils/pdf';
@@ -40,8 +40,16 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [notifsEnabled, setNotifsEnabled] = useState(true);
   const [showInvoiceView, setShowInvoiceView] = useState(false);
   const [selectedFacture, setSelectedFacture] = useState<Facture | null>(null);
-  const [company] = useState<CompanyProfile>(loadCompanyProfile());
+  const [company, setCompany] = useState<CompanyProfile>(loadCompanyProfile());
   const { isAr, toggle } = useLang();
+
+  useEffect(() => {
+    const sync = async () => {
+      const remote = await syncCompanyProfile();
+      setCompany(remote);
+    };
+    sync();
+  }, []);
   const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'docs' | 'support'>('overview');
   const [showNotifs, setShowNotifs] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -249,6 +257,16 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
            </div>
            
            <div className="flex items-center gap-4">
+              <button 
+                onClick={async () => {
+                  const remote = await syncCompanyProfile();
+                  setCompany(remote);
+                }}
+                className="p-2 text-slate-400 hover:text-indigo-600 transition-colors"
+                title={isAr ? 'تحديث' : 'Actualiser'}
+              >
+                <RotateCw className="w-5 h-5" />
+              </button>
               <button onClick={toggle} className="px-5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-100 transition-colors">
                  {isAr ? 'FR' : 'عربية'}
               </button>

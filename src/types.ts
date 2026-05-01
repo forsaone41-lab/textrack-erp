@@ -401,6 +401,20 @@ export function loadCompanyProfile(): CompanyProfile {
   }
 }
 
+export async function syncCompanyProfile(): Promise<CompanyProfile> {
+  try {
+    const { data, error } = await supabase.from('settings').select('*').eq('id', 'company-profile').single();
+    if (data && !error) {
+      const remoteProfile = data.value as CompanyProfile;
+      safeStorage.setItem('textrack_profile', JSON.stringify(remoteProfile));
+      return remoteProfile;
+    }
+    return loadCompanyProfile();
+  } catch (e) {
+    return loadCompanyProfile();
+  }
+}
+
 export async function loadLeads(): Promise<Lead[]> {
   try {
     // Try Supabase first
@@ -436,8 +450,14 @@ export async function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'>) {
   return newLead;
 }
 
-export function saveCompanyProfile(profile: CompanyProfile): void {
+export async function saveCompanyProfile(profile: CompanyProfile): Promise<void> {
   safeStorage.setItem('textrack_profile', JSON.stringify(profile));
+  // Also save to Supabase
+  try {
+    await supabase.from('settings').upsert({ id: 'company-profile', value: profile });
+  } catch (e) {
+    console.error("Failed to sync settings to cloud:", e);
+  }
 }
 
 // ─── Storage Helpers ────────────────────────────────────────

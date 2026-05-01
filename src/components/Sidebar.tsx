@@ -16,6 +16,7 @@ interface SidebarProps {
   onLogout: () => void;
   mobileOpen?: boolean;
   setMobileOpen?: (val: boolean) => void;
+  company: CompanyProfile;
 }
 
 const LogoWithFallback = ({ src, alt }: { src: string; alt: string }) => {
@@ -35,9 +36,8 @@ const LogoWithFallback = ({ src, alt }: { src: string; alt: string }) => {
   return <img src={src} className="h-10 object-contain" alt={alt} onError={() => setError(true)} />;
 };
 
-export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mobileOpen, setMobileOpen }: SidebarProps) {
+export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mobileOpen, setMobileOpen, company }: SidebarProps) {
   const { lang, isAr, toggle } = useLang();
-  const company = loadCompanyProfile();
   
   const permissions = loadPermissions();
   const userRole = (currentUser.role || '').toLowerCase() as keyof typeof permissions;

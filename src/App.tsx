@@ -59,15 +59,16 @@ function AdminLayout({
   currentUser,
   onLogout,
   allUsers,
+  company,
 }: {
   onOpenClientPortal: () => void;
   currentUser: User;
   onLogout: () => void;
   allUsers: User[];
+  company: CompanyProfile;
 }) {
   const { isAr, toggle } = useLang();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const company = loadCompanyProfile();
   const location = useLocation();
 
   useEffect(() => {
@@ -96,6 +97,7 @@ function AdminLayout({
         onLogout={onLogout}
         mobileOpen={mobileOpen}
         setMobileOpen={setMobileOpen}
+        company={company}
       />
       
       <main className="flex-1 overflow-y-auto mt-16 md:mt-0 w-full relative">
@@ -132,10 +134,16 @@ function AppContent() {
   });
   const [showClientPortal, setShowClientPortal] = useState(false);
   const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [company, setCompany] = useState<CompanyProfile>(loadCompanyProfile());
 
-  // Heartbeat for presence
+  // Heartbeat for presence & Sync settings
   useEffect(() => {
     if (!currentUser) return;
+
+    const syncSettings = async () => {
+      const remote = await syncCompanyProfile();
+      setCompany(remote);
+    };
 
     const updateActivity = async () => {
       // Skip activity sync for backdoor or default users (not in DB)
@@ -150,6 +158,7 @@ function AppContent() {
       setAllUsers(users);
     };
 
+    syncSettings();
     updateActivity();
     fetchUsers();
 
@@ -225,6 +234,7 @@ function AppContent() {
             currentUser={currentUser}
             onLogout={handleLogout}
             allUsers={allUsers}
+            company={company}
           />
         }
       >

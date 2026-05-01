@@ -20,8 +20,8 @@ export default function Settings() {
     setSaved(false);
   };
 
-  const handleSave = () => {
-    saveCompanyProfile(profile);
+  const handleSave = async () => {
+    await saveCompanyProfile(profile);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
     // Reload the page to apply changes everywhere
