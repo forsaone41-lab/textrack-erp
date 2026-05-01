@@ -1222,7 +1222,6 @@ export default function FichesTechniques() {
             </div>
           </div>
         </div>
-        </div>
       )}
 
       {/* Modal Confirmation Echantillon */}
