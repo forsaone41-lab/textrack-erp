@@ -67,10 +67,19 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
         {/* Info Section */}
         <div className="flex-1 p-6 flex flex-col relative overflow-hidden">
           {/* Waiting for Client Overlay */}
+          {/* Waiting for Client - Organized Label */}
           {isSampleWaiting && (
-            <div className="absolute inset-0 z-30 bg-amber-500/10 backdrop-blur-[1px] flex items-center justify-center pointer-events-none">
-              <div className="bg-amber-500 text-white px-6 py-2 rounded-full font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-amber-500/40 animate-pulse border-2 border-white/30">
-                {isAr ? 'في انتظار رد الزبون' : 'QYD LITIDA RAD ZABOUN'}
+            <div className={`absolute top-0 ${isAr ? 'left-0' : 'right-0'} z-40`}>
+              <div className="relative group/status">
+                <div className="absolute inset-0 bg-amber-500 blur-md opacity-20 animate-pulse rounded-bl-3xl" />
+                <div className={`relative bg-gradient-to-br from-amber-400 to-orange-500 text-white px-5 py-3 shadow-xl ${isAr ? 'rounded-br-3xl rounded-tl-3xl' : 'rounded-bl-3xl rounded-tr-3xl'} border-b-2 border-white/20 flex flex-col items-center justify-center min-w-[140px]`}>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.1em]">{isAr ? 'قيد تأكيد الزبون' : 'EN ATTENTE CLIENT'}</span>
+                  </div>
+                  <div className="h-[1px] w-8 bg-white/30 mb-1" />
+                  <span className="text-[8px] font-bold opacity-90 uppercase tracking-tighter">QYD LITIDA RAD ZABOUN</span>
+                </div>
               </div>
             </div>
           )}
