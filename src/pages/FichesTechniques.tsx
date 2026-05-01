@@ -8,7 +8,7 @@ import { printFicheTechnique as printFT } from '../utils/print';
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
 
-function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onViewMesures, onShare }: {
+function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onViewMesures, onShare, onLaunchSample }: {
   f: FicheTechnique;
   openEdit: (f: FicheTechnique) => void;
   remove: (id: string) => void;
