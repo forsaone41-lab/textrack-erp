@@ -29,26 +29,23 @@ async function verifyLogin(identifier: string, password: string): Promise<User |
     };
   }
 
-  // ✅ WORKER LOGIN: Name + PIN (no @ in identifier = it's a name, not email)
+  // ✅ WORKER LOGIN: Name + PIN (no @ = name, not email)
   if (!trimId.includes('@') && password.length === 4 && /^\d+$/.test(password)) {
     const employes = await loadData<Employe>('employes');
     if (Array.isArray(employes)) {
       const worker = employes.find(e => {
         if (!e.actif || e.pin_code !== password) return false;
+        // STRICT matching: only exact full name, first name, or last name
         const fullName = `${e.prenom || ''} ${e.nom || ''}`.toLowerCase().trim();
-        const prenom = (e.prenom || '').toLowerCase().trim();
-        const nom = (e.nom || '').toLowerCase().trim();
+        const prenom   = (e.prenom || '').toLowerCase().trim();
+        const nom      = (e.nom || '').toLowerCase().trim();
         return (
           fullName === trimId ||
-          prenom === trimId ||
-          nom === trimId ||
-          fullName.includes(trimId) ||
-          trimId.includes(prenom) ||
-          trimId.includes(nom)
+          prenom   === trimId ||
+          nom      === trimId
         );
       });
       if (worker) {
-        // Get linked user account for employeId
         const users = await loadData<User>('users');
         const linkedUser = Array.isArray(users)
           ? users.find(u => u.employeId === worker.id)
@@ -63,6 +60,7 @@ async function verifyLogin(identifier: string, password: string): Promise<User |
         };
       }
     }
+    // Name entered but no match found → block access
     return null;
   }
 
