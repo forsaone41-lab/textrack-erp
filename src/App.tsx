@@ -209,8 +209,8 @@ function AppContent() {
         const existingManifest = document.querySelector("link[rel='manifest']") as HTMLLinkElement;
         if (existingManifest) {
           const manifestContent = {
-            name: remote.name || "BEYA CREATIVE ERP",
-            short_name: remote.name?.split(' ')[0] || "BEYA ERP",
+            name: remote.name || "Beya Creative",
+            short_name: remote.name || "Beya Creative",
             description: remote.description || "Système de gestion textile",
             start_url: "/",
             display: "standalone",
