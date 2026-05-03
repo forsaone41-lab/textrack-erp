@@ -970,19 +970,30 @@ export default function Demandes() {
 
                   {/* Secondary Tools: Devis, Fiche, Convert Client */}
                   <div className="flex items-center gap-2 bg-slate-50/50 p-1.5 rounded-2xl border border-slate-100 shadow-inner">
-                    {/* Convert to Client Button - Disappears if already a client */}
-                    {!users.some(u => u.nom.toLowerCase() === lead.name.toLowerCase() && u.role === 'client') ? (
+                    {/* Recruitment Add Button - Navigates to SuiviRH with candidate data */}
+                    {category === 'recrutement' ? (
                       <button 
-                        onClick={() => convertToClient(lead)}
-                        className="w-9 h-9 flex items-center justify-center bg-white text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-xl transition-all shadow-sm border border-emerald-100 group/btn"
-                        title={isAr ? 'تسجيل كزبون جديد' : 'Enregistrer comme nouveau client'}
+                        onClick={() => navigate('/suivi-rh', { state: { fromRecruitment: lead } })}
+                        className="w-12 h-12 flex items-center justify-center bg-rose-500 text-white hover:bg-rose-600 rounded-xl transition-all shadow-lg shadow-rose-200 group/btn animate-pulse hover:animate-none"
+                        title={isAr ? 'إضافة إلى الموظفين' : 'Ajouter aux Employés'}
                       >
-                        <UserPlus className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                        <UserPlus className="w-5 h-5 group-hover/btn:scale-110 transition-transform" />
                       </button>
                     ) : (
-                      <div className="w-9 h-9 flex items-center justify-center bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100" title={isAr ? 'زبون مسجل' : 'Client déjà enregistré'}>
-                        <CheckCircle className="w-4 h-4" />
-                      </div>
+                      /* Convert to Client Button - Disappears if already a client */
+                      !users.some(u => u.nom.toLowerCase() === lead.name.toLowerCase() && u.role === 'client') ? (
+                        <button 
+                          onClick={() => convertToClient(lead)}
+                          className="w-9 h-9 flex items-center justify-center bg-white text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-xl transition-all shadow-sm border border-emerald-100 group/btn"
+                          title={isAr ? 'تسجيل كزبون جديد' : 'Enregistrer comme nouveau client'}
+                        >
+                          <UserPlus className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                        </button>
+                      ) : (
+                        <div className="w-9 h-9 flex items-center justify-center bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100" title={isAr ? 'زبون مسجل' : 'Client déjà enregistré'}>
+                          <CheckCircle className="w-4 h-4" />
+                        </div>
+                      )
                     )}
 
                     {!lead.type.startsWith('RECRUTEMENT:') && (

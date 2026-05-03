@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useLang } from '../contexts/LangContext';
 import { Plus, Search, Edit2, Trash2, Users, CreditCard, DollarSign, Home, Image as ImageIcon, X, Printer, Download, File, Phone, Mail, RotateCw, Copy, Check, Zap } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -123,6 +124,8 @@ export default function SuiviRH() {
 
   const company = loadCompanyProfile();
 
+  const location = useLocation();
+
   useEffect(() => {
     setSyncStatus(isAr ? 'جاري التحميل...' : 'Chargement...');
     
@@ -145,7 +148,43 @@ export default function SuiviRH() {
     });
 
     setSyncStatus(null);
-  }, [isAr]);
+
+    // Handle Incoming Candidate Data from Recruitment
+    if (location.state?.fromRecruitment) {
+      const candidate = location.state.fromRecruitment;
+      const [firstName, ...lastNameParts] = candidate.name.split(' ');
+      const lastName = lastNameParts.join(' ');
+
+      // Clean the position name
+      let suggestedPoste = '';
+      const rawType = candidate.type.replace('RECRUTEMENT: ', '');
+      const posteMatch = POSTES_ATELIER.find(p => p.toLowerCase().includes(rawType.toLowerCase())) || 
+                         POSTES_SOUSTRAITANCE.find(p => p.toLowerCase().includes(rawType.toLowerCase()));
+      
+      if (posteMatch) {
+        suggestedPoste = posteMatch;
+      } else {
+        // Try matching Arabic labels if needed, or just use the raw type
+        suggestedPoste = rawType;
+      }
+
+      setForm({
+        nom: lastName || firstName,
+        prenom: lastName ? firstName : '',
+        telephone: candidate.phone,
+        email: candidate.email === 'recrutement@beya.ma' ? '' : candidate.email,
+        poste: suggestedPoste,
+        type: 'atelier',
+        actif: true,
+        salaireMensuel: 0,
+        remunerationType: 'mensuel'
+      });
+      setShowModal(true);
+      
+      // Clear location state to prevent re-opening on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [isAr, location.state]);
 
   const availableMois = useMemo(() => {
     try {
