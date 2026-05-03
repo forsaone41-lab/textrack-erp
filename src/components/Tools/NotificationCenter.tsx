@@ -103,6 +103,10 @@ export default function NotificationCenter() {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
 
+  const markAsRead = (id: string) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  };
+
   const removeNotification = (id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
   };
@@ -182,7 +186,14 @@ export default function NotificationCenter() {
             ) : notifications.length > 0 ? (
               <div className="divide-y divide-slate-50">
                 {notifications.map(n => (
-                  <div key={n.id} className={`p-6 flex gap-4 hover:bg-slate-50 transition-colors relative group ${!n.read ? 'bg-indigo-50/30' : ''}`}>
+                  <div 
+                    key={n.id} 
+                    onClick={() => markAsRead(n.id)}
+                    className={`p-6 flex gap-4 hover:bg-slate-50 transition-colors relative group cursor-pointer ${!n.read ? 'bg-indigo-50/20' : ''}`}
+                  >
+                    {!n.read && (
+                      <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-indigo-600 rounded-full" />
+                    )}
                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm ${
                       n.type === 'client' || n.type === 'recrutement' ? 'bg-emerald-50 text-emerald-600' :
                       n.type === 'payment' ? 'bg-rose-50 text-rose-600' :
