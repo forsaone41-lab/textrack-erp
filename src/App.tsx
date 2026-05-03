@@ -190,8 +190,6 @@ function AppContent() {
 
   // Heartbeat for presence & Sync settings
   useEffect(() => {
-    if (!currentUser) return;
-
     const syncSettings = async () => {
       const remote = await syncCompanyProfile();
       setCompany(remote);
@@ -251,8 +249,8 @@ function AppContent() {
       const users = await loadData<User>('users');
       setAllUsers(users || []);
     };
-
     syncSettings();
+    if (!currentUser) return;
     updateActivity();
     fetchUsers();
 
