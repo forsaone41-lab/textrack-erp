@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, FileText, Settings, LogOut, ShoppingCart, 
@@ -5,10 +6,11 @@ import {
   Sparkles,
   ChevronRight,
   RotateCw,
-  RefreshCw
+  RefreshCw,
+  CalendarDays
 } from 'lucide-react';
 
-import { User, loadCompanyProfile, loadPermissions, AppPage } from '../types';
+import { User, loadCompanyProfile, loadPermissions, AppPage, syncCompanyProfile } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
 
@@ -50,11 +52,28 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `group flex items-center justify-between px-5 py-3.5 rounded-2xl text-[13px] font-bold transition-all duration-500 relative overflow-hidden ${
       isActive 
-        ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-500/30' 
-        : 'text-slate-400 hover:text-white hover:bg-white/5'
+        ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' 
+        : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
     }`;
 
   const closeMobile = () => setMobileOpen?.(false);
+
+  const NavItem = ({ to, icon: Icon, label, end = false, pro = false }: { to: string; icon: any; label: string; end?: boolean; pro?: boolean }) => (
+    <NavLink to={to} className={linkClass} onClick={closeMobile} end={end}>
+      {({ isActive }) => (
+        <>
+          <div className="flex items-center gap-3">
+            <Icon className={`w-[18px] h-[18px] transition-colors ${isActive ? 'text-indigo-400' : 'text-slate-500'}`} />
+            <span className={isActive ? 'text-indigo-400' : ''}>{label}</span>
+            {pro && !isActive && <Sparkles className="w-3 h-3 text-amber-500/50" />}
+          </div>
+          {isActive && (
+            <div className={`absolute ${isAr ? 'right-0' : 'left-0'} top-1/2 -translate-y-1/2 w-1 h-5 bg-indigo-500 rounded-${isAr ? 'l' : 'r'}-full shadow-[0_0_10px_#4f46e5] animate-in slide-in-from-${isAr ? 'right' : 'left'}-1 duration-300`} />
+          )}
+        </>
+      )}
+    </NavLink>
+  );
 
   return (
     <>
@@ -86,267 +105,98 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
           <div className="flex items-center gap-2 mt-2">
              <div className="h-px flex-1 bg-gradient-to-r from-indigo-500/50 to-transparent" />
              <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] whitespace-nowrap">
-               Elite Factory OS
+                Elite Factory OS
              </p>
           </div>
         </div>
 
-        {/* Navigation Links - Refined Groups */}
-        <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto scrollbar-hide py-4">
+        {/* Navigation Links - Hierarchical Groups */}
+        <nav className="flex-1 px-4 space-y-8 overflow-y-auto scrollbar-hide py-6">
+          
+          {/* Group 1: Access */}
           <div className="space-y-1">
-            {can('dashboard') && (
-              <NavLink to="/" className={linkClass} onClick={closeMobile} end>
-                <div className="flex items-center gap-3">
-                  <LayoutDashboard className="w-[18px] h-[18px]" />
-                  <span>{t('dashboard', lang)}</span>
-                </div>
-                <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-40 transition-opacity" />
-              </NavLink>
-            )}
+            {can('dashboard') && <NavItem to="/" icon={LayoutDashboard} label={t('dashboard', lang)} end />}
+            <NavItem to="/profil" icon={UserCircle} label={isAr ? 'الملف الشخصي' : 'Mon Profil'} />
+            {can('worker_portal') && <NavItem to="/worker-portal" icon={UserIcon} label={isAr ? 'فضاء العامل' : 'Espace Ouvrier'} />}
+            {can('partenaire_portal') && <NavItem to="/partenaire-portal" icon={Globe} label={isAr ? 'بوابة الشركاء' : 'Portail Partenaire'} />}
+          </div>
 
-            {currentUser.role === 'worker' ? (
-              <NavLink to="/worker-portal" className={linkClass} onClick={closeMobile}>
-                <div className="flex items-center gap-3">
-                  <UserCircle className="w-[18px] h-[18px]" />
-                  <span>{isAr ? 'حسابي' : 'Mon Profil'}</span>
-                </div>
-                <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
-              </NavLink>
-            ) : (
+          {/* Group 2: Commercial */}
+          <div className="space-y-1">
+            <SectionTitle title={isAr ? 'التجاري' : 'Commercial'} isAr={isAr} />
+            {can('demandes') && <NavItem to="/demandes" icon={Users} label={isAr ? 'الزبناء المحتملون' : 'Prospects'} />}
+            {can('demandes') && <NavItem to="/echantillons" icon={Scissors} label={isAr ? 'العينات' : 'Échantillons'} />}
+            {can('clients') && <NavItem to="/clients" icon={UserCheck} label={isAr ? 'قاعدة الزبناء' : 'Clients'} />}
+          </div>
+
+          {/* Group 3: Production */}
+          <div className="space-y-1">
+            <SectionTitle title={isAr ? 'الإنتاج' : 'Production'} isAr={isAr} />
+            {can('commandes') && (
               <>
-                <NavLink to="/profil" className={linkClass} onClick={closeMobile}>
-                  <div className="flex items-center gap-3">
-                    <UserCircle className="w-[18px] h-[18px]" />
-                    <span>{isAr ? 'حسابي' : 'Mon Profil'}</span>
-                  </div>
-                  <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-40 transition-opacity" />
-                </NavLink>
-
-                {can('worker_portal') && (
-                  <NavLink to="/worker-portal" className="group flex items-center justify-between px-5 py-3.5 rounded-2xl text-[13px] font-bold transition-all duration-500 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/20" onClick={closeMobile}>
-                    <div className="flex items-center gap-3">
-                      <UserIcon className="w-[18px] h-[18px]" />
-                      <span className="font-extrabold">{isAr ? 'فضاء العامل' : 'Espace Ouvrier'}</span>
-                    </div>
-                    <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-40 transition-opacity" />
-                  </NavLink>
-                )}
-
-                {can('partenaire_portal') && (
-                  <NavLink to="/partenaire-portal" className="group flex items-center justify-between px-5 py-3.5 rounded-2xl text-[13px] font-bold transition-all duration-500 bg-indigo-600/10 border border-indigo-600/20 text-indigo-400 hover:bg-indigo-600/20 mt-2 mb-4" onClick={closeMobile}>
-                    <div className="flex items-center gap-3">
-                      <Globe className="w-[18px] h-[18px]" />
-                      <span className="font-extrabold">{isAr ? 'بوابة الشركاء' : 'Portail Partenaire'}</span>
-                    </div>
-                    <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-40 transition-opacity" />
-                  </NavLink>
-                )}
+                <NavItem to="/commandes" icon={ShoppingCart} label={isAr ? 'الطلبيات' : 'Commandes'} />
+                {can('agenda') && <NavItem to="/agenda" icon={CalendarDays} label={isAr ? 'الأجندة' : 'Agenda'} />}
+                <NavItem to="/commandes/manage" icon={Sparkles} label={isAr ? 'إعداد طلبية (PRO)' : 'Master Setup (PRO)'} pro />
               </>
             )}
-          </div>
-          
-          {(can('demandes') || can('fiches') || can('ordres') || can('chaine')) && (
-            <SectionTitle title={isAr ? 'الإنتاج' : 'Production'} isAr={isAr} />
-          )}
-          
-          <div className="space-y-1">
-            {can('demandes') && (
-              <NavLink to="/demandes" className={linkClass} onClick={closeMobile}>
-                <div className="flex items-center gap-3">
-                  <Users className="w-[18px] h-[18px]" />
-                  <span>{isAr ? 'الزبناء المحتملون' : 'Prospects'}</span>
-                </div>
-              </NavLink>
-            )}
-            {can('demandes') && (
-              <NavLink to="/echantillons" className={linkClass} onClick={closeMobile}>
-                <div className="flex items-center gap-3">
-                  <Scissors className="w-[18px] h-[18px]" />
-                  <span>{isAr ? 'العينات' : 'Échantillons'}</span>
-                </div>
-              </NavLink>
-            )}
-            {can('clients') && (
-              <NavLink to="/clients" className={linkClass} onClick={closeMobile}>
-                <div className="flex items-center gap-3">
-                  <UserCheck className="w-[18px] h-[18px]" />
-                  <span>{isAr ? 'قاعدة الزبناء' : 'Clients'}</span>
-                </div>
-              </NavLink>
-            )}
-            {can('commandes') && (
-              <NavLink to="/commandes" className={linkClass} onClick={closeMobile}>
-                <div className="flex items-center gap-3">
-                  <ShoppingCart className="w-[18px] h-[18px]" />
-                  <span>{isAr ? 'الطلبيات' : 'Commandes'}</span>
-                </div>
-              </NavLink>
-            )}
-            {can('stocks') && (
-              <NavLink to="/stocks" className={linkClass} onClick={closeMobile}>
-                <div className="flex items-center gap-3">
-                  <Package className="w-[18px] h-[18px]" />
-                  <span>{isAr ? 'مخزون السلع' : 'Stock Matières'}</span>
-                </div>
-              </NavLink>
-            )}
-            {can('fiches') && (
-              <NavLink to="/fiches-techniques" className={linkClass} onClick={closeMobile}>
-                <div className="flex items-center gap-3">
-                  <FileText className="w-[18px] h-[18px]" />
-                  <span>{isAr ? 'البطاقات التقنية' : 'Fiches Tech.'}</span>
-                </div>
-              </NavLink>
-            )}
-            {can('ordres') && (
-              <NavLink to="/ordres-de-coupe" className={linkClass} onClick={closeMobile}>
-                <div className="flex items-center gap-3">
-                  <Scissors className="w-[18px] h-[18px]" />
-                  <span>{isAr ? 'أوامر القص' : 'Ordres de Coupe'}</span>
-                </div>
-              </NavLink>
-            )}
+            {can('stocks') && <NavItem to="/stocks" icon={Package} label={isAr ? 'المخزون' : 'Stocks'} />}
+            {can('fiches') && <NavItem to="/fiches-techniques" icon={FileText} label={isAr ? 'البطاقات التقنية' : 'Fiches Tech.'} />}
+            {can('ordres') && <NavItem to="/ordres-de-coupe" icon={Scissors} label={isAr ? 'أوامر القص' : 'Ordres de Coupe'} />}
             {can('chaine') && (
               <>
-                <NavLink to="/chaine-montage" className={linkClass} onClick={closeMobile}>
-                  <div className="flex items-center gap-3">
-                    <Activity className="w-[18px] h-[18px]" />
-                    <span>{isAr ? 'تتبع التركيب' : 'Suivi Montage'}</span>
-                  </div>
-                </NavLink>
-                <NavLink to="/pilotage-chaine" className={linkClass} onClick={closeMobile}>
-                  <div className="flex items-center gap-3">
-                    <TrendingUp className="w-[18px] h-[18px]" />
-                    <span>{isAr ? 'لوحة القيادة' : 'Pilotage'}</span>
-                  </div>
-                </NavLink>
+                <NavItem to="/chaine-montage" icon={Activity} label={isAr ? 'تتبع التركيب' : 'Suivi Montage'} />
+                <NavItem to="/pilotage-chaine" icon={TrendingUp} label={isAr ? 'لوحة القيادة' : 'Pilotage'} />
               </>
             )}
-
           </div>
 
-          {(can('bilan') || can('factures') || can('charges')) && (
+          {/* Group 4: Finance */}
+          <div className="space-y-1">
             <SectionTitle title={isAr ? 'المالية' : 'Finance'} isAr={isAr} />
-          )}
-
-          <div className="space-y-1">
-            {can('bilan') && (
-              <NavLink to="/bilan" className={linkClass} onClick={closeMobile}>
-                <div className="flex items-center gap-3">
-                  <PieChart className="w-[18px] h-[18px]" />
-                  <span>{isAr ? 'جدول البيانات' : 'Tableau de Bord'}</span>
-                </div>
-              </NavLink>
-            )}
-            {can('factures') && (
-              <NavLink to="/factures" className={linkClass} onClick={closeMobile}>
-                <div className="flex items-center gap-3">
-                  <Receipt className="w-[18px] h-[18px]" />
-                  <span>{isAr ? 'الفواتير' : 'Factures'}</span>
-                </div>
-              </NavLink>
-            )}
-            {can('charges') && (
-              <NavLink to="/charges" className={linkClass} onClick={closeMobile}>
-                <div className="flex items-center gap-3">
-                  <TrendingUp className="w-[18px] h-[18px]" />
-                  <span>{isAr ? 'المصاريف' : 'Charges'}</span>
-                </div>
-              </NavLink>
-            )}
+            {can('bilan') && <NavItem to="/bilan" icon={PieChart} label={isAr ? 'جدول البيانات' : 'Tableau de Bord'} />}
+            {can('factures') && <NavItem to="/factures" icon={Receipt} label={isAr ? 'الفواتير' : 'Factures'} />}
+            {can('charges') && <NavItem to="/charges" icon={TrendingUp} label={isAr ? 'المصاريف' : 'Charges'} />}
           </div>
 
-          <SectionTitle title={isAr ? 'النظام' : 'Système'} isAr={isAr} />
-
+          {/* Group 5: System Admin */}
           <div className="space-y-1">
-            {can('rh') && (
-              <>
-                <NavLink to="/rh" className={linkClass} onClick={closeMobile}>
-                  <div className="flex items-center gap-3">
-                    <Users className="w-[18px] h-[18px]" />
-                    <span>{isAr ? 'الموارد البشرية' : 'RH & Employés'}</span>
-                  </div>
-                </NavLink>
-                {can('performance') && (
-                  <NavLink to="/performance" className={linkClass} onClick={closeMobile}>
-                    <div className="flex items-center gap-3">
-                      <Trophy className="w-[18px] h-[18px]" />
-                      <span>{isAr ? 'أداء العمال' : 'Performance'}</span>
-                    </div>
-                  </NavLink>
-                )}
-              </>
-            )}
-            {can('pointage') && (
-              <NavLink to="/pointage" className={linkClass} onClick={closeMobile}>
-                <div className="flex items-center gap-3">
-                  <ClipboardCheck className="w-[18px] h-[18px]" />
-                  <span>{isAr ? 'تسجيل الحضور' : 'Pointage'}</span>
-                </div>
-              </NavLink>
-            )}
-            {can('fast_scanner') && (
-              <NavLink to="/fast-scanner" className={linkClass} onClick={closeMobile}>
-                <div className="flex items-center gap-3">
-                  <QrCode className="w-[18px] h-[18px] text-indigo-400" />
-                  <span className="font-black">{isAr ? 'الماسح الضوئي (PRO)' : 'Scanner (PRO)'}</span>
-                </div>
-                <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse shadow-[0_0_10px_#4f46e5]" />
-              </NavLink>
-            )}
-            {can('utilisateurs') && (
-              <NavLink to="/utilisateurs" className={linkClass} onClick={closeMobile}>
-                <div className="flex items-center gap-3">
-                  <ShieldCheck className="w-[18px] h-[18px]" />
-                  <span>{isAr ? 'إدارة المستخدمين' : 'Gestion Utilisateurs'}</span>
-                </div>
-              </NavLink>
-            )}
-            {can('parametres') && (
-              <NavLink to="/parametres" className={linkClass} onClick={closeMobile}>
-                <div className="flex items-center gap-3">
-                  <Settings className="w-[18px] h-[18px]" />
-                  <span>{isAr ? 'الإعدادات' : 'Paramètres'}</span>
-                </div>
-              </NavLink>
-            )}
+            <SectionTitle title={isAr ? 'النظام' : 'Système'} isAr={isAr} />
+            {can('rh') && <NavItem to="/rh" icon={Users} label={isAr ? 'الموارد البشرية' : 'RH'} />}
+            {can('pointage') && <NavItem to="/pointage" icon={ClipboardCheck} label={isAr ? 'تسجيل الحضور' : 'Pointage'} />}
+            {can('fast_scanner') && <NavItem to="/fast-scanner" icon={QrCode} label={isAr ? 'الماسح الضوئي' : 'Scanner PRO'} />}
+            {can('utilisateurs') && <NavItem to="/utilisateurs" icon={ShieldCheck} label={isAr ? 'المستخدمين' : 'Utilisateurs'} />}
+            {can('parametres') && <NavItem to="/parametres" icon={Settings} label={isAr ? 'الإعدادات' : 'Paramètres'} />}
           </div>
         </nav>
 
         {/* Modern Footer Section */}
         <div className="p-4 space-y-3 bg-[#080b14] border-t border-white/5">
-          {/* Theme/Lang Minimal Toggle */}
-          <button 
-            onClick={toggle}
-            className="w-full flex items-center justify-between p-3 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors border border-white/5 group"
-          >
-            <div className="flex items-center gap-3">
+          {/* Controls Row */}
+          <div className="flex gap-2">
+            {/* Language Toggle */}
+            <button 
+              onClick={toggle}
+              className="flex-1 flex items-center gap-3 p-3 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors border border-white/5 group"
+            >
               <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-[10px] font-black text-white group-hover:scale-110 transition-transform">
                 {isAr ? 'ع' : 'FR'}
               </div>
-              <span className="text-xs font-bold text-slate-300">{isAr ? 'اللغة العربية' : 'Langue Française'}</span>
-            </div>
-            <div className={`w-8 h-4 rounded-full relative transition-all ${isAr ? 'bg-indigo-600' : 'bg-slate-700'}`}>
-               <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${isAr ? 'right-0.5' : 'left-0.5'}`} />
-            </div>
-          </button>
+              <span className="text-xs font-bold text-slate-300">{isAr ? 'العربية' : 'Français'}</span>
+            </button>
 
-          {/* Sync / Update Button */}
-          <button 
-            onClick={() => {
-              localStorage.removeItem('textrack_permissions');
-              window.location.reload();
-            }}
-            className="w-full flex items-center gap-3 p-3 rounded-2xl bg-indigo-500/10 hover:bg-indigo-500/20 transition-all border border-indigo-500/20 group"
-          >
-            <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 group-hover:rotate-180 transition-transform duration-500">
-              <RefreshCw className="w-4 h-4 text-white" />
-            </div>
-            <div className="flex flex-col items-start min-w-0">
-              <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">{isAr ? 'تحديث النظام' : 'Mise à jour'}</span>
-              <span className="text-[9px] font-bold text-slate-500 truncate">{isAr ? 'مزامنة البيانات والصلاحيات' : 'Sync. Données & Perms'}</span>
-            </div>
-          </button>
+            {/* Compact Sync Button */}
+            <button 
+              onClick={async () => {
+                localStorage.removeItem('textrack_permissions');
+                await syncCompanyProfile();
+                window.location.reload();
+              }}
+              className="w-12 h-12 flex items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white transition-all border border-indigo-500/20 shadow-lg shadow-indigo-500/5 group"
+              title={isAr ? 'تحديث النظام' : 'Mise à jour'}
+            >
+              <RefreshCw className="w-5 h-5 group-hover:rotate-180 transition-transform duration-700" />
+            </button>
+          </div>
 
 
           {/* Premium Profile Card */}
@@ -363,19 +213,6 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
               </div>
             </div>
             
-            {currentUser.role === 'admin' && (
-              <button 
-                onClick={async () => {
-                  await syncCompanyProfile();
-                  window.location.reload();
-                }}
-                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest border border-indigo-500/20 mb-2"
-              >
-                <RotateCw className="w-3.5 h-3.5" />
-                <span>{isAr ? 'تحديث البيانات' : 'Actualiser les données'}</span>
-              </button>
-            )}
-
             <button 
               onClick={onLogout}
               className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all text-[11px] font-bold border border-rose-500/20"

@@ -407,7 +407,6 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
                  </div>
                  
                  <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-2">{selectedUser.nom}</h3>
-                 <h3 className="text-2xl font-bold text-slate-900 uppercase tracking-tighter mb-2">{selectedUser.nom}</h3>
                  <p className="text-xs font-bold text-indigo-600 bg-indigo-50 px-4 py-1.5 rounded-full uppercase tracking-widest mb-8 border border-indigo-100">
                     {selectedUser.role}
                  </p>

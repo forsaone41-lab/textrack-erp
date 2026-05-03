@@ -110,6 +110,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     setSearched(true);
     const results = commandes.filter(c =>
       c.reference.toLowerCase() === reference.toLowerCase() ||
+      (c.referenceClient && c.referenceClient.toLowerCase() === reference.toLowerCase()) ||
       c.client.toLowerCase().includes(reference.toLowerCase())
     );
     setFound(results);

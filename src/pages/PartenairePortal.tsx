@@ -55,7 +55,8 @@ export default function PartenairePortal({ currentUser, onLogout }: PartenairePo
       const allCmds = await loadData<Commande>('commandes') || [];
       const assigned = allCmds.filter(c => 
         c.partenaireId === currentUser.id || 
-        c.partenaireId === currentUser.employeId
+        c.partenaireId === currentUser.employeId ||
+        (c.externalTasks || []).some(t => t.partenaireId === currentUser.id || t.partenaireId === currentUser.employeId)
       );
       setCommandes(assigned);
     } catch (e) {

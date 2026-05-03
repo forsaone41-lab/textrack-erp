@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Search, Plus, User, Phone, Mail, MapPin, ExternalLink, MessageSquare, DollarSign, ChevronRight, TrendingUp, History, FileText, X, Printer, Download, Edit2, Copy, Check } from 'lucide-react';
-import { Commande, loadData, genId, loadCompanyProfile } from '../types';
+import { Search, Plus, User, Phone, Mail, MapPin, ExternalLink, MessageSquare, DollarSign, ChevronRight, TrendingUp, History, FileText, X, Printer, Download, Edit2, Copy, Check, Trash2 } from 'lucide-react';
+import { Commande, loadData, genId, loadCompanyProfile, deleteRecord } from '../types';
 import { generatePDF } from '../utils/pdf';
 
 interface Client {
@@ -150,6 +150,23 @@ export default function Clients() {
     await saveRecord('users', clientData);
     
     setShowModal(false);
+  }
+
+  async function handleDelete(c: Client) {
+    const confirmMsg = isAr 
+      ? `هل أنت متأكد من حذف الزبون ${c.nom}؟` 
+      : `Voulez-vous vraiment supprimer le client ${c.nom} ?`;
+    
+    if (window.confirm(confirmMsg)) {
+      try {
+        await deleteRecord('users', c.id);
+        const updated = clients.filter(item => item.id !== c.id);
+        setClients(updated);
+        saveLocalClients(updated);
+      } catch (e: any) {
+        alert(isAr ? 'خطأ في الحذف' : 'Erreur de suppression');
+      }
+    }
   }
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -427,9 +444,14 @@ export default function Clients() {
                         </div>
                       </div>
                     </div>
-                    <button onClick={() => openEdit(c)} className="p-2 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
-                      <Edit2 className="w-4 h-4 text-slate-400" />
-                    </button>
+                    <div className="flex gap-1.5">
+                      <button onClick={() => openEdit(c)} className="p-2 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
+                        <Edit2 className="w-4 h-4 text-slate-400" />
+                      </button>
+                      <button onClick={(e) => { e.stopPropagation(); handleDelete(c); }} className="p-2 bg-rose-50 rounded-xl hover:bg-rose-100 transition-colors">
+                        <Trash2 className="w-4 h-4 text-rose-400" />
+                      </button>
+                    </div>
                   </div>
 
                   <div className="space-y-2 mb-6">

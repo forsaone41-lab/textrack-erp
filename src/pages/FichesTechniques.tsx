@@ -377,7 +377,11 @@ export default function FichesTechniques() {
   }
 
   async function save() {
-    if (!form.modele || !form.client) return;
+    if (!form.modele || !form.client || !form.tissuConsommation) {
+      if (isAr) alert('يرجى إدخال جميع المعلومات الضرورية (الموديل، الزبون، واستهلاك القماش)');
+      else alert('Veuillez remplir tous les champs obligatoires (Modèle, Client, et Consommation)');
+      return;
+    }
     const isNew = !editId;
     const fId = editId || genId();
 
@@ -972,9 +976,10 @@ export default function FichesTechniques() {
                 <div>
                   <label className={`block text-xs font-semibold text-slate-600 mb-1.5 ${isAr ? 'text-right' : ''}`}>
                     <Ruler className="w-3.5 h-3.5 inline mr-1 text-indigo-400" />
-                    {t('conso_tissu', lang)}
+                    {t('conso_tissu', lang)} <span className="text-rose-500 font-bold">*</span>
                   </label>
-                  <input type="number" step="0.01" value={form.tissuConsommation || 0} onChange={e => setForm({ ...form, tissuConsommation: parseFloat(e.target.value) })}
+                  <input type="number" step="0.01" value={form.tissuConsommation || ''} onChange={e => setForm({ ...form, tissuConsommation: parseFloat(e.target.value) || 0 })}
+                    required
                     className={`w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors ${isAr ? 'text-right' : ''}`} />
                 </div>
               </div>

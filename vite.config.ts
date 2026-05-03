@@ -16,4 +16,21 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src"),
     },
   },
+  build: {
+    target: 'esnext',
+    minify: 'terser',
+    cssMinify: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-ui': ['lucide-react', 'clsx', 'tailwind-merge'],
+          'vendor-charts': ['recharts'],
+          'vendor-db': ['@supabase/supabase-js'],
+          'vendor-utils': ['react-router-dom'],
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000,
+  }
 });
+

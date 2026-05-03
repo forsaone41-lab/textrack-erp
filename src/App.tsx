@@ -3,6 +3,9 @@ import * as React from 'react';
 import { useState, useEffect, Component, ReactNode, lazy, Suspense } from 'react';
 import { Menu, Package } from 'lucide-react';
 import Sidebar from './components/Sidebar';
+import Calculator from './components/Tools/Calculator';
+import NotificationCenter from './components/Tools/NotificationCenter';
+import { CompanyProfile } from './types';
 
 // ✅ Lazy load all pages - each page loads only when visited
 const Dashboard        = lazy(() => import('./pages/Dashboard'));
@@ -18,6 +21,7 @@ const SuiviRH          = lazy(() => import('./pages/SuiviRH'));
 const Echantillons     = lazy(() => import('./pages/Echantillons'));
 const Clients          = lazy(() => import('./pages/Clients'));
 const Commandes        = lazy(() => import('./pages/Commandes'));
+const ManageOrder      = lazy(() => import('./pages/ManageOrder'));
 const Factures         = lazy(() => import('./pages/Factures'));
 const Pointage         = lazy(() => import('./pages/Pointage'));
 const PortailClient    = lazy(() => import('./pages/PortailClient'));
@@ -33,6 +37,8 @@ const KioskScanner     = lazy(() => import('./pages/KioskScanner'));
 const FastScanner      = lazy(() => import('./pages/FastScanner'));
 const PlanningView     = lazy(() => import('./pages/PlanningView'));
 const PartenairePortal = lazy(() => import('./pages/PartenairePortal'));
+const Agenda           = lazy(() => import('./pages/Agenda'));
+const Recrutement     = lazy(() => import('./pages/Recrutement'));
 
 // Loading spinner for Suspense fallback
 const PageLoader = () => (
@@ -98,13 +104,27 @@ function AdminLayout({
           <MobileLogoWithFallback src={company.logoMobileHeader || company.logoUrl} alt={company.name} />
         </div>
 
-        <button
-          onClick={() => setMobileOpen(true)}
-          className="w-10 h-10 flex items-center justify-center text-slate-600 hover:text-indigo-600 transition-all bg-slate-100/50 rounded-xl border border-slate-200 active:scale-90"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          {currentUser.role === 'admin' && location.pathname === '/' && (
+            <div className="scale-75 origin-right">
+              <NotificationCenter />
+            </div>
+          )}
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="w-10 h-10 flex items-center justify-center text-slate-600 hover:text-indigo-600 transition-all bg-slate-100/50 rounded-xl border border-slate-200 active:scale-90"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        </div>
       </div>
+      
+      {/* Mobile Calculator - Bottom Right - Admin Only */}
+      {currentUser.role === 'admin' && (
+        <div className={`md:hidden fixed bottom-6 ${isAr ? 'left-6' : 'right-6'} z-[140] scale-90`}>
+          <Calculator />
+        </div>
+      )}
 
       <Sidebar
         onOpenClientPortal={onOpenClientPortal}
@@ -116,12 +136,28 @@ function AdminLayout({
       />
       
       <main className="flex-1 overflow-y-auto mt-16 md:mt-0 w-full relative">
+        {/* Global Tools Bar - Notification only on Dashboard Page for Admin */}
+        {currentUser.role === 'admin' && (
+          <div className={`fixed top-8 ${isAr ? 'left-12' : 'right-12'} z-[130] hidden md:flex items-center gap-4`}>
+            {location.pathname === '/' && <NotificationCenter />}
+          </div>
+        )}
+
+        {/* Floating Calculator - Admin Only */}
+        {currentUser.role === 'admin' && (
+          <div className={`fixed bottom-8 ${isAr ? 'left-8' : 'right-8'} z-[130] hidden md:block`}>
+            <Calculator />
+          </div>
+        )}
+
         {/* Decorative background element */}
         <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-indigo-500/5 blur-[120px] pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-purple-500/5 blur-[120px] pointer-events-none" />
         
         <div className="p-4 md:p-8 lg:p-12 max-w-[1600px] mx-auto relative z-10">
-          <Outlet />
+          <Suspense fallback={<PageLoader />}>
+            <Outlet />
+          </Suspense>
         </div>
       </main>
     </div>
@@ -132,7 +168,9 @@ function PointageLayout() {
   return (
     <div className="min-h-screen bg-slate-50">
       <main className="w-full min-h-screen p-4 md:p-6 lg:p-8 overflow-y-auto">
-        <Outlet />
+        <Suspense fallback={<PageLoader />}>
+          <Outlet />
+        </Suspense>
       </main>
     </div>
   );
@@ -140,7 +178,6 @@ function PointageLayout() {
 
 function AppContent() {
   const location = useLocation();
-  console.log("Current Path:", location.pathname);
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     try {
       const s = localStorage.getItem(AUTH_KEY);
@@ -165,7 +202,12 @@ function AppContent() {
       if (currentUser.id === 'master-admin' || currentUser.id.startsWith('default-')) return;
       
       const now = new Date().toISOString();
-      await saveRecord('users', { ...currentUser, lastActive: now });
+      try {
+        await saveRecord('users', { ...currentUser, lastActive: now }, true);
+      } catch (e) {
+        // Silent fail for background tasks to avoid disturbing the user
+        console.warn("Background lastActive update failed:", e);
+      }
     };
 
     const fetchUsers = async () => {
@@ -210,6 +252,7 @@ function AppContent() {
         </Route>
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
         <Route path="/portal" element={<PortailClient />} />
+        <Route path="/recrutement" element={<Recrutement />} />
         <Route path="/" element={<LandingPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -244,7 +287,6 @@ function AppContent() {
   }
 
   return (
-    <Suspense fallback={<PageLoader />}>
     <Routes>
       <Route
         path="/"
@@ -290,6 +332,8 @@ function AppContent() {
         {/* Shared / Public ERP Routes */}
         <Route path="stocks" element={can('stocks') ? <StockMateriaux /> : <Navigate to="/" replace />} />
         <Route path="commandes" element={can('commandes') ? <Commandes /> : <Navigate to="/" replace />} />
+        <Route path="agenda" element={can('agenda') ? <Agenda /> : <Navigate to="/" replace />} />
+        <Route path="commandes/manage" element={can('commandes') ? <ManageOrder /> : <Navigate to="/" replace />} />
         <Route path="planning-view/:id" element={<PlanningView />} />
       </Route>
       <Route element={<PointageLayout />}>
@@ -299,7 +343,6 @@ function AppContent() {
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
-    </Suspense>
   );
 }
 

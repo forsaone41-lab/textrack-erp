@@ -71,6 +71,7 @@ export interface OrdreDeCoupe {
   metrage: number;
   statut: 'planifié' | 'en_cours' | 'terminé';
   dateCoupe: string;
+  tissus?: { id: string; type: string; couleur: string; conso: number; prix: number; sourcing: string }[];
 }
 
 export interface Commande {
@@ -101,6 +102,19 @@ export interface Commande {
   avance?: number;
   planningReady?: boolean;
   partenaireId?: string;
+  externalTasks?: {
+    id: string;
+    type: 'traz' | 'print' | 'confection' | 'patronage' | 'coupe' | 'autre';
+    partenaireId: string;
+    details: string;
+    status: 'en_attente' | 'en_cours' | 'terminé';
+    location?: 'devant' | 'dos' | 'manches' | 'pantalon' | 'complet';
+    avance?: number;
+    prixUnitaire?: number;
+    photo?: string;
+  }[];
+  referenceClient?: string;
+  typeModele?: string;
 }
 
 export interface StockTissu {
@@ -226,6 +240,16 @@ export interface User {
   photo?: string;
 }
 
+export interface Appointment {
+  id: string;
+  title: string;
+  description: string;
+  date: string; // ISO date
+  type: 'livraison' | 'reunion' | 'paiement' | 'echantillon' | 'autre';
+  priority: 'low' | 'medium' | 'high';
+  relatedId?: string; // e.g. Commande ID
+}
+
 export type ChargeCategorie =
   | 'salaires'
   | 'achats_matieres'
@@ -287,12 +311,12 @@ export type AppPage =
   | 'dashboard' | 'fiches' | 'ordres' | 'chaine' | 'stocks' | 'pilotage' | 'scan_production'
   | 'rh' | 'commandes' | 'clients' | 'factures' | 'charges' | 'bilan' | 'fast_scanner'
   | 'pointage' | 'portail_client' | 'performance' | 'utilisateurs' | 'parametres' | 'demandes'
-  | 'worker_portal' | 'controle_qualite' | 'partenaire_portal';
+  | 'worker_portal' | 'controle_qualite' | 'partenaire_portal' | 'agenda';
 
 export type RolePermMap = Record<'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire', AppPage[]>;
 
 export const DEFAULT_PERMISSIONS: RolePermMap = {
-  admin: ['dashboard', 'demandes', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'stocks', 'rh', 'commandes', 'clients', 'factures', 'charges', 'bilan', 'fast_scanner', 'pointage', 'portail_client', 'performance', 'utilisateurs', 'parametres', 'worker_portal', 'controle_qualite', 'partenaire_portal'],
+  admin: ['dashboard', 'demandes', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'stocks', 'rh', 'commandes', 'clients', 'factures', 'charges', 'bilan', 'fast_scanner', 'pointage', 'portail_client', 'performance', 'utilisateurs', 'parametres', 'worker_portal', 'controle_qualite', 'partenaire_portal', 'agenda'],
   pointeur: ['dashboard', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'pointage', 'performance', 'worker_portal', 'controle_qualite'],
   client: ['portail_client'],
   worker: ['pointage', 'fast_scanner', 'worker_portal'],
@@ -303,7 +327,7 @@ export const DEFAULT_PERMISSIONS: RolePermMap = {
   partenaire: ['partenaire_portal'],
 };
 
-const PERMISSIONS_VERSION = 9;
+const PERMISSIONS_VERSION = 10;
 
 export function loadPermissions(): RolePermMap {
   try {
@@ -314,14 +338,12 @@ export function loadPermissions(): RolePermMap {
       localStorage.removeItem('textrack_permissions');
       return DEFAULT_PERMISSIONS;
     }
-    return {
-      admin: parsed.admin ?? DEFAULT_PERMISSIONS.admin,
-      pointeur: parsed.pointeur ?? DEFAULT_PERMISSIONS.pointeur,
-      client: parsed.client ?? DEFAULT_PERMISSIONS.client,
-      worker: parsed.worker ?? DEFAULT_PERMISSIONS.worker,
-      coupeur: parsed.coupeur ?? DEFAULT_PERMISSIONS.coupeur,
-      modeliste: parsed.modeliste ?? DEFAULT_PERMISSIONS.modeliste,
-    };
+    const keys: (keyof RolePermMap)[] = ['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'controleur', 'agent_pointage', 'partenaire'];
+    const result = { ...DEFAULT_PERMISSIONS };
+    keys.forEach(k => {
+      if (parsed[k]) (result as any)[k] = parsed[k];
+    });
+    return result;
   } catch { return DEFAULT_PERMISSIONS; }
 }
 
@@ -340,6 +362,7 @@ export interface CompanyProfile {
   logoInvoice?: string;
   logoLogin?: string;
   logoMobileHeader?: string;
+  logoFooter?: string;
   address: string;
   ice: string;
   rc: string;
@@ -399,6 +422,7 @@ export function loadCompanyProfile(): CompanyProfile {
     if (!merged.logoInvoice) merged.logoInvoice = merged.logoUrl;
     if (!merged.logoLogin) merged.logoLogin = merged.logoUrl;
     if (!merged.logoMobileHeader) merged.logoMobileHeader = merged.logoUrl;
+    if (!merged.logoFooter) merged.logoFooter = merged.logoUrl;
     
     return merged;
   } catch (e) {
@@ -533,41 +557,51 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
     }
   }
 
-  const { error } = await supabase.from(table).upsert(record as any);
-  if (error) {
-    console.error(`Error saving to ${table}:`, error.message);
+  try {
+    const { error } = await supabase.from(table).upsert(record as any);
+    if (error) {
+      console.error(`Error saving to ${table}:`, error.message);
 
-    // Robust fallback for missing columns in Supabase schema
-    const errMsg = error.message.toLowerCase();
-    const isMissingColumn = errMsg.includes('column') || errMsg.includes('not find') || errMsg.includes('attribute') || errMsg.includes('schema cache');
-    
-    if (isMissingColumn) {
-      const fallbackRecord = { ...record as any };
-      const newCols = [
-        'tissuPrix', 'coutMainOeuvre', 'tissuSourcing', 
-        'tissu', 'tissuConsommation', 'commandeId', 'fournisseurTel', 'fournisseurEmail',
-        'adresse', 'notes', 'pinCode',
-        'avance', 'retouche', 'lastActive', 'photo',
-        'composition', 'metrageTotal', 'largeur', 'zone', 'etagere',
-        'cin', 'rib', 'banque', 'salaireMensuel', 'remunerationType', 'actif', 'prenom',
-        'dateEntree', 'contrat', 'cnss', 'mutuelle', 'enfants', 'situation_familiale',
-        'clientId', 'rebut', 'suivi', 'planningReady', 'ville', 'employeId', 'telephone'
-      ];
-      newCols.forEach(col => delete fallbackRecord[col]);
+      // Robust fallback for missing columns in Supabase schema
+      const errMsg = error.message.toLowerCase();
+      const isMissingColumn = errMsg.includes('column') || errMsg.includes('not find') || errMsg.includes('attribute') || errMsg.includes('schema cache');
       
-      const { error: retryError } = await supabase.from(table).upsert(fallbackRecord);
-      if (!retryError) {
-        console.warn(`Saved ${table} using fallback (ignored new columns). Run SQL update to enable full tracking.`);
-        return; 
+      if (isMissingColumn) {
+        const fallbackRecord = { ...record as any };
+        const newCols = [
+          'tissuPrix', 'coutMainOeuvre', 'tissuSourcing', 
+          'tissuConsommation', 'fournisseurTel', 'fournisseurEmail',
+          'pinCode',
+          'avance', 'retouche', 'lastActive', 'photo',
+          'composition', 'metrageTotal', 'largeur', 'zone', 'etagere',
+          'cin', 'rib', 'banque', 'salaireMensuel', 'remunerationType', 'actif', 'prenom',
+          'dateEntree', 'contrat', 'cnss', 'mutuelle', 'enfants', 'situation_familiale',
+          'clientId', 'rebut', 'planningReady', 'ville', 'employeId', 'telephone', 'tailles', 'rejectionNote', 'tissus'
+        ];
+        newCols.forEach(col => delete fallbackRecord[col]);
+        
+        const { error: retryError } = await supabase.from(table).upsert(fallbackRecord);
+        if (!retryError) {
+          console.warn(`Saved ${table} using fallback (ignored new columns). Run SQL update to enable full tracking.`);
+          return; 
+        }
+        
+        // If even the fallback fails, use the latest error for the alert
+        if (!silent) alert(`Erreur de sauvegarde dans ${table} : ${retryError.message}\n\nNote: Certaines colonnes sont peut-être manquantes dans votre base de données Supabase.`);
+        return;
       }
-      
-      // If even the fallback fails, use the latest error for the alert
-      if (!silent) alert(`Erreur de sauvegarde dans ${table} : ${retryError.message}\n\nNote: Certaines colonnes sont peut-être manquantes dans votre base de données Supabase.`);
-      return;
-    }
 
-    // Only alert if it's NOT a missing column error
-    if (!silent) alert(`Erreur de sauvegarde dans ${table} : ${error.message}`);
+      // Only alert if it's NOT a missing column error
+      if (!silent) alert(`Erreur de sauvegarde dans ${table} : ${error.message}`);
+    }
+  } catch (e: any) {
+    console.error(`Fatal save error for ${table}:`, e);
+    if (!silent) {
+      const msg = e.message === 'Failed to fetch' 
+        ? (silent ? '' : "Erreur de connexion : Impossible de joindre le serveur. Vérifiez votre connexion internet.") 
+        : e.message;
+      if (msg) alert(`Erreur critique [${table}] : ${msg}`);
+    }
   }
 }
 

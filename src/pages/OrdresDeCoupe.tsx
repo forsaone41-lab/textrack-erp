@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, Scissors, ShoppingCart, FileText, Image as ImageIcon, Download, Ruler, ChevronRight } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Scissors, ShoppingCart, FileText, Image as ImageIcon, Download, Ruler, ChevronRight, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { OrdreDeCoupe, StockTissu, FicheTechnique, Commande, loadData, saveRecord, deleteRecord, genId } from '../types';
 import { printFicheTechnique } from '../utils/print';
 import { useLang } from '../contexts/LangContext';
@@ -18,6 +18,9 @@ export default function OrdresDeCoupe() {
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [viewMesuresFiche, setViewMesuresFiche] = useState<FicheTechnique | null>(null);
   const [checks, setChecks] = useState<Record<string, { patron?: boolean, fiche?: boolean, mesures?: boolean }>>({});
+  const [showRejectForm, setShowRejectForm] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [showSuccess, setShowSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     refreshData();
@@ -86,8 +89,14 @@ export default function OrdresDeCoupe() {
 
     const cmd = commandes.find(c => c.id === o.commandeId);
     if (cmd) {
-      const updatedCmd = { ...cmd, phase: 'montage' as any }; 
-      await saveRecord('commandes', updatedCmd);
+      // Use "Clean Update" to preserve data (like externalTasks) but avoid payload issues
+      const cleanCmd = { ...cmd };
+      delete (cleanCmd as any).modelePhoto;
+      delete (cleanCmd as any).tissuPhoto;
+      delete (cleanCmd as any).preuveValidation;
+      
+      cleanCmd.phase = 'montage' as any;
+      await saveRecord('commandes', cleanCmd);
     }
   };
 
@@ -132,14 +141,73 @@ export default function OrdresDeCoupe() {
   };
 
   async function save() {
-    if (!form.modele || !form.tissu) return;
+    if (!form.modele) {
+      alert(isAr ? 'الموديل مطلوب' : 'Modèle requis');
+      return;
+    }
+    
+    // Ensure tissu is NEVER null to satisfy DB constraint
+    const finalTissu = form.tissu || 'NON SPECIFIÉ';
+    
     const isNew = !editId;
     const oId = editId || genId();
-    const ordreData = { id: oId, ...form } as OrdreDeCoupe;
-    const updated = isNew ? [...ordres, ordreData] : ordres.map(o => o.id === editId ? ordreData : o);
-    setOrdres(updated);
+    const ordreData = { 
+      ...form, 
+      id: oId, 
+      tissu: finalTissu,
+      statut: form.statut || 'planifié',
+      metrage: form.metrage || 0,
+      quantite: form.quantite || 0,
+      dateCoupe: (form as any).dateCoupe || new Date().toISOString().split('T')[0]
+    } as OrdreDeCoupe;
+    
+    setOrdres(prev => isNew ? [...prev, ordreData] : prev.map(o => o.id === editId ? ordreData : o));
     setShowModal(false);
-    await saveRecord('ordres', ordreData);
+    
+    try {
+      await saveRecord('ordres', ordreData);
+      setShowSuccess(isAr ? 'تم حفظ أمر القطع بنجاح' : 'Ordre de coupe enregistré avec succès');
+    } catch (e: any) {
+      alert(isAr ? `خطأ في الحفظ: ${e.message}` : `Erreur de sauvegarde: ${e.message}`);
+    }
+  }
+
+  async function handleReject() {
+    if (!form.commandeId) return;
+    if (!rejectReason.trim()) {
+      alert(isAr ? 'يرجى كتابة سبب الرفض' : 'Veuillez saisir la raison du refus');
+      return;
+    }
+
+    const cmd = commandes.find(c => c.id === form.commandeId);
+    if (cmd) {
+      const updatedCmd = { 
+        ...cmd, 
+        phase: 'patronage' as any, // Send back to patronage
+        statut: 'en_cours' as any,
+        rejectionNote: rejectReason,
+        suivi: [
+          ...(cmd.suivi || []),
+          { phase: 'coupe' as any, date: new Date().toISOString(), note: `REFUS: ${rejectReason}` }
+        ]
+      };
+      
+      // Remove photos to avoid payload issues if they exist as base64
+      delete (updatedCmd as any).modelePhoto;
+      delete (updatedCmd as any).tissuPhoto;
+      delete (updatedCmd as any).preuveValidation;
+
+      try {
+        await saveRecord('commandes', updatedCmd);
+        setCommandes(prev => prev.map(c => c.id === updatedCmd.id ? updatedCmd : c));
+        setShowModal(false);
+        setShowRejectForm(false);
+        setRejectReason('');
+        setShowSuccess(isAr ? 'تم رفض الطلبية وإعادتها للإدارة' : 'Ordre refusé et renvoyé à l\'administration');
+      } catch (e: any) {
+        alert(`Erreur: ${e.message}`);
+      }
+    }
   }
 
   async function remove(id: string) {
@@ -205,12 +273,59 @@ export default function OrdresDeCoupe() {
           </div>
           <div>
             <h2 className="text-lg font-black text-slate-800 leading-none">{t('file_attente', lang)}</h2>
-            <p className="text-xs text-slate-400 font-bold mt-1 uppercase tracking-wider">{planifies.length} {t('ordres_attente', lang)}</p>
+            <p className="text-xs text-slate-400 font-bold mt-1 uppercase tracking-wider">{(planifies.length + pendingCommands.length)} {t('ordres_attente', lang)}</p>
           </div>
         </div>
 
-        {planifies.length > 0 ? (
+        {(planifies.length > 0 || pendingCommands.length > 0) ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* NEW COMMANDS FROM MASTER SETUP */}
+            {pendingCommands.map(c => {
+              const fiche = fiches.find(f => f.modele.toLowerCase() === c.modele.toLowerCase());
+              return (
+                <div key={c.id} className="bg-indigo-50/50 border-2 border-indigo-200 border-dashed rounded-[2.5rem] p-8 shadow-xl shadow-indigo-500/5 flex flex-col hover:border-indigo-400 transition-all group relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-4"><span className="px-3 py-1 bg-indigo-600 text-white text-[8px] font-black uppercase tracking-widest rounded-full shadow-lg animate-pulse">NOUVEAU</span></div>
+                  <div className="flex gap-6 mb-6">
+                    <div className="w-20 h-20 rounded-3xl bg-white overflow-hidden flex-shrink-0 border border-indigo-100 shadow-sm">
+                      {fiche?.photo ? <img src={fiche.photo} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><ImageIcon className="w-8 h-8 text-indigo-100" /></div>}
+                    </div>
+                    <div className="flex-1 min-w-0 py-1">
+                      <h3 className="text-lg font-black text-slate-800 truncate mb-1 uppercase tracking-tight">{c.modele}</h3>
+                      <p className="text-xs font-bold text-indigo-600 mb-2">{c.client}</p>
+                      <span className="px-3 py-1 bg-white border border-indigo-100 rounded-full text-[9px] font-black uppercase text-indigo-500">{c.quantite} {t('pcs', lang)}</span>
+                    </div>
+                  </div>
+                  
+                  <button 
+                    onClick={() => {
+                      const fiche = fiches.find(f => f.modele.toLowerCase() === c.modele.toLowerCase());
+                      const conso = fiche?.tissuConsommation || 0;
+                      const totalMetrage = Number((conso * c.quantite).toFixed(2));
+                      
+                      setForm({
+                        commandeId: c.id,
+                        modele: c.modele,
+                        client: c.client,
+                        quantite: c.quantite,
+                        tissu: c.tissu,
+                        couleur: c.couleur || '',
+                        statut: 'planifié',
+                        metrage: Number(((c as any).tissus?.reduce((acc: number, t: any) => acc + (c.quantite * (t.conso || 0)), 0) || (c.quantite * (fiche?.tissuConsommation || 0))).toFixed(2)),
+                        tissus: (c as any).tissus || []
+                      });
+                      setEditId(null);
+                      setShowModal(true);
+                    }}
+                    className="w-full py-4 bg-indigo-600 text-white rounded-2xl text-[10px] font-black hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all flex items-center justify-center gap-3 uppercase tracking-widest"
+                  >
+                    <Plus className="w-4 h-4" /> 
+                    PLANIFIER LA COUPE
+                  </button>
+                </div>
+              );
+            })}
+
+            {/* ALREADY PLANNED ORDERS */}
             {planifies.map(o => {
               const fiche = fiches.find(f => f.modele.toLowerCase() === o.modele.toLowerCase());
               return (
@@ -354,43 +469,162 @@ export default function OrdresDeCoupe() {
         </div>
       </div>
 
-      {/* Main Ordre Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
-          <div className="bg-white rounded-[2rem] w-full max-w-lg shadow-2xl p-10 space-y-6">
-            <h2 className="text-2xl font-black text-slate-800 tracking-tight leading-none mb-4">{editId ? t('modifier_ordre', lang) : t('lancer_ordre', lang)}</h2>
-            <div className="space-y-4">
-              <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{t('modele_label', lang)} *</label><input value={form.modele || ''} onChange={e => handleModeleChange(e.target.value)} list="modeles-list" className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-50 outline-none transition-all" /></div>
-              <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{t('selectionner_rouleau', lang)}</label>
-                <select 
-                  value={form.rollId || ''} 
-                  onChange={e => {
-                    const roll = tissus.find(t => t.id === e.target.value);
-                    if (roll) {
-                      setForm({ ...form, rollId: roll.id, tissu: roll.type, couleur: roll.couleur });
-                    }
-                  }}
-                  className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-50 outline-none transition-all"
-                >
-                  <option value="">{t('choisir_rouleau', lang)}</option>
-                  {tissus.filter(t => t.metrage > 0).map(t => (
-                    <option key={t.id} value={t.id}>
-                      {t.type} {t.couleur} ({t.metrage}m dispos) — {t.reference || t.id.slice(0,4)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{t('tissu_auto', lang)}</label><input readOnly value={form.tissu || ''} className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-400 outline-none" /></div>
-                <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{t('couleur_auto', lang)}</label><input readOnly value={form.couleur || ''} className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-400 outline-none" /></div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{t('quantite_pcs', lang)}</label><input type="number" value={form.quantite || 0} onChange={e => handleQtyChange(parseInt(e.target.value) || 0)} className="w-full px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-50 outline-none transition-all" /></div>
-                <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{t('metrage_m', lang)}</label><div className="w-full px-5 py-4 bg-indigo-50 border border-indigo-100 rounded-2xl text-sm font-black text-indigo-700 flex justify-between items-center"><span>{form.metrage || 0}</span><span className="opacity-40">M</span></div></div>
-              </div>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-[3rem] w-full max-w-xl shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in-95 duration-300">
+            {/* Modal Header Premium */}
+            <div className="bg-slate-50 p-8 border-b border-slate-100 flex items-center justify-between">
+               <div className="flex items-center gap-4">
+                 <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-indigo-100 transform rotate-3">
+                   <Scissors className="w-6 h-6" />
+                 </div>
+                 <div>
+                   <h2 className="text-xl font-black text-slate-800 tracking-tight leading-none uppercase">{editId ? t('modifier_ordre', lang) : t('lancer_ordre', lang)}</h2>
+                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Workspace de Planification</p>
+                 </div>
+               </div>
+               <button onClick={() => { setShowModal(false); setShowRejectForm(false); }} className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white hover:shadow-lg transition-all text-slate-400">×</button>
             </div>
-            <div className="flex justify-end gap-3 pt-6"><button onClick={() => setShowModal(false)} className="px-6 py-4 text-[10px] font-black text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest">{t('cancel', lang)}</button><button onClick={save} className="px-10 py-4 bg-indigo-600 text-white rounded-2xl text-[10px] font-black hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all uppercase tracking-widest">{t('enregistrer_ordre', lang)}</button></div>
+
+            <div className="p-10 space-y-8 max-h-[60vh] overflow-y-auto">
+               {showRejectForm ? (
+                 <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                    <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-[1.5rem] flex items-center justify-center mx-auto mb-4">
+                      <AlertTriangle className="w-8 h-8" />
+                    </div>
+                    <div className="text-center">
+                       <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight mb-2">{t('refuser_ordre' as any, lang)}</h3>
+                       <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('raison_refus' as any, lang)}</p>
+                    </div>
+                    <textarea 
+                      value={rejectReason}
+                      onChange={e => setRejectReason(e.target.value)}
+                      placeholder={isAr ? 'اكتب سبب الرفض هنا...' : 'Expliquez pourquoi vous refusez cet ordre...'}
+                      className={`w-full h-32 p-6 bg-slate-50 border border-slate-200 rounded-3xl outline-none focus:ring-2 focus:ring-rose-500 text-sm font-bold ${isAr ? 'text-right' : ''}`}
+                    />
+                 </div>
+               ) : (
+                 <>
+              {/* Main Info Card */}
+              <div className="grid grid-cols-2 gap-4">
+                 <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
+                    <label className="block text-[9px] font-black text-slate-400 uppercase mb-2">Modèle</label>
+                    <p className="text-lg font-black text-slate-800 uppercase tracking-tighter">{form.modele || '—'}</p>
+                 </div>
+                 <div className="p-6 bg-indigo-50/50 rounded-[2rem] border border-indigo-100">
+                    <label className="block text-[9px] font-black text-indigo-400 uppercase mb-2">Quantité</label>
+                    <p className="text-lg font-black text-indigo-700 tracking-tighter">{form.quantite || 0} PCS</p>
+                 </div>
+              </div>
+
+              {/* Sizes Breakdown - NEW */}
+              {form.commandeId && (
+                <div className="space-y-4">
+                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Répartition des Tailles</label>
+                   <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                      {commandes.find(cmd => cmd.id === form.commandeId)?.quantitesTailles && 
+                        Object.entries(commandes.find(cmd => cmd.id === form.commandeId)!.quantitesTailles).map(([size, qty]) => (
+                          <div key={size} className="bg-slate-50 border border-slate-100 rounded-2xl p-3 text-center">
+                             <p className="text-[9px] font-black text-slate-400 uppercase mb-1">{size}</p>
+                             <p className="text-sm font-black text-slate-800">{qty as number}</p>
+                          </div>
+                        ))
+                      }
+                   </div>
+                </div>
+              )}
+
+              {/* FABRIC SUMMARY - THE "WOW" BLOCK */}
+              <div className="p-8 bg-slate-900 rounded-[2.5rem] text-white relative overflow-hidden group shadow-2xl">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-600/20 blur-[50px] -mr-16 -mt-16 group-hover:bg-indigo-600/40 transition-colors" />
+                  
+                  {(form as any).tissus && (form as any).tissus.length > 0 ? (
+                    <div className="space-y-6">
+                       <div className="flex justify-between items-center border-b border-white/10 pb-4">
+                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Plan de Coupe (Multi-Tissus)</span>
+                          <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Métrage par Ligne</span>
+                       </div>
+                       <div className="space-y-4">
+                          {(form as any).tissus.map((t: any, i: number) => {
+                            const rowMetrage = (form.quantite * (t.conso || 0)).toFixed(2);
+                            return (
+                              <div key={t.id || i} className="flex justify-between items-center">
+                                <div className="flex items-center gap-3">
+                                   <div className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)]" />
+                                   <div>
+                                      <p className="text-sm font-black uppercase">{t.couleur} {t.type}</p>
+                                      <p className="text-[9px] text-slate-500 font-bold uppercase mt-0.5">Conso: {t.conso}m/pc</p>
+                                   </div>
+                                </div>
+                                <p className="text-xl font-black text-white">{rowMetrage}<span className="text-[10px] text-slate-500 ml-1">M</span></p>
+                              </div>
+                            );
+                          })}
+                       </div>
+                       <div className="pt-4 border-t border-white/10 flex justify-between items-center">
+                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total Global</span>
+                          <p className="text-2xl font-black text-indigo-400">{form.metrage}<span className="text-sm ml-1">M</span></p>
+                       </div>
+                    </div>
+                  ) : (
+                    <div className="relative flex justify-between items-end">
+                      <div className="space-y-4">
+                          <div>
+                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Tissu & Couleur</span>
+                            <div className="flex items-center gap-3 mt-1">
+                                <div className="w-3 h-3 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
+                                <p className="text-xl font-black uppercase tracking-tight">{form.tissu || '—'} <span className="text-slate-500 ml-2">({form.couleur || '—'})</span></p>
+                            </div>
+                          </div>
+                      </div>
+                      <div className="text-right">
+                          <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Métrage Total Requis</span>
+                          <div className="flex items-baseline justify-end gap-1 mt-1">
+                            <p className="text-5xl font-black text-white leading-none">{(form.metrage || 0).toLocaleString()}</p>
+                            <span className="text-lg font-black text-slate-500">M</span>
+                          </div>
+                      </div>
+                    </div>
+                  )}
+              </div>
+               </>
+               )}
+            </div>
+
+            <div className="p-10 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
+              {showRejectForm ? (
+                <>
+                  <button onClick={() => setShowRejectForm(false)} className="px-6 py-4 text-[10px] font-black text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest">Retour</button>
+                  <button 
+                    onClick={handleReject} 
+                    className="px-12 py-5 bg-rose-600 text-white rounded-2xl text-[11px] font-black hover:bg-rose-700 shadow-xl shadow-rose-600/20 transition-all uppercase tracking-widest transform active:scale-95"
+                  >
+                    {t('confirmer_refus' as any, lang)}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="flex gap-4">
+                    <button onClick={() => { setShowModal(false); setShowRejectForm(false); }} className="px-6 py-4 text-[10px] font-black text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest">Annuler</button>
+                    {form.commandeId && (
+                      <button 
+                        onClick={() => setShowRejectForm(true)} 
+                        className="px-6 py-4 text-[10px] font-black text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-2xl transition-all uppercase tracking-widest flex items-center gap-2"
+                      >
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        {t('refuser_ordre' as any, lang)}
+                      </button>
+                    )}
+                  </div>
+                  <button 
+                    onClick={save} 
+                    className="px-12 py-5 bg-indigo-600 text-white rounded-2xl text-[11px] font-black hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all uppercase tracking-widest transform active:scale-95"
+                  >
+                    {t('enregistrer_ordre', lang)}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -406,6 +640,28 @@ export default function OrdresDeCoupe() {
             <div className="flex-1 overflow-auto p-10"><div className="rounded-3xl border border-slate-200 overflow-hidden shadow-sm"><table className="w-full text-sm border-collapse"><thead><tr className="bg-slate-900 text-white uppercase text-[10px] font-black tracking-[0.15em]"><th className="px-8 py-5 text-left border-r border-slate-800">{t('point_mesure_label', lang)}</th>{viewMesuresFiche.tailles.map(t => <th key={t} className="px-6 py-5 text-center border-r border-slate-800 last:border-r-0">{t}</th>)}</tr></thead><tbody className="divide-y divide-slate-200">{viewMesuresFiche.mesures.map((m, i) => (<tr key={i} className="hover:bg-indigo-50/30 transition-colors group"><td className="px-8 py-5 font-black text-slate-700 bg-slate-50 group-hover:bg-indigo-50/50 border-r border-slate-200 transition-colors uppercase tracking-tight">{m.nom}</td>{viewMesuresFiche.tailles.map(t => (<td key={t} className="px-6 py-5 text-center font-bold text-indigo-600 border-r border-slate-100 last:border-r-0 group-hover:bg-white transition-colors">{m.valeurs[t] || '—'}</td>))}</tr>))}</tbody></table></div></div>
             <div className="p-8 border-t border-slate-100 flex justify-center bg-slate-50/50"><button onClick={() => setViewMesuresFiche(null)} className="px-12 py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl">{t('fermer_tableau', lang)}</button></div>
           </div>
+        </div>
+      )}
+      {/* Modern Success Modal */}
+      {showSuccess && (
+        <div className="fixed inset-0 z-[200] bg-slate-900/60 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-500">
+           <div className="bg-white rounded-[3rem] p-12 max-w-sm w-full text-center shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-300">
+              <div className="w-24 h-24 bg-emerald-50 text-emerald-500 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 shadow-xl shadow-emerald-500/10 border-2 border-emerald-100/50">
+                <CheckCircle2 className="w-12 h-12" />
+              </div>
+              <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-3">
+                {isAr ? 'تم بنجاح!' : 'Félicitations !'}
+              </h3>
+              <p className="text-sm font-bold text-slate-400 mb-10 leading-relaxed uppercase tracking-widest">
+                {showSuccess}
+              </p>
+              <button 
+                onClick={() => setShowSuccess(null)}
+                className="w-full h-16 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-slate-200 hover:bg-indigo-600 transition-all active:scale-95"
+              >
+                {isAr ? 'حسناً' : 'Continuer'}
+              </button>
+           </div>
         </div>
       )}
     </div>

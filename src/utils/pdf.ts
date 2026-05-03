@@ -1,5 +1,6 @@
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+// Dynamic imports for heavy libraries to keep bundle light
+const getHtml2Canvas = () => import('html2canvas').then(m => m.default);
+const getJsPDF = () => import('jspdf').then(m => m.default);
 
 /**
  * Super robust printing: Converts canvases to images first, then clones 
@@ -55,7 +56,7 @@ export function printElement(elementId: string) {
     <html>
       <head>
         <title>Impression - TexTrack</title>
-        ${stylesHtml}
+        \${stylesHtml}
         <style>
           body { margin: 0; padding: 20px; background: white !important; font-family: sans-serif; }
           img { max-width: 100% !important; height: auto !important; }
@@ -65,7 +66,7 @@ export function printElement(elementId: string) {
       </head>
       <body>
         <div class="print-content">
-          ${clone.outerHTML}
+          \${clone.outerHTML}
         </div>
       </body>
     </html>
@@ -111,6 +112,13 @@ export async function generatePDF(elementId: string, filename: string) {
 
   try {
     element.scrollTop = 0;
+
+    // Lazy load libraries
+    const [html2canvas, jsPDF] = await Promise.all([
+      getHtml2Canvas(),
+      getJsPDF()
+    ]);
+
     const canvas = await html2canvas(element, {
       scale: 2, 
       useCORS: true,
@@ -129,6 +137,7 @@ export async function generatePDF(elementId: string, filename: string) {
         }
       }
     });
+
 
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, TriangleAlert, Package, Layers, MapPin, User, Tag, Coins, Calendar, Mail, Phone, MessageCircle } from 'lucide-react';
 import { StockTissu, StockFourniture, loadData, saveRecord, deleteRecord, genId } from '../types';
+import { useLang } from '../contexts/LangContext';
+import { t } from '../i18n';
 
 type Tab = 'tissus' | 'fournitures';
 
@@ -30,20 +32,21 @@ const FOURNI_ICONS: Record<string, string> = {
   étiquettes: '🏷️', élastiques: '🔄', autre: '📦',
 };
 
-const STATUT_TISSU_STYLE = {
-  disponible: { label: 'Disponible', cls: 'bg-green-100 text-green-700', border: 'border-t-green-500' },
-  alerte: { label: 'Alerte', cls: 'bg-amber-100 text-amber-700', border: 'border-t-amber-500' },
-  epuise: { label: 'Épuisé', cls: 'bg-red-100 text-red-700', border: 'border-t-red-500' },
-};
+const STATUT_TISSU_STYLE = (lang: any) => ({
+  disponible: { label: t('disponible', lang), cls: 'bg-green-100 text-green-700', border: 'border-t-green-500' },
+  alerte: { label: t('alerte', lang), cls: 'bg-amber-100 text-amber-700', border: 'border-t-amber-500' },
+  epuise: { label: t('epuise', lang), cls: 'bg-red-100 text-red-700', border: 'border-t-red-500' },
+});
 
-const STATUT_FOURNI_STYLE = {
-  normal: { label: 'Normal', cls: 'bg-green-100 text-green-700' },
-  alerte: { label: 'Alerte', cls: 'bg-amber-100 text-amber-700' },
-  rupture: { label: 'Rupture', cls: 'bg-red-100 text-red-700' },
-};
+const STATUT_FOURNI_STYLE = (lang: any) => ({
+  normal: { label: t('normal', lang), cls: 'bg-green-100 text-green-700' },
+  alerte: { label: t('alerte', lang), cls: 'bg-amber-100 text-amber-700' },
+  rupture: { label: t('rupture', lang), cls: 'bg-red-100 text-red-700' },
+});
 
 // ─── Component ──────────────────────────────────────────────
 export default function StockMateriaux() {
+  const { lang, isAr } = useLang();
   const [tab, setTab] = useState<Tab>('tissus');
   const [tissus, setTissus] = useState<StockTissu[]>([]);
   const [fournitures, setFournitures] = useState<StockFourniture[]>([]);
@@ -224,12 +227,12 @@ export default function StockMateriaux() {
       <div className="flex gap-2">
         <button onClick={() => { setTab('tissus'); setSearch(''); }}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition ${tab === 'tissus' ? 'bg-indigo-600 text-white shadow' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
-          <Layers className="w-4 h-4" /> Rouleaux de Tissu
+          <Layers className="w-4 h-4" /> {t('stock_tissu_title', lang).split('—')[1] || t('stock_tissu_title', lang)}
           {alertesT + epuisesT > 0 && <span className="bg-red-500 text-white text-xs rounded-full px-1.5">{alertesT + epuisesT}</span>}
         </button>
         <button onClick={() => { setTab('fournitures'); setSearch(''); }}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition ${tab === 'fournitures' ? 'bg-indigo-600 text-white shadow' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
-          <Package className="w-4 h-4" /> Fournitures
+          <Package className="w-4 h-4" /> {t('stock_fourni_title', lang).split('—')[1] || t('stock_fourni_title', lang)}
           {alertesF + rupturesF > 0 && <span className="bg-red-500 text-white text-xs rounded-full px-1.5">{alertesF + rupturesF}</span>}
         </button>
       </div>
@@ -246,13 +249,13 @@ export default function StockMateriaux() {
                   <TriangleAlert className="w-6 h-6 text-indigo-400" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-black tracking-tight">Planification des Besoins (MRP)</h2>
-                  <p className="text-indigo-300/60 text-xs font-bold uppercase tracking-widest">Analyse automatique des stocks vs commandes</p>
+                  <h2 className="text-2xl font-black tracking-tight">{t('mrp_title', lang)}</h2>
+                  <p className="text-indigo-300/60 text-xs font-bold uppercase tracking-widest">{t('mrp_subtitle', lang)}</p>
                 </div>
               </div>
               <div className="bg-white/5 px-4 py-2 rounded-xl border border-white/10 flex items-center gap-3">
                 <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Données en temps réel</span>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('real_time', lang)}</span>
               </div>
             </div>
             
@@ -260,11 +263,11 @@ export default function StockMateriaux() {
               <table className="w-full text-left border-separate border-spacing-y-2">
                 <thead>
                   <tr className="text-indigo-300/40 text-[10px] font-black uppercase tracking-widest">
-                    <th className="px-4 py-2">Matière / Couleur</th>
-                    <th className="px-4 py-2">Total Requis</th>
-                    <th className="px-4 py-2">Stock Actuel</th>
-                    <th className="px-4 py-2 text-center">Statut / Manque</th>
-                    <th className="px-4 py-2">Action Fournisseur</th>
+                    <th className="px-4 py-2">{t('matiere_couleur', lang)}</th>
+                    <th className="px-4 py-2">{t('total_requis', lang)}</th>
+                    <th className="px-4 py-2">{t('stock_actuel', lang)}</th>
+                    <th className="px-4 py-2 text-center">{t('statut_manque', lang)}</th>
+                    <th className="px-4 py-2">{t('action_fournisseur', lang)}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -291,7 +294,7 @@ export default function StockMateriaux() {
                     if (entries.length === 0) return (
                       <tr>
                         <td colSpan={5} className="py-12 text-center text-slate-500 italic text-sm">
-                          Aucun besoin immédiat détecté pour les commandes en cours.
+                          {t('no_mrp_need', lang)}
                         </td>
                       </tr>
                     );
@@ -322,11 +325,11 @@ export default function StockMateriaux() {
                           </td>
                           <td className="px-4 py-4 text-center">
                             {isOk ? (
-                              <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-black px-3 py-1 rounded-full border border-emerald-500/30 uppercase">Disponible</span>
+                              <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-black px-3 py-1 rounded-full border border-emerald-500/30 uppercase">{t('disponible', lang)}</span>
                             ) : (
                               <div className="flex flex-col items-center">
                                 <span className="bg-red-500 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg shadow-red-900/40 uppercase animate-pulse">
-                                  Manque {shortage.toFixed(1)}m
+                                  {isAr ? 'نقص' : 'Manque'} {shortage.toFixed(1)}m
                                 </span>
                               </div>
                             )}
@@ -347,7 +350,7 @@ export default function StockMateriaux() {
                                 </a>
                               </div>
                             ) : (
-                              <p className="text-[10px] text-slate-500 italic">Prêt à produire</p>
+                              <p className="text-[10px] text-slate-500 italic">{isAr ? 'جاهز للإنتاج' : 'Prêt à produire'}</p>
                             )}
                           </td>
                         </tr>
@@ -367,22 +370,22 @@ export default function StockMateriaux() {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-slate-800">Stock — Rouleaux de Tissu</h1>
-              <p className="text-sm text-slate-400">{tissus.length} rouleaux enregistrés</p>
+              <h1 className="text-2xl font-bold text-slate-800">{t('stock_tissu_title', lang)}</h1>
+              <p className="text-sm text-slate-400">{tissus.length} {t('rouleaux_enregistres', lang)}</p>
             </div>
             <button onClick={openCreateT}
               className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-lg hover:bg-indigo-700 transition text-sm font-medium shadow">
-              <Plus className="w-4 h-4" /> Nouveau Rouleau
+              <Plus className="w-4 h-4" /> {t('nouveau_rouleau', lang)}
             </button>
           </div>
 
           {/* KPIs */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { label: 'Mètres Disponibles', value: `${totalM.toLocaleString()} m`, cls: 'text-indigo-600' },
-              { label: 'Valeur en Stock', value: `${valeurT.toLocaleString()} MAD`, cls: 'text-indigo-600' },
-              { label: 'Alertes Stock', value: alertesT, cls: alertesT > 0 ? 'text-amber-500' : 'text-slate-400' },
-              { label: 'Rouleaux Épuisés', value: epuisesT, cls: epuisesT > 0 ? 'text-red-600' : 'text-slate-400' },
+              { label: t('metres_dispo', lang), value: `${totalM.toLocaleString()} m`, cls: 'text-indigo-600' },
+              { label: t('valeur_stock', lang), value: `${valeurT.toLocaleString()} MAD`, cls: 'text-indigo-600' },
+              { label: t('alertes_stock', lang), value: alertesT, cls: alertesT > 0 ? 'text-amber-500' : 'text-slate-400' },
+              { label: t('rouleaux_epuises', lang), value: epuisesT, cls: epuisesT > 0 ? 'text-red-600' : 'text-slate-400' },
             ].map((k, i) => (
               <div key={i} className="bg-white rounded-xl border border-slate-200 p-5">
                 <p className={`text-2xl font-bold ${k.cls}`}>{k.value}</p>
@@ -395,7 +398,7 @@ export default function StockMateriaux() {
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input type="text" placeholder="Rechercher par référence, couleur, fournisseur..."
+              <input type="text" placeholder={t('search_stock_placeholder', lang)}
                 value={search} onChange={e => setSearch(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
@@ -403,7 +406,7 @@ export default function StockMateriaux() {
               {['tous', 'disponible', 'alerte', 'epuise'].map(f => (
                 <button key={f} onClick={() => setFilterTissu(f)}
                   className={`px-3 py-2 rounded-lg text-xs font-medium capitalize transition ${filterTissu === f ? 'bg-indigo-600 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
-                  {f === 'tous' ? 'Tous' : f === 'epuise' ? 'Épuisé' : f.charAt(0).toUpperCase() + f.slice(1)}
+                  {t(f as any, lang)}
                 </button>
               ))}
             </div>
@@ -411,28 +414,28 @@ export default function StockMateriaux() {
 
           {/* Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {filteredTissus.map(t => {
-              const statut = getTissuStatut(t);
-              const st = STATUT_TISSU_STYLE[statut];
-              const pct = t.metrageTotal ? Math.min(100, Math.round((t.metrage / t.metrageTotal) * 100)) : null;
+            {filteredTissus.map(roll => {
+              const statut = getTissuStatut(roll);
+              const st = STATUT_TISSU_STYLE(lang)[statut];
+              const pct = roll.metrageTotal ? Math.min(100, Math.round((roll.metrage / roll.metrageTotal) * 100)) : null;
               const barColor = statut === 'disponible' ? 'bg-green-500' : statut === 'alerte' ? 'bg-amber-500' : 'bg-red-500';
               return (
-                <div key={t.id} className={`bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden border-t-4 ${st.border}`}>
+                <div key={roll.id} className={`bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden border-t-4 ${st.border}`}>
                   <div className="p-5">
                     {/* Top row */}
                     <div className="flex items-start justify-between mb-3">
                       <div>
-                        <p className="text-[10px] text-slate-400 font-mono mb-0.5">{getTissuRef(t)}</p>
-                        <h3 className="font-black text-slate-900 text-lg leading-tight uppercase tracking-tight">{t.type} {t.couleur}</h3>
-                        <p className="text-[10px] text-slate-500 font-medium">{t.composition || 'Composition non spécifiée'}</p>
+                        <p className="text-[10px] text-slate-400 font-mono mb-0.5">{getTissuRef(roll)}</p>
+                        <h3 className="font-black text-slate-900 text-lg leading-tight uppercase tracking-tight">{roll.type} {roll.couleur}</h3>
+                        <p className="text-[10px] text-slate-500 font-medium">{roll.composition || 'Composition non spécifiée'}</p>
                       </div>
                       <div className="flex items-center gap-1">
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${st.cls}`}>
                           {statut === 'alerte' && <TriangleAlert className="w-3 h-3 inline mr-0.5" />}
                           {st.label}
                         </span>
-                        <button onClick={() => openEditT(t)} className="p-1 text-slate-300 hover:text-indigo-500 transition"><Edit2 className="w-3.5 h-3.5" /></button>
-                        <button onClick={() => removeTissu(t.id)} className="p-1 text-slate-300 hover:text-red-500 transition"><Trash2 className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => openEditT(roll)} className="p-1 text-slate-300 hover:text-indigo-500 transition"><Edit2 className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => removeTissu(roll.id)} className="p-1 text-slate-300 hover:text-red-500 transition"><Trash2 className="w-3.5 h-3.5" /></button>
                       </div>
                     </div>
 
@@ -440,19 +443,19 @@ export default function StockMateriaux() {
                     <div className="mb-4">
                       <div className="flex justify-between text-xs text-slate-500 mb-1">
                         <span className={`font-black ${statut === 'epuise' ? 'text-red-600 text-lg' : 'font-semibold'}`}>
-                          {t.metrage} m {statut === 'epuise' ? 'RESTANTS' : 'restants'}
+                          {roll.metrage} m {t('restants_label', lang)}
                         </span>
-                        {t.metrageTotal && statut !== 'epuise' && <span className="text-slate-400">/ {t.metrageTotal} m</span>}
+                        {roll.metrageTotal && statut !== 'epuise' && <span className="text-slate-400">/ {roll.metrageTotal} m</span>}
                       </div>
                       {statut === 'epuise' ? (
                         <div className="bg-red-50 border border-red-100 rounded-xl p-3">
-                           <p className="text-[9px] font-black text-red-400 uppercase tracking-tighter mb-1">Cause d'épuisement</p>
+                           <p className="text-[9px] font-black text-red-400 uppercase tracking-tighter mb-1">{t('cause_epuisement', lang)}</p>
                            {(() => {
-                             const lastOrdre = [...ordres].reverse().find(o => o.tissu === `${t.type} ${t.couleur}`);
+                             const lastOrdre = [...ordres].reverse().find(o => o.tissu === `${roll.type} ${roll.couleur}`);
                              const lastCmd = lastOrdre ? commandes.find(c => c.id === lastOrdre.commandeId) : null;
                              return (
                                <p className="text-[11px] font-bold text-red-700 leading-tight">
-                                 {lastCmd ? `Consommé par: ${lastCmd.reference} (${lastCmd.modele})` : 'Usage manuel ou non répertorié'}
+                                 {lastCmd ? `${t('consomme_par', lang)}: ${lastCmd.reference} (${lastCmd.modele})` : t('usage_manuel', lang)}
                                </p>
                              );
                            })()}
@@ -463,7 +466,7 @@ export default function StockMateriaux() {
                             <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                               <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
                             </div>
-                            <p className="text-[10px] text-slate-400 mt-1">{pct}% disponible</p>
+                            <p className="text-[10px] text-slate-400 mt-1">{pct}% {t('disponible', lang)}</p>
                           </>
                         )
                       )}
@@ -471,35 +474,35 @@ export default function StockMateriaux() {
 
                     {/* Details */}
                     <div className="grid grid-cols-1 gap-y-2 mb-4 bg-slate-50/30 p-2.5 rounded-lg border border-slate-100">
-                      {t.fournisseur && (
+                      {roll.fournisseur && (
                         <div className="flex items-center gap-2">
                           <User className="w-3.5 h-3.5 text-slate-400" />
-                          <p className="text-xs text-slate-600 font-medium">{t.fournisseur}</p>
+                          <p className="text-xs text-slate-600 font-medium">{roll.fournisseur}</p>
                         </div>
                       )}
 
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Tag className="w-3.5 h-3.5 text-slate-400" />
-                          <p className="text-xs font-semibold text-indigo-600">{t.prixMetre} MAD</p>
+                          <p className="text-xs font-semibold text-indigo-600">{roll.prixMetre} MAD</p>
                         </div>
                         <div className="flex items-center gap-2 text-right">
-                          <p className="text-xs font-medium text-slate-700">{(t.metrage * t.prixMetre).toLocaleString()} MAD</p>
+                          <p className="text-xs font-medium text-slate-700">{(roll.metrage * roll.prixMetre).toLocaleString()} MAD</p>
                           <Coins className="w-3.5 h-3.5 text-slate-400" />
                         </div>
                       </div>
                     </div>
 
                     {/* Contact Buttons */}
-                    {(t.fournisseurTel || t.fournisseurEmail) && (
+                    {(roll.fournisseurTel || roll.fournisseurEmail) && (
                       <div className="mb-4 flex items-center gap-2">
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mr-auto">Contact Fournisseur</p>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mr-auto">{t('contact_fournisseur', lang)}</p>
                         <div className="flex gap-1.5">
-                          {t.fournisseurEmail && (
+                          {roll.fournisseurEmail && (
                             <button 
                               onClick={(e) => {
                                 e.stopPropagation();
-                                window.location.href = `mailto:${t.fournisseurEmail}`;
+                                window.location.href = `mailto:${roll.fournisseurEmail}`;
                               }}
                               className="p-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100 transition shadow-sm border border-indigo-100"
                               title="Envoyer Email"
@@ -507,12 +510,12 @@ export default function StockMateriaux() {
                               <Mail className="w-3.5 h-3.5" />
                             </button>
                           )}
-                          {t.fournisseurTel && (
+                          {roll.fournisseurTel && (
                             <>
                               <button 
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  window.open(`https://wa.me/${t.fournisseurTel?.replace(/\s+/g, '')}`, '_blank');
+                                  window.open(`https://wa.me/${roll.fournisseurTel?.replace(/\s+/g, '')}`, '_blank');
                                 }}
                                 className="p-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition shadow-sm border border-emerald-100"
                                 title="WhatsApp"
@@ -522,7 +525,7 @@ export default function StockMateriaux() {
                               <button 
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  window.location.href = `tel:${t.fournisseurTel}`;
+                                  window.location.href = `tel:${roll.fournisseurTel}`;
                                 }}
                                 className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition shadow-sm border border-blue-100"
                                 title="Appeler"
@@ -537,16 +540,16 @@ export default function StockMateriaux() {
 
                     {/* Footer */}
                     <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-[10px] text-slate-400">
-                      {(t.zone || t.etagere) && (
+                      {(roll.zone || roll.etagere) && (
                         <span className="flex items-center gap-1">
                           <MapPin className="w-3 h-3" />
-                          {[t.zone, t.etagere].filter(Boolean).join(' – ')}
+                          {[roll.zone, roll.etagere].filter(Boolean).join(' – ')}
                         </span>
                       )}
-                      {t.dateReception && (
+                      {roll.dateReception && (
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
-                          {t.dateReception}
+                          {roll.dateReception}
                         </span>
                       )}
                     </div>
@@ -571,22 +574,22 @@ export default function StockMateriaux() {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-slate-800">Stock — Fournitures</h1>
-              <p className="text-sm text-slate-400">{fournitures.length} articles enregistrés</p>
+              <h1 className="text-2xl font-bold text-slate-800">{t('stock_fourni_title', lang)}</h1>
+              <p className="text-sm text-slate-400">{fournitures.length} {t('articles_enregistres', lang)}</p>
             </div>
             <button onClick={openCreateF}
               className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-lg hover:bg-indigo-700 transition text-sm font-medium shadow">
-              <Plus className="w-4 h-4" /> Nouvel Article
+              <Plus className="w-4 h-4" /> {t('nouvel_article', lang)}
             </button>
           </div>
 
           {/* KPIs */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { label: 'Total Articles', value: fournitures.length, cls: 'text-indigo-600' },
-              { label: 'Valeur Stock', value: `${valeurF.toLocaleString()} MAD`, cls: 'text-indigo-600' },
-              { label: 'En Alerte', value: alertesF, cls: alertesF > 0 ? 'text-amber-500' : 'text-slate-400' },
-              { label: 'Rupture de Stock', value: rupturesF, cls: rupturesF > 0 ? 'text-red-600' : 'text-slate-400' },
+              { label: t('total_articles', lang), value: fournitures.length, cls: 'text-indigo-600' },
+              { label: t('valeur_stock', lang), value: `${valeurF.toLocaleString()} MAD`, cls: 'text-indigo-600' },
+              { label: t('en_alerte', lang), value: alertesF, cls: alertesF > 0 ? 'text-amber-500' : 'text-slate-400' },
+              { label: t('rupture_stock', lang), value: rupturesF, cls: rupturesF > 0 ? 'text-red-600' : 'text-slate-400' },
             ].map((k, i) => (
               <div key={i} className="bg-white rounded-xl border border-slate-200 p-5">
                 <p className={`text-2xl font-bold ${k.cls}`}>{k.value}</p>
@@ -600,7 +603,7 @@ export default function StockMateriaux() {
             <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-5 py-3">
               <TriangleAlert className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-semibold text-red-700">{urgentsF.length} article(s) nécessitent un réapprovisionnement urgent</p>
+                <p className="text-sm font-semibold text-red-700">{urgentsF.length} {t('urgent_restock', lang)}</p>
                 <p className="text-xs text-red-500 mt-0.5">{urgentsF.map(f => f.nom).join(' · ')}</p>
               </div>
             </div>
@@ -611,7 +614,7 @@ export default function StockMateriaux() {
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input type="text" placeholder="Rechercher une fourniture..."
+                <input type="text" placeholder={t('search_fourni_placeholder', lang)}
                   value={search} onChange={e => setSearch(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
@@ -620,14 +623,14 @@ export default function StockMateriaux() {
               {categories.map(c => (
                 <button key={c} onClick={() => setFilterCat(c)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition ${filterCat === c ? 'bg-indigo-600 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
-                  {c === 'tous' ? 'Tous' : `${FOURNI_ICONS[c] ?? ''} ${c.charAt(0).toUpperCase() + c.slice(1)}`}
+                  {c === 'tous' ? t('all', lang) : `${FOURNI_ICONS[c] ?? ''} ${c.charAt(0).toUpperCase() + c.slice(1)}`}
                 </button>
               ))}
               <div className="ml-auto flex gap-2">
                 {['tous', 'normal', 'alerte', 'rupture'].map(f => (
                   <button key={f} onClick={() => setFilterFourni(f)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition ${filterFourni === f ? 'bg-slate-700 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
-                    {f === 'tous' ? 'Tous' : f.charAt(0).toUpperCase() + f.slice(1)}
+                    {t(f as any, lang)}
                   </button>
                 ))}
               </div>
@@ -639,22 +642,22 @@ export default function StockMateriaux() {
             <table className="w-full">
               <thead className="bg-slate-50 border-b border-slate-100">
                 <tr>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Article</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Catégorie</th>
-                  <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Stock actuel</th>
-                  <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Stock min.</th>
-                  <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase w-32">Niveau</th>
-                  <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Prix unit.</th>
-                  <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Valeur</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Fournisseur</th>
-                  <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Statut</th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">{t('article', lang)}</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">{t('categorie', lang)}</th>
+                  <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">{t('stock_actuel', lang)}</th>
+                  <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">{t('stock_min', lang)}</th>
+                  <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase w-32">{t('niveau', lang)}</th>
+                  <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">{t('prix_unit', lang)}</th>
+                  <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">{t('valeur', lang)}</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">{t('fournisseur', lang)}</th>
+                  <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">{t('statut', lang)}</th>
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredFourni.map(f => {
-                  const statut = getFourniStatut(f);
-                  const st = STATUT_FOURNI_STYLE[statut];
+                   const statut = getFourniStatut(f);
+                   const st = STATUT_FOURNI_STYLE(lang)[statut];
                   const pct = f.stockMin && f.stockMin > 0 ? Math.min(100, Math.round((f.quantite / (f.stockMin * 3)) * 100)) : f.quantite > 0 ? 100 : 0;
                   const barColor = statut === 'normal' ? 'bg-green-500' : statut === 'alerte' ? 'bg-amber-500' : 'bg-red-500';
                   return (
@@ -704,7 +707,7 @@ export default function StockMateriaux() {
             {filteredFourni.length === 0 && (
               <div className="text-center py-10 text-slate-400">
                 <Package className="w-10 h-10 mx-auto mb-2 opacity-30" />
-                <p className="text-sm">Aucune fourniture trouvée</p>
+                <p className="text-sm">{t('no_fourni_found', lang)}</p>
               </div>
             )}
           </div>

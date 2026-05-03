@@ -87,6 +87,16 @@ export default function LandingPage() {
   const [isSending, setIsSending] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [selectedType, setSelectedType] = useState('T-Shirt');
+  const [tailles, setTailles] = useState<Record<string, string>>({ XS: '', S: '', M: '', L: '', XL: '', XXL: '' });
+  const [quantity, setQuantity] = useState('');
+
+  // Auto-calculate total quantity from sizes
+  useEffect(() => {
+    const total = Object.values(tailles).reduce((acc, val) => acc + (Number(val) || 0), 0);
+    if (total > 0) {
+      setQuantity(total.toString());
+    }
+  }, [tailles]);
 
   // Dynamic SEO Title & Description
   useEffect(() => {
@@ -237,6 +247,7 @@ export default function LandingPage() {
                   className="absolute inset-0 w-full h-full border-0"
                   allowFullScreen
                   scrolling="no"
+                  loading="lazy"
                   allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
                 ></iframe>
               ) : (
@@ -324,6 +335,7 @@ export default function LandingPage() {
                         ville: formData.get('ville') as string,
                         type: finalType,
                         quantity: Number(formData.get('quantity')),
+                        tailles: Object.fromEntries(Object.entries(tailles).filter(([_, v]) => v !== '').map(([k, v]) => [k, Number(v)])),
                         details: formData.get('details') as string,
                         photo: selectedPhoto
                       };
@@ -333,6 +345,7 @@ export default function LandingPage() {
                       setShowSuccess(true);
                       setSelectedPhoto(null);
                       setSelectedType('T-Shirt');
+                      setTailles({ XS: '', S: '', M: '', L: '', XL: '', XXL: '' });
                       formElement.reset();
                     } catch (err: any) {
                       setIsSending(false);
@@ -421,7 +434,40 @@ export default function LandingPage() {
                     </div>
                     <div>
                       <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">{isAr ? 'الكمية التقديرية' : 'Quantité Estimeé'}</label>
-                      <input type="number" name="quantity" placeholder="100" min="1" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors h-[58px]" required />
+                      <input 
+                        type="number" 
+                        name="quantity" 
+                        placeholder="100" 
+                        min="1" 
+                        value={quantity}
+                        onChange={(e) => setQuantity(e.target.value)}
+                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors h-[58px]" 
+                        required 
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-6">
+                    <div>
+                      <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-4">
+                        {isAr ? 'المقاسات (اختياري)' : 'Tailles & Répartition (Optionnel)'}
+                      </label>
+                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                        {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map(size => (
+                          <div key={size} className="relative group">
+                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 bg-indigo-50 text-[8px] font-black text-indigo-600 rounded-full border border-indigo-100 z-10 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                              {size}
+                            </div>
+                            <input
+                              type="number"
+                              value={tailles[size]}
+                              onChange={(e) => setTailles({...tailles, [size]: e.target.value})}
+                              placeholder="0"
+                              className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl pt-4 pb-2 px-1 text-center text-xs font-black outline-none focus:border-indigo-600 focus:bg-white transition-all h-[58px]"
+                            />
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
@@ -531,14 +577,15 @@ export default function LandingPage() {
         </div>
       )}
 
-      {/* Footer */}
       <footer className="py-20 px-6 border-t border-slate-100 bg-slate-900 text-white overflow-hidden relative">
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-6 md:p-12">
             <div className={isAr ? 'text-right' : 'text-left'}>
               <div className="flex items-center gap-3 mb-6 justify-center md:justify-start">
-                {company.logoUrl && company.logoUrl !== '/logo.png' ? (
-                  <img src={company.logoUrl} alt="Logo" className="w-12 h-12 object-contain rounded-xl" />
+                {company.logoFooter ? (
+                  <img src={company.logoFooter} alt="Logo Footer" className="w-auto h-12 object-contain" loading="lazy" />
+                ) : company.logoUrl && company.logoUrl !== '/logo.png' ? (
+                  <img src={company.logoUrl} alt="Logo" className="w-12 h-12 object-contain rounded-xl" loading="lazy" />
                 ) : (
                   <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center">
                     <Package className="w-7 h-7 text-white" />
