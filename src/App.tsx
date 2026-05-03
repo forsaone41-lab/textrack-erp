@@ -305,6 +305,7 @@ function AppContent() {
         
         {/* User Profile */}
         <Route path="profil" element={<Profil currentUser={currentUser} />} />
+        <Route path="recrutement" element={<Recrutement />} />
         
         {/* Protected Production Routes */}
         <Route path="demandes" element={can('demandes') ? <Demandes /> : <Navigate to="/" replace />} />
