@@ -397,19 +397,30 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
   }
   render() {
     if (this.state.hasError) {
+      const isChunkError = this.state.error?.toString().includes('chunk') || 
+                          this.state.error?.toString().includes('dynamically imported module');
+
       return (
         <div className="min-h-screen bg-slate-950 flex items-center justify-center p-8 text-center">
           <div className="max-w-md w-full bg-white/5 border border-white/10 p-8 rounded-[40px] backdrop-blur-xl">
-            <h1 className="text-2xl font-black text-white mb-4">Oups! Une erreur est survenue</h1>
-            <p className="text-slate-400 mb-6 text-sm">Le composant a crashé. Voici l'erreur :</p>
-            <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl mb-8 text-left overflow-auto max-h-40">
-              <code className="text-red-400 text-xs whitespace-pre-wrap">{this.state.error?.toString()}</code>
-            </div>
+            <h1 className="text-2xl font-black text-white mb-4">
+              {isChunkError ? "Nouvelle version disponible" : "Oups! Une erreur est survenue"}
+            </h1>
+            <p className="text-slate-400 mb-6 text-sm">
+              {isChunkError 
+                ? "Une mise à jour du système a été effectuée. Veuillez recharger pour appliquer les changements." 
+                : "Le composant a crashé. Voici l'erreur :"}
+            </p>
+            {!isChunkError && (
+              <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl mb-8 text-left overflow-auto max-h-40">
+                <code className="text-red-400 text-xs whitespace-pre-wrap">{this.state.error?.toString()}</code>
+              </div>
+            )}
             <button
               onClick={() => window.location.reload()}
-              className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm hover:bg-indigo-500 transition-all"
+              className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-600/20"
             >
-              Recharger la page
+              {isChunkError ? "Mettre à jour maintenant" : "Recharger la page"}
             </button>
           </div>
         </div>
