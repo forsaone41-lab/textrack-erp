@@ -197,40 +197,40 @@ function AppContent() {
       setCompany(remote);
 
       // Dynamic Branding Update
-      if (remote.logoAppIcon) {
-        // Update Favicon
-        const icon = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
-        if (icon) icon.href = remote.logoAppIcon;
-        
-        const appleIcon = document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement;
-        if (appleIcon) appleIcon.href = remote.logoAppIcon;
+      const finalIcon = remote.logoAppIcon || "/logo.png";
+      
+      // Update Favicon
+      const icon = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
+      if (icon) icon.href = finalIcon;
+      
+      const appleIcon = document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement;
+      if (appleIcon) appleIcon.href = finalIcon;
 
-        // Update Manifest (PWA Icon)
-        const existingManifest = document.querySelector("link[rel='manifest']") as HTMLLinkElement;
-        if (existingManifest) {
-          const manifestContent = {
-            name: remote.name || "Beya Creative",
-            short_name: remote.name || "Beya Creative",
-            description: remote.description || "Système de gestion textile",
-            start_url: "/",
-            display: "standalone",
-            background_color: "#0f172a",
-            theme_color: "#4f46e5",
-            icons: [
-              { src: remote.logoAppIcon, sizes: "192x192", type: "image/png", purpose: "any maskable" },
-              { src: remote.logoAppIcon, sizes: "512x512", type: "image/png", purpose: "any maskable" }
-            ]
-          };
-          const stringManifest = JSON.stringify(manifestContent);
-          const blob = new Blob([stringManifest], {type: 'application/json'});
-          const manifestURL = URL.createObjectURL(blob);
-          existingManifest.href = manifestURL;
-        }
+      // Update Manifest (PWA Icon)
+      const existingManifest = document.querySelector("link[rel='manifest']") as HTMLLinkElement;
+      if (existingManifest) {
+        const manifestContent = {
+          name: remote.name || "Beya Creative",
+          short_name: remote.name || "Beya Creative",
+          description: remote.description || "Système de gestion textile",
+          start_url: "/",
+          display: "standalone",
+          background_color: "#0f172a",
+          theme_color: "#4f46e5",
+          icons: [
+            { src: finalIcon, sizes: "192x192", type: "image/png", purpose: "any maskable" },
+            { src: finalIcon, sizes: "512x512", type: "image/png", purpose: "any maskable" }
+          ]
+        };
+        const stringManifest = JSON.stringify(manifestContent);
+        const blob = new Blob([stringManifest], {type: 'application/json'});
+        const manifestURL = URL.createObjectURL(blob);
+        existingManifest.href = manifestURL;
+      }
 
-        // Update Document Title
-        if (remote.name) {
-          document.title = remote.name;
-        }
+      // Update Document Title
+      if (remote.name) {
+        document.title = remote.name;
       }
     };
 

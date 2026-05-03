@@ -424,7 +424,6 @@ export function loadCompanyProfile(): CompanyProfile {
     if (!merged.logoLogin) merged.logoLogin = merged.logoUrl;
     if (!merged.logoMobileHeader) merged.logoMobileHeader = merged.logoUrl;
     if (!merged.logoFooter) merged.logoFooter = merged.logoUrl;
-    if (!merged.logoAppIcon) merged.logoAppIcon = merged.logoUrl;
     
     return merged;
   } catch (e) {

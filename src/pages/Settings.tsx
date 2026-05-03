@@ -302,11 +302,22 @@ export default function Settings() {
                 {isAr ? 'أيقونة التطبيق (PWA / Favicon)' : 'Icône de l\'App (PWA)'}
               </label>
               <div className="flex flex-col gap-4">
-                <div className="h-20 bg-white rounded-2xl border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden">
-                  {profile.logoAppIcon ? (
-                    <img src={profile.logoAppIcon} className="w-12 h-12 object-contain" alt="App Icon" />
+                <div className="h-20 bg-white rounded-2xl border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden relative group">
+                  {(profile.logoAppIcon && profile.logoAppIcon !== '/logo.png') ? (
+                    <>
+                      <img src={profile.logoAppIcon} className="w-12 h-12 object-contain" alt="App Icon" />
+                      <button 
+                        onClick={() => handleChange('logoAppIcon', '')}
+                        className="absolute inset-0 bg-rose-500/80 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 font-black text-[8px] uppercase tracking-widest"
+                      >
+                        <X className="w-3 h-3" /> {isAr ? 'حذف' : 'Supprimer'}
+                      </button>
+                    </>
                   ) : (
-                    <ImageIcon className="w-8 h-8 text-slate-200" />
+                    <div className="flex flex-col items-center gap-1">
+                      <ImageIcon className="w-6 h-6 text-slate-200" />
+                      <span className="text-[8px] font-black text-slate-300 uppercase">{isAr ? 'لا توجد أيقونة' : 'Aucune Icône'}</span>
+                    </div>
                   )}
                 </div>
                 <div className="flex gap-2">
