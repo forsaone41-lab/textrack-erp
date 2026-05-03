@@ -603,8 +603,12 @@ export default function LandingPage() {
             </div>
 
             <div className="flex flex-col items-center md:items-end gap-6">
-              <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400">{isAr ? 'تابعونا على' : 'Suivez-nous'}</p>
-              <div className="flex gap-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400">{isAr ? 'روابط سريعة' : 'Liens Rapides'}</p>
+              <div className="flex flex-wrap justify-center md:justify-end gap-4">
+                <Link to="/recrutement" className="px-6 py-3 bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600 hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all border border-indigo-600/30 flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  {isAr ? 'التوظيف' : 'Recrutement'}
+                </Link>
                 <a href="https://www.instagram.com/beyacreative/" target="_blank" className="px-6 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-black uppercase tracking-widest transition-colors flex items-center gap-2">
                   Instagram
                 </a>
