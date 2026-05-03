@@ -7,6 +7,7 @@ export default function Recrutement() {
   const { isAr, toggle } = useLang();
   const [isSending, setIsSending] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [cvFile, setCvFile] = useState<string>('');
 
   const specialties = [
     { id: 'piqueuse', fr: 'Piqueuse / Machiniste', ar: 'خياطة / بيكوز' },
@@ -30,7 +31,8 @@ export default function Recrutement() {
       type: 'RECRUTEMENT: ' + formData.get('specialty'),
       quantity: 0,
       details: `Expérience: ${formData.get('experience')} ans. Message: ${formData.get('message')}`,
-      photo: '' // Optional for recruitment
+      photo: '', // Optional for recruitment
+      cv: cvFile
     };
 
     try {
@@ -40,6 +42,17 @@ export default function Recrutement() {
     } catch (err) {
       setIsSending(false);
       alert('Error');
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCvFile(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -139,6 +152,24 @@ export default function Recrutement() {
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{isAr ? 'سنوات الخبرة' : 'Années d\'expérience'}</label>
               <input name="experience" type="number" required placeholder="Ex: 5" className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl text-sm font-bold focus:bg-white focus:border-indigo-600 outline-none transition-all" />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{isAr ? 'السيرة الذاتية (CV)' : 'Votre CV (PDF ou Image)'}</label>
+              <div className="flex items-center gap-4">
+                <label className="flex-1 flex items-center gap-3 px-6 py-4 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:bg-white hover:border-indigo-600 transition-all group">
+                  <Upload className="w-5 h-5 text-slate-400 group-hover:text-indigo-600" />
+                  <span className="text-sm font-bold text-slate-400 group-hover:text-slate-600">
+                    {cvFile ? (isAr ? 'تم اختيار الملف ✅' : 'Fichier sélectionné ✅') : (isAr ? 'اختر ملف CV...' : 'Choisir un fichier...')}
+                  </span>
+                  <input type="file" accept=".pdf,image/*" className="hidden" onChange={handleFileChange} />
+                </label>
+                {cvFile && (
+                  <button type="button" onClick={() => setCvFile('')} className="p-4 bg-rose-50 text-rose-500 rounded-2xl hover:bg-rose-100 transition-colors">
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="space-y-2">

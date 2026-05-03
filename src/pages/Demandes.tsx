@@ -24,6 +24,7 @@ export default function Demandes() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [filter, setFilter] = useState<'all' | 'new' | 'completed'>('all');
+  const [category, setCategory] = useState<'clients' | 'recrutement'>('clients');
 
   const [confirmLead, setConfirmLead] = useState<Lead | null>(null);
   const [confirmDetails, setConfirmDetails] = useState({
@@ -329,7 +330,12 @@ export default function Demandes() {
     }, 500);
   };
 
-  const filteredLeads = leads.filter(l => filter === 'all' || l.status === filter);
+  const filteredLeads = leads.filter(l => {
+    const isRecrutement = l.type.startsWith('RECRUTEMENT:');
+    const matchCategory = category === 'recrutement' ? isRecrutement : !isRecrutement;
+    const matchFilter = filter === 'all' || l.status === filter;
+    return matchCategory && matchFilter;
+  });
 
   return (
     <div className={`space-y-6 ${isAr ? 'text-right' : 'text-left'} relative`} dir={isAr ? 'rtl' : 'ltr'}>
@@ -801,37 +807,56 @@ export default function Demandes() {
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-4">
+            <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 shadow-inner">
+              <button 
+                onClick={() => setCategory('clients')}
+                className={`px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 ${category === 'clients' ? 'bg-white text-indigo-600 shadow-md ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-800'}`}
+              >
+                <Package className="w-4 h-4" />
+                {isAr ? 'زبناء محتملون' : 'Prospects Clients'}
+              </button>
+              <button 
+                onClick={() => setCategory('recrutement')}
+                className={`px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 ${category === 'recrutement' ? 'bg-white text-rose-600 shadow-md ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-800'}`}
+              >
+                <UserPlus className="w-4 h-4" />
+                {isAr ? 'طلبات التوظيف' : 'Recrutement'}
+              </button>
+            </div>
+          </div>
           <div>
-            <h1 className="text-2xl font-black text-slate-800 uppercase tracking-tight">
-              {isAr ? 'طلبات الزبائن الجدد' : 'Demandes Prospects'}
+            <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tight leading-none">
+              {category === 'recrutement' ? (isAr ? 'إدارة التوظيف' : 'Gestion Recrutement') : (isAr ? 'طلبات الزبائن' : 'Demandes Prospects')}
             </h1>
-            <p className="text-slate-500 text-sm font-medium">
-              {isAr ? 'تواصل مع المهتمين بخدمات المصنع' : 'Gérez les prospects intéressés par vos services'}
+            <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-2">
+              {category === 'recrutement' ? (isAr ? 'مراجعة المترشحين الجدد' : 'Suivi des candidatures et profils') : (isAr ? 'تواصل مع المهتمين بخدمات المصنع' : 'Gérez les prospects intéressés par vos services')}
             </p>
           </div>
-          <button 
-            onClick={() => setShowSettings(true)}
-            className="p-3 bg-white border border-slate-200 text-slate-400 rounded-2xl hover:text-indigo-600 hover:border-indigo-100 transition-all shadow-sm"
-            title={isAr ? 'إعدادات الرسائل' : 'Paramètres des Messages'}
-          >
-            <Settings className="w-5 h-5" />
-          </button>
         </div>
 
-        <div className="flex bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
-          {(['all', 'new', 'completed'] as const).map(f => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${
-                filter === f ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50'
-              }`}
-            >
-              {isAr ? (f === 'all' ? 'الكل' : f === 'new' ? 'جديد' : 'مكتمل') : f}
-            </button>
-          ))}
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => setShowSettings(true)}
+            className="p-4 bg-white border border-slate-200 text-slate-400 rounded-2xl hover:text-indigo-600 hover:border-indigo-100 transition-all shadow-sm"
+          >
+            <Settings className="w-6 h-6" />
+          </button>
+          <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm">
+            {(['all', 'new', 'completed'] as const).map(f => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                  filter === f ? 'bg-slate-900 text-white shadow-xl' : 'text-slate-500 hover:bg-slate-50'
+                }`}
+              >
+                {isAr ? (f === 'all' ? 'الكل' : f === 'new' ? 'جديد' : 'مكتمل') : f}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -886,7 +911,18 @@ export default function Demandes() {
                       {lead.email && <span className="flex items-center gap-1.5"><Mail className="w-4 h-4 text-slate-400" /> {lead.email}</span>}
                       <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-slate-400" /> {new Date(lead.date).toLocaleDateString()}</span>
                       <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full">
-                        <Package className="w-3.5 h-3.5" /> {lead.type} ({lead.quantity} pcs)
+                        {lead.type.startsWith('RECRUTEMENT:') ? (
+                          <>
+                            <UserPlus className="w-3.5 h-3.5" />
+                            <span className="font-black text-[11px] uppercase tracking-tighter">
+                              {lead.type.replace('RECRUTEMENT:', '')}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <Package className="w-3.5 h-3.5" /> {lead.type} ({lead.quantity} pcs)
+                          </>
+                        )}
                       </span>
                     </div>
                   </div>
@@ -916,6 +952,20 @@ export default function Demandes() {
                       <MessageSquare className="w-4 h-4" />
                       {isAr ? (lead.contactedAt ? 'تم التواصل' : 'واتساب') : (lead.contactedAt ? 'Contacté' : 'WhatsApp')}
                     </button>
+                    {lead.cv && (
+                      <button 
+                        onClick={() => {
+                          const link = document.createElement('a');
+                          link.href = lead.cv!;
+                          link.download = `CV_${lead.name.replace(/\s/g, '_')}`;
+                          link.click();
+                        }}
+                        className="w-11 h-11 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-xl flex items-center justify-center transition-all border border-indigo-100 shadow-sm"
+                        title={isAr ? 'تحميل السيرة الذاتية' : 'Télécharger le CV'}
+                      >
+                        <FileText className="w-5 h-5" />
+                      </button>
+                    )}
                   </div>
 
                   {/* Secondary Tools: Devis, Fiche, Convert Client */}
@@ -935,13 +985,15 @@ export default function Demandes() {
                       </div>
                     )}
 
-                    <button 
-                      onClick={() => setDevisLead(lead)}
-                      className="w-9 h-9 flex items-center justify-center bg-white text-amber-500 hover:bg-amber-500 hover:text-white rounded-xl transition-all shadow-sm border border-amber-100 group/btn"
-                      title={isAr ? 'حساب التكلفة' : 'Devis'}
-                    >
-                      <Calculator className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
-                    </button>
+                    {!lead.type.startsWith('RECRUTEMENT:') && (
+                      <button 
+                        onClick={() => setDevisLead(lead)}
+                        className="w-9 h-9 flex items-center justify-center bg-white text-amber-500 hover:bg-amber-500 hover:text-white rounded-xl transition-all shadow-sm border border-amber-100 group/btn"
+                        title={isAr ? 'حساب التكلفة' : 'Devis'}
+                      >
+                        <Calculator className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                      </button>
+                    )}
 
                     {/* Fiche Technique Button - Only active if client is registered */}
                     {(() => {

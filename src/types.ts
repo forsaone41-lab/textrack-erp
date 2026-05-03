@@ -386,6 +386,7 @@ export interface Lead {
   date: string;
   status: 'new' | 'completed';
   photo?: string;
+  cv?: string;
   email?: string;
   contactedAt?: string;
   contactedType?: string;
