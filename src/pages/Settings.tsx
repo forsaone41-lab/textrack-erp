@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, Image as ImageIcon, Building2, FileText, Phone, Play, Zap, Globe, Settings as SettingsIcon, ShieldCheck, X } from 'lucide-react';
+import { Save, Image as ImageIcon, Building2, FileText, Phone, Play, Zap, Globe, Settings as SettingsIcon, ShieldCheck, X, Star, MapPin } from 'lucide-react';
 import { CompanyProfile, loadCompanyProfile, saveCompanyProfile } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
