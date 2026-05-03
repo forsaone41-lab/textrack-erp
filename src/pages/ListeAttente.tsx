@@ -14,21 +14,27 @@ interface WaitlistedCandidate {
   notes?: string;
 }
 
+// Local storage helpers for Waiting List
+function getLocalList<T>(key: string): T[] {
+  try {
+    const data = localStorage.getItem(`textrack_${key}`);
+    return data ? JSON.parse(data) : [];
+  } catch { return []; }
+}
+
+function saveLocalList<T>(key: string, data: T[]) {
+  localStorage.setItem(`textrack_${key}`, JSON.stringify(data));
+}
+
 export default function ListeAttente() {
   const { isAr } = useLang();
   const location = useLocation();
   const navigate = useNavigate();
-  const [candidates, setCandidates] = useState<WaitlistedCandidate[]>([]);
+  const [candidates, setCandidates] = useState<WaitlistedCandidate[]>(getLocalList('liste_attente'));
   const [search, setSearch] = useState('');
   const [showConfirmModal, setShowConfirmModal] = useState<WaitlistedCandidate | null>(null);
 
   useEffect(() => {
-    async function init() {
-      const data = await loadData<WaitlistedCandidate>('liste_attente');
-      setCandidates(data || []);
-    }
-    init();
-
     // Catch data from Recruitment
     if (location.state?.fromRecruitment) {
       const lead = location.state.fromRecruitment;
@@ -51,16 +57,20 @@ export default function ListeAttente() {
     }
   }, [location.state]);
 
-  const handleAddNew = async (candidate: WaitlistedCandidate) => {
-    const updated = [candidate, ...candidates];
-    setCandidates(updated);
-    await saveRecord('liste_attente', candidate);
+  const handleAddNew = (candidate: WaitlistedCandidate) => {
+    setCandidates(prev => {
+      const updated = [candidate, ...prev];
+      saveLocalList('liste_attente', updated);
+      return updated;
+    });
   };
 
-  const handleDelete = async (id: string) => {
-    const updated = candidates.filter(c => c.id !== id);
-    setCandidates(updated);
-    await deleteRecord('liste_attente', id);
+  const handleDelete = (id: string) => {
+    setCandidates(prev => {
+      const updated = prev.filter(c => c.id !== id);
+      saveLocalList('liste_attente', updated);
+      return updated;
+    });
   };
 
   const handleEmbaucher = async (candidate: WaitlistedCandidate) => {
