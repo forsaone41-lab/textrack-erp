@@ -679,7 +679,7 @@ export default function LandingPage() {
 
           {/* Interactive Map (Link to Google Maps) */}
           <a 
-            href="https://www.google.com/maps/search/?api=1&query=Meknes+Morocco" 
+            href={company.googleMapsUrl || "https://www.google.com/maps/search/?api=1&query=Meknes+Morocco"} 
             target="_blank" 
             rel="noopener noreferrer"
             className="mt-20 relative rounded-[3rem] overflow-hidden h-[400px] border-8 border-slate-50 group block cursor-pointer"

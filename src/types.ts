@@ -382,6 +382,7 @@ export interface CompanyProfile {
   visionTextAr?: string;
   missionTextFr?: string;
   missionTextAr?: string;
+  googleMapsUrl?: string;
 }
 
 export interface Lead {

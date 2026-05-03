@@ -539,6 +539,21 @@ export default function Settings() {
               <label className="block text-sm font-semibold text-slate-700 mb-1">{t('adresse_complete', lang)}</label>
               <input type="text" value={profile.address} onChange={e => handleChange('address', e.target.value)} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
             </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-1 flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-rose-500" />
+                {isAr ? 'رابط Google Maps' : 'Lien Google Maps'}
+              </label>
+              <input 
+                type="text" 
+                value={profile.googleMapsUrl || ''} 
+                onChange={e => handleChange('googleMapsUrl', e.target.value)} 
+                placeholder="https://www.google.com/maps/..." 
+                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-xs text-left" 
+                dir="ltr" 
+              />
+              <p className="text-[9px] text-slate-400 mt-1 italic">{isAr ? 'حط هنا الرابط اللي كيعطيك Google Maps ملي كدير Partager لموقع المحل.' : 'Collez ici le lien de partage fourni par Google Maps.'}</p>
+            </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1">{t('telephone', lang)}</label>
               <input type="text" value={profile.phone} onChange={e => handleChange('phone', e.target.value)} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none text-left" dir="ltr" />
