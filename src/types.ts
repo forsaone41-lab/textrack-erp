@@ -372,6 +372,16 @@ export interface CompanyProfile {
   phone: string;
   email: string;
   landingVideoUrl?: string;
+  // About Us Content
+  aboutTitleFr?: string;
+  aboutTitleAr?: string;
+  aboutTextFr?: string;
+  aboutTextAr?: string;
+  aboutPhotoUrl?: string;
+  visionTextFr?: string;
+  visionTextAr?: string;
+  missionTextFr?: string;
+  missionTextAr?: string;
 }
 
 export interface Lead {

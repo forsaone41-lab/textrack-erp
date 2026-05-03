@@ -589,7 +589,7 @@ export default function LandingPage() {
             <div className="relative">
               <div className="absolute -inset-4 bg-indigo-600 rounded-[3rem] blur-2xl opacity-20 animate-pulse" />
               <img 
-                src="https://images.unsplash.com/photo-1556905055-8f358a7a47b2?q=80&w=2070" 
+                src={company.aboutPhotoUrl || "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?q=80&w=2070"} 
                 alt="Atelier BEYA" 
                 className="relative rounded-[3rem] shadow-2xl border-4 border-white/5 object-cover h-[500px] w-full"
               />
@@ -605,23 +605,31 @@ export default function LandingPage() {
                 {isAr ? 'من نحن' : 'Qui Sommes-Nous'}
               </div>
               <h2 className="text-5xl md:text-6xl font-black mb-8 tracking-tighter leading-none italic">
-                {isAr ? 'قصة نجاح مغربية' : 'Une Excellence'} <br />
-                <span className="text-indigo-400">{isAr ? 'بمعايير عالمية' : 'Marocaine.'}</span>
+                {isAr 
+                  ? (company.aboutTitleAr || 'قصة نجاح مغربية') 
+                  : (company.aboutTitleFr || 'Une Excellence')} <br />
+                <span className="text-indigo-400">
+                  {isAr ? (company.aboutTitleAr ? '' : 'بمعايير عالمية') : (company.aboutTitleFr ? '' : 'Marocaine.')}
+                </span>
               </h2>
               <p className="text-slate-400 text-lg font-medium leading-relaxed mb-10">
                 {isAr 
-                  ? 'BEYA CREATIVE هي ثمرة سنوات من الشغف في مجال النسيج والخياطة. نحن لسنا مجرد مصنع، بل شريك استراتيجي يساعدك على تحويل أفكارك إلى واقع ملموس بجودة تضاهي كبريات الماركات العالمية.'
-                  : 'BEYA CREATIVE est le fruit de plusieurs années de passion pour le textile. Nous ne sommes pas qu\'une simple usine, mais un partenaire stratégique qui transforme vos idées en réalité avec une qualité digne des plus grandes marques internationales.'}
+                  ? (company.aboutTextAr || 'BEYA CREATIVE هي ثمرة سنوات من الشغف في مجال النسيج والخياطة. نحن لسنا مجرد مصنع، بل شريك استراتيجي يساعدك على تحويل أفكارك إلى واقع ملموس بجودة تضاهي كبريات الماركات العالمية.')
+                  : (company.aboutTextFr || 'BEYA CREATIVE est le fruit de plusieurs années de passion pour le textile. Nous ne sommes pas qu\'une simple usine, mais un partenaire stratégique qui transforme vos idées en réalité avec une qualité digne des plus grandes marques internationales.')}
               </p>
               
               <div className="grid grid-cols-2 gap-8">
                 <div>
                   <h4 className="text-indigo-400 font-black uppercase tracking-widest text-xs mb-3">{isAr ? 'رؤيتنا' : 'Notre Vision'}</h4>
-                  <p className="text-sm text-slate-300 font-medium">{isAr ? 'أن نكون الرائد الأول في صناعة الملابس عالية الجودة بالمغرب.' : 'Être le leader incontesté de la confection haut de gamme au Maroc.'}</p>
+                  <p className="text-sm text-slate-300 font-medium">
+                    {isAr ? (company.visionTextAr || 'أن نكون الرائد الأول في صناعة الملابس عالية الجودة بالمغرب.') : (company.visionTextFr || 'Être le leader incontesté de la confection haut de gamme au Maroc.')}
+                  </p>
                 </div>
                 <div>
                   <h4 className="text-rose-400 font-black uppercase tracking-widest text-xs mb-3">{isAr ? 'مهمتنا' : 'Notre Mission'}</h4>
-                  <p className="text-sm text-slate-300 font-medium">{isAr ? 'توفير حلول متكاملة تضمن دقة التصنيع وسرعة التسليم.' : 'Offrir des solutions complètes garantissant précision et rapidité.'}</p>
+                  <p className="text-sm text-slate-300 font-medium">
+                    {isAr ? (company.missionTextAr || 'توفير حلول متكاملة تضمن دقة التصنيع وسرعة التسليم.') : (company.missionTextFr || 'Offrir des solutions complètes garantissant précision et rapidité.')}
+                  </p>
                 </div>
               </div>
             </div>
@@ -648,7 +656,7 @@ export default function LandingPage() {
                 <Globe className="w-8 h-8" />
               </div>
               <h3 className="text-xl font-black uppercase tracking-tight mb-2">{isAr ? 'مقرنا' : 'Adresse'}</h3>
-              <p className="text-sm font-medium opacity-70">Appartement 1 Imm 53 Zone Industrielle Azrou, Ait Melloul 80000 Morocco</p>
+              <p className="text-sm font-medium opacity-70">{company.address}</p>
             </div>
 
             <div className="bg-slate-50 p-10 rounded-[3rem] border border-slate-100 flex flex-col items-center text-center group hover:bg-slate-900 hover:text-white transition-all duration-500">
@@ -665,7 +673,7 @@ export default function LandingPage() {
                 <LogOut className="w-8 h-8 rotate-180" />
               </div>
               <h3 className="text-xl font-black uppercase tracking-tight mb-2">Email</h3>
-              <p className="text-sm font-medium opacity-70">contact@beyacreative.com</p>
+              <p className="text-sm font-medium opacity-70">{company.email}</p>
             </div>
           </div>
 

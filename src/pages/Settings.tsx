@@ -402,6 +402,106 @@ export default function Settings() {
           </div>
         </div>
 
+        {/* Mise en Page & Contenu Landing Page */}
+        <div className="p-6 border-b border-slate-100 bg-slate-50/30">
+          <h2 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+            <Star className="w-5 h-5 text-indigo-500" />
+            {isAr ? 'محتوى صفحة "من نحن"' : 'Contenu "Qui Sommes-Nous"'}
+          </h2>
+          
+          <div className="space-y-8">
+            {/* About Photo */}
+            <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-indigo-500" />
+                {isAr ? 'تصويرة قسم "من نحن"' : 'Photo Section "À Propos"'}
+              </label>
+              <div className="flex flex-col md:flex-row gap-6 items-center">
+                <div className="w-full md:w-48 h-32 bg-slate-100 rounded-2xl overflow-hidden border-2 border-dashed border-slate-200 flex items-center justify-center">
+                  {profile.aboutPhotoUrl ? (
+                    <img src={profile.aboutPhotoUrl} className="w-full h-full object-cover" alt="About" />
+                  ) : (
+                    <ImageIcon className="w-8 h-8 text-slate-300" />
+                  )}
+                </div>
+                <div className="flex-1 space-y-3">
+                  <input 
+                    type="text" 
+                    value={profile.aboutPhotoUrl || ''} 
+                    onChange={e => handleChange('aboutPhotoUrl', e.target.value)} 
+                    placeholder="URL de l'image ou Base64..." 
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500" 
+                  />
+                  <label className="cursor-pointer inline-flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-600 transition">
+                    <ImageIcon className="w-4 h-4" />
+                    {isAr ? 'اختيار صورة' : 'Choisir une photo'}
+                    <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => handleChange('aboutPhotoUrl', reader.result as string);
+                        reader.readAsDataURL(file);
+                      }
+                    }} />
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* About Title & Text */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <h3 className="text-xs font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2">
+                  <Globe className="w-3 h-3" /> Français
+                </h3>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Titre</label>
+                  <input type="text" value={profile.aboutTitleFr || ''} onChange={e => handleChange('aboutTitleFr', e.target.value)} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none" placeholder="Ex: Une Excellence Marocaine" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Description</label>
+                  <textarea rows={4} value={profile.aboutTextFr || ''} onChange={e => handleChange('aboutTextFr', e.target.value)} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none resize-none" placeholder="Texte de présentation..." />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-xs font-black text-rose-600 uppercase tracking-widest flex items-center gap-2">
+                  <Globe className="w-3 h-3" /> العربية
+                </h3>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">العنوان</label>
+                  <input type="text" value={profile.aboutTitleAr || ''} onChange={e => handleChange('aboutTitleAr', e.target.value)} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none text-right" placeholder="مثال: قصة نجاح مغربية" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">الوصف</label>
+                  <textarea rows={4} value={profile.aboutTextAr || ''} onChange={e => handleChange('aboutTextAr', e.target.value)} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none resize-none text-right" placeholder="نص التعريف بالشركة..." />
+                </div>
+              </div>
+            </div>
+
+            {/* Vision & Mission */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-slate-100">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-amber-500" />
+                  <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">{isAr ? 'الرؤية والرسالة (FR)' : 'Vision & Mission (FR)'}</h4>
+                </div>
+                <input type="text" value={profile.visionTextFr || ''} onChange={e => handleChange('visionTextFr', e.target.value)} placeholder="Notre Vision..." className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none" />
+                <input type="text" value={profile.missionTextFr || ''} onChange={e => handleChange('missionTextFr', e.target.value)} placeholder="Notre Mission..." className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none" />
+              </div>
+
+              <div className="space-y-4 text-right">
+                <div className="flex items-center gap-2 justify-end">
+                  <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">{isAr ? 'الرؤية والرسالة (AR)' : 'Vision & Mission (AR)'}</h4>
+                  <Zap className="w-4 h-4 text-amber-500" />
+                </div>
+                <input type="text" value={profile.visionTextAr || ''} onChange={e => handleChange('visionTextAr', e.target.value)} placeholder="رؤيتنا..." className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none text-right" />
+                <input type="text" value={profile.missionTextAr || ''} onChange={e => handleChange('missionTextAr', e.target.value)} placeholder="مهمتنا..." className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none text-right" />
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Informations Légales */}
         <div className="p-6 border-b border-slate-100">
           <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
