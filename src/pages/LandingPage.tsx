@@ -589,7 +589,7 @@ export default function LandingPage() {
             <div className="relative">
               <div className="absolute -inset-4 bg-indigo-600 rounded-[3rem] blur-2xl opacity-20 animate-pulse" />
               <img 
-                src={company.aboutPhotoUrl || "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?q=80&w=2070"} 
+                src={company.aboutPhotoUrl || "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=2070"} 
                 alt="Atelier BEYA" 
                 className="relative rounded-[3rem] shadow-2xl border-4 border-white/5 object-cover h-[500px] w-full"
               />
