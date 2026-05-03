@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, X, UserPlus, Package, AlertCircle, CreditCard, Clock, CheckCircle2, RotateCw } from 'lucide-react';
+import { Bell, X, UserPlus, Package, AlertCircle, CreditCard, Clock, CheckCircle2, RotateCw, Globe } from 'lucide-react';
 import { useLang } from '../../contexts/LangContext';
 import { loadData, Lead, Commande, Facture } from '../../types';
 
@@ -144,6 +144,31 @@ export default function NotificationCenter() {
              <button onClick={markAllRead} className="text-[10px] font-black text-indigo-600 uppercase hover:underline">
                {isAr ? 'تحديد الكل كمقروء' : 'Tout marquer lu'}
              </button>
+          </div>
+
+          {/* Push Notification Toggle */}
+          <div className="px-6 py-3 bg-indigo-600/5 border-b border-indigo-100/50 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Globe className="w-3.5 h-3.5 text-indigo-600" />
+              <span className="text-[10px] font-black text-slate-600 uppercase tracking-tight">
+                {isAr ? 'إشعارات الهاتف' : 'Notifications Phone'}
+              </span>
+            </div>
+            <button 
+              onClick={async () => {
+                if ('Notification' in window) {
+                  const permission = await Notification.requestPermission();
+                  if (permission === 'granted') {
+                    alert(isAr ? 'تم تفعيل الإشعارات بنجاح! ✅' : 'Notifications activées avec succès ! ✅');
+                  } else {
+                    alert(isAr ? 'يجب السماح بالإشعارات من إعدادات المتصفح.' : 'Veuillez autoriser les notifications dans les paramètres.');
+                  }
+                }
+              }}
+              className="px-3 py-1 bg-white border border-indigo-200 rounded-full text-[9px] font-black text-indigo-600 uppercase hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+            >
+              {isAr ? 'تفعيل الآن' : 'Activer Maintenant'}
+            </button>
           </div>
 
           <div className="max-h-[450px] overflow-y-auto">
