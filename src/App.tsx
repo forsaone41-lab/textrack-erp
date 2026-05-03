@@ -226,6 +226,11 @@ function AppContent() {
           const manifestURL = URL.createObjectURL(blob);
           existingManifest.href = manifestURL;
         }
+
+        // Update Document Title
+        if (remote.name) {
+          document.title = remote.name;
+        }
       }
     };
 
