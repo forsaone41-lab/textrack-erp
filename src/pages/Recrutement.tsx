@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useLang } from '../contexts/LangContext';
-import { Shirt, Scissors, Users, ArrowRight, CheckCircle, Send, Phone, MapPin, Briefcase } from 'lucide-react';
+import { Shirt, Scissors, Users, ArrowRight, CheckCircle, Send, Phone, MapPin, Briefcase, Globe } from 'lucide-react';
 import { saveLead } from '../types';
 
 export default function Recrutement() {
-  const { isAr } = useLang();
+  const { isAr, toggle } = useLang();
   const [isSending, setIsSending] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -66,6 +66,17 @@ export default function Recrutement() {
 
   return (
     <div className={`min-h-screen bg-slate-50 relative overflow-hidden pb-20 ${isAr ? 'font-sans' : ''}`} dir={isAr ? 'rtl' : 'ltr'}>
+      {/* Language Toggle */}
+      <div className={`absolute top-6 ${isAr ? 'left-6' : 'right-6'} z-50`}>
+        <button 
+          onClick={toggle}
+          className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-md border border-slate-200 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm"
+        >
+          <Globe className="w-3.5 h-3.5 text-indigo-500" />
+          {isAr ? 'FRANÇAIS' : 'العربية'}
+        </button>
+      </div>
+
       {/* Decorative background */}
       <div className="absolute top-0 right-0 w-1/2 h-[500px] bg-indigo-500/5 blur-[120px] pointer-events-none" />
       
