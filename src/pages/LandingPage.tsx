@@ -677,12 +677,17 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Interactive Map (Placeholder Image with Design) */}
-          <div className="mt-20 relative rounded-[3rem] overflow-hidden h-[400px] border-8 border-slate-50 group">
+          {/* Interactive Map (Link to Google Maps) */}
+          <a 
+            href="https://www.google.com/maps/search/?api=1&query=Meknes+Morocco" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="mt-20 relative rounded-[3rem] overflow-hidden h-[400px] border-8 border-slate-50 group block cursor-pointer"
+          >
              <div className="absolute inset-0 bg-slate-900/40 group-hover:bg-slate-900/20 transition-all flex items-center justify-center z-10">
-                <div className="bg-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 animate-bounce">
+                <div className="bg-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 animate-bounce group-hover:scale-110 transition-transform">
                    <MapPin className="w-6 h-6 text-rose-500" />
-                   <span className="text-sm font-black uppercase tracking-widest">{isAr ? 'تجدوننا هنا' : 'Nous trouver ici'}</span>
+                   <span className="text-sm font-black uppercase tracking-widest text-slate-900">{isAr ? 'تجدوننا هنا' : 'Nous trouver ici'}</span>
                 </div>
              </div>
              <img 
@@ -690,7 +695,7 @@ export default function LandingPage() {
                alt="Map" 
                className="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform duration-1000"
              />
-          </div>
+          </a>
         </div>
       </section>
 

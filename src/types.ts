@@ -412,7 +412,7 @@ export const DEFAULT_COMPANY: CompanyProfile = {
   logoInvoice: '/logo.png',
   logoLogin: '/logo.png',
   logoMobileHeader: '/logo.png',
-  address: 'Zone Industrielle, Casablanca',
+  address: 'Sidi Said, Meknes 50000, Morocco',
   ice: '000000000000000',
   rc: '123456',
   if_tax: '0000000',
