@@ -970,12 +970,12 @@ export default function Demandes() {
 
                   {/* Secondary Tools: Devis, Fiche, Convert Client */}
                   <div className="flex items-center gap-2 bg-slate-50/50 p-1.5 rounded-2xl border border-slate-100 shadow-inner">
-                    {/* Recruitment Add Button - Navigates to SuiviRH with candidate data */}
+                    {/* Recruitment Add Button - Navigates to Waiting List with candidate data */}
                     {category === 'recrutement' ? (
                       <button 
-                        onClick={() => navigate('/suivi-rh', { state: { fromRecruitment: lead } })}
+                        onClick={() => navigate('/liste-attente', { state: { fromRecruitment: lead } })}
                         className="w-12 h-12 flex items-center justify-center bg-rose-500 text-white hover:bg-rose-600 rounded-xl transition-all shadow-lg shadow-rose-200 group/btn animate-pulse hover:animate-none"
-                        title={isAr ? 'إضافة إلى الموظفين' : 'Ajouter aux Employés'}
+                        title={isAr ? 'إضافة إلى لائحة الانتظار' : 'Ajouter à la liste d\'attente'}
                       >
                         <UserPlus className="w-5 h-5 group-hover/btn:scale-110 transition-transform" />
                       </button>

@@ -39,6 +39,7 @@ const PlanningView     = lazy(() => import('./pages/PlanningView'));
 const PartenairePortal = lazy(() => import('./pages/PartenairePortal'));
 const Agenda           = lazy(() => import('./pages/Agenda'));
 const Recrutement     = lazy(() => import('./pages/Recrutement'));
+const ListeAttente    = lazy(() => import('./pages/ListeAttente'));
 
 // Loading spinner for Suspense fallback
 const PageLoader = () => (
@@ -374,6 +375,7 @@ function AppContent() {
         <Route path="commandes" element={can('commandes') ? <Commandes /> : <Navigate to="/" replace />} />
         <Route path="agenda" element={can('agenda') ? <Agenda /> : <Navigate to="/" replace />} />
         <Route path="commandes/manage" element={can('commandes') ? <ManageOrder /> : <Navigate to="/" replace />} />
+        <Route path="liste-attente" element={can('rh') ? <ListeAttente /> : <Navigate to="/" replace />} />
         <Route path="planning-view/:id" element={<PlanningView />} />
       </Route>
       <Route element={<PointageLayout />}>

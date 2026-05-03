@@ -1,0 +1,198 @@
+import { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useLang } from '../contexts/LangContext';
+import { Users, Search, Trash2, CheckCircle, UserPlus, Clock, Phone, MapPin, Briefcase, X, ArrowRight } from 'lucide-react';
+import { loadData, saveRecord, deleteRecord, genId, Employe } from '../types';
+
+interface WaitlistedCandidate {
+  id: string;
+  nom: string;
+  prenom: string;
+  telephone: string;
+  poste: string;
+  dateAjout: string;
+  notes?: string;
+}
+
+export default function ListeAttente() {
+  const { isAr } = useLang();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [candidates, setCandidates] = useState<WaitlistedCandidate[]>([]);
+  const [search, setSearch] = useState('');
+  const [showConfirmModal, setShowConfirmModal] = useState<WaitlistedCandidate | null>(null);
+
+  useEffect(() => {
+    async function init() {
+      const data = await loadData<WaitlistedCandidate>('liste_attente');
+      setCandidates(data || []);
+    }
+    init();
+
+    // Catch data from Recruitment
+    if (location.state?.fromRecruitment) {
+      const lead = location.state.fromRecruitment;
+      const [firstName, ...lastNameParts] = lead.name.split(' ');
+      const lastName = lastNameParts.join(' ');
+
+      const newCandidate: WaitlistedCandidate = {
+        id: genId(),
+        nom: lastName || firstName,
+        prenom: lastName ? firstName : '',
+        telephone: lead.phone,
+        poste: lead.type.replace('RECRUTEMENT: ', ''),
+        dateAjout: new Date().toISOString(),
+        notes: lead.details
+      };
+
+      handleAddNew(newCandidate);
+      // Clear state
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
+  const handleAddNew = async (candidate: WaitlistedCandidate) => {
+    const updated = [candidate, ...candidates];
+    setCandidates(updated);
+    await saveRecord('liste_attente', candidate);
+  };
+
+  const handleDelete = async (id: string) => {
+    const updated = candidates.filter(c => c.id !== id);
+    setCandidates(updated);
+    await deleteRecord('liste_attente', id);
+  };
+
+  const handleEmbaucher = async (candidate: WaitlistedCandidate) => {
+    // 1. Prepare Employee Data for SuiviRH
+    const newEmployee: Employe = {
+      id: genId(),
+      nom: candidate.nom,
+      prenom: candidate.prenom,
+      poste: candidate.poste,
+      telephone: candidate.telephone,
+      type: 'atelier',
+      actif: true,
+      salaireMensuel: 0,
+      remunerationType: 'mensuel',
+      dateEmbauche: new Date().toISOString().split('T')[0]
+    };
+
+    // 2. Save to Employees table
+    await saveRecord('employes', newEmployee);
+    
+    // 3. Remove from waiting list
+    await handleDelete(candidate.id);
+
+    // 4. Redirect to RH to finish setup
+    navigate('/suivi-rh', { state: { fromWaitlist: newEmployee } });
+  };
+
+  const filtered = candidates.filter(c => 
+    `${c.prenom} ${c.nom}`.toLowerCase().includes(search.toLowerCase()) ||
+    c.poste.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-6" dir={isAr ? 'rtl' : 'ltr'}>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">
+            {isAr ? 'لائحة الانتظار (قبل التوظيف)' : 'Liste d\'Attente (Pré-embauche)'}
+          </h1>
+          <p className="text-slate-500 text-sm font-medium">
+            {isAr ? 'إدارة المترشحين المقبولين مبدئياً قبل إدراجهم في النظام المالي' : 'Gérez les candidats validés avant leur intégration officielle RH'}
+          </p>
+        </div>
+      </div>
+
+      <div className="relative">
+        <Search className={`absolute ${isAr ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400`} />
+        <input 
+          type="text"
+          placeholder={isAr ? 'بحث عن مترشح...' : 'Rechercher un candidat...'}
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className={`w-full bg-white border-2 border-slate-50 rounded-2xl py-4 ${isAr ? 'pr-12 pl-4 text-right' : 'pl-12 pr-4 text-left'} text-sm font-bold outline-none focus:border-indigo-500 shadow-sm`}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filtered.map(c => (
+          <div key={c.id} className="bg-white rounded-[2.5rem] p-6 border-2 border-slate-50 shadow-sm hover:shadow-md transition-all group">
+            <div className="flex items-start justify-between mb-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600">
+                  <Clock className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">{c.prenom} {c.nom}</h3>
+                  <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">{c.poste}</p>
+                </div>
+              </div>
+              <button onClick={() => handleDelete(c.id)} className="p-2 text-slate-300 hover:text-rose-500 transition-colors">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 mb-8">
+              <div className="flex items-center gap-3 text-slate-500 text-xs font-bold">
+                <Phone className="w-4 h-4 text-slate-300" /> {c.telephone}
+              </div>
+              <div className="flex items-center gap-3 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                <Clock className="w-4 h-4" /> {isAr ? 'أضيف في:' : 'Ajouté le :'} {new Date(c.dateAjout).toLocaleDateString()}
+              </div>
+            </div>
+
+            <button 
+              onClick={() => setShowConfirmModal(c)}
+              className="w-full py-4 bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-100"
+            >
+              <UserPlus className="w-4 h-4" />
+              {isAr ? 'توظيف رسمي (RH)' : 'Embaucher Officiellement'}
+            </button>
+          </div>
+        ))}
+
+        {filtered.length === 0 && (
+          <div className="col-span-full py-20 text-center border-2 border-dashed border-slate-100 rounded-[3rem]">
+            <Users className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">
+              {isAr ? 'لائحة الانتظار فارغة' : 'La liste d\'attente est vide'}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-[500] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-6">
+          <div className="bg-white rounded-[3rem] p-10 max-w-md w-full shadow-2xl border border-slate-100 text-center animate-in zoom-in-95 duration-300">
+            <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-[1.5rem] flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="w-10 h-10" />
+            </div>
+            <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-4">
+              {isAr ? 'تأكيد التوظيف؟' : 'Confirmer l\'Embauche ?'}
+            </h3>
+            <p className="text-slate-500 text-sm font-medium mb-10 leading-relaxed">
+              {isAr 
+                ? `هل أنت متأكد من نقل "${showConfirmModal.prenom} ${showConfirmModal.nom}" إلى النظام المالي والموارد البشرية؟`
+                : `Voulez-vous vraiment transférer "${showConfirmModal.prenom} ${showConfirmModal.nom}" vers le système RH officiel ?`}
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <button onClick={() => setShowConfirmModal(null)} className="py-4 bg-slate-50 text-slate-500 rounded-2xl font-black uppercase tracking-widest text-[10px]">
+                {isAr ? 'إلغاء' : 'Annuler'}
+              </button>
+              <button 
+                onClick={() => handleEmbaucher(showConfirmModal)}
+                className="py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-slate-200"
+              >
+                {isAr ? 'تأكيد ونقل' : 'Confirmer & Transférer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
