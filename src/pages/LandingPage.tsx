@@ -577,6 +577,115 @@ export default function LandingPage() {
         </div>
       )}
 
+      {/* About Us Section - "Man Nahnu" */}
+      <section id="about" className="py-32 px-6 bg-slate-900 text-white relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+            <div className="absolute top-0 left-0 w-64 h-64 bg-indigo-500 rounded-full blur-[100px] -ml-32 -mt-32" />
+            <div className="absolute bottom-0 right-0 w-64 h-64 bg-rose-500 rounded-full blur-[100px] -mr-32 -mb-32" />
+        </div>
+
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+            <div className="relative">
+              <div className="absolute -inset-4 bg-indigo-600 rounded-[3rem] blur-2xl opacity-20 animate-pulse" />
+              <img 
+                src="https://images.unsplash.com/photo-1558002038-1055907df827?q=80&w=2070" 
+                alt="Atelier BEYA" 
+                className="relative rounded-[3rem] shadow-2xl border-4 border-white/5 object-cover h-[500px] w-full"
+              />
+              <div className={`absolute -bottom-10 ${isAr ? '-left-10' : '-right-10'} bg-white p-8 rounded-[2rem] shadow-2xl hidden md:block border border-slate-100 animate-in slide-in-from-bottom-10 duration-700`}>
+                <p className="text-4xl font-black text-indigo-600 mb-1 leading-none">15+</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'سنة من الخبرة' : 'Ans d\'Expérience'}</p>
+              </div>
+            </div>
+
+            <div className={isAr ? 'text-right' : 'text-left'}>
+              <div className="inline-flex items-center gap-3 px-6 py-2 bg-white/5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 border border-white/10 mb-8">
+                <Star className="w-4 h-4" />
+                {isAr ? 'من نحن' : 'Qui Sommes-Nous'}
+              </div>
+              <h2 className="text-5xl md:text-6xl font-black mb-8 tracking-tighter leading-none italic">
+                {isAr ? 'قصة نجاح مغربية' : 'Une Excellence'} <br />
+                <span className="text-indigo-400">{isAr ? 'بمعايير عالمية' : 'Marocaine.'}</span>
+              </h2>
+              <p className="text-slate-400 text-lg font-medium leading-relaxed mb-10">
+                {isAr 
+                  ? 'BEYA CREATIVE هي ثمرة سنوات من الشغف في مجال النسيج والخياطة. نحن لسنا مجرد مصنع، بل شريك استراتيجي يساعدك على تحويل أفكارك إلى واقع ملموس بجودة تضاهي كبريات الماركات العالمية.'
+                  : 'BEYA CREATIVE est le fruit de plusieurs années de passion pour le textile. Nous ne sommes pas qu\'une simple usine, mais un partenaire stratégique qui transforme vos idées en réalité avec une qualité digne des plus grandes marques internationales.'}
+              </p>
+              
+              <div className="grid grid-cols-2 gap-8">
+                <div>
+                  <h4 className="text-indigo-400 font-black uppercase tracking-widest text-xs mb-3">{isAr ? 'رؤيتنا' : 'Notre Vision'}</h4>
+                  <p className="text-sm text-slate-300 font-medium">{isAr ? 'أن نكون الرائد الأول في صناعة الملابس عالية الجودة بالمغرب.' : 'Être le leader incontesté de la confection haut de gamme au Maroc.'}</p>
+                </div>
+                <div>
+                  <h4 className="text-rose-400 font-black uppercase tracking-widest text-xs mb-3">{isAr ? 'مهمتنا' : 'Notre Mission'}</h4>
+                  <p className="text-sm text-slate-300 font-medium">{isAr ? 'توفير حلول متكاملة تضمن دقة التصنيع وسرعة التسليم.' : 'Offrir des solutions complètes garantissant précision et rapidité.'}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section id="contact" className="py-32 px-6 bg-white relative overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-20">
+            <h2 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter uppercase mb-6">
+              {isAr ? 'تواصل معنا' : 'Contactez-Nous'}
+            </h2>
+            <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">
+              {isAr ? 'نحن هنا للإجابة على جميع استفساراتكم' : 'Nous sommes à votre disposition pour toute question'}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Contact Info Cards */}
+            <div className="bg-slate-50 p-10 rounded-[3rem] border border-slate-100 flex flex-col items-center text-center group hover:bg-slate-900 hover:text-white transition-all duration-500">
+              <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-indigo-600 mb-6 shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                <Globe className="w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-black uppercase tracking-tight mb-2">{isAr ? 'مقرنا' : 'Adresse'}</h3>
+              <p className="text-sm font-medium opacity-70">Appartement 1 Imm 53 Zone Industrielle Azrou, Ait Melloul 80000 Morocco</p>
+            </div>
+
+            <div className="bg-slate-50 p-10 rounded-[3rem] border border-slate-100 flex flex-col items-center text-center group hover:bg-slate-900 hover:text-white transition-all duration-500">
+              <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-emerald-600 mb-6 shadow-sm group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                <MessageCircle className="w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-black uppercase tracking-tight mb-2">{isAr ? 'واتساب' : 'WhatsApp'}</h3>
+              <p className="text-sm font-black tracking-widest tabular-nums">{company.phone}</p>
+              <a href={`https://wa.me/${company.phone.replace(/\D/g, '')}`} className="mt-4 px-6 py-2 bg-emerald-500 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform">{isAr ? 'دردشة مباشرة' : 'Chat Direct'}</a>
+            </div>
+
+            <div className="bg-slate-50 p-10 rounded-[3rem] border border-slate-100 flex flex-col items-center text-center group hover:bg-slate-900 hover:text-white transition-all duration-500">
+              <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-rose-600 mb-6 shadow-sm group-hover:bg-rose-600 group-hover:text-white transition-colors">
+                <LogOut className="w-8 h-8 rotate-180" />
+              </div>
+              <h3 className="text-xl font-black uppercase tracking-tight mb-2">Email</h3>
+              <p className="text-sm font-medium opacity-70">contact@beyacreative.com</p>
+            </div>
+          </div>
+
+          {/* Interactive Map (Placeholder Image with Design) */}
+          <div className="mt-20 relative rounded-[3rem] overflow-hidden h-[400px] border-8 border-slate-50 group">
+             <div className="absolute inset-0 bg-slate-900/40 group-hover:bg-slate-900/20 transition-all flex items-center justify-center z-10">
+                <div className="bg-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 animate-bounce">
+                   <MapPin className="w-6 h-6 text-rose-500" />
+                   <span className="text-sm font-black uppercase tracking-widest">{isAr ? 'تجدوننا هنا' : 'Nous trouver ici'}</span>
+                </div>
+             </div>
+             <img 
+               src="https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=2074" 
+               alt="Map" 
+               className="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform duration-1000"
+             />
+          </div>
+        </div>
+      </section>
+
       <footer className="py-20 px-6 border-t border-slate-100 bg-slate-900 text-white overflow-hidden relative">
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-6 md:p-12">
