@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLang } from '../contexts/LangContext';
-import { Shirt, Scissors, Users, ArrowRight, CheckCircle, Send, Phone, MapPin, Briefcase, Globe } from 'lucide-react';
+import { Shirt, Scissors, Users, ArrowRight, CheckCircle, Send, Phone, MapPin, Briefcase, Globe, Upload, Trash2 } from 'lucide-react';
 import { saveLead } from '../types';
 
 export default function Recrutement() {
