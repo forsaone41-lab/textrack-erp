@@ -30,9 +30,8 @@ export default function Recrutement() {
       ville: formData.get('ville') as string,
       type: 'RECRUTEMENT: ' + formData.get('specialty'),
       quantity: 0,
-      details: `Expérience: ${formData.get('experience')} ans. Message: ${formData.get('message')}`,
+      details: `Expérience: ${formData.get('experience')} ans. Message: ${formData.get('message')} | CV_ATTACHMENT:${cvFile}`,
       photo: '', // Optional for recruitment
-      cv: cvFile
     };
 
     try {

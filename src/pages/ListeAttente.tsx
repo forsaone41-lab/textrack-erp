@@ -154,13 +154,33 @@ export default function ListeAttente() {
               </div>
             </div>
 
-            <button 
-              onClick={() => setShowConfirmModal(c)}
-              className="w-full py-4 bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-100"
-            >
-              <UserPlus className="w-4 h-4" />
-              {isAr ? 'توظيف رسمي (RH)' : 'Embaucher Officiellement'}
-            </button>
+            <div className="flex items-center gap-2 mb-8">
+              <button 
+                onClick={() => setShowConfirmModal(c)}
+                className="flex-1 py-4 bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-100"
+              >
+                <UserPlus className="w-4 h-4" />
+                {isAr ? 'توظيف رسمي (RH)' : 'Embaucher Officiellement'}
+              </button>
+              {(() => {
+                const cvData = c.notes?.split('| CV_ATTACHMENT:')[1];
+                if (!cvData) return null;
+                return (
+                  <button 
+                    onClick={() => {
+                      const link = document.createElement('a');
+                      link.href = cvData;
+                      link.download = `CV_${c.nom.replace(/\s/g, '_')}`;
+                      link.click();
+                    }}
+                    className="w-12 h-12 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-2xl flex items-center justify-center transition-all border border-indigo-100"
+                    title={isAr ? 'تحميل السيرة الذاتية' : 'Télécharger le CV'}
+                  >
+                    <FileText className="w-5 h-5" />
+                  </button>
+                );
+              })()}
+            </div>
           </div>
         ))}
 

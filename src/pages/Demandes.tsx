@@ -952,20 +952,24 @@ export default function Demandes() {
                       <MessageSquare className="w-4 h-4" />
                       {isAr ? (lead.contactedAt ? 'تم التواصل' : 'واتساب') : (lead.contactedAt ? 'Contacté' : 'WhatsApp')}
                     </button>
-                    {lead.cv && (
-                      <button 
-                        onClick={() => {
-                          const link = document.createElement('a');
-                          link.href = lead.cv!;
-                          link.download = `CV_${lead.name.replace(/\s/g, '_')}`;
-                          link.click();
-                        }}
-                        className="w-11 h-11 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-xl flex items-center justify-center transition-all border border-indigo-100 shadow-sm"
-                        title={isAr ? 'تحميل السيرة الذاتية' : 'Télécharger le CV'}
-                      >
-                        <FileText className="w-5 h-5" />
-                      </button>
-                    )}
+                    {(() => {
+                      const cvData = lead.details?.split('| CV_ATTACHMENT:')[1];
+                      if (!cvData) return null;
+                      return (
+                        <button 
+                          onClick={() => {
+                            const link = document.createElement('a');
+                            link.href = cvData;
+                            link.download = `CV_${lead.name.replace(/\s/g, '_')}`;
+                            link.click();
+                          }}
+                          className="w-11 h-11 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-xl flex items-center justify-center transition-all border border-indigo-100 shadow-sm"
+                          title={isAr ? 'تحميل السيرة الذاتية' : 'Télécharger le CV'}
+                        >
+                          <FileText className="w-5 h-5" />
+                        </button>
+                      );
+                    })()}
                   </div>
 
                   {/* Secondary Tools: Devis, Fiche, Convert Client */}
