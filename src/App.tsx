@@ -50,7 +50,7 @@ const PageLoader = () => (
   </div>
 );
 
-import { initMockData, User, loadPermissions, AppPage, loadCompanyProfile, loadData, saveRecord } from './types';
+import { initMockData, User, loadPermissions, AppPage, loadCompanyProfile, syncCompanyProfile, loadData, saveRecord } from './types';
 import { LangProvider, useLang } from './contexts/LangContext';
 
 initMockData();
@@ -195,6 +195,38 @@ function AppContent() {
     const syncSettings = async () => {
       const remote = await syncCompanyProfile();
       setCompany(remote);
+
+      // Dynamic Branding Update
+      if (remote.logoAppIcon) {
+        // Update Favicon
+        const icon = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
+        if (icon) icon.href = remote.logoAppIcon;
+        
+        const appleIcon = document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement;
+        if (appleIcon) appleIcon.href = remote.logoAppIcon;
+
+        // Update Manifest (PWA Icon)
+        const existingManifest = document.querySelector("link[rel='manifest']") as HTMLLinkElement;
+        if (existingManifest) {
+          const manifestContent = {
+            name: remote.name || "BEYA CREATIVE ERP",
+            short_name: remote.name?.split(' ')[0] || "BEYA ERP",
+            description: remote.description || "Système de gestion textile",
+            start_url: "/",
+            display: "standalone",
+            background_color: "#0f172a",
+            theme_color: "#4f46e5",
+            icons: [
+              { src: remote.logoAppIcon, sizes: "192x192", type: "image/png", purpose: "any maskable" },
+              { src: remote.logoAppIcon, sizes: "512x512", type: "image/png", purpose: "any maskable" }
+            ]
+          };
+          const stringManifest = JSON.stringify(manifestContent);
+          const blob = new Blob([stringManifest], {type: 'application/json'});
+          const manifestURL = URL.createObjectURL(blob);
+          existingManifest.href = manifestURL;
+        }
+      }
     };
 
     const updateActivity = async () => {

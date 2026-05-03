@@ -295,6 +295,40 @@ export default function Settings() {
               </div>
             </div>
 
+            {/* Logo App Icon / Favicon */}
+            <div className="bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                <Zap className="w-4 h-4 text-amber-500" />
+                {isAr ? 'أيقونة التطبيق (PWA / Favicon)' : 'Icône de l\'App (PWA)'}
+              </label>
+              <div className="flex flex-col gap-4">
+                <div className="h-20 bg-white rounded-2xl border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden">
+                  {profile.logoAppIcon ? (
+                    <img src={profile.logoAppIcon} className="w-12 h-12 object-contain" alt="App Icon" />
+                  ) : (
+                    <ImageIcon className="w-8 h-8 text-slate-200" />
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <input type="text" value={profile.logoAppIcon || ''} onChange={e => handleChange('logoAppIcon', e.target.value)} placeholder="/logo.png" className="flex-1 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500" dir="ltr" />
+                  <label className="cursor-pointer bg-slate-900 text-white p-2.5 rounded-xl hover:bg-indigo-600 transition shadow-lg shadow-slate-200 flex items-center justify-center">
+                    <ImageIcon className="w-4 h-4" />
+                    <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => handleChange('logoAppIcon', reader.result as string);
+                        reader.readAsDataURL(file);
+                      }
+                    }} />
+                  </label>
+                </div>
+                <p className="text-[9px] font-bold text-amber-600 italic tracking-tight">
+                  {isAr ? 'هادي هي اللي غاتبان فالتلفون ملي تثبت التطبيق.' : 'C\'est l\'icône qui s\'affichera sur l\'écran d\'accueil du téléphone.'}
+                </p>
+              </div>
+            </div>
+
             {/* Video Section (Part of the same grid) */}
             <div className="md:col-span-2">
               <label className="block text-sm font-semibold text-slate-700 mb-1 flex items-center gap-2">
