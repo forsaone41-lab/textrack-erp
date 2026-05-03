@@ -228,7 +228,11 @@ function AppContent() {
 
       // Update Document Title
       if (remote.name) {
-        document.title = remote.name;
+        if (window.location.hash === '#/' || window.location.hash === '') {
+          document.title = "BEYA CREATIVE - Excellence en Confection Textile au Maroc";
+        } else {
+          document.title = remote.name;
+        }
       }
     };
 
