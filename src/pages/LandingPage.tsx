@@ -589,8 +589,8 @@ export default function LandingPage() {
             <div className="relative">
               <div className="absolute -inset-4 bg-indigo-600 rounded-[3rem] blur-2xl opacity-20 animate-pulse" />
               <img 
-                src={company.aboutPhotoUrl || "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071"} 
-                alt="Équipe BEYA" 
+                src={company.aboutPhotoUrl || "/patron-sewing-tech.png"} 
+                alt="Patron BEYA" 
                 className="relative rounded-[3rem] shadow-2xl border-4 border-white/5 object-cover h-[500px] w-full"
               />
               <div className={`absolute -bottom-10 ${isAr ? '-left-10' : '-right-10'} bg-white p-8 rounded-[2rem] shadow-2xl hidden md:block border border-slate-100 animate-in slide-in-from-bottom-10 duration-700`}>
