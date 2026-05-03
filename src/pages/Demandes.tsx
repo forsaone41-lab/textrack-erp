@@ -995,8 +995,8 @@ export default function Demandes() {
                       </button>
                     )}
 
-                    {/* Fiche Technique Button - Only active if client is registered */}
-                    {(() => {
+                    {/* Fiche Technique Button - Hidden for recruitment, otherwise active only if client is registered */}
+                    {!lead.type.startsWith('RECRUTEMENT:') && (() => {
                       const clientExists = users.some(u => u.nom.toLowerCase() === lead.name.toLowerCase() && u.role === 'client');
                       return (
                         <button 
