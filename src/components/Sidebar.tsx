@@ -7,7 +7,8 @@ import {
   ChevronRight,
   RotateCw,
   RefreshCw,
-  CalendarDays
+  CalendarDays,
+  Clock
 } from 'lucide-react';
 
 import { User, loadCompanyProfile, loadPermissions, AppPage, syncCompanyProfile } from '../types';
