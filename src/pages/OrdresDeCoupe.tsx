@@ -11,6 +11,11 @@ export default function OrdresDeCoupe() {
   const [tissus, setTissus] = useState<StockTissu[]>([]);
   const [fiches, setFiches] = useState<FicheTechnique[]>([]);
   const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
+  const ITEMS_PER_PAGE = 10;
+  
   const [filterStatut, setFilterStatut] = useState<string>('all');
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -23,8 +28,74 @@ export default function OrdresDeCoupe() {
   const [showSuccess, setShowSuccess] = useState<string | null>(null);
 
   useEffect(() => {
-    refreshData();
+    // Refresh only metadata (fiches, stock, commands)
+    refreshMetadata();
+    // Load initial orders
+    loadOrders(0, true);
   }, []);
+
+  // Debounced search effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadOrders(0, true);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const refreshMetadata = () => {
+    Promise.all([
+      loadData<StockTissu>('tissus'),
+      loadData<FicheTechnique>('fiches'),
+      loadData<Commande>('commandes')
+    ]).then(([tiss, fchs, cmds]) => {
+      setTissus(tiss || []);
+      setFiches(fchs || []);
+      setCommandes(cmds || []);
+    });
+  };
+
+  const loadOrders = async (pageIdx: number, reset: boolean = false) => {
+    if (loading) return;
+    setLoading(true);
+    
+    try {
+      const from = pageIdx * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+      
+      let query = (window as any).supabase
+        .from('ordres')
+        .select('*')
+        .order('dateCoupe', { ascending: false })
+        .range(from, to);
+      
+      if (search) {
+        query = query.or(`modele.ilike.%${search}%,client.ilike.%${search}%`);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      if (data) {
+        setOrdres(prev => reset ? data : [...prev, ...data]);
+        setHasMore(data.length === ITEMS_PER_PAGE);
+        setPage(pageIdx);
+      }
+    } catch (err) {
+      console.error("Error loading orders:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const pendingCommands = commandes.filter(c =>
+    c.phase === 'coupe' &&
+    !ordres.some(o => o.commandeId === c.id) &&
+    c.statut !== 'livré'
+  );
+
+  const planifies = ordres.filter(o => o.statut === 'planifié');
+  const actifEtTermines = ordres.filter(o => o.statut !== 'planifié');
 
   const toggleCheck = (orderId: string, key: 'patron' | 'fiche' | 'mesures') => {
     setChecks(prev => ({
@@ -37,29 +108,6 @@ export default function OrdresDeCoupe() {
     const c = checks[orderId];
     return c?.patron && c?.fiche && c?.mesures;
   };
-
-  const refreshData = () => {
-    Promise.all([
-      loadData<OrdreDeCoupe>('ordres'),
-      loadData<StockTissu>('tissus'),
-      loadData<FicheTechnique>('fiches'),
-      loadData<Commande>('commandes')
-    ]).then(([ords, tiss, fchs, cmds]) => {
-      setOrdres(ords);
-      setTissus(tiss);
-      setFiches(fchs);
-      setCommandes(cmds);
-    });
-  };
-
-  const pendingCommands = commandes.filter(c =>
-    c.phase === 'coupe' &&
-    !ordres.some(o => o.commandeId === c.id) &&
-    c.statut !== 'livré'
-  );
-
-  const planifies = ordres.filter(o => o.statut === 'planifié');
-  const actifEtTermines = ordres.filter(o => o.statut !== 'planifié');
 
   const startCutting = async (o: OrdreDeCoupe) => {
     const updated = { ...o, statut: 'en_cours' as const };
@@ -466,6 +514,18 @@ export default function OrdresDeCoupe() {
               </tbody>
             </table>
           </div>
+          
+          {hasMore && (
+            <div className="p-8 border-t border-slate-50 flex justify-center bg-slate-50/30">
+              <button 
+                onClick={() => loadOrders(page + 1)}
+                disabled={loading}
+                className="px-8 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-slate-900 hover:text-white transition-all shadow-sm disabled:opacity-50"
+              >
+                {loading ? 'Chargement...' : 'Afficher plus d\'ordres'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

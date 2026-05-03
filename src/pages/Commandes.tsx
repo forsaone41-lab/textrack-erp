@@ -22,6 +22,11 @@ export default function Commandes() {
   const [employes, setEmployes] = useState<Employe[]>([]);
 
   const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
+  const ITEMS_PER_PAGE = 10;
+
   const [filterStatut, setFilterStatut] = useState<'all' | 'echantillon_en_cours' | 'en_cours' | 'terminé' | 'livré'>('all');
   const [filterType, setFilterType] = useState<'all' | 'interne' | 'sous-traitance'>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -30,43 +35,79 @@ export default function Commandes() {
   const [showSuccess, setShowSuccess] = useState<string | null>(null);
 
   useEffect(() => {
-    async function loadAll() {
-      const [cmds, fch, ord, pts, fac, emp] = await Promise.all([
-        loadData<Commande>('commandes'),
-        loadData<FicheTechnique>('fiches'),
-        loadData<OrdreDeCoupe>('ordres'),
-        loadData<PointageEntry>('pointages'),
-        loadData<Facture>('factures'),
-        loadData<Employe>('employes')
-      ]);
-      setCommandes(cmds || []);
-      setFiches(fch || []);
-      setOrdres(ord || []);
-      setPointages(pts || []);
-      setFactures(fac || []);
-      setEmployes(emp || []);
-    }
-    loadAll();
+    loadMetadata();
+    loadCommands(0, true);
   }, []);
+
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadCommands(0, true);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search, filterStatut]);
+
+  async function loadMetadata() {
+    const [fch, ord, pts, fac, emp] = await Promise.all([
+      loadData<FicheTechnique>('fiches'),
+      loadData<OrdreDeCoupe>('ordres'),
+      loadData<PointageEntry>('pointages'),
+      loadData<Facture>('factures'),
+      loadData<Employe>('employes')
+    ]);
+    setFiches(fch || []);
+    setOrdres(ord || []);
+    setPointages(pts || []);
+    setFactures(fac || []);
+    setEmployes(emp || []);
+  }
+
+  async function loadCommands(pageIdx: number, reset: boolean = false) {
+    if (loading) return;
+    setLoading(true);
+    try {
+      const from = pageIdx * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+      
+      let query = (window as any).supabase
+        .from('commandes')
+        .select('*')
+        .order('dateCommande', { ascending: false })
+        .range(from, to);
+
+      if (search) {
+        query = query.or(`reference.ilike.%${search}%,client.ilike.%${search}%,modele.ilike.%${search}%`);
+      }
+
+      if (filterStatut !== 'all') {
+        query = query.eq('statut', filterStatut);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      if (data) {
+        setCommandes(prev => reset ? data : [...prev, ...data]);
+        setHasMore(data.length === ITEMS_PER_PAGE);
+        setPage(pageIdx);
+      }
+    } catch (e) {
+      console.error("Error loading commands:", e);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const filtered = useMemo(() => {
     return commandes.filter(c => {
-      const matchSearch = 
-        c.reference.toLowerCase().includes(search.toLowerCase()) ||
-        (c.referenceClient || '').toLowerCase().includes(search.toLowerCase()) ||
-        c.client.toLowerCase().includes(search.toLowerCase()) ||
-        c.modele.toLowerCase().includes(search.toLowerCase());
-      
-      const matchStatut = filterStatut === 'all' || c.statut === filterStatut;
-      
       const hasExternal = !!(c.partenaireId || (c.externalTasks && c.externalTasks.length > 0));
       const matchType = filterType === 'all' || 
         (filterType === 'interne' && !hasExternal) ||
         (filterType === 'sous-traitance' && hasExternal);
 
-      return matchSearch && matchStatut && matchType;
+      return matchType;
     });
-  }, [commandes, search, filterStatut, filterType]);
+  }, [commandes, filterType]);
 
   function getDynamicStatus(c: Commande) {
     const statusMap: Record<string, TKey> = {
@@ -467,6 +508,18 @@ export default function Commandes() {
             </tbody>
           </table>
         </div>
+
+        {hasMore && (
+          <div className="p-8 border-t border-slate-50 flex justify-center bg-slate-50/30">
+            <button 
+              onClick={() => loadCommands(page + 1)}
+              disabled={loading}
+              className="px-10 py-4 bg-white border border-slate-200 text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-slate-900 hover:text-white transition-all shadow-sm disabled:opacity-50"
+            >
+              {loading ? 'Chargement...' : (isAr ? 'عرض المزيد من الطلبيات' : 'Afficher plus de commandes')}
+            </button>
+          </div>
+        )}
       </div>
       {/* Custom Delete Confirmation Modal */}
       {deleteConfirm && (
