@@ -1,10 +1,10 @@
+import React, { useState, useEffect } from 'react';
 import { Play, ShieldCheck, Zap, Users, ArrowRight, MessageCircle, Star, Package, Factory, Globe, Shirt, Scissors, CheckCircle, Image as ImageIcon, X, ChevronDown, Search, LogOut, RotateCw, MapPin } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
 import { loadCompanyProfile, saveLead, syncCompanyProfile, CompanyProfile } from '../types';
 
-const LogoWithFallback = ({ src, alt, isAr }: { src: string; alt: string; isAr: boolean }) => {
+const LogoWithFallback = ({ src, alt }: { src: string; alt: string }) => {
   const [error, setError] = useState(false);
   if (error || !src) {
     return (
@@ -22,7 +22,7 @@ const LogoWithFallback = ({ src, alt, isAr }: { src: string; alt: string; isAr: 
 };
 
 export default function LandingPage() {
-  const { isAr, toggle } = useLang();
+  const { isAr } = useLang();
   const [company, setCompany] = useState<CompanyProfile>(loadCompanyProfile());
 
   useEffect(() => {
@@ -85,7 +85,6 @@ export default function LandingPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [selectedType, setSelectedType] = useState('T-Shirt');
   const [tailles, setTailles] = useState<Record<string, string>>({ XS: '', S: '', M: '', L: '', XL: '', XXL: '' });
   const [quantity, setQuantity] = useState('');
@@ -171,7 +170,7 @@ export default function LandingPage() {
       <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/80 backdrop-blur-xl border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-             <LogoWithFallback src={company.logoLanding || company.logoUrl} alt={company.name} isAr={isAr} />
+             <LogoWithFallback src={company.logoLanding || company.logoUrl} alt={company.name} />
           </div>
 
           <div className="flex items-center gap-2 md:gap-4">

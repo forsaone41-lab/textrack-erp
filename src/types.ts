@@ -548,18 +548,18 @@ export async function saveCompanyProfile(profile: CompanyProfile): Promise<void>
 }
 
 // ─── Storage Helpers ────────────────────────────────────────
-export async function loadData<T>(table: string): Promise<T[] | null> {
+export async function loadData<T>(table: string): Promise<T[]> {
   try {
     const { data, error } = await supabase.from(table).select('*');
     if (error) {
       console.warn(`Failed to load ${table}:`, error.message);
-      return null;
+      return [];
     }
     // Ensure we always return an array if no error, even if data is null
     return Array.isArray(data) ? data : [];
   } catch (err) {
     console.error(`Fatal load error for ${table}:`, err);
-    return null;
+    return [];
   }
 }
 
