@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useLang } from '../contexts/LangContext';
 import { Users, Search, Trash2, CheckCircle, UserPlus, Clock, Phone, FileText } from 'lucide-react';
-import { saveRecord, genId, Employe } from '../types';
+import { saveRecord, deleteRecord, genId, Employe } from '../types';
 
 interface WaitlistedCandidate {
   id: string;
@@ -52,6 +52,14 @@ export default function ListeAttente() {
       };
 
       handleAddNew(newCandidate);
+
+      // Auto-delete lead from Demandes so it doesn't appear in both places
+      if (lead.id) {
+        deleteRecord('leads', lead.id, lead.email).catch(() => 
+          console.warn('Could not auto-delete lead from Demandes')
+        );
+      }
+
       // Clear state
       window.history.replaceState({}, document.title);
     }
