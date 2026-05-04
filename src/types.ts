@@ -99,7 +99,6 @@ export interface Commande {
   tissuSourcing?: 'maison' | 'client';
   tissuPrix?: number;
   coutMainOeuvre?: number;
-  avance?: number;
   planningReady?: boolean;
   partenaireId?: string;
   externalTasks?: {
@@ -450,7 +449,7 @@ export function loadCompanyProfile(): CompanyProfile {
 export async function syncCompanyProfile(): Promise<CompanyProfile> {
   try {
     // 1. Try to find the LATEST system config record in 'leads' table
-    const { data: lData, error: lError } = await supabase
+    const { data: lData } = await supabase
       .from('leads')
       .select('*')
       .eq('name', '__SYSTEM_CONFIG__')
