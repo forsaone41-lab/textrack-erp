@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, Clock, UserPlus, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RotateCw, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy } from 'lucide-react';
+import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, UserPlus, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy } from 'lucide-react';
 import { Lead, loadLeads, saveRecord, User, genId, deleteRecord, loadData } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { generatePDF } from '../utils/pdf';
@@ -106,11 +106,7 @@ export default function Demandes() {
       const allUsers = await loadData<User>('users');
       let existingUser = allUsers?.find(u => u.email === lead.email);
 
-      let clientId = '';
-
-      if (existingUser) {
-        clientId = existingUser.id;
-      } else {
+      if (!existingUser) {
         // 2. Create new user if not exists
         const newClient: User = {
           id: genId(),
@@ -120,7 +116,6 @@ export default function Demandes() {
           password: 'Client' + lead.phone.slice(-4),
           pinCode: lead.phone.slice(-4),
         };
-        clientId = newClient.id;
         await saveRecord('users', newClient);
       }
 
@@ -311,12 +306,6 @@ export default function Demandes() {
     }, 800);
   };
 
-  const getFirstContactMessage = (lead: Lead) => {
-    const lang = isAr ? 'ar' : 'fr';
-    return templates[lang].firstContact
-      .replace(/{name}/g, lead.name)
-      .replace(/{type}/g, lead.type);
-  };
 
   const handleDownloadPDF = async () => {
     if (!devisLead) return;
