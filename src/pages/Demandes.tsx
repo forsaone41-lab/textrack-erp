@@ -1048,7 +1048,9 @@ export default function Demandes() {
                   <div className="flex items-center gap-2 mb-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                     <MessageSquare className="w-3.5 h-3.5" /> {isAr ? 'تفاصيل المشروع' : 'Détails du projet'}
                   </div>
-                  <p className="text-sm text-slate-600 font-medium leading-relaxed">{lead.details}</p>
+                  <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                    {lead.details.split('| CV_ATTACHMENT:')[0]}
+                  </p>
                 </div>
               )}
             </div>
