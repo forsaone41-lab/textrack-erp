@@ -22,7 +22,7 @@ const LogoWithFallback = ({ src, alt }: { src: string; alt: string }) => {
 };
 
 export default function LandingPage() {
-  const { isAr } = useLang();
+  const { isAr, toggle } = useLang();
   const [company, setCompany] = useState<CompanyProfile>(loadCompanyProfile());
 
   useEffect(() => {

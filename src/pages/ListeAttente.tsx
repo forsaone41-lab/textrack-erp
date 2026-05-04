@@ -81,6 +81,7 @@ export default function ListeAttente() {
       prenom: candidate.prenom,
       poste: candidate.poste,
       telephone: candidate.telephone,
+      email: '',
       type: 'atelier',
       actif: true,
       salaireMensuel: 0,
