@@ -115,6 +115,7 @@ export interface Commande {
   }[];
   referenceClient?: string;
   typeModele?: string;
+  photo?: string;
 }
 
 export interface StockTissu {
