@@ -84,8 +84,7 @@ export default function ListeAttente() {
       type: 'atelier',
       actif: true,
       salaireMensuel: 0,
-      remunerationType: 'mensuel',
-      dateEmbauche: new Date().toISOString().split('T')[0]
+      remunerationType: 'mensuel'
     };
 
     // 2. Save to Employees table
