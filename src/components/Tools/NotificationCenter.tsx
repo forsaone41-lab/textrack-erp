@@ -126,7 +126,7 @@ export default function NotificationCenter() {
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-4 w-96 bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden animate-in slide-in-from-top-4 duration-200 z-[200]">
+        <div className={`absolute top-full ${isAr ? 'left-0' : 'right-0'} mt-4 w-96 bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden animate-in slide-in-from-top-4 duration-200 z-[200]`} dir={isAr ? 'rtl' : 'ltr'}>
           <div className="p-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
              <div className="flex items-center gap-3">
                 <div className="flex flex-col">
@@ -192,7 +192,7 @@ export default function NotificationCenter() {
                     className={`p-6 flex gap-4 hover:bg-slate-50 transition-colors relative group cursor-pointer ${!n.read ? 'bg-indigo-50/20' : ''}`}
                   >
                     {!n.read && (
-                      <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-indigo-600 rounded-full" />
+                      <div className={`absolute ${isAr ? 'right-2' : 'left-2'} top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-indigo-600 rounded-full`} />
                     )}
                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm ${
                       n.type === 'client' || n.type === 'recrutement' ? 'bg-emerald-50 text-emerald-600' :
@@ -206,7 +206,7 @@ export default function NotificationCenter() {
                       {n.type === 'problem' && <AlertCircle className="w-5 h-5" />}
                     </div>
 
-                    <div className="flex-1 space-y-1">
+                    <div className={`flex-1 space-y-1 ${isAr ? 'text-right' : 'text-left'}`}>
                       <div className="flex items-center justify-between">
                          <span className="text-[11px] font-black text-slate-900 uppercase tracking-tight">{n.title[lang === 'ar' ? 'ar' : 'fr']}</span>
                          <span className="text-[9px] font-bold text-slate-400 flex items-center gap-1"><Clock className="w-3 h-3" /> {n.time}</span>
@@ -218,7 +218,7 @@ export default function NotificationCenter() {
 
                     <button 
                       onClick={() => removeNotification(n.id)}
-                      className="absolute top-2 right-2 p-1 text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className={`absolute top-2 ${isAr ? 'left-2' : 'right-2'} p-1 text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity`}
                     >
                       <X className="w-3 h-3" />
                     </button>
