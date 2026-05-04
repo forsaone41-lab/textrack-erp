@@ -383,6 +383,9 @@ export interface CompanyProfile {
   missionTextFr?: string;
   missionTextAr?: string;
   googleMapsUrl?: string;
+  experienceYears?: string;
+  experienceTextFr?: string;
+  experienceTextAr?: string;
 }
 
 export interface Lead {

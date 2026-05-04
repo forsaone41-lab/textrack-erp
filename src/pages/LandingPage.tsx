@@ -594,8 +594,10 @@ export default function LandingPage() {
                 className="relative rounded-[3rem] shadow-2xl border-4 border-white/5 object-cover h-[500px] w-full"
               />
               <div className={`absolute -bottom-10 ${isAr ? '-left-10' : '-right-10'} bg-white p-8 rounded-[2rem] shadow-2xl hidden md:block border border-slate-100 animate-in slide-in-from-bottom-10 duration-700`}>
-                <p className="text-4xl font-black text-indigo-600 mb-1 leading-none">15+</p>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'سنة من الخبرة' : 'Ans d\'Expérience'}</p>
+                <p className="text-4xl font-black text-indigo-600 mb-1 leading-none">{company.experienceYears || '15+'}</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  {isAr ? (company.experienceTextAr || 'سنة من الخبرة') : (company.experienceTextFr || 'Ans d\'Expérience')}
+                </p>
               </div>
             </div>
 

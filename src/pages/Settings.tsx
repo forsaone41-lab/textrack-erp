@@ -479,6 +479,28 @@ export default function Settings() {
               </div>
             </div>
 
+            {/* Experience Card Stats */}
+            <div className="bg-indigo-50/50 p-6 rounded-3xl border border-indigo-100 space-y-4">
+              <h4 className="text-xs font-black text-indigo-900 uppercase tracking-widest flex items-center gap-2">
+                <Star className="w-4 h-4" />
+                {isAr ? 'بطاقة سنوات الخبرة' : 'Carte d\'Années d\'Expérience'}
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">{isAr ? 'عدد السنوات' : 'Nombre d\'années'}</label>
+                  <input type="text" value={profile.experienceYears || ''} onChange={e => handleChange('experienceYears', e.target.value)} placeholder="Ex: 15+" className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none font-black text-indigo-600" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">{isAr ? 'النص (FR)' : 'Texte (FR)'}</label>
+                  <input type="text" value={profile.experienceTextFr || ''} onChange={e => handleChange('experienceTextFr', e.target.value)} placeholder="Ans d'Expérience" className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">{isAr ? 'النص (AR)' : 'Texte (AR)'}</label>
+                  <input type="text" value={profile.experienceTextAr || ''} onChange={e => handleChange('experienceTextAr', e.target.value)} placeholder="سنة من الخبرة" className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none text-right" />
+                </div>
+              </div>
+            </div>
+
             {/* Vision & Mission */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-slate-100">
               <div className="space-y-4">
