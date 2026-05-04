@@ -327,9 +327,9 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
                                    <span className="text-[10px] font-bold uppercase tracking-widest">Réf: {cmd?.reference}</span>
                                 </div>
                               </div>
-                              {cmd?.photo && (
+                              {cmd?.modelePhoto && (
                                 <div className="relative">
-                                  <img src={cmd.photo} className="w-20 h-20 rounded-3xl object-cover border-4 border-white/20 shadow-2xl rotate-3" alt="Modèle" />
+                                  <img src={cmd.modelePhoto} className="w-20 h-20 rounded-3xl object-cover border-4 border-white/20 shadow-2xl rotate-3" alt="Modèle" />
                                 </div>
                               )}
                             </div>

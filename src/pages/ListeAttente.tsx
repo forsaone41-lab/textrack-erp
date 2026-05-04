@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useLang } from '../contexts/LangContext';
-import { Users, Search, Trash2, CheckCircle, UserPlus, Clock, Phone, MapPin, Briefcase, X, ArrowRight, FileText } from 'lucide-react';
-import { loadData, saveRecord, deleteRecord, genId, Employe } from '../types';
+import { Users, Search, Trash2, CheckCircle, UserPlus, Clock, Phone, FileText } from 'lucide-react';
+import { saveRecord, genId, Employe } from '../types';
 
 interface WaitlistedCandidate {
   id: string;
