@@ -615,10 +615,18 @@ export default function SuiviRH() {
                     <span className="text-[11px] font-bold text-slate-600">{e.cin || '—'}</span>
                   </div>
                   {e.pin_code && (
-                    <div className="flex items-center gap-2 bg-indigo-50 px-3 py-2 rounded-2xl border border-indigo-100">
-                      <Zap className="w-3.5 h-3.5 text-indigo-500 fill-indigo-500" />
+                    <button 
+                      onClick={() => { 
+                        navigator.clipboard.writeText(e.pin_code!);
+                        alert(isAr ? 'تم نسخ الرمز!' : 'Code PIN copié !');
+                      }}
+                      className="flex items-center gap-2 bg-indigo-50 px-3 py-2 rounded-2xl border border-indigo-100 hover:bg-indigo-100 transition-colors group/pin active:scale-95"
+                      title={isAr ? 'نسخ رمز PIN' : 'Copier le code PIN'}
+                    >
+                      <Zap className="w-3.5 h-3.5 text-indigo-500 fill-indigo-500 group-hover/pin:scale-110 transition-transform" />
                       <span className="text-[10px] font-black text-indigo-700 uppercase tracking-widest">PIN: {e.pin_code}</span>
-                    </div>
+                      <Copy className="w-3 h-3 text-indigo-300 group-hover/pin:text-indigo-600 transition-colors" />
+                    </button>
                   )}
                 </div>
 
