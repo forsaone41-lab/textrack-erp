@@ -219,6 +219,95 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
         </NavLink>
       </div>
 
+      {/* 📊 Attendance Summary Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 px-1">
+        {/* Attendance Stats */}
+        <div className="lg:col-span-1 bg-white/70 backdrop-blur-sm rounded-[2.5rem] border border-white p-8 shadow-2xl shadow-indigo-100/20 flex flex-col justify-between overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-3xl -mr-16 -mt-16" />
+          <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-3">
+            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+            {isAr ? 'حضور اليوم' : 'Pointage Aujourd\'hui'}
+          </h3>
+          
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center"><UserCheck className="w-5 h-5" /></div>
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-tight">{isAr ? 'حاضر' : 'Présents'}</span>
+              </div>
+              <span className="text-lg font-black text-emerald-600">{presents.length}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center"><UserX className="w-5 h-5" /></div>
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-tight">{isAr ? 'غائب' : 'Absents'}</span>
+              </div>
+              <span className="text-lg font-black text-rose-600">{absents.length}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center"><Clock className="w-5 h-5" /></div>
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-tight">{isAr ? 'متأخر' : 'Retards'}</span>
+              </div>
+              <span className="text-lg font-black text-amber-600">{retards.length}</span>
+            </div>
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between">
+             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'نسبة الحضور' : 'Taux de présence'}</span>
+             <span className="text-sm font-black text-indigo-600">
+               {actifs.length > 0 ? Math.round((presents.length / actifs.length) * 100) : 0}%
+             </span>
+          </div>
+        </div>
+
+        {/* Live Attendance List */}
+        <div className="lg:col-span-3 bg-white/70 backdrop-blur-sm rounded-[2.5rem] border border-white p-8 shadow-2xl shadow-indigo-100/20 overflow-hidden relative flex flex-col">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              {isAr ? 'العمال المتواجدون حالياً' : 'Ouvriers Actuellement Présents'}
+            </h3>
+            <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full uppercase tracking-widest border border-emerald-100">
+              {enCoursPresence.length} {isAr ? 'عامل' : 'Ouvriers'}
+            </span>
+          </div>
+
+          <div className="flex-1 overflow-x-auto pb-4 scrollbar-hide">
+            {enCoursPresence.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center bg-slate-50/50 rounded-3xl border border-dashed border-slate-200 py-6">
+                 <UserX className="w-10 h-10 text-slate-200 mb-2" />
+                 <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{isAr ? 'لا يوجد عمال مسجلون حالياً' : 'Aucun ouvrier en cours'}</p>
+              </div>
+            ) : (
+              <div className="flex gap-4 min-w-max px-1">
+                {enCoursPresence.map(e => {
+                  const p = presencesAujourdhui.find(pr => pr.employeId === e.id);
+                  return (
+                    <div key={e.id} className="flex flex-col items-center gap-3 group">
+                       <div className="relative">
+                          <div className="w-16 h-16 rounded-[24px] bg-slate-100 border-2 border-white shadow-lg overflow-hidden group-hover:scale-110 transition-transform">
+                            {e.photo ? <img src={e.photo} alt={e.nom} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-400 font-black text-xl">{e.nom[0]}</div>}
+                          </div>
+                          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 border-4 border-white rounded-full shadow-sm flex items-center justify-center">
+                             <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
+                          </div>
+                       </div>
+                       <div className="text-center">
+                          <p className="text-[10px] font-black text-slate-900 uppercase tracking-tighter leading-none mb-1 truncate max-w-[80px]">{e.nom}</p>
+                          <p className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-100 inline-block tabular-nums">
+                            {p?.heureEntree || '--:--'}
+                          </p>
+                       </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* KPI Cards - High Fidelity Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 px-1">
         {kpiCards.map((kpi, i) => (

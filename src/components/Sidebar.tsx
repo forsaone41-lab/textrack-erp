@@ -166,6 +166,7 @@ export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mob
             {can('rh') && <NavItem to="/liste-attente" icon={Clock} label={isAr ? 'لائحة الانتظار' : 'Liste d\'Attente'} />}
             {can('pointage') && <NavItem to="/pointage" icon={ClipboardCheck} label={isAr ? 'تسجيل الحضور' : 'Pointage'} />}
             {can('fast_scanner') && <NavItem to="/fast-scanner" icon={QrCode} label={isAr ? 'الماسح الضوئي' : 'Scanner PRO'} />}
+            {can('performance') && <NavItem to="/performance" icon={Trophy} label={isAr ? 'الأداء والإنتاجية' : 'Performance'} />}
             {can('utilisateurs') && <NavItem to="/utilisateurs" icon={ShieldCheck} label={isAr ? 'المستخدمين' : 'Utilisateurs'} />}
             {can('parametres') && <NavItem to="/parametres" icon={Settings} label={isAr ? 'الإعدادات' : 'Paramètres'} />}
           </div>
