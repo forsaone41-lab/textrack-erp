@@ -123,7 +123,6 @@ export default function SuiviRH() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ nom: string; pin: string } | null>(null);
 
   const company = loadCompanyProfile();
