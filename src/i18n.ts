@@ -160,7 +160,6 @@ export const T = {
   phase_controle: { fr: 'Contrôle', ar: 'مراقبة' },
   phase_emballage: { fr: 'Emballage', ar: 'التغليف' },
   phase_livré: { fr: 'Livré', ar: 'تم التسليم' },
-  en_cours: { fr: 'En cours', ar: 'جارية' },
   terminé: { fr: 'Terminé', ar: 'جاهزة' },
   livré: { fr: 'Livré', ar: 'مسلّمة' },
 
