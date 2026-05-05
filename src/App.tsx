@@ -138,14 +138,14 @@ function AdminLayout({
       <main className="flex-1 overflow-y-auto mt-16 md:mt-0 w-full relative">
         {/* Global Tools Bar - Notification only on Dashboard Page for Admin */}
         {currentUser.role === 'admin' && (
-          <div className={`fixed top-8 ${isAr ? 'left-12' : 'right-12'} z-[130] hidden md:flex items-center gap-4`}>
+          <div className={`fixed top-8 ${isAr ? 'right-12' : 'right-12'} z-[130] hidden md:flex items-center gap-4`}>
             {location.pathname === '/' && <NotificationCenter />}
           </div>
         )}
 
         {/* Floating Calculator - Admin Only */}
         {currentUser.role === 'admin' && (
-          <div className={`fixed bottom-8 ${isAr ? 'left-8' : 'right-8'} z-[130] hidden md:block`}>
+          <div className={`fixed bottom-8 ${isAr ? 'right-8' : 'right-8'} z-[130] hidden md:block`}>
             <Calculator />
           </div>
         )}
