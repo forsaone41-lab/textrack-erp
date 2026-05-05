@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useLang } from '../contexts/LangContext';
-import { Plus, Search, Edit2, Trash2, CreditCard, DollarSign, Home, Image as ImageIcon, X, Printer, Download, File, Phone, Mail, RotateCw, Copy, Check, Zap, Calculator } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, CreditCard, DollarSign, Image as ImageIcon, X, Printer, Download, File, Phone, RotateCw, Copy, Check, Zap, Calculator } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Employe, PaiementSalaire, Charge, Commande, loadData, genId, loadCompanyProfile, saveRecord, safeStorage } from '../types';
+import { Employe, PaiementSalaire, Commande, loadData, genId, loadCompanyProfile, saveRecord, safeStorage } from '../types';
 import { generatePDF, printElement } from '../utils/pdf';
 
 // Local storage helpers for RH specifically to avoid Supabase schema mismatch
@@ -1056,6 +1056,51 @@ export default function SuiviRH() {
           </div>
         </div>
       )}
+      {/* 📜 Historique Modal */}
+      {showHistorique && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="bg-white rounded-[3rem] p-10 max-w-2xl w-full shadow-2xl border border-white/20 relative max-h-[80vh] overflow-hidden flex flex-col">
+             <button onClick={() => setShowHistorique(null)} className="absolute top-8 right-8 p-3 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 rounded-2xl transition-all">
+               <X className="w-5 h-5" />
+             </button>
+             
+             <h3 className="text-2xl font-black text-slate-900 mb-8 uppercase tracking-tighter flex items-center gap-3">
+               <RotateCw className="w-6 h-6 text-indigo-600" />
+               {isAr ? 'سجل الأداءات' : 'Historique des Paiements'}
+             </h3>
+
+             <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+               {paiements.filter(p => p.employeId === showHistorique).length === 0 ? (
+                 <div className="text-center py-20 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200">
+                   <p className="text-slate-400 font-bold">{isAr ? 'لا يوجد سجل أداء حالياً' : 'Aucun historique de paiement'}</p>
+                 </div>
+               ) : (
+                 paiements
+                   .filter(p => p.employeId === showHistorique)
+                   .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                   .map(p => (
+                     <div key={p.id} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-between group hover:bg-white hover:shadow-lg transition-all">
+                       <div className="flex items-center gap-4">
+                         <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-black">
+                           <DollarSign className="w-5 h-5" />
+                         </div>
+                         <div className={isAr ? 'text-right' : ''}>
+                           <p className="text-sm font-black text-slate-900">{p.montant.toLocaleString()} MAD</p>
+                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{new Date(p.date).toLocaleDateString(isAr ? 'ar-MA' : 'fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                         </div>
+                       </div>
+                       <div className="flex items-center gap-3">
+                          <span className="text-[9px] font-black uppercase tracking-widest bg-white px-3 py-1 rounded-full border border-slate-200 text-slate-500">{p.methode}</span>
+                          <button onClick={() => setPaiements(prev => prev.filter(x => x.id !== p.id))} className="p-2 text-slate-300 hover:text-rose-600 transition opacity-0 group-hover:opacity-100"><Trash2 className="w-4 h-4" /></button>
+                       </div>
+                     </div>
+                   ))
+               )}
+             </div>
+          </div>
+        </div>
+      )}
+
       {/* ✅ Contract Print Modal */}
       {showContract && selectedContractEmp && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-300">
