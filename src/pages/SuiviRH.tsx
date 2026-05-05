@@ -577,82 +577,64 @@ export default function SuiviRH() {
           const paye = getPaye(e.id);
           const reste = getReste(e);
           return (
-            <div key={e.id} className="bg-white rounded-[40px] border-2 border-slate-50 shadow-sm hover:shadow-md transition-all group overflow-hidden">
-              <div className="p-8">
-                <div className="flex items-start justify-between mb-6">
-                  <div className="flex items-center gap-5">
-                    <div className={`w-16 h-16 rounded-[24px] flex items-center justify-center text-white font-black text-2xl shadow-lg ${e.type === 'atelier' ? 'bg-slate-900' : 'bg-indigo-600'}`}>
-                      {e.prenom && e.nom ? (e.prenom?.[0] || '') + (e.nom?.[0] || '') : (e.nom ? e.nom.substring(0, 2).toUpperCase() : '??')}
+            <div key={e.id} className="bg-white rounded-[40px] border-2 border-slate-50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group overflow-hidden relative">
+              {/* Header Profile Section */}
+              <div className="p-8 pb-4">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-16 h-16 rounded-[24px] flex items-center justify-center text-white font-black text-xl shadow-lg relative overflow-hidden ${e.type === 'atelier' ? 'bg-slate-900' : 'bg-indigo-600'}`}>
+                      {e.photo ? (
+                        <img src={e.photo} alt={e.nom} className="w-full h-full object-cover" />
+                      ) : (
+                        <span>{e.prenom && e.nom ? (e.prenom?.[0] || '') + (e.nom?.[0] || '') : (e.nom ? e.nom.substring(0, 2).toUpperCase() : '??')}</span>
+                      )}
+                      <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
                     </div>
                     <div className={isAr ? 'text-right' : ''}>
-                      <h3 className="text-lg font-black text-slate-900 uppercase tracking-tighter">{empName(e)}</h3>
-                      <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
-                        <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{e.poste || (isAr ? 'منصب غير محدد' : 'Poste non défini')}</p>
-                        <span className="text-[11px] font-black text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100 shadow-sm tabular-nums">
-                          {(e.salaireMensuel || 0).toLocaleString()} / {e.remunerationType === 'hebdomadaire' ? (isAr ? 'أسبوع' : 'Semaine') : e.remunerationType === 'tache' ? (isAr ? 'مهمة' : 'Tâche') : (isAr ? 'شهر' : 'Mois')}
-                        </span>
-                      </div>
+                      <h3 className="text-lg font-black text-slate-900 uppercase tracking-tighter leading-none mb-1">{empName(e)}</h3>
+                      <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 px-2 py-0.5 rounded-lg inline-block">
+                        {e.poste || (isAr ? 'منصب غير محدد' : 'Poste non défini')}
+                      </p>
                     </div>
                   </div>
                   <div className={`flex gap-1 ${isAr ? 'flex-row-reverse' : ''}`}>
-                    <button 
-                      onClick={() => { setSelectedContractEmp(e); setShowContract(true); }}
-                      className="p-2 text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition"
-                      title={isAr ? 'عقد عمل' : 'Contrat de Travail'}
-                    >
-                      <File className="w-4 h-4" />
-                    </button>
+                    <button onClick={() => { setSelectedContractEmp(e); setShowContract(true); }} className="p-2 text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition" title={isAr ? 'عقد عمل' : 'Contrat de Travail'}><File className="w-4 h-4" /></button>
                     <button onClick={() => openEdit(e)} className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition"><Edit2 className="w-4 h-4" /></button>
                     <button onClick={() => setConfirmDeleteId(e.id)} className="p-2 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>
 
-                <div className="space-y-2 mb-6">
-                  {e.telephone && (
-                    <div className="flex items-center gap-3 text-slate-500">
-                      <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center"><Phone className="w-3.5 h-3.5" /></div>
-                      <span className="text-xs font-bold">{e.telephone}</span>
-                    </div>
-                  )}
-                  {e.cin && (
-                    <div className="flex items-center gap-3 text-slate-500">
-                      <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center"><File className="w-3.5 h-3.5" /></div>
-                      <span className="text-xs font-bold uppercase">{e.cin}</span>
-                    </div>
-                  )}
+                {/* Info Pills */}
+                <div className={`flex flex-wrap gap-2 mb-6 ${isAr ? 'flex-row-reverse' : ''}`}>
+                  <div className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-2xl border border-slate-100">
+                    <Phone className="w-3.5 h-3.5 text-slate-400" />
+                    <span className="text-[11px] font-bold text-slate-600">{e.telephone || '—'}</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-2xl border border-slate-100">
+                    <CreditCard className="w-3.5 h-3.5 text-slate-400" />
+                    <span className="text-[11px] font-bold text-slate-600">{e.cin || '—'}</span>
+                  </div>
                   {e.pin_code && (
-                    <div className={`flex items-center justify-between gap-3 text-indigo-600 bg-indigo-50/50 px-3 py-1.5 rounded-xl border border-indigo-100/50 ${isAr ? 'flex-row-reverse' : ''}`}>
-                      <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
-                        <div className="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center text-white"><CreditCard className="w-3 h-3" /></div>
-                        <span className="text-[10px] font-black tracking-[0.2em] tabular-nums">{isAr ? 'PIN:' : 'PIN:'} {e.pin_code}</span>
-                      </div>
-                      <button 
-                        onClick={(e_ui) => {
-                          e_ui.stopPropagation();
-                          navigator.clipboard.writeText(e.pin_code || '');
-                          setCopiedId(e.id);
-                          setTimeout(() => setCopiedId(null), 2000);
-                        }}
-                        className="p-1 hover:bg-indigo-100 rounded-lg transition-colors"
-                        title={isAr ? 'نسخ رمز PIN' : "Copier le code PIN"}
-                      >
-                        {copiedId === e.id ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3 text-indigo-400" />}
-                      </button>
+                    <div className="flex items-center gap-2 bg-indigo-50 px-3 py-2 rounded-2xl border border-indigo-100">
+                      <Zap className="w-3.5 h-3.5 text-indigo-500 fill-indigo-500" />
+                      <span className="text-[10px] font-black text-indigo-700 uppercase tracking-widest">PIN: {e.pin_code}</span>
                     </div>
                   )}
                 </div>
 
-                <div className={`grid grid-cols-2 gap-4 mb-8 ${isAr ? 'flex-row-reverse' : ''}`}>
-                  <div className={`bg-slate-50 p-4 rounded-3xl ${isAr ? 'text-right' : ''}`}>
-                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'مؤدى' : 'Payé'}</p>
-                    <p className="text-sm font-black text-emerald-600 tabular-nums">{paye.toLocaleString()} MAD</p>
+                {/* Salary Stats Dashboard */}
+                <div className={`grid grid-cols-2 gap-3 mb-6 ${isAr ? 'flex-row-reverse' : ''}`}>
+                  <div className={`p-4 rounded-[24px] border-2 border-slate-50 transition-colors hover:border-emerald-100 bg-white ${isAr ? 'text-right' : ''}`}>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'مؤدى' : 'Payé'}</p>
+                    <p className="text-lg font-black text-emerald-600 tabular-nums">{(paye || 0).toLocaleString()} <span className="text-[10px]">MAD</span></p>
                   </div>
-                  <div className={`bg-slate-50 p-4 rounded-3xl ${isAr ? 'text-right' : ''}`}>
-                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الباقي' : 'Reste'}</p>
-                    <p className="text-sm font-black text-rose-600 tabular-nums">{reste.toLocaleString()} MAD</p>
+                  <div className={`p-4 rounded-[24px] border-2 border-slate-50 transition-colors hover:border-rose-100 bg-white ${isAr ? 'text-right' : ''}`}>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الباقي' : 'Reste'}</p>
+                    <p className="text-lg font-black text-rose-600 tabular-nums">{(reste || 0).toLocaleString()} <span className="text-[10px]">MAD</span></p>
                   </div>
                 </div>
 
+                {/* Main Action Bar */}
                 <div className={`flex gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
                   <button
                     onClick={() => openPayer(e.id)}
