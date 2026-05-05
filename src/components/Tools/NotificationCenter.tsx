@@ -252,7 +252,10 @@ export default function NotificationCenter() {
           </div>
 
           <div className="p-4 bg-slate-50 border-t border-slate-100 text-center">
-             <button className="text-[10px] font-black text-slate-400 uppercase hover:text-slate-600 transition-colors">
+             <button 
+              onClick={() => { navigate('/notifications'); setIsOpen(false); }}
+              className="text-[10px] font-black text-slate-400 uppercase hover:text-slate-600 transition-colors"
+             >
                {isAr ? 'عرض كل السجل' : 'Voir tout l\'historique'}
              </button>
           </div>
