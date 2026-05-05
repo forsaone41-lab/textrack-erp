@@ -112,6 +112,8 @@ export default function SuiviRH() {
   const [showAllBadges, setShowAllBadges] = useState(false);
   const [showContract, setShowContract] = useState(false);
   const [selectedContractEmp, setSelectedContractEmp] = useState<Employe | null>(null);
+  const [showSimulator, setShowSimulator] = useState(false);
+  const [simNet, setSimNet] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Bon de Travail state
@@ -514,6 +516,12 @@ export default function SuiviRH() {
           >
             <RotateCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
             {syncStatus || (isAr ? 'مزامنة' : 'Sync')}
+          </button>
+          <button 
+            onClick={() => setShowSimulator(true)}
+            className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2.5 rounded-2xl hover:bg-emerald-100 transition-all font-black text-[10px] uppercase tracking-widest border border-emerald-200"
+          >
+            <Calculator className="w-4 h-4" /> {isAr ? 'حاسبة التكاليف' : 'Simulateur Salaire'}
           </button>
           <button onClick={openCreate} className="bg-slate-900 text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-900/20 active:scale-95 transition-all">
             <Plus className="w-4 h-4" /> {isAr ? 'إضافة' : 'Ajouter'}
@@ -1169,6 +1177,67 @@ export default function SuiviRH() {
           Généré via BEYA ERP — Systéme de Gestion Intégré Textile
         </div>
       </div>
+      {/* 📊 Salary & CNSS Simulator */}
+      {showSimulator && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="bg-white rounded-[3rem] p-10 max-w-md w-full shadow-2xl border border-white/20 relative">
+             <div className="absolute top-0 inset-x-0 h-2 bg-emerald-500 rounded-t-[3rem]" />
+             <h3 className="text-2xl font-black text-slate-900 mb-6 uppercase tracking-tighter">
+               {isAr ? 'حاسبة تكاليف الأجير' : 'Simulateur Salaire & CNSS'}
+             </h3>
+
+             <div className="space-y-6">
+                <div>
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 italic">
+                    {isAr ? 'الراتب الصافي المطلوب (Net)' : 'Salaire NET souhaité (MAD)'}
+                  </label>
+                  <div className="relative">
+                    <input 
+                      type="number" 
+                      value={simNet}
+                      onChange={e => setSimNet(e.target.value)}
+                      placeholder="3000"
+                      className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-6 text-lg font-black text-slate-900 outline-none focus:border-emerald-500 transition-all"
+                    />
+                    <span className="absolute right-6 top-1/2 -translate-y-1/2 font-black text-slate-300">MAD</span>
+                  </div>
+                </div>
+
+                {simNet && Number(simNet) > 0 && (() => {
+                  const net = Number(simNet);
+                  const brutApprox = net / 0.9326; // Approx for small salaries
+                  const cnssPatronale = brutApprox * 0.248; // Approx 24.8%
+                  const totalCost = brutApprox + cnssPatronale;
+                  return (
+                    <div className="p-6 bg-emerald-50 rounded-[2.5rem] border border-emerald-100 space-y-4 animate-in slide-in-from-bottom-2 duration-300">
+                      <div className="flex justify-between items-center text-xs font-bold text-emerald-800 uppercase tracking-widest border-b border-emerald-200/50 pb-2">
+                        <span>{isAr ? 'الراتب الخام' : 'Salaire Brut'}</span>
+                        <span className="font-black">{Math.round(brutApprox).toLocaleString()} MAD</span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs font-bold text-emerald-800 uppercase tracking-widest border-b border-emerald-200/50 pb-2">
+                        <span>{isAr ? 'مساهمة CNSS (المشغل)' : 'Charges Patronales'}</span>
+                        <span className="font-black">+{Math.round(cnssPatronale).toLocaleString()} MAD</span>
+                      </div>
+                      <div className="pt-2">
+                        <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">{isAr ? 'التكلفة الإجمالية عليك' : 'Coût Total pour vous'}</p>
+                        <p className="text-3xl font-black text-emerald-900 tabular-nums">
+                          {Math.round(totalCost).toLocaleString()} <span className="text-sm">MAD</span>
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                <button 
+                  onClick={() => setShowSimulator(false)}
+                  className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10"
+                >
+                  {isAr ? 'إغلاق' : 'Fermer'}
+                </button>
+             </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
