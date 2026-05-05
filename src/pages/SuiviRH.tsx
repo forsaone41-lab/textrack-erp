@@ -110,6 +110,8 @@ export default function SuiviRH() {
   const [showHistorique, setShowHistorique] = useState<string | null>(null);
   const [selectedBadge, setSelectedBadge] = useState<Employe | null>(null);
   const [showAllBadges, setShowAllBadges] = useState(false);
+  const [showContract, setShowContract] = useState(false);
+  const [selectedContractEmp, setSelectedContractEmp] = useState<Employe | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Bon de Travail state
@@ -585,6 +587,13 @@ export default function SuiviRH() {
                     </div>
                   </div>
                   <div className={`flex gap-1 ${isAr ? 'flex-row-reverse' : ''}`}>
+                    <button 
+                      onClick={() => { setSelectedContractEmp(e); setShowContract(true); }}
+                      className="p-2 text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition"
+                      title={isAr ? 'عقد عمل' : 'Contrat de Travail'}
+                    >
+                      <File className="w-4 h-4" />
+                    </button>
                     <button onClick={() => openEdit(e)} className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition"><Edit2 className="w-4 h-4" /></button>
                     <button onClick={() => setConfirmDeleteId(e.id)} className="p-2 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition"><Trash2 className="w-4 h-4" /></button>
                   </div>
@@ -1049,6 +1058,108 @@ export default function SuiviRH() {
           </div>
         </div>
       )}
+      {/* ✅ Contract Print Modal */}
+      {showContract && selectedContractEmp && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="bg-white rounded-[3rem] p-10 max-w-lg w-full shadow-2xl border border-white/20 relative">
+             <div className="w-20 h-20 bg-emerald-50 rounded-[2rem] flex items-center justify-center mb-6">
+                <File className="w-10 h-10 text-emerald-600" />
+             </div>
+             <h3 className="text-2xl font-black text-slate-900 mb-2 uppercase tracking-tight">
+               {isAr ? 'عقد العمل' : 'Contrat de Travail'}
+             </h3>
+             <p className="text-slate-500 font-bold text-sm mb-8">
+               {isAr ? `هل تريد تحميل عقد العمل الخاص بـ ${empName(selectedContractEmp)}؟` : `Voulez-vous générer le contrat pour ${empName(selectedContractEmp)} ?`}
+             </p>
+
+             <div className="grid grid-cols-2 gap-4">
+               <button 
+                onClick={() => setShowContract(false)}
+                className="py-4 bg-slate-50 text-slate-500 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-100 transition-all"
+               >
+                 {isAr ? 'إلغاء' : 'Annuler'}
+               </button>
+               <button 
+                onClick={() => {
+                  handleDownloadPDF('contract-template', `Contrat_${selectedContractEmp.nom}`);
+                  setTimeout(() => setShowContract(false), 2000);
+                }}
+                className="py-4 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-emerald-200"
+               >
+                 <Printer className="w-4 h-4" />
+                 {isAr ? 'تحميل PDF' : 'Télécharger PDF'}
+               </button>
+             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 📄 Hidden Contract Template */}
+      <div id="contract-template" className="fixed top-0 left-0 opacity-0 pointer-events-none -z-[500] w-[800px] bg-white p-16 text-slate-900 font-serif leading-relaxed" dir={isAr ? 'rtl' : 'ltr'}>
+        <div className="text-center mb-12 border-b-4 border-slate-900 pb-8">
+          <h1 className="text-4xl font-black mb-2 tracking-tighter uppercase">BEYA CREATIVE</h1>
+          <p className="text-sm font-bold uppercase tracking-[0.3em] text-slate-500 italic">Atelier de Confection Textile de Haute Qualité</p>
+        </div>
+
+        <div className="text-center mb-16">
+          <h2 className="text-3xl font-black underline decoration-slate-900 underline-offset-8 uppercase">
+            {isAr ? 'عقد عمل مهني' : 'CONTRAT DE TRAVAIL'}
+          </h2>
+        </div>
+
+        <div className="space-y-8 text-lg">
+          <section>
+            <p className="font-bold border-b border-slate-200 pb-2 mb-4">1. {isAr ? 'الأطراف المتعاقدة' : 'LES PARTIES'}:</p>
+            <div className="pl-6 space-y-2">
+              <p>• <b>{isAr ? 'المشغل' : 'Employeur'}:</b> BEYA CREATIVE — Atelier de Confection.</p>
+              <p>• <b>{isAr ? 'الأجير' : 'Employé(e)'}:</b> {empName(selectedContractEmp!)}</p>
+              <p>• <b>{isAr ? 'البطاقة الوطنية' : 'CIN'}:</b> {selectedContractEmp?.cin || '...................'}</p>
+            </div>
+          </section>
+
+          <section>
+            <p className="font-bold border-b border-slate-200 pb-2 mb-4">2. {isAr ? 'المهمة والمنصب' : 'POSTE ET MISSION'}:</p>
+            <p>
+              {isAr 
+                ? `يلتزم الأجير بشغل منصب "${selectedContractEmp?.poste || 'عامل'}" داخل المعمل، والقيام بالمهام المنوطة به بمهنية وجودة عالية.` 
+                : `L'employé(e) est engagé(e) en tant que "${selectedContractEmp?.poste || 'Ouvrier'}" et s'engage à réaliser ses tâches avec professionnalisme.`}
+            </p>
+          </section>
+
+          <section>
+            <p className="font-bold border-b border-slate-200 pb-2 mb-4">3. {isAr ? 'الالتزامات' : 'ENGAGEMENTS'}:</p>
+            <ul className="list-disc pl-8 space-y-2 text-sm italic">
+              <li>{isAr ? 'الحفاظ على سرية تصاميم ونماذج المعمل.' : 'Respecter la confidentialité des modèles et designs.'}</li>
+              <li>{isAr ? 'الحفاظ على سلامة الآلات والمعدات.' : 'Prendre soin des machines et équipements.'}</li>
+              <li>{isAr ? 'احترام أوقات العمل المتفق عليها.' : 'Respecter les horaires de travail convenus.'}</li>
+            </ul>
+          </section>
+
+          <section>
+            <p className="font-bold border-b border-slate-200 pb-2 mb-4">4. {isAr ? 'الأجر' : 'RÉMUNÉRATION'}:</p>
+            <p>
+              {isAr 
+                ? `تم الاتفاق على مبلغ ${(selectedContractEmp?.salaireMensuel || 0).toLocaleString()} درهم لكل ${selectedContractEmp?.remunerationType === 'hebdomadaire' ? 'أسبوع' : 'شهر'}.` 
+                : `La rémunération convenue est de ${(selectedContractEmp?.salaireMensuel || 0).toLocaleString()} MAD par ${selectedContractEmp?.remunerationType === 'hebdomadaire' ? 'semaine' : 'mois'}.`}
+            </p>
+          </section>
+        </div>
+
+        <div className="grid grid-cols-2 gap-20 mt-32 text-center h-48 items-end">
+          <div className="border-t-2 border-slate-300 pt-4">
+            <p className="font-black uppercase text-xs tracking-widest">{isAr ? 'توقيع الأجير' : 'Signature Employé(e)'}</p>
+            <p className="text-[10px] text-slate-400 mt-1 italic">(Légalisation obligatoire)</p>
+          </div>
+          <div className="border-t-2 border-slate-300 pt-4">
+            <p className="font-black uppercase text-xs tracking-widest">{isAr ? 'توقيع الإدارة' : 'Signature Direction'}</p>
+            <p className="text-[10px] text-slate-400 mt-1 italic">BEYA CREATIVE — Cachet</p>
+          </div>
+        </div>
+
+        <div className="mt-20 text-[9px] text-center text-slate-400 uppercase tracking-widest border-t pt-4">
+          Généré via BEYA ERP — Systéme de Gestion Intégré Textile
+        </div>
+      </div>
     </div>
   );
 }
