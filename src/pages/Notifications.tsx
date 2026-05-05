@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { 
-  Bell, UserPlus, Package, AlertCircle, CreditCard, Clock, 
-  Search, Trash2, Filter, CheckCircle2, ChevronRight, Inbox
+  Bell, UserPlus, AlertCircle, CreditCard, Clock, 
+  Search, Trash2, ChevronRight, Inbox
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLang } from '../contexts/LangContext';
