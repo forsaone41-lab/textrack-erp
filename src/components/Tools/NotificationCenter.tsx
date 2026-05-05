@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, X, UserPlus, Package, AlertCircle, CreditCard, Clock, CheckCircle2, RotateCw, Globe } from 'lucide-react';
 import { useLang } from '../../contexts/LangContext';
-import { loadData, Lead, Commande, Facture } from '../../types';
+import { loadData, saveRecord, Lead, Commande, Facture } from '../../types';
 
 interface Notification {
   id: string;
@@ -105,8 +105,22 @@ export default function NotificationCenter() {
   
     const unreadCount = notifications.filter(n => !n.read).length;
   
-    const markAllRead = () => {
+    const markAllRead = async () => {
+      // Get all unread lead notifications
+      const unreadLeads = notifications.filter(n => !n.read && n.id.startsWith('lead-'));
+      
+      // Optimistic UI update
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+
+      // Persistence: Update all unread leads in DB
+      for (const n of unreadLeads) {
+        const leadId = n.id.replace('lead-', '');
+        try {
+          await saveRecord('leads', { id: leadId, status: 'processed' }, true);
+        } catch (e) {
+          console.error("Failed to persist markAllRead for lead:", leadId, e);
+        }
+      }
     };
   
     const handleNotificationClick = (n: Notification) => {
@@ -117,12 +131,32 @@ export default function NotificationCenter() {
       }
     };
 
-    const markAsRead = (id: string) => {
+    const markAsRead = async (id: string) => {
+      // Optimistic UI update
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+
+      // Persistence if it's a lead
+      if (id.startsWith('lead-')) {
+        const leadId = id.replace('lead-', '');
+        try {
+          await saveRecord('leads', { id: leadId, status: 'processed' }, true);
+        } catch (e) {
+          console.error("Failed to persist markAsRead for lead:", leadId, e);
+        }
+      }
     };
   
-    const removeNotification = (id: string) => {
+    const removeNotification = async (id: string) => {
       setNotifications(prev => prev.filter(n => n.id !== id));
+      // Optionally also mark as processed if removed
+      if (id.startsWith('lead-')) {
+        const leadId = id.replace('lead-', '');
+        try {
+          await saveRecord('leads', { id: leadId, status: 'processed' }, true);
+        } catch (e) {
+          console.error("Failed to persist removal for lead:", leadId, e);
+        }
+      }
     };
   
     return (

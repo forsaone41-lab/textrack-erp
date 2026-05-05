@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLang } from '../contexts/LangContext';
-import { loadData, Lead, Commande, Facture } from '../types';
+import { loadData, saveRecord, Lead, Commande, Facture } from '../types';
 
 interface Notification {
   id: string;
@@ -122,12 +122,42 @@ export default function Notifications() {
     return matchesFilter && matchesSearch;
   });
 
-  const markAllRead = () => {
+  const markAllRead = async () => {
+    const unreadLeads = notifications.filter(n => !n.read && n.id.startsWith('lead-'));
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+
+    for (const n of unreadLeads) {
+      const leadId = n.id.replace('lead-', '');
+      try {
+        await saveRecord('leads', { id: leadId, status: 'processed' }, true);
+      } catch (e) {
+        console.error("Failed to persist markAllRead for lead:", leadId, e);
+      }
+    }
   };
 
-  const removeNotification = (id: string) => {
+  const markAsRead = async (id: string) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    if (id.startsWith('lead-')) {
+      const leadId = id.replace('lead-', '');
+      try {
+        await saveRecord('leads', { id: leadId, status: 'processed' }, true);
+      } catch (e) {
+        console.error("Failed to persist markAsRead for lead:", leadId, e);
+      }
+    }
+  };
+
+  const removeNotification = async (id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
+    if (id.startsWith('lead-')) {
+      const leadId = id.replace('lead-', '');
+      try {
+        await saveRecord('leads', { id: leadId, status: 'processed' }, true);
+      } catch (e) {
+        console.error("Failed to persist removal for lead:", leadId, e);
+      }
+    }
   };
 
   return (
@@ -207,7 +237,11 @@ export default function Notifications() {
             {filtered.map((n) => (
               <div 
                 key={n.id}
-                className={`group py-6 flex flex-col md:flex-row md:items-center gap-6 hover:bg-slate-50/50 transition-all px-4 rounded-3xl ${!n.read ? 'bg-indigo-50/20' : ''}`}
+                onClick={() => {
+                  markAsRead(n.id);
+                  if (n.targetUrl) navigate(n.targetUrl);
+                }}
+                className={`group py-6 flex flex-col md:flex-row md:items-center gap-6 hover:bg-slate-50/50 transition-all px-4 rounded-3xl cursor-pointer ${!n.read ? 'bg-indigo-50/20' : ''}`}
               >
                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-sm ${
                   n.type === 'client' || n.type === 'recrutement' ? 'bg-emerald-50 text-emerald-600' :
