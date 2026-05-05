@@ -177,7 +177,6 @@ function PointageLayout() {
 }
 
 function AppContent() {
-  const location = useLocation();
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     try {
       const s = localStorage.getItem(AUTH_KEY);
