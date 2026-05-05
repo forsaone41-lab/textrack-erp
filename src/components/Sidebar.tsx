@@ -2,16 +2,14 @@ import * as React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, FileText, Settings, LogOut, ShoppingCart, 
-  Package, Scissors, Activity, Receipt, CreditCard, PieChart, TrendingUp, UserCheck, Shirt, Globe, X, Menu, ClipboardCheck, Trophy, ShieldCheck, UserCircle, QrCode, User as UserIcon,
+  Package, Scissors, Activity, Receipt, PieChart, TrendingUp, UserCheck, Globe, X, ClipboardCheck, Trophy, ShieldCheck, UserCircle, QrCode, User as UserIcon,
   Sparkles,
-  ChevronRight,
-  RotateCw,
   RefreshCw,
   CalendarDays,
   Clock
 } from 'lucide-react';
 
-import { User, loadCompanyProfile, loadPermissions, AppPage, syncCompanyProfile } from '../types';
+import { User, CompanyProfile, loadPermissions, AppPage, syncCompanyProfile } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
 
