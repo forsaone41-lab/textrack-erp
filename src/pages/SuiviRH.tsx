@@ -1107,40 +1107,49 @@ export default function SuiviRH() {
           </h2>
         </div>
 
-        <div className="space-y-8 text-lg">
+        <div className="space-y-6 text-sm">
           <section>
-            <p className="font-bold border-b border-slate-200 pb-2 mb-4">1. {isAr ? 'الأطراف المتعاقدة' : 'LES PARTIES'}:</p>
-            <div className="pl-6 space-y-2">
-              <p>• <b>{isAr ? 'المشغل' : 'Employeur'}:</b> BEYA CREATIVE — Atelier de Confection.</p>
+            <p className="font-black border-b-2 border-slate-900 pb-1 mb-3">1. {isAr ? 'الأطراف المتعاقدة' : 'LES PARTIES'}:</p>
+            <div className="pl-4 space-y-1">
+              <p>• <b>{isAr ? 'المشغل' : 'Employeur'}:</b> BEYA CREATIVE — Représenté par la Direction.</p>
               <p>• <b>{isAr ? 'الأجير' : 'Employé(e)'}:</b> {empName(selectedContractEmp!)}</p>
-              <p>• <b>{isAr ? 'البطاقة الوطنية' : 'CIN'}:</b> {selectedContractEmp?.cin || '...................'}</p>
+              <p>• <b>{isAr ? 'رقم البطاقة الوطنية' : 'CIN'}:</b> {selectedContractEmp?.cin || '...................'}</p>
             </div>
           </section>
 
           <section>
-            <p className="font-bold border-b border-slate-200 pb-2 mb-4">2. {isAr ? 'المهمة والمنصب' : 'POSTE ET MISSION'}:</p>
-            <p>
+            <p className="font-black border-b-2 border-slate-900 pb-1 mb-3">2. {isAr ? 'فترة التجربة' : "PÉRIODE D'ESSAI"}:</p>
+            <p className="italic">
               {isAr 
-                ? `يلتزم الأجير بشغل منصب "${selectedContractEmp?.poste || 'عامل'}" داخل المعمل، والقيام بالمهام المنوطة به بمهنية وجودة عالية.` 
-                : `L'employé(e) est engagé(e) en tant que "${selectedContractEmp?.poste || 'Ouvrier'}" et s'engage à réaliser ses tâches avec professionnalisme.`}
+                ? "يخضع هذا العقد لفترة تجربة مدتها 15 يوماً (خاضعة للتجديد مرة واحدة)، طبقاً لمقتضيات المادة 14 من مدونة الشغل. خلال هذه الفترة، يمكن لأي طرف إنهاء العقد دون إشعار مسبق أو تعويض." 
+                : "Le présent contrat est soumis à une période d'essai de 15 jours (renouvelable une fois), conformément à l'article 14 du Code du Travail. Durant cette période, chacune des parties peut rompre le contrat sans préavis ni indemnité."}
             </p>
           </section>
 
           <section>
-            <p className="font-bold border-b border-slate-200 pb-2 mb-4">3. {isAr ? 'الالتزامات' : 'ENGAGEMENTS'}:</p>
-            <ul className="list-disc pl-8 space-y-2 text-sm italic">
-              <li>{isAr ? 'الحفاظ على سرية تصاميم ونماذج المعمل.' : 'Respecter la confidentialité des modèles et designs.'}</li>
-              <li>{isAr ? 'الحفاظ على سلامة الآلات والمعدات.' : 'Prendre soin des machines et équipements.'}</li>
-              <li>{isAr ? 'احترام أوقات العمل المتفق عليها.' : 'Respecter les horaires de travail convenus.'}</li>
-            </ul>
+            <p className="font-black border-b-2 border-slate-900 pb-1 mb-3">3. {isAr ? 'طبيعة العمل وساعات العمل' : 'POSTE ET DURÉE DU TRAVAIL'}:</p>
+            <p>
+              {isAr 
+                ? `يشتغل الأجير كـ "${selectedContractEmp?.poste || 'عامل'}" لمدة 44 ساعة في الأسبوع، مع احترام أوقات الدخول والخروج المعمول بها داخل الورشة.` 
+                : `L'employé(e) occupera le poste de "${selectedContractEmp?.poste || 'Ouvrier'}" pour une durée hebdomadaire de 44 heures, conformément à la législation en vigueur.`}
+            </p>
           </section>
 
           <section>
-            <p className="font-bold border-b border-slate-200 pb-2 mb-4">4. {isAr ? 'الأجر' : 'RÉMUNÉRATION'}:</p>
+            <p className="font-black border-b-2 border-slate-900 pb-1 mb-3">4. {isAr ? 'الأجر والضمان الاجتماعي' : 'RÉMUNÉRATION ET CNSS'}:</p>
             <p>
               {isAr 
-                ? `تم الاتفاق على مبلغ ${(selectedContractEmp?.salaireMensuel || 0).toLocaleString()} درهم لكل ${selectedContractEmp?.remunerationType === 'hebdomadaire' ? 'أسبوع' : 'شهر'}.` 
-                : `La rémunération convenue est de ${(selectedContractEmp?.salaireMensuel || 0).toLocaleString()} MAD par ${selectedContractEmp?.remunerationType === 'hebdomadaire' ? 'semaine' : 'mois'}.`}
+                ? `تم تحديد الأجر في ${(selectedContractEmp?.salaireMensuel || 0).toLocaleString()} درهم. تلتزم الشركة بالتصريح بالأجير لدى الصندوق الوطني للضمان الاجتماعي (CNSS) فور استيفاء الشروط القانونية.` 
+                : `Le salaire est fixé à ${(selectedContractEmp?.salaireMensuel || 0).toLocaleString()} MAD. L'employeur s'engage à déclarer l'employé(e) à la CNSS conformément aux dispositions légales.`}
+            </p>
+          </section>
+
+          <section>
+            <p className="font-black border-b-2 border-slate-900 pb-1 mb-3">5. {isAr ? 'الالتزامات المهنية' : 'OBLIGATIONS'}:</p>
+            <p className="text-[11px] leading-relaxed">
+              {isAr 
+                ? "يلتزم الأجير بالحفاظ على أسرار الشركة، وبسلامة المعدات والآلات المسلمة له، وباحترام معايير الجودة والسلامة الصحية داخل مقر العمل. أي خطأ جسيم قد يؤدي إلى الفصل دون تعويض طبقاً للمادة 61 من مدونة الشغل." 
+                : "L'employé(e) s'engage à respecter le secret professionnel, à prendre soin du matériel et à respecter les normes d'hygiène et de sécurité. Toute faute grave pourra entraîner un licenciement sans indemnité (Art. 61 du Code du Travail)."}
             </p>
           </section>
         </div>
