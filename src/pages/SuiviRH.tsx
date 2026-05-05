@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useLang } from '../contexts/LangContext';
-import { Plus, Search, Edit2, Trash2, Users, CreditCard, DollarSign, Home, Image as ImageIcon, X, Printer, Download, File, Phone, Mail, RotateCw, Copy, Check, Zap } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, CreditCard, DollarSign, Home, Image as ImageIcon, X, Printer, Download, File, Phone, Mail, RotateCw, Copy, Check, Zap, Calculator } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Employe, PaiementSalaire, Charge, Commande, loadData, genId, loadCompanyProfile, saveRecord, safeStorage } from '../types';
 import { generatePDF, printElement } from '../utils/pdf';

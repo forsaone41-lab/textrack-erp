@@ -164,6 +164,7 @@ export interface Employe {
   salaireMensuel?: number;
   remunerationType?: 'mensuel' | 'hebdomadaire' | 'tache';
   pin_code?: string;
+  adresse?: string;
   photo?: string;
 }
 
