@@ -1103,22 +1103,22 @@ export default function SuiviRH() {
       )}
 
       {/* 📄 Hidden Contract Template */}
-      <div id="contract-template" className="fixed top-0 left-0 opacity-0 pointer-events-none -z-[500] w-[800px] bg-white p-16 text-slate-900 font-serif leading-relaxed" dir={isAr ? 'rtl' : 'ltr'}>
-        <div className="text-center mb-12 border-b-4 border-slate-900 pb-8">
-          <h1 className="text-4xl font-black mb-2 tracking-tighter uppercase">BEYA CREATIVE</h1>
-          <p className="text-sm font-bold uppercase tracking-[0.3em] text-slate-500 italic">Atelier de Confection Textile de Haute Qualité</p>
+        <div id="contract-template" className="fixed top-0 left-0 opacity-0 pointer-events-none -z-[500] w-[800px] bg-white p-12 text-slate-900 font-serif leading-relaxed" dir={isAr ? 'rtl' : 'ltr'}>
+        <div className="text-center mb-8 border-b-4 border-slate-900 pb-4">
+          <h1 className="text-3xl font-black mb-1 tracking-tighter uppercase">BEYA CREATIVE</h1>
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-500 italic">Atelier de Confection Textile de Haute Qualité</p>
         </div>
 
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-black underline decoration-slate-900 underline-offset-8 uppercase">
+        <div className="text-center mb-10">
+          <h2 className="text-2xl font-black underline decoration-slate-900 underline-offset-8 uppercase">
             {isAr ? 'عقد عمل مهني' : 'CONTRAT DE TRAVAIL'}
           </h2>
         </div>
 
-        <div className="space-y-6 text-sm">
+        <div className="space-y-4 text-[11px]">
           <section>
-            <p className="font-black border-b-2 border-slate-900 pb-1 mb-3">1. {isAr ? 'الأطراف المتعاقدة' : 'LES PARTIES'}:</p>
-            <div className="pl-4 space-y-1">
+            <p className="font-black border-b border-slate-900 pb-0.5 mb-2">1. {isAr ? 'الأطراف المتعاقدة' : 'LES PARTIES'}:</p>
+            <div className={`space-y-0.5 ${isAr ? 'pr-4' : 'pl-4'}`}>
               <p>• <b>{isAr ? 'المشغل' : 'Employeur'}:</b> BEYA CREATIVE — Représenté par la Direction.</p>
               <p>• <b>{isAr ? 'الأجير' : 'Employé(e)'}:</b> {empName(selectedContractEmp!)}</p>
               <p>• <b>{isAr ? 'رقم البطاقة الوطنية' : 'CIN'}:</b> {selectedContractEmp?.cin || '...................'}</p>
@@ -1126,8 +1126,8 @@ export default function SuiviRH() {
           </section>
 
           <section>
-            <p className="font-black border-b-2 border-slate-900 pb-1 mb-3">2. {isAr ? 'فترة التجربة' : "PÉRIODE D'ESSAI"}:</p>
-            <p className="italic">
+            <p className="font-black border-b border-slate-900 pb-0.5 mb-2">2. {isAr ? 'فترة التجربة' : "PÉRIODE D'ESSAI"}:</p>
+            <p className="italic leading-normal">
               {isAr 
                 ? "يخضع هذا العقد لفترة تجربة مدتها 15 يوماً (خاضعة للتجديد مرة واحدة)، طبقاً لمقتضيات المادة 14 من مدونة الشغل. خلال هذه الفترة، يمكن لأي طرف إنهاء العقد دون إشعار مسبق أو تعويض." 
                 : "Le présent contrat est soumis à une période d'essai de 15 jours (renouvelable une fois), conformément à l'article 14 du Code du Travail. Durant cette période, chacune des parties peut rompre le contrat sans préavis ni indemnité."}
@@ -1135,7 +1135,7 @@ export default function SuiviRH() {
           </section>
 
           <section>
-            <p className="font-black border-b-2 border-slate-900 pb-1 mb-3">3. {isAr ? 'طبيعة العمل وساعات العمل' : 'POSTE ET DURÉE DU TRAVAIL'}:</p>
+            <p className="font-black border-b border-slate-900 pb-0.5 mb-2">3. {isAr ? 'طبيعة العمل وساعات العمل' : 'POSTE ET DURÉE DU TRAVAIL'}:</p>
             <p>
               {isAr 
                 ? `يشتغل الأجير كـ "${selectedContractEmp?.poste || 'عامل'}" لمدة 44 ساعة في الأسبوع، مع احترام أوقات الدخول والخروج المعمول بها داخل الورشة.` 
@@ -1144,7 +1144,7 @@ export default function SuiviRH() {
           </section>
 
           <section>
-            <p className="font-black border-b-2 border-slate-900 pb-1 mb-3">4. {isAr ? 'الأجر والضمان الاجتماعي' : 'RÉMUNÉRATION ET CNSS'}:</p>
+            <p className="font-black border-b border-slate-900 pb-0.5 mb-2">4. {isAr ? 'الأجر والضمان الاجتماعي' : 'RÉMUNÉRATION ET CNSS'}:</p>
             <p>
               {isAr 
                 ? `تم تحديد الأجر في ${(selectedContractEmp?.salaireMensuel || 0).toLocaleString()} درهم. تلتزم الشركة بالتصريح بالأجير لدى الصندوق الوطني للضمان الاجتماعي (CNSS) فور استيفاء الشروط القانونية.` 
@@ -1153,8 +1153,8 @@ export default function SuiviRH() {
           </section>
 
           <section>
-            <p className="font-black border-b-2 border-slate-900 pb-1 mb-3">5. {isAr ? 'الالتزامات المهنية' : 'OBLIGATIONS'}:</p>
-            <p className="text-[11px] leading-relaxed">
+            <p className="font-black border-b border-slate-900 pb-0.5 mb-2">5. {isAr ? 'الالتزامات المهنية' : 'OBLIGATIONS'}:</p>
+            <p className="leading-relaxed">
               {isAr 
                 ? "يلتزم الأجير بالحفاظ على أسرار الشركة، وبسلامة المعدات والآلات المسلمة له، وباحترام معايير الجودة والسلامة الصحية داخل مقر العمل. أي خطأ جسيم قد يؤدي إلى الفصل دون تعويض طبقاً للمادة 61 من مدونة الشغل." 
                 : "L'employé(e) s'engage à respecter le secret professionnel, à prendre soin du matériel et à respecter les normes d'hygiène et de sécurité. Toute faute grave pourra entraîner un licenciement sans indemnité (Art. 61 du Code du Travail)."}
@@ -1162,19 +1162,19 @@ export default function SuiviRH() {
           </section>
         </div>
 
-        <div className="grid grid-cols-2 gap-20 mt-32 text-center h-48 items-end">
-          <div className="border-t-2 border-slate-300 pt-4">
-            <p className="font-black uppercase text-xs tracking-widest">{isAr ? 'توقيع الأجير' : 'Signature Employé(e)'}</p>
-            <p className="text-[10px] text-slate-400 mt-1 italic">(Légalisation obligatoire)</p>
+        <div className="grid grid-cols-2 gap-20 mt-12 text-center items-end">
+          <div className="border-t-2 border-slate-300 pt-2">
+            <p className="font-black uppercase text-[10px] tracking-widest">{isAr ? 'توقيع الأجير' : 'Signature Employé(e)'}</p>
+            <p className="text-[8px] text-slate-400 mt-0.5 italic">{isAr ? '(تصحيح الإمضاء ضروري)' : '(Légalisation obligatoire)'}</p>
           </div>
-          <div className="border-t-2 border-slate-300 pt-4">
-            <p className="font-black uppercase text-xs tracking-widest">{isAr ? 'توقيع الإدارة' : 'Signature Direction'}</p>
-            <p className="text-[10px] text-slate-400 mt-1 italic">BEYA CREATIVE — Cachet</p>
+          <div className="border-t-2 border-slate-300 pt-2">
+            <p className="font-black uppercase text-[10px] tracking-widest">{isAr ? 'توقيع الإدارة' : 'Signature Direction'}</p>
+            <p className="text-[8px] text-slate-400 mt-0.5 italic">BEYA CREATIVE — {isAr ? 'خاتم الشركة' : 'Cachet'}</p>
           </div>
         </div>
 
-        <div className="mt-20 text-[9px] text-center text-slate-400 uppercase tracking-widest border-t pt-4">
-          Généré via BEYA ERP — Systéme de Gestion Intégré Textile
+        <div className="mt-12 text-[8px] text-center text-slate-400 uppercase tracking-widest border-t pt-2">
+          {isAr ? 'تم الاستخراج عبر نظام BEYA ERP — نظام التسيير المندمج' : 'Généré via BEYA ERP — Systéme de Gestion Intégré Textile'}
         </div>
       </div>
       {/* 📊 Salary & CNSS Simulator */}
