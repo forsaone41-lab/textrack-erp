@@ -39,7 +39,7 @@ const LogoWithFallback = ({ src, alt }: { src: string; alt: string }) => {
   return <img src={src} className="h-10 object-contain" alt={alt} onError={() => setError(true)} />;
 };
 
-export default function Sidebar({ onOpenClientPortal, currentUser, onLogout, mobileOpen, setMobileOpen, company }: SidebarProps) {
+export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOpen, company }: SidebarProps) {
   const { lang, isAr, toggle } = useLang();
   
   const permissions = loadPermissions();
