@@ -92,7 +92,7 @@ export default function NotificationCenter() {
             });
           });
   
-          setNotifications(newNotifications.sort((a, b) => a.priority === 'high' ? -1 : 1));
+          setNotifications(newNotifications.sort((a, _) => a.priority === 'high' ? -1 : 1));
         } catch (err) {
           console.error("Error fetching notifications:", err);
         } finally {
