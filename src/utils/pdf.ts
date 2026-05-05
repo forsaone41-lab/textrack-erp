@@ -56,7 +56,7 @@ export function printElement(elementId: string) {
     <html>
       <head>
         <title>Impression - TexTrack</title>
-        \${stylesHtml}
+        ${stylesHtml}
         <style>
           body { margin: 0; padding: 20px; background: white !important; font-family: sans-serif; }
           img { max-width: 100% !important; height: auto !important; }
@@ -66,7 +66,7 @@ export function printElement(elementId: string) {
       </head>
       <body>
         <div class="print-content">
-          \${clone.outerHTML}
+          ${clone.outerHTML}
         </div>
       </body>
     </html>
