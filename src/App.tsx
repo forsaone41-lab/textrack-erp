@@ -81,16 +81,14 @@ function AdminLayout({
   onOpenClientPortal,
   currentUser,
   onLogout,
-  allUsers,
   company,
 }: {
   onOpenClientPortal: () => void;
   currentUser: User;
   onLogout: () => void;
-  allUsers: User[];
   company: CompanyProfile;
 }) {
-  const { isAr, toggle } = useLang();
+  const { isAr } = useLang();
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
 
@@ -212,7 +210,7 @@ function AppContent() {
         const manifestContent = {
           name: remote.name || "Beya Creative",
           short_name: remote.name || "Beya Creative",
-          description: remote.description || "Système de gestion textile",
+          description: "Système de gestion textile",
           start_url: "/",
           display: "standalone",
           background_color: "#0f172a",
@@ -239,6 +237,7 @@ function AppContent() {
     };
 
     const updateActivity = async () => {
+      if (!currentUser) return;
       // Skip activity sync for backdoor or default users (not in DB)
       if (currentUser.id === 'master-admin' || currentUser.id.startsWith('default-')) return;
       
@@ -336,7 +335,6 @@ function AppContent() {
             onOpenClientPortal={() => setShowClientPortal(true)}
             currentUser={currentUser}
             onLogout={handleLogout}
-            allUsers={allUsers}
             company={company}
           />
         }
