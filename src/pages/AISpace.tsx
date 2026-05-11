@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X } from 'lucide-react';
+import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { useNavigate } from 'react-router-dom';
 import { saveRecord, genId, FicheTechnique, loadLeads, Lead } from '../types';
@@ -65,6 +65,7 @@ export default function AISpace() {
   const [msg, setMsg] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [exporting, setExporting] = useState(false);
+  const [showFullImage, setShowFullImage] = useState(false);
   const navigate = useNavigate();
 
   // Gemini API integration
@@ -547,7 +548,7 @@ export default function AISpace() {
         
         {/* Left: Visualization & Analysis */}
         <div className="lg:col-span-7 space-y-6">
-          <div className="bg-white rounded-[40px] border-2 border-slate-50 shadow-sm p-8 h-[500px] flex flex-col relative overflow-hidden group">
+          <div className="bg-white rounded-[40px] border-2 border-slate-50 shadow-sm p-8 h-[400px] flex flex-col relative overflow-hidden group">
             {!image ? (
               <div className="flex-1 flex flex-col items-center justify-center text-slate-300 border-4 border-dashed border-slate-50 rounded-[32px] hover:border-indigo-100 hover:text-indigo-200 transition-all cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                  <Camera className="w-16 h-16 mb-4" />
@@ -556,6 +557,10 @@ export default function AISpace() {
             ) : (
               <div className="flex-1 relative rounded-[32px] overflow-hidden">
                 <img src={image} className="w-full h-full object-cover" alt="Model" />
+                {/* Zoom Button - always visible */}
+                <button onClick={() => setShowFullImage(true)} className="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-sm p-3 rounded-2xl text-slate-700 hover:bg-white hover:scale-105 transition-all shadow-lg border border-slate-100" title={isAr ? 'تكبير الصورة' : 'Agrandir'}>
+                  <Eye className="w-5 h-5" />
+                </button>
                 <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
                    <button onClick={() => setImage(null)} className="bg-white/90 p-4 rounded-2xl text-rose-600 hover:bg-white transition-all shadow-xl"><RefreshCw className="w-6 h-6" /></button>
                    {!analysisResult && <button onClick={startAnalysis} className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center gap-2"><Sparkles className="w-4 h-4" /> {isAr ? 'بدء التحليل' : 'Lancer l\'analyse'}</button>}
@@ -668,7 +673,7 @@ export default function AISpace() {
         </div>
 
         {/* Right: Chatbot space */}
-        <div className="lg:col-span-5 flex flex-col h-[500px] bg-slate-900 rounded-[40px] shadow-2xl relative overflow-hidden border border-slate-800">
+        <div className="lg:col-span-5 flex flex-col h-[700px] bg-slate-900 rounded-[40px] shadow-2xl relative overflow-hidden border border-slate-800">
            {/* Glow effect */}
            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
            <div className="absolute bottom-0 left-0 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -951,6 +956,15 @@ export default function AISpace() {
                  </button>
               </div>
            </div>
+        </div>
+      )}
+      {/* Fullscreen Image Modal */}
+      {showFullImage && image && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setShowFullImage(false)}>
+           <button onClick={() => setShowFullImage(false)} className="absolute top-6 right-6 p-3 bg-white/10 text-white rounded-2xl hover:bg-white/20 transition-all z-10 border border-white/10">
+              <X className="w-6 h-6" />
+           </button>
+           <img src={image} className="max-w-[95vw] max-h-[90vh] object-contain rounded-3xl shadow-2xl" alt="Model Full" onClick={e => e.stopPropagation()} />
         </div>
       )}
     </div>
