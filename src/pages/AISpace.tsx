@@ -268,23 +268,48 @@ export default function AISpace() {
           }],
           generationConfig: {
             temperature: 0.3,
+            responseMimeType: "application/json",
           }
         })
       });
 
       const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error.message || 'API Error');
+      }
+
       let rawText = '';
       if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
         rawText = data.candidates[0].content.parts[0].text;
       }
 
-      // Extract JSON from response (handle markdown code blocks)
-      let jsonStr = rawText;
-      const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonStr = jsonMatch[1].trim();
+      if (!rawText.trim()) {
+        throw new Error(isAr ? 'الذكاء الاصطناعي ما ردش. جرب مرة أخرى.' : 'Pas de réponse. Réessayez.');
+      }
+
+      // Extract JSON - try multiple methods
+      let parsed: any = null;
       
-      try {
-        const parsed = JSON.parse(jsonStr);
+      // Method 1: Direct parse (responseMimeType should give clean JSON)
+      try { parsed = JSON.parse(rawText); } catch(e) {}
+      
+      // Method 2: Extract from markdown code blocks
+      if (!parsed) {
+        const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (jsonMatch) try { parsed = JSON.parse(jsonMatch[1].trim()); } catch(e) {}
+      }
+      
+      // Method 3: Find first { to last }
+      if (!parsed) {
+        const firstBrace = rawText.indexOf('{');
+        const lastBrace = rawText.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace > firstBrace) {
+          try { parsed = JSON.parse(rawText.substring(firstBrace, lastBrace + 1)); } catch(e) {}
+        }
+      }
+      
+      if (parsed) {
         const result: any = {
           category: parsed.category || 'موديل',
           consumption: parsed.totalConsumption || parsed.consumption || '—',
@@ -308,11 +333,9 @@ export default function AISpace() {
               valeurs: m.valeurs || {}
             }))
           }));
-          // Flatten all components
           result.components = result.pieces.flatMap((p: any) => p.components);
         }
 
-        // Update custom measurements from first piece
         if (result.pieces.length > 0 && result.pieces[0].mesures.length > 0) {
           setCustomMesures(result.pieces[0].mesures);
         }
@@ -320,7 +343,6 @@ export default function AISpace() {
         setAnalysisResult(result);
         setAnalyzing(false);
 
-        // Build rich chat message
         let chatMsg = isAr ? '✅ تم تحليل الموديل بنجاح بالذكاء الاصطناعي!\n\n' : '✅ Analyse IA terminée !\n\n';
         if (result.pieces.length > 0) {
           result.pieces.forEach((p: any, i: number) => {
@@ -333,8 +355,8 @@ export default function AISpace() {
         chatMsg += isAr ? '⬇️ شوف التفاصيل الكاملة في الأسفل — يمكنك تبديل بين القطع!' : '⬇️ Voir les détails complets ci-dessous.';
         setChat(prev => [...prev, { role: 'ai', text: chatMsg }]);
 
-      } catch (parseErr) {
-        // JSON parsing failed, show raw text
+      } else {
+        // JSON parsing totally failed — show AI raw text in chat
         setAnalysisResult({
           category: isAr ? 'تحليل الموديل' : 'Analyse du modèle',
           consumption: '—',
