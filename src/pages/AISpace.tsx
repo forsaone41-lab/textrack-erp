@@ -64,6 +64,14 @@ export default function AISpace() {
   ]);
   const [msg, setMsg] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [chat]);
+
   const [exporting, setExporting] = useState(false);
   const [showFullImage, setShowFullImage] = useState(false);
   const navigate = useNavigate();
@@ -710,7 +718,8 @@ export default function AISpace() {
           </div>
 
           {/* Chat Messages */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4 relative z-10 flex flex-col justify-end">
+          <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-4 relative z-10 flex flex-col scroll-smooth">
+            <div className="flex-grow" />
             <div className="space-y-4 animate-in fade-in duration-300">
               {chat.map((c, i) => (
                 <div key={i} className={`flex ${c.role === 'user' ? 'justify-end' : 'justify-start'}`}>
