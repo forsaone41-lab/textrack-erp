@@ -414,6 +414,35 @@ export default function AISpace() {
       : `J'ai noté votre question sur "${userMsg}". 🤔 Pour une réponse précise, je vous conseille :\n\n1. D'uploader la photo du modèle concerné\n2. Ou de préciser votre question (ex: "Combien de mètres pour ce modèle ?")\n\nJe peux vous aider avec : consommation tissu, coûts, étapes de production, et patronage.`;
   };
 
+  const sendDirect = async (directMsg: string) => {
+    const userMessage = directMsg;
+    setChat(prev => [...prev, { role: 'user', text: userMessage }]);
+
+    const apiKey = localStorage.getItem('beya_gemini_api_key');
+    if (apiKey) {
+       try {
+         setChat(prev => [...prev, { role: 'ai', text: '...' }]);
+         const contents: any[] = [{ role: "user", parts: [{ text: userMessage }] }];
+         if (image) {
+            const base64Data = image.split(',')[1];
+            const mimeType = image.split(';')[0].split(':')[1];
+            contents[0].parts.push({ inlineData: { data: base64Data, mimeType } });
+         }
+         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+           method: 'POST', headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify({ contents, systemInstruction: { parts: [{ text: "أنت المساعد الذكي BEYA AI في مصنع نسيج مغربي. تكلم بالدارجة المغربية بأسلوب احترافي وودي. ساعد المستخدم في حساب كميات الثوب، تكاليف الإنتاج، مراحل الخياطة، وتحليل الموديلات. إذا سألك أسئلة تقنية، أجب بدقة. كن مفيداً جداً وتصرف كخبير نسيج وخياطة." }] } })
+         });
+         const data = await response.json();
+         let aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || (data.error ? 'خطأ: ' + data.error.message : 'لم أستطع فهم الرد.');
+         setChat(prev => { const n = [...prev]; n.pop(); return [...n, { role: 'ai', text: aiText }]; });
+       } catch(e: any) {
+         setChat(prev => { const n = [...prev]; n.pop(); return [...n, { role: 'ai', text: 'خطأ: ' + e.message }]; });
+       }
+    } else {
+       setChat(prev => [...prev, { role: 'ai', text: getSmartReply(userMessage) }]);
+    }
+  };
+
   const sendMsg = async () => {
     if (!msg.trim()) return;
     const userMessage = msg;
@@ -525,8 +554,8 @@ export default function AISpace() {
                  <p className="font-black text-xs uppercase tracking-[0.2em]">{isAr ? 'اضغط لرفع الموديل' : 'Cliquez pour uploader le modèle'}</p>
               </div>
             ) : (
-              <div className="flex-1 relative rounded-[32px] overflow-hidden bg-slate-50">
-                <img src={image} className="w-full h-full object-contain" alt="Model" />
+              <div className="flex-1 relative rounded-[32px] overflow-hidden">
+                <img src={image} className="w-full h-full object-cover" alt="Model" />
                 <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
                    <button onClick={() => setImage(null)} className="bg-white/90 p-4 rounded-2xl text-rose-600 hover:bg-white transition-all shadow-xl"><RefreshCw className="w-6 h-6" /></button>
                    {!analysisResult && <button onClick={startAnalysis} className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center gap-2"><Sparkles className="w-4 h-4" /> {isAr ? 'بدء التحليل' : 'Lancer l\'analyse'}</button>}
@@ -567,38 +596,71 @@ export default function AISpace() {
                  </div>
                )}
 
-               {/* Metrics Row - show active piece or global */}
+               {/* Metrics Row - show active piece or global - CLICKABLE */}
                {(() => {
                  const piece = analysisResult.pieces?.[activePieceIdx];
                  const consumption = piece?.consumption || analysisResult.consumption;
                  const complexity = piece?.complexity || analysisResult.complexity;
                  const cost = piece?.costEstimate || analysisResult.costEstimate;
                  const fit = piece?.fit;
+                 const pieceName = piece?.name || analysisResult.category;
+                 const askAI = (topic: string) => {
+                   const q = `أعطيني تفاصيل أكثر على ${topic} ديال "${pieceName}" اللي في الصورة. بغي معلومات دقيقة وعملية للإنتاج.`;
+                   sendDirect(q);
+                 };
                  return (
-                   <div className={`grid ${fit ? 'grid-cols-4' : 'grid-cols-3'} gap-4`}>
-                      <div className="bg-slate-50/50 rounded-3xl p-5 border border-slate-100 text-center">
-                         <Ruler className="w-5 h-5 text-indigo-500 mx-auto mb-2" />
+                   <>
+                   <div className={`grid ${fit ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-3'} gap-4`}>
+                      <div onClick={() => askAI('استهلاك الثوب والمتراج')} className="bg-slate-50/50 rounded-3xl p-5 border border-slate-100 text-center cursor-pointer hover:border-indigo-200 hover:bg-indigo-50/30 transition-all group">
+                         <Ruler className="w-5 h-5 text-indigo-500 mx-auto mb-2 group-hover:scale-110 transition-transform" />
                          <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'استهلاك الثوب' : 'Consommation'}</span>
                          <span className="text-xs font-black text-slate-800">{consumption}</span>
+                         <span className="block text-[8px] text-indigo-400 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">{isAr ? '🔍 اضغط لتفاصيل أكثر' : '🔍 Cliquez pour détails'}</span>
                       </div>
-                      <div className="bg-slate-50/50 rounded-3xl p-5 border border-slate-100 text-center">
-                         <Scissors className="w-5 h-5 text-emerald-500 mx-auto mb-2" />
+                      <div onClick={() => askAI('التعقيد ومراحل الخياطة')} className="bg-slate-50/50 rounded-3xl p-5 border border-slate-100 text-center cursor-pointer hover:border-emerald-200 hover:bg-emerald-50/30 transition-all group">
+                         <Scissors className="w-5 h-5 text-emerald-500 mx-auto mb-2 group-hover:scale-110 transition-transform" />
                          <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'التعقيد' : 'Complexité'}</span>
                          <span className="text-xs font-black text-emerald-700 uppercase tracking-wider">{complexity}</span>
+                         <span className="block text-[8px] text-emerald-400 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">{isAr ? '🔍 اضغط لتفاصيل أكثر' : '🔍 Cliquez pour détails'}</span>
                       </div>
                       {fit && (
-                        <div className="bg-slate-50/50 rounded-3xl p-5 border border-slate-100 text-center">
-                           <Sparkles className="w-5 h-5 text-violet-500 mx-auto mb-2" />
+                        <div onClick={() => askAI('الفيت والقصة واش لاصق ولا واسع')} className="bg-slate-50/50 rounded-3xl p-5 border border-slate-100 text-center cursor-pointer hover:border-violet-200 hover:bg-violet-50/30 transition-all group">
+                           <Sparkles className="w-5 h-5 text-violet-500 mx-auto mb-2 group-hover:scale-110 transition-transform" />
                            <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الفيت / القصة' : 'Fit / Coupe'}</span>
                            <span className="text-xs font-black text-violet-700">{fit}</span>
+                           <span className="block text-[8px] text-violet-400 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">{isAr ? '🔍 اضغط لتفاصيل أكثر' : '🔍 Cliquez pour détails'}</span>
                         </div>
                       )}
-                      <div className="bg-slate-50/50 rounded-3xl p-5 border border-slate-100 text-center">
-                         <DollarSign className="w-5 h-5 text-amber-500 mx-auto mb-2" />
+                      <div onClick={() => askAI('التكلفة التقديرية والتفصيل المالي')} className="bg-slate-50/50 rounded-3xl p-5 border border-slate-100 text-center cursor-pointer hover:border-amber-200 hover:bg-amber-50/30 transition-all group">
+                         <DollarSign className="w-5 h-5 text-amber-500 mx-auto mb-2 group-hover:scale-110 transition-transform" />
                          <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'التكلفة التقديرية' : 'Coût Estimé'}</span>
                          <span className="text-xs font-black text-slate-800">{cost}</span>
+                         <span className="block text-[8px] text-amber-400 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">{isAr ? '🔍 اضغط لتفاصيل أكثر' : '🔍 Cliquez pour détails'}</span>
                       </div>
                    </div>
+
+                   {/* Active Piece Detail Panel */}
+                   {piece && (
+                     <div className="bg-gradient-to-br from-slate-50 to-indigo-50/30 rounded-3xl p-6 border border-slate-100 space-y-4">
+                        <div className={`flex items-center justify-between ${isAr ? 'flex-row-reverse' : ''}`}>
+                           <h4 className="font-black text-sm text-slate-800">📦 {piece.name}</h4>
+                           <span className="text-[9px] font-black text-indigo-500 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">{piece.fit}</span>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                           {piece.components.map((comp, ci) => (
+                             <div key={ci} className="flex items-center gap-2 bg-white/80 px-3 py-2 rounded-xl border border-slate-100 text-[10px] font-bold text-slate-600">
+                               <ChevronRight className="w-3 h-3 text-indigo-400 flex-shrink-0" /> {comp}
+                             </div>
+                           ))}
+                        </div>
+                        {piece.mesures && piece.mesures.length > 0 && (
+                          <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest pt-2 border-t border-slate-100">
+                            {isAr ? `${piece.mesures.length} قياسات متاحة — شوف الجدول الكامل في الأسفل ⬇️` : `${piece.mesures.length} mesures disponibles — voir le tableau ci-dessous ⬇️`}
+                          </div>
+                        )}
+                     </div>
+                   )}
+                   </>
                  );
                })()}
             </div>
@@ -606,7 +668,7 @@ export default function AISpace() {
         </div>
 
         {/* Right: Chatbot space */}
-        <div className="lg:col-span-5 flex flex-col h-[700px] bg-slate-900 rounded-[40px] shadow-2xl relative overflow-hidden border border-slate-800">
+        <div className="lg:col-span-5 flex flex-col h-[500px] bg-slate-900 rounded-[40px] shadow-2xl relative overflow-hidden border border-slate-800">
            {/* Glow effect */}
            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
            <div className="absolute bottom-0 left-0 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -643,11 +705,11 @@ export default function AISpace() {
            </div>
 
            {/* Chat Messages */}
-           <div className="flex-1 overflow-y-auto p-6 space-y-4 relative z-10" ref={(el) => { if (el) el.scrollTop = el.scrollHeight; }}>
-              <div className="space-y-4">
+           <div className="flex-1 overflow-y-auto p-6 space-y-4 relative z-10 flex flex-col justify-end">
+              <div className="space-y-4 animate-in fade-in duration-300">
                  {chat.map((c, i) => (
                     <div key={i} className={`flex ${c.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                       <div className={`max-w-[90%] p-4 rounded-3xl text-xs font-medium leading-relaxed shadow-sm whitespace-pre-line ${
+                       <div className={`max-w-[85%] p-4 rounded-3xl text-xs font-medium leading-relaxed shadow-sm whitespace-pre-line ${
                           c.role === 'user' 
                             ? 'bg-indigo-600 text-white rounded-br-none' 
                             : 'bg-slate-800 text-slate-200 border border-slate-700/50 rounded-bl-none'
@@ -754,41 +816,12 @@ export default function AISpace() {
                    <h4 className="font-black text-xs text-slate-900 uppercase tracking-tighter">{isAr ? 'مكونات وقطع الموديل المقترحة' : 'Composants & Pièces du modèle'}</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                   {(analysisResult.pieces?.[activePieceIdx]?.components || analysisResult.components).map((c, i) => {
-                     const pieceName = analysisResult.pieces?.[activePieceIdx]?.name || analysisResult.category;
-                     const askDetail = () => {
-                       const q = `عطيني تفاصيل دقيقة على "${c}" ديال ${pieceName}: كيفاش كتخاط؟ شحال ديال القماش كتاخد؟ شحال ديال الخياطة (surplus couture)؟ واش كاين شي حيلة ولا نصيحة خاصة؟`;
-                       setMsg('');
-                       setChat(prev => [...prev, { role: 'user', text: `📌 تفاصيل: ${c}` }]);
-                       // auto trigger AI
-                       const apiKey = localStorage.getItem('beya_gemini_api_key');
-                       if (apiKey) {
-                         setChat(prev => [...prev, { role: 'ai', text: '...' }]);
-                         fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-                           method: 'POST',
-                           headers: { 'Content-Type': 'application/json' },
-                           body: JSON.stringify({
-                             contents: [{ role: "user", parts: [{ text: q }, ...(image ? [{ inlineData: { data: image.split(',')[1], mimeType: image.split(';')[0].split(':')[1] } }] : [])] }],
-                             systemInstruction: { parts: [{ text: "أنت خبير نسيج وخياطة محترف. أجب بالدارجة المغربية بأسلوب مفصل ودقيق. أعطي معلومات تقنية: القياسات، طريقة الخياطة، surplus couture، نصائح عملية، والأخطاء اللي خاص تتجنب." }] },
-                             generationConfig: { temperature: 0.3 }
-                           })
-                         }).then(r => r.json()).then(data => {
-                           const txt = data.candidates?.[0]?.content?.parts?.[0]?.text || 'لم أتمكن من الرد';
-                           setChat(prev => { const n = [...prev]; n.pop(); return [...n, { role: 'ai', text: txt }]; });
-                         }).catch(() => {
-                           setChat(prev => { const n = [...prev]; n.pop(); return [...n, { role: 'ai', text: 'خطأ في الاتصال' }]; });
-                         });
-                       } else {
-                         setTimeout(() => setChat(prev => [...prev, { role: 'ai', text: `لتفاصيل "${c}" الدقيقة، أضف مفتاح Gemini API من زر ⚡` }]), 500);
-                       }
-                     };
-                     return (
-                       <div key={i} onClick={askDetail} className={`flex items-center gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-100 cursor-pointer hover:bg-indigo-50 hover:border-indigo-200 hover:shadow-md transition-all group ${isAr ? 'flex-row-reverse' : ''}`}>
-                          <ChevronRight className={`w-4 h-4 text-indigo-400 group-hover:text-indigo-600 transition-colors ${isAr ? 'rotate-180' : ''}`} />
-                          <span className="text-[11px] font-black text-slate-600 group-hover:text-indigo-700 transition-colors">{c}</span>
-                       </div>
-                     );
-                   })}
+                   {(analysisResult.pieces?.[activePieceIdx]?.components || analysisResult.components).map((c, i) => (
+                     <div key={i} className={`flex items-center gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-100 ${isAr ? 'flex-row-reverse' : ''}`}>
+                        <ChevronRight className={`w-4 h-4 text-indigo-400 ${isAr ? 'rotate-180' : ''}`} />
+                        <span className="text-[11px] font-black text-slate-600">{c}</span>
+                     </div>
+                   ))}
                 </div>
              </div>
 
