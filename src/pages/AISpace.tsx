@@ -697,7 +697,7 @@ export default function AISpace() {
                           ))}
                         </div>
                         {piece.mesures && piece.mesures.length > 0 && (
-                          <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest pt-2 border-t border-slate-100">
+                          <div className="text-[10px] sm:text-xs font-black text-slate-500 uppercase tracking-wider pt-3 border-t border-slate-100 mt-2">
                             {isAr ? `${piece.mesures.length} قياسات متاحة — شوف الجدول الكامل في الأسفل ⬇️` : `${piece.mesures.length} mesures disponibles — voir le tableau ci-dessous ⬇️`}
                           </div>
                         )}
@@ -719,39 +719,41 @@ export default function AISpace() {
                         </div>
 
                          {/* Primary suggested fabric */}
-                        <div className={`bg-white/80 p-4 rounded-2xl border border-slate-100 flex items-center justify-between shadow-sm ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                        <div className={`bg-white/80 p-5 rounded-3xl border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm ${isAr ? 'sm:flex-row-reverse text-right' : ''}`}>
                           <div>
-                            <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'الثوب الرئيسي المقترح' : 'Tissu Principal Recommandé'}</span>
-                            <span className="text-sm font-black text-slate-800 mt-0.5">
+                            <span className="block text-[10px] sm:text-xs font-black text-slate-500 uppercase tracking-wider mb-1">{isAr ? 'الثوب الرئيسي المقترح' : 'Tissu Principal Recommandé'}</span>
+                            <span className="block text-base sm:text-lg font-black text-slate-800">
                               {piece?.fabricSuggested || analysisResult.fabricSuggested || (isAr ? 'لم يحدد' : 'Non spécifié')}
                             </span>
                           </div>
-                          <span className="px-3 py-1.5 bg-indigo-50 border border-indigo-100 text-[9px] font-black text-indigo-700 rounded-full">
-                            {isAr ? 'مثالي للموديل' : 'Idéal'}
-                          </span>
+                          <div className="flex-shrink-0">
+                            <span className="inline-block px-4 py-2 bg-indigo-50 border border-indigo-100 text-[10px] sm:text-xs font-black text-indigo-700 rounded-full shadow-sm">
+                              {isAr ? 'مثالي للموديل' : 'Idéal'}
+                            </span>
+                          </div>
                         </div>
 
                         {/* Alternative Suggested Fabrics */}
                         {((piece?.fabricAlternatives && piece.fabricAlternatives.length > 0) || 
                           (analysisResult.fabricAlternatives && analysisResult.fabricAlternatives.length > 0)) && (
-                          <div className="space-y-3">
-                            <h5 className={`text-[10px] font-black text-slate-400 uppercase tracking-widest ${isAr ? 'text-right' : ''}`}>
+                          <div className="space-y-4">
+                            <h5 className={`text-xs font-black text-slate-500 uppercase tracking-wider ${isAr ? 'text-right' : ''}`}>
                               {isAr ? 'خيارات أثواب بديلة' : 'Options de Tissus Alternatives'}
                             </h5>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               {((piece?.fabricAlternatives || analysisResult.fabricAlternatives) as any[]).map((alt, ai) => (
-                                <div key={ai} className="bg-white/95 p-4 rounded-2xl border border-slate-100 shadow-sm space-y-3 relative group hover:border-indigo-100 hover:shadow-md transition-all">
-                                  <div className={`flex justify-between items-center ${isAr ? 'flex-row-reverse text-right' : ''}`}>
-                                    <h6 className="text-xs font-black text-slate-800">{alt.name}</h6>
-                                    <span className="text-[8px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{isAr ? 'بديل' : 'Alternative'}</span>
+                                <div key={ai} className="bg-white/95 p-5 rounded-3xl border border-slate-100 shadow-sm space-y-4 relative group hover:border-indigo-100 hover:shadow-md transition-all">
+                                  <div className={`flex justify-between items-start gap-2 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                                    <h6 className="text-sm font-black text-slate-800 leading-tight">{alt.name}</h6>
+                                    <span className="text-[10px] sm:text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full whitespace-nowrap">{isAr ? 'بديل' : 'Alternative'}</span>
                                   </div>
-                                  <div className="space-y-2 text-[10px] leading-relaxed">
-                                    <div className={`flex gap-1.5 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
-                                      <span className="text-emerald-500 font-black">✔</span>
+                                  <div className="space-y-2.5 text-xs leading-relaxed">
+                                    <div className={`flex gap-2 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                                      <span className="text-emerald-500 font-black mt-0.5">✔</span>
                                       <span className="text-slate-600 font-medium"><strong className="text-emerald-600 font-bold">{isAr ? 'المزايا: ' : 'Membres: '}</strong>{alt.pros}</span>
                                     </div>
-                                    <div className={`flex gap-1.5 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
-                                      <span className="text-rose-500 font-black">✘</span>
+                                    <div className={`flex gap-2 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                                      <span className="text-rose-500 font-black mt-0.5">✘</span>
                                       <span className="text-slate-600 font-medium"><strong className="text-rose-600 font-bold">{isAr ? 'العيوب: ' : 'Cons: '}</strong>{alt.cons}</span>
                                     </div>
                                   </div>
