@@ -35,79 +35,6 @@ const STANDARD_MESURES: Record<string, { nom: string; valeurs: Record<string, nu
     { nom: 'الطول (Longueur)', valeurs: { S: 100, M: 102, L: 104, XL: 106, XXL: 108 } }
   ]
 };
-const TechnicalDrawing2D = ({ category, mesures, isAr, selectedSize = 'M' }: { category: string; mesures: any[]; isAr: boolean; selectedSize?: string }) => {
-  const isTop = ['Chemise', 'T-Shirt', 'Veste'].includes(category);
-  const isBottom = ['Pantalon', 'Short', 'Jupe'].includes(category);
-  const isFull = ['Robe', 'Caftan', 'Djellaba', 'Manteau'].includes(category) || (!isTop && !isBottom);
-
-  const getVal = (keywords: string[]) => {
-    const m = mesures.find(m => keywords.some(k => m.nom.toLowerCase().includes(k)));
-    return m && m.valeurs ? m.valeurs[selectedSize] || '-' : '-';
-  };
-
-  const chest = getVal(['صدر', 'poitrine']);
-  const shoulder = getVal(['كتف', 'épaule', 'epaules']);
-  const length = getVal(['طول', 'longueur']);
-  const sleeve = getVal(['كم', 'manche']);
-  const waist = getVal(['خصر', 'taille']);
-  const hips = getVal(['ورك', 'hanche']);
-
-  return (
-    <div className="relative w-full h-80 bg-slate-50/50 rounded-2xl border-2 border-slate-100 flex items-center justify-center overflow-hidden group">
-      <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1.5 rounded-xl text-[10px] font-black text-indigo-500 uppercase tracking-widest shadow-sm border border-indigo-100 z-10 flex items-center gap-2">
-        <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
-        </span>
-        {isAr ? 'رسم تقني 2D مباشر' : 'Croquis Technique 2D'}
-      </div>
-      
-      <svg viewBox="0 0 400 400" className="w-full h-full opacity-90 stroke-indigo-900 fill-none transition-all duration-700 group-hover:scale-105" style={{ strokeWidth: 2.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
-        
-        {(isTop || isFull) && (
-          <g className="animate-in fade-in duration-1000">
-            <path d={isFull ? "M 150 50 C 180 50, 220 50, 250 50 L 300 120 L 280 200 L 250 180 L 250 350 L 150 350 L 150 180 L 120 200 L 100 120 Z" : "M 150 50 C 180 50, 220 50, 250 50 L 300 120 L 280 200 L 250 180 L 250 250 L 150 250 L 150 180 L 120 200 L 100 120 Z"} className="fill-white stroke-slate-300" strokeWidth="3" />
-            
-            <line x1="150" y1="35" x2="250" y2="35" strokeDasharray="4 4" className="stroke-rose-400" />
-            <text x="200" y="25" className="text-[12px] fill-rose-600 font-bold" textAnchor="middle" stroke="none">{shoulder} cm</text>
-            
-            <line x1="140" y1="120" x2="260" y2="120" strokeDasharray="4 4" className="stroke-emerald-500" />
-            <text x="200" y="115" className="text-[12px] fill-emerald-600 font-bold" textAnchor="middle" stroke="none">{chest} cm</text>
-            
-            <line x1="260" y1="60" x2="295" y2="115" strokeDasharray="4 4" className="stroke-amber-500" />
-            <text x="300" y="80" className="text-[12px] fill-amber-600 font-bold" textAnchor="start" stroke="none">{sleeve} cm</text>
-            
-            <line x1="110" y1="50" x2="110" y2={isFull ? "350" : "250"} strokeDasharray="4 4" className="stroke-indigo-400" />
-            <text x="100" y={isFull ? "200" : "150"} className="text-[12px] fill-indigo-600 font-bold" textAnchor="end" stroke="none">{length} cm</text>
-            
-            {isFull && hips !== '-' && (
-              <>
-                <line x1="150" y1="200" x2="250" y2="200" strokeDasharray="4 4" className="stroke-purple-500" />
-                <text x="200" y="195" className="text-[12px] fill-purple-600 font-bold" textAnchor="middle" stroke="none">{hips} cm</text>
-              </>
-            )}
-          </g>
-        )}
-
-        {isBottom && (
-          <g className="animate-in fade-in duration-1000">
-            <path d="M 160 50 L 240 50 L 260 120 L 250 350 L 200 350 L 200 150 L 150 350 L 100 350 L 140 120 Z" className="fill-white stroke-slate-300" strokeWidth="3" />
-            
-            <line x1="160" y1="40" x2="240" y2="40" strokeDasharray="4 4" className="stroke-rose-400" />
-            <text x="200" y="30" className="text-[12px] fill-rose-600 font-bold" textAnchor="middle" stroke="none">{waist} cm</text>
-
-            <line x1="140" y1="120" x2="260" y2="120" strokeDasharray="4 4" className="stroke-purple-500" />
-            <text x="200" y="110" className="text-[12px] fill-purple-600 font-bold" textAnchor="middle" stroke="none">{hips} cm</text>
-            
-            <line x1="80" y1="50" x2="80" y2="350" strokeDasharray="4 4" className="stroke-indigo-400" />
-            <text x="70" y="200" className="text-[12px] fill-indigo-600 font-bold" textAnchor="end" stroke="none">{length} cm</text>
-          </g>
-        )}
-      </svg>
-    </div>
-  );
-};
-
 export default function AISpace() {
   const { isAr } = useLang();
   const [aiLangOverride, setAiLangOverride] = useState<'ar' | 'fr' | null>(null);
@@ -306,7 +233,7 @@ export default function AISpace() {
 
 لكل قطعة أعطيني:
 1. اسم القطعة (بالعربية والفرنسية)
-2. كمية الثوب المطلوبة بالمتر (لعرض ثوب 1.50م)
+2. كمية الثوب المطلوبة بالمتر. أعطني القياس بدقة لعرضين مختلفين للثوب: عرض 1.50م وعرض 1.80م.
 3. نوع الفيت (لاصق/ضيق، عادي/ريكيلار، واسع/لارج) - حلل من الصورة واش الموديل لاصق ولا واسع
 4. مستوى التعقيد (بسيط، متوسط، معقد)
 5. التكلفة التقديرية للخياطة بالدرهم
@@ -320,7 +247,7 @@ export default function AISpace() {
 أجب بصيغة JSON فقط بدون أي نص إضافي، بهذا الشكل:
 {
   "category": "اسم عام للموديل",
-  "totalConsumption": "X.XXm - X.XXm",
+  "totalConsumption": "عرض 1.50م: X.XXm | عرض 1.80م: X.XXm",
   "totalCost": "XX - XX MAD",
   "complexity": "متوسطة",
   "fabricSuggested": "نوع الثوب الرئيسي المقترح للموديل كامل",
@@ -339,7 +266,7 @@ export default function AISpace() {
   "pieces": [
     {
       "name": "تيشرت / T-Shirt",
-      "consumption": "1.20m - 1.50m",
+      "consumption": "عرض 1.50م: 1.50m | عرض 1.80م: 1.20m",
       "fit": "عادي (Regular)",
       "complexity": "بسيط",
       "costEstimate": "25 - 40 MAD",
@@ -843,36 +770,36 @@ export default function AISpace() {
         </div>
 
         {/* Right: Chatbot space */}
-        <div className="lg:col-span-5 flex flex-col h-[700px] bg-slate-900 rounded-[40px] shadow-2xl relative overflow-hidden border border-slate-800">
+        <div className="lg:col-span-5 flex flex-col h-[500px] lg:h-[700px] bg-white/95 backdrop-blur-xl rounded-[40px] shadow-2xl shadow-slate-200/40 relative overflow-hidden border border-slate-100/80">
           {/* Glow effect */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-400/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-violet-400/5 rounded-full blur-3xl pointer-events-none" />
 
           {/* Chat Header */}
-          <div className={`p-6 border-b border-slate-800 flex items-center justify-between relative z-10 ${isAr ? 'flex-row-reverse' : ''}`}>
+          <div className={`p-6 border-b border-slate-100 flex items-center justify-between relative z-10 ${isAr ? 'flex-row-reverse' : ''}`}>
             <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
-              <div className="w-8 h-8 bg-indigo-500/20 text-indigo-400 rounded-xl flex items-center justify-center border border-indigo-500/20">
+              <div className="w-8 h-8 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center border border-indigo-100 shadow-sm">
                 <MessageSquare className="w-4 h-4" />
               </div>
               <div className={isAr ? 'text-right' : ''}>
-                <h3 className="font-black text-sm text-white uppercase tracking-tight">{isAr ? 'مساعد الإنتاج والتصميم' : 'Assistant Design & Prod'}</h3>
+                <h3 className="font-black text-sm text-slate-800 uppercase tracking-tight">{isAr ? 'مساعد الإنتاج والتصميم' : 'Assistant Design & Prod'}</h3>
                 <div className={`flex items-center gap-1 mt-0.5 justify-start ${isAr ? 'flex-row-reverse' : ''}`}>
-                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">{isAr ? 'متصل' : 'Actif'}</span>
+                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-sm shadow-emerald-500/50" />
+                  <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider">{isAr ? 'متصل' : 'Actif'}</span>
                 </div>
               </div>
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => setShowApiKeyModal(true)}
-                className="p-2.5 bg-slate-800 text-slate-400 hover:text-indigo-400 border border-slate-700/50 hover:border-indigo-500/20 rounded-xl transition-all"
+                className="p-2.5 bg-white text-slate-400 hover:text-indigo-600 border border-slate-100 hover:border-indigo-100 hover:bg-indigo-50/50 rounded-xl transition-all shadow-sm"
                 title="إعدادات الذكاء الاصطناعي (API Key)"
               >
                 <Zap className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setChat([{ role: 'ai', text: isAr ? 'أنا مساعدك الذكي BEYA AI. ارفع صورة موديل لأقوم بتحليلها لك.' : 'Bonjour ! Je suis votre assistant BEYA AI. Téléchargez la photo d\'un modèle pour que je puisse l\'analyser.' }])}
-                className="p-2.5 bg-slate-800 text-slate-400 hover:text-rose-400 border border-slate-700/50 hover:border-rose-500/20 rounded-xl transition-all"
+                className="p-2.5 bg-white text-slate-400 hover:text-rose-600 border border-slate-100 hover:border-rose-100 hover:bg-rose-50/50 rounded-xl transition-all shadow-sm"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -885,9 +812,9 @@ export default function AISpace() {
             <div className="space-y-4 animate-in fade-in duration-300">
               {chat.map((c, i) => (
                 <div key={i} className={`flex ${c.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] p-4 rounded-3xl text-xs font-medium leading-relaxed shadow-sm whitespace-pre-line ${c.role === 'user'
-                      ? 'bg-indigo-600 text-white rounded-br-none'
-                      : 'bg-slate-800 text-slate-200 border border-slate-700/50 rounded-bl-none'
+                  <div className={`max-w-[85%] p-4 rounded-3xl text-xs font-medium leading-relaxed whitespace-pre-line ${c.role === 'user'
+                      ? 'bg-indigo-600 text-white rounded-br-none shadow-md shadow-indigo-600/20'
+                      : 'bg-slate-50 text-slate-700 border border-slate-100 rounded-bl-none shadow-sm'
                     }`}>
                     {c.text}
                   </div>
@@ -897,7 +824,7 @@ export default function AISpace() {
           </div>
 
           {/* Chat Input */}
-          <div className="p-4 border-t border-slate-800 bg-slate-900/80 backdrop-blur-md relative z-10">
+          <div className="p-4 border-t border-slate-100 bg-white/80 backdrop-blur-md relative z-10">
             <div className="relative flex items-center">
               <input
                 type="text"
@@ -905,11 +832,11 @@ export default function AISpace() {
                 onChange={e => setMsg(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && sendMsg()}
                 placeholder={isAr ? 'اسأل المساعد...' : 'Demandez à l\'assistant...'}
-                className={`w-full bg-slate-800/80 border border-slate-700/50 text-white placeholder-slate-500 rounded-2xl py-3.5 ${isAr ? 'pr-4 pl-12 text-right' : 'pl-4 pr-12'} text-xs font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all`}
+                className={`w-full bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 rounded-2xl py-3.5 ${isAr ? 'pr-4 pl-12 text-right' : 'pl-4 pr-12'} text-xs font-bold focus:bg-white focus:ring-4 focus:ring-indigo-600/10 focus:border-indigo-500 outline-none transition-all shadow-inner`}
               />
               <button
                 onClick={sendMsg}
-                className={`absolute ${isAr ? 'left-2.5' : 'right-2.5'} p-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 hover:scale-105 active:scale-95 transition-all shadow-md shadow-indigo-600/10`}
+                className={`absolute ${isAr ? 'left-2.5' : 'right-2.5'} p-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all shadow-md shadow-indigo-600/20`}
               >
                 <Send className="w-3.5 h-3.5" />
               </button>
@@ -954,44 +881,34 @@ export default function AISpace() {
               )}
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              <div className="overflow-x-auto border border-slate-100 rounded-2xl h-full flex flex-col">
-                <table className="w-full text-left border-collapse flex-1">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-100">
-                      <th className="p-3 text-[9px] font-black text-slate-400 uppercase tracking-wider">{isAr ? 'القياس' : 'Mesure'}</th>
+            <div className="overflow-x-auto border border-slate-100 rounded-2xl">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-100">
+                    <th className="p-3 text-[9px] font-black text-slate-400 uppercase tracking-wider">{isAr ? 'القياس' : 'Mesure'}</th>
+                    {selectedTailles.map(size => (
+                      <th key={size} className="p-3 text-[9px] font-black text-slate-400 uppercase tracking-wider text-center">{size}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {customMesures.map((row, rowIndex) => (
+                    <tr key={rowIndex} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="p-3 text-xs font-black text-slate-700">{row.nom}</td>
                       {selectedTailles.map(size => (
-                        <th key={size} className="p-3 text-[9px] font-black text-slate-400 uppercase tracking-wider text-center">{size}</th>
+                        <td key={size} className="p-2 text-center">
+                          <input
+                            type="number"
+                            value={row.valeurs[size] || 0}
+                            onChange={e => handleCellChange(rowIndex, size, parseFloat(e.target.value) || 0)}
+                            className="w-16 bg-slate-50 focus:bg-white border border-slate-100 focus:border-indigo-500 text-center text-xs font-black text-slate-800 py-1.5 px-1 rounded-lg outline-none transition-all shadow-sm"
+                          />
+                        </td>
                       ))}
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50">
-                    {customMesures.map((row, rowIndex) => (
-                      <tr key={rowIndex} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-3 text-xs font-black text-slate-700">{row.nom}</td>
-                        {selectedTailles.map(size => (
-                          <td key={size} className="p-2 text-center">
-                            <input
-                              type="number"
-                              value={row.valeurs[size] || 0}
-                              onChange={e => handleCellChange(rowIndex, size, parseFloat(e.target.value) || 0)}
-                              className="w-12 sm:w-16 bg-slate-50 focus:bg-white border border-slate-100 focus:border-indigo-500 text-center text-xs font-black text-slate-800 py-1.5 px-1 rounded-lg outline-none transition-all shadow-sm"
-                            />
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="flex flex-col h-full justify-center">
-                <TechnicalDrawing2D 
-                  category={analysisResult.pieces?.[activePieceIdx]?.name || selectedCategory} 
-                  mesures={customMesures} 
-                  isAr={isAr} 
-                  selectedSize="M" 
-                />
-              </div>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
             {/* Components Breakdown */}
