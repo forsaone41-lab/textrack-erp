@@ -39,22 +39,22 @@ const STANDARD_MESURES: Record<string, { nom: string; valeurs: Record<string, nu
 function getFabricImageUrl(name: string): string {
   const clean = (name || '').toLowerCase();
   if (clean.includes('كريب') || clean.includes('crepe') || clean.includes('crêpe')) {
-    return 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=600&auto=format&fit=crop';
+    return 'https://images.unsplash.com/photo-1600541519468-4a912852278b?q=80&w=600&auto=format&fit=crop';
   }
   if (clean.includes('قطن') || clean.includes('coton') || clean.includes('cotton')) {
-    return 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?q=80&w=600&auto=format&fit=crop';
+    return 'https://images.unsplash.com/photo-1590736969955-71cc94801759?q=80&w=600&auto=format&fit=crop';
   }
   if (clean.includes('كتان') || clean.includes('lin') || clean.includes('linen')) {
-    return 'https://images.unsplash.com/photo-1618220179428-22790b461013?q=80&w=600&auto=format&fit=crop';
+    return 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?q=80&w=600&auto=format&fit=crop';
   }
   if (clean.includes('حرير') || clean.includes('soie') || clean.includes('silk') || clean.includes('ساتان') || clean.includes('satin')) {
-    return 'https://images.unsplash.com/photo-1603252109303-2751441dd157?q=80&w=600&auto=format&fit=crop';
+    return 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=600&auto=format&fit=crop';
   }
   if (clean.includes('جينز') || clean.includes('jean') || clean.includes('denim')) {
     return 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=600&auto=format&fit=crop';
   }
   if (clean.includes('موبرا') || clean.includes('velour') || clean.includes('قطيفة')) {
-    return 'https://images.unsplash.com/photo-1598514982205-f3ad012115f8?q=80&w=600&auto=format&fit=crop';
+    return 'https://images.unsplash.com/photo-1519642918688-7e43b1701085?q=80&w=600&auto=format&fit=crop';
   }
   if (clean.includes('شيفون') || clean.includes('chiffon') || clean.includes('موسلين') || clean.includes('mousseline')) {
     return 'https://images.unsplash.com/photo-1551269901-5c5e14c25df7?q=80&w=600&auto=format&fit=crop';
@@ -62,8 +62,8 @@ function getFabricImageUrl(name: string): string {
   if (clean.includes('صوف') || clean.includes('laine') || clean.includes('wool')) {
     return 'https://images.unsplash.com/photo-1575908939634-75472481985f?q=80&w=600&auto=format&fit=crop';
   }
-  // Default beautiful high-res textile fold
-  return 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=600&auto=format&fit=crop';
+  // Default beautiful high-res close-up cotton canvas texture
+  return 'https://images.unsplash.com/photo-1588854337236-6889d631faa8?q=80&w=600&auto=format&fit=crop';
 }
 
 export default function AISpace() {
@@ -108,6 +108,7 @@ export default function AISpace() {
 
   const [exporting, setExporting] = useState(false);
   const [showFullImage, setShowFullImage] = useState(false);
+  const [zoomFabric, setZoomFabric] = useState<{ name: string; url: string } | null>(null);
   const navigate = useNavigate();
 
   // Gemini API integration
@@ -756,8 +757,15 @@ export default function AISpace() {
                           const imgUrl = getFabricImageUrl(mainFabric);
                           return (
                             <div className={`bg-white/80 rounded-2xl border border-slate-100 overflow-hidden flex items-stretch shadow-sm ${isAr ? 'flex-row-reverse text-right' : ''}`}>
-                              <div className="w-24 h-24 flex-shrink-0 relative overflow-hidden bg-slate-100 border-r border-slate-100/50">
-                                <img src={imgUrl} alt={mainFabric} className="w-full h-full object-cover hover:scale-110 transition-transform duration-500" />
+                              <div 
+                                onClick={() => setZoomFabric({ name: mainFabric, url: imgUrl })}
+                                className="w-24 h-24 flex-shrink-0 relative overflow-hidden bg-slate-100 border-r border-slate-100/50 cursor-zoom-in group/thumb"
+                                title={isAr ? 'اضغط لتكبير صورة نسيج الثوب' : 'Cliquez pour zoomer'}
+                              >
+                                <img src={imgUrl} alt={mainFabric} className="w-full h-full object-cover group-hover/thumb:scale-110 transition-transform duration-500" />
+                                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/thumb:opacity-100 flex items-center justify-center transition-opacity duration-300">
+                                  <span className="text-[8px] font-black text-white uppercase tracking-wider bg-indigo-600/90 px-2 py-1 rounded-lg shadow-md">{isAr ? '🔍 تكبير' : '🔍 Zoom'}</span>
+                                </div>
                               </div>
                               <div className="p-4 flex flex-col justify-center flex-1">
                                 <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'الثوب الرئيسي المقترح' : 'Tissu Principal Recommandé'}</span>
@@ -777,15 +785,22 @@ export default function AISpace() {
                           (analysisResult.fabricAlternatives && analysisResult.fabricAlternatives.length > 0)) && (
                           <div className="space-y-3">
                             <h5 className={`text-[10px] font-black text-slate-400 uppercase tracking-widest ${isAr ? 'text-right' : ''}`}>
-                              {isAr ? 'خيارات أثواب بديلة مع صور توضيحية' : 'Options de Tissus Alternatives'}
+                              {isAr ? 'خيارات أثواب بديلة مع صور توضيحية (اضغط للتكبير)' : 'Options de Tissus Alternatives (cliquez pour zoomer)'}
                             </h5>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               {((piece?.fabricAlternatives || analysisResult.fabricAlternatives) as any[]).map((alt, ai) => {
                                 const altImgUrl = getFabricImageUrl(alt.name);
                                 return (
                                   <div key={ai} className="bg-white/95 rounded-2xl border border-slate-100 shadow-sm flex overflow-hidden group hover:border-indigo-100 hover:shadow-md transition-all">
-                                    <div className="w-20 flex-shrink-0 relative overflow-hidden bg-slate-50 border-r border-slate-100/50">
-                                      <img src={altImgUrl} alt={alt.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                    <div 
+                                      onClick={() => setZoomFabric({ name: alt.name, url: altImgUrl })}
+                                      className="w-20 flex-shrink-0 relative overflow-hidden bg-slate-50 border-r border-slate-100/50 cursor-zoom-in group/thumb"
+                                      title={isAr ? 'اضغط لتكبير صورة نسيج الثوب' : 'Cliquez pour zoomer'}
+                                    >
+                                      <img src={altImgUrl} alt={alt.name} className="w-full h-full object-cover group-hover/thumb:scale-110 transition-transform duration-500" />
+                                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/thumb:opacity-100 flex items-center justify-center transition-opacity duration-300">
+                                        <span className="text-[8px] font-black text-white bg-indigo-600/90 px-1.5 py-0.5 rounded-md shadow-sm">{isAr ? '🔍 زوم' : '🔍 Zoom'}</span>
+                                      </div>
                                     </div>
                                     <div className="p-4 flex-1 space-y-2">
                                       <div className={`flex justify-between items-center ${isAr ? 'flex-row-reverse text-right' : ''}`}>
@@ -1111,6 +1126,18 @@ export default function AISpace() {
             <X className="w-6 h-6" />
           </button>
           <img src={image} className="max-w-[95vw] max-h-[90vh] object-contain rounded-3xl shadow-2xl" alt="Model Full" onClick={e => e.stopPropagation()} />
+        </div>
+      )}
+      {/* Fabric Zoom Modal */}
+      {zoomFabric && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setZoomFabric(null)}>
+          <button onClick={() => setZoomFabric(null)} className="absolute top-6 right-6 p-3 bg-white/10 text-white rounded-2xl hover:bg-white/20 transition-all z-10 border border-white/10">
+            <X className="w-6 h-6" />
+          </button>
+          <div className="flex flex-col items-center gap-4 max-w-[95vw]" onClick={e => e.stopPropagation()}>
+            <img src={zoomFabric.url} className="max-w-full max-h-[75vh] object-contain rounded-[32px] shadow-2xl border-4 border-white/10" alt={zoomFabric.name} />
+            <span className="text-white text-xs font-black tracking-widest uppercase px-6 py-3 bg-slate-900/60 rounded-full border border-white/10 backdrop-blur-sm shadow-xl">{zoomFabric.name}</span>
+          </div>
         </div>
       )}
     </div>
