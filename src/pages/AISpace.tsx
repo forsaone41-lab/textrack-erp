@@ -36,6 +36,36 @@ const STANDARD_MESURES: Record<string, { nom: string; valeurs: Record<string, nu
   ]
 };
 
+function getFabricImageUrl(name: string): string {
+  const clean = (name || '').toLowerCase();
+  if (clean.includes('كريب') || clean.includes('crepe') || clean.includes('crêpe')) {
+    return 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=600&auto=format&fit=crop';
+  }
+  if (clean.includes('قطن') || clean.includes('coton') || clean.includes('cotton')) {
+    return 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?q=80&w=600&auto=format&fit=crop';
+  }
+  if (clean.includes('كتان') || clean.includes('lin') || clean.includes('linen')) {
+    return 'https://images.unsplash.com/photo-1618220179428-22790b461013?q=80&w=600&auto=format&fit=crop';
+  }
+  if (clean.includes('حرير') || clean.includes('soie') || clean.includes('silk') || clean.includes('ساتان') || clean.includes('satin')) {
+    return 'https://images.unsplash.com/photo-1603252109303-2751441dd157?q=80&w=600&auto=format&fit=crop';
+  }
+  if (clean.includes('جينز') || clean.includes('jean') || clean.includes('denim')) {
+    return 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=600&auto=format&fit=crop';
+  }
+  if (clean.includes('موبرا') || clean.includes('velour') || clean.includes('قطيفة')) {
+    return 'https://images.unsplash.com/photo-1598514982205-f3ad012115f8?q=80&w=600&auto=format&fit=crop';
+  }
+  if (clean.includes('شيفون') || clean.includes('chiffon') || clean.includes('موسلين') || clean.includes('mousseline')) {
+    return 'https://images.unsplash.com/photo-1551269901-5c5e14c25df7?q=80&w=600&auto=format&fit=crop';
+  }
+  if (clean.includes('صوف') || clean.includes('laine') || clean.includes('wool')) {
+    return 'https://images.unsplash.com/photo-1575908939634-75472481985f?q=80&w=600&auto=format&fit=crop';
+  }
+  // Default beautiful high-res textile fold
+  return 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=600&auto=format&fit=crop';
+}
+
 export default function AISpace() {
   const { isAr } = useLang();
   const [aiLangOverride, setAiLangOverride] = useState<'ar' | 'fr' | null>(null);
@@ -719,45 +749,63 @@ export default function AISpace() {
                           </div>
                         </div>
 
-                        {/* Primary suggested fabric */}
-                        <div className={`bg-white/80 p-4 rounded-2xl border border-slate-100 flex items-center justify-between ${isAr ? 'flex-row-reverse text-right' : ''}`}>
-                          <div>
-                            <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'الثوب الرئيسي المقترح' : 'Tissu Principal Recommandé'}</span>
-                            <span className="text-sm font-black text-indigo-600">
-                              {piece?.fabricSuggested || analysisResult.fabricSuggested || (isAr ? 'لم يحدد' : 'Non spécifié')}
-                            </span>
-                          </div>
-                          <span className="px-3.5 py-1.5 bg-indigo-50 border border-indigo-100 text-[10px] font-black text-indigo-700 rounded-full">
-                            {isAr ? 'مثالي للموديل' : 'Idéal'}
-                          </span>
-                        </div>
+                         {/* Primary suggested fabric */}
+                        {(() => {
+                          const mainFabric = piece?.fabricSuggested || analysisResult.fabricSuggested;
+                          if (!mainFabric || mainFabric === '—') return null;
+                          const imgUrl = getFabricImageUrl(mainFabric);
+                          return (
+                            <div className={`bg-white/80 rounded-2xl border border-slate-100 overflow-hidden flex items-stretch shadow-sm ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                              <div className="w-24 h-24 flex-shrink-0 relative overflow-hidden bg-slate-100 border-r border-slate-100/50">
+                                <img src={imgUrl} alt={mainFabric} className="w-full h-full object-cover hover:scale-110 transition-transform duration-500" />
+                              </div>
+                              <div className="p-4 flex flex-col justify-center flex-1">
+                                <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'الثوب الرئيسي المقترح' : 'Tissu Principal Recommandé'}</span>
+                                <span className="text-sm font-black text-slate-800 mt-0.5">{mainFabric}</span>
+                                <div className="mt-1.5">
+                                  <span className="px-2 py-0.5 bg-indigo-50 border border-indigo-100 text-[8px] font-black text-indigo-700 rounded-full">
+                                    {isAr ? 'مثالي للموديل' : 'Idéal'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
 
                         {/* Alternative Suggested Fabrics */}
                         {((piece?.fabricAlternatives && piece.fabricAlternatives.length > 0) || 
                           (analysisResult.fabricAlternatives && analysisResult.fabricAlternatives.length > 0)) && (
                           <div className="space-y-3">
                             <h5 className={`text-[10px] font-black text-slate-400 uppercase tracking-widest ${isAr ? 'text-right' : ''}`}>
-                              {isAr ? 'خيارات أثواب بديلة' : 'Options de Tissus Alternatives'}
+                              {isAr ? 'خيارات أثواب بديلة مع صور توضيحية' : 'Options de Tissus Alternatives'}
                             </h5>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {((piece?.fabricAlternatives || analysisResult.fabricAlternatives) as any[]).map((alt, ai) => (
-                                <div key={ai} className="bg-white/95 p-4 rounded-2xl border border-slate-100 shadow-sm space-y-3 relative overflow-hidden group hover:border-indigo-100 hover:shadow-md transition-all">
-                                  <div className={`flex justify-between items-center ${isAr ? 'flex-row-reverse text-right' : ''}`}>
-                                    <h6 className="text-xs font-black text-slate-800">{alt.name}</h6>
-                                    <span className="text-[8px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{isAr ? 'بديل' : 'Alternative'}</span>
-                                  </div>
-                                  <div className="space-y-2 text-[10px] leading-relaxed">
-                                    <div className={`flex gap-1.5 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
-                                      <span className="text-emerald-500 font-black">✔</span>
-                                      <span className="text-slate-600 font-medium"><strong className="text-emerald-600 font-bold">{isAr ? 'المزايا: ' : 'Membres: '}</strong>{alt.pros}</span>
+                              {((piece?.fabricAlternatives || analysisResult.fabricAlternatives) as any[]).map((alt, ai) => {
+                                const altImgUrl = getFabricImageUrl(alt.name);
+                                return (
+                                  <div key={ai} className="bg-white/95 rounded-2xl border border-slate-100 shadow-sm flex overflow-hidden group hover:border-indigo-100 hover:shadow-md transition-all">
+                                    <div className="w-20 flex-shrink-0 relative overflow-hidden bg-slate-50 border-r border-slate-100/50">
+                                      <img src={altImgUrl} alt={alt.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                                     </div>
-                                    <div className={`flex gap-1.5 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
-                                      <span className="text-rose-500 font-black">✘</span>
-                                      <span className="text-slate-600 font-medium"><strong className="text-rose-600 font-bold">{isAr ? 'العيوب: ' : 'Cons: '}</strong>{alt.cons}</span>
+                                    <div className="p-4 flex-1 space-y-2">
+                                      <div className={`flex justify-between items-center ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                                        <h6 className="text-xs font-black text-slate-800">{alt.name}</h6>
+                                        <span className="text-[8px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{isAr ? 'بديل' : 'Alternative'}</span>
+                                      </div>
+                                      <div className="space-y-1.5 text-[10px] leading-relaxed">
+                                        <div className={`flex gap-1.5 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                                          <span className="text-emerald-500 font-black">✔</span>
+                                          <span className="text-slate-600 font-medium"><strong className="text-emerald-600 font-bold">{isAr ? 'المزايا: ' : 'Membres: '}</strong>{alt.pros}</span>
+                                        </div>
+                                        <div className={`flex gap-1.5 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                                          <span className="text-rose-500 font-black">✘</span>
+                                          <span className="text-slate-600 font-medium"><strong className="text-rose-600 font-bold">{isAr ? 'العيوب: ' : 'Cons: '}</strong>{alt.cons}</span>
+                                        </div>
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           </div>
                         )}
