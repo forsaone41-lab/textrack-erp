@@ -525,8 +525,8 @@ export default function AISpace() {
                  <p className="font-black text-xs uppercase tracking-[0.2em]">{isAr ? 'اضغط لرفع الموديل' : 'Cliquez pour uploader le modèle'}</p>
               </div>
             ) : (
-              <div className="flex-1 relative rounded-[32px] overflow-hidden">
-                <img src={image} className="w-full h-full object-cover" alt="Model" />
+              <div className="flex-1 relative rounded-[32px] overflow-hidden bg-slate-50">
+                <img src={image} className="w-full h-full object-contain" alt="Model" />
                 <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
                    <button onClick={() => setImage(null)} className="bg-white/90 p-4 rounded-2xl text-rose-600 hover:bg-white transition-all shadow-xl"><RefreshCw className="w-6 h-6" /></button>
                    {!analysisResult && <button onClick={startAnalysis} className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center gap-2"><Sparkles className="w-4 h-4" /> {isAr ? 'بدء التحليل' : 'Lancer l\'analyse'}</button>}
@@ -606,7 +606,7 @@ export default function AISpace() {
         </div>
 
         {/* Right: Chatbot space */}
-        <div className="lg:col-span-5 flex flex-col h-[500px] bg-slate-900 rounded-[40px] shadow-2xl relative overflow-hidden border border-slate-800">
+        <div className="lg:col-span-5 flex flex-col h-[700px] bg-slate-900 rounded-[40px] shadow-2xl relative overflow-hidden border border-slate-800">
            {/* Glow effect */}
            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
            <div className="absolute bottom-0 left-0 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -643,11 +643,11 @@ export default function AISpace() {
            </div>
 
            {/* Chat Messages */}
-           <div className="flex-1 overflow-y-auto p-6 space-y-4 relative z-10 flex flex-col justify-end">
-              <div className="space-y-4 animate-in fade-in duration-300">
+           <div className="flex-1 overflow-y-auto p-6 space-y-4 relative z-10" ref={(el) => { if (el) el.scrollTop = el.scrollHeight; }}>
+              <div className="space-y-4">
                  {chat.map((c, i) => (
                     <div key={i} className={`flex ${c.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                       <div className={`max-w-[85%] p-4 rounded-3xl text-xs font-medium leading-relaxed shadow-sm whitespace-pre-line ${
+                       <div className={`max-w-[90%] p-4 rounded-3xl text-xs font-medium leading-relaxed shadow-sm whitespace-pre-line ${
                           c.role === 'user' 
                             ? 'bg-indigo-600 text-white rounded-br-none' 
                             : 'bg-slate-800 text-slate-200 border border-slate-700/50 rounded-bl-none'
