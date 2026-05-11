@@ -47,14 +47,17 @@ function getFabricImageUrl(name: string): string {
   if (clean.includes('كتان') || clean.includes('lin') || clean.includes('linen')) {
     return 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?q=80&w=600&auto=format&fit=crop';
   }
+  if (clean.includes('فيسكوز') || clean.includes('viscose') || clean.includes('viscoz')) {
+    return 'https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=600&auto=format&fit=crop';
+  }
   if (clean.includes('حرير') || clean.includes('soie') || clean.includes('silk') || clean.includes('ساتان') || clean.includes('satin')) {
-    return 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=600&auto=format&fit=crop';
+    return 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=600&auto=format&fit=crop';
   }
   if (clean.includes('جينز') || clean.includes('jean') || clean.includes('denim')) {
-    return 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=600&auto=format&fit=crop';
+    return 'https://images.unsplash.com/photo-1542272604-787c3835535d?q=80&w=600&auto=format&fit=crop';
   }
   if (clean.includes('موبرا') || clean.includes('velour') || clean.includes('قطيفة')) {
-    return 'https://images.unsplash.com/photo-1519642918688-7e43b1701085?q=80&w=600&auto=format&fit=crop';
+    return 'https://images.unsplash.com/photo-1563245372-f21724e3856d?q=80&w=600&auto=format&fit=crop';
   }
   if (clean.includes('شيفون') || clean.includes('chiffon') || clean.includes('موسلين') || clean.includes('mousseline')) {
     return 'https://images.unsplash.com/photo-1551269901-5c5e14c25df7?q=80&w=600&auto=format&fit=crop';
@@ -62,7 +65,7 @@ function getFabricImageUrl(name: string): string {
   if (clean.includes('صوف') || clean.includes('laine') || clean.includes('wool')) {
     return 'https://images.unsplash.com/photo-1575908939634-75472481985f?q=80&w=600&auto=format&fit=crop';
   }
-  // Default beautiful high-res close-up cotton canvas texture
+  // Default beautiful high-res close-up grey fabric texture
   return 'https://images.unsplash.com/photo-1588854337236-6889d631faa8?q=80&w=600&auto=format&fit=crop';
 }
 
