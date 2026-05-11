@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
-  ArrowLeft, Save, Plus, X, ClipboardCheck, 
-  Package, Receipt, Layers, Palette, Maximize2, 
-  Image as ImageIcon, FileText, CheckCircle2, AlertTriangle, TrendingUp,
-  Scissors, ShoppingCart, Info, Tag, Search, Calculator, Ruler, Eye, Download,
+  ArrowLeft, Save, Plus, X, 
+  Package, Receipt, Layers, 
+  Image as ImageIcon, FileText, CheckCircle2, AlertTriangle,
+  Scissors, ShoppingCart, Ruler, Eye, Download,
   Binary, Users, Trash2, Truck, Calendar, CloudOff, Printer, Camera,
   Clock, Zap, CheckCircle2 as CheckIcon
 } from 'lucide-react';

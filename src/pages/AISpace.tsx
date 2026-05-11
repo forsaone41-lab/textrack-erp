@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Plus, Trash2, Package, X } from 'lucide-react';
+import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { useNavigate } from 'react-router-dom';
 import { saveRecord, genId, FicheTechnique, loadLeads, Lead } from '../types';
@@ -63,7 +63,7 @@ export default function AISpace() {
   // Custom Measurements States
   const [selectedCategory, setSelectedCategory] = useState<'Robe' | 'Caftan' | 'Djellaba' | 'Chemise' | 'Pantalon'>('Robe');
   const [customMesures, setCustomMesures] = useState<any[]>(() => JSON.parse(JSON.stringify(STANDARD_MESURES['Robe'])));
-  const [selectedTailles, setSelectedTailles] = useState<string[]>(['S', 'M', 'L', 'XL', 'XXL']);
+  const [selectedTailles] = useState<string[]>(['S', 'M', 'L', 'XL', 'XXL']);
 
   // Prospects Integration States
   const [leads, setLeads] = useState<Lead[]>([]);
