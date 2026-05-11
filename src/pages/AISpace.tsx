@@ -56,6 +56,10 @@ export default function AISpace() {
   const [exporting, setExporting] = useState(false);
   const navigate = useNavigate();
 
+  // Gemini API integration
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+  const [apiKeyInput, setApiKeyInput] = useState('');
+
   // Custom Measurements States
   const [selectedCategory, setSelectedCategory] = useState<'Robe' | 'Caftan' | 'Djellaba' | 'Chemise' | 'Pantalon'>('Robe');
   const [customMesures, setCustomMesures] = useState<any[]>(() => JSON.parse(JSON.stringify(STANDARD_MESURES['Robe'])));
@@ -66,6 +70,7 @@ export default function AISpace() {
   const [showLeadsModal, setShowLeadsModal] = useState(false);
 
   useEffect(() => {
+    setApiKeyInput(localStorage.getItem('beya_gemini_api_key') || '');
     loadLeads().then(data => {
       setLeads(data.filter(l => l.photo));
     });
@@ -252,14 +257,76 @@ export default function AISpace() {
       : `J'ai noté votre question sur "${userMsg}". 🤔 Pour une réponse précise, je vous conseille :\n\n1. D'uploader la photo du modèle concerné\n2. Ou de préciser votre question (ex: "Combien de mètres pour ce modèle ?")\n\nJe peux vous aider avec : consommation tissu, coûts, étapes de production, et patronage.`;
   };
 
-  const sendMsg = () => {
+  const sendMsg = async () => {
     if (!msg.trim()) return;
     const userMessage = msg;
     setChat(prev => [...prev, { role: 'user', text: userMessage }]);
     setMsg('');
-    setTimeout(() => {
-      setChat(prev => [...prev, { role: 'ai', text: getSmartReply(userMessage) }]);
-    }, 800);
+
+    const apiKey = localStorage.getItem('beya_gemini_api_key');
+    if (apiKey) {
+       try {
+         // show loading indicator
+         setChat(prev => [...prev, { role: 'ai', text: '...' }]);
+
+         const contents: any[] = [
+           {
+             role: "user",
+             parts: [
+               { text: userMessage }
+             ]
+           }
+         ];
+         
+         if (image) {
+            const base64Data = image.split(',')[1];
+            const mimeType = image.split(';')[0].split(':')[1];
+            contents[0].parts.push({
+               inlineData: {
+                  data: base64Data,
+                  mimeType: mimeType
+               }
+            });
+         }
+
+         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify({
+             contents,
+             systemInstruction: {
+                parts: [{ text: "أنت المساعد الذكي BEYA AI في مصنع نسيج مغربي. تكلم بالدارجة المغربية بأسلوب احترافي وودي. ساعد المستخدم في حساب كميات الثوب، تكاليف الإنتاج، مراحل الخياطة، وتحليل الموديلات. إذا سألك أسئلة تقنية، أجب بدقة. كن مفيداً جداً وتصرف كخبير نسيج وخياطة." }]
+             }
+           })
+         });
+
+         const data = await response.json();
+         let aiResponseText = "";
+         if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
+             aiResponseText = data.candidates[0].content.parts[0].text;
+         } else if (data.error) {
+             aiResponseText = "عذراً، وقع خطأ في واجهة برمجة التطبيقات (API Error): " + data.error.message;
+         } else {
+             aiResponseText = "لم أستطع فهم الرد. حاول مرة أخرى.";
+         }
+
+         setChat(prev => {
+            const newChat = [...prev];
+            newChat.pop(); // remove loading
+            return [...newChat, { role: 'ai', text: aiResponseText }];
+         });
+       } catch(e: any) {
+         setChat(prev => {
+            const newChat = [...prev];
+            newChat.pop();
+            return [...newChat, { role: 'ai', text: "وقع خطأ في الاتصال: " + e.message }];
+         });
+       }
+    } else {
+       setTimeout(() => {
+         setChat(prev => [...prev, { role: 'ai', text: getSmartReply(userMessage) + "\n\n💡 (للحصول على ذكاء اصطناعي حقيقي يفهم الدارجة ويحلل الصور بدقة، قم بإضافة مفتاح Gemini API من زر الإعدادات أعلاه!)" }]);
+       }, 800);
+    }
   };
 
   return (
@@ -373,12 +440,21 @@ export default function AISpace() {
                     </div>
                  </div>
               </div>
-              <button 
-                onClick={() => setChat([{ role: 'ai', text: isAr ? 'أنا مساعدك الذكي BEYA AI. ارفع صورة موديل لأقوم بتحليلها لك.' : 'Bonjour ! Je suis votre assistant BEYA AI. Téléchargez la photo d\'un modèle pour que je puisse l\'analyser.' }])}
-                className="p-2.5 bg-slate-800 text-slate-400 hover:text-rose-400 border border-slate-700/50 hover:border-rose-500/20 rounded-xl transition-all"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+              <div className="flex gap-2">
+                 <button 
+                   onClick={() => setShowApiKeyModal(true)}
+                   className="p-2.5 bg-slate-800 text-slate-400 hover:text-indigo-400 border border-slate-700/50 hover:border-indigo-500/20 rounded-xl transition-all"
+                   title="إعدادات الذكاء الاصطناعي (API Key)"
+                 >
+                   <Zap className="w-4 h-4" />
+                 </button>
+                 <button 
+                   onClick={() => setChat([{ role: 'ai', text: isAr ? 'أنا مساعدك الذكي BEYA AI. ارفع صورة موديل لأقوم بتحليلها لك.' : 'Bonjour ! Je suis votre assistant BEYA AI. Téléchargez la photo d\'un modèle pour que je puisse l\'analyser.' }])}
+                   className="p-2.5 bg-slate-800 text-slate-400 hover:text-rose-400 border border-slate-700/50 hover:border-rose-500/20 rounded-xl transition-all"
+                 >
+                   <Trash2 className="w-4 h-4" />
+                 </button>
+              </div>
            </div>
 
            {/* Chat Messages */}
@@ -576,6 +652,51 @@ export default function AISpace() {
                        ))}
                     </div>
                  )}
+              </div>
+           </div>
+        </div>
+      )}
+
+      {/* API Key Modal */}
+      {showApiKeyModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-200">
+           <div className="bg-white rounded-[32px] w-full max-w-md shadow-2xl overflow-hidden">
+              <div className={`p-6 border-b border-slate-100 flex items-center justify-between ${isAr ? 'flex-row-reverse' : ''}`}>
+                 <h3 className="font-black text-slate-900 uppercase">إعدادات Gemini API</h3>
+                 <button onClick={() => setShowApiKeyModal(false)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition"><X className="w-4 h-4" /></button>
+              </div>
+              <div className={`p-6 space-y-4 ${isAr ? 'text-right' : ''}`}>
+                 <p className="text-xs font-bold text-slate-500 leading-relaxed">
+                    للحصول على مساعد ذكي حقيقي يفهم الدارجة ويحلل الصور بدقة، قم بإضافة مفتاح <strong>Google Gemini API</strong> الخاص بك هنا. (يتم حفظه في متصفحك فقط)
+                 </p>
+                 <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">API Key</label>
+                    <input 
+                      type="password" 
+                      value={apiKeyInput}
+                      onChange={e => setApiKeyInput(e.target.value)}
+                      placeholder="AIzaSy..."
+                      className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-4 py-3 text-sm font-mono outline-none focus:border-indigo-500 transition"
+                      dir="ltr"
+                    />
+                 </div>
+                 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-[10px] font-bold text-indigo-600 hover:underline">
+                    احصل على مفتاح API مجاني من هنا &rarr;
+                 </a>
+              </div>
+              <div className="p-6 bg-slate-50">
+                 <button 
+                   onClick={() => {
+                     localStorage.setItem('beya_gemini_api_key', apiKeyInput);
+                     setShowApiKeyModal(false);
+                     if (apiKeyInput) {
+                        setChat([{ role: 'ai', text: isAr ? 'تم تفعيل الذكاء الاصطناعي الحقيقي! كيف يمكنني مساعدتك؟' : 'IA activée ! Comment puis-je vous aider ?' }]);
+                     }
+                   }}
+                   className="w-full bg-indigo-600 text-white rounded-xl py-3 font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition"
+                 >
+                    حفظ التغييرات
+                 </button>
               </div>
            </div>
         </div>
