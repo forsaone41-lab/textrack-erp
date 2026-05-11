@@ -754,12 +754,41 @@ export default function AISpace() {
                    <h4 className="font-black text-xs text-slate-900 uppercase tracking-tighter">{isAr ? 'مكونات وقطع الموديل المقترحة' : 'Composants & Pièces du modèle'}</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                   {(analysisResult.pieces?.[activePieceIdx]?.components || analysisResult.components).map((c, i) => (
-                     <div key={i} className={`flex items-center gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-100 ${isAr ? 'flex-row-reverse' : ''}`}>
-                        <ChevronRight className={`w-4 h-4 text-indigo-400 ${isAr ? 'rotate-180' : ''}`} />
-                        <span className="text-[11px] font-black text-slate-600">{c}</span>
-                     </div>
-                   ))}
+                   {(analysisResult.pieces?.[activePieceIdx]?.components || analysisResult.components).map((c, i) => {
+                     const pieceName = analysisResult.pieces?.[activePieceIdx]?.name || analysisResult.category;
+                     const askDetail = () => {
+                       const q = `عطيني تفاصيل دقيقة على "${c}" ديال ${pieceName}: كيفاش كتخاط؟ شحال ديال القماش كتاخد؟ شحال ديال الخياطة (surplus couture)؟ واش كاين شي حيلة ولا نصيحة خاصة؟`;
+                       setMsg('');
+                       setChat(prev => [...prev, { role: 'user', text: `📌 تفاصيل: ${c}` }]);
+                       // auto trigger AI
+                       const apiKey = localStorage.getItem('beya_gemini_api_key');
+                       if (apiKey) {
+                         setChat(prev => [...prev, { role: 'ai', text: '...' }]);
+                         fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                           method: 'POST',
+                           headers: { 'Content-Type': 'application/json' },
+                           body: JSON.stringify({
+                             contents: [{ role: "user", parts: [{ text: q }, ...(image ? [{ inlineData: { data: image.split(',')[1], mimeType: image.split(';')[0].split(':')[1] } }] : [])] }],
+                             systemInstruction: { parts: [{ text: "أنت خبير نسيج وخياطة محترف. أجب بالدارجة المغربية بأسلوب مفصل ودقيق. أعطي معلومات تقنية: القياسات، طريقة الخياطة، surplus couture، نصائح عملية، والأخطاء اللي خاص تتجنب." }] },
+                             generationConfig: { temperature: 0.3 }
+                           })
+                         }).then(r => r.json()).then(data => {
+                           const txt = data.candidates?.[0]?.content?.parts?.[0]?.text || 'لم أتمكن من الرد';
+                           setChat(prev => { const n = [...prev]; n.pop(); return [...n, { role: 'ai', text: txt }]; });
+                         }).catch(() => {
+                           setChat(prev => { const n = [...prev]; n.pop(); return [...n, { role: 'ai', text: 'خطأ في الاتصال' }]; });
+                         });
+                       } else {
+                         setTimeout(() => setChat(prev => [...prev, { role: 'ai', text: `لتفاصيل "${c}" الدقيقة، أضف مفتاح Gemini API من زر ⚡` }]), 500);
+                       }
+                     };
+                     return (
+                       <div key={i} onClick={askDetail} className={`flex items-center gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-100 cursor-pointer hover:bg-indigo-50 hover:border-indigo-200 hover:shadow-md transition-all group ${isAr ? 'flex-row-reverse' : ''}`}>
+                          <ChevronRight className={`w-4 h-4 text-indigo-400 group-hover:text-indigo-600 transition-colors ${isAr ? 'rotate-180' : ''}`} />
+                          <span className="text-[11px] font-black text-slate-600 group-hover:text-indigo-700 transition-colors">{c}</span>
+                       </div>
+                     );
+                   })}
                 </div>
              </div>
 
