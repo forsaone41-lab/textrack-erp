@@ -5,6 +5,7 @@ import {
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { printElement } from '../utils/pdf';
+import { compressImage } from '../utils/image';
 import { printFicheTechnique as printFT } from '../utils/print';
 import { InvoicePRO } from '../components/InvoicePRO';
 
@@ -119,11 +120,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const handleOrderPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setNewOrderForm({ ...newOrderForm, photo: reader.result as string });
-      };
-      reader.readAsDataURL(file);
+      compressImage(file).then(res => { setNewOrderForm({ ...newOrderForm, photo: res }); }).catch(console.error);
     }
   };
 

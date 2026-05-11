@@ -2,7 +2,7 @@ import * as React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, FileText, Settings, LogOut, ShoppingCart, 
-  Package, Scissors, Activity, Receipt, PieChart, TrendingUp, UserCheck, Globe, X, ClipboardCheck, Trophy, ShieldCheck, UserCircle, QrCode, User as UserIcon,
+  Package, Scissors, Activity, Receipt, PieChart, TrendingUp, UserCheck, Globe, X, ClipboardCheck, Trophy, ShieldCheck, QrCode, User as UserIcon,
   Sparkles,
   RefreshCw,
   CalendarDays,
@@ -115,7 +115,6 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
           {/* Group 1: Access */}
           <div className="space-y-1">
             {can('dashboard') && <NavItem to="/" icon={LayoutDashboard} label={t('dashboard', lang)} end />}
-            <NavItem to="/profil" icon={UserCircle} label={isAr ? 'الملف الشخصي' : 'Mon Profil'} />
             {can('worker_portal') && <NavItem to="/worker-portal" icon={UserIcon} label={isAr ? 'فضاء العامل' : 'Espace Ouvrier'} />}
             {can('partenaire_portal') && <NavItem to="/partenaire-portal" icon={Globe} label={isAr ? 'بوابة الشركاء' : 'Portail Partenaire'} />}
           </div>
@@ -139,7 +138,12 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
               </>
             )}
             {can('stocks') && <NavItem to="/stocks" icon={Package} label={isAr ? 'المخزون' : 'Stocks'} />}
-            {can('fiches') && <NavItem to="/fiches-techniques" icon={FileText} label={isAr ? 'البطاقات التقنية' : 'Fiches Tech.'} />}
+            {can('fiches') && (
+              <NavItem to="/fiches-techniques" icon={FileText} label={isAr ? 'البطاقات التقنية' : 'Fiches Tech.'} />
+            )}
+            {can('ai_space') && (
+              <NavItem to="/ai-space" icon={Sparkles} label={isAr ? 'المساعد الذكي' : 'Assistant IA'} pro />
+            )}
             {can('ordres') && <NavItem to="/ordres-de-coupe" icon={Scissors} label={isAr ? 'أوامر القص' : 'Ordres de Coupe'} />}
             {can('chaine') && (
               <>

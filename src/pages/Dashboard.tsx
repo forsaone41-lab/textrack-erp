@@ -11,6 +11,7 @@ import {
   loadData, Commande, StockTissu, Employe, Facture, PointageEntry, Presence,
   PHASE_LABELS, PHASE_ORDER, User, safeStorage, Lead, loadLeads
 } from '../types';
+import { supabase } from '../supabase';
 import { useLang } from '../contexts/LangContext';
 import { NavLink } from 'react-router-dom';
 
@@ -29,6 +30,7 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [now, setNow] = useState(new Date());
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [workerPhotos, setWorkerPhotos] = useState<Record<string, string>>({});
 
   function loadAll() {
     Promise.all([
@@ -53,8 +55,23 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
 
   useEffect(() => {
     loadAll();
-    const interval = setInterval(loadAll, 30000);
-    return () => clearInterval(interval);
+    // Load all worker photos from Supabase leads table
+    (async () => {
+      try {
+        const { data: photos } = await supabase
+          .from('leads')
+          .select('phone, details')
+          .eq('name', '__WORKER_PHOTO__');
+        if (photos && photos.length > 0) {
+          const map: Record<string, string> = {};
+          photos.forEach((p: any) => { if (p.phone && p.details) map[p.phone] = p.details; });
+          setWorkerPhotos(map);
+          Object.entries(map).forEach(([wId, photo]) => {
+            localStorage.setItem(`beya_worker_photo_${wId}`, photo);
+          });
+        }
+      } catch { /* silent */ }
+    })();
   }, []);
 
   const commandesEnCours = commandes.filter(c => c.statut === 'en_cours');
@@ -136,6 +153,24 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
       color: 'from-purple-500 to-pink-600',
       textColor: 'text-purple-600',
     },
+    {
+      title: isAr ? 'إجمالي العملاء' : 'Total Clients',
+      value: isAr ? `${Array.isArray(allUsers) ? allUsers.filter(u => u.role === 'client').length : 0} عميل` : `${Array.isArray(allUsers) ? allUsers.filter(u => u.role === 'client').length : 0} Clients`,
+      subtitle: isAr ? 'زبناء مسجلين في النظام' : 'Clients enregistrés dans le système',
+      icon: UserCheck,
+      color: 'from-blue-600 to-indigo-700',
+      textColor: 'text-blue-600',
+    },
+    {
+      title: isAr ? 'فريق العمل والشركاء' : 'Équipe & Partenaires',
+      value: isAr ? `${employes.filter(e => e.type !== 'sous_traitance' && e.actif).length} عامل (Atelier)` : `${employes.filter(e => e.type !== 'sous_traitance' && e.actif).length} Ouvriers (Atelier)`,
+      subtitle: isAr 
+        ? `+ ${employes.filter(e => e.type === 'sous_traitance' && e.actif).length + (Array.isArray(allUsers) ? allUsers.filter(u => u.role === 'partenaire').length : 0)} شركاء خارجيين` 
+        : `+ ${employes.filter(e => e.type === 'sous_traitance' && e.actif).length + (Array.isArray(allUsers) ? allUsers.filter(u => u.role === 'partenaire').length : 0)} Sous-traitants`,
+      icon: Users,
+      color: 'from-orange-500 to-amber-600',
+      textColor: 'text-orange-600',
+    },
   ];
 
   return (
@@ -143,7 +178,7 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
       <div className="relative overflow-hidden bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/50 p-8 shadow-2xl shadow-indigo-100/20">
         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl -mr-20 -mt-20" />
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/5 rounded-full blur-3xl -ml-20 -mb-20" />
-        
+
         <div className={`relative flex flex-col md:flex-row md:items-center justify-between gap-6 ${isAr ? 'flex-row-reverse' : ''}`}>
           <div className="flex items-center gap-5">
             <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl flex items-center justify-center shadow-lg shadow-indigo-200 ring-4 ring-indigo-50">
@@ -161,28 +196,46 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
           <div className="flex items-center gap-4 bg-white/60 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white shadow-xl shadow-indigo-100/20">
             <div className="flex flex-col items-end mr-2">
               <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">{isAr ? 'الفريق المتصل' : 'Équipe en ligne'}</span>
-               <span className="text-[10px] text-emerald-600 font-black uppercase">
+              <span className="text-[10px] text-emerald-600 font-black uppercase">
                 {Array.isArray(allUsers) ? allUsers.filter(u => u && u.lastActive && (Date.now() - new Date(u.lastActive).getTime() < 120000)).length : 0} {isAr ? 'نشط الآن' : 'actifs'}
               </span>
             </div>
             <div className="flex -space-x-3">
               {Array.isArray(allUsers) && allUsers.filter(u => u && u.lastActive && (Date.now() - new Date(u.lastActive).getTime() < 120000)).map(u => {
-                const colors: Record<string, string> = { 
-                  admin: 'border-indigo-500 bg-indigo-50 text-indigo-700', 
+                const colors: Record<string, string> = {
+                  admin: 'border-indigo-500 bg-indigo-50 text-indigo-700',
                   pointeur: 'border-blue-500 bg-blue-50 text-blue-700',
                   worker: 'border-purple-500 bg-purple-50 text-purple-700',
                   coupeur: 'border-orange-500 bg-orange-50 text-orange-700',
                 };
                 const c = colors[u.role] || 'border-slate-300 bg-slate-50 text-slate-600';
                 const initials = (u.nom || 'User').split(' ').filter(Boolean).map(n => n?.[0] || '').join('').toUpperCase() || '??';
+                
+                // ✅ Smart Photo Lookup (Supabase map → localStorage → none)
+                let empId = u.employeId;
+                if (!empId && u.nom) {
+                   const match = employes.find(e => 
+                      `${e.prenom} ${e.nom}`.toLowerCase() === u.nom.toLowerCase() ||
+                      `${e.nom} ${e.prenom}`.toLowerCase() === u.nom.toLowerCase()
+                   );
+                   if (match) empId = match.id;
+                }
+
+                const photo = u.photo
+                  || (empId ? workerPhotos[empId] : null)
+                  || (empId ? localStorage.getItem(`beya_worker_photo_${empId}`) : null);
+                
                 return (
-                  <div 
-                    key={u.id} 
+                  <div
+                    key={u.id}
                     onClick={() => setSelectedUser(u)}
-                    className={`w-10 h-10 rounded-full border-2 ${c} flex items-center justify-center text-[10px] font-black shadow-lg ring-2 ring-white transition-transform hover:-translate-y-2 cursor-pointer active:scale-90`} 
+                    className={`w-10 h-10 rounded-full border-2 ${c} flex items-center justify-center text-[10px] font-black shadow-lg ring-2 ring-white transition-transform hover:-translate-y-2 cursor-pointer active:scale-90 overflow-hidden`}
                     title={u.nom}
                   >
-                    {initials}
+                    {photo 
+                      ? <img src={photo} alt={u.nom} className="w-full h-full object-cover" />
+                      : initials
+                    }
                   </div>
                 );
               })}
@@ -196,7 +249,7 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
         <NavLink to="/worker-portal" className="group relative overflow-hidden bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-800 rounded-[2.5rem] p-8 shadow-2xl shadow-indigo-200/50 flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all hover:scale-[1.01] active:scale-95">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20 group-hover:scale-110 transition-transform duration-700" />
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full blur-3xl -ml-20 -mb-20" />
-          
+
           <div className="flex items-center gap-6 relative z-10">
             <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-3xl flex items-center justify-center shadow-inner border border-white/30">
               <UserCheck className="w-8 h-8 text-white" />
@@ -210,7 +263,7 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-4 relative z-10">
             <div className="px-6 py-3 bg-white text-indigo-700 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl group-hover:bg-indigo-50 transition-colors">
               {isAr ? 'دخول الآن' : 'Accéder Maintenant'}
@@ -228,7 +281,7 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
             <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
             {isAr ? 'حضور اليوم' : 'Pointage Aujourd\'hui'}
           </h3>
-          
+
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -254,10 +307,10 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
           </div>
 
           <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between">
-             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'نسبة الحضور' : 'Taux de présence'}</span>
-             <span className="text-sm font-black text-indigo-600">
-               {actifs.length > 0 ? Math.round((presents.length / actifs.length) * 100) : 0}%
-             </span>
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'نسبة الحضور' : 'Taux de présence'}</span>
+            <span className="text-sm font-black text-indigo-600">
+              {actifs.length > 0 ? Math.round((presents.length / actifs.length) * 100) : 0}%
+            </span>
           </div>
         </div>
 
@@ -276,8 +329,8 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
           <div className="flex-1 overflow-x-auto pb-4 scrollbar-hide">
             {enCoursPresence.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center bg-slate-50/50 rounded-3xl border border-dashed border-slate-200 py-6">
-                 <UserX className="w-10 h-10 text-slate-200 mb-2" />
-                 <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{isAr ? 'لا يوجد عمال مسجلون حالياً' : 'Aucun ouvrier en cours'}</p>
+                <UserX className="w-10 h-10 text-slate-200 mb-2" />
+                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{isAr ? 'لا يوجد عمال مسجلون حالياً' : 'Aucun ouvrier en cours'}</p>
               </div>
             ) : (
               <div className="flex gap-4 min-w-max px-1">
@@ -285,20 +338,27 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
                   const p = presencesAujourdhui.find(pr => pr.employeId === e.id);
                   return (
                     <div key={e.id} className="flex flex-col items-center gap-3 group">
-                       <div className="relative">
-                          <div className="w-16 h-16 rounded-[24px] bg-slate-100 border-2 border-white shadow-lg overflow-hidden group-hover:scale-110 transition-transform">
-                            {e.photo ? <img src={e.photo} alt={e.nom} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-400 font-black text-xl">{e.nom[0]}</div>}
-                          </div>
-                          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 border-4 border-white rounded-full shadow-sm flex items-center justify-center">
-                             <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
-                          </div>
-                       </div>
-                       <div className="text-center">
-                          <p className="text-[10px] font-black text-slate-900 uppercase tracking-tighter leading-none mb-1 truncate max-w-[80px]">{e.nom}</p>
-                          <p className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-100 inline-block tabular-nums">
-                            {p?.heureEntree || '--:--'}
-                          </p>
-                       </div>
+                      <div className="relative">
+                        <div className="w-16 h-16 rounded-[24px] bg-slate-100 border-2 border-white shadow-lg overflow-hidden group-hover:scale-110 transition-transform flex items-center justify-center">
+                          {(() => {
+                            const photo = e.photo 
+                              || (typeof workerPhotos !== 'undefined' ? workerPhotos[e.id] : null)
+                              || localStorage.getItem(`beya_worker_photo_${e.id}`);
+                            return photo 
+                              ? <img src={photo} alt={e.nom} className="w-full h-full object-cover" />
+                              : <div className="text-slate-400 font-black text-xl">{e.nom[0]}</div>;
+                          })()}
+                        </div>
+                        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 border-4 border-white rounded-full shadow-sm flex items-center justify-center">
+                          <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[10px] font-black text-slate-900 uppercase tracking-tighter leading-none mb-1 truncate max-w-[80px]">{e.nom}</p>
+                        <p className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-100 inline-block tabular-nums">
+                          {p?.heureEntree || '--:--'}
+                        </p>
+                      </div>
                     </div>
                   );
                 })}
@@ -312,20 +372,20 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 px-1">
         {kpiCards.map((kpi, i) => (
           <div key={i} className="group relative bg-white p-6 rounded-[2.5rem] border border-slate-50 shadow-xl shadow-slate-100/30 hover:shadow-2xl transition-all duration-300 overflow-hidden">
-             <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${kpi.color} opacity-5 blur-2xl -mr-10 -mt-10 group-hover:opacity-10 transition-opacity`} />
-             
-             <div className="flex items-start justify-between mb-4">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg bg-gradient-to-br ${kpi.color} transform group-hover:scale-110 transition-transform duration-500`}>
-                  <kpi.icon className="w-7 h-7" />
-                </div>
-                <div className="px-3 py-1 rounded-full bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-tighter">KPI {i+1}</div>
-             </div>
-             
-             <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mb-1">{kpi.title}</p>
-                <p className={`text-3xl font-black text-slate-900 tracking-tight`}>{kpi.value}</p>
-                <p className={`text-[10px] font-bold mt-2 ${kpi.textColor} opacity-80 italic`}>{kpi.subtitle}</p>
-             </div>
+            <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${kpi.color} opacity-5 blur-2xl -mr-10 -mt-10 group-hover:opacity-10 transition-opacity`} />
+
+            <div className="flex items-start justify-between mb-4">
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg bg-gradient-to-br ${kpi.color} transform group-hover:scale-110 transition-transform duration-500`}>
+                <kpi.icon className="w-7 h-7" />
+              </div>
+              <div className="px-3 py-1 rounded-full bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-tighter">KPI {i + 1}</div>
+            </div>
+
+            <div>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mb-1">{kpi.title}</p>
+              <p className={`text-3xl font-black text-slate-900 tracking-tight`}>{kpi.value}</p>
+              <p className={`text-[10px] font-bold mt-2 ${kpi.textColor} opacity-80 italic`}>{kpi.subtitle}</p>
+            </div>
           </div>
         ))}
       </div>
@@ -380,11 +440,11 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip 
+              <Tooltip
                 contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
               />
-              <Legend 
-                verticalAlign="bottom" 
+              <Legend
+                verticalAlign="bottom"
                 align="center"
                 iconType="circle"
                 formatter={(val) => <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">{val}</span>}
@@ -404,8 +464,8 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
           </h3>
           {lowStockTissus.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
-               <CheckCircle className="w-10 h-10 text-emerald-400 mb-3" />
-               <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Tous les stocks sont OK</p>
+              <CheckCircle className="w-10 h-10 text-emerald-400 mb-3" />
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Tous les stocks sont OK</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-3">
@@ -487,41 +547,60 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
       {/* User Detail Popover */}
       {selectedUser && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
-           <div className="bg-white rounded-[3rem] p-10 max-w-sm w-full shadow-2xl border border-white relative overflow-hidden animate-in zoom-in-95 duration-300">
-              <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-indigo-500 to-purple-600" />
-              
-              <div className="flex flex-col items-center text-center">
-                 <div className="w-24 h-24 bg-indigo-50 rounded-[2.5rem] flex items-center justify-center text-indigo-600 text-2xl font-black mb-6 shadow-xl shadow-indigo-100 border-4 border-white">
-                    {(selectedUser.nom || 'User').split(' ').filter(Boolean).map(n => n?.[0] || '').join('').toUpperCase() || '??'}
-                 </div>
-                 
-                 <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-2">{selectedUser.nom}</h3>
-                 <p className="text-xs font-bold text-indigo-600 bg-indigo-50 px-4 py-1.5 rounded-full uppercase tracking-widest mb-8 border border-indigo-100">
-                    {selectedUser.role}
-                 </p>
-                 
-                 <div className="w-full space-y-4 mb-10">
-                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{isAr ? 'آخر ظهور' : 'Dernier accès'}</span>
-                       <span className="text-xs font-bold text-slate-900">{selectedUser.lastActive ? new Date(selectedUser.lastActive).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}</span>
+          <div className="bg-white rounded-[3rem] p-10 max-w-sm w-full shadow-2xl border border-white relative overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-indigo-500 to-purple-600" />
+
+            <div className="flex flex-col items-center text-center">
+                {(() => {
+                  // ✅ Smart Photo Lookup (Supabase map → localStorage → none)
+                  let empId = selectedUser.employeId;
+                  if (!empId && selectedUser.nom) {
+                     const match = employes.find(e => 
+                        `${e.prenom} ${e.nom}`.toLowerCase() === selectedUser.nom.toLowerCase() ||
+                        `${e.nom} ${e.prenom}`.toLowerCase() === selectedUser.nom.toLowerCase()
+                     );
+                     if (match) empId = match.id;
+                  }
+
+                  const photo = selectedUser.photo
+                    || (empId ? workerPhotos[empId] : null)
+                    || (empId ? localStorage.getItem(`beya_worker_photo_${empId}`) : null);
+                  
+                  const initials = (selectedUser.nom || 'User').split(' ').filter(Boolean).map(n => n?.[0] || '').join('').toUpperCase() || '??';
+                  return (
+                    <div className="w-24 h-24 bg-indigo-50 rounded-[2.5rem] flex items-center justify-center text-indigo-600 text-2xl font-black mb-6 shadow-xl shadow-indigo-100 border-4 border-white overflow-hidden">
+                      {photo ? <img src={photo} alt={selectedUser.nom} className="w-full h-full object-cover" /> : initials}
                     </div>
-                    <div className="flex items-center justify-between p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100">
-                       <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">{isAr ? 'الحالة' : 'Statut'}</span>
-                       <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                          <span className="text-xs font-bold text-emerald-700 uppercase tracking-widest">{isAr ? 'متصل الآن' : 'En ligne'}</span>
-                       </div>
-                    </div>
-                 </div>
-                 
-                 <button 
-                   onClick={() => setSelectedUser(null)}
-                   className="w-full py-4 bg-slate-900 text-white rounded-2xl text-xs font-bold uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-xl shadow-slate-200"
-                 >
-                    {isAr ? 'إغلاق' : 'Fermer'}
-                 </button>
+                  );
+                })()}
+
+              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-2">{selectedUser.nom}</h3>
+              <p className="text-xs font-bold text-indigo-600 bg-indigo-50 px-4 py-1.5 rounded-full uppercase tracking-widest mb-8 border border-indigo-100">
+                {selectedUser.role}
+              </p>
+
+              <div className="w-full space-y-4 mb-10">
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{isAr ? 'آخر ظهور' : 'Dernier accès'}</span>
+                  <span className="text-xs font-bold text-slate-900">{selectedUser.lastActive ? new Date(selectedUser.lastActive).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}</span>
+                </div>
+                <div className="flex items-center justify-between p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100">
+                  <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">{isAr ? 'الحالة' : 'Statut'}</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                    <span className="text-xs font-bold text-emerald-700 uppercase tracking-widest">{isAr ? 'متصل الآن' : 'En ligne'}</span>
+                  </div>
+                </div>
               </div>
-           </div>
+
+              <button
+                onClick={() => setSelectedUser(null)}
+                className="w-full py-4 bg-slate-900 text-white rounded-2xl text-xs font-bold uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-xl shadow-slate-200"
+              >
+                {isAr ? 'إغلاق' : 'Fermer'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, X, UserPlus, Package, AlertCircle, CreditCard, Clock, CheckCircle2, RotateCw, Globe } from 'lucide-react';
 import { useLang } from '../../contexts/LangContext';
-import { loadData, saveRecord, Lead, Commande, Facture } from '../../types';
+import { loadData, saveRecord, Lead, Commande, Facture, loadPermissions, AppPage } from '../../types';
 
 interface Notification {
   id: string;
@@ -21,6 +21,14 @@ export default function NotificationCenter() {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  
+  const auth = localStorage.getItem('textrack_auth');
+  const currentUser = auth ? JSON.parse(auth) : null;
+  const permissions = loadPermissions();
+  const can = (page: AppPage) => {
+    const role = (currentUser?.role || '').toLowerCase() as any;
+    return (permissions[role] || []).includes(page);
+  };
 
   useEffect(() => {
     const fetchRealData = async () => {
@@ -285,14 +293,16 @@ export default function NotificationCenter() {
             )}
           </div>
 
-          <div className="p-4 bg-slate-50 border-t border-slate-100 text-center">
-             <button 
-              onClick={() => { navigate('/notifications'); setIsOpen(false); }}
-              className="text-[10px] font-black text-slate-400 uppercase hover:text-slate-600 transition-colors"
-             >
-               {isAr ? 'عرض كل السجل' : 'Voir tout l\'historique'}
-             </button>
-          </div>
+          {can('notifications') && (
+            <div className="p-4 bg-slate-50 border-t border-slate-100 text-center">
+               <button 
+                onClick={() => { navigate('/notifications'); setIsOpen(false); }}
+                className="text-[10px] font-black text-slate-400 uppercase hover:text-slate-600 transition-colors"
+               >
+                 {isAr ? 'عرض كل السجل' : 'Voir tout l\'historique'}
+               </button>
+            </div>
+          )}
         </div>
       )}
     </div>

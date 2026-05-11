@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLang } from '../contexts/LangContext';
 import { Shirt, Scissors, Users, ArrowRight, CheckCircle, Send, Phone, MapPin, Briefcase, Globe, Upload, Trash2 } from 'lucide-react';
 import { saveLead } from '../types';
+import { compressImage } from '../utils/image';
 
 export default function Recrutement() {
   const { isAr, toggle } = useLang();
@@ -44,14 +45,15 @@ export default function Recrutement() {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCvFile(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const compressed = await compressImage(file);
+        setCvFile(compressed);
+      } catch (err) {
+        console.error(err);
+      }
     }
   };
 

@@ -2,20 +2,19 @@ import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, Ruler, Calculator, Camera, FileText, Download, MessageCircle, X, ChevronRight, Upload, ImageIcon, Copy, CheckCircle, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
-  FicheTechnique, StockTissu, loadData, saveRecord, deleteRecord, genId,
+  FicheTechnique, StockTissu, loadData, saveRecord, deleteRecord, genId, Commande, User
 } from '../types';
 import { printFicheTechnique as printFT } from '../utils/print';
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
 
-function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onViewMesures, onShare, onLaunchSample, isSampleWaiting, isSampleValidated }: {
+function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onViewMesures, onLaunchSample, isSampleWaiting, isSampleValidated }: {
   f: FicheTechnique;
   openEdit: (f: FicheTechnique) => void;
   remove: (id: string) => void;
   downloadFile: (data: string, filename: string) => void;
   printFicheTechnique: (f: FicheTechnique) => void;
   onViewMesures: (f: FicheTechnique) => void;
-  onShare: (f: FicheTechnique) => void;
   onLaunchSample: (f: FicheTechnique) => void;
   isSampleWaiting?: boolean;
   isSampleValidated?: boolean;
@@ -598,7 +597,6 @@ export default function FichesTechniques() {
                   downloadFile={downloadFile} 
                   printFicheTechnique={printFT} 
                   onViewMesures={setViewMesuresFiche} 
-                  onShare={setShowShareModal} 
                   onLaunchSample={(fiche) => {
                     setConfirmFiche(fiche);
                     setConfirmDetails({
@@ -641,7 +639,6 @@ export default function FichesTechniques() {
                   downloadFile={downloadFile} 
                   printFicheTechnique={printFT} 
                   onViewMesures={setViewMesuresFiche} 
-                  onShare={setShowShareModal} 
                   onLaunchSample={(fiche) => {
                     setConfirmFiche(fiche);
                     setConfirmDetails(prev => ({
@@ -1627,14 +1624,6 @@ export default function FichesTechniques() {
         </div>
       )}
     </div>
-  );
-}
-
-function FileTextIcon({ className }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><path d="M14 2v6h6" /><path d="M16 13H8" /><path d="M16 17H8" /><path d="M10 9H8" />
-    </svg>
   );
 }
 

@@ -75,6 +75,8 @@ export default function ChaineDetaillee() {
   const [opForm, setOpForm] = useState<Partial<OperationModele>>({});
   const [showQrModal, setShowQrModal] = useState(false);
   const [qrPost, setQrPost] = useState<OperationModele | null>(null);
+  const [aiRecommendation, setAiRecommendation] = useState<Record<string, string>>({});
+  const [showAIPanel, setShowAIPanel] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -283,6 +285,84 @@ export default function ChaineDetaillee() {
     }
   }
 
+  const runAIBalancing = () => {
+    const availableWorkers = [...employes];
+    if (availableWorkers.length === 0) {
+      alert(isAr ? "المرجو إضافة عمال أولاً في قسم الموارد البشرية." : "Veuillez ajouter des employés d'abord.");
+      return;
+    }
+
+    const newAssignments = { ...assignments };
+    const explanations: Record<string, string> = {};
+
+    modelOps.forEach((op) => {
+      let bestWorker = '';
+      let bestScore = -1;
+      let reason = '';
+
+      // Match by past performance
+      availableWorkers.forEach(emp => {
+        const pastPerformances = suivi.filter(s => s.employe_id === emp.id && s.operation_id === op.id);
+        if (pastPerformances.length > 0) {
+          const avgQty = pastPerformances.reduce((acc, curr) => acc + curr.quantite_realisee, 0) / pastPerformances.length;
+          const efficiency = (avgQty / op.target_heure) * 100;
+          if (efficiency > bestScore) {
+            bestScore = efficiency;
+            bestWorker = emp.id;
+            reason = isAr 
+              ? `كفاءة عالية ومستقرة في هذا المركز بمتوسط ${Math.round(avgQty)} قطعة/ساعة (${Math.round(efficiency)}%)`
+              : `Haute performance stable à ce poste avec une moyenne de ${Math.round(avgQty)} pcs/h (${Math.round(efficiency)}%)`;
+          }
+        }
+      });
+
+      // Match by role keywords
+      if (!bestWorker) {
+        const matchedRoleWorker = availableWorkers.find(emp => {
+          const posteName = (emp.poste || '').toLowerCase();
+          const opName = op.nom_operation.toLowerCase();
+          return posteName.includes(opName) || opName.includes(posteName);
+        });
+
+        if (matchedRoleWorker) {
+          bestWorker = matchedRoleWorker.id;
+          reason = isAr
+            ? `مطابقة المهنة والخبرة للمركز المحدد (${matchedRoleWorker.poste})`
+            : `Correspondance parfaite du profil et du poste (${matchedRoleWorker.poste})`;
+        }
+      }
+
+      // Match by general availability
+      if (!bestWorker && availableWorkers.length > 0) {
+        const fallbackWorker = availableWorkers[Math.floor(Math.random() * availableWorkers.length)];
+        if (fallbackWorker) {
+          bestWorker = fallbackWorker.id;
+          reason = isAr
+            ? `تم التعيين بناءً على جاهزية العامل وتوافق وقت العمل`
+            : `Assigné automatiquement selon la disponibilité`;
+        }
+      }
+
+      if (bestWorker) {
+        newAssignments[op.id] = {
+          empId: bestWorker,
+          startHour: availableHours[0] || '08:00',
+          endHour: availableHours[availableHours.length - 1] || '18:00'
+        };
+        explanations[op.id] = reason;
+
+        if (availableWorkers.length > modelOps.length) {
+          const index = availableWorkers.findIndex(w => w.id === bestWorker);
+          if (index !== -1) availableWorkers.splice(index, 1);
+        }
+      }
+    });
+
+    setAssignments(newAssignments);
+    setAiRecommendation(explanations);
+    setShowAIPanel(true);
+  };
+
   const getProduction = (opId: string, heureDebut: string) => {
     return todaySuivi.find(s => s.operation_id === opId && s.heure_debut === heureDebut);
   };
@@ -362,11 +442,18 @@ export default function ChaineDetaillee() {
                    <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase italic">{isAr ? 'توزيع المهام اليومية' : 'Distribution des Missions'}</h2>
                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">Assignez un ouvrier et une plage horaire à chaque poste</p>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-4">
                    <div className="flex bg-slate-100 p-1 rounded-xl">
                       <button onClick={() => setActiveShift('jour')} className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase transition-all ${activeShift === 'jour' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400'}`}>Jour</button>
                       <button onClick={() => setActiveShift('nuit')} className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase transition-all ${activeShift === 'nuit' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400'}`}>Nuit</button>
                    </div>
+                   <button 
+                     onClick={runAIBalancing}
+                     className="px-6 py-4 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:shadow-lg transition-all shadow-xl shadow-indigo-100 flex items-center gap-2 border border-indigo-400/20"
+                   >
+                      <Sparkles className="w-4 h-4 text-amber-400 animate-bounce" />
+                      {isAr ? 'موازنة السلسلة بالذكاء الاصطناعي' : 'Équilibrer par IA (Autopilot)'}
+                   </button>
                    <button 
                      onClick={applyPlanning}
                      disabled={syncing}
@@ -377,6 +464,40 @@ export default function ChaineDetaillee() {
                    </button>
                 </div>
              </div>
+
+             {showAIPanel && Object.keys(aiRecommendation).length > 0 && (
+                <div className="bg-indigo-50/50 border border-indigo-100 rounded-[2rem] p-6 mb-8 animate-in slide-in-from-top-4 duration-500 relative">
+                   <button onClick={() => setShowAIPanel(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors">
+                      <X className="w-4 h-4" />
+                   </button>
+                   <div className="flex items-start gap-4 mb-6">
+                      <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-600/15">
+                         <Sparkles className="w-5 h-5 text-white animate-pulse" />
+                      </div>
+                      <div>
+                         <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">{isAr ? 'تقرير موازنة السلسلة بالذكاء الاصطناعي' : 'Rapport d\'Équilibrage Auto-Balancing'}</h3>
+                         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{isAr ? 'توزيع تلقائي مبني على كفاءة العمال والمهام المحددة' : 'Assignation optimisée selon l\'historique et la spécialité'}</p>
+                      </div>
+                   </div>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                      {modelOps.map((op, idx) => {
+                         const emp = employes.find(e => e.id === assignments[op.id]?.empId);
+                         return (
+                            <div key={op.id} className="bg-white border border-indigo-50 rounded-2xl p-4 shadow-sm flex flex-col justify-between">
+                               <div>
+                                  <div className="flex items-center justify-between mb-2">
+                                     <span className="text-[9px] font-black text-indigo-600 uppercase">Poste {idx + 1}</span>
+                                     <span className="text-[9px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded uppercase">{op.nom_operation}</span>
+                                  </div>
+                                  <p className="text-xs font-black text-slate-800">{emp ? `${emp.prenom} ${emp.nom}` : (isAr ? 'غير معين' : 'Non assigné')}</p>
+                                  <p className="text-[10px] text-slate-500 font-bold mt-1 italic">"{aiRecommendation[op.id]}"</p>
+                               </div>
+                            </div>
+                         );
+                      })}
+                   </div>
+                </div>
+             )}
 
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {modelOps.map((op, idx) => {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Search, Edit2, Trash2, TrendingDown, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, TrendingDown, CheckCircle, Clock, XCircle, DollarSign } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import {
   Charge,
@@ -10,6 +10,8 @@ import {
   saveRecord,
   deleteRecord,
   genId,
+  Employe,
+  PaiementSalaire
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 
@@ -89,9 +91,14 @@ export default function Charges() {
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<Charge>>({});
+  
+  const [employes, setEmployes] = useState<Employe[]>([]);
+  const [paiements, setPaiements] = useState<PaiementSalaire[]>([]);
 
   useEffect(() => {
     loadData<Charge>('charges').then(setCharges);
+    loadData<Employe>('employes').then(setEmployes);
+    loadData<PaiementSalaire>('paiements_salaires').then(setPaiements);
   }, []);
 
   const availableMois = useMemo(() => {
@@ -107,9 +114,24 @@ export default function Charges() {
     return matchSearch && matchCategorie && matchMois && matchStatut;
   });
 
-  const totalFiltered = filtered.reduce((a, c) => a + c.montant, 0);
+  const currentMonthStr = new Date().toISOString().slice(0, 7);
+  const pendingSalaries = useMemo(() => {
+    if (!Array.isArray(employes) || !Array.isArray(paiements)) return 0;
+    
+    return employes
+      .filter(e => e && e.actif)
+      .reduce((total, emp) => {
+        const paye = paiements
+          .filter(p => p && p.employeId === emp.id && p.mois === currentMonthStr)
+          .reduce((sum, p) => sum + (p.montant || 0), 0);
+        const reste = Math.max(0, (emp.salaireMensuel || 0) - paye);
+        return total + reste;
+      }, 0);
+  }, [employes, paiements, currentMonthStr]);
+
+  const totalFiltered = filtered.reduce((a, c) => a + c.montant, 0) + pendingSalaries;
   const totalPaye = filtered.filter(c => c.statut === 'payé').reduce((a, c) => a + c.montant, 0);
-  const totalEnAttente = filtered.filter(c => c.statut === 'en_attente').reduce((a, c) => a + c.montant, 0);
+  const totalEnAttente = filtered.filter(c => c.statut === 'en_attente').reduce((a, c) => a + c.montant, 0) + pendingSalaries;
   const totalImpaye = filtered.filter(c => c.statut === 'impayé').reduce((a, c) => a + c.montant, 0);
 
   const pieData = useMemo(() => {
@@ -232,7 +254,15 @@ export default function Charges() {
             <p className="text-xs text-amber-600">{isAr ? 'في الانتظار' : 'En attente'}</p>
           </div>
           <p className="text-2xl font-bold text-amber-700 tabular-nums">{totalEnAttente.toLocaleString()}</p>
-          <p className="text-xs text-amber-400 mt-0.5">{isAr ? 'درهم' : 'MAD'}</p>
+          <div className="flex items-center justify-between mt-0.5">
+             <p className="text-xs text-amber-400">{isAr ? 'درهم' : 'MAD'}</p>
+             {pendingSalaries > 0 && (
+               <span className="text-[10px] font-bold text-amber-600 bg-amber-100/50 px-1.5 py-0.5 rounded flex items-center gap-1 animate-pulse">
+                 <DollarSign className="w-2.5 h-2.5" />
+                 {isAr ? 'تشمل الرواتب' : 'Inclut Salaires'}
+               </span>
+             )}
+           </div>
         </div>
         <div className={`bg-red-50 rounded-xl border border-red-200 p-4 ${isAr ? 'text-right' : ''}`}>
           <div className={`flex items-center gap-2 mb-2 ${isAr ? 'flex-row-reverse' : ''}`}>

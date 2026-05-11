@@ -190,7 +190,7 @@ export default function OrdresDeCoupe() {
 
   async function save() {
     if (!form.modele) {
-      alert(isAr ? 'الموديل مطلوب' : 'Modèle requis');
+      setShowSuccess(isAr ? 'الموديل مطلوب' : 'Modèle requis');
       return;
     }
     
@@ -216,14 +216,14 @@ export default function OrdresDeCoupe() {
       await saveRecord('ordres', ordreData);
       setShowSuccess(isAr ? 'تم حفظ أمر القطع بنجاح' : 'Ordre de coupe enregistré avec succès');
     } catch (e: any) {
-      alert(isAr ? `خطأ في الحفظ: ${e.message}` : `Erreur de sauvegarde: ${e.message}`);
+      setShowSuccess(isAr ? `خطأ في الحفظ: ${e.message}` : `Erreur de sauvegarde: ${e.message}`);
     }
   }
 
   async function handleReject() {
     if (!form.commandeId) return;
     if (!rejectReason.trim()) {
-      alert(isAr ? 'يرجى كتابة سبب الرفض' : 'Veuillez saisir la raison du refus');
+      setShowSuccess(isAr ? 'يرجى كتابة سبب الرفض' : 'Veuillez saisir la raison du refus');
       return;
     }
 
@@ -253,7 +253,7 @@ export default function OrdresDeCoupe() {
         setRejectReason('');
         setShowSuccess(isAr ? 'تم رفض الطلبية وإعادتها للإدارة' : 'Ordre refusé et renvoyé à l\'administration');
       } catch (e: any) {
-        alert(`Erreur: ${e.message}`);
+        setShowSuccess(`Erreur: ${e.message}`);
       }
     }
   }

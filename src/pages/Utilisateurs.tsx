@@ -1,20 +1,18 @@
-import * as React from 'react';
 import { useState, useEffect, Fragment, ElementType } from 'react';
 import {
   Plus, Search, Edit2, Trash2,
   ShieldCheck, HardHat, ShoppingBag,
-  Eye, EyeOff, Copy, RefreshCw, KeyRound, UserX,
+  Eye, Copy, RefreshCw, KeyRound, UserX,
   LayoutDashboard, FileText, Scissors, Factory, Package,
   Users, ShoppingCart, Receipt, TrendingDown, ClipboardCheck, Clock,
-  Globe, Trophy, UserCircle, RotateCcw, Lock, Zap, MousePointer2, UserCheck, BarChart3, Settings, X
+  Globe, Trophy, UserCircle, RotateCcw, Lock, Zap, MousePointer2, UserCheck, BarChart3, Settings, X, Sparkles
 } from 'lucide-react';
 import {
-  User, Employe, AppPage, RolePermMap,
+  User, AppPage, RolePermMap,
   loadData, saveRecord, deleteRecord, genId,
   loadPermissions, savePermissions, DEFAULT_PERMISSIONS,
 } from '../types';
 import { useLang } from '../contexts/LangContext';
-import { t } from '../i18n';
 
 // ─── Role Config ───────────────────────────────────────────
 const ROLE_CFG = {
@@ -92,6 +90,7 @@ const ALL_PAGES: PageDef[] = [
   { key: 'demandes', label: 'Prospects (Leads)', labelAr: 'الزبناء المحتملون', icon: Users, group: 'Général' },
   
   { key: 'fiches', label: 'Fiches Techniques', labelAr: 'البطاقات التقنية', icon: FileText, group: 'Production' },
+  { key: 'ai_space', label: 'Assistant IA', labelAr: 'المساعد الذكي (AI Space)', icon: Sparkles, group: 'Production' },
   { key: 'ordres', label: 'Ordres de Coupe', labelAr: 'أوامر القص', icon: Scissors, group: 'Production' },
   { key: 'chaine', label: 'Chaîne de Montage', labelAr: 'تتبع التركيب', icon: Factory, group: 'Production' },
   { key: 'pilotage', label: 'Pilotage & Chaine', labelAr: 'قيادة خط الإنتاج', icon: MousePointer2, group: 'Production' },
@@ -127,7 +126,7 @@ const PAGE_GROUPS_AR: Record<string, string> = {
 };
 
 // Pages locked per role (cannot be removed)
-const LOCKED: Partial<Record<'admin' | 'pointeur' | 'client', AppPage[]>> = {
+const LOCKED: Partial<Record<'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'partenaire', AppPage[]>> = {
   admin: ['utilisateurs'],
   client: ['portail_client'],
 };

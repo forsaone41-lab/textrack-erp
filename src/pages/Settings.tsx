@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Save, Image as ImageIcon, Building2, FileText, Phone, Play, Zap, Globe, Settings as SettingsIcon, ShieldCheck, X, Star, MapPin } from 'lucide-react';
 import { CompanyProfile, loadCompanyProfile, saveCompanyProfile } from '../types';
+import { compressImage } from '../utils/image';
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
 
@@ -92,9 +93,7 @@ export default function Settings() {
                     <input type="file" className="hidden" accept="image/*" onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => handleChange('logoLanding', reader.result as string);
-                        reader.readAsDataURL(file);
+                        compressImage(file).then(res => handleChange('logoLanding', res)).catch(console.error);
                       }
                     }} />
                   </label>
@@ -124,9 +123,7 @@ export default function Settings() {
                     <input type="file" className="hidden" accept="image/*" onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => handleChange('logoAdmin', reader.result as string);
-                        reader.readAsDataURL(file);
+                        compressImage(file).then(res => handleChange('logoAdmin', res)).catch(console.error);
                       }
                     }} />
                   </label>
@@ -156,9 +153,7 @@ export default function Settings() {
                     <input type="file" className="hidden" accept="image/*" onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => handleChange('logoClient', reader.result as string);
-                        reader.readAsDataURL(file);
+                        compressImage(file).then(res => handleChange('logoClient', res)).catch(console.error);
                       }
                     }} />
                   </label>
@@ -188,9 +183,7 @@ export default function Settings() {
                     <input type="file" className="hidden" accept="image/*" onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => handleChange('logoInvoice', reader.result as string);
-                        reader.readAsDataURL(file);
+                        compressImage(file).then(res => handleChange('logoInvoice', res)).catch(console.error);
                       }
                     }} />
                   </label>
@@ -220,9 +213,7 @@ export default function Settings() {
                     <input type="file" className="hidden" accept="image/*" onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => handleChange('logoLogin', reader.result as string);
-                        reader.readAsDataURL(file);
+                        compressImage(file).then(res => handleChange('logoLogin', res)).catch(console.error);
                       }
                     }} />
                   </label>
@@ -252,9 +243,7 @@ export default function Settings() {
                     <input type="file" className="hidden" accept="image/*" onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => handleChange('logoMobileHeader', reader.result as string);
-                        reader.readAsDataURL(file);
+                        compressImage(file).then(res => handleChange('logoMobileHeader', res)).catch(console.error);
                       }
                     }} />
                   </label>
@@ -284,9 +273,7 @@ export default function Settings() {
                     <input type="file" className="hidden" accept="image/*" onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => handleChange('logoFooter', reader.result as string);
-                        reader.readAsDataURL(file);
+                        compressImage(file).then(res => handleChange('logoFooter', res)).catch(console.error);
                       }
                     }} />
                   </label>
@@ -327,9 +314,7 @@ export default function Settings() {
                     <input type="file" className="hidden" accept="image/*" onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => handleChange('logoAppIcon', reader.result as string);
-                        reader.readAsDataURL(file);
+                        compressImage(file).then(res => handleChange('logoAppIcon', res)).catch(console.error);
                       }
                     }} />
                   </label>
@@ -438,9 +423,7 @@ export default function Settings() {
                     <input type="file" className="hidden" accept="image/*" onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => handleChange('aboutPhotoUrl', reader.result as string);
-                        reader.readAsDataURL(file);
+                        compressImage(file).then(res => handleChange('aboutPhotoUrl', res)).catch(console.error);
                       }
                     }} />
                   </label>

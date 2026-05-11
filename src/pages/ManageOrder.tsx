@@ -31,6 +31,14 @@ export default function ManageOrder() {
   const [zoomMedia, setZoomMedia] = useState<string | null>(null);
   const [showAddSizeModal, setShowAddSizeModal] = useState(false);
   const [customSizeName, setCustomSizeName] = useState('');
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (successMsg) {
+      const timer = setTimeout(() => setSuccessMsg(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMsg]);
 
   const [form, setForm] = useState<Partial<Commande>>({
     reference: '',
@@ -59,7 +67,7 @@ export default function ManageOrder() {
     modelePhoto: '',
     tissuPhoto: '',
     preuveValidation: '',
-    typeDossier: isST ? 'service' : 'production'
+    typeDossier: (isST ? 'service' : 'production') as any
   });
 
   const selectedFiche = fiches.find(f => 
@@ -118,7 +126,7 @@ export default function ManageOrder() {
           setForm(prev => ({ 
             ...prev, 
             reference: ref,
-            externalTasks: isST ? [{ id: genId(), type: 'confection', partenaireId: '', details: '', status: 'en_attente', avance: 0 }] : []
+            externalTasks: isST ? [{ id: genId(), type: 'confection', partenaireId: '', details: '', status: 'en_attente', avance: 0, quantite: 0 }] : []
           }));
         }
       } catch (e) {
@@ -174,11 +182,11 @@ export default function ManageOrder() {
 
   const removeFabricRow = (id: string) => {
     if ((form.tissus || []).length <= 1) return;
-    setForm(prev => ({ ...prev, tissus: prev.tissus?.filter(t => t.id !== id) }));
+    setForm(prev => ({ ...prev, tissus: prev.tissus?.filter((t: any) => t.id !== id) }));
   };
 
   const updateFabricRow = (id: string, updates: any) => {
-    const updated = (form.tissus || []).map(t => t.id === id ? { ...t, ...updates } : t);
+    const updated = (form.tissus || []).map((t: any) => t.id === id ? { ...t, ...updates } : t);
     setForm(prev => ({ ...prev, tissus: updated }));
   };
 
@@ -202,7 +210,7 @@ export default function ManageOrder() {
   };
 
   const addExternalTask = () => {
-    const newTask = { id: genId(), type: 'confection', partenaireId: '', details: '', status: 'en_attente', avance: 0, prixUnitaire: 0, photo: '' };
+    const newTask: any = { id: genId(), type: 'confection', partenaireId: '', details: '', status: 'en_attente', avance: 0, prixUnitaire: 0, photo: '', quantite: form.quantite || 0 };
     setForm({ ...form, externalTasks: [...(form.externalTasks || []), newTask] });
   };
 
@@ -210,12 +218,33 @@ export default function ManageOrder() {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 1024 * 500) {
-        alert(isAr ? 'الملف كبير جداً (الأقصى 500kb)' : 'Fichier trop lourd (Max 500kb)');
+        setSuccessMsg(isAr ? 'الملف كبير جداً (الأقصى 500kb)' : 'Fichier trop lourd (Max 500kb)');
         return;
       }
       const reader = new FileReader();
       reader.onload = () => {
         updateExternalTask(taskId, { photo: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleTaskAttachmentUpload = (e: React.ChangeEvent<HTMLInputElement>, taskId: string) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 1024 * 1024 * 2) {
+        setSuccessMsg(isAr ? 'الملف كبير جداً (الأقصى 2MB)' : 'Fichier trop lourd (Max 2MB)');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const tasks = [...(form.externalTasks || [])];
+        const idx = tasks.findIndex(t => t.id === taskId);
+        if (idx !== -1) {
+          const current = tasks[idx].attachments || [];
+          tasks[idx] = { ...tasks[idx], attachments: [...current, reader.result as string] };
+          setForm({ ...form, externalTasks: tasks });
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -234,7 +263,7 @@ export default function ManageOrder() {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 1024 * 500) { // Alert if > 500KB
-        alert(isAr ? 'الصورة كبيرة جداً، يرجى اختيار صورة أصغر من 500KB' : 'Image trop grande, veuillez choisir une image < 500KB');
+        setSuccessMsg(isAr ? 'الصورة كبيرة جداً، يرجى اختيار صورة أصغر من 500KB' : 'Image trop grande, veuillez choisir une image < 500KB');
         return;
       }
       const reader = new FileReader();
@@ -245,7 +274,7 @@ export default function ManageOrder() {
 
   const save = async () => {
     if (!form.reference || !form.client) {
-      alert(isAr ? 'المرجع والزبون مطلوبان' : 'Référence et Client sont obligatoires');
+      setSuccessMsg(isAr ? 'المرجع والزبون مطلوبان' : 'Référence et Client sont obligatoires');
       return;
     }
     
@@ -266,14 +295,17 @@ export default function ManageOrder() {
         dateLivraisonPrevue: form.dateLivraisonPrevue || new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0],
         phase: form.phase || 'coupe',
         tissu: fabricSummary,
-        tissus: form.tissus // Save full array if possible
+        tissus: form.tissus, // Save full array if possible
+        externalTasks: form.externalTasks || [],
+        partenaireId: form.externalTasks && form.externalTasks.length > 0 ? form.externalTasks[0].partenaireId : null,
+        typeDossier: form.typeDossier || 'production'
       };
       
       await saveRecord('commandes', record);
       navigate('/commandes');
     } catch (error: any) {
       console.error(error);
-      alert(isAr ? `خطأ في الاتصال بالسيرفر: ${error.message}` : `Erreur de connexion: ${error.message}`);
+      setSuccessMsg(isAr ? `خطأ في الاتصال بالسيرفر: ${error.message}` : `Erreur de connexion: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -325,14 +357,14 @@ export default function ManageOrder() {
         <div className="bg-white rounded-[2.5rem] p-4 shadow-sm border border-slate-100 flex items-center justify-center gap-4 mb-8">
            <button 
              onClick={() => setForm({ ...form, typeDossier: 'production' })}
-             className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${form.typeDossier === 'production' ? 'bg-slate-900 text-white shadow-xl shadow-slate-200' : 'text-slate-400 hover:bg-slate-50'}`}
+             className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${(form.typeDossier as any) === 'production' ? 'bg-slate-900 text-white shadow-xl shadow-slate-200' : 'text-slate-400 hover:bg-slate-50'}`}
            >
              <Package className="w-5 h-5" />
              {isAr ? 'إنتاج كامل' : 'Production Complète'}
            </button>
            <button 
              onClick={() => setForm({ ...form, typeDossier: 'service' })}
-             className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${form.typeDossier === 'service' ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-100' : 'text-slate-400 hover:bg-slate-50'}`}
+             className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${(form.typeDossier as any) === 'service' ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-100' : 'text-slate-400 hover:bg-slate-50'}`}
            >
              <Truck className="w-5 h-5" />
              {isAr ? 'خدمة / مهمة (باترون...)' : 'Service / Mission Externe'}
@@ -346,7 +378,7 @@ export default function ManageOrder() {
                <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100 mb-4">
                  <AlertTriangle className="w-4 h-4 text-amber-600" />
                  <p className="text-[10px] font-bold text-amber-800 uppercase tracking-tight">
-                   {form.typeDossier === 'production' 
+                   {(form.typeDossier as any) === 'production' 
                      ? (isAr ? 'وضع الإنتاج: يتضمن تتبع الثوب والمقاسات' : 'MODE PRODUCTION: Suivi tissu et tailles inclus')
                      : (isAr ? 'وضع الخدمة: موجه فقط للمهام الخارجية' : 'MODE SERVICE: Focus sur les tâches externes uniquement')}
                  </p>
@@ -361,7 +393,7 @@ export default function ManageOrder() {
             </div>
           </div>
 
-          {form.typeDossier === 'production' && (
+          { (form.typeDossier as any) === 'production' && (
             <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-sm border border-slate-100 space-y-8 animate-in slide-in-from-top-4">
                <div className="flex items-center justify-between">
                   <h2 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-3"><ShoppingCart className="w-4 h-4 text-amber-600" /> {t('sourcing_tissu_multiple', lang)}</h2>
@@ -425,7 +457,7 @@ export default function ManageOrder() {
             </div>
           )}
 
-          {form.typeDossier === 'production' && (
+          { (form.typeDossier as any) === 'production' && (
             <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-sm border border-slate-100 space-y-6 animate-in slide-in-from-top-4">
               <div className="flex items-center justify-between">
                  <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><Layers className="w-4 h-4 text-indigo-500" /> {t('quantites_par_taille', lang)}</h3>
@@ -487,7 +519,7 @@ export default function ManageOrder() {
             </div>
             <div className="space-y-6">
               {(form.externalTasks || []).map((task) => {
-                const totalTask = (task.prixUnitaire || 0) * (form.quantite || 0);
+                const totalTask = (task.prixUnitaire || 0) * (task.quantite !== undefined ? task.quantite : (form.quantite || 0));
                 return (
                   <div key={task.id} className="p-8 bg-slate-50/50 rounded-[2.5rem] border border-slate-100 relative group animate-in slide-in-from-bottom-2 duration-300">
                     <button onClick={() => removeExternalTask(task.id)} className="absolute top-6 right-6 p-2 text-slate-300 hover:text-red-500 transition-all"><Trash2 className="w-4 h-4" /></button>
@@ -512,10 +544,37 @@ export default function ManageOrder() {
                              </label>
                            )}
                         </div>
+
+                        <div className="mt-6 space-y-3">
+                           <label className="block text-[10px] font-black text-slate-400 uppercase ml-1 flex items-center gap-2"><FileText className="w-3.5 h-3.5" /> {isAr ? 'ملفات إضافية' : 'ATTACHEMENTS EXTRA'}</label>
+                           <div className="grid grid-cols-3 gap-2">
+                              {(task.attachments || []).map((file, idx) => (
+                                 <div key={idx} className="aspect-square bg-white rounded-xl relative group overflow-hidden border border-slate-200 shadow-sm">
+                                    <img src={file} className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center gap-1">
+                                       <button onClick={() => setZoomMedia(file)} className="p-1 bg-white/20 rounded-md text-white"><Eye className="w-3 h-3" /></button>
+                                       <button 
+                                          onClick={() => {
+                                            const updated = (task.attachments || []).filter((_, i) => i !== idx);
+                                            updateExternalTask(task.id, { attachments: updated });
+                                          }}
+                                          className="p-1 bg-rose-500/80 rounded-md text-white"
+                                       >
+                                          <X className="w-3 h-3" />
+                                       </button>
+                                    </div>
+                                 </div>
+                              ))}
+                              <label className="aspect-square bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-slate-300 hover:bg-indigo-50 hover:border-indigo-300 transition-all cursor-pointer">
+                                 <Plus className="w-5 h-5" />
+                                 <input type="file" className="hidden" onChange={e => handleTaskAttachmentUpload(e, task.id)} />
+                              </label>
+                           </div>
+                        </div>
                       </div>
 
                       <div className="md:col-span-9 space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
                           <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">{t('type_de_travail', lang)}</label>
                             <select value={task.type} onChange={e => updateExternalTask(task.id, { type: e.target.value })} className="w-full px-6 py-4 bg-white border-2 border-slate-100 rounded-2xl text-xs font-black outline-none focus:border-indigo-500 shadow-sm transition-all">
@@ -533,6 +592,11 @@ export default function ManageOrder() {
                               <option value="">— {t('partenaire', lang)} —</option>
                               {users.filter(u => u.role === 'partenaire').map(u => <option key={u.id} value={u.id}>{u.nom}</option>)}
                             </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-black text-indigo-500 uppercase mb-2 ml-1">{isAr ? 'العدد (الكمية)' : 'QUANTITÉ'}</label>
+                            <input type="number" value={task.quantite !== undefined ? task.quantite : (form.quantite || 0)} onChange={e => updateExternalTask(task.id, { quantite: parseInt(e.target.value) || 0 })} className="w-full px-6 py-4 bg-white border-2 border-slate-100 rounded-2xl text-lg font-black outline-none focus:border-indigo-500 shadow-sm" />
                           </div>
 
                           <div>
@@ -588,6 +652,26 @@ export default function ManageOrder() {
                               </div>
                            </div>
                         </div>
+
+                        {(task.partnerResultFiles || []).length > 0 && (
+                          <div className="mt-6 pt-6 border-t border-slate-100 flex items-center justify-between animate-in slide-in-from-top-2">
+                             <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 shadow-sm"><CheckCircle2 className="w-5 h-5" /></div>
+                                <div>
+                                   <h4 className="text-[10px] font-black text-slate-800 uppercase tracking-widest leading-none mb-1">{isAr ? 'نتائج الشريك' : 'RÉSULTATS DU PARTENAIRE'}</h4>
+                                   <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{(task.partnerResultFiles || []).length} {isAr ? 'ملفات مستلمة' : 'fichiers reçus'}</p>
+                                </div>
+                             </div>
+                             <div className="flex flex-wrap gap-2">
+                                {(task.partnerResultFiles || []).map((file, rIdx) => (
+                                   <button key={rIdx} onClick={() => downloadFile(file, `Resultat_${rIdx+1}_${form.reference}`)} className="p-2 bg-slate-50 text-slate-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all border border-slate-100 shadow-sm flex items-center gap-2 group/res">
+                                      <Download className="w-3.5 h-3.5 group-hover/res:scale-110 transition-transform" />
+                                      <span className="text-[8px] font-black uppercase">{isAr ? 'تحميل النتيجة' : 'Résultat'} {rIdx + 1}</span>
+                                   </button>
+                                ))}
+                             </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -692,7 +776,7 @@ export default function ManageOrder() {
            <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 space-y-6 sticky top-24">
              <h2 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
                <Receipt className="w-4 h-4 text-emerald-600" /> 
-               {form.typeDossier === 'production' ? t('bilan_financier_pro', lang) : (isAr ? 'تتبع تكاليف الخدمة' : 'Suivi Coûts Service')}
+               {(form.typeDossier as any) === 'production' ? t('bilan_financier_pro', lang) : (isAr ? 'تتبع تكاليف الخدمة' : 'Suivi Coûts Service')}
              </h2>
              
              <div className="space-y-4">
@@ -706,7 +790,7 @@ export default function ManageOrder() {
                  />
                </div>
                
-               {form.typeDossier === 'production' && (
+               {(form.typeDossier as any) === 'production' && (
                  <div>
                    <label className="block text-[10px] font-black text-slate-400 mb-1">{t('prix_vente_ht_label', lang)}</label>
                    <input 
@@ -720,7 +804,7 @@ export default function ManageOrder() {
              </div>
 
              <div className="pt-6 border-t border-slate-100">
-               {form.typeDossier === 'production' ? (
+               {(form.typeDossier as any) === 'production' ? (
                  <div className="p-8 bg-slate-900 rounded-[3rem] text-white space-y-4 shadow-2xl relative overflow-hidden">
                     <div>
                       <span className="text-[10px] font-black uppercase text-slate-500">{t('ca_estime', lang)}</span>
@@ -745,7 +829,7 @@ export default function ManageOrder() {
                  <div className="p-8 bg-indigo-600 rounded-[3rem] text-white space-y-4 shadow-2xl relative overflow-hidden">
                     <span className="text-[10px] font-black uppercase text-indigo-200">{isAr ? 'إجمالي تكلفة الخدمة' : 'Coût Total Service'}</span>
                     <p className="text-4xl font-black">
-                      {(form.externalTasks || []).reduce((acc, t) => acc + ((t.prixUnitaire || 0) * (form.quantite || 0)), 0).toLocaleString()} 
+                      {(form.externalTasks || []).reduce((acc, t) => acc + ((t.prixUnitaire || 0) * (t.quantite !== undefined ? t.quantite : (form.quantite || 0))), 0).toLocaleString()} 
                       <span className="text-sm"> DH</span>
                     </p>
                     <p className="text-[10px] font-bold text-indigo-300 uppercase leading-relaxed">
@@ -812,6 +896,19 @@ export default function ManageOrder() {
            </div>
         </div>
       )}
+        {successMsg && (
+          <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[2000] animate-in slide-in-from-bottom-10 fade-in duration-500">
+            <div className="bg-slate-900/90 text-white px-8 py-5 rounded-[2rem] shadow-2xl flex items-center gap-4 border border-white/10 backdrop-blur-2xl">
+               <div className="w-10 h-10 bg-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20 animate-pulse">
+                  <CheckCircle2 className="w-6 h-6 text-white" />
+               </div>
+               <div className={isAr ? 'text-right' : ''}>
+                 <p className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em] mb-0.5">{isAr ? 'تمت العملية' : 'Succès'}</p>
+                 <p className="text-sm font-black uppercase tracking-tight">{successMsg}</p>
+               </div>
+            </div>
+          </div>
+        )}
     </div>
   </div>
 );

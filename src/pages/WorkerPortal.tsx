@@ -6,21 +6,17 @@ import {
   Clock, 
   ArrowRight, 
   CheckCircle2, 
-  QrCode,
   Layout,
-  Star,
-  ChevronRight,
-  TrendingUp,
-  Image as ImageIcon,
   Wallet,
   Calendar,
   CreditCard,
   Medal,
   Zap,
   Info,
-  LogOut,
   ShieldCheck,
-  Camera
+  Camera,
+  RotateCw,
+  Trash2
 } from 'lucide-react';
 import { 
   Employe, 
@@ -40,8 +36,8 @@ interface WorkerPortalProps {
 export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
   const { isAr } = useLang();
   const [loading, setLoading] = useState(true);
-  // Auto-detect worker from logged-in user account
-  const selectedWorkerId = currentUser?.employeId || '';
+  // Auto-detect worker from logged-in user account, but allow admin to switch
+  const [selectedWorkerId, setSelectedWorkerId] = useState(currentUser?.employeId || '');
   const [activeTab, setActiveTab] = useState<'mission' | 'paiements' | 'profil'>('mission');
   const [expandedMissionId, setExpandedMissionId] = useState<string | null>(null);
   const [data, setData] = useState<{
@@ -79,25 +75,195 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
     });
   }, []);
 
-  const currentWorker = data.employes.find(e => e.id === selectedWorkerId);
+  // Smart Match: If no ID is linked, try to find by name
+  useEffect(() => {
+    if (!selectedWorkerId && currentUser?.nom && data.employes.length > 0) {
+      const match = data.employes.find(e => 
+        `${e.prenom} ${e.nom}`.toLowerCase() === currentUser.nom.toLowerCase() ||
+        `${e.nom} ${e.prenom}`.toLowerCase() === currentUser.nom.toLowerCase()
+      );
+      if (match) {
+        setSelectedWorkerId(match.id);
+      }
+    }
+  }, [data.employes, currentUser?.nom, selectedWorkerId]);
+
+  // ✅ Load photo from Supabase leads table (cross-device sync)
+  const [remotePhoto, setRemotePhoto] = useState<string | null>(null);
+  useEffect(() => {
+    if (!selectedWorkerId) {
+      setRemotePhoto(null);
+      return;
+    }
+    
+    // ✅ CRITICAL: Reset to null FIRST to avoid showing previous worker's photo
+    setRemotePhoto(null);
+    
+    // Check localStorage for this specific worker
+    const local = localStorage.getItem(`beya_worker_photo_${selectedWorkerId}`);
+    if (local) setRemotePhoto(local);
+    
+    // Then fetch from Supabase (cross-device) - use a flag to avoid stale closure
+    let cancelled = false;
+    (async () => {
+      try {
+        const { supabase } = await import('../supabase');
+        const { data: photos } = await supabase
+          .from('leads')
+          .select('details')
+          .eq('name', '__WORKER_PHOTO__')
+          .eq('phone', selectedWorkerId)
+          .limit(1);
+        if (!cancelled && photos && photos.length > 0 && photos[0].details) {
+          setRemotePhoto(photos[0].details);
+          // Cache locally for this device
+          localStorage.setItem(`beya_worker_photo_${selectedWorkerId}`, photos[0].details);
+        } else if (!cancelled && !local) {
+          // No photo found anywhere - ensure null
+          setRemotePhoto(null);
+        }
+      } catch { /* silent */ }
+    })();
+    
+    // Cleanup: if worker changes before async finishes, ignore result
+    return () => { cancelled = true; };
+  }, [selectedWorkerId]);
+
+  const currentWorker = useMemo(() => {
+    const worker = data.employes.find(e => e.id === selectedWorkerId);
+    if (!worker) return worker;
+    // ✅ Multi-source photo: DB employes → remotePhoto (Supabase leads) → localStorage
+    if (!worker.photo && remotePhoto) {
+      return { ...worker, photo: remotePhoto };
+    }
+    return worker;
+  }, [data.employes, selectedWorkerId, remotePhoto]);
   
+  const handlePhotoDelete = async () => {
+    if (!currentWorker) return;
+    if (!window.confirm(isAr ? 'هل تريد حذف الصورة؟' : 'Supprimer la photo de profil ?')) return;
+    
+    // Remove from localStorage
+    localStorage.removeItem(`beya_worker_photo_${currentWorker.id}`);
+    
+    // Remove from Supabase leads table
+    try {
+      const { supabase } = await import('../supabase');
+      // 1. Leads table cleanup
+      await supabase
+        .from('leads')
+        .delete()
+        .eq('name', '__WORKER_PHOTO__')
+        .eq('phone', currentWorker.id);
+    } catch { /* silent */ }
+    
+    // Update local state
+    setRemotePhoto(null);
+    setData(prev => ({
+      ...prev,
+      employes: prev.employes.map(e => e.id === currentWorker.id ? { ...e, photo: undefined } : e)
+    }));
+  };
+
   const handlePhotoChange = async () => {
     if (!currentWorker) return;
-    const url = prompt(isAr ? 'أدخل رابط الصورة الجديدة:' : 'Entrez l\'URL de la nouvelle photo:');
-    if (url) {
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e: any) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
       setIsUploading(true);
-      const updated = { ...currentWorker, photo: url };
-      // Save to employees table
-      const { saveRecord } = await import('../types');
-      await saveRecord('employes', updated);
-      
-      // Update local state
-      setData(prev => ({
-        ...prev,
-        employes: prev.employes.map(e => e.id === updated.id ? updated : e)
-      }));
-      setIsUploading(false);
-    }
+      try {
+        const reader = new FileReader();
+        reader.onload = async (event: any) => {
+          const img = new Image();
+          img.onload = async () => {
+            // ✅ Optimized Low-Size Compression Logic
+            const canvas = document.createElement('canvas');
+             const MAX_WIDTH = 120;
+             const MAX_HEIGHT = 120;
+             let width = img.width;
+             let height = img.height;
+
+             if (width > height) {
+               if (width > MAX_WIDTH) {
+                 height *= MAX_WIDTH / width;
+                 width = MAX_WIDTH;
+               }
+             } else {
+               if (height > MAX_HEIGHT) {
+                 width *= MAX_HEIGHT / height;
+                 height = MAX_HEIGHT;
+               }
+             }
+
+             canvas.width = width;
+             canvas.height = height;
+             const ctx = canvas.getContext('2d');
+             ctx?.drawImage(img, 0, 0, width, height);
+
+             const compressedBase64 = canvas.toDataURL('image/jpeg', 0.2);
+             console.log("Ultra-compressed image size (chars):", compressedBase64.length);
+
+            // ✅ STORAGE 1: localStorage (instant, same device)
+            localStorage.setItem(`beya_worker_photo_${currentWorker.id}`, compressedBase64);
+
+            // ✅ STORAGE 2: Supabase 'leads' table (cross-device, 100% guaranteed)
+            // We use leads table because 'users' and 'employes' don't have a 'photo' column
+            try {
+              const { supabase } = await import('../supabase');
+              const { genId } = await import('../types');
+              
+              // Step 1: Delete any existing photo for this worker
+              await supabase
+                .from('leads')
+                .delete()
+                .eq('name', '__WORKER_PHOTO__')
+                .eq('phone', currentWorker.id);
+              
+              // Step 2: Insert new photo with proper UUID
+              const { error } = await supabase.from('leads').insert({
+                id: genId(),
+                name: '__WORKER_PHOTO__',
+                phone: currentWorker.id,
+                type: 'PHOTO',
+                quantity: 0,
+                status: 'completed',
+                date: new Date().toISOString(),
+                details: compressedBase64
+              });
+              
+              if (error) {
+                console.error('[PHOTO] ❌ Supabase save failed:', error.message);
+                alert('[DEBUG] Photo save error: ' + error.message);
+              } else {
+                console.log('[PHOTO] ✅ Saved to Supabase leads table (cross-device)');
+                setRemotePhoto(compressedBase64);
+              }
+            } catch (err) {
+              console.error('[PHOTO] ❌ Exception:', err);
+            }
+
+            // Update local state
+            setData(prev => ({
+              ...prev,
+              employes: prev.employes.map(e => e.id === currentWorker.id ? { ...e, photo: compressedBase64 } : e)
+            }));
+            setIsUploading(false);
+          };
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      } catch (err) {
+        console.error("Upload failed:", err);
+        setIsUploading(false);
+        alert(isAr ? 'فشل تحميل الصورة' : 'Échec du téléchargement');
+      }
+    };
+    input.click();
   };
 
   const workerPaiements = data.paiements
@@ -112,7 +278,6 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
 
   const lastEntry = workerSuiviToday[workerSuiviToday.length - 1];
   const activeOp = data.operations.find(o => o.id === lastEntry?.operation_id);
-  const activeCmd = data.commandes.find(c => c.id === lastEntry?.commande_id);
 
   const totalPcsToday = workerSuiviToday.reduce((acc, curr) => acc + curr.quantite_realisee, 0);
   const totalTarget = activeOp ? activeOp.target_heure * 8 : 0; 
@@ -135,7 +300,7 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
   );
 
   // If user has no linked employee profile, show a clear message
-  if (!selectedWorkerId) {
+  if (!selectedWorkerId && currentUser?.role !== 'admin') {
     return (
       <div className="min-h-screen bg-slate-950 p-6 flex flex-col items-center justify-center">
         <div className="w-24 h-24 bg-gradient-to-br from-slate-700 to-slate-800 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-2xl ring-4 ring-slate-900">
@@ -164,17 +329,30 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
               <img src={currentWorker.photo} className="w-12 h-12 rounded-2xl object-cover shadow-lg shadow-indigo-500/20 border-2 border-indigo-500" alt="Avatar" />
             ) : (
               <div className="w-12 h-12 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-2xl flex items-center justify-center font-bold text-lg shadow-lg shadow-indigo-500/20">
-                {currentWorker?.prenom[0]}{currentWorker?.nom[0]}
+                {currentWorker?.prenom?.[0] || '?'}{currentWorker?.nom?.[0] || '?'}
               </div>
             )}
             <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-slate-950 rounded-full" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-               <h2 className="text-sm font-bold uppercase tracking-tight">{currentWorker?.prenom} {currentWorker?.nom}</h2>
-               <span className={`text-[8px] px-1.5 py-0.5 rounded ${rank.bg} ${rank.color} font-bold uppercase`}>{rank.label}</span>
-            </div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{currentWorker?.poste}</p>
+            {currentUser?.role === 'admin' ? (
+              <select 
+                value={selectedWorkerId} 
+                onChange={e => setSelectedWorkerId(e.target.value)}
+                className="bg-transparent text-sm font-bold uppercase tracking-tight outline-none text-indigo-400 focus:text-white transition-colors cursor-pointer border-b border-white/10 pb-1"
+              >
+                <option value="" className="bg-slate-900 text-white">— {isAr ? 'اختر موظفاً' : 'Choisir Employé'} —</option>
+                {data.employes.map(e => (
+                  <option key={e.id} value={e.id} className="bg-slate-900 text-white">{e.prenom} {e.nom}</option>
+                ))}
+              </select>
+            ) : (
+              <div className="flex items-center gap-2">
+                 <h2 className="text-sm font-bold uppercase tracking-tight">{currentWorker?.prenom} {currentWorker?.nom}</h2>
+                 <span className={`text-[8px] px-1.5 py-0.5 rounded ${rank.bg} ${rank.color} font-bold uppercase`}>{rank.label}</span>
+              </div>
+            )}
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{currentWorker?.poste || (isAr ? 'عرض الإدارة' : 'Vue Administration')}</p>
           </div>
         </div>
 
@@ -271,7 +449,7 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
 
                   let allPreviousDone = true;
 
-                  return sortedOpIds.map((opId, idx) => {
+                  return sortedOpIds.map((opId) => {
                     const op = data.operations.find(o => o.id === opId);
                     const cmd = data.commandes.find(c => c.id === workerSuiviToday.find(s => s.operation_id === opId)?.commande_id);
                     
@@ -411,7 +589,7 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
                </div>
              ) : (
                <div className="space-y-4">
-                  {workerPaiements.map((p, i) => (
+                  {workerPaiements.map((p) => (
                     <div key={p.id} className="bg-slate-900 border border-white/5 p-6 rounded-3xl hover:bg-slate-800/50 transition-colors">
                        <div className="flex justify-between items-start mb-4">
                           <div className="flex items-center gap-4">
@@ -460,11 +638,16 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
              <div className="flex flex-col items-center text-center pb-8 border-b border-white/5 relative">
                 <div className="relative group">
-                  <div className="w-28 h-28 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-[2.5rem] flex items-center justify-center text-4xl font-bold shadow-2xl shadow-indigo-500/20 mb-6 border-4 border-slate-900 ring-2 ring-indigo-500/20 overflow-hidden">
+                  <div className="w-28 h-28 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-[2.5rem] flex items-center justify-center text-4xl font-bold shadow-2xl shadow-indigo-500/20 mb-6 border-4 border-slate-900 ring-2 ring-indigo-500/20 overflow-hidden relative">
+                    {isUploading && (
+                      <div className="absolute inset-0 z-10 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center">
+                        <RotateCw className="w-8 h-8 text-white animate-spin" />
+                      </div>
+                    )}
                     {currentWorker?.photo ? (
                       <img src={currentWorker.photo} className="w-full h-full object-cover" alt="Profile" />
                     ) : (
-                      <span>{currentWorker?.prenom[0]}{currentWorker?.nom[0]}</span>
+                      <span>{currentWorker?.prenom?.[0]}{currentWorker?.nom?.[0]}</span>
                     )}
                   </div>
                   <button 
@@ -473,6 +656,15 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
                   >
                     <Camera className="w-5 h-5" />
                   </button>
+                  {currentWorker?.photo && (
+                    <button 
+                      onClick={handlePhotoDelete}
+                      className="absolute bottom-4 left-0 w-10 h-10 bg-rose-600 rounded-2xl shadow-xl flex items-center justify-center text-white hover:bg-rose-500 transition-all border-4 border-slate-900"
+                      title={isAr ? 'حذف الصورة' : 'Supprimer la photo'}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
                 <h2 className="text-2xl font-bold uppercase tracking-tight">{currentWorker?.prenom} {currentWorker?.nom}</h2>
                 <div className="mt-2 px-4 py-1 bg-indigo-500/10 text-indigo-400 rounded-full text-[10px] font-bold uppercase tracking-widest border border-indigo-500/20">

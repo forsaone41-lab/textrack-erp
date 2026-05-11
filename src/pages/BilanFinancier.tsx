@@ -11,7 +11,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
-import { loadData, Facture, Charge, Commande, FicheTechnique, StockTissu } from '../types';
+import { loadData, Facture, Charge, Commande, FicheTechnique, StockTissu, Employe, PaiementSalaire } from '../types';
 import { useLang } from '../contexts/LangContext';
 
 const MONTHS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
@@ -51,6 +51,8 @@ export default function BilanFinancier() {
   const [fiches, setFiches] = useState<FicheTechnique[]>([]);
   const [tissus, setTissus] = useState<StockTissu[]>([]);
   const [clients, setClients] = useState<any[]>([]);
+  const [employes, setEmployes] = useState<Employe[]>([]);
+  const [paiements, setPaiements] = useState<PaiementSalaire[]>([]);
 
   useEffect(() => {
     Promise.all([
@@ -59,14 +61,18 @@ export default function BilanFinancier() {
       loadData<Commande>('commandes'),
       loadData<FicheTechnique>('fiches'),
       loadData<StockTissu>('tissus'),
-      loadData<any>('users')
-    ]).then(([f, c, cmd, ft, t, u]) => {
+      loadData<any>('users'),
+      loadData<Employe>('employes'),
+      loadData<PaiementSalaire>('paiements_salaires')
+    ]).then(([f, c, cmd, ft, t, u, emp, p]) => {
       setFactures(f);
       setCharges(c);
       setCommandes(cmd);
       setFiches(ft);
       setTissus(t);
       setClients(u.filter((user: any) => user.role === 'client'));
+      setEmployes(emp);
+      setPaiements(p);
     });
   }, []);
 
@@ -146,7 +152,22 @@ export default function BilanFinancier() {
 
     // Fixed Charges
     const totalCharges = charges.filter(c => c.statut === 'payé').reduce((a, c) => a + c.montant, 0);
-    const totalChargesPending = charges.filter(c => c.statut === 'en_attente').reduce((a, c) => a + c.montant, 0);
+    
+    // ✅ Calculate Pending Salaries from RH for the current month
+    const currentMonthStr = new Date().toISOString().slice(0, 7);
+    const pendingSalaries = Array.isArray(employes) && Array.isArray(paiements)
+      ? employes
+        .filter(e => e && e.actif)
+        .reduce((total, emp) => {
+          const paye = paiements
+            .filter(p => p && p.employeId === emp.id && p.mois === currentMonthStr)
+            .reduce((sum, p) => sum + (p.montant || 0), 0);
+          const reste = Math.max(0, (emp.salaireMensuel || 0) - paye);
+          return total + reste;
+        }, 0)
+      : 0;
+
+    const totalChargesPending = charges.filter(c => c.statut === 'en_attente').reduce((a, c) => a + c.montant, 0) + pendingSalaries;
     
     // Direct Costs from Orders
     const totalOrderCosts = orderProfits.reduce((a, op) => a + op.totalCost, 0);
@@ -155,7 +176,7 @@ export default function BilanFinancier() {
     const marge = ca > 0 ? Math.round((globalProfit / ca) * 100) : 0;
 
     return { ca, caTotal, caAttente, totalCharges, totalChargesPending, totalOrderCosts, globalProfit, marge };
-  }, [factures, charges, orderProfits]);
+  }, [factures, charges, orderProfits, employes, paiements]);
 
   const monthlyData = useMemo(() => {
     return (isAr ? MONTHS_AR : MONTHS_FR).map((month, i) => {

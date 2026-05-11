@@ -5,21 +5,20 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  loadData, saveRecord, deleteRecord, Commande, FicheTechnique, OrdreDeCoupe, PointageEntry, Facture, User, Employe, Phase,
-  PHASE_LABELS
+  loadData, saveRecord, deleteRecord, Commande, OrdreDeCoupe, Employe, Phase,
+  PHASE_LABELS, User
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { t, T, TKey } from '../i18n';
+import { supabase } from '../supabase';
 
 export default function Commandes() {
   const { lang, isAr } = useLang();
   const navigate = useNavigate();
   const [commandes, setCommandes] = useState<Commande[]>([]);
-  const [fiches, setFiches] = useState<FicheTechnique[]>([]);
   const [ordres, setOrdres] = useState<OrdreDeCoupe[]>([]);
-  const [pointages, setPointages] = useState<PointageEntry[]>([]);
-  const [factures, setFactures] = useState<Facture[]>([]);
   const [employes, setEmployes] = useState<Employe[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
 
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
@@ -48,19 +47,24 @@ export default function Commandes() {
   }, [search, filterStatut]);
 
   async function loadMetadata() {
-    const [fch, ord, pts, fac, emp] = await Promise.all([
-      loadData<FicheTechnique>('fiches'),
+    const [ord, emp, usr] = await Promise.all([
       loadData<OrdreDeCoupe>('ordres'),
-      loadData<PointageEntry>('pointages'),
-      loadData<Facture>('factures'),
-      loadData<Employe>('employes')
+      loadData<Employe>('employes'),
+      loadData<User>('users')
     ]);
-    setFiches(fch || []);
     setOrdres(ord || []);
-    setPointages(pts || []);
-    setFactures(fac || []);
     setEmployes(emp || []);
+    setUsers(usr || []);
   }
+
+  const downloadFile = (dataUrl: string, fileName: string) => {
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   async function loadCommands(pageIdx: number, reset: boolean = false) {
     if (loading) return;
@@ -69,7 +73,7 @@ export default function Commandes() {
       const from = pageIdx * ITEMS_PER_PAGE;
       const to = from + ITEMS_PER_PAGE - 1;
       
-      let query = (window as any).supabase
+      let query = supabase
         .from('commandes')
         .select('*')
         .order('dateCommande', { ascending: false })
@@ -100,7 +104,10 @@ export default function Commandes() {
 
   const filtered = useMemo(() => {
     return commandes.filter(c => {
-      const hasExternal = !!(c.partenaireId || (c.externalTasks && c.externalTasks.length > 0));
+      const hasExternal = !!(
+        (c.partenaireId && typeof c.partenaireId === 'string' && c.partenaireId.trim().length > 0) || 
+        (Array.isArray(c.externalTasks) && c.externalTasks.some(t => t.partenaireId && t.partenaireId.trim().length > 0))
+      );
       const matchType = filterType === 'all' || 
         (filterType === 'interne' && !hasExternal) ||
         (filterType === 'sous-traitance' && hasExternal);
@@ -110,25 +117,19 @@ export default function Commandes() {
   }, [commandes, filterType]);
 
   function getDynamicStatus(c: Commande) {
-    const statusMap: Record<string, TKey> = {
-      'livré': 'status_livree',
-      'terminé': 'status_terminee',
-      'echantillon_en_cours': 'echantillon_en_cours',
-      'en_cours': 'status_en_cours'
-    };
 
     if (c.statut === 'livré') return { label: t('status_livree', lang), color: 'bg-emerald-50 text-emerald-600', dot: 'bg-emerald-500' };
     if (c.statut === 'terminé') return { label: t('status_terminee', lang), color: 'bg-blue-50 text-blue-600', dot: 'bg-blue-500' };
     if (c.statut === 'echantillon_en_cours') return { label: t('echantillon_en_cours', lang), color: 'bg-fuchsia-50 text-fuchsia-600', dot: 'bg-fuchsia-500' };
     
     // Fallback to phase if status is just 'en_cours'
-    const phaseKey = `phase_${c.phase}` as any;
-    const label = T[phaseKey] ? t(phaseKey, lang) : (PHASE_LABELS[c.phase as Phase] || c.phase);
+    const phaseKey = `phase_${c.phase}`;
+    const label = (T as any)[phaseKey] ? t(phaseKey as any, lang) : (PHASE_LABELS[c.phase as Phase] || c.phase);
     return { label: label, color: 'bg-slate-50 text-slate-600', dot: 'bg-slate-400' };
   }
 
   function getProgress(c: Commande) {
-    const phases: Phase[] = ['coupe', 'montage', 'finition', 'controle_qualite'];
+    const phases: Phase[] = ['coupe', 'montage', 'finition', 'controle'];
     const idx = phases.indexOf(c.phase as Phase);
     if (c.statut === 'terminé' || c.statut === 'livré') return 100;
     if (idx === -1) return 0;
@@ -417,10 +418,22 @@ export default function Commandes() {
                         </div>
                       </td>
                       <td className="px-6 py-6 text-center">
-                        <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border border-white shadow-sm ${ds.color}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${ds.dot}`} />
-                          {ds.label}
-                        </span>
+                        <div className="flex flex-col items-center gap-2">
+                           <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border border-white shadow-sm ${ds.color}`}>
+                             <span className={`w-1.5 h-1.5 rounded-full ${ds.dot}`} />
+                             {ds.label}
+                           </span>
+                           {(() => {
+                             const partnerId = c.partenaireId || c.externalTasks?.[0]?.partenaireId;
+                             if (!partnerId) return null;
+                             const partner = users.find(u => u.id === partnerId || u.employeId === partnerId);
+                             return (
+                               <span className="text-[8px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 shadow-sm">
+                                 {partner?.nom || partnerId}
+                               </span>
+                             );
+                           })()}
+                        </div>
                       </td>
                       <td className="px-6 py-6 text-right">
                         <div className="flex items-center justify-end gap-1.5">
@@ -434,7 +447,11 @@ export default function Commandes() {
                             </button>
                           )}
                           {(() => {
+                            const isST = !!(c.partenaireId || (c.externalTasks && c.externalTasks.length > 0));
+                            if (isST) return null;
+
                             const isPlanned = ordres.some(o => o.commandeId === c.id);
+                            
                             if (isPlanned) {
                               return (
                                 <div className="w-9 h-9 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center shadow-sm border border-emerald-200" title={isAr ? 'تمت البرمجة' : 'Déjà Planifié'}>
@@ -442,6 +459,7 @@ export default function Commandes() {
                                 </div>
                               );
                             }
+
                             return (
                               <button 
                                 onClick={(e) => { e.stopPropagation(); handleSendToCoupe(c); }}
@@ -492,7 +510,19 @@ export default function Commandes() {
                                           <p className="text-[9px] font-bold text-slate-400">{empName(t.partenaireId)}</p>
                                         </div>
                                       </div>
-                                      <span className="text-[9px] font-black text-indigo-500">{t.avance || 0} DH</span>
+                                      <div className="flex items-center gap-2">
+                                         {(t.partnerResultFiles || []).map((file, fIdx) => (
+                                            <button 
+                                              key={fIdx} 
+                                              onClick={(e) => { e.stopPropagation(); downloadFile(file, `Resultat_${fIdx+1}_${c.reference}`); }}
+                                              className="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all shadow-sm border border-emerald-100 flex items-center justify-center"
+                                              title={`Télécharger Résultat ${fIdx+1}`}
+                                            >
+                                               <CheckCircle2 className="w-4 h-4" />
+                                            </button>
+                                         ))}
+                                         <span className="text-[9px] font-black text-indigo-500">{t.avance || 0} DH</span>
+                                      </div>
                                    </div>
                                  ))}
                                  {(c.externalTasks || []).length === 0 && <p className="text-[10px] text-slate-400 italic">Aucune tâche externe...</p>}

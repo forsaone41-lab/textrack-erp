@@ -110,11 +110,27 @@ export interface Commande {
     location?: 'devant' | 'dos' | 'manches' | 'pantalon' | 'complet';
     avance?: number;
     prixUnitaire?: number;
+    quantite?: number;
     photo?: string;
+    attachments?: string[];
+    partnerResultFiles?: string[];
   }[];
   referenceClient?: string;
   typeModele?: string;
   photo?: string;
+  tissus?: { id: string; type: string; couleur: string; conso: number; prix: number; sourcing: string }[];
+  tissuConsommation?: number;
+  typeDossier?: 'creations' | 'sous_traitance' | 'uniformes' | 'production' | 'service';
+}
+
+export interface Stock {
+  id: string;
+  type: string;
+  couleur: string;
+  metrage: number;
+  prixMetre: number;
+  seuilAlerte: number;
+  reference?: string;
 }
 
 export interface StockTissu {
@@ -312,23 +328,23 @@ export type AppPage =
   | 'dashboard' | 'fiches' | 'ordres' | 'chaine' | 'stocks' | 'pilotage' | 'scan_production'
   | 'rh' | 'commandes' | 'clients' | 'factures' | 'charges' | 'bilan' | 'fast_scanner'
   | 'pointage' | 'portail_client' | 'performance' | 'utilisateurs' | 'parametres' | 'demandes'
-  | 'worker_portal' | 'controle_qualite' | 'partenaire_portal' | 'agenda';
+  | 'worker_portal' | 'controle_qualite' | 'partenaire_portal' | 'agenda' | 'notifications' | 'ai_space';
 
 export type RolePermMap = Record<'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire', AppPage[]>;
 
 export const DEFAULT_PERMISSIONS: RolePermMap = {
-  admin: ['dashboard', 'demandes', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'stocks', 'rh', 'commandes', 'clients', 'factures', 'charges', 'bilan', 'fast_scanner', 'pointage', 'portail_client', 'performance', 'utilisateurs', 'parametres', 'worker_portal', 'controle_qualite', 'partenaire_portal', 'agenda'],
+  admin: ['dashboard', 'demandes', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'stocks', 'rh', 'commandes', 'clients', 'factures', 'charges', 'bilan', 'fast_scanner', 'pointage', 'portail_client', 'performance', 'utilisateurs', 'parametres', 'worker_portal', 'controle_qualite', 'partenaire_portal', 'agenda', 'notifications', 'ai_space'],
   pointeur: ['dashboard', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'pointage', 'performance', 'worker_portal', 'controle_qualite'],
   client: ['portail_client'],
-  worker: ['pointage', 'fast_scanner', 'worker_portal'],
+  worker: ['worker_portal'],
   coupeur: ['ordres'],
-  modeliste: ['fiches'],
+  modeliste: ['fiches', 'ai_space'],
   controleur: ['scan_production', 'controle_qualite', 'worker_portal'],
   agent_pointage: ['pointage', 'rh'],
   partenaire: ['partenaire_portal'],
 };
 
-const PERMISSIONS_VERSION = 10;
+const PERMISSIONS_VERSION = 12;
 
 export function loadPermissions(): RolePermMap {
   try {
@@ -484,19 +500,21 @@ export async function syncCompanyProfile(): Promise<CompanyProfile> {
 
 export async function loadLeads(): Promise<Lead[]> {
   try {
-    // Try Supabase first
-    const data = await loadData<Lead>('leads');
-    
-    // Defensive check: ensure data is an array before filtering
-    if (Array.isArray(data)) {
-      // Filter out system config records
-      return data.filter(l => l && l.name !== '__SYSTEM_CONFIG__');
+    // 1. Try to get from Supabase but FILTER OUT photos to keep it fast
+    const { data, error } = await supabase
+      .from('leads')
+      .select('*')
+      .neq('name', '__WORKER_PHOTO__')
+      .neq('name', '__SYSTEM_CONFIG__');
+
+    if (!error && Array.isArray(data)) {
+      return data;
     }
     
-    // Fallback to local only if remote call failed or returned non-array
+    // Fallback to local
     const local = safeStorage.getItem('textrack_leads');
     const parsed = local ? JSON.parse(local) : [];
-    return Array.isArray(parsed) ? parsed.filter((l: any) => l && l.name !== '__SYSTEM_CONFIG__') : [];
+    return Array.isArray(parsed) ? parsed.filter((l: any) => l && l.name !== '__SYSTEM_CONFIG__' && l.name !== '__WORKER_PHOTO__') : [];
   } catch (err) {
     console.error("Error in loadLeads:", err);
     return [];
@@ -549,15 +567,40 @@ export async function saveCompanyProfile(profile: CompanyProfile): Promise<void>
 }
 
 // ─── Storage Helpers ────────────────────────────────────────
+const _cache: Record<string, { data: any[]; ts: number }> = {};
+const CACHE_TTL = 60_000; // 60s in-memory cache
+
 export async function loadData<T>(table: string): Promise<T[]> {
+  // 1. Check in-memory cache first (instant)
+  const cached = _cache[table];
+  if (cached && Date.now() - cached.ts < CACHE_TTL) {
+    return cached.data as T[];
+  }
+
   try {
+    // 2. Show localStorage data instantly while fetching
+    const localKey = `textrack_data_${table}`;
+    const localRaw = localStorage.getItem(localKey);
+    let localData: T[] | null = null;
+    if (localRaw) {
+      try { localData = JSON.parse(localRaw); } catch { /* ignore */ }
+    }
+
+    // 3. Fetch from Supabase
     const { data, error } = await supabase.from(table).select('*');
     if (error) {
       console.warn(`Failed to load ${table}:`, error.message);
+      // Return localStorage fallback if network fails
+      if (localData && Array.isArray(localData)) return localData;
       return [];
     }
-    // Ensure we always return an array if no error, even if data is null
-    return Array.isArray(data) ? data : [];
+    const result = Array.isArray(data) ? data : [];
+    
+    // 4. Update both caches
+    _cache[table] = { data: result, ts: Date.now() };
+    try { localStorage.setItem(localKey, JSON.stringify(result)); } catch { /* quota */ }
+    
+    return result;
   } catch (err) {
     console.error(`Fatal load error for ${table}:`, err);
     return [];
@@ -576,6 +619,13 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
 
   try {
     const { error } = await supabase.from(table).upsert(record as any);
+    if (!error) {
+      // ✅ Invalidate both caches on success
+      localStorage.removeItem(`textrack_data_${table}`);
+      delete _cache[table];
+      return;
+    }
+
     if (error) {
       console.error(`Error saving to ${table}:`, error.message);
 
@@ -589,16 +639,21 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
           'tissuPrix', 'coutMainOeuvre', 'tissuSourcing', 
           'tissuConsommation', 'fournisseurTel', 'fournisseurEmail',
           'pinCode',
-          'avance', 'retouche', 'lastActive', 'photo',
+          'avance', 'retouche', 'lastActive',
           'composition', 'metrageTotal', 'largeur', 'zone', 'etagere',
-          'cin', 'rib', 'banque', 'salaireMensuel', 'remunerationType', 'actif', 'prenom',
+          'cin', 'rib', 'banque', 'salaireMensuel', 'remunerationType', 'actif',
           'dateEntree', 'contrat', 'cnss', 'mutuelle', 'enfants', 'situation_familiale',
-          'clientId', 'rebut', 'planningReady', 'ville', 'employeId', 'telephone', 'tailles', 'rejectionNote', 'tissus'
+          'clientId', 'rebut', 'planningReady', 'ville', 'employeId', 'telephone', 'tailles', 'rejectionNote', 'tissus',
+          'partenaireId', 'externalTasks', 'typeDossier',
+          'photo'
         ];
         newCols.forEach(col => delete fallbackRecord[col]);
         
         const { error: retryError } = await supabase.from(table).upsert(fallbackRecord);
         if (!retryError) {
+          // ✅ Invalidate both caches on success
+          localStorage.removeItem(`textrack_data_${table}`);
+          delete _cache[table];
           console.warn(`Saved ${table} using fallback (ignored new columns). Run SQL update to enable full tracking.`);
           return; 
         }

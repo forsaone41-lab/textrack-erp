@@ -30,7 +30,6 @@ const Performance      = lazy(() => import('./pages/Performance'));
 const Charges          = lazy(() => import('./pages/Charges'));
 const BilanFinancier   = lazy(() => import('./pages/BilanFinancier'));
 const Settings         = lazy(() => import('./pages/Settings'));
-const Profil           = lazy(() => import('./pages/Profil'));
 const Login            = lazy(() => import('./pages/Login'));
 const LandingPage      = lazy(() => import('./pages/LandingPage'));
 const KioskScanner     = lazy(() => import('./pages/KioskScanner'));
@@ -41,6 +40,7 @@ const Agenda           = lazy(() => import('./pages/Agenda'));
 const Recrutement     = lazy(() => import('./pages/Recrutement'));
 const ListeAttente    = lazy(() => import('./pages/ListeAttente'));
 const Notifications   = lazy(() => import('./pages/Notifications'));
+const AISpace         = lazy(() => import('./pages/AISpace'));
 
 // Loading spinner for Suspense fallback
 const PageLoader = () => (
@@ -120,7 +120,7 @@ function AdminLayout({
       </div>
       
       {/* Mobile Calculator - Bottom Right - Admin Only */}
-      {currentUser.role === 'admin' && (
+      {currentUser.role === 'admin' && location.pathname !== '/partenaire-portal' && (
         <div className={`md:hidden fixed bottom-6 ${isAr ? 'left-6' : 'right-6'} z-[140] scale-90`}>
           <Calculator />
         </div>
@@ -144,7 +144,7 @@ function AdminLayout({
         )}
 
         {/* Floating Calculator - Admin Only */}
-        {currentUser.role === 'admin' && (
+        {currentUser.role === 'admin' && location.pathname !== '/partenaire-portal' && (
           <div className={`fixed bottom-8 ${isAr ? 'right-8' : 'right-8'} z-[130] hidden md:block`}>
             <Calculator />
           </div>
@@ -251,7 +251,18 @@ function AppContent() {
 
     const fetchUsers = async () => {
       const users = await loadData<User>('users');
-      setAllUsers(users || []);
+      if (users) {
+        setAllUsers(users);
+        
+        // ✅ Sync current user state with database (handles photo persistence)
+        if (currentUser) {
+          const latest = users.find(u => u.id === currentUser.id);
+          if (latest && latest.photo !== currentUser.photo) {
+            setCurrentUser(latest);
+            localStorage.setItem(AUTH_KEY, JSON.stringify(latest));
+          }
+        }
+      }
     };
     syncSettings();
     if (!currentUser) return;
@@ -260,7 +271,7 @@ function AppContent() {
 
     const interval = setInterval(() => {
       updateActivity();
-      fetchUsers();
+      // REMOVED fetchUsers() here to make the app lighter and stop fetching all users every 30s
     }, 30000); // every 30s
 
     return () => clearInterval(interval);
@@ -338,11 +349,10 @@ function AppContent() {
           />
         }
       >
-        <Route index element={can('dashboard') ? <Dashboard allUsers={allUsers} /> : <Navigate to="/profil" replace />} />
-        <Route path="dashboard" element={can('dashboard') ? <Dashboard allUsers={allUsers} /> : <Navigate to="/profil" replace />} />
+        <Route index element={can('dashboard') ? <Dashboard allUsers={allUsers} /> : <Navigate to={can('worker_portal') ? "/worker-portal" : "/"} replace />} />
+        <Route path="dashboard" element={can('dashboard') ? <Dashboard allUsers={allUsers} /> : <Navigate to={can('worker_portal') ? "/worker-portal" : "/"} replace />} />
         
-        {/* User Profile */}
-        <Route path="profil" element={<Profil currentUser={currentUser} />} />
+        {/* Recruitment & Other */}
         <Route path="recrutement" element={<Recrutement />} />
         
         {/* Protected Production Routes */}
@@ -374,8 +384,10 @@ function AppContent() {
         <Route path="agenda" element={can('agenda') ? <Agenda /> : <Navigate to="/" replace />} />
         <Route path="commandes/manage" element={can('commandes') ? <ManageOrder /> : <Navigate to="/" replace />} />
         <Route path="liste-attente" element={can('rh') ? <ListeAttente /> : <Navigate to="/" replace />} />
-        <Route path="notifications" element={<Notifications />} />
+        <Route path="notifications" element={can('notifications') ? <Notifications /> : <Navigate to="/" replace />} />
+        <Route path="ai-space" element={can('ai_space') ? <AISpace /> : <Navigate to="/" replace />} />
         <Route path="planning-view/:id" element={<PlanningView />} />
+
       </Route>
       <Route element={<PointageLayout />}>
         <Route path="pointage" element={can('pointage') ? <Pointage onLogout={handleLogout} /> : <Navigate to="/" replace />} />

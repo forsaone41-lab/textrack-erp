@@ -36,13 +36,37 @@ export default function LandingPage() {
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert(isAr ? 'حجم الصورة كبير جداً (الأقصى 5MB)' : 'Photo trop grande (Max 5MB)');
+      if (file.size > 10 * 1024 * 1024) {
+        alert(isAr ? 'حجم الصورة كبير جداً (الأقصى 10MB)' : 'Photo trop grande (Max 10MB)');
         return;
       }
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setSelectedPhoto(reader.result as string);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const MAX_SIZE = 800;
+          if (width > height && width > MAX_SIZE) {
+            height *= MAX_SIZE / width;
+            width = MAX_SIZE;
+          } else if (height > MAX_SIZE) {
+            width *= MAX_SIZE / height;
+            height = MAX_SIZE;
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
+            setSelectedPhoto(compressedBase64);
+          } else {
+            setSelectedPhoto(event.target?.result as string);
+          }
+        };
+        img.src = event.target?.result as string;
       };
       reader.readAsDataURL(file);
     }

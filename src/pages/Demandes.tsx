@@ -4,6 +4,7 @@ import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, Use
 import { Lead, loadLeads, saveRecord, User, genId, deleteRecord, loadData } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { generatePDF } from '../utils/pdf';
+import { compressImage } from '../utils/image';
 
 const DEFAULT_TEMPLATES = {
   ar: {
@@ -46,7 +47,7 @@ export default function Demandes() {
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
   const [newClientCode, setNewClientCode] = useState<{ name: string, code: string } | null>(null);
   const [showSettings, setShowSettings] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(15);
+  const [visibleCount, setVisibleCount] = useState(10);
   const [templates, setTemplates] = useState(() => {
     try {
       const saved = localStorage.getItem('textrack_msg_templates');
@@ -62,7 +63,22 @@ export default function Demandes() {
   });
 
   useEffect(() => {
-    async function init() {
+    // Show cached data instantly (no blank screen)
+    try {
+      const cachedLeads = localStorage.getItem('textrack_data_leads');
+      if (cachedLeads) {
+        const parsed = JSON.parse(cachedLeads);
+        if (Array.isArray(parsed)) setLeads(parsed.filter((l: any) => l && l.name !== '__SYSTEM_CONFIG__'));
+      }
+      const cachedUsers = localStorage.getItem('textrack_data_users');
+      if (cachedUsers) {
+        const parsed = JSON.parse(cachedUsers);
+        if (Array.isArray(parsed)) setUsers(parsed);
+      }
+    } catch { /* ignore parse errors */ }
+
+    // Then refresh from network in background
+    async function refresh() {
       const [leadsData, usersData] = await Promise.all([
         loadLeads(),
         loadData<User>('users')
@@ -70,7 +86,7 @@ export default function Demandes() {
       setLeads(leadsData);
       setUsers(usersData || []);
     }
-    init();
+    refresh();
   }, []);
 
   const saveTemplates = (newTemplates: any) => {
@@ -297,7 +313,6 @@ export default function Demandes() {
     } : l);
 
     setLeads(updated);
-    setLeads(updated);
     await saveRecord('leads', updated.find(l => l.id === lead.id), true);
 
     // Slight delay before closing to show feedback
@@ -328,7 +343,7 @@ export default function Demandes() {
   }), [leads, category, filter]);
 
   // Reset visible count when filters change
-  useEffect(() => { setVisibleCount(15); }, [category, filter]);
+  useEffect(() => { setVisibleCount(10); }, [category, filter]);
 
   const visibleLeads = useMemo(() => filteredLeads.slice(0, visibleCount), [filteredLeads, visibleCount]);
   const hasMore = visibleCount < filteredLeads.length;
@@ -552,14 +567,15 @@ export default function Demandes() {
                           type="file"
                           accept="image/*"
                           className="hidden"
-                          onChange={(e) => {
+                          onChange={async (e) => {
                             const file = e.target.files?.[0];
                             if (file) {
-                              const reader = new FileReader();
-                              reader.onloadend = () => {
-                                setConfirmDetails({ ...confirmDetails, tissuPhoto: reader.result as string });
-                              };
-                              reader.readAsDataURL(file);
+                              try {
+                                const compressed = await compressImage(file);
+                                setConfirmDetails({ ...confirmDetails, tissuPhoto: compressed });
+                              } catch (err) {
+                                console.error('Failed to compress image', err);
+                              }
                             }
                           }}
                         />
@@ -585,14 +601,15 @@ export default function Demandes() {
                           type="file"
                           accept="image/*"
                           className="hidden"
-                          onChange={(e) => {
+                          onChange={async (e) => {
                             const file = e.target.files?.[0];
                             if (file) {
-                              const reader = new FileReader();
-                              reader.onloadend = () => {
-                                setConfirmDetails({ ...confirmDetails, modelePhoto: reader.result as string });
-                              };
-                              reader.readAsDataURL(file);
+                              try {
+                                const compressed = await compressImage(file);
+                                setConfirmDetails({ ...confirmDetails, modelePhoto: compressed });
+                              } catch (err) {
+                                console.error('Failed to compress image', err);
+                              }
                             }
                           }}
                         />
@@ -882,7 +899,7 @@ export default function Demandes() {
                   <div className="relative group/photo shrink-0">
                     <div className="w-14 h-14 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center text-slate-400 group-hover:scale-110 transition-transform overflow-hidden">
                       {lead.photo ? (
-                        <img src={lead.photo} className="w-full h-full object-cover" alt="Model" />
+                        <img src={lead.photo} className="w-full h-full object-cover" alt="Model" loading="lazy" />
                       ) : (
                         <ImageIcon className="w-5 h-5 opacity-50" />
                       )}
@@ -1052,7 +1069,7 @@ export default function Demandes() {
         {hasMore && (
           <div className="flex justify-center pt-8 pb-12">
             <button
-              onClick={() => setVisibleCount(prev => prev + 15)}
+              onClick={() => setVisibleCount(prev => prev + 10)}
               className="px-10 py-4 bg-white border-2 border-slate-100 text-indigo-600 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:border-indigo-200 hover:bg-indigo-50 transition-all shadow-sm flex items-center gap-3 group"
             >
               <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
@@ -1061,7 +1078,8 @@ export default function Demandes() {
           </div>
         )}
       </div>
-      {/* Hidden PDF Template for Export - Optimized for single page capture */}
+      {/* Hidden PDF Template for Export - Only rendered when needed */}
+      {devisLead && (
       <div
         id="devis-pdf-template"
         className="fixed top-0 left-0 opacity-0 pointer-events-none -z-[100] w-[800px] bg-white p-12 text-slate-900 font-sans"
@@ -1155,6 +1173,7 @@ export default function Demandes() {
           </p>
         </div>
       </div>
+      )}
       {/* Message Templates Settings Modal */}
       {showSettings && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">

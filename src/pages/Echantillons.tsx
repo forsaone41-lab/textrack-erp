@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLang } from '../contexts/LangContext';
 import { Commande, loadData, saveRecord, deleteRecord } from '../types';
+import { compressImage } from '../utils/image';
 import { Scissors, CheckCircle, Package, Clock, Palette, Ruler, FileText, Image as ImageIcon, MessageSquare, PhoneCall, Handshake, Globe, X, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
