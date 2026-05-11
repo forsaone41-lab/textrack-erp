@@ -47,7 +47,18 @@ export default function AISpace() {
     complexity: string;
     components: string[];
     costEstimate: string;
+    pieces?: {
+      name: string;
+      consumption: string;
+      fit: string;
+      complexity: string;
+      costEstimate: string;
+      components: string[];
+      mesures: { nom: string; valeurs: Record<string, number> }[];
+    }[];
+    rawAnalysis?: string;
   }>(null);
+  const [activePieceIdx, setActivePieceIdx] = useState(0);
   const [chat, setChat] = useState<{ role: 'ai' | 'user'; text: string }[]>([
     { role: 'ai', text: isAr ? 'أنا مساعدك الذكي BEYA AI. ارفع صورة موديل لأقوم بتحليلها لك.' : 'Bonjour ! Je suis votre assistant BEYA AI. Téléchargez la photo d\'un modèle pour que je puisse l\'analyser.' }
   ]);
@@ -170,28 +181,174 @@ export default function AISpace() {
     reader.readAsDataURL(file);
   };
 
-  const startAnalysis = () => {
+  const startAnalysis = async () => {
+    if (!image) return;
     setAnalyzing(true);
-    // Simulate AI Processing
-    setTimeout(() => {
-      setAnalysisResult({
-        category: isAr ? 'فستان عصري (Robe)' : 'Robe Moderne',
-        consumption: '2.40m - 2.80m',
-        complexity: isAr ? 'متوسطة' : 'Moyenne',
-        components: [
-          isAr ? 'صدر مبطن' : 'Buste doublé',
-          isAr ? 'أكمام طويلة' : 'Manches longues',
-          isAr ? 'سحاب مخفي' : 'Fermeture invisible',
-          isAr ? 'حزام منفصل' : 'Ceinture amovible'
-        ],
-        costEstimate: '85 MAD - 120 MAD'
+    setActivePieceIdx(0);
+
+    const apiKey = localStorage.getItem('beya_gemini_api_key');
+    if (!apiKey) {
+      // Fallback: simulated analysis
+      setTimeout(() => {
+        setAnalysisResult({
+          category: isAr ? 'فستان عصري (Robe)' : 'Robe Moderne',
+          consumption: '2.40m - 2.80m',
+          complexity: isAr ? 'متوسطة' : 'Moyenne',
+          components: [
+            isAr ? 'صدر مبطن' : 'Buste doublé',
+            isAr ? 'أكمام طويلة' : 'Manches longues',
+            isAr ? 'سحاب مخفي' : 'Fermeture invisible',
+            isAr ? 'حزام منفصل' : 'Ceinture amovible'
+          ],
+          costEstimate: '85 MAD - 120 MAD'
+        });
+        setAnalyzing(false);
+        setChat(prev => [...prev, { 
+          role: 'ai', 
+          text: (isAr ? 'تم تحليل الموديل (محاكاة). لتحليل حقيقي ودقيق مع تفصيل كل قطعة، أضف مفتاح Gemini API من زر ⚡ أعلاه!' : 'Analyse simulée. Pour une analyse réelle et détaillée, ajoutez la clé API Gemini !') 
+        }]);
+      }, 2500);
+      return;
+    }
+
+    try {
+      const base64Data = image.split(',')[1];
+      const mimeType = image.split(';')[0].split(':')[1];
+
+      const analysisPrompt = `أنت خبير نسيج وخياطة محترف في مصنع مغربي. حلل هذه الصورة بدقة عالية جداً.
+
+أريد منك تحليل كل قطعة ملابس في الصورة بشكل منفصل (مثلاً إذا في الصورة تيشرت وسروال، حلل كل واحد لوحدو).
+
+لكل قطعة أعطيني:
+1. اسم القطعة (بالعربية والفرنسية)
+2. كمية الثوب المطلوبة بالمتر (لعرض ثوب 1.50م)
+3. نوع الفيت (لاصق/ضيق، عادي/ريكيلار، واسع/لارج) - حلل من الصورة واش الموديل لاصق ولا واسع
+4. مستوى التعقيد (بسيط، متوسط، معقد)
+5. التكلفة التقديرية للخياطة بالدرهم
+6. مكونات القطعة (الأجزاء: صدر، ظهر، أكمام، ياقة، جيوب...)
+7. جدول القياسات لكل مقاس (S, M, L, XL, XXL) - أعطي قياسات واقعية:
+   - للجزء العلوي: الصدر، الكتف، الطول، الكم، الخصر
+   - للسروال: الخصر، الورك، الطول، الفخذ، أسفل الرجل
+
+أجب بصيغة JSON فقط بدون أي نص إضافي، بهذا الشكل:
+{
+  "category": "اسم عام للموديل",
+  "totalConsumption": "X.XXm - X.XXm",
+  "totalCost": "XX - XX MAD",
+  "complexity": "متوسطة",
+  "pieces": [
+    {
+      "name": "تيشرت / T-Shirt",
+      "consumption": "1.20m - 1.50m",
+      "fit": "عادي (Regular)",
+      "complexity": "بسيط",
+      "costEstimate": "25 - 40 MAD",
+      "components": ["صدر أمامي", "ظهر", "أكمام قصيرة", "ياقة دائرية"],
+      "mesures": [
+        {"nom": "الصدر (Poitrine)", "valeurs": {"S": 90, "M": 96, "L": 102, "XL": 108, "XXL": 114}},
+        {"nom": "الكتف (Épaules)", "valeurs": {"S": 42, "M": 44, "L": 46, "XL": 48, "XXL": 50}},
+        {"nom": "الطول (Longueur)", "valeurs": {"S": 68, "M": 70, "L": 72, "XL": 74, "XXL": 76}},
+        {"nom": "الكم (Manche)", "valeurs": {"S": 20, "M": 21, "L": 22, "XL": 23, "XXL": 24}}
+      ]
+    }
+  ]
+}`;
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            role: "user",
+            parts: [
+              { text: analysisPrompt },
+              { inlineData: { data: base64Data, mimeType } }
+            ]
+          }],
+          generationConfig: {
+            temperature: 0.3,
+          }
+        })
       });
+
+      const data = await response.json();
+      let rawText = '';
+      if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
+        rawText = data.candidates[0].content.parts[0].text;
+      }
+
+      // Extract JSON from response (handle markdown code blocks)
+      let jsonStr = rawText;
+      const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) jsonStr = jsonMatch[1].trim();
+      
+      try {
+        const parsed = JSON.parse(jsonStr);
+        const result: any = {
+          category: parsed.category || 'موديل',
+          consumption: parsed.totalConsumption || parsed.consumption || '—',
+          complexity: parsed.complexity || 'متوسطة',
+          costEstimate: parsed.totalCost || parsed.costEstimate || '—',
+          components: [],
+          pieces: [],
+          rawAnalysis: rawText
+        };
+
+        if (parsed.pieces && Array.isArray(parsed.pieces)) {
+          result.pieces = parsed.pieces.map((p: any) => ({
+            name: p.name || 'قطعة',
+            consumption: p.consumption || '—',
+            fit: p.fit || 'عادي',
+            complexity: p.complexity || 'متوسط',
+            costEstimate: p.costEstimate || '—',
+            components: p.components || [],
+            mesures: (p.mesures || []).map((m: any) => ({
+              nom: m.nom || '',
+              valeurs: m.valeurs || {}
+            }))
+          }));
+          // Flatten all components
+          result.components = result.pieces.flatMap((p: any) => p.components);
+        }
+
+        // Update custom measurements from first piece
+        if (result.pieces.length > 0 && result.pieces[0].mesures.length > 0) {
+          setCustomMesures(result.pieces[0].mesures);
+        }
+
+        setAnalysisResult(result);
+        setAnalyzing(false);
+
+        // Build rich chat message
+        let chatMsg = isAr ? '✅ تم تحليل الموديل بنجاح بالذكاء الاصطناعي!\n\n' : '✅ Analyse IA terminée !\n\n';
+        if (result.pieces.length > 0) {
+          result.pieces.forEach((p: any, i: number) => {
+            chatMsg += `📦 ${i+1}. ${p.name}\n`;
+            chatMsg += `   🧵 ${isAr ? 'الثوب' : 'Tissu'}: ${p.consumption}\n`;
+            chatMsg += `   📐 ${isAr ? 'الفيت' : 'Fit'}: ${p.fit}\n`;
+            chatMsg += `   💰 ${isAr ? 'التكلفة' : 'Coût'}: ${p.costEstimate}\n\n`;
+          });
+        }
+        chatMsg += isAr ? '⬇️ شوف التفاصيل الكاملة في الأسفل — يمكنك تبديل بين القطع!' : '⬇️ Voir les détails complets ci-dessous.';
+        setChat(prev => [...prev, { role: 'ai', text: chatMsg }]);
+
+      } catch (parseErr) {
+        // JSON parsing failed, show raw text
+        setAnalysisResult({
+          category: isAr ? 'تحليل الموديل' : 'Analyse du modèle',
+          consumption: '—',
+          complexity: '—',
+          components: [],
+          costEstimate: '—',
+          rawAnalysis: rawText
+        });
+        setAnalyzing(false);
+        setChat(prev => [...prev, { role: 'ai', text: rawText }]);
+      }
+    } catch (err: any) {
       setAnalyzing(false);
-      setChat(prev => [...prev, { 
-        role: 'ai', 
-        text: isAr ? 'تم تحليل الموديل بنجاح! هذا الفستان يحتاج لحوالي 2.60 متر من الثوب. هل تريد مني تفصيل مراحل الإنتاج؟' : 'Analyse terminée ! Cette robe nécessite environ 2.60m de tissu. Voulez-vous que je détaille les étapes de production ?' 
-      }]);
-    }, 2500);
+      setChat(prev => [...prev, { role: 'ai', text: 'خطأ في التحليل: ' + err.message }]);
+    }
   };
 
   const getSmartReply = (userMsg: string): string => {
@@ -398,24 +555,52 @@ export default function AISpace() {
                   </div>
                </div>
 
-               {/* Metrics Row */}
-               <div className="grid grid-cols-3 gap-4">
-                  <div className="bg-slate-50/50 rounded-3xl p-5 border border-slate-100 text-center">
-                     <Ruler className="w-5 h-5 text-indigo-500 mx-auto mb-2" />
-                     <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'استهلاك الثوب' : 'Consommation'}</span>
-                     <span className="text-xs font-black text-slate-800">{analysisResult.consumption}</span>
-                  </div>
-                  <div className="bg-slate-50/50 rounded-3xl p-5 border border-slate-100 text-center">
-                     <Scissors className="w-5 h-5 text-emerald-500 mx-auto mb-2" />
-                     <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'التعقيد' : 'Complexité'}</span>
-                     <span className="text-xs font-black text-emerald-700 uppercase tracking-wider">{analysisResult.complexity}</span>
-                  </div>
-                  <div className="bg-slate-50/50 rounded-3xl p-5 border border-slate-100 text-center">
-                     <DollarSign className="w-5 h-5 text-amber-500 mx-auto mb-2" />
-                     <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'التكلفة التقديرية' : 'Coût Estimé'}</span>
-                     <span className="text-xs font-black text-slate-800">{analysisResult.costEstimate}</span>
-                  </div>
-               </div>
+               {/* Piece Tabs */}
+               {analysisResult.pieces && analysisResult.pieces.length > 1 && (
+                 <div className="flex gap-2 flex-wrap">
+                    {analysisResult.pieces.map((p, idx) => (
+                      <button key={idx} onClick={() => { setActivePieceIdx(idx); if (p.mesures?.length) setCustomMesures(p.mesures); }}
+                        className={`px-5 py-2.5 rounded-2xl text-[11px] font-black uppercase tracking-wider transition-all ${activePieceIdx === idx ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-100'}`}>
+                        📦 {p.name}
+                      </button>
+                    ))}
+                 </div>
+               )}
+
+               {/* Metrics Row - show active piece or global */}
+               {(() => {
+                 const piece = analysisResult.pieces?.[activePieceIdx];
+                 const consumption = piece?.consumption || analysisResult.consumption;
+                 const complexity = piece?.complexity || analysisResult.complexity;
+                 const cost = piece?.costEstimate || analysisResult.costEstimate;
+                 const fit = piece?.fit;
+                 return (
+                   <div className={`grid ${fit ? 'grid-cols-4' : 'grid-cols-3'} gap-4`}>
+                      <div className="bg-slate-50/50 rounded-3xl p-5 border border-slate-100 text-center">
+                         <Ruler className="w-5 h-5 text-indigo-500 mx-auto mb-2" />
+                         <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'استهلاك الثوب' : 'Consommation'}</span>
+                         <span className="text-xs font-black text-slate-800">{consumption}</span>
+                      </div>
+                      <div className="bg-slate-50/50 rounded-3xl p-5 border border-slate-100 text-center">
+                         <Scissors className="w-5 h-5 text-emerald-500 mx-auto mb-2" />
+                         <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'التعقيد' : 'Complexité'}</span>
+                         <span className="text-xs font-black text-emerald-700 uppercase tracking-wider">{complexity}</span>
+                      </div>
+                      {fit && (
+                        <div className="bg-slate-50/50 rounded-3xl p-5 border border-slate-100 text-center">
+                           <Sparkles className="w-5 h-5 text-violet-500 mx-auto mb-2" />
+                           <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الفيت / القصة' : 'Fit / Coupe'}</span>
+                           <span className="text-xs font-black text-violet-700">{fit}</span>
+                        </div>
+                      )}
+                      <div className="bg-slate-50/50 rounded-3xl p-5 border border-slate-100 text-center">
+                         <DollarSign className="w-5 h-5 text-amber-500 mx-auto mb-2" />
+                         <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'التكلفة التقديرية' : 'Coût Estimé'}</span>
+                         <span className="text-xs font-black text-slate-800">{cost}</span>
+                      </div>
+                   </div>
+                 );
+               })()}
             </div>
           )}
         </div>
@@ -462,7 +647,7 @@ export default function AISpace() {
               <div className="space-y-4 animate-in fade-in duration-300">
                  {chat.map((c, i) => (
                     <div key={i} className={`flex ${c.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                       <div className={`max-w-[85%] p-4 rounded-3xl text-xs font-medium leading-relaxed shadow-sm ${
+                       <div className={`max-w-[85%] p-4 rounded-3xl text-xs font-medium leading-relaxed shadow-sm whitespace-pre-line ${
                           c.role === 'user' 
                             ? 'bg-indigo-600 text-white rounded-br-none' 
                             : 'bg-slate-800 text-slate-200 border border-slate-700/50 rounded-bl-none'
@@ -506,25 +691,30 @@ export default function AISpace() {
              <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-6 ${isAr ? 'flex-row-reverse' : ''}`}>
                 <div className={isAr ? 'text-right' : ''}>
                    <h3 className="font-black text-slate-900 text-base">{isAr ? 'جدول المقاسات التفاعلي' : 'Matrice des Mesures Interactive'}</h3>
-                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{isAr ? 'تخصيص القياسات حسب رغبتك' : 'Ajustez les valeurs pour le patron'}</p>
+                   <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mt-0.5">
+                     {analysisResult.pieces?.[activePieceIdx]?.name || (isAr ? 'تخصيص القياسات حسب رغبتك' : 'Ajustez les valeurs pour le patron')}
+                   </p>
                 </div>
                 
-                {/* Category Switcher inside Results */}
-                <div className="flex gap-1.5 flex-wrap">
-                   {(['Robe', 'Caftan', 'Djellaba', 'Chemise', 'Pantalon'] as const).map(cat => (
-                      <button
-                        key={cat}
-                        onClick={() => handleCategoryChange(cat)}
-                        className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${
-                          selectedCategory === cat 
-                            ? 'bg-indigo-600 text-white shadow-md' 
-                            : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
-                        }`}
-                      >
+                {analysisResult.pieces && analysisResult.pieces.length > 0 ? (
+                  <div className="flex gap-1.5 flex-wrap">
+                     {analysisResult.pieces.map((p, idx) => (
+                       <button key={idx} onClick={() => { setActivePieceIdx(idx); if (p.mesures?.length) setCustomMesures(p.mesures); }}
+                         className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${activePieceIdx === idx ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
+                         📦 {p.name}
+                       </button>
+                     ))}
+                  </div>
+                ) : (
+                  <div className="flex gap-1.5 flex-wrap">
+                     {(['Robe', 'Caftan', 'Djellaba', 'Chemise', 'Pantalon'] as const).map(cat => (
+                       <button key={cat} onClick={() => handleCategoryChange(cat)}
+                         className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${selectedCategory === cat ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
                          {cat}
-                      </button>
-                   ))}
-                </div>
+                       </button>
+                     ))}
+                  </div>
+                )}
              </div>
 
              <div className="overflow-x-auto border border-slate-100 rounded-2xl">
@@ -564,7 +754,7 @@ export default function AISpace() {
                    <h4 className="font-black text-xs text-slate-900 uppercase tracking-tighter">{isAr ? 'مكونات وقطع الموديل المقترحة' : 'Composants & Pièces du modèle'}</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                   {analysisResult.components.map((c, i) => (
+                   {(analysisResult.pieces?.[activePieceIdx]?.components || analysisResult.components).map((c, i) => (
                      <div key={i} className={`flex items-center gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-100 ${isAr ? 'flex-row-reverse' : ''}`}>
                         <ChevronRight className={`w-4 h-4 text-indigo-400 ${isAr ? 'rotate-180' : ''}`} />
                         <span className="text-[11px] font-black text-slate-600">{c}</span>
