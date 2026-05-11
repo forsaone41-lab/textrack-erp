@@ -55,8 +55,12 @@ export default function AISpace() {
       costEstimate: string;
       components: string[];
       mesures: { nom: string; valeurs: Record<string, number> }[];
+      fabricSuggested?: string;
+      fabricAlternatives?: { name: string; pros: string; cons: string }[];
     }[];
     rawAnalysis?: string;
+    fabricSuggested?: string;
+    fabricAlternatives?: { name: string; pros: string; cons: string }[];
   }>(null);
   const [activePieceIdx, setActivePieceIdx] = useState(0);
   const [chat, setChat] = useState<{ role: 'ai' | 'user'; text: string }[]>([
@@ -224,7 +228,7 @@ export default function AISpace() {
       const base64Data = image.split(',')[1];
       const mimeType = image.split(';')[0].split(':')[1];
 
-      const analysisPrompt = `أنت خبير نسيج وخياطة محترف في مصنع مغربي. حلل هذه الصورة بدقة عالية جداً.
+       const analysisPrompt = `أنت خبير نسيج وخياطة محترف في مصنع مغربي. حلل هذه الصورة بدقة عالية جداً.
 
 أريد منك تحليل كل قطعة ملابس في الصورة بشكل منفصل (مثلاً إذا في الصورة تيشرت وسروال، حلل كل واحد لوحدو).
 
@@ -239,6 +243,7 @@ export default function AISpace() {
    - للجزء العلوي: الصدر، الكتف، الطول، الكم، الخصر.
    - تنبيه هام جداً: إذا كانت القطعة العلوية طويلة (تصل أو تتجاوز منطقة الأرداف/الورك، مثل الفستان، الجلابة، القفطان، أو البلوزة الطويلة Tunique)، يجب عليك إضافة قياس "الورك (Hanches)" كقياس سادس أساسي في جدول هذه القطعة!
    - للسروال: الخصر، الورك، الطول، الفخذ، أسفل الرجل.
+8. نوع الثوب الرئيسي المقترح لصناعة هذه القطعة مع اقتراحين بديلين للثوب، مع ذكر المزايا والعيوب لكل بديل بالدارجة المغربية بشكل مختصر ومفيد للمصنع.
 
 أجب بصيغة JSON فقط بدون أي نص إضافي، بهذا الشكل:
 {
@@ -246,6 +251,19 @@ export default function AISpace() {
   "totalConsumption": "X.XXm - X.XXm",
   "totalCost": "XX - XX MAD",
   "complexity": "متوسطة",
+  "fabricSuggested": "نوع الثوب الرئيسي المقترح للموديل كامل",
+  "fabricAlternatives": [
+    {
+      "name": "كريب ريحانة / Crêpe Rayhana",
+      "pros": "طايح، مكيتبينش، وساهل في الخياطة ومريح",
+      "cons": "كيشرب شوية في المصلوح"
+    },
+    {
+      "name": "كتان لينوه / Lin",
+      "pros": "بارد في الصيف، مظهر طبيعي فخم ومريح",
+      "cons": "كيتكمش بسرعة وكيبغي المصلوح ديما"
+    }
+  ],
   "pieces": [
     {
       "name": "تيشرت / T-Shirt",
@@ -254,6 +272,14 @@ export default function AISpace() {
       "complexity": "بسيط",
       "costEstimate": "25 - 40 MAD",
       "components": ["صدر أمامي", "ظهر", "أكمام قصيرة", "ياقة دائرية"],
+      "fabricSuggested": "قطن ليكرا / Coton Lycra",
+      "fabricAlternatives": [
+        {
+          "name": "ميكروفيبر / Microfibre",
+          "pros": "خفيف جداً وسريع الجفاف",
+          "cons": "مكيمتصش العرق بحال القطن الطبيعي"
+        }
+      ],
       "mesures": [
         {"nom": "الصدر (Poitrine)", "valeurs": {"S": 90, "M": 96, "L": 102, "XL": 108, "XXL": 114}},
         {"nom": "الكتف (Épaules)", "valeurs": {"S": 42, "M": 44, "L": 46, "XL": 48, "XXL": 50}},
@@ -301,6 +327,8 @@ export default function AISpace() {
           costEstimate: parsed.totalCost || parsed.costEstimate || '—',
           components: [],
           pieces: [],
+          fabricSuggested: parsed.fabricSuggested || '—',
+          fabricAlternatives: parsed.fabricAlternatives || [],
           rawAnalysis: rawText
         };
 
@@ -312,6 +340,8 @@ export default function AISpace() {
             complexity: p.complexity || 'متوسط',
             costEstimate: p.costEstimate || '—',
             components: p.components || [],
+            fabricSuggested: p.fabricSuggested || '',
+            fabricAlternatives: p.fabricAlternatives || [],
             mesures: (p.mesures || []).map((m: any) => ({
               nom: m.nom || '',
               valeurs: m.valeurs || {}
@@ -670,6 +700,65 @@ export default function AISpace() {
                         {piece.mesures && piece.mesures.length > 0 && (
                           <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest pt-2 border-t border-slate-100">
                             {isAr ? `${piece.mesures.length} قياسات متاحة — شوف الجدول الكامل في الأسفل ⬇️` : `${piece.mesures.length} mesures disponibles — voir le tableau ci-dessous ⬇️`}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Fabric Suggestions and Alternatives with Pros/Cons */}
+                    {((piece && (piece.fabricSuggested || (piece.fabricAlternatives && piece.fabricAlternatives.length > 0))) || 
+                      (analysisResult.fabricSuggested || (analysisResult.fabricAlternatives && analysisResult.fabricAlternatives.length > 0))) && (
+                      <div className="bg-gradient-to-br from-indigo-950/5 to-slate-50 rounded-3xl p-6 border border-indigo-100/40 space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                          <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-2xl">
+                            <Package className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-black text-sm text-slate-800">{isAr ? 'تحليل واقتراحات الثوب المناسب' : 'Analyse & Suggestions de Tissus'}</h4>
+                            <p className="text-[10px] text-slate-400 font-bold">{isAr ? 'توصيات من خبير النسيج بالعيوب والمميزات لكل ثوب' : 'Recommandations d\'expert avec avantages et inconvénients'}</p>
+                          </div>
+                        </div>
+
+                        {/* Primary suggested fabric */}
+                        <div className={`bg-white/80 p-4 rounded-2xl border border-slate-100 flex items-center justify-between ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                          <div>
+                            <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'الثوب الرئيسي المقترح' : 'Tissu Principal Recommandé'}</span>
+                            <span className="text-sm font-black text-indigo-600">
+                              {piece?.fabricSuggested || analysisResult.fabricSuggested || (isAr ? 'لم يحدد' : 'Non spécifié')}
+                            </span>
+                          </div>
+                          <span className="px-3.5 py-1.5 bg-indigo-50 border border-indigo-100 text-[10px] font-black text-indigo-700 rounded-full">
+                            {isAr ? 'مثالي للموديل' : 'Idéal'}
+                          </span>
+                        </div>
+
+                        {/* Alternative Suggested Fabrics */}
+                        {((piece?.fabricAlternatives && piece.fabricAlternatives.length > 0) || 
+                          (analysisResult.fabricAlternatives && analysisResult.fabricAlternatives.length > 0)) && (
+                          <div className="space-y-3">
+                            <h5 className={`text-[10px] font-black text-slate-400 uppercase tracking-widest ${isAr ? 'text-right' : ''}`}>
+                              {isAr ? 'خيارات أثواب بديلة' : 'Options de Tissus Alternatives'}
+                            </h5>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {((piece?.fabricAlternatives || analysisResult.fabricAlternatives) as any[]).map((alt, ai) => (
+                                <div key={ai} className="bg-white/95 p-4 rounded-2xl border border-slate-100 shadow-sm space-y-3 relative overflow-hidden group hover:border-indigo-100 hover:shadow-md transition-all">
+                                  <div className={`flex justify-between items-center ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                                    <h6 className="text-xs font-black text-slate-800">{alt.name}</h6>
+                                    <span className="text-[8px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{isAr ? 'بديل' : 'Alternative'}</span>
+                                  </div>
+                                  <div className="space-y-2 text-[10px] leading-relaxed">
+                                    <div className={`flex gap-1.5 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                                      <span className="text-emerald-500 font-black">✔</span>
+                                      <span className="text-slate-600 font-medium"><strong className="text-emerald-600 font-bold">{isAr ? 'المزايا: ' : 'Membres: '}</strong>{alt.pros}</span>
+                                    </div>
+                                    <div className={`flex gap-1.5 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                                      <span className="text-rose-500 font-black">✘</span>
+                                      <span className="text-slate-600 font-medium"><strong className="text-rose-600 font-bold">{isAr ? 'العيوب: ' : 'Cons: '}</strong>{alt.cons}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         )}
                       </div>
