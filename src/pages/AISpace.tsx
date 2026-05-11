@@ -548,7 +548,7 @@ export default function AISpace() {
         
         {/* Left: Visualization & Analysis */}
         <div className="lg:col-span-7 space-y-6">
-          <div className="bg-white rounded-[40px] border-2 border-slate-50 shadow-sm p-8 h-[400px] flex flex-col relative overflow-hidden group">
+          <div className="bg-white rounded-[40px] border-2 border-slate-50 shadow-sm p-8 h-[600px] flex flex-col relative overflow-hidden group">
             {!image ? (
               <div className="flex-1 flex flex-col items-center justify-center text-slate-300 border-4 border-dashed border-slate-50 rounded-[32px] hover:border-indigo-100 hover:text-indigo-200 transition-all cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                  <Camera className="w-16 h-16 mb-4" />
@@ -556,7 +556,7 @@ export default function AISpace() {
               </div>
             ) : (
               <div className="flex-1 relative rounded-[32px] overflow-hidden">
-                <img src={image} className="w-full h-full object-cover" alt="Model" />
+                <img src={image} className="w-full h-full object-contain" alt="Model" />
                 {/* Zoom Button - always visible */}
                 <button onClick={() => setShowFullImage(true)} className="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-sm p-3 rounded-2xl text-slate-700 hover:bg-white hover:scale-105 transition-all shadow-lg border border-slate-100" title={isAr ? 'تكبير الصورة' : 'Agrandir'}>
                   <Eye className="w-5 h-5" />
