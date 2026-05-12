@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye } from 'lucide-react';
+import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { useNavigate } from 'react-router-dom';
 import { saveRecord, genId, FicheTechnique, loadLeads, Lead } from '../types';
@@ -82,6 +82,7 @@ export default function AISpace() {
   // Gemini API integration
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState('');
+  const [customAlert, setCustomAlert] = useState<{ title: string; message: string; onConfirm?: () => void; isError?: boolean } | null>(null);
 
   // Custom Measurements States
   const [selectedCategory, setSelectedCategory] = useState<'Robe' | 'Caftan' | 'Djellaba' | 'Chemise' | 'Pantalon'>('Robe');
@@ -171,15 +172,20 @@ export default function AISpace() {
 
       await saveRecord('fiches', newFT);
 
-      alert(isAr
-        ? `✅ تم بنجاح تصدير الموديل "${analysisResult.category}" إلى البطاقات التقنية! يمكنك الآن إكمال الباطرون هناك.`
-        : `✅ Modèle "${analysisResult.category}" exporté avec succès vers les Fiches Techniques !`
-      );
-
-      navigate('/fiches-techniques');
+      setCustomAlert({
+        title: isAr ? "تصدير ناجح للبطاقة التقنية 🎉" : "Exportation Réussie 🎉",
+        message: isAr
+          ? `تم بنجاح تصدير الموديل "${analysisResult.category}" إلى البطاقات التقنية! يمكنك الآن إكمال الباطرون والقياسات هناك.`
+          : `Le modèle "${analysisResult.category}" a été exporté avec succès vers les Fiches Techniques ! Vous pouvez maintenant y gérer le patronage.`,
+        onConfirm: () => navigate('/fiches-techniques')
+      });
     } catch (err) {
       console.error("Export Error:", err);
-      alert(isAr ? "حدث خطأ أثناء التصدير" : "Erreur lors de l'exportation");
+      setCustomAlert({
+        title: isAr ? "خطأ في التصدير ❌" : "Erreur d'exportation ❌",
+        message: isAr ? "حدث خطأ أثناء تصدير الموديل. يرجى المحاولة مرة أخرى." : "Une erreur est survenue lors de l'exportation. Veuillez réessayer.",
+        isError: true
+      });
     } finally {
       setExporting(false);
     }
@@ -1064,6 +1070,39 @@ export default function AISpace() {
             <X className="w-6 h-6" />
           </button>
           <img src={image} className="max-w-[95vw] max-h-[90vh] object-contain rounded-3xl shadow-2xl" alt="Model Full" onClick={e => e.stopPropagation()} />
+        </div>
+      )}
+      {/* Beautiful Custom Alert Modal */}
+      {customAlert && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white rounded-[40px] border-2 border-slate-100 w-full max-w-md p-8 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col items-center text-center">
+            {/* Top decorative badge */}
+            <div className={`w-16 h-16 rounded-3xl flex items-center justify-center mb-6 shadow-lg ${
+              customAlert.isError 
+                ? 'bg-rose-50 border border-rose-100 text-rose-500 shadow-rose-200/50' 
+                : 'bg-emerald-50 border border-emerald-100 text-emerald-500 shadow-emerald-200/50'
+            }`}>
+              {customAlert.isError ? <X className="w-8 h-8" /> : <Check className="w-8 h-8" />}
+            </div>
+
+            <h3 className="text-lg font-black text-slate-900 mb-2">{customAlert.title}</h3>
+            <p className="text-xs font-semibold leading-relaxed text-slate-500 mb-6">{customAlert.message}</p>
+
+            <button
+              onClick={() => {
+                const onConf = customAlert.onConfirm;
+                setCustomAlert(null);
+                if (onConf) onConf();
+              }}
+              className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-md ${
+                customAlert.isError
+                  ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/20'
+                  : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20'
+              }`}
+            >
+              {isAr ? 'موافق' : 'D\'accord'}
+            </button>
+          </div>
         </div>
       )}
     </div>
