@@ -814,9 +814,9 @@ export default function AISpace() {
             <div className="space-y-4 animate-in fade-in duration-300">
               {chat.map((c, i) => (
                 <div key={i} className={`flex ${c.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] p-4 rounded-3xl text-xs font-medium leading-relaxed whitespace-pre-line ${c.role === 'user'
+                  <div className={`max-w-[85%] p-4 sm:p-5 rounded-3xl text-sm font-semibold leading-loose whitespace-pre-line ${c.role === 'user'
                       ? 'bg-indigo-600 text-white rounded-br-none shadow-md shadow-indigo-600/20'
-                      : 'bg-slate-50 text-slate-700 border border-slate-100 rounded-bl-none shadow-sm'
+                      : 'bg-slate-50 text-slate-800 border border-slate-100 rounded-bl-none shadow-sm'
                     }`}>
                     {c.text}
                   </div>
