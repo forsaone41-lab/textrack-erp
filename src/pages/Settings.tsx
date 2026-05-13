@@ -57,10 +57,34 @@ export default function Settings() {
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         {/* Identité */}
         <div className="p-6 border-b border-slate-100">
-          <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-indigo-500" />
-            {t('identite_visuelle', lang)}
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-indigo-500" />
+              {t('identite_visuelle', lang)}
+            </h2>
+            <button
+              onClick={() => {
+                if (window.confirm(isAr ? 'واش متأكد بغيتي ترجع اللوغوات الأصلية (logo.png)؟' : 'Voulez-vous vraiment restaurer les logos par défaut ?')) {
+                  setProfile({
+                    ...profile,
+                    logoUrl: '/logo.png',
+                    logoLanding: '/logo.png',
+                    logoAdmin: '/logo.png',
+                    logoClient: '/logo.png',
+                    logoInvoice: '/logo.png',
+                    logoLogin: '/logo.png',
+                    logoMobileHeader: '/logo.png',
+                    logoFooter: '/logo.png',
+                    logoAppIcon: '/logo.png'
+                  });
+                  setSaved(false);
+                }
+              }}
+              className="text-[10px] bg-rose-50 text-rose-600 px-3 py-1.5 rounded-lg font-bold uppercase tracking-widest hover:bg-rose-100 transition"
+            >
+              {isAr ? 'إرجاع اللوغو الأصلي' : 'Réinitialiser Logos'}
+            </button>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1">{t('nom_societe', lang)}</label>
