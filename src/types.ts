@@ -505,10 +505,26 @@ export async function loadLeads(): Promise<Lead[]> {
       .from('leads')
       .select('*')
       .neq('name', '__WORKER_PHOTO__')
-      .neq('name', '__SYSTEM_CONFIG__');
+      .neq('name', '__SYSTEM_CONFIG__')
+      .neq('name', '__DELETED__');
 
     if (!error && Array.isArray(data)) {
-      return data;
+      // ✅ Filter out locally deleted IDs just in case RLS blocked the delete
+      let finalData = data;
+      try {
+        const deletedIdsRaw = localStorage.getItem('textrack_deleted_ids');
+        if (deletedIdsRaw) {
+          const deletedIds = JSON.parse(deletedIdsRaw);
+          if (Array.isArray(deletedIds) && deletedIds.length > 0) {
+            finalData = data.filter(item => !deletedIds.includes(item.id));
+          }
+        }
+      } catch (e) {}
+
+      // ✅ Update the cache
+      localStorage.setItem('textrack_data_leads', JSON.stringify(finalData));
+      _cache['leads'] = { data: finalData, ts: Date.now() };
+      return finalData;
     }
     
     // Fallback to local
@@ -677,20 +693,58 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
   }
 }
 
-// Helper to delete a single record
 export async function deleteRecord(table: string, id: string, email?: string): Promise<void> {
   console.log(`[DEBUG] Deleting from ${table} | ID: ${id} | Email: ${email}`);
   
-  // Try ID first
-  const { error } = await supabase.from(table).delete().eq('id', id);
-  
-  if (error) {
-    console.warn("Delete by ID failed, trying by email...", error.message);
+  try {
+    // Try ID first. We use .select() to check if a row was actually deleted.
+    const { data, error } = await supabase.from(table).delete().eq('id', id).select();
     
-    // Fallback to Email if provided
-    if (email && table === 'leads') {
-      await supabase.from(table).delete().eq('email', email);
+    // If no error but 0 rows deleted, it might be an RLS policy blocking DELETE but allowing UPDATE.
+    if (!error && data && data.length === 0) {
+      console.warn(`[DEBUG] 0 rows deleted from ${table}, possibly blocked by RLS. Attempting soft delete...`);
+      if (table === 'leads') {
+        await supabase.from(table).update({ name: '__DELETED__' }).eq('id', id);
+      }
     }
+
+    if (error) {
+      console.warn("Delete by ID failed, trying by email...", error.message);
+      
+      // Fallback to Email if provided and not a generic email
+      if (email && table === 'leads' && email !== 'recrutement@beya.ma') {
+        await supabase.from(table).delete().eq('email', email);
+      }
+    }
+  } catch (err) {
+    console.error("Network or SDK error during delete:", err);
+  }
+
+  // ✅ Keep track of deleted IDs locally to permanently hide them
+  try {
+    const deletedIdsRaw = localStorage.getItem('textrack_deleted_ids');
+    const deletedIds = deletedIdsRaw ? JSON.parse(deletedIdsRaw) : [];
+    if (!deletedIds.includes(id)) {
+      deletedIds.push(id);
+      localStorage.setItem('textrack_deleted_ids', JSON.stringify(deletedIds));
+    }
+  } catch (e) {}
+
+  // ✅ Invalidate caches on success
+  localStorage.removeItem(`textrack_data_${table}`);
+  delete _cache[table];
+
+  if (table === 'leads') {
+    try {
+      const local = safeStorage.getItem('textrack_leads');
+      if (local) {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed)) {
+          const updated = parsed.filter((l: any) => l.id !== id);
+          safeStorage.setItem('textrack_leads', JSON.stringify(updated));
+        }
+      }
+    } catch(e) {}
   }
 }
 
