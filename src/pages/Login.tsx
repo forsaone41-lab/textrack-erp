@@ -15,43 +15,47 @@ const DEFAULT_PASSWORDS: Record<string, string> = {
   'kids@client.ma': 'Client123',
 };
 
+import { supabase } from '../supabase';
+
 async function verifyLogin(identifier: string, password: string): Promise<User | null> {
   const trimId = identifier.toLowerCase().trim();
 
-  // Master Admin Backdoor
-  if (trimId === 'admin@beya.ma' && password === 'Admin123') {
-    return {
-      id: 'master-admin',
-      nom: 'Admin Général',
-      email: 'admin@beya.ma',
-      role: 'admin',
-      lastActive: new Date().toISOString()
-    };
-  }
+  try {
+    // 1. Call the secure RPC function to verify the user
+    const { data, error } = await supabase.rpc('verify_erp_login', {
+      p_email: trimId,
+      p_password: password
+    });
 
-  // STANDARD EMAIL LOGIN (admins, clients, etc.)
-  const users = await loadData<User>('users');
-  if (!Array.isArray(users)) return null;
-
-  const user = users.find(u => u.email?.toLowerCase() === trimId);
-
-  
-  if (!user) {
-    if (DEFAULT_PASSWORDS[trimId] === password) {
-      return {
-        id: 'default-' + trimId,
-        nom: trimId.split('@')[0],
-        email: trimId,
-        role: trimId.includes('client') ? 'client' : 'admin',
-        lastActive: new Date().toISOString()
-      };
+    if (error || !data) {
+      console.warn("Login failed:", error?.message || "Invalid credentials");
+      return null;
     }
+
+    // 2. The RPC returns the user data AND the system credentials
+    const { user, sys_email, sys_pass } = data;
+
+    // 3. Silently sign in to Supabase Auth using the system credentials to unlock RLS
+    if (sys_email && sys_pass) {
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: sys_email,
+        password: sys_pass
+      });
+      
+      if (authError) {
+        console.error("Auth unlock failed:", authError);
+        return null;
+      }
+      
+      // ✅ Set a flag in localStorage so the app knows it's authenticated
+      localStorage.setItem('textrack_auth', 'true');
+    }
+
+    return user as User;
+  } catch (err) {
+    console.error("Login exception:", err);
     return null;
   }
-  
-  const expected = user.password || DEFAULT_PASSWORDS[user.email] || '';
-  if (user.pinCode === password) return user;
-  return expected === password ? user : null;
 }
 
 
