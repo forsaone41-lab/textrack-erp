@@ -679,6 +679,12 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
         return;
       }
 
+      // Handle Quota Exceeded error specifically
+      if (error.message.includes('exceed_egress_quota')) {
+        if (!silent) alert('السيرفر توقف مؤقتاً حيت استهلكتي الكوطا المجانية (السبب هو داك السكرين شوت الكبير اللي دخلتي). خاصك تدخل لـ Supabase وتقاد الحساب ديالك.');
+        return;
+      }
+
       // Only alert if it's NOT a missing column error
       if (!silent) alert(`Erreur de sauvegarde dans ${table} : ${error.message}`);
     }
