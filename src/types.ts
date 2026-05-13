@@ -545,8 +545,12 @@ export async function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'>) {
     status: 'new'
   };
   
-  // Save to Supabase (primary) - setting silent to false to see errors
-  await saveRecord('leads', newLead, false);
+  // Save to Supabase (primary) - Use pure INSERT for public users to respect RLS
+  const { error } = await supabase.from('leads').insert(newLead);
+  if (error) {
+    console.error("Erreur d'insertion lead:", error);
+    throw error;
+  }
   
   // Also save to local (legacy fallback)
   const leads = await loadLeads();
