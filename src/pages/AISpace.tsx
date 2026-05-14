@@ -167,17 +167,28 @@ export default function AISpace() {
       };
 
       let ftModele = analysisResult.category;
+      const fitStr = analysisResult.fit || (analysisResult.pieces?.[0]?.fit) || '';
+      const compStr = analysisResult.complexity || '';
+
+      const extrasAr = ` | القصة: ${fitStr || 'عادي'} | الصعوبة: ${compStr || 'متوسط'}`;
+      const extrasFr = ` | Coupe: ${fitStr || 'Regular'} | Complexité: ${compStr || 'Moyenne'}`;
+
       let ftDescription = isAr
-        ? `المكونات: ${analysisResult.components.join('، ')}`
-        : `Composants: ${analysisResult.components.join(', ')}`;
+        ? `المكونات: ${analysisResult.components.join('، ')}${extrasAr}`
+        : `Composants: ${analysisResult.components.join(', ')}${extrasFr}`;
       let ftMesures = customMesures;
       let ftConso = parseConso(analysisResult.consumption) || 2.50;
 
       if (mode === 'current' && analysisResult.pieces && analysisResult.pieces.length > 0) {
         const p = analysisResult.pieces[activePieceIdx];
         if (p) {
+          const pFit = p.fit || fitStr;
+          const pComp = p.complexity || compStr;
+          const pExtAr = ` | القصة: ${pFit || 'عادي'} | الصعوبة: ${pComp || 'متوسط'}`;
+          const pExtFr = ` | Coupe: ${pFit || 'Regular'} | Complexité: ${pComp || 'Moyenne'}`;
+
           ftModele = p.name;
-          ftDescription = isAr ? `المكونات: ${(p.components || []).join('، ')}` : `Composants: ${(p.components || []).join(', ')}`;
+          ftDescription = isAr ? `المكونات: ${(p.components || []).join('، ')}${pExtAr}` : `Composants: ${(p.components || []).join(', ')}${pExtFr}`;
           ftMesures = customMesures; // The active table
           ftConso = parseConso(p.consumption) || ftConso;
         }
@@ -223,11 +234,11 @@ export default function AISpace() {
         }
 
         if (allComps.length > 0) {
-          ftDescription = isAr ? `المكونات: ${allComps.join('، ')}` : `Composants: ${allComps.join(', ')}`;
+          ftDescription = isAr ? `المكونات: ${allComps.join('، ')}${extrasAr}` : `Composants: ${allComps.join(', ')}${extrasFr}`;
         }
       } else {
         if (analysisResult.components && Array.isArray(analysisResult.components) && analysisResult.components.length > 0) {
-          ftDescription = isAr ? `المكونات: ${analysisResult.components.join('، ')}` : `Composants: ${analysisResult.components.join(', ')}`;
+          ftDescription = isAr ? `المكونات: ${analysisResult.components.join('، ')}${extrasAr}` : `Composants: ${analysisResult.components.join(', ')}${extrasFr}`;
         }
       }
 

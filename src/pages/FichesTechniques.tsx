@@ -121,14 +121,38 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
           {f.description && (() => {
             const desc = f.description;
             if (desc.includes('المكونات:') || desc.includes('Composants:')) {
-              const parts = desc.split(/المكونات:|Composants:/);
+              const mainParts = desc.split('|');
+              const compsSection = mainParts[0];
+              const fitSection = mainParts.find(p => p.includes('القصة:') || p.includes('Coupe:'));
+              const compSection = mainParts.find(p => p.includes('الصعوبة:') || p.includes('Complexité:'));
+
+              const fitVal = fitSection ? fitSection.split(/القصة:|Coupe:/)[1].trim() : '';
+              const compVal = compSection ? compSection.split(/الصعوبة:|Complexité:/)[1].trim() : '';
+
+              const parts = compsSection.split(/المكونات:|Composants:/);
               const header = parts[0].trim();
               const compsStr = parts[1].trim();
               const comps = compsStr.split(/[,،]/).map(c => c.trim()).filter(Boolean);
 
               return (
-                <div className="mb-6 space-y-2.5">
+                <div className="mb-6 space-y-3">
                   {header && <p className={`text-xs font-bold text-indigo-600 ${isAr ? 'text-right' : ''}`}>{header}</p>}
+
+                  {(fitVal || compVal) && (
+                    <div className={`flex flex-wrap gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                      {fitVal && (
+                        <span className="flex items-center gap-1.5 px-2.5 py-1 bg-violet-50 text-violet-700 border border-violet-200 rounded-lg text-[11px] font-black tracking-wide shadow-sm">
+                          ✨ {isAr ? 'القصة:' : 'Coupe:'} {fitVal}
+                        </span>
+                      )}
+                      {compVal && (
+                        <span className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-[11px] font-black tracking-wide shadow-sm">
+                          ⚡ {isAr ? 'الصعوبة:' : 'Complexité:'} {compVal}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
                   <p className={`text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
                     <span className="w-4 h-4 rounded-md bg-rose-50 text-rose-500 flex items-center justify-center text-xs">✂</span>
                     {isAr ? 'مكونات وتفاصيل الموديل' : 'COMPOSANTS DU MODÈLE'}
@@ -1210,14 +1234,38 @@ export default function FichesTechniques() {
                     {(() => {
                       const desc = viewMesuresFiche.description || '';
                       if (desc.includes('المكونات:') || desc.includes('Composants:')) {
-                        const parts = desc.split(/المكونات:|Composants:/);
+                        const mainParts = desc.split('|');
+                        const compsSection = mainParts[0];
+                        const fitSection = mainParts.find(p => p.includes('القصة:') || p.includes('Coupe:'));
+                        const compSection = mainParts.find(p => p.includes('الصعوبة:') || p.includes('Complexité:'));
+
+                        const fitVal = fitSection ? fitSection.split(/القصة:|Coupe:/)[1].trim() : '';
+                        const compVal = compSection ? compSection.split(/الصعوبة:|Complexité:/)[1].trim() : '';
+
+                        const parts = compsSection.split(/المكونات:|Composants:/);
                         const header = parts[0].trim();
                         const compsStr = parts[1].trim();
                         const comps = compsStr.split(/[,،]/).map(c => c.trim()).filter(Boolean);
 
                         return (
-                          <div className="space-y-3">
+                          <div className="space-y-3.5">
                             {header && <p className={`text-xs font-bold text-indigo-600 ${isAr ? 'text-right' : ''}`}>{header}</p>}
+
+                            {(fitVal || compVal) && (
+                              <div className={`flex flex-wrap gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                                {fitVal && (
+                                  <span className="flex items-center gap-1.5 px-3 py-1 bg-violet-50 text-violet-700 border border-violet-200 rounded-lg text-xs font-black tracking-wide shadow-sm">
+                                    ✨ {isAr ? 'القصة:' : 'Coupe:'} {fitVal}
+                                  </span>
+                                )}
+                                {compVal && (
+                                  <span className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-xs font-black tracking-wide shadow-sm">
+                                    ⚡ {isAr ? 'الصعوبة:' : 'Complexité:'} {compVal}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+
                             <p className={`text-[10px] font-black text-rose-500 uppercase tracking-widest flex items-center gap-1.5 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
                               ✂ {isAr ? 'مكونات وتفاصيل الموديل' : 'COMPOSANTS DU MODÈLE'}
                             </p>
