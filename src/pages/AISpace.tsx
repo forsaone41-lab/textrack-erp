@@ -172,22 +172,26 @@ export default function AISpace() {
           ftMesures = customMesures; // The active table
           ftConso = parseFloat((p.consumption || '').split(' - ')[0]) || ftConso;
         }
-      } else if (mode === 'complete' && analysisResult.pieces && analysisResult.pieces.length > 1) {
+      } else if (mode === 'complete') {
         ftModele = analysisResult.category;
-        const combinedMesures: any[] = [];
-        analysisResult.pieces.forEach((p: any) => {
-          const prefix = p.name.split('/')[0].trim();
-          if (p.mesures && Array.isArray(p.mesures)) {
-            p.mesures.forEach((m: any) => {
-              combinedMesures.push({
-                nom: `${prefix} - ${m.nom}`,
-                valeurs: { ...m.valeurs }
+        if (analysisResult.pieces && analysisResult.pieces.length > 0) {
+          const combinedMesures: any[] = [];
+          analysisResult.pieces.forEach((p: any) => {
+            const prefix = p.name.split('/')[0].trim();
+            if (p.mesures && Array.isArray(p.mesures)) {
+              p.mesures.forEach((m: any) => {
+                combinedMesures.push({
+                  nom: `${prefix} - ${m.nom}`,
+                  valeurs: { ...m.valeurs }
+                });
               });
-            });
+            }
+          });
+          if (combinedMesures.length > 0) {
+            ftMesures = combinedMesures;
           }
-        });
-        if (combinedMesures.length > 0) {
-          ftMesures = combinedMesures;
+        } else {
+          ftMesures = customMesures;
         }
       }
 
@@ -1011,35 +1015,24 @@ export default function AISpace() {
             </div>
 
             {/* Export Action */}
-            {analysisResult.pieces && analysisResult.pieces.length > 1 ? (
-              <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                <button
-                  onClick={() => exportToFicheTechnique('current')}
-                  disabled={exporting}
-                  className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-xl shadow-slate-900/15"
-                >
-                  {exporting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-amber-400 text-amber-400" />}
-                  {isAr ? `تصدير القطعة الحالية فقط (${analysisResult.pieces[activePieceIdx]?.name?.split('/')[0]?.trim() || 'قطعة'})` : `Exporter pièce actuelle`}
-                </button>
-                <button
-                  onClick={() => exportToFicheTechnique('complete')}
-                  disabled={exporting}
-                  className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-xl shadow-indigo-600/20"
-                >
-                  {exporting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Package className="w-4 h-4" />}
-                  {isAr ? 'تصدير الطقم كامل (Ensemble Complet)' : 'Exporter ensemble complet'}
-                </button>
-              </div>
-            ) : (
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <button
                 onClick={() => exportToFicheTechnique('current')}
                 disabled={exporting}
-                className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-xl shadow-slate-900/15"
+                className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-xl shadow-slate-900/15"
               >
                 {exporting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-amber-400 text-amber-400" />}
-                {isAr ? 'تأكيد وحفظ في ملفات البطاقة التقنية' : 'Valider & Exporter vers Fiche Technique'}
+                {isAr ? `تصدير القطعة الحالية فقط (${analysisResult.pieces?.[activePieceIdx]?.name?.split('/')[0]?.trim() || analysisResult.category || 'قطعة'})` : `Exporter pièce actuelle`}
               </button>
-            )}
+              <button
+                onClick={() => exportToFicheTechnique('complete')}
+                disabled={exporting}
+                className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-xl shadow-indigo-600/20"
+              >
+                {exporting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Package className="w-4 h-4" />}
+                {isAr ? 'تصدير الطقم كامل (Ensemble Complet)' : 'Exporter ensemble complet'}
+              </button>
+            </div>
           </div>
 
           {/* Guidelines Banner */}
