@@ -60,7 +60,8 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     modele: '',
     quantite: '',
     details: '',
-    photo: null as string | null
+    photo: null as string | null,
+    tailles: { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' } as Record<string, string>
   });
   const [sendingOrder, setSendingOrder] = useState(false);
   const [orderSent, setOrderSent] = useState(false);
@@ -135,6 +136,11 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     setSendingOrder(true);
     
     try {
+      const sizeQuantities: Record<string, number> = {};
+      Object.entries(newOrderForm.tailles).forEach(([s, q]) => {
+        if (q && parseInt(q) > 0) sizeQuantities[s] = parseInt(q);
+      });
+
       const leadPayload = {
         name: currentUser.nom,
         email: currentUser.email || '',
@@ -142,7 +148,8 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
         type: newOrderForm.modele,
         quantity: parseInt(newOrderForm.quantite),
         photo: newOrderForm.photo,
-        details: newOrderForm.details
+        details: newOrderForm.details,
+        tailles: sizeQuantities
       };
       
       await saveLead(leadPayload);
@@ -151,7 +158,13 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       setTimeout(() => {
         setOrderSent(false);
         setShowNewOrderModal(false);
-        setNewOrderForm({ modele: '', quantite: '', details: '', photo: null });
+        setNewOrderForm({ 
+          modele: '', 
+          quantite: '', 
+          details: '', 
+          photo: null,
+          tailles: { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' }
+        });
       }, 2000);
     } catch (err: any) {
       console.error("Order submission failed:", err);
@@ -908,6 +921,30 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                         placeholder="100"
                         className={`w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:border-indigo-600 transition-all ${isAr ? 'text-right' : ''}`}
                       />
+                    </div>
+
+                    {/* Size Breakdown */}
+                    <div className="space-y-3">
+                       <label className={`block text-xs font-black text-slate-500 uppercase tracking-widest ${isAr ? 'text-right' : ''}`}>
+                          {isAr ? 'تفصيل القياسات (اختياري)' : 'Répartition par Tailles (Optionnel)'}
+                       </label>
+                       <div className="grid grid-cols-3 gap-2">
+                          {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map(size => (
+                            <div key={size} className="relative">
+                               <input
+                                 type="number"
+                                 placeholder={size}
+                                 value={newOrderForm.tailles[size]}
+                                 onChange={(e) => setNewOrderForm({
+                                   ...newOrderForm,
+                                   tailles: { ...newOrderForm.tailles, [size]: e.target.value }
+                                 })}
+                                 className={`w-full px-3 py-3 bg-white border border-slate-200 rounded-xl text-xs font-black text-center outline-none focus:border-indigo-500 transition-all placeholder:text-slate-300`}
+                               />
+                               <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] font-black text-slate-400 uppercase">{size}</span>
+                            </div>
+                          ))}
+                       </div>
                     </div>
                     <div>
                       <label className={`block text-xs font-black text-slate-500 uppercase tracking-widest mb-2 ${isAr ? 'text-right' : ''}`}>
