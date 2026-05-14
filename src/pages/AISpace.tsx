@@ -159,8 +159,8 @@ export default function AISpace() {
     try {
       let ftModele = analysisResult.category;
       let ftDescription = isAr
-        ? `تم إنشاؤها تلقائياً بواسطة BEYA AI. المكونات المقترحة: ${analysisResult.components.join(', ')}`
-        : `Généré automatiquement par BEYA AI. Composants suggérés: ${analysisResult.components.join(', ')}`;
+        ? `المكونات: ${analysisResult.components.join('، ')}`
+        : `Composants: ${analysisResult.components.join(', ')}`;
       let ftMesures = customMesures;
       let ftConso = parseFloat(analysisResult.consumption.split(' - ')[0]) || 2.50;
 
@@ -168,7 +168,7 @@ export default function AISpace() {
         const p = analysisResult.pieces[activePieceIdx];
         if (p) {
           ftModele = p.name;
-          ftDescription = isAr ? `قطعة: ${p.name}. المكونات: ${(p.components || []).join(', ')}` : `Pièce: ${p.name}. Composants: ${(p.components || []).join(', ')}`;
+          ftDescription = isAr ? `المكونات: ${(p.components || []).join('، ')}` : `Composants: ${(p.components || []).join(', ')}`;
           ftMesures = customMesures; // The active table
           ftConso = parseFloat((p.consumption || '').split(' - ')[0]) || ftConso;
         }
