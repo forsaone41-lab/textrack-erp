@@ -157,12 +157,21 @@ export default function AISpace() {
     setExporting(true);
 
     try {
+      const parseConso = (str: string): number => {
+        if (!str) return 0;
+        let s = str;
+        if (s.includes(':')) {
+          s = s.split(':')[1];
+        }
+        return parseFloat(s) || 0;
+      };
+
       let ftModele = analysisResult.category;
       let ftDescription = isAr
         ? `المكونات: ${analysisResult.components.join('، ')}`
         : `Composants: ${analysisResult.components.join(', ')}`;
       let ftMesures = customMesures;
-      let ftConso = parseFloat(analysisResult.consumption.split(' - ')[0]) || 2.50;
+      let ftConso = parseConso(analysisResult.consumption) || 2.50;
 
       if (mode === 'current' && analysisResult.pieces && analysisResult.pieces.length > 0) {
         const p = analysisResult.pieces[activePieceIdx];
@@ -170,16 +179,23 @@ export default function AISpace() {
           ftModele = p.name;
           ftDescription = isAr ? `المكونات: ${(p.components || []).join('، ')}` : `Composants: ${(p.components || []).join(', ')}`;
           ftMesures = customMesures; // The active table
-          ftConso = parseFloat((p.consumption || '').split(' - ')[0]) || ftConso;
+          ftConso = parseConso(p.consumption) || ftConso;
         }
       } else if (mode === 'complete') {
         ftModele = analysisResult.category;
+        const allComps: string[] = [];
+
         if (analysisResult.pieces && analysisResult.pieces.length > 0) {
           const combinedMesures: any[] = [];
-          const allComps: string[] = [];
+          let totalConso = 0;
 
           analysisResult.pieces.forEach((p: any) => {
             const prefix = p.name.trim();
+            const pConso = parseConso(p.consumption);
+            if (pConso > 0) {
+              totalConso += pConso;
+            }
+
             if (p.components && Array.isArray(p.components)) {
               allComps.push(...p.components);
             }
@@ -195,11 +211,23 @@ export default function AISpace() {
           if (combinedMesures.length > 0) {
             ftMesures = combinedMesures;
           }
-          if (allComps.length > 0) {
-            ftDescription = isAr ? `المكونات: ${allComps.join('، ')}` : `Composants: ${allComps.join(', ')}`;
+          if (totalConso > 0) {
+            ftConso = Math.round(totalConso * 100) / 100;
           }
         } else {
           ftMesures = customMesures;
+        }
+
+        if (allComps.length === 0 && analysisResult.components && Array.isArray(analysisResult.components)) {
+          allComps.push(...analysisResult.components);
+        }
+
+        if (allComps.length > 0) {
+          ftDescription = isAr ? `المكونات: ${allComps.join('، ')}` : `Composants: ${allComps.join(', ')}`;
+        }
+      } else {
+        if (analysisResult.components && Array.isArray(analysisResult.components) && analysisResult.components.length > 0) {
+          ftDescription = isAr ? `المكونات: ${analysisResult.components.join('، ')}` : `Composants: ${analysisResult.components.join(', ')}`;
         }
       }
 
