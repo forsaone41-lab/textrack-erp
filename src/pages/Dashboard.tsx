@@ -4,12 +4,12 @@ import {
   PieChart, Pie, Cell, Legend,
 } from 'recharts';
 import {
-  Shirt, AlertTriangle, Truck, TrendingUp, Package, Users, Activity,
-  Clock, CheckCircle, XCircle, Receipt, UserCheck, UserX, LogIn, LogOut,
+  Shirt, AlertTriangle, Truck, TrendingUp, Users, Activity,
+  Clock, CheckCircle, UserCheck, UserX, UserPlus,
 } from 'lucide-react';
 import {
-  loadData, Commande, StockTissu, Employe, Facture, PointageEntry, Presence,
-  PHASE_LABELS, PHASE_ORDER, User, safeStorage, Lead, loadLeads
+  loadData, Commande, StockTissu, Employe, Facture, Presence,
+  PHASE_LABELS, PHASE_ORDER, User, Lead, loadLeads
 } from '../types';
 import { supabase } from '../supabase';
 import { useLang } from '../contexts/LangContext';
@@ -25,7 +25,6 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
   const [tissus, setTissus] = useState<StockTissu[]>([]);
   const [employes, setEmployes] = useState<Employe[]>([]);
   const [factures, setFactures] = useState<Facture[]>([]);
-  const [pointages, setPointages] = useState<PointageEntry[]>([]);
   const [presences, setPresences] = useState<Presence[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [now, setNow] = useState(new Date());
@@ -38,15 +37,13 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
       loadData<StockTissu>('tissus'),
       loadData<Employe>('employes'),
       loadData<Facture>('factures'),
-      loadData<PointageEntry>('pointages'),
       loadData<Presence>('presences'),
       loadLeads()
-    ]).then(([cmds, tiss, emps, facs, pts, pres, lds]) => {
+    ]).then(([cmds, tiss, emps, facs, pres, lds]) => {
       setCommandes(cmds || []);
       setTissus(tiss || []);
       setFactures(facs || []);
       setLeads(lds || []);
-      setPointages(pts || []);
       setEmployes(emps || []);
       setPresences(pres || []);
       setNow(new Date());
@@ -98,7 +95,6 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
   const absents = actifs.filter(e => !presencesAujourdhui.some(p => p.employeId === e.id && p.statut !== 'absent'));
   const retards = actifs.filter(e => presencesAujourdhui.some(p => p.employeId === e.id && p.statut === 'retard'));
   const enCoursPresence = actifs.filter(e => presencesAujourdhui.some(p => p.employeId === e.id && p.heureEntree && !p.heureSortie));
-  const empName = (e: Employe) => e.prenom ? `${e.prenom} ${e.nom}` : e.nom;
 
   const phaseData = PHASE_ORDER.filter(p => p !== 'livré').map(phase => ({
     name: PHASE_LABELS[phase],
@@ -146,12 +142,20 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
       textColor: 'text-emerald-600',
     },
     {
-      title: isAr ? 'طلبات جديدة' : 'Nouveaux Prospects',
-      value: isAr ? `${leads.filter(l => l.status === 'new').length} طلب` : `${leads.filter(l => l.status === 'new').length} Leads`,
-      subtitle: isAr ? 'من الصفحة الرئيسية' : 'Depuis la Landing Page',
+      title: isAr ? 'طلبات الزبائن' : 'Nouveaux Clients',
+      value: isAr ? `${leads.filter(l => l.status === 'new' && (!l.type || !l.type.startsWith('RECRUTEMENT:'))).length} طلب` : `${leads.filter(l => l.status === 'new' && (!l.type || !l.type.startsWith('RECRUTEMENT:'))).length} Leads`,
+      subtitle: isAr ? 'زبناء محتملون' : 'Prospects',
       icon: Users,
       color: 'from-purple-500 to-pink-600',
       textColor: 'text-purple-600',
+    },
+    {
+      title: isAr ? 'طلبات التوظيف' : 'Candidatures',
+      value: isAr ? `${leads.filter(l => l.status === 'new' && l.type && l.type.startsWith('RECRUTEMENT:')).length} طلب` : `${leads.filter(l => l.status === 'new' && l.type && l.type.startsWith('RECRUTEMENT:')).length} CVs`,
+      subtitle: isAr ? 'توظيف جديد' : 'Recrutement',
+      icon: UserPlus,
+      color: 'from-cyan-500 to-blue-600',
+      textColor: 'text-cyan-600',
     },
     {
       title: isAr ? 'إجمالي العملاء' : 'Total Clients',
