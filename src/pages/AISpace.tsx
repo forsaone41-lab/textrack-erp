@@ -177,7 +177,7 @@ export default function AISpace() {
         if (analysisResult.pieces && analysisResult.pieces.length > 0) {
           const combinedMesures: any[] = [];
           analysisResult.pieces.forEach((p: any) => {
-            const prefix = p.name.split('/')[0].trim();
+            const prefix = p.name.trim();
             if (p.mesures && Array.isArray(p.mesures)) {
               p.mesures.forEach((m: any) => {
                 combinedMesures.push({

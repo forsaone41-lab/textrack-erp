@@ -1057,12 +1057,23 @@ export default function FichesTechniques() {
                           const showHeader = currentPrefix && currentPrefix !== prevPrefix;
                           const cleanNom = parts.length > 1 ? parts[1].trim() : m.nom;
 
+                          const subParts = currentPrefix.split('/');
+                          const arTitle = subParts[0].trim();
+                          const frTitle = subParts.length > 1 ? subParts[1].trim() : arTitle;
+
                           return (
                             <React.Fragment key={i}>
                               {showHeader && (
                                 <tr className="bg-indigo-50/90 border-y border-indigo-200">
-                                  <td colSpan={(form.tailles || []).length + 2} className={`px-4 py-2.5 font-black text-xs text-indigo-900 uppercase tracking-wider ${isAr ? 'text-right' : 'text-left'}`}>
-                                    📦 <span className="underline decoration-indigo-400 decoration-2 underline-offset-4">{currentPrefix}</span>
+                                  <td colSpan={(form.tailles || []).length + 2} className="px-4 py-2.5 bg-indigo-50/90">
+                                    <div className="flex items-center justify-between w-full text-xs font-black uppercase tracking-wider">
+                                      <span className="text-left text-indigo-800 flex items-center gap-1.5">
+                                        📦 {frTitle}
+                                      </span>
+                                      <span className="text-right text-indigo-950 underline decoration-indigo-400 decoration-2 underline-offset-4 flex items-center gap-1.5" dir="rtl">
+                                        📦 {arTitle}
+                                      </span>
+                                    </div>
                                   </td>
                                 </tr>
                               )}
@@ -1208,12 +1219,23 @@ export default function FichesTechniques() {
                             const showHeader = currentPrefix && currentPrefix !== prevPrefix;
                             const cleanNom = parts.length > 1 ? parts[1].trim() : m.nom;
 
+                            const subParts = currentPrefix.split('/');
+                            const arTitle = subParts[0].trim();
+                            const frTitle = subParts.length > 1 ? subParts[1].trim() : arTitle;
+
                             return (
                               <React.Fragment key={i}>
                                 {showHeader && (
-                                  <tr className="bg-slate-900 text-white">
-                                    <td colSpan={viewMesuresFiche.tailles.length + 1} className={`px-8 py-3 font-black text-xs text-amber-400 uppercase tracking-widest ${isAr ? 'text-right' : 'text-left'}`}>
-                                      📦 {currentPrefix}
+                                  <tr className="bg-slate-900 text-white border-y border-slate-800">
+                                    <td colSpan={viewMesuresFiche.tailles.length + 1} className="px-8 py-3 bg-slate-900">
+                                      <div className="flex items-center justify-between w-full text-xs font-black uppercase tracking-widest text-amber-400">
+                                        <span className="text-left flex items-center gap-1.5">
+                                          📦 {frTitle}
+                                        </span>
+                                        <span className="text-right flex items-center gap-1.5" dir="rtl">
+                                          📦 {arTitle}
+                                        </span>
+                                      </div>
                                     </td>
                                   </tr>
                                 )}

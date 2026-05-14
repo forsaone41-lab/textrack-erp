@@ -354,7 +354,18 @@ export function printFicheTechnique(fiche: FicheTechnique) {
 
           let res = '';
           if (showHeader) {
-            res += `<tr style="background: #1e293b; color: #f59e0b;"><td colspan="${fiche.tailles.length + 1}" style="text-align: left; font-weight: 800; font-size: 13px; padding: 8px 12px; border: 1px solid #334155;">📦 ${currentPrefix}</td></tr>`;
+            const subParts = currentPrefix.split('/');
+            const arTitle = subParts[0].trim();
+            const frTitle = subParts.length > 1 ? subParts[1].trim() : arTitle;
+
+            res += `<tr style="background: #1e293b; color: #f59e0b;">
+              <td colspan="${fiche.tailles.length + 1}" style="padding: 8px 12px; border: 1px solid #334155;">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; font-weight: 800; font-size: 13px;">
+                  <span style="text-align: left;">📦 ${frTitle}</span>
+                  <span style="text-align: right;" dir="rtl">📦 ${arTitle}</span>
+                </div>
+              </td>
+            </tr>`;
           }
           res += `
             <tr>
