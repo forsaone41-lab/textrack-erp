@@ -152,21 +152,53 @@ export default function AISpace() {
     setCustomMesures(updated);
   };
 
-  const exportToFicheTechnique = async () => {
+  const exportToFicheTechnique = async (mode: 'current' | 'complete' = 'current') => {
     if (!analysisResult) return;
     setExporting(true);
 
     try {
+      let ftModele = analysisResult.category;
+      let ftDescription = isAr
+        ? `تم إنشاؤها تلقائياً بواسطة BEYA AI. المكونات المقترحة: ${analysisResult.components.join(', ')}`
+        : `Généré automatiquement par BEYA AI. Composants suggérés: ${analysisResult.components.join(', ')}`;
+      let ftMesures = customMesures;
+      let ftConso = parseFloat(analysisResult.consumption.split(' - ')[0]) || 2.50;
+
+      if (mode === 'current' && analysisResult.pieces && analysisResult.pieces.length > 0) {
+        const p = analysisResult.pieces[activePieceIdx];
+        if (p) {
+          ftModele = p.name;
+          ftDescription = isAr ? `قطعة: ${p.name}. المكونات: ${(p.components || []).join(', ')}` : `Pièce: ${p.name}. Composants: ${(p.components || []).join(', ')}`;
+          ftMesures = customMesures; // The active table
+          ftConso = parseFloat((p.consumption || '').split(' - ')[0]) || ftConso;
+        }
+      } else if (mode === 'complete' && analysisResult.pieces && analysisResult.pieces.length > 1) {
+        ftModele = analysisResult.category;
+        const combinedMesures: any[] = [];
+        analysisResult.pieces.forEach((p: any) => {
+          const prefix = p.name.split('/')[0].trim();
+          if (p.mesures && Array.isArray(p.mesures)) {
+            p.mesures.forEach((m: any) => {
+              combinedMesures.push({
+                nom: `${prefix} - ${m.nom}`,
+                valeurs: { ...m.valeurs }
+              });
+            });
+          }
+        });
+        if (combinedMesures.length > 0) {
+          ftMesures = combinedMesures;
+        }
+      }
+
       const newFT: FicheTechnique = {
         id: genId(),
-        modele: analysisResult.category,
-        description: isAr
-          ? `تم إنشاؤها تلقائياً بواسطة BEYA AI. المكونات المقترحة: ${analysisResult.components.join(', ')}`
-          : `Généré automatiquement par BEYA AI. Composants suggérés: ${analysisResult.components.join(', ')}`,
+        modele: ftModele,
+        description: ftDescription,
         client: isAr ? 'اقتراح الذكاء الاصطناعي' : 'Suggestion IA',
         tailles: selectedTailles,
-        mesures: customMesures,
-        tissuConsommation: parseFloat(analysisResult.consumption.split(' - ')[0]) || 2.50,
+        mesures: ftMesures,
+        tissuConsommation: ftConso,
         type: 'creations',
         createdAt: new Date().toISOString().split('T')[0],
         photo: image || undefined
@@ -177,8 +209,8 @@ export default function AISpace() {
       setCustomAlert({
         title: isAr ? "تصدير ناجح للبطاقة التقنية 🎉" : "Exportation Réussie 🎉",
         message: isAr
-          ? `تم بنجاح تصدير الموديل "${analysisResult.category}" إلى البطاقات التقنية! يمكنك الآن إكمال الباطرون والقياسات هناك.`
-          : `Le modèle "${analysisResult.category}" a été exporté avec succès vers les Fiches Techniques ! Vous pouvez maintenant y gérer le patronage.`,
+          ? `تم بنجاح تصدير "${ftModele}" إلى البطاقات التقنية! يمكنك الآن إكمال الباطرون والقياسات هناك.`
+          : `Le modèle "${ftModele}" a été exporté avec succès vers les Fiches Techniques !`,
         onConfirm: () => navigate('/fiches-techniques')
       });
     } catch (err) {
@@ -979,14 +1011,35 @@ export default function AISpace() {
             </div>
 
             {/* Export Action */}
-            <button
-              onClick={exportToFicheTechnique}
-              disabled={exporting}
-              className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-xl shadow-slate-900/15"
-            >
-              {exporting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-amber-400 text-amber-400" />}
-              {isAr ? 'تأكيد وحفظ في ملفات البطاقة التقنية' : 'Valider & Exporter vers Fiche Technique'}
-            </button>
+            {analysisResult.pieces && analysisResult.pieces.length > 1 ? (
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <button
+                  onClick={() => exportToFicheTechnique('current')}
+                  disabled={exporting}
+                  className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-xl shadow-slate-900/15"
+                >
+                  {exporting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-amber-400 text-amber-400" />}
+                  {isAr ? `تصدير القطعة الحالية فقط (${analysisResult.pieces[activePieceIdx]?.name?.split('/')[0]?.trim() || 'قطعة'})` : `Exporter pièce actuelle`}
+                </button>
+                <button
+                  onClick={() => exportToFicheTechnique('complete')}
+                  disabled={exporting}
+                  className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-xl shadow-indigo-600/20"
+                >
+                  {exporting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Package className="w-4 h-4" />}
+                  {isAr ? 'تصدير الطقم كامل (Ensemble Complet)' : 'Exporter ensemble complet'}
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => exportToFicheTechnique('current')}
+                disabled={exporting}
+                className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-xl shadow-slate-900/15"
+              >
+                {exporting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-amber-400 text-amber-400" />}
+                {isAr ? 'تأكيد وحفظ في ملفات البطاقة التقنية' : 'Valider & Exporter vers Fiche Technique'}
+              </button>
+            )}
           </div>
 
           {/* Guidelines Banner */}
