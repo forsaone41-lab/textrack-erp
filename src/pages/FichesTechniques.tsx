@@ -118,9 +118,36 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
             </div>
 
 
-          {f.description && (
-            <p className="text-xs text-slate-400 line-clamp-2 italic mb-6 leading-relaxed">"{f.description}"</p>
-          )}
+          {f.description && (() => {
+            const desc = f.description;
+            if (desc.includes('المكونات:') || desc.includes('Composants:')) {
+              const parts = desc.split(/المكونات:|Composants:/);
+              const header = parts[0].trim();
+              const compsStr = parts[1].trim();
+              const comps = compsStr.split(/[,،]/).map(c => c.trim()).filter(Boolean);
+
+              return (
+                <div className="mb-6 space-y-2.5">
+                  {header && <p className={`text-xs font-bold text-indigo-600 ${isAr ? 'text-right' : ''}`}>{header}</p>}
+                  <p className={`text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                    <span className="w-4 h-4 rounded-md bg-rose-50 text-rose-500 flex items-center justify-center text-xs">✂</span>
+                    {isAr ? 'مكونات وتفاصيل الموديل' : 'COMPOSANTS DU MODÈLE'}
+                  </p>
+                  <div className={`flex flex-wrap gap-1.5 ${isAr ? 'flex-row-reverse' : ''}`}>
+                    {comps.map((c, idx) => (
+                      <span key={idx} className={`flex items-center gap-1 px-2.5 py-1.5 bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 border border-slate-100 rounded-xl text-xs font-bold text-slate-700 transition-all shadow-sm ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                        <span className="text-[10px] text-indigo-400">›</span> {c}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <p className="text-xs text-slate-400 line-clamp-2 italic mb-6 leading-relaxed">"{desc}"</p>
+            );
+          })()}
 
           <div className="mt-auto space-y-6">
             {/* Downloads Grid */}
@@ -1180,9 +1207,36 @@ export default function FichesTechniques() {
 
                   <div className="p-6 bg-slate-50/50 rounded-[32px] border border-slate-100 space-y-4">
                     <p className={`text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] ${isAr ? 'text-right' : ''}`}>{t('notes_obs', lang)}</p>
-                    <p className={`text-sm text-slate-600 leading-relaxed italic ${isAr ? 'text-right' : ''}`}>
-                      {viewMesuresFiche.description || (isAr ? "لم يتم إضافة أي ملاحظات تقنية لهذا النموذج." : "Aucune observation technique n'a été ajoutée pour ce modèle.")}
-                    </p>
+                    {(() => {
+                      const desc = viewMesuresFiche.description || '';
+                      if (desc.includes('المكونات:') || desc.includes('Composants:')) {
+                        const parts = desc.split(/المكونات:|Composants:/);
+                        const header = parts[0].trim();
+                        const compsStr = parts[1].trim();
+                        const comps = compsStr.split(/[,،]/).map(c => c.trim()).filter(Boolean);
+
+                        return (
+                          <div className="space-y-3">
+                            {header && <p className={`text-xs font-bold text-indigo-600 ${isAr ? 'text-right' : ''}`}>{header}</p>}
+                            <p className={`text-[10px] font-black text-rose-500 uppercase tracking-widest flex items-center gap-1.5 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                              ✂ {isAr ? 'مكونات وتفاصيل الموديل' : 'COMPOSANTS DU MODÈLE'}
+                            </p>
+                            <div className={`flex flex-wrap gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                              {comps.map((c, idx) => (
+                                <span key={idx} className={`flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 rounded-2xl text-xs font-extrabold text-slate-800 shadow-sm ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                                  <span className="text-indigo-500">›</span> {c}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      }
+                      return (
+                        <p className={`text-sm text-slate-600 leading-relaxed italic ${isAr ? 'text-right' : ''}`}>
+                          {desc || (isAr ? "لم يتم إضافة أي ملاحظات تقنية لهذا النموذج." : "Aucune observation technique n'a été ajoutée pour ce modèle.")}
+                        </p>
+                      );
+                    })()}
                   </div>
                 </div>
 

@@ -176,8 +176,13 @@ export default function AISpace() {
         ftModele = analysisResult.category;
         if (analysisResult.pieces && analysisResult.pieces.length > 0) {
           const combinedMesures: any[] = [];
+          const allComps: string[] = [];
+
           analysisResult.pieces.forEach((p: any) => {
             const prefix = p.name.trim();
+            if (p.components && Array.isArray(p.components)) {
+              allComps.push(...p.components);
+            }
             if (p.mesures && Array.isArray(p.mesures)) {
               p.mesures.forEach((m: any) => {
                 combinedMesures.push({
@@ -189,6 +194,9 @@ export default function AISpace() {
           });
           if (combinedMesures.length > 0) {
             ftMesures = combinedMesures;
+          }
+          if (allComps.length > 0) {
+            ftDescription = isAr ? `المكونات: ${allComps.join('، ')}` : `Composants: ${allComps.join(', ')}`;
           }
         } else {
           ftMesures = customMesures;
