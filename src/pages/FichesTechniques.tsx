@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, Ruler, Calculator, Camera, FileText, Download, MessageCircle, X, ChevronRight, Upload, ImageIcon, Copy, CheckCircle, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -1049,29 +1049,47 @@ export default function FichesTechniques() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {(form.mesures || []).map((m, i) => (
-                          <tr key={i} className="hover:bg-slate-50/50 group/row transition-colors">
-                            <td className={`px-4 py-2 font-medium text-slate-700 sticky left-0 bg-white group-hover/row:bg-slate-50 z-10 border-r border-slate-200 shadow-[2px_0_5px_rgba(0,0,0,0.02)] ${isAr ? 'text-right' : 'text-left'}`}>
-                              {m.nom}
-                            </td>
-                            {(form.tailles || []).map(t => (
-                              <td key={t} className="p-0 border-r border-slate-100 last:border-r-0">
-                                <input
-                                  type="number"
-                                  value={m.valeurs[t] === 0 ? '' : m.valeurs[t]}
-                                  onChange={e => updateMesureValeur(i, t, parseFloat(e.target.value) || 0)}
-                                  className="w-full h-full px-3 py-3 text-center focus:ring-2 focus:ring-inset focus:ring-emerald-500 outline-none bg-transparent font-medium text-slate-800 transition-all"
-                                  placeholder="0"
-                                />
-                              </td>
-                            ))}
-                            <td className="px-2 text-center">
-                              <button onClick={() => removeMesure(i)} className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition opacity-0 group-hover/row:opacity-100">
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
+                        {(form.mesures || []).map((m, i) => {
+                          const parts = m.nom.split(' - ');
+                          const currentPrefix = parts.length > 1 ? parts[0].trim() : '';
+                          const prevParts = i > 0 ? (form.mesures || [])[i - 1].nom.split(' - ') : [];
+                          const prevPrefix = prevParts.length > 1 ? prevParts[0].trim() : '';
+                          const showHeader = currentPrefix && currentPrefix !== prevPrefix;
+                          const cleanNom = parts.length > 1 ? parts[1].trim() : m.nom;
+
+                          return (
+                            <React.Fragment key={i}>
+                              {showHeader && (
+                                <tr className="bg-indigo-50/90 border-y border-indigo-200">
+                                  <td colSpan={(form.tailles || []).length + 2} className={`px-4 py-2.5 font-black text-xs text-indigo-900 uppercase tracking-wider ${isAr ? 'text-right' : 'text-left'}`}>
+                                    📦 <span className="underline decoration-indigo-400 decoration-2 underline-offset-4">{currentPrefix}</span>
+                                  </td>
+                                </tr>
+                              )}
+                              <tr className="hover:bg-slate-50/50 group/row transition-colors">
+                                <td className={`px-4 py-2 font-medium text-slate-700 sticky left-0 bg-white group-hover/row:bg-slate-50 z-10 border-r border-slate-200 shadow-[2px_0_5px_rgba(0,0,0,0.02)] ${isAr ? 'text-right' : 'text-left'}`}>
+                                  {cleanNom}
+                                </td>
+                                {(form.tailles || []).map(t => (
+                                  <td key={t} className="p-0 border-r border-slate-100 last:border-r-0">
+                                    <input
+                                      type="number"
+                                      value={m.valeurs[t] === 0 ? '' : m.valeurs[t]}
+                                      onChange={e => updateMesureValeur(i, t, parseFloat(e.target.value) || 0)}
+                                      className="w-full h-full px-3 py-3 text-center focus:ring-2 focus:ring-inset focus:ring-emerald-500 outline-none bg-transparent font-medium text-slate-800 transition-all"
+                                      placeholder="0"
+                                    />
+                                  </td>
+                                ))}
+                                <td className="px-2 text-center">
+                                  <button onClick={() => removeMesure(i)} className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition opacity-0 group-hover/row:opacity-100">
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </td>
+                              </tr>
+                            </React.Fragment>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -1182,16 +1200,34 @@ export default function FichesTechniques() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
-                          {viewMesuresFiche.mesures.map((m, i) => (
-                            <tr key={i} className="hover:bg-indigo-50/30 transition-colors group/row">
-                              <td className={`px-8 py-4 font-bold text-slate-700 border-r border-slate-100 bg-slate-50/30 group-hover/row:bg-white ${isAr ? 'text-right' : 'text-left'}`}>{m.nom}</td>
-                              {viewMesuresFiche.tailles.map(taille => (
-                                <td key={taille} className="px-6 py-4 text-center font-black text-indigo-600">
-                                  {m.valeurs?.[taille] || 0}<span className="text-[10px] font-normal text-slate-400 ml-1">{t('cm', lang)}</span>
-                                </td>
-                              ))}
-                            </tr>
-                          ))}
+                          {viewMesuresFiche.mesures.map((m, i) => {
+                            const parts = m.nom.split(' - ');
+                            const currentPrefix = parts.length > 1 ? parts[0].trim() : '';
+                            const prevParts = i > 0 ? viewMesuresFiche.mesures[i - 1].nom.split(' - ') : [];
+                            const prevPrefix = prevParts.length > 1 ? prevParts[0].trim() : '';
+                            const showHeader = currentPrefix && currentPrefix !== prevPrefix;
+                            const cleanNom = parts.length > 1 ? parts[1].trim() : m.nom;
+
+                            return (
+                              <React.Fragment key={i}>
+                                {showHeader && (
+                                  <tr className="bg-slate-900 text-white">
+                                    <td colSpan={viewMesuresFiche.tailles.length + 1} className={`px-8 py-3 font-black text-xs text-amber-400 uppercase tracking-widest ${isAr ? 'text-right' : 'text-left'}`}>
+                                      📦 {currentPrefix}
+                                    </td>
+                                  </tr>
+                                )}
+                                <tr className="hover:bg-indigo-50/30 transition-colors group/row">
+                                  <td className={`px-8 py-4 font-bold text-slate-700 border-r border-slate-100 bg-slate-50/30 group-hover/row:bg-white ${isAr ? 'text-right' : 'text-left'}`}>{cleanNom}</td>
+                                  {viewMesuresFiche.tailles.map(taille => (
+                                    <td key={taille} className="px-6 py-4 text-center font-black text-indigo-600">
+                                      {m.valeurs?.[taille] || 0}<span className="text-[10px] font-normal text-slate-400 ml-1">{t('cm', lang)}</span>
+                                    </td>
+                                  ))}
+                                </tr>
+                              </React.Fragment>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>

@@ -344,12 +344,26 @@ export function printFicheTechnique(fiche: FicheTechnique) {
         </tr>
       </thead>
       <tbody>
-        ${fiche.mesures.map((m: any) => `
-          <tr>
-            <td>${m.nom}</td>
-            ${fiche.tailles.map((t: string) => `<td>${m.valeurs?.[t] || '—'}</td>`).join('')}
-          </tr>
-        `).join('')}
+        ${fiche.mesures.map((m: any, i: number) => {
+          const parts = m.nom.split(' - ');
+          const currentPrefix = parts.length > 1 ? parts[0].trim() : '';
+          const prevParts = i > 0 ? fiche.mesures[i - 1].nom.split(' - ') : [];
+          const prevPrefix = prevParts.length > 1 ? prevParts[0].trim() : '';
+          const showHeader = currentPrefix && currentPrefix !== prevPrefix;
+          const cleanNom = parts.length > 1 ? parts[1].trim() : m.nom;
+
+          let res = '';
+          if (showHeader) {
+            res += `<tr style="background: #1e293b; color: #f59e0b;"><td colspan="${fiche.tailles.length + 1}" style="text-align: left; font-weight: 800; font-size: 13px; padding: 8px 12px; border: 1px solid #334155;">📦 ${currentPrefix}</td></tr>`;
+          }
+          res += `
+            <tr>
+              <td style="text-align: left; font-weight: 700; background: #f8fafc; color: #475569;">${cleanNom}</td>
+              ${fiche.tailles.map((t: string) => `<td>${m.valeurs?.[t] || '—'}</td>`).join('')}
+            </tr>
+          `;
+          return res;
+        }).join('')}
       </tbody>
     </table>
 
