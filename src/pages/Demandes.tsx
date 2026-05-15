@@ -1514,6 +1514,117 @@ export default function Demandes() {
           </div>
         </div>
       )}
+      {/* Edit Lead Modal */}
+      {editingLead && (
+        <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300" dir={isAr ? 'rtl' : 'ltr'}>
+          <div className="bg-white rounded-[2.5rem] p-8 max-w-xl w-full shadow-2xl relative overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
+            <div className="absolute top-0 inset-x-0 h-1.5 bg-indigo-600" />
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">
+                {isAr ? 'تعديل بيانات الطلب' : 'Modifier le Lead'}
+              </h3>
+              <button
+                onClick={() => setEditingLead(null)}
+                className="p-2 text-slate-400 hover:text-rose-500 bg-slate-50 hover:bg-rose-50 rounded-xl transition-all"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-6 pr-2 scrollbar-hide">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'الاسم' : 'Nom'}</label>
+                  <input 
+                    type="text" 
+                    value={editForm.name || ''} 
+                    onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'الهاتف' : 'Téléphone'}</label>
+                  <input 
+                    type="text" 
+                    value={editForm.phone || ''} 
+                    onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'المدينة' : 'Ville'}</label>
+                  <input 
+                    type="text" 
+                    value={editForm.ville || ''} 
+                    onChange={e => setEditForm({ ...editForm, ville: e.target.value })}
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'البريد الإلكتروني' : 'Email'}</label>
+                  <input 
+                    type="email" 
+                    value={editForm.email || ''} 
+                    onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'الموديل' : 'Modèle / Type'}</label>
+                  <input 
+                    type="text" 
+                    value={editForm.type || ''} 
+                    onChange={e => setEditForm({ ...editForm, type: e.target.value })}
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
+                  />
+                </div>
+                {!editForm.type?.startsWith('RECRUTEMENT:') && (
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'الكمية' : 'Quantité'}</label>
+                    <input 
+                      type="number" 
+                      value={editForm.quantity || 0} 
+                      onChange={e => setEditForm({ ...editForm, quantity: Number(e.target.value) })}
+                      className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'تفاصيل إضافية' : 'Détails'}</label>
+                <textarea 
+                  value={editForm.details || ''} 
+                  onChange={e => setEditForm({ ...editForm, details: e.target.value })}
+                  rows={4}
+                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="pt-8 flex gap-3">
+              <button
+                onClick={() => setEditingLead(null)}
+                className="flex-1 py-4 bg-slate-50 text-slate-500 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-100 transition-all"
+              >
+                {isAr ? 'إلغاء' : 'Annuler'}
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100"
+              >
+                {isAr ? 'حفظ التعديلات' : 'Enregistrer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
