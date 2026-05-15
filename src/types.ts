@@ -57,6 +57,8 @@ export interface FicheTechnique {
   photo?: string;
   patronagePhoto?: string;
   patronageFileName?: string;
+  fit?: string;
+  complexity?: string;
 }
 
 export interface OrdreDeCoupe {

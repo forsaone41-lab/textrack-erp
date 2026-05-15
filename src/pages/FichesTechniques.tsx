@@ -120,14 +120,23 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
 
           {f.description && (() => {
             const desc = f.description;
+            
+            // Use explicit fields if available, otherwise fallback to parsing description
+            const fitVal = f.fit || (() => {
+              const mainParts = desc.split('|');
+              const fitSection = mainParts.find(p => p.includes('القصة:') || p.includes('Coupe:'));
+              return fitSection ? fitSection.split(/القصة:|Coupe:/)[1].trim() : '';
+            })();
+
+            const compVal = f.complexity || (() => {
+              const mainParts = desc.split('|');
+              const compSection = mainParts.find(p => p.includes('الصعوبة:') || p.includes('Complexité:'));
+              return compSection ? compSection.split(/الصعوبة:|Complexité:/)[1].trim() : '';
+            })();
+
             if (desc.includes('المكونات:') || desc.includes('Composants:')) {
               const mainParts = desc.split('|');
               const compsSection = mainParts[0];
-              const fitSection = mainParts.find(p => p.includes('القصة:') || p.includes('Coupe:'));
-              const compSection = mainParts.find(p => p.includes('الصعوبة:') || p.includes('Complexité:'));
-
-              const fitVal = fitSection ? fitSection.split(/القصة:|Coupe:/)[1].trim() : '';
-              const compVal = compSection ? compSection.split(/الصعوبة:|Complexité:/)[1].trim() : '';
 
               const parts = compsSection.split(/المكونات:|Composants:/);
               const header = parts[0].trim();
@@ -169,7 +178,23 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
             }
 
             return (
-              <p className="text-xs text-slate-400 line-clamp-2 italic mb-6 leading-relaxed">"{desc}"</p>
+              <div className="mb-6 space-y-3">
+                {(fitVal || compVal) && (
+                    <div className={`flex flex-wrap gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                      {fitVal && (
+                        <span className="flex items-center gap-1.5 px-2.5 py-1 bg-violet-50 text-violet-700 border border-violet-200 rounded-lg text-[11px] font-black tracking-wide shadow-sm">
+                          ✨ {isAr ? 'القصة:' : 'Coupe:'} {fitVal}
+                        </span>
+                      )}
+                      {compVal && (
+                        <span className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-[11px] font-black tracking-wide shadow-sm">
+                          ⚡ {isAr ? 'الصعوبة:' : 'Complexité:'} {compVal}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                <p className="text-xs text-slate-400 line-clamp-2 italic leading-relaxed">"{desc}"</p>
+              </div>
             );
           })()}
 
@@ -416,13 +441,27 @@ export default function FichesTechniques() {
 
   function openCreate() {
     setEditId(null);
-    setForm({ modele: '', description: '', client: '', tailles: [], type: '', tissuConsommation: 0, mesures: [] });
+    setForm({ modele: '', description: '', client: '', tailles: [], type: '', tissuConsommation: 0, mesures: [], fit: '', complexity: '' });
     setShowModal(true);
   }
 
   function openEdit(f: FicheTechnique) {
     setEditId(f.id);
-    setForm({ ...f, mesures: [...f.mesures], tailles: [...f.tailles] });
+    const desc = f.description || '';
+    
+    // Parse fit and complexity from description if they are missing in explicit fields
+    let fit = f.fit;
+    let complexity = f.complexity;
+
+    if (!fit || !complexity) {
+       const mainParts = desc.split('|');
+       const fitSection = mainParts.find(p => p.includes('القصة:') || p.includes('Coupe:'));
+       const compSection = mainParts.find(p => p.includes('الصعوبة:') || p.includes('Complexité:'));
+       if (!fit && fitSection) fit = fitSection.split(/القصة:|Coupe:/)[1].trim();
+       if (!complexity && compSection) complexity = compSection.split(/الصعوبة:|Complexité:/)[1].trim();
+    }
+
+    setForm({ ...f, mesures: [...f.mesures], tailles: [...f.tailles], fit: fit || '', complexity: complexity || '' });
     setShowModal(true);
   }
 
@@ -437,12 +476,18 @@ export default function FichesTechniques() {
 
     const fData: FicheTechnique = {
       id: fId,
-      modele: form.modele || '', description: form.description || '',
-      client: form.client || '', tailles: form.tailles || [], mesures: form.mesures || [],
+      modele: form.modele || '', 
+      description: form.description || '',
+      client: form.client || '', 
+      tailles: form.tailles || [], 
+      mesures: form.mesures || [],
       tissuConsommation: form.tissuConsommation || 0,
       type: form.type || '',
-      photo: form.photo, patronagePhoto: form.patronagePhoto,
+      photo: form.photo, 
+      patronagePhoto: form.patronagePhoto,
       patronageFileName: form.patronageFileName,
+      fit: form.fit,
+      complexity: form.complexity,
       createdAt: form.createdAt || new Date().toISOString().split('T')[0],
     };
 
@@ -1021,14 +1066,45 @@ export default function FichesTechniques() {
                   <textarea value={form.description || ''} onChange={e => setForm({ ...form, description: e.target.value })}
                     rows={2} className={`w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors resize-none ${isAr ? 'text-right' : ''}`} />
                 </div>
-                <div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={`block text-xs font-semibold text-slate-600 mb-1.5 ${isAr ? 'text-right' : ''}`}>
+                      <Ruler className="w-3.5 h-3.5 inline mr-1 text-indigo-400" />
+                      {t('conso_tissu', lang)} <span className="text-rose-500 font-bold">*</span>
+                    </label>
+                    <input type="number" step="0.01" value={form.tissuConsommation || ''} onChange={e => setForm({ ...form, tissuConsommation: parseFloat(e.target.value) || 0 })}
+                      required
+                      className={`w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors ${isAr ? 'text-right' : ''}`} />
+                  </div>
+                  <div>
+                    <label className={`block text-xs font-semibold text-slate-600 mb-1.5 ${isAr ? 'text-right' : ''}`}>
+                       ✨ {isAr ? 'القصة' : 'Coupe / Fit'}
+                    </label>
+                    <input value={form.fit || ''} onChange={e => setForm({ ...form, fit: e.target.value })}
+                      placeholder={isAr ? 'مثلا: واسع، ضيق...' : 'Ex: Large, Slim...'}
+                      className={`w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors ${isAr ? 'text-right' : ''}`} />
+                  </div>
+                </div>
+
+                <div className="mt-3">
                   <label className={`block text-xs font-semibold text-slate-600 mb-1.5 ${isAr ? 'text-right' : ''}`}>
-                    <Ruler className="w-3.5 h-3.5 inline mr-1 text-indigo-400" />
-                    {t('conso_tissu', lang)} <span className="text-rose-500 font-bold">*</span>
+                     ⚡ {isAr ? 'الصعوبة' : 'Complexité'}
                   </label>
-                  <input type="number" step="0.01" value={form.tissuConsommation || ''} onChange={e => setForm({ ...form, tissuConsommation: parseFloat(e.target.value) || 0 })}
-                    required
-                    className={`w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors ${isAr ? 'text-right' : ''}`} />
+                  <div className={`flex flex-wrap gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                    {['Facile', 'Moyen', 'Difficile'].map(lvl => (
+                      <button
+                        key={lvl}
+                        type="button"
+                        onClick={() => setForm({ ...form, complexity: lvl })}
+                        className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${form.complexity === lvl
+                          ? 'bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-200'
+                          : 'bg-white border-slate-200 text-slate-600 hover:border-amber-400'
+                          }`}
+                      >
+                        {lvl === 'Facile' ? (isAr ? 'سهل' : 'Facile') : lvl === 'Moyen' ? (isAr ? 'متوسط' : 'Moyen') : (isAr ? 'صعب' : 'Difficile')}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -1233,14 +1309,23 @@ export default function FichesTechniques() {
                     <p className={`text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] ${isAr ? 'text-right' : ''}`}>{t('notes_obs', lang)}</p>
                     {(() => {
                       const desc = viewMesuresFiche.description || '';
+                      
+                      // Explicit fields with description fallback
+                      const fitVal = viewMesuresFiche.fit || (() => {
+                        const mainParts = desc.split('|');
+                        const fitSection = mainParts.find(p => p.includes('القصة:') || p.includes('Coupe:'));
+                        return fitSection ? fitSection.split(/القصة:|Coupe:/)[1].trim() : '';
+                      })();
+
+                      const compVal = viewMesuresFiche.complexity || (() => {
+                        const mainParts = desc.split('|');
+                        const compSection = mainParts.find(p => p.includes('الصعوبة:') || p.includes('Complexité:'));
+                        return compSection ? compSection.split(/الصعوبة:|Complexité:/)[1].trim() : '';
+                      })();
+
                       if (desc.includes('المكونات:') || desc.includes('Composants:')) {
                         const mainParts = desc.split('|');
                         const compsSection = mainParts[0];
-                        const fitSection = mainParts.find(p => p.includes('القصة:') || p.includes('Coupe:'));
-                        const compSection = mainParts.find(p => p.includes('الصعوبة:') || p.includes('Complexité:'));
-
-                        const fitVal = fitSection ? fitSection.split(/القصة:|Coupe:/)[1].trim() : '';
-                        const compVal = compSection ? compSection.split(/الصعوبة:|Complexité:/)[1].trim() : '';
 
                         const parts = compsSection.split(/المكونات:|Composants:/);
                         const header = parts[0].trim();
@@ -1280,9 +1365,25 @@ export default function FichesTechniques() {
                         );
                       }
                       return (
-                        <p className={`text-sm text-slate-600 leading-relaxed italic ${isAr ? 'text-right' : ''}`}>
-                          {desc || (isAr ? "لم يتم إضافة أي ملاحظات تقنية لهذا النموذج." : "Aucune observation technique n'a été ajoutée pour ce modèle.")}
-                        </p>
+                        <div className="space-y-3.5">
+                          {(fitVal || compVal) && (
+                              <div className={`flex flex-wrap gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                                {fitVal && (
+                                  <span className="flex items-center gap-1.5 px-3 py-1 bg-violet-50 text-violet-700 border border-violet-200 rounded-lg text-xs font-black tracking-wide shadow-sm">
+                                    ✨ {isAr ? 'القصة:' : 'Coupe:'} {fitVal}
+                                  </span>
+                                )}
+                                {compVal && (
+                                  <span className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-xs font-black tracking-wide shadow-sm">
+                                    ⚡ {isAr ? 'الصعوبة:' : 'Complexité:'} {compVal}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          <p className={`text-sm text-slate-600 leading-relaxed italic ${isAr ? 'text-right' : ''}`}>
+                            {desc || (isAr ? "لم يتم إضافة أي ملاحظات تقنية لهذا النموذج." : "Aucune observation technique n'a été ajoutée pour ce modèle.")}
+                          </p>
+                        </div>
                       );
                     })()}
                   </div>
