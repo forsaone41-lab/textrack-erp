@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, UserPlus, Users, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy } from 'lucide-react';
+import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, UserPlus, Users, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy, Edit2 } from 'lucide-react';
 import { Lead, loadLeads, saveRecord, User, genId, deleteRecord, loadData } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { generatePDF } from '../utils/pdf';
@@ -45,6 +45,8 @@ export default function Demandes() {
   const [matierePrice, setMatierePrice] = useState<string>('');
   const [laborPrice, setLaborPrice] = useState<string>('');
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
+  const [editingLead, setEditingLead] = useState<Lead | null>(null);
+  const [editForm, setEditForm] = useState<Partial<Lead>>({});
   const [newClientCode, setNewClientCode] = useState<{ name: string, code: string } | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [visibleCount, setVisibleCount] = useState(10);
@@ -220,6 +222,19 @@ export default function Demandes() {
       console.error("Delete failed:", err);
     } finally {
       setDeleteId(null);
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingLead) return;
+    const updatedLead = { ...editingLead, ...editForm };
+    const updatedList = leads.map(l => l.id === editingLead.id ? updatedLead : l);
+    setLeads(updatedList);
+    try {
+      await saveRecord('leads', updatedLead, true);
+      setEditingLead(null);
+    } catch (err: any) {
+      alert(isAr ? 'مشكل في الحفظ: ' + err.message : 'Erreur de sauvegarde : ' + err.message);
     }
   };
 
@@ -1078,14 +1093,23 @@ export default function Demandes() {
                     })()}
                   </div>
 
-                  {/* Delete Action */}
-                  <button
-                    onClick={() => setDeleteId(lead.id)}
-                    className="w-11 h-11 flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
-                    title={isAr ? 'حذف الطلب' : 'Supprimer'}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {/* Edit/Delete Actions */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => { setEditingLead(lead); setEditForm(lead); }}
+                      className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
+                      title={isAr ? 'تعديل' : 'Modifier'}
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setDeleteId(lead.id)}
+                      className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+                      title={isAr ? 'حذف الطلب' : 'Supprimer'}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
 
