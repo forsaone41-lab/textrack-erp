@@ -96,11 +96,28 @@ export default function LandingPage() {
   // Helper to format video URL (Instagram or direct)
   const getEmbedUrl = (url?: string) => {
     if (!url) return null;
+    
+    // Instagram
     if (url.includes('instagram.com')) {
-      // Clean the URL and add /embed
       const cleanUrl = url.split('?')[0].replace(/\/$/, '');
       return `${cleanUrl}/embed`;
     }
+
+    // YouTube
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      let videoId = '';
+      if (url.includes('v=')) {
+        videoId = url.split('v=')[1].split('&')[0];
+      } else if (url.includes('youtu.be/')) {
+        videoId = url.split('youtu.be/')[1].split('?')[0];
+      } else if (url.includes('shorts/')) {
+        videoId = url.split('shorts/')[1].split('?')[0];
+      } else if (url.includes('embed/')) {
+        return url;
+      }
+      return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+    }
+
     return url;
   };
 
@@ -265,14 +282,23 @@ export default function LandingPage() {
             {/* Video Container */}
             <div className="relative aspect-video bg-slate-900 rounded-3xl md:rounded-[3rem] overflow-hidden shadow-[0_30px_100px_rgba(0,0,0,0.2)] border-8 border-white">
               {embedUrl ? (
-                <iframe
-                  src={embedUrl}
-                  className="absolute inset-0 w-full h-full border-0"
-                  allowFullScreen
-                  scrolling="no"
-                  loading="lazy"
-                  allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                ></iframe>
+                embedUrl.match(/\.(mp4|webm|ogg)$/i) ? (
+                  <video 
+                    src={embedUrl} 
+                    controls 
+                    className="absolute inset-0 w-full h-full object-cover"
+                    poster={company.logoUrl}
+                  />
+                ) : (
+                  <iframe
+                    src={embedUrl}
+                    className="absolute inset-0 w-full h-full border-0"
+                    allowFullScreen
+                    scrolling="no"
+                    loading="lazy"
+                    allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                  ></iframe>
+                )
               ) : (
                 <>
                   <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1558002038-1055907df827?q=80&w=2070')] bg-cover bg-center opacity-60 mix-blend-overlay" />
