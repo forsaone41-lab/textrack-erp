@@ -89,6 +89,22 @@ export default function Demandes() {
     refresh();
   }, []);
 
+  const { prospectsCount, recruitmentCount } = useMemo(() => {
+    return {
+      prospectsCount: leads.filter(l => !l.type.startsWith('RECRUTEMENT:')).length,
+      recruitmentCount: leads.filter(l => l.type.startsWith('RECRUTEMENT:')).length
+    };
+  }, [leads]);
+
+  const activeWorkersCount = useMemo(() => {
+    return employes.filter(e => e.actif).length;
+  }, [employes]);
+
+  const [employes, setEmployes] = useState<any[]>([]);
+  useEffect(() => {
+    loadData<any>('employes').then(data => setEmployes(data || []));
+  }, []);
+
   const saveTemplates = (newTemplates: any) => {
     console.log("Saving templates...", newTemplates);
     setTemplates(newTemplates);
@@ -825,18 +841,39 @@ export default function Demandes() {
             <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 shadow-inner">
               <button
                 onClick={() => setCategory('clients')}
-                className={`px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 ${category === 'clients' ? 'bg-white text-indigo-600 shadow-md ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-800'}`}
+                className={`px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 relative ${category === 'clients' ? 'bg-white text-indigo-600 shadow-md ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-800'}`}
               >
                 <Package className="w-4 h-4" />
                 {isAr ? 'زبناء محتملون' : 'Prospects Clients'}
+                {prospectsCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-indigo-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full shadow-lg animate-in zoom-in border-2 border-white">
+                    {prospectsCount}
+                  </span>
+                )}
               </button>
               <button
                 onClick={() => setCategory('recrutement')}
-                className={`px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 ${category === 'recrutement' ? 'bg-white text-rose-600 shadow-md ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-800'}`}
+                className={`px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 relative ${category === 'recrutement' ? 'bg-white text-rose-600 shadow-md ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-800'}`}
               >
                 <UserPlus className="w-4 h-4" />
                 {isAr ? 'طلبات التوظيف' : 'Recrutement'}
+                {recruitmentCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-rose-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full shadow-lg animate-in zoom-in border-2 border-white">
+                    {recruitmentCount}
+                  </span>
+                )}
               </button>
+            </div>
+            
+            {/* Global Workers Summary (Khdama) */}
+            <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl border border-slate-100 shadow-sm ml-auto">
+              <div className="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
+                <Users className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-tight">{isAr ? 'مجموع الخدامة' : 'Total Personnel'}</p>
+                <p className="text-sm font-black text-slate-900 leading-tight">{activeWorkersCount}</p>
+              </div>
             </div>
           </div>
           <div>

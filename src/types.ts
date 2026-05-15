@@ -667,7 +667,7 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
           'dateEntree', 'contrat', 'cnss', 'mutuelle', 'enfants', 'situation_familiale',
           'clientId', 'rebut', 'planningReady', 'ville', 'employeId', 'telephone', 'tailles', 'rejectionNote', 'tissus',
           'partenaireId', 'externalTasks', 'typeDossier',
-          'photo'
+          'photo', 'adresse'
         ];
         newCols.forEach(col => delete fallbackRecord[col]);
         
