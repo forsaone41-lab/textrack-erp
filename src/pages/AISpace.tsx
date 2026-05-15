@@ -321,7 +321,8 @@ export default function AISpace() {
       const base64Data = image.split(',')[1];
       const mimeType = image.split(';')[0].split(':')[1];
 
-       const analysisPrompt = `أنت خبير نسيج وخياطة محترف في مصنع مغربي. حلل هذه الصورة بدقة عالية جداً.
+      const analysisPrompt = isAr 
+        ? `أنت خبير نسيج وخياطة محترف في مصنع مغربي. حلل هذه الصورة بدقة عالية جداً.
 
 أريد منك تحليل كل قطعة ملابس في الصورة بشكل منفصل (مثلاً إذا في الصورة تيشرت وسروال، حلل كل واحد لوحدو).
 
@@ -350,11 +351,6 @@ export default function AISpace() {
       "name": "كريب ريحانة / Crêpe Rayhana",
       "pros": "طايح، مكيتبينش، وساهل في الخياطة ومريح",
       "cons": "كيشرب شوية في المصلوح"
-    },
-    {
-      "name": "كتان لينوه / Lin",
-      "pros": "بارد في الصيف، مظهر طبيعي فخم ومريح",
-      "cons": "كيتكمش بسرعة وكيبغي المصلوح ديما"
     }
   ],
   "pieces": [
@@ -366,18 +362,55 @@ export default function AISpace() {
       "costEstimate": "25 - 40 MAD",
       "components": ["صدر أمامي", "ظهر", "أكمام قصيرة", "ياقة دائرية"],
       "fabricSuggested": "قطن ليكرا / Coton Lycra",
-      "fabricAlternatives": [
-        {
-          "name": "ميكروفيبر / Microfibre",
-          "pros": "خفيف جداً وسريع الجفاف",
-          "cons": "مكيمتصش العرق بحال القطن الطبيعي"
-        }
-      ],
+      "fabricAlternatives": [],
       "mesures": [
-        {"nom": "الصدر (Poitrine)", "valeurs": {"S": 90, "M": 96, "L": 102, "XL": 108, "XXL": 114}},
-        {"nom": "الكتف (Épaules)", "valeurs": {"S": 42, "M": 44, "L": 46, "XL": 48, "XXL": 50}},
-        {"nom": "الطول (Longueur)", "valeurs": {"S": 68, "M": 70, "L": 72, "XL": 74, "XXL": 76}},
-        {"nom": "الكم (Manche)", "valeurs": {"S": 20, "M": 21, "L": 22, "XL": 23, "XXL": 24}}
+        {"nom": "الصدر (Poitrine)", "valeurs": {"S": 90, "M": 96, "L": 102, "XL": 108, "XXL": 114}}
+      ]
+    }
+  ]
+}`
+        : `Tu es un expert textile et confection professionnel. Analyse cette image avec une très haute précision.
+
+Je veux une analyse de chaque vêtement présent sur l'image séparément.
+
+Pour chaque pièce, donne-moi :
+1. Nom de la pièce (en Français)
+2. Consommation de tissu en mètres. Donne la mesure pour deux laizes : 1.50m et 1.80m.
+3. Type de Fit (Slim, Regular, Loose/Large) - analyse si le modèle est serré ou large d'après la photo.
+4. Niveau de complexité (Simple, Moyen, Complexe)
+5. Coût estimé de confection en MAD
+6. Composants de la pièce (Buste, dos, manches, col, poches...)
+7. Tableau des mesures pour chaque taille (S, M, L, XL, XXL) :
+   - Haut : Poitrine, Épaules, Longueur, Manche, Taille. (Ajoute Hanches si c'est une pièce longue comme une robe).
+   - Pantalon : Taille, Hanches, Longueur, Cuisse, Bas.
+8. Type de tissu principal suggéré et deux alternatives avec avantages/inconvénients.
+
+Réponds UNIQUEMENT au format JSON sans texte additionnel :
+{
+  "category": "Nom général du modèle",
+  "totalConsumption": "Laize 1.50m : X.XXm | Laize 1.80m : X.XXm",
+  "totalCost": "XX - XX MAD",
+  "complexity": "Moyenne",
+  "fabricSuggested": "Tissu suggéré",
+  "fabricAlternatives": [
+    {
+      "name": "Nom du tissu",
+      "pros": "Avantages",
+      "cons": "Inconvénients"
+    }
+  ],
+  "pieces": [
+    {
+      "name": "T-Shirt",
+      "consumption": "Laize 1.50m : 1.50m | Laize 1.80m : 1.20m",
+      "fit": "Regular",
+      "complexity": "Simple",
+      "costEstimate": "25 - 40 MAD",
+      "components": ["Buste avant", "Dos", "Manches courtes", "Col rond"],
+      "fabricSuggested": "Coton Lycra",
+      "fabricAlternatives": [],
+      "mesures": [
+        {"nom": "Poitrine", "valeurs": {"S": 90, "M": 96, "L": 102, "XL": 108, "XXL": 114}}
       ]
     }
   ]
@@ -449,6 +482,10 @@ export default function AISpace() {
         if (result.pieces.length > 0 && result.pieces[0].mesures.length > 0) {
           setCustomMesures(result.pieces[0].mesures);
         }
+
+        // AUTO-TRANSLATE result labels if they are standard but in wrong language
+        if (!isAr && result.category === 'موديل') result.category = 'Modèle';
+        if (isAr && result.category === 'Modèle') result.category = 'موديل';
 
         setAnalysisResult(result);
         setAnalyzing(false);
@@ -743,7 +780,9 @@ export default function AISpace() {
                 const fit = piece?.fit;
                 const pieceName = piece?.name || analysisResult.category;
                 const askAI = (topic: string) => {
-                  const q = `أعطيني تفاصيل أكثر على ${topic} ديال "${pieceName}" اللي في الصورة. بغي معلومات دقيقة وعملية للإنتاج.`;
+                  const q = isAr 
+                    ? `أعطيني تفاصيل أكثر على ${topic} ديال "${pieceName}" اللي في الصورة. بغي معلومات دقيقة وعملية للإنتاج.`
+                    : `Donne-moi plus de détails sur ${topic} de "${pieceName}" sur l'image. Je veux des infos précises pour la production.`;
                   sendDirect(q);
                 };
                 return (
@@ -1073,7 +1112,7 @@ export default function AISpace() {
                 className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-xl shadow-slate-900/15"
               >
                 {exporting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-amber-400 text-amber-400" />}
-                {isAr ? `تصدير القطعة الحالية فقط (${analysisResult.pieces?.[activePieceIdx]?.name?.split('/')[0]?.trim() || analysisResult.category || 'قطعة'})` : `Exporter pièce actuelle`}
+                {isAr ? `تصدير القطعة الحالية فقط (${analysisResult.pieces?.[activePieceIdx]?.name?.split('/')[0]?.trim() || analysisResult.category || 'قطعة'})` : `Exporter cette pièce uniquement`}
               </button>
               <button
                 onClick={() => exportToFicheTechnique('complete')}
@@ -1081,7 +1120,7 @@ export default function AISpace() {
                 className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-xl shadow-indigo-600/20"
               >
                 {exporting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Package className="w-4 h-4" />}
-                {isAr ? 'تصدير الطقم كامل (Ensemble Complet)' : 'Exporter ensemble complet'}
+                {isAr ? 'تصدير الطقم كامل (Ensemble Complet)' : 'Exporter l\'ensemble complet'}
               </button>
             </div>
           </div>
@@ -1197,7 +1236,7 @@ export default function AISpace() {
                 }}
                 className="w-full bg-indigo-600 text-white rounded-xl py-3 font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition"
               >
-                حفظ التغييرات
+                {isAr ? 'حفظ التغييرات' : 'Sauvegarder'}
               </button>
             </div>
           </div>
