@@ -1061,12 +1061,7 @@ export default function FichesTechniques() {
                   <input value={form.client || ''} onChange={e => setForm({ ...form, client: e.target.value })}
                     className={`w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors ${isAr ? 'text-right' : ''}`} />
                 </div>
-                <div className="mb-3">
-                  <label className={`block text-xs font-semibold text-slate-600 mb-1.5 ${isAr ? 'text-right' : ''}`}>{t('desc_label', lang)}</label>
-                  <textarea value={form.description || ''} onChange={e => setForm({ ...form, description: e.target.value })}
-                    rows={2} className={`w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors resize-none ${isAr ? 'text-right' : ''}`} />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-3 mb-3">
                   <div>
                     <label className={`block text-xs font-semibold text-slate-600 mb-1.5 ${isAr ? 'text-right' : ''}`}>
                       <Ruler className="w-3.5 h-3.5 inline mr-1 text-indigo-400" />
@@ -1086,7 +1081,7 @@ export default function FichesTechniques() {
                   </div>
                 </div>
 
-                <div className="mt-3">
+                <div className="mb-3">
                   <label className={`block text-xs font-semibold text-slate-600 mb-1.5 ${isAr ? 'text-right' : ''}`}>
                      ⚡ {isAr ? 'الصعوبة' : 'Complexité'}
                   </label>
@@ -1096,8 +1091,8 @@ export default function FichesTechniques() {
                         key={lvl}
                         type="button"
                         onClick={() => setForm({ ...form, complexity: lvl })}
-                        className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${form.complexity === lvl
-                          ? 'bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-200'
+                        className={`px-3 py-1.5 text-[10px] font-black rounded-lg border transition-all ${form.complexity === lvl
+                          ? 'bg-amber-500 border-amber-500 text-white shadow-md shadow-amber-200'
                           : 'bg-white border-slate-200 text-slate-600 hover:border-amber-400'
                           }`}
                       >
@@ -1105,6 +1100,12 @@ export default function FichesTechniques() {
                       </button>
                     ))}
                   </div>
+                </div>
+
+                <div className="mb-3">
+                  <label className={`block text-xs font-semibold text-slate-600 mb-1.5 ${isAr ? 'text-right' : ''}`}>{t('desc_label', lang)}</label>
+                  <textarea value={form.description || ''} onChange={e => setForm({ ...form, description: e.target.value })}
+                    rows={2} className={`w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors resize-none ${isAr ? 'text-right' : ''}`} />
                 </div>
               </div>
 

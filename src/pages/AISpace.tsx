@@ -43,6 +43,7 @@ export default function AISpace() {
   const [analysisResult, setAnalysisResult] = useState<null | {
     category: string;
     consumption: string;
+    fit?: string;
     complexity: string;
     components: string[];
     costEstimate: string;
@@ -250,9 +251,11 @@ export default function AISpace() {
         tailles: selectedTailles,
         mesures: ftMesures,
         tissuConsommation: ftConso,
-        type: 'creations',
+        type: mode === 'complete' ? 'Ensemble' : (analysisResult.category || 'creations'),
         createdAt: new Date().toISOString().split('T')[0],
-        photo: image || undefined
+        photo: image || undefined,
+        fit: mode === 'current' && analysisResult.pieces?.[activePieceIdx]?.fit ? analysisResult.pieces[activePieceIdx].fit : fitStr,
+        complexity: mode === 'current' && analysisResult.pieces?.[activePieceIdx]?.complexity ? analysisResult.pieces[activePieceIdx].complexity : compStr
       };
 
       await saveRecord('fiches', newFT);
@@ -413,6 +416,7 @@ export default function AISpace() {
         const result: any = {
           category: parsed.category || 'موديل',
           consumption: parsed.totalConsumption || parsed.consumption || '—',
+          fit: parsed.fit || (parsed.pieces?.[0]?.fit) || 'عادي',
           complexity: parsed.complexity || 'متوسطة',
           costEstimate: parsed.totalCost || parsed.costEstimate || '—',
           components: [],
