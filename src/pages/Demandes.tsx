@@ -89,6 +89,12 @@ export default function Demandes() {
     refresh();
   }, []);
 
+  const [employes, setEmployes] = useState<any[]>([]);
+
+  useEffect(() => {
+    loadData<any>('employes').then(data => setEmployes(data || []));
+  }, []);
+
   const { prospectsCount, recruitmentCount } = useMemo(() => {
     return {
       prospectsCount: leads.filter(l => !l.type.startsWith('RECRUTEMENT:')).length,
@@ -99,11 +105,6 @@ export default function Demandes() {
   const activeWorkersCount = useMemo(() => {
     return employes.filter(e => e.actif).length;
   }, [employes]);
-
-  const [employes, setEmployes] = useState<any[]>([]);
-  useEffect(() => {
-    loadData<any>('employes').then(data => setEmployes(data || []));
-  }, []);
 
   const saveTemplates = (newTemplates: any) => {
     console.log("Saving templates...", newTemplates);
