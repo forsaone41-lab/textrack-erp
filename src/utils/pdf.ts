@@ -3,6 +3,17 @@ const getHtml2Canvas = () => import('html2canvas').then(m => m.default);
 const getJsPDF = () => import('jspdf').then(m => m.default);
 
 /**
+ * Recursively strips all class attributes from an element and its children
+ * to prevent Tailwind hiding classes from interfering.
+ */
+function stripAllClasses(el: HTMLElement) {
+  el.removeAttribute('class');
+  Array.from(el.children).forEach(child => {
+    if (child instanceof HTMLElement) stripAllClasses(child);
+  });
+}
+
+/**
  * Super robust printing using a hidden iframe.
  */
 export function printElement(elementId: string) {
@@ -25,29 +36,20 @@ export function printElement(elementId: string) {
   const doc = iframe.contentWindow?.document;
   if (!doc) return;
 
+  // Clone and STRIP all classes
   const clone = original.cloneNode(true) as HTMLElement;
-  clone.style.cssText = 'opacity:1!important;visibility:visible!important;display:block!important;position:relative!important;width:100%!important;';
+  stripAllClasses(clone);
+  clone.style.cssText = 'opacity:1;visibility:visible;display:block;position:relative;width:100%;background:white;color:#0f172a;font-family:sans-serif;';
   
-  let stylesHtml = '';
-  try {
-    Array.from(document.styleSheets).forEach(sheet => {
-      if (sheet.href) {
-        stylesHtml += `<link rel="stylesheet" href="${sheet.href}">`;
-      } else {
-        stylesHtml += `<style>${Array.from(sheet.cssRules).map(r => r.cssText).join('\n')}</style>`;
-      }
-    });
-  } catch (e) { /* CORS */ }
-
   doc.open();
-  doc.write(`<!DOCTYPE html><html><head><title>BEYA CREATIVE</title>${stylesHtml}
+  doc.write(`<!DOCTYPE html><html><head><title>BEYA CREATIVE</title>
     <style>
       body{margin:0;padding:20px;background:white!important;font-family:sans-serif;color:#0f172a!important}
-      *{opacity:1!important;visibility:visible!important}
+      img{max-width:100%!important;height:auto!important}
       @page{margin:0.5cm;size:A4}
       @media print{html,body{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
     </style></head>
-    <body><div style="width:100%;background:white;color:#0f172a">${clone.outerHTML}</div></body></html>`);
+    <body>${clone.outerHTML}</body></html>`);
   doc.close();
 
   const printWhenReady = () => {
@@ -60,157 +62,82 @@ export function printElement(elementId: string) {
 }
 
 /**
- * Generates a high-quality PDF by cloning the element into a visible container,
- * capturing it, then removing the clone. Never touches the original element.
- * Falls back to direct download via data URL if html2canvas fails.
+ * Generates a high-quality PDF.
+ * Strategy: clone → strip classes → append visible off-screen → capture → remove → save PDF.
  */
 export async function generatePDF(elementId: string, filename: string) {
   const element = document.getElementById(elementId);
   if (!element) {
-    console.error('generatePDF: Element not found:', elementId);
+    console.error('generatePDF: element not found', elementId);
     return;
   }
 
-  // Create a visible clone container off-screen
+  // Create visible off-screen wrapper
   const wrapper = document.createElement('div');
-  wrapper.id = 'pdf-capture-wrapper';
-  wrapper.style.cssText = `
-    position: fixed;
-    left: -9999px;
-    top: 0;
-    width: 800px;
-    background: white;
-    z-index: -1;
-    opacity: 1;
-    visibility: visible;
-    display: block;
-    overflow: visible;
-  `;
-  
-  // Clone the element
+  wrapper.style.cssText = 'position:absolute;left:-9999px;top:0;width:800px;background:white;z-index:99999;overflow:visible;';
+
+  // Deep clone and strip ALL Tailwind/CSS classes
   const clone = element.cloneNode(true) as HTMLElement;
-  clone.removeAttribute('id');
-  clone.style.cssText = `
-    opacity: 1 !important;
-    visibility: visible !important;
-    display: block !important;
-    position: relative !important;
-    left: 0 !important;
-    top: 0 !important;
-    width: 800px !important;
-    background: white !important;
-    color: #0f172a !important;
-    pointer-events: none !important;
-  `;
-  
+  stripAllClasses(clone);
+  clone.style.cssText = 'opacity:1;visibility:visible;display:block;position:relative;width:800px;background:white;color:#0f172a;font-family:sans-serif;';
+
   wrapper.appendChild(clone);
   document.body.appendChild(wrapper);
 
-  // Wait for images to load and DOM to settle
-  await new Promise(r => setTimeout(r, 300));
+  // Give browser time to render
+  await new Promise(r => setTimeout(r, 500));
+
+  let success = false;
 
   try {
-    // Lazy load libraries
-    const [html2canvas, jsPDF] = await Promise.all([
-      getHtml2Canvas(),
-      getJsPDF()
-    ]);
+    const [html2canvas, jsPDF] = await Promise.all([getHtml2Canvas(), getJsPDF()]);
 
-    // Capture the clone (which is visible, just off-screen)
     const canvas = await html2canvas(wrapper, {
       scale: 2,
       useCORS: true,
       allowTaint: true,
       logging: false,
       backgroundColor: '#ffffff',
-      width: 800,
-      scrollX: 0,
-      scrollY: 0,
-      windowWidth: 800,
     });
 
-    // Remove clone immediately
-    document.body.removeChild(wrapper);
-
-    // Verify canvas has content
-    if (canvas.width === 0 || canvas.height === 0) {
-      console.error('generatePDF: Canvas is empty');
-      return;
-    }
-
-    // Generate PDF
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    
-    const imgWidth = pdfWidth;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    
-    if (imgHeight <= pdfHeight) {
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight, undefined, 'FAST');
-    } else {
-      // Multi-page
-      const pageCanvasHeight = (pdfHeight * canvas.width) / pdfWidth;
-      let remainingHeight = canvas.height;
-      let position = 0;
-      let page = 0;
-
-      while (remainingHeight > 0) {
-        if (page > 0) pdf.addPage();
-        
-        const sliceHeight = Math.min(pageCanvasHeight, remainingHeight);
-        const pageCanvas = document.createElement('canvas');
-        pageCanvas.width = canvas.width;
-        pageCanvas.height = sliceHeight;
-        const ctx = pageCanvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(canvas, 0, position, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
-          const pageImgData = pageCanvas.toDataURL('image/png');
-          const sliceImgHeight = (sliceHeight * imgWidth) / canvas.width;
-          pdf.addImage(pageImgData, 'PNG', 0, 0, imgWidth, sliceImgHeight, undefined, 'FAST');
-        }
-        
-        position += sliceHeight;
-        remainingHeight -= sliceHeight;
-        page++;
-      }
-    }
-    
-    // Direct download — no print dialog!
-    pdf.save(`${filename}.pdf`);
-
-  } catch (error) {
-    console.error('PDF Generation Error:', error);
-    // Clean up clone
-    try { document.body.removeChild(wrapper); } catch (_) {}
-    
-    // Fallback: try simpler approach without scale
-    try {
-      const [html2canvas, jsPDF] = await Promise.all([getHtml2Canvas(), getJsPDF()]);
-      
-      // Re-add clone for retry
-      const wrapper2 = document.createElement('div');
-      wrapper2.style.cssText = 'position:fixed;left:-9999px;top:0;width:800px;background:white;z-index:-1;';
-      const clone2 = element.cloneNode(true) as HTMLElement;
-      clone2.removeAttribute('id');
-      clone2.style.cssText = 'opacity:1!important;visibility:visible!important;display:block!important;position:relative!important;width:800px!important;background:white!important;';
-      wrapper2.appendChild(clone2);
-      document.body.appendChild(wrapper2);
-      await new Promise(r => setTimeout(r, 200));
-      
-      const canvas = await html2canvas(wrapper2, { scale: 1, useCORS: true, allowTaint: true, logging: true, backgroundColor: '#ffffff' });
-      document.body.removeChild(wrapper2);
-      
+    if (canvas.width > 0 && canvas.height > 0) {
+      const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
-      const pw = pdf.internal.pageSize.getWidth();
-      const ih = (canvas.height * pw) / canvas.width;
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pw, ih, undefined, 'FAST');
+      const pdfW = pdf.internal.pageSize.getWidth();
+      const pdfH = pdf.internal.pageSize.getHeight();
+      const imgW = pdfW;
+      const imgH = (canvas.height * imgW) / canvas.width;
+
+      if (imgH <= pdfH) {
+        pdf.addImage(imgData, 'PNG', 0, 0, imgW, imgH, undefined, 'FAST');
+      } else {
+        // Multi-page
+        const pageH = (pdfH * canvas.width) / pdfW;
+        let rem = canvas.height, pos = 0, pg = 0;
+        while (rem > 0) {
+          if (pg > 0) pdf.addPage();
+          const sh = Math.min(pageH, rem);
+          const pc = document.createElement('canvas');
+          pc.width = canvas.width; pc.height = sh;
+          pc.getContext('2d')?.drawImage(canvas, 0, pos, canvas.width, sh, 0, 0, canvas.width, sh);
+          pdf.addImage(pc.toDataURL('image/png'), 'PNG', 0, 0, imgW, (sh * imgW) / canvas.width, undefined, 'FAST');
+          pos += sh; rem -= sh; pg++;
+        }
+      }
+
       pdf.save(`${filename}.pdf`);
-    } catch (err2) {
-      console.error('PDF Fallback also failed:', err2);
-      // Ultimate fallback: open print dialog with content
-      printElement(elementId);
+      success = true;
     }
+  } catch (err) {
+    console.error('html2canvas failed:', err);
+  }
+
+  // Cleanup
+  try { document.body.removeChild(wrapper); } catch (_) {}
+
+  // If html2canvas failed entirely, fallback to print
+  if (!success) {
+    console.warn('Falling back to printElement');
+    printElement(elementId);
   }
 }
