@@ -1238,24 +1238,32 @@ export default function Demandes() {
 
         {/* ===== TOTALS ===== */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 40px 32px' }}>
-          <div style={{ width: '300px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 16px', fontSize: '11px', fontWeight: 700, color: '#64748b' }}>
+          <div style={{ width: '340px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 16px', fontSize: '11px', fontWeight: 700, color: '#64748b', borderBottom: '1px solid #f1f5f9' }}>
               <span>Prix Unitaire</span>
-              <span>{unitPrice.toFixed(2)} MAD</span>
+              <span style={{ fontWeight: 800 }}>{unitPrice.toFixed(2)} MAD</span>
             </div>
             {Number(matierePrice) > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 16px', fontSize: '11px', fontWeight: 700, color: '#64748b' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 16px', fontSize: '11px', fontWeight: 700, color: '#64748b', borderBottom: '1px solid #f1f5f9' }}>
                 <span>Sous-total Matière</span>
-                <span>{totalMatiere.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
+                <span style={{ fontWeight: 800 }}>{totalMatiere.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
               </div>
             )}
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 16px', fontSize: '11px', fontWeight: 700, color: '#64748b' }}>
-              <span>Sous-total MO</span>
-              <span>{totalLabor.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 16px', fontSize: '11px', fontWeight: 700, color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>
+              <span>Sous-total Main d'œuvre</span>
+              <span style={{ fontWeight: 800 }}>{totalLabor.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#4f46e5', color: 'white', padding: '20px', borderRadius: '16px', marginTop: '8px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px' }}>Total Général TTC</span>
-              <span style={{ fontSize: '24px', fontWeight: 900 }}>{totalGeneral.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
+            <div style={{ 
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+              background: 'linear-gradient(135deg, #312e81, #4f46e5)', 
+              color: 'white', padding: '24px 20px', borderRadius: '16px', marginTop: '12px',
+              boxShadow: '0 10px 30px rgba(79, 70, 229, 0.3)'
+            }}>
+              <div>
+                <span style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px', opacity: 0.7, display: 'block' }}>Total Général</span>
+                <span style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px' }}>TTC</span>
+              </div>
+              <span style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-1px' }}>{totalGeneral.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} <span style={{ fontSize: '16px', fontWeight: 800 }}>MAD</span></span>
             </div>
           </div>
         </div>

@@ -3,12 +3,8 @@ const getHtml2Canvas = () => import('html2canvas').then(m => m.default);
 const getJsPDF = () => import('jspdf').then(m => m.default);
 
 /**
- * Super robust printing: Converts canvases to images first, then clones 
- * to a clean div to avoid Modal/Fixed positioning issues.
- */
-/**
  * Super robust printing using a hidden iframe.
- * This avoids all the issues with document.write/window.open in modern browsers.
+ * Uses @page CSS to remove browser headers/footers (date, URL, page numbers).
  */
 export function printElement(elementId: string) {
   const original = document.getElementById(elementId);
@@ -55,13 +51,22 @@ export function printElement(elementId: string) {
     <!DOCTYPE html>
     <html>
       <head>
-        <title>Impression - TexTrack</title>
+        <title>BEYA CREATIVE</title>
         ${stylesHtml}
         <style>
           body { margin: 0; padding: 20px; background: white !important; font-family: sans-serif; }
           img { max-width: 100% !important; height: auto !important; }
           .no-print { display: none !important; }
-          @page { margin: 1cm; }
+          @page { 
+            margin: 0.5cm; 
+            size: A4;
+          }
+          @media print {
+            html, body { 
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+          }
         </style>
       </head>
       <body>
@@ -88,23 +93,20 @@ export function printElement(elementId: string) {
       setTimeout(() => {
         iframe.contentWindow?.focus();
         iframe.contentWindow?.print();
-        // Cleanup after some delay
-        setTimeout(() => {
-          // document.body.removeChild(iframe); // Keep it or not
-        }, 1000);
       }, 500);
     });
   };
 
   if (iframe.contentWindow) {
     iframe.onload = printWhenReady;
-    // For browsers where iframe.onload doesn't fire for doc.write
     setTimeout(printWhenReady, 1000);
   }
 }
 
 /**
  * Generates a high-quality PDF from a DOM element.
+ * Uses html2canvas + jsPDF for clean output without browser headers/footers.
+ * Supports multi-page content automatically.
  */
 export async function generatePDF(elementId: string, filename: string) {
   const element = document.getElementById(elementId);
@@ -130,7 +132,7 @@ export async function generatePDF(elementId: string, filename: string) {
           clonedElement.style.opacity = '1';
           clonedElement.style.visibility = 'visible';
           clonedElement.style.display = 'block';
-          clonedElement.style.position = 'relative'; // CRITICAL: Reset from 'fixed'
+          clonedElement.style.position = 'relative';
           clonedElement.style.left = '0';
           clonedElement.style.top = '0';
           clonedElement.style.zIndex = '9999';
@@ -138,28 +140,50 @@ export async function generatePDF(elementId: string, filename: string) {
       }
     });
 
-
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
     
-    // Calculate dimensions to fit on one page if possible
     const imgWidth = pdfWidth;
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
     
-    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight, undefined, 'FAST');
+    // Handle multi-page content
+    if (imgHeight <= pdfHeight) {
+      // Fits on one page
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight, undefined, 'FAST');
+    } else {
+      // Multi-page: slice the canvas into page-sized chunks
+      const pageCanvasHeight = (pdfHeight * canvas.width) / pdfWidth;
+      let remainingHeight = canvas.height;
+      let position = 0;
+      let page = 0;
+
+      while (remainingHeight > 0) {
+        if (page > 0) pdf.addPage();
+        
+        const sliceHeight = Math.min(pageCanvasHeight, remainingHeight);
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.width = canvas.width;
+        pageCanvas.height = sliceHeight;
+        const ctx = pageCanvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(canvas, 0, position, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
+          const pageImgData = pageCanvas.toDataURL('image/png');
+          const sliceImgHeight = (sliceHeight * imgWidth) / canvas.width;
+          pdf.addImage(pageImgData, 'PNG', 0, 0, imgWidth, sliceImgHeight, undefined, 'FAST');
+        }
+        
+        position += sliceHeight;
+        remainingHeight -= sliceHeight;
+        page++;
+      }
+    }
+    
     pdf.save(`${filename}.pdf`);
   } catch (error) {
     console.error('PDF Generation Error:', error);
-    // Fallback but with clean style
-    const element = document.getElementById(elementId);
-    if (element) {
-      element.style.opacity = '1';
-      element.style.position = 'relative';
-      printElement(elementId);
-      element.style.opacity = '0';
-      element.style.position = 'fixed';
-    }
+    // Fallback: use print but with clean @page rules
+    printElement(elementId);
   }
 }
