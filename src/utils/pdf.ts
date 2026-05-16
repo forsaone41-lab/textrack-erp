@@ -4,13 +4,11 @@ const getJsPDF = () => import('jspdf').then(m => m.default);
 
 /**
  * Super robust printing using a hidden iframe.
- * Forces visibility on cloned elements and uses @page CSS to remove browser headers/footers.
  */
 export function printElement(elementId: string) {
   const original = document.getElementById(elementId);
   if (!original) return;
 
-  // 1. Create a hidden iframe
   let iframe = document.getElementById('print-iframe-temp') as HTMLIFrameElement;
   if (iframe) iframe.remove();
   
@@ -27,97 +25,47 @@ export function printElement(elementId: string) {
   const doc = iframe.contentWindow?.document;
   if (!doc) return;
 
-  // 2. Clone the element and FORCE visibility
   const clone = original.cloneNode(true) as HTMLElement;
-  clone.style.opacity = '1';
-  clone.style.visibility = 'visible';
-  clone.style.display = 'block';
-  clone.style.position = 'relative';
-  clone.style.left = '0';
-  clone.style.top = '0';
-  clone.style.zIndex = 'auto';
-  clone.style.pointerEvents = 'auto';
-  clone.style.width = '100%';
-  clone.removeAttribute('class'); // Remove all Tailwind hiding classes
+  // Force visibility on clone
+  clone.style.cssText = 'opacity:1!important;visibility:visible!important;display:block!important;position:relative!important;width:100%!important;pointer-events:auto!important;';
   
-  // 3. Collect all stylesheets to preserve look
   let stylesHtml = '';
-  const stylesheets = Array.from(document.styleSheets);
   try {
-    stylesheets.forEach(sheet => {
+    Array.from(document.styleSheets).forEach(sheet => {
       if (sheet.href) {
         stylesHtml += `<link rel="stylesheet" href="${sheet.href}">`;
       } else {
-        const rules = Array.from(sheet.cssRules);
-        stylesHtml += `<style>${rules.map(r => r.cssText).join('\n')}</style>`;
+        stylesHtml += `<style>${Array.from(sheet.cssRules).map(r => r.cssText).join('\n')}</style>`;
       }
     });
-  } catch (e) {
-    console.warn("Could not copy some styles due to CORS, falling back to basic styles", e);
-  }
+  } catch (e) { /* CORS */ }
 
   doc.open();
-  doc.write(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>BEYA CREATIVE</title>
-        ${stylesHtml}
-        <style>
-          body { margin: 0; padding: 20px; background: white !important; font-family: sans-serif; color: #0f172a !important; }
-          img { max-width: 100% !important; height: auto !important; }
-          .no-print { display: none !important; }
-          * { opacity: 1 !important; visibility: visible !important; }
-          @page { 
-            margin: 0.5cm; 
-            size: A4;
-          }
-          @media print {
-            html, body { 
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        <div style="width: 100%; background: white; color: #0f172a;">
-          ${clone.outerHTML}
-        </div>
-      </body>
-    </html>
-  `);
+  doc.write(`<!DOCTYPE html><html><head><title>BEYA CREATIVE</title>${stylesHtml}
+    <style>
+      body{margin:0;padding:20px;background:white!important;font-family:sans-serif;color:#0f172a!important}
+      img{max-width:100%!important;height:auto!important}
+      .no-print{display:none!important}
+      *{opacity:1!important;visibility:visible!important}
+      @page{margin:0.5cm;size:A4}
+      @media print{html,body{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
+    </style></head>
+    <body><div style="width:100%;background:white;color:#0f172a">${clone.outerHTML}</div></body></html>`);
   doc.close();
 
-  // 4. Wait for images and styles to load before printing
   const printWhenReady = () => {
     const images = Array.from(doc.querySelectorAll('img'));
-    const promises = images.map(img => {
-      if (img.complete) return Promise.resolve();
-      return new Promise(resolve => {
-        img.onload = resolve;
-        img.onerror = resolve;
-      });
-    });
-
-    Promise.all(promises).then(() => {
-      setTimeout(() => {
-        iframe.contentWindow?.focus();
-        iframe.contentWindow?.print();
-      }, 500);
+    Promise.all(images.map(img => img.complete ? Promise.resolve() : new Promise(r => { img.onload = r; img.onerror = r; }))).then(() => {
+      setTimeout(() => { iframe.contentWindow?.focus(); iframe.contentWindow?.print(); }, 500);
     });
   };
-
-  if (iframe.contentWindow) {
-    iframe.onload = printWhenReady;
-    setTimeout(printWhenReady, 1000);
-  }
+  if (iframe.contentWindow) { iframe.onload = printWhenReady; setTimeout(printWhenReady, 1000); }
 }
 
 /**
- * Generates a high-quality PDF from a DOM element.
- * Uses html2canvas + jsPDF for clean output without browser headers/footers.
- * Supports multi-page content automatically.
+ * Generates a high-quality PDF by temporarily making the element visible,
+ * capturing it with html2canvas, then hiding it again.
+ * This approach avoids the blank-canvas issue entirely.
  */
 export async function generatePDF(elementId: string, filename: string) {
   const element = document.getElementById(elementId);
@@ -126,48 +74,56 @@ export async function generatePDF(elementId: string, filename: string) {
     return;
   }
 
-  try {
-    element.scrollTop = 0;
+  // Save original styles
+  const origStyle = element.getAttribute('style') || '';
+  const origClass = element.className;
 
-    // Lazy load libraries
+  try {
+    // STEP 1: Temporarily make the element FULLY VISIBLE for html2canvas
+    element.style.cssText = `
+      opacity: 1 !important;
+      visibility: visible !important;
+      display: block !important;
+      position: absolute !important;
+      left: 0 !important;
+      top: 0 !important;
+      z-index: -1 !important;
+      width: 800px !important;
+      pointer-events: none !important;
+      background: white !important;
+    `;
+    // Remove Tailwind hiding classes temporarily
+    element.className = '';
+
+    // Force browser to repaint
+    await new Promise(r => setTimeout(r, 100));
+
+    // STEP 2: Lazy load libraries
     const [html2canvas, jsPDF] = await Promise.all([
       getHtml2Canvas(),
       getJsPDF()
     ]);
 
+    // STEP 3: Capture to canvas
     const canvas = await html2canvas(element, {
-      scale: 2, 
+      scale: 2,
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
       width: 800,
-      onclone: (clonedDoc) => {
-        const clonedElement = clonedDoc.getElementById(elementId);
-        if (clonedElement) {
-          // CRITICAL: Force full visibility on the cloned element
-          clonedElement.style.setProperty('opacity', '1', 'important');
-          clonedElement.style.setProperty('visibility', 'visible', 'important');
-          clonedElement.style.setProperty('display', 'block', 'important');
-          clonedElement.style.setProperty('position', 'relative', 'important');
-          clonedElement.style.setProperty('left', '0', 'important');
-          clonedElement.style.setProperty('top', '0', 'important');
-          clonedElement.style.setProperty('z-index', '9999', 'important');
-          clonedElement.style.setProperty('pointer-events', 'auto', 'important');
-          clonedElement.style.setProperty('width', '800px', 'important');
-          clonedElement.style.setProperty('padding', '0', 'important');
-          // Remove Tailwind hiding classes
-          clonedElement.className = 'bg-white font-sans';
-        }
-      }
     });
 
-    // Verify canvas has content
+    // STEP 4: Restore original styles immediately
+    element.setAttribute('style', origStyle);
+    element.className = origClass;
+
+    // STEP 5: Verify canvas
     if (canvas.width === 0 || canvas.height === 0) {
-      console.error('generatePDF: Canvas is empty, falling back to print');
-      printElement(elementId);
+      console.error('generatePDF: Canvas is empty');
       return;
     }
 
+    // STEP 6: Generate PDF
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -176,12 +132,11 @@ export async function generatePDF(elementId: string, filename: string) {
     const imgWidth = pdfWidth;
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
     
-    // Handle multi-page content
     if (imgHeight <= pdfHeight) {
       // Fits on one page
       pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight, undefined, 'FAST');
     } else {
-      // Multi-page: slice the canvas into page-sized chunks
+      // Multi-page
       const pageCanvasHeight = (pdfHeight * canvas.width) / pdfWidth;
       let remainingHeight = canvas.height;
       let position = 0;
@@ -208,10 +163,15 @@ export async function generatePDF(elementId: string, filename: string) {
       }
     }
     
+    // STEP 7: Direct download — no print dialog!
     pdf.save(`${filename}.pdf`);
+
   } catch (error) {
     console.error('PDF Generation Error:', error);
-    // Fallback: use print with forced visibility
-    printElement(elementId);
+    // Restore styles in case of error
+    element.setAttribute('style', origStyle);
+    element.className = origClass;
+    // Last resort: alert user
+    alert('Erreur lors de la génération du PDF. Veuillez réessayer.');
   }
 }
