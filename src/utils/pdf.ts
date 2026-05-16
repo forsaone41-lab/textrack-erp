@@ -4,7 +4,7 @@ const getJsPDF = () => import('jspdf').then(m => m.default);
 
 /**
  * Super robust printing using a hidden iframe.
- * Uses @page CSS to remove browser headers/footers (date, URL, page numbers).
+ * Forces visibility on cloned elements and uses @page CSS to remove browser headers/footers.
  */
 export function printElement(elementId: string) {
   const original = document.getElementById(elementId);
@@ -27,8 +27,18 @@ export function printElement(elementId: string) {
   const doc = iframe.contentWindow?.document;
   if (!doc) return;
 
-  // 2. Clone the element
+  // 2. Clone the element and FORCE visibility
   const clone = original.cloneNode(true) as HTMLElement;
+  clone.style.opacity = '1';
+  clone.style.visibility = 'visible';
+  clone.style.display = 'block';
+  clone.style.position = 'relative';
+  clone.style.left = '0';
+  clone.style.top = '0';
+  clone.style.zIndex = 'auto';
+  clone.style.pointerEvents = 'auto';
+  clone.style.width = '100%';
+  clone.removeAttribute('class'); // Remove all Tailwind hiding classes
   
   // 3. Collect all stylesheets to preserve look
   let stylesHtml = '';
@@ -54,9 +64,10 @@ export function printElement(elementId: string) {
         <title>BEYA CREATIVE</title>
         ${stylesHtml}
         <style>
-          body { margin: 0; padding: 20px; background: white !important; font-family: sans-serif; }
+          body { margin: 0; padding: 20px; background: white !important; font-family: sans-serif; color: #0f172a !important; }
           img { max-width: 100% !important; height: auto !important; }
           .no-print { display: none !important; }
+          * { opacity: 1 !important; visibility: visible !important; }
           @page { 
             margin: 0.5cm; 
             size: A4;
@@ -70,7 +81,7 @@ export function printElement(elementId: string) {
         </style>
       </head>
       <body>
-        <div class="print-content">
+        <div style="width: 100%; background: white; color: #0f172a;">
           ${clone.outerHTML}
         </div>
       </body>
@@ -110,7 +121,10 @@ export function printElement(elementId: string) {
  */
 export async function generatePDF(elementId: string, filename: string) {
   const element = document.getElementById(elementId);
-  if (!element) return;
+  if (!element) {
+    console.error('generatePDF: Element not found:', elementId);
+    return;
+  }
 
   try {
     element.scrollTop = 0;
@@ -126,19 +140,33 @@ export async function generatePDF(elementId: string, filename: string) {
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
+      width: 800,
       onclone: (clonedDoc) => {
         const clonedElement = clonedDoc.getElementById(elementId);
         if (clonedElement) {
-          clonedElement.style.opacity = '1';
-          clonedElement.style.visibility = 'visible';
-          clonedElement.style.display = 'block';
-          clonedElement.style.position = 'relative';
-          clonedElement.style.left = '0';
-          clonedElement.style.top = '0';
-          clonedElement.style.zIndex = '9999';
+          // CRITICAL: Force full visibility on the cloned element
+          clonedElement.style.setProperty('opacity', '1', 'important');
+          clonedElement.style.setProperty('visibility', 'visible', 'important');
+          clonedElement.style.setProperty('display', 'block', 'important');
+          clonedElement.style.setProperty('position', 'relative', 'important');
+          clonedElement.style.setProperty('left', '0', 'important');
+          clonedElement.style.setProperty('top', '0', 'important');
+          clonedElement.style.setProperty('z-index', '9999', 'important');
+          clonedElement.style.setProperty('pointer-events', 'auto', 'important');
+          clonedElement.style.setProperty('width', '800px', 'important');
+          clonedElement.style.setProperty('padding', '0', 'important');
+          // Remove Tailwind hiding classes
+          clonedElement.className = 'bg-white font-sans';
         }
       }
     });
+
+    // Verify canvas has content
+    if (canvas.width === 0 || canvas.height === 0) {
+      console.error('generatePDF: Canvas is empty, falling back to print');
+      printElement(elementId);
+      return;
+    }
 
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
@@ -183,7 +211,7 @@ export async function generatePDF(elementId: string, filename: string) {
     pdf.save(`${filename}.pdf`);
   } catch (error) {
     console.error('PDF Generation Error:', error);
-    // Fallback: use print but with clean @page rules
+    // Fallback: use print with forced visibility
     printElement(elementId);
   }
 }
