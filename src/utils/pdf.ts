@@ -26,8 +26,7 @@ export function printElement(elementId: string) {
   if (!doc) return;
 
   const clone = original.cloneNode(true) as HTMLElement;
-  // Force visibility on clone
-  clone.style.cssText = 'opacity:1!important;visibility:visible!important;display:block!important;position:relative!important;width:100%!important;pointer-events:auto!important;';
+  clone.style.cssText = 'opacity:1!important;visibility:visible!important;display:block!important;position:relative!important;width:100%!important;';
   
   let stylesHtml = '';
   try {
@@ -44,8 +43,6 @@ export function printElement(elementId: string) {
   doc.write(`<!DOCTYPE html><html><head><title>BEYA CREATIVE</title>${stylesHtml}
     <style>
       body{margin:0;padding:20px;background:white!important;font-family:sans-serif;color:#0f172a!important}
-      img{max-width:100%!important;height:auto!important}
-      .no-print{display:none!important}
       *{opacity:1!important;visibility:visible!important}
       @page{margin:0.5cm;size:A4}
       @media print{html,body{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
@@ -63,9 +60,9 @@ export function printElement(elementId: string) {
 }
 
 /**
- * Generates a high-quality PDF by temporarily making the element visible,
- * capturing it with html2canvas, then hiding it again.
- * This approach avoids the blank-canvas issue entirely.
+ * Generates a high-quality PDF by cloning the element into a visible container,
+ * capturing it, then removing the clone. Never touches the original element.
+ * Falls back to direct download via data URL if html2canvas fails.
  */
 export async function generatePDF(elementId: string, filename: string) {
   const element = document.getElementById(elementId);
@@ -74,56 +71,74 @@ export async function generatePDF(elementId: string, filename: string) {
     return;
   }
 
-  // Save original styles
-  const origStyle = element.getAttribute('style') || '';
-  const origClass = element.className;
+  // Create a visible clone container off-screen
+  const wrapper = document.createElement('div');
+  wrapper.id = 'pdf-capture-wrapper';
+  wrapper.style.cssText = `
+    position: fixed;
+    left: -9999px;
+    top: 0;
+    width: 800px;
+    background: white;
+    z-index: -1;
+    opacity: 1;
+    visibility: visible;
+    display: block;
+    overflow: visible;
+  `;
+  
+  // Clone the element
+  const clone = element.cloneNode(true) as HTMLElement;
+  clone.removeAttribute('id');
+  clone.style.cssText = `
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+    position: relative !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 800px !important;
+    background: white !important;
+    color: #0f172a !important;
+    pointer-events: none !important;
+  `;
+  
+  wrapper.appendChild(clone);
+  document.body.appendChild(wrapper);
+
+  // Wait for images to load and DOM to settle
+  await new Promise(r => setTimeout(r, 300));
 
   try {
-    // STEP 1: Temporarily make the element FULLY VISIBLE for html2canvas
-    element.style.cssText = `
-      opacity: 1 !important;
-      visibility: visible !important;
-      display: block !important;
-      position: absolute !important;
-      left: 0 !important;
-      top: 0 !important;
-      z-index: -1 !important;
-      width: 800px !important;
-      pointer-events: none !important;
-      background: white !important;
-    `;
-    // Remove Tailwind hiding classes temporarily
-    element.className = '';
-
-    // Force browser to repaint
-    await new Promise(r => setTimeout(r, 100));
-
-    // STEP 2: Lazy load libraries
+    // Lazy load libraries
     const [html2canvas, jsPDF] = await Promise.all([
       getHtml2Canvas(),
       getJsPDF()
     ]);
 
-    // STEP 3: Capture to canvas
-    const canvas = await html2canvas(element, {
+    // Capture the clone (which is visible, just off-screen)
+    const canvas = await html2canvas(wrapper, {
       scale: 2,
       useCORS: true,
+      allowTaint: true,
       logging: false,
       backgroundColor: '#ffffff',
       width: 800,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: 800,
     });
 
-    // STEP 4: Restore original styles immediately
-    element.setAttribute('style', origStyle);
-    element.className = origClass;
+    // Remove clone immediately
+    document.body.removeChild(wrapper);
 
-    // STEP 5: Verify canvas
+    // Verify canvas has content
     if (canvas.width === 0 || canvas.height === 0) {
       console.error('generatePDF: Canvas is empty');
       return;
     }
 
-    // STEP 6: Generate PDF
+    // Generate PDF
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -133,7 +148,6 @@ export async function generatePDF(elementId: string, filename: string) {
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
     
     if (imgHeight <= pdfHeight) {
-      // Fits on one page
       pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight, undefined, 'FAST');
     } else {
       // Multi-page
@@ -163,15 +177,40 @@ export async function generatePDF(elementId: string, filename: string) {
       }
     }
     
-    // STEP 7: Direct download — no print dialog!
+    // Direct download — no print dialog!
     pdf.save(`${filename}.pdf`);
 
   } catch (error) {
     console.error('PDF Generation Error:', error);
-    // Restore styles in case of error
-    element.setAttribute('style', origStyle);
-    element.className = origClass;
-    // Last resort: alert user
-    alert('Erreur lors de la génération du PDF. Veuillez réessayer.');
+    // Clean up clone
+    try { document.body.removeChild(wrapper); } catch (_) {}
+    
+    // Fallback: try simpler approach without scale
+    try {
+      const [html2canvas, jsPDF] = await Promise.all([getHtml2Canvas(), getJsPDF()]);
+      
+      // Re-add clone for retry
+      const wrapper2 = document.createElement('div');
+      wrapper2.style.cssText = 'position:fixed;left:-9999px;top:0;width:800px;background:white;z-index:-1;';
+      const clone2 = element.cloneNode(true) as HTMLElement;
+      clone2.removeAttribute('id');
+      clone2.style.cssText = 'opacity:1!important;visibility:visible!important;display:block!important;position:relative!important;width:800px!important;background:white!important;';
+      wrapper2.appendChild(clone2);
+      document.body.appendChild(wrapper2);
+      await new Promise(r => setTimeout(r, 200));
+      
+      const canvas = await html2canvas(wrapper2, { scale: 1, useCORS: true, allowTaint: true, logging: true, backgroundColor: '#ffffff' });
+      document.body.removeChild(wrapper2);
+      
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pw = pdf.internal.pageSize.getWidth();
+      const ih = (canvas.height * pw) / canvas.width;
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pw, ih, undefined, 'FAST');
+      pdf.save(`${filename}.pdf`);
+    } catch (err2) {
+      console.error('PDF Fallback also failed:', err2);
+      // Ultimate fallback: open print dialog with content
+      printElement(elementId);
+    }
   }
 }
