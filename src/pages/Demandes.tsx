@@ -1152,138 +1152,123 @@ export default function Demandes() {
         return (
       <div
         id="devis-pdf-template"
-        className="fixed top-0 left-0 opacity-0 pointer-events-none -z-[100] w-[800px] bg-white font-sans"
-        style={{ color: '#0f172a', backgroundColor: 'white' }}
+        className="fixed top-0 left-0 opacity-0 pointer-events-none -z-[100] w-[800px] bg-white"
+        style={{ color: '#1a1a1a', backgroundColor: 'white', fontFamily: 'Helvetica, Arial, sans-serif', padding: '28px 36px' }}
       >
-        {/* ===== HEADER ===== */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '3px solid #4f46e5', padding: '20px 32px 14px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            {company.logoInvoice && company.logoInvoice !== '/logo.png' ? (
-              <img src={company.logoInvoice} alt="Logo" style={{ height: '44px', objectFit: 'contain' }} />
-            ) : company.logoUrl && company.logoUrl !== '/logo.png' ? (
-              <img src={company.logoUrl} alt="Logo" style={{ height: '44px', objectFit: 'contain' }} />
-            ) : (
-              <div style={{ width: '44px', height: '44px', background: '#4f46e5', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900, fontSize: '20px' }}>
-                {company.name?.charAt(0) || 'B'}
-              </div>
-            )}
+        {/* HEADER */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid #1a1a1a', paddingBottom: '12px', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {(company.logoInvoice && company.logoInvoice !== '/logo.png') ? (
+              <img src={company.logoInvoice} alt="Logo" style={{ height: '36px', objectFit: 'contain' }} />
+            ) : (company.logoUrl && company.logoUrl !== '/logo.png') ? (
+              <img src={company.logoUrl} alt="Logo" style={{ height: '36px', objectFit: 'contain' }} />
+            ) : null}
             <div>
-              <h1 style={{ fontSize: '18px', fontWeight: 900, color: '#1e1b4b', margin: 0, textTransform: 'uppercase' }}>{company.name || 'BEYA CREATIVE'}</h1>
-              <p style={{ fontSize: '8px', fontWeight: 700, color: '#6366f1', margin: 0, textTransform: 'uppercase', letterSpacing: '2px' }}>{company.subtitle || 'Confection Textile'}</p>
+              <div style={{ fontSize: '16px', fontWeight: 700, margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{company.name || 'BEYA CREATIVE'}</div>
+              <div style={{ fontSize: '8px', fontWeight: 500, color: '#888', margin: 0, textTransform: 'uppercase', letterSpacing: '1.5px' }}>{company.subtitle || 'Confection Textile'}</div>
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: 900, margin: 0, color: '#1e1b4b', textTransform: 'uppercase' }}>DEVIS</h2>
-            <p style={{ fontSize: '9px', fontWeight: 700, color: '#94a3b8', margin: '2px 0 0' }}>N° {devisNum} — {new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+            <div style={{ fontSize: '22px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px' }}>Devis</div>
+            <div style={{ fontSize: '9px', fontWeight: 500, color: '#888', marginTop: '2px' }}>N° {devisNum} — {new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
           </div>
         </div>
 
-        {/* ===== EMETTEUR / CLIENT ===== */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', margin: '12px 32px', fontSize: '11px' }}>
-          <div style={{ background: '#f8fafc', padding: '12px 14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-            <h3 style={{ fontSize: '8px', fontWeight: 900, color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 6px' }}>Émetteur</h3>
-            <p style={{ fontWeight: 900, fontSize: '11px', margin: '0 0 2px', textTransform: 'uppercase' }}>{company.name}</p>
-            <p style={{ fontWeight: 600, color: '#64748b', margin: '0 0 1px', fontSize: '10px' }}>{company.address}</p>
-            <p style={{ fontWeight: 600, color: '#64748b', margin: '0 0 1px', fontSize: '10px' }}>Tél: {company.phone}</p>
-            {company.email && <p style={{ fontWeight: 600, color: '#64748b', margin: '0', fontSize: '10px' }}>{company.email}</p>}
-            {company.ice && company.ice !== '000000000000000' && <p style={{ fontWeight: 600, color: '#94a3b8', margin: '3px 0 0', fontSize: '9px' }}>ICE: {company.ice} {company.rc && company.rc !== '123456' ? `| RC: ${company.rc}` : ''}</p>}
+        {/* EMETTEUR / CLIENT */}
+        <div style={{ display: 'flex', gap: '24px', marginBottom: '14px', fontSize: '10px' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '8px', fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '4px' }}>Émetteur</div>
+            <div style={{ fontWeight: 700, fontSize: '11px', marginBottom: '1px' }}>{company.name}</div>
+            <div style={{ color: '#555', marginBottom: '1px' }}>{company.address}</div>
+            <div style={{ color: '#555', marginBottom: '1px' }}>Tél: {company.phone}</div>
+            {company.email && <div style={{ color: '#555' }}>{company.email}</div>}
+            {company.ice && company.ice !== '000000000000000' && (
+              <div style={{ color: '#999', marginTop: '3px', fontSize: '9px' }}>ICE: {company.ice}{company.rc && company.rc !== '123456' ? ` · RC: ${company.rc}` : ''}</div>
+            )}
           </div>
-          <div style={{ background: '#f8fafc', padding: '12px 14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-            <h3 style={{ fontSize: '8px', fontWeight: 900, color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 6px' }}>Client / Destinataire</h3>
-            <p style={{ fontWeight: 900, fontSize: '11px', margin: '0 0 2px', textTransform: 'uppercase' }}>{devisLead.name}</p>
-            <p style={{ fontWeight: 600, color: '#64748b', margin: '0 0 1px', fontSize: '10px' }}>{devisLead.phone}</p>
-            {devisLead.email && <p style={{ fontWeight: 600, color: '#64748b', margin: '0 0 1px', fontSize: '10px' }}>{devisLead.email}</p>}
-            {devisLead.ville && <p style={{ fontWeight: 600, color: '#64748b', margin: '0', fontSize: '10px' }}>{devisLead.ville}</p>}
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '8px', fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '4px' }}>Client</div>
+            <div style={{ fontWeight: 700, fontSize: '11px', marginBottom: '1px' }}>{devisLead.name}</div>
+            <div style={{ color: '#555', marginBottom: '1px' }}>{devisLead.phone}</div>
+            {devisLead.email && <div style={{ color: '#555', marginBottom: '1px' }}>{devisLead.email}</div>}
+            {devisLead.ville && <div style={{ color: '#555' }}>{devisLead.ville}</div>}
           </div>
         </div>
 
-        {/* ===== OBJET ===== */}
-        <div style={{ margin: '0 32px 10px', background: '#eef2ff', padding: '8px 14px', borderRadius: '8px', border: '1px solid #c7d2fe' }}>
-          <p style={{ margin: 0, fontSize: '10px', fontWeight: 800, color: '#4338ca' }}>
-            Objet : Devis de confection — <span style={{ fontWeight: 900 }}>{devisLead.type}</span> × {devisLead.quantity} pièces
-          </p>
+        {/* OBJET */}
+        <div style={{ marginBottom: '12px', padding: '6px 0', borderTop: '1px solid #ddd', borderBottom: '1px solid #ddd' }}>
+          <span style={{ fontSize: '10px', fontWeight: 500, color: '#555' }}>Objet : </span>
+          <span style={{ fontSize: '10px', fontWeight: 700 }}>Devis de confection — {devisLead.type} × {devisLead.quantity} pièces</span>
         </div>
 
-        {/* ===== TABLE ===== */}
-        <div style={{ margin: '0 32px 10px' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
-            <thead>
-              <tr style={{ background: '#0f172a', color: 'white' }}>
-                <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '9px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', borderRadius: '8px 0 0 0' }}>Description</th>
-                <th style={{ padding: '10px 12px', textAlign: 'center', fontSize: '9px', fontWeight: 900, textTransform: 'uppercase' }}>Qté</th>
-                <th style={{ padding: '10px 12px', textAlign: 'center', fontSize: '9px', fontWeight: 900, textTransform: 'uppercase' }}>PU (MAD)</th>
-                <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '9px', fontWeight: 900, textTransform: 'uppercase', borderRadius: '0 8px 0 0' }}>Total (MAD)</th>
+        {/* TABLE */}
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px', marginBottom: '10px' }}>
+          <thead>
+            <tr style={{ borderBottom: '2px solid #1a1a1a' }}>
+              <th style={{ padding: '8px 0', textAlign: 'left', fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Description</th>
+              <th style={{ padding: '8px 0', textAlign: 'center', fontSize: '9px', fontWeight: 700, textTransform: 'uppercase' }}>Qté</th>
+              <th style={{ padding: '8px 0', textAlign: 'center', fontSize: '9px', fontWeight: 700, textTransform: 'uppercase' }}>P.U.</th>
+              <th style={{ padding: '8px 0', textAlign: 'right', fontSize: '9px', fontWeight: 700, textTransform: 'uppercase' }}>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {Number(matierePrice) > 0 && (
+              <tr style={{ borderBottom: '1px solid #eee' }}>
+                <td style={{ padding: '8px 0', fontWeight: 500 }}>Tissu & Fournitures</td>
+                <td style={{ padding: '8px 0', textAlign: 'center' }}>{devisLead.quantity}</td>
+                <td style={{ padding: '8px 0', textAlign: 'center', color: '#555' }}>{Number(matierePrice).toFixed(2)}</td>
+                <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 600 }}>{totalMatiere.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
               </tr>
-            </thead>
-            <tbody>
-              {Number(matierePrice) > 0 && (
-                <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '10px 12px', fontWeight: 800 }}>Tissu & Fournitures</td>
-                  <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600 }}>{devisLead.quantity}</td>
-                  <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600, color: '#64748b' }}>{Number(matierePrice).toFixed(2)}</td>
-                  <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 800 }}>{totalMatiere.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
-                </tr>
-              )}
-              <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                <td style={{ padding: '10px 12px', fontWeight: 800 }}>Confection & Main d'œuvre</td>
-                <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600 }}>{devisLead.quantity}</td>
-                <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600, color: '#64748b' }}>{Number(laborPrice || 0).toFixed(2)}</td>
-                <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 800 }}>{totalLabor.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+            )}
+            <tr style={{ borderBottom: '1px solid #eee' }}>
+              <td style={{ padding: '8px 0', fontWeight: 500 }}>Confection & Main d'œuvre</td>
+              <td style={{ padding: '8px 0', textAlign: 'center' }}>{devisLead.quantity}</td>
+              <td style={{ padding: '8px 0', textAlign: 'center', color: '#555' }}>{Number(laborPrice || 0).toFixed(2)}</td>
+              <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 600 }}>{totalLabor.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
+            </tr>
+          </tbody>
+        </table>
 
-        {/* ===== TOTALS ===== */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 32px 14px' }}>
-          <div style={{ width: '300px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 12px', fontSize: '10px', fontWeight: 700, color: '#64748b', borderBottom: '1px solid #f1f5f9' }}>
-              <span>Prix Unitaire</span>
-              <span style={{ fontWeight: 800 }}>{unitPrice.toFixed(2)} MAD</span>
+        {/* TOTALS */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+          <div style={{ width: '260px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '9px', color: '#888' }}>
+              <span>Prix unitaire</span>
+              <span>{unitPrice.toFixed(2)} MAD</span>
             </div>
             {Number(matierePrice) > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 12px', fontSize: '10px', fontWeight: 700, color: '#64748b', borderBottom: '1px solid #f1f5f9' }}>
-                <span>Sous-total Matière</span>
-                <span style={{ fontWeight: 800 }}>{totalMatiere.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '9px', color: '#888' }}>
+                <span>Sous-total matière</span>
+                <span>{totalMatiere.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
               </div>
             )}
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 12px', fontSize: '10px', fontWeight: 700, color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>
-              <span>Sous-total MO</span>
-              <span style={{ fontWeight: 800 }}>{totalLabor.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '9px', color: '#888', borderBottom: '1px solid #ddd' }}>
+              <span>Sous-total main d'œuvre</span>
+              <span>{totalLabor.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
             </div>
-            <div style={{ 
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
-              background: 'linear-gradient(135deg, #312e81, #4f46e5)', 
-              color: 'white', padding: '16px', borderRadius: '12px', marginTop: '8px'
-            }}>
-              <div>
-                <span style={{ fontSize: '8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px', opacity: 0.7, display: 'block' }}>Total Général</span>
-                <span style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase' }}>TTC</span>
-              </div>
-              <span style={{ fontSize: '26px', fontWeight: 900, letterSpacing: '-1px' }}>{totalGeneral.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} <span style={{ fontSize: '13px', fontWeight: 800 }}>MAD</span></span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '10px 0 0', borderTop: '2px solid #1a1a1a', marginTop: '-1px' }}>
+              <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total TTC</span>
+              <span style={{ fontSize: '22px', fontWeight: 700 }}>{totalGeneral.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} <span style={{ fontSize: '11px' }}>MAD</span></span>
             </div>
           </div>
         </div>
 
-        {/* ===== CONDITIONS — CLEAR & READABLE ===== */}
-        <div style={{ margin: '0 32px 12px', padding: '14px 18px', borderRadius: '10px', border: '2px solid #312e81', borderLeft: '6px solid #4f46e5', background: '#fafaff' }}>
-          <p style={{ fontWeight: 900, color: '#1e1b4b', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 8px', borderBottom: '1px solid #e0e7ff', paddingBottom: '6px' }}>📋 Conditions Générales</p>
-          <div style={{ fontSize: '11px', color: '#334155', fontWeight: 600, lineHeight: '2' }}>
-            <p style={{ margin: '0 0 2px' }}><strong style={{ color: '#4f46e5' }}>1.</strong> Ce devis est <strong>valable 15 jours</strong> à compter de la date d'émission.</p>
-            <p style={{ margin: '0 0 2px' }}><strong style={{ color: '#4f46e5' }}>2.</strong> Un <strong>acompte de 50%</strong> est requis à la confirmation de la commande.</p>
-            <p style={{ margin: '0 0 2px' }}><strong style={{ color: '#4f46e5' }}>3.</strong> Le <strong>délai de production</strong> sera confirmé après validation de l'échantillon.</p>
-            <p style={{ margin: 0 }}><strong style={{ color: '#4f46e5' }}>4.</strong> Toute <strong>modification du modèle</strong> après lancement peut entraîner une révision tarifaire.</p>
+        {/* CONDITIONS */}
+        <div style={{ marginBottom: '14px', padding: '10px 14px', border: '1px solid #ddd' }}>
+          <div style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Conditions</div>
+          <div style={{ fontSize: '9px', color: '#555', fontWeight: 500, lineHeight: '1.9' }}>
+            <div>1. Ce devis est valable <strong style={{ color: '#1a1a1a' }}>15 jours</strong> à compter de la date d'émission.</div>
+            <div>2. Un <strong style={{ color: '#1a1a1a' }}>acompte de 50%</strong> est requis à la confirmation de la commande.</div>
+            <div>3. Le délai de production sera confirmé après validation de l'échantillon.</div>
+            <div>4. Toute modification du modèle après lancement peut entraîner une révision tarifaire.</div>
           </div>
         </div>
 
-        {/* ===== FOOTER ===== */}
-        <div style={{ margin: '0 32px', borderTop: '2px solid #e2e8f0', paddingTop: '10px', textAlign: 'center' }}>
-          <p style={{ fontSize: '9px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 2px' }}>
-            Merci de votre confiance — {company.name}
-          </p>
-          <p style={{ fontSize: '8px', fontWeight: 700, color: '#cbd5e1', margin: 0 }}>
-            {company.address} | {company.phone} | {company.email}
-          </p>
+        {/* FOOTER */}
+        <div style={{ borderTop: '1px solid #ddd', paddingTop: '8px', textAlign: 'center' }}>
+          <div style={{ fontSize: '8px', fontWeight: 500, color: '#aaa', letterSpacing: '1px' }}>
+            {company.name} · {company.address} · {company.phone} · {company.email}
+          </div>
         </div>
       </div>
         );
