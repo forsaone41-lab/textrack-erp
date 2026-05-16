@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, UserPlus, Users, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy, Edit2 } from 'lucide-react';
-import { Lead, loadLeads, saveRecord, User, genId, deleteRecord, loadData } from '../types';
+import { Lead, loadLeads, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { generatePDF } from '../utils/pdf';
 import { compressImage } from '../utils/image';
@@ -1141,101 +1141,146 @@ export default function Demandes() {
         )}
       </div>
       {/* Hidden PDF Template for Export - Only rendered when needed */}
-      {devisLead && (
+      {devisLead && (() => {
+        const company = loadCompanyProfile();
+        const unitPrice = Number(matierePrice || 0) + Number(laborPrice || 0);
+        const totalMatiere = Number(matierePrice || 0) * (devisLead.quantity || 0);
+        const totalLabor = Number(laborPrice || 0) * (devisLead.quantity || 0);
+        const totalGeneral = unitPrice * (devisLead.quantity || 0);
+        const devisNum = `DV-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
+
+        return (
       <div
         id="devis-pdf-template"
-        className="fixed top-0 left-0 opacity-0 pointer-events-none -z-[100] w-[800px] bg-white p-12 text-slate-900 font-sans"
+        className="fixed top-0 left-0 opacity-0 pointer-events-none -z-[100] w-[800px] bg-white font-sans"
         style={{ color: '#0f172a', backgroundColor: 'white' }}
       >
-        <div className="flex justify-between items-start border-b-4 border-indigo-600 pb-8 mb-8">
-          <div>
-            <h1 className="text-4xl font-black text-indigo-600 tracking-tighter uppercase mb-2">BEYA CREATIVE</h1>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Confection Textile & Création</p>
-          </div>
-          <div className="text-right">
-            <h2 className="text-2xl font-black uppercase mb-1">DEVIS ESTIMATIF</h2>
-            <p className="text-sm font-bold text-slate-400 italic">Date: {new Date().toLocaleDateString()}</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-12 mb-12">
-          <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
-            <h3 className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-4">Émetteur</h3>
-            <p className="text-sm font-black uppercase mb-1">BEYA CREATIVE FACTORY</p>
-            <p className="text-xs font-bold text-slate-500">Zone Industrielle, Tanger</p>
-            <p className="text-xs font-bold text-slate-500">Tel: +212 6 XX XX XX XX</p>
-          </div>
-          <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
-            <h3 className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-4">Client / Destinataire</h3>
-            <p className="text-sm font-black uppercase mb-1">{devisLead?.name}</p>
-            <p className="text-xs font-bold text-slate-500">{devisLead?.phone}</p>
-            <p className="text-xs font-bold text-slate-500">{devisLead?.email}</p>
-          </div>
-        </div>
-
-        <table className="w-full mb-12 border-collapse">
-          <thead>
-            <tr className="bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest">
-              <th className="py-4 px-6 text-left rounded-l-2xl">Description</th>
-              <th className="py-4 px-6 text-center">Quantité</th>
-              <th className="py-4 px-6 text-center">Matière / Unit</th>
-              <th className="py-4 px-6 text-center">Main d'œuvre / Unit</th>
-              <th className="py-4 px-6 text-right rounded-r-2xl">Total MAD</th>
-            </tr>
-          </thead>
-          <tbody className="text-sm">
-            {Number(matierePrice) > 0 && (
-              <tr className="border-b border-slate-100">
-                <td className="py-6 px-6 font-black uppercase">{isAr ? 'القماش / المواد' : 'Tissu / Fournitures'}</td>
-                <td className="py-6 px-6 text-center font-bold">{devisLead?.quantity}</td>
-                <td className="py-6 px-6 text-center font-bold text-slate-500">{matierePrice} MAD</td>
-                <td className="py-6 px-6 text-right font-black">
-                  {(Number(matierePrice || 0) * (devisLead?.quantity || 0)).toLocaleString()} MAD
-                </td>
-              </tr>
-            )}
-            <tr className="border-b border-slate-100">
-              <td className="py-6 px-6 font-black uppercase">{isAr ? 'الفصالة والخياطة' : 'Coupe & Confection'}</td>
-              <td className="py-6 px-6 text-center font-bold">{devisLead?.quantity}</td>
-              <td className="py-6 px-6 text-center font-bold text-slate-500">{laborPrice} MAD</td>
-              <td className="py-6 px-6 text-right font-black">
-                {(Number(laborPrice || 0) * (devisLead?.quantity || 0)).toLocaleString()} MAD
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div className="flex justify-end mb-20">
-          <div className="w-72 space-y-4">
-            {Number(matierePrice) > 0 && (
-              <div className="flex justify-between items-center text-slate-500 font-bold uppercase text-[10px] tracking-widest px-4">
-                <span>Total Matière</span>
-                <span>{(Number(matierePrice || 0) * (devisLead?.quantity || 0)).toLocaleString()} MAD</span>
+        {/* ===== HEADER ===== */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '4px solid #4f46e5', paddingBottom: '24px', marginBottom: '24px', padding: '32px 40px 24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            {company.logoInvoice && company.logoInvoice !== '/logo.png' ? (
+              <img src={company.logoInvoice} alt="Logo" style={{ height: '60px', objectFit: 'contain' }} />
+            ) : company.logoUrl && company.logoUrl !== '/logo.png' ? (
+              <img src={company.logoUrl} alt="Logo" style={{ height: '60px', objectFit: 'contain' }} />
+            ) : (
+              <div style={{ width: '60px', height: '60px', background: '#4f46e5', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900, fontSize: '24px' }}>
+                {company.name?.charAt(0) || 'B'}
               </div>
             )}
-            <div className="flex justify-between items-center text-slate-500 font-bold uppercase text-[10px] tracking-widest px-4">
-              <span>Total Main d'œuvre</span>
-              <span>{(Number(laborPrice || 0) * (devisLead?.quantity || 0)).toLocaleString()} MAD</span>
+            <div>
+              <h1 style={{ fontSize: '22px', fontWeight: 900, color: '#1e1b4b', margin: 0, letterSpacing: '-0.5px', textTransform: 'uppercase' }}>{company.name || 'BEYA CREATIVE'}</h1>
+              <p style={{ fontSize: '10px', fontWeight: 700, color: '#6366f1', margin: 0, textTransform: 'uppercase', letterSpacing: '2px' }}>{company.subtitle || 'Confection Textile'}</p>
             </div>
-            <div className="bg-indigo-600 p-6 rounded-3xl text-white flex justify-between items-center shadow-xl shadow-indigo-100">
-              <span className="text-xs font-black uppercase tracking-tighter">Total Général</span>
-              <span className="text-2xl font-black tracking-tighter">
-                {((Number(matierePrice || 0) + Number(laborPrice || 0)) * (devisLead?.quantity || 0)).toLocaleString()} MAD
-              </span>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <h2 style={{ fontSize: '28px', fontWeight: 900, margin: 0, color: '#1e1b4b', textTransform: 'uppercase', letterSpacing: '-1px' }}>DEVIS</h2>
+            <p style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', margin: '4px 0 0' }}>N° {devisNum}</p>
+            <p style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', margin: '2px 0 0' }}>Date: {new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+          </div>
+        </div>
+
+        {/* ===== EMETTEUR / CLIENT ===== */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', margin: '0 40px 32px', fontSize: '12px' }}>
+          <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+            <h3 style={{ fontSize: '9px', fontWeight: 900, color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 12px' }}>Émetteur</h3>
+            <p style={{ fontWeight: 900, fontSize: '13px', margin: '0 0 4px', textTransform: 'uppercase' }}>{company.name}</p>
+            <p style={{ fontWeight: 600, color: '#64748b', margin: '0 0 2px' }}>{company.address}</p>
+            <p style={{ fontWeight: 600, color: '#64748b', margin: '0 0 2px' }}>Tél: {company.phone}</p>
+            {company.email && <p style={{ fontWeight: 600, color: '#64748b', margin: '0 0 2px' }}>{company.email}</p>}
+            {company.ice && company.ice !== '000000000000000' && <p style={{ fontWeight: 600, color: '#94a3b8', margin: '8px 0 0', fontSize: '10px' }}>ICE: {company.ice}</p>}
+            {company.rc && company.rc !== '123456' && <p style={{ fontWeight: 600, color: '#94a3b8', margin: '0', fontSize: '10px' }}>RC: {company.rc} | IF: {company.if_tax} | Patente: {company.patente}</p>}
+          </div>
+          <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+            <h3 style={{ fontSize: '9px', fontWeight: 900, color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 12px' }}>Client / Destinataire</h3>
+            <p style={{ fontWeight: 900, fontSize: '13px', margin: '0 0 4px', textTransform: 'uppercase' }}>{devisLead.name}</p>
+            <p style={{ fontWeight: 600, color: '#64748b', margin: '0 0 2px' }}>{devisLead.phone}</p>
+            {devisLead.email && <p style={{ fontWeight: 600, color: '#64748b', margin: '0 0 2px' }}>{devisLead.email}</p>}
+            {devisLead.ville && <p style={{ fontWeight: 600, color: '#64748b', margin: '0' }}>{devisLead.ville}</p>}
+          </div>
+        </div>
+
+        {/* ===== OBJET ===== */}
+        <div style={{ margin: '0 40px 24px', background: '#eef2ff', padding: '16px 20px', borderRadius: '12px', border: '1px solid #c7d2fe' }}>
+          <p style={{ margin: 0, fontSize: '11px', fontWeight: 800, color: '#4338ca' }}>
+            Objet : Devis de confection — <span style={{ fontWeight: 900 }}>{devisLead.type}</span> × {devisLead.quantity} pièces
+          </p>
+        </div>
+
+        {/* ===== TABLE ===== */}
+        <div style={{ margin: '0 40px 24px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+            <thead>
+              <tr style={{ background: '#0f172a', color: 'white' }}>
+                <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', borderRadius: '12px 0 0 0' }}>Description</th>
+                <th style={{ padding: '14px 16px', textAlign: 'center', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px' }}>Qté</th>
+                <th style={{ padding: '14px 16px', textAlign: 'center', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px' }}>PU (MAD)</th>
+                <th style={{ padding: '14px 16px', textAlign: 'right', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', borderRadius: '0 12px 0 0' }}>Total (MAD)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Number(matierePrice) > 0 && (
+                <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td style={{ padding: '16px', fontWeight: 800 }}>Tissu & Fournitures</td>
+                  <td style={{ padding: '16px', textAlign: 'center', fontWeight: 600 }}>{devisLead.quantity}</td>
+                  <td style={{ padding: '16px', textAlign: 'center', fontWeight: 600, color: '#64748b' }}>{Number(matierePrice).toFixed(2)}</td>
+                  <td style={{ padding: '16px', textAlign: 'right', fontWeight: 800 }}>{totalMatiere.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
+                </tr>
+              )}
+              <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
+                <td style={{ padding: '16px', fontWeight: 800 }}>Confection & Main d'œuvre</td>
+                <td style={{ padding: '16px', textAlign: 'center', fontWeight: 600 }}>{devisLead.quantity}</td>
+                <td style={{ padding: '16px', textAlign: 'center', fontWeight: 600, color: '#64748b' }}>{Number(laborPrice || 0).toFixed(2)}</td>
+                <td style={{ padding: '16px', textAlign: 'right', fontWeight: 800 }}>{totalLabor.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* ===== TOTALS ===== */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 40px 32px' }}>
+          <div style={{ width: '300px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 16px', fontSize: '11px', fontWeight: 700, color: '#64748b' }}>
+              <span>Prix Unitaire</span>
+              <span>{unitPrice.toFixed(2)} MAD</span>
+            </div>
+            {Number(matierePrice) > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 16px', fontSize: '11px', fontWeight: 700, color: '#64748b' }}>
+                <span>Sous-total Matière</span>
+                <span>{totalMatiere.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
+              </div>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 16px', fontSize: '11px', fontWeight: 700, color: '#64748b' }}>
+              <span>Sous-total MO</span>
+              <span>{totalLabor.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#4f46e5', color: 'white', padding: '20px', borderRadius: '16px', marginTop: '8px' }}>
+              <span style={{ fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px' }}>Total Général TTC</span>
+              <span style={{ fontSize: '24px', fontWeight: 900 }}>{totalGeneral.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
             </div>
           </div>
         </div>
 
-        <div className="border-t-2 border-slate-100 pt-8 text-center">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-            Merci de votre confiance. Ce devis est valable pendant 15 jours.
+        {/* ===== CONDITIONS ===== */}
+        <div style={{ margin: '0 40px 24px', background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '10px', color: '#64748b', fontWeight: 600, lineHeight: '1.8' }}>
+          <p style={{ fontWeight: 900, color: '#334155', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 8px' }}>Conditions</p>
+          <p style={{ margin: '0 0 2px' }}>• Ce devis est valable 15 jours à compter de la date d'émission.</p>
+          <p style={{ margin: '0 0 2px' }}>• Un acompte de 50% est requis à la confirmation de commande.</p>
+          <p style={{ margin: '0 0 2px' }}>• Délai de production estimé : à confirmer après validation de l'échantillon.</p>
+          <p style={{ margin: 0 }}>• Toute modification de modèle après lancement peut entraîner une révision tarifaire.</p>
+        </div>
+
+        {/* ===== FOOTER ===== */}
+        <div style={{ margin: '0 40px', borderTop: '2px solid #e2e8f0', paddingTop: '16px', textAlign: 'center' }}>
+          <p style={{ fontSize: '10px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 4px' }}>
+            Merci de votre confiance — {company.name}
           </p>
-          <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mt-2">
-            BEYA CREATIVE - MADE IN MOROCCO 🇲🇦
+          <p style={{ fontSize: '9px', fontWeight: 700, color: '#cbd5e1', margin: 0 }}>
+            {company.address} | {company.phone} | {company.email}
           </p>
         </div>
       </div>
-      )}
+        );
+      })()}
       {/* Message Templates Settings Modal */}
       {showSettings && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
