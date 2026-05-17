@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, TriangleAlert, Package, Layers, MapPin, User, Tag, Coins, Calendar, Mail, Phone, MessageCircle } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, TriangleAlert, Package, Layers, MapPin, User, Tag, Coins, Calendar, Mail, Phone, MessageCircle, Camera, X } from 'lucide-react';
 import { StockTissu, StockFourniture, loadData, saveRecord, deleteRecord, genId } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
@@ -137,6 +137,7 @@ export default function StockMateriaux() {
       fournisseurEmail: tForm.fournisseurEmail,
       largeur: tForm.largeur, zone: tForm.zone,
       etagere: tForm.etagere, dateReception: tForm.dateReception,
+      imageUrl: tForm.imageUrl,
     };
     const updated = editTId ? tissus.map(t => t.id === editTId ? item : t) : [...tissus, item];
     setTissus(updated); setShowTModal(false);
@@ -421,13 +422,27 @@ export default function StockMateriaux() {
               const barColor = statut === 'disponible' ? 'bg-green-500' : statut === 'alerte' ? 'bg-amber-500' : 'bg-red-500';
               return (
                 <div key={roll.id} className={`bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden border-t-4 ${st.border}`}>
+                  {/* Fabric Image Thumbnail */}
+                  {roll.imageUrl && (
+                    <div className="relative w-full h-32 bg-slate-100 overflow-hidden">
+                      <img src={roll.imageUrl} alt={`${roll.type} ${roll.couleur}`} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                    </div>
+                  )}
                   <div className="p-5">
                     {/* Top row */}
                     <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <p className="text-[10px] text-slate-400 font-mono mb-0.5">{getTissuRef(roll)}</p>
-                        <h3 className="font-black text-slate-900 text-lg leading-tight uppercase tracking-tight">{roll.type} {roll.couleur}</h3>
-                        <p className="text-[10px] text-slate-500 font-medium">{roll.composition || 'Composition non spécifiée'}</p>
+                      <div className="flex items-start gap-3">
+                        {!roll.imageUrl && (
+                          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                            <Layers className="w-5 h-5 text-slate-400" />
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-[10px] text-slate-400 font-mono mb-0.5">{getTissuRef(roll)}</p>
+                          <h3 className="font-black text-slate-900 text-lg leading-tight uppercase tracking-tight">{roll.type} {roll.couleur}</h3>
+                          <p className="text-[10px] text-slate-500 font-medium">{roll.composition || 'Composition non spécifiée'}</p>
+                        </div>
                       </div>
                       <div className="flex items-center gap-1">
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${st.cls}`}>
@@ -803,6 +818,56 @@ export default function StockMateriaux() {
                 <label className="block text-xs font-medium text-slate-600 mb-1">Date réception</label>
                 <input type="date" value={tForm.dateReception ?? ''} onChange={e => setTForm({ ...tForm, dateReception: e.target.value })}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+              </div>
+
+              {/* Image Upload */}
+              <div className="col-span-2">
+                <label className="block text-xs font-medium text-slate-600 mb-1">📸 Photo du tissu</label>
+                {tForm.imageUrl ? (
+                  <div className="relative inline-block">
+                    <img src={tForm.imageUrl} alt="Preview" className="w-32 h-24 object-cover rounded-xl border-2 border-indigo-200 shadow-sm" />
+                    <button
+                      type="button"
+                      onClick={() => setTForm({ ...tForm, imageUrl: undefined })}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 shadow-lg hover:bg-red-600 transition"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex items-center gap-3 px-4 py-3 bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:bg-indigo-50 hover:border-indigo-300 transition group">
+                    <Camera className="w-5 h-5 text-slate-400 group-hover:text-indigo-500 transition" />
+                    <span className="text-sm text-slate-500 group-hover:text-indigo-600 transition font-medium">Cliquez pour ajouter une photo</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        // Compress and convert to base64 thumbnail
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          const img = new Image();
+                          img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            const MAX = 400;
+                            let w = img.width, h = img.height;
+                            if (w > h) { h = (h / w) * MAX; w = MAX; }
+                            else { w = (w / h) * MAX; h = MAX; }
+                            canvas.width = w;
+                            canvas.height = h;
+                            canvas.getContext('2d')?.drawImage(img, 0, 0, w, h);
+                            const compressed = canvas.toDataURL('image/jpeg', 0.7);
+                            setTForm({ ...tForm, imageUrl: compressed });
+                          };
+                          img.src = ev.target?.result as string;
+                        };
+                        reader.readAsDataURL(file);
+                      }}
+                    />
+                  </label>
+                )}
               </div>
             </div>
             <div className="p-6 border-t border-slate-100 flex justify-end gap-3">

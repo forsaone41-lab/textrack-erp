@@ -152,6 +152,7 @@ export interface StockTissu {
   zone?: string;
   etagere?: string;
   dateReception?: string;
+  imageUrl?: string;
 }
 
 export interface StockFourniture {
