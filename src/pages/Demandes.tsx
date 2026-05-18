@@ -560,8 +560,8 @@ export default function Demandes() {
                           type="button"
                           onClick={() => toggleColor(color)}
                           className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase transition-all ${isSelected
-                              ? 'bg-indigo-600 text-white shadow-sm'
-                              : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                            ? 'bg-indigo-600 text-white shadow-sm'
+                            : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                             }`}
                         >
                           {color}
@@ -851,16 +851,16 @@ export default function Demandes() {
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-4">
-            <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 shadow-inner">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 shadow-inner w-full sm:w-auto">
               <button
                 onClick={() => setCategory('clients')}
-                className={`px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 relative ${category === 'clients' ? 'bg-white text-indigo-600 shadow-md ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-800'}`}
+                className={`flex-1 sm:flex-none px-4 sm:px-8 py-3 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 relative ${category === 'clients' ? 'bg-white text-indigo-600 shadow-md ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-800'}`}
               >
                 <Package className="w-4 h-4" />
-                {isAr ? 'زبناء محتملون' : 'Prospects Clients'}
+                {isAr ? 'زبناء محتملون' : 'Prospects'}
                 {prospectsCount > 0 && (
                   <span className="absolute -top-2 -right-2 bg-indigo-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full shadow-lg animate-in zoom-in border-2 border-white">
                     {prospectsCount}
@@ -869,10 +869,10 @@ export default function Demandes() {
               </button>
               <button
                 onClick={() => setCategory('recrutement')}
-                className={`px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 relative ${category === 'recrutement' ? 'bg-white text-rose-600 shadow-md ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-800'}`}
+                className={`flex-1 sm:flex-none px-4 sm:px-8 py-3 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 relative ${category === 'recrutement' ? 'bg-white text-rose-600 shadow-md ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-800'}`}
               >
                 <UserPlus className="w-4 h-4" />
-                {isAr ? 'طلبات التوظيف' : 'Recrutement'}
+                {isAr ? 'توظيف' : 'Recrutement'}
                 {recruitmentCount > 0 && (
                   <span className="absolute -top-2 -right-2 bg-rose-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full shadow-lg animate-in zoom-in border-2 border-white">
                     {recruitmentCount}
@@ -880,9 +880,9 @@ export default function Demandes() {
                 )}
               </button>
             </div>
-            
-            {/* Global Workers Summary (Khdama) */}
-            <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl border border-slate-100 shadow-sm ml-auto">
+
+            {/* Global Workers Summary (Khdama) - hidden on very small screens */}
+            <div className="hidden sm:flex items-center gap-3 bg-white px-5 py-3 rounded-2xl border border-slate-100 shadow-sm ml-auto">
               <div className="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
                 <Users className="w-4 h-4" />
               </div>
@@ -902,19 +902,19 @@ export default function Demandes() {
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <button
             onClick={() => setShowSettings(true)}
-            className="p-4 bg-white border border-slate-200 text-slate-400 rounded-2xl hover:text-indigo-600 hover:border-indigo-100 transition-all shadow-sm"
+            className="p-3 sm:p-4 bg-white border border-slate-200 text-slate-400 rounded-2xl hover:text-indigo-600 hover:border-indigo-100 transition-all shadow-sm"
           >
-            <Settings className="w-6 h-6" />
+            <Settings className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
           <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm">
             {(['all', 'new', 'completed'] as const).map(f => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filter === f ? 'bg-slate-900 text-white shadow-xl' : 'text-slate-500 hover:bg-slate-50'
+                className={`px-3 sm:px-6 py-2.5 sm:py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filter === f ? 'bg-slate-900 text-white shadow-xl' : 'text-slate-500 hover:bg-slate-50'
                   }`}
               >
                 {isAr ? (f === 'all' ? 'الكل' : f === 'new' ? 'جديد' : 'مكتمل') : f}
@@ -938,7 +938,7 @@ export default function Demandes() {
           visibleLeads.map(lead => (
             <div
               key={lead.id}
-              className={`bg-white rounded-[2.5rem] p-6 border-2 transition-all hover:border-indigo-100 shadow-sm hover:shadow-xl group relative overflow-hidden ${lead.status === 'new' ? 'border-indigo-500/20 ring-1 ring-indigo-500/10' : 'border-slate-100'
+              className={`bg-white rounded-2xl sm:rounded-[2.5rem] p-4 sm:p-6 border-2 transition-all hover:border-indigo-100 shadow-sm hover:shadow-xl group relative overflow-hidden ${lead.status === 'new' ? 'border-indigo-500/20 ring-1 ring-indigo-500/10' : 'border-slate-100'
                 }`}
             >
               {lead.status === 'new' && (
@@ -967,8 +967,8 @@ export default function Demandes() {
                     )}
                   </div>
                   <div>
-                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-1">{lead.name}</h3>
-                    <div className="flex flex-wrap gap-4 text-xs font-bold text-slate-500">
+                    <h3 className="text-base sm:text-xl font-black text-slate-900 uppercase tracking-tight mb-1">{lead.name}</h3>
+                    <div className="flex flex-wrap gap-2 sm:gap-4 text-[10px] sm:text-xs font-bold text-slate-500">
                       <span className="flex items-center gap-1.5"><Phone className="w-4 h-4 text-indigo-500" /> {lead.phone}</span>
                       <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-rose-500" /> {lead.ville || '-'}</span>
                       {lead.email && <span className="flex items-center gap-1.5"><Mail className="w-4 h-4 text-slate-400" /> {lead.email}</span>}
@@ -991,12 +991,12 @@ export default function Demandes() {
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-center gap-3">
+                <div className="flex flex-col items-stretch sm:items-center gap-3">
 
                   {/* Primary Action Removed: Sample Launch now handled in FichesTechniques */}
 
                   {/* Contact Actions */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                     <a
                       href={`tel:${lead.phone.replace(/\D/g, '').startsWith('0') ? '212' + lead.phone.replace(/\D/g, '').substring(1) : lead.phone.replace(/\D/g, '')}`}
                       className="w-11 h-11 bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl flex items-center justify-center transition-colors border border-slate-100 shadow-sm"
@@ -1007,39 +1007,13 @@ export default function Demandes() {
                     <button
                       onClick={() => setContactingLead(lead)}
                       className={`h-11 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 border shadow-sm ${lead.contactedAt
-                          ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                          : 'bg-emerald-500 text-white hover:bg-emerald-600 border-emerald-500'
+                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                        : 'bg-emerald-500 text-white hover:bg-emerald-600 border-emerald-500'
                         }`}
                     >
                       <MessageSquare className="w-4 h-4" />
                       {isAr ? (lead.contactedAt ? 'تم التواصل' : 'واتساب') : (lead.contactedAt ? 'Contacté' : 'WhatsApp')}
                     </button>
-
-                    {/* Email: Demander numéro correct */}
-                    {lead.email && (
-                      <button
-                        onClick={() => {
-                          const subject = isAr 
-                            ? 'BEYA CREATIVE - نحتاج رقم هاتفكم'
-                            : 'BEYA CREATIVE - Numero de telephone requis';
-                          const body = isAr 
-                            ? ['السلام عليكم ' + lead.name, '', 'شكرا لتقديم طلبكم الخاص ب ' + lead.type + '.', '', 'للاسف لم نتمكن من الوصول اليكم عبر رقم الهاتف: ' + lead.phone, '', 'نرجو منكم:', '- ارسال رقم هاتفكم الصحيح ردا على هذا الايميل', '- او اعادة تقديم الطلب عبر موقعنا', '', 'مع اطيب التحيات', 'فريق BEYA CREATIVE'].join('\n')
-                            : ['Bonjour ' + lead.name + ',', '', 'Merci pour votre demande concernant ' + lead.type + '.', '', 'Malheureusement, nous n\'avons pas pu vous joindre au numero : ' + lead.phone, '', 'Nous vous prions de :', '- Nous envoyer votre numero correct en reponse a cet email', '- Ou soumettre une nouvelle demande via notre site', '', 'Cordialement,', 'L\'equipe BEYA CREATIVE'].join('\n');
-                          const mailtoUrl = 'mailto:' + lead.email + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
-                          const a = document.createElement('a');
-                          a.href = mailtoUrl;
-                          a.target = '_self';
-                          document.body.appendChild(a);
-                          a.click();
-                          document.body.removeChild(a);
-                        }}
-                        className="w-11 h-11 bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white rounded-xl flex items-center justify-center transition-all border border-amber-200 shadow-sm"
-                        title={isAr ? 'طلب رقم صحيح عبر الإيميل' : 'Demander numéro correct par email'}
-                      >
-                        <Mail className="w-5 h-5" />
-                      </button>
-                    )}
-
                     {(() => {
                       const cvData = lead.details?.split('| CV_ATTACHMENT:')[1];
                       if (!cvData) return null;
@@ -1061,7 +1035,7 @@ export default function Demandes() {
                   </div>
 
                   {/* Secondary Tools: Devis, Fiche, Convert Client */}
-                  <div className="flex items-center gap-2 bg-slate-50/50 p-1.5 rounded-2xl border border-slate-100 shadow-inner">
+                  <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-50/50 p-1 sm:p-1.5 rounded-2xl border border-slate-100 shadow-inner flex-wrap">
                     {/* Recruitment Add Button - Navigates to Waiting List with candidate data */}
                     {category === 'recrutement' ? (
                       <button
@@ -1106,8 +1080,8 @@ export default function Demandes() {
                           onClick={() => clientExists && navigate('/fiches-techniques', { state: { fromLead: lead } })}
                           disabled={!clientExists}
                           className={`h-9 px-3 flex items-center justify-center gap-2 rounded-xl transition-all shadow-sm border font-black text-[9px] uppercase tracking-widest ${clientExists
-                              ? 'bg-indigo-50 text-indigo-600 border-indigo-100 hover:bg-indigo-600 hover:text-white hover:shadow-indigo-100 group/btn'
-                              : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed opacity-60'
+                            ? 'bg-indigo-50 text-indigo-600 border-indigo-100 hover:bg-indigo-600 hover:text-white hover:shadow-indigo-100 group/btn'
+                            : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed opacity-60'
                             }`}
                           title={!clientExists ? (isAr ? 'يجب تسجيل الزبون أولاً' : 'Enregistrez le client d\'abord') : (isAr ? 'إنشاء بطاقة تقنية' : 'Créer Fiche Technique')}
                         >
@@ -1176,142 +1150,142 @@ export default function Demandes() {
         const devisNum = `DV-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
 
         return (
-      <div
-        id="devis-pdf-template"
-        className="fixed top-0 left-0 opacity-0 pointer-events-none -z-[100] w-[800px] bg-white font-sans"
-        style={{ color: '#0f172a', backgroundColor: 'white' }}
-      >
-        {/* ===== HEADER ===== */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '3px solid #4f46e5', padding: '20px 32px 14px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            {company.logoInvoice && company.logoInvoice !== '/logo.png' ? (
-              <img src={company.logoInvoice} alt="Logo" style={{ height: '44px', objectFit: 'contain' }} />
-            ) : company.logoUrl && company.logoUrl !== '/logo.png' ? (
-              <img src={company.logoUrl} alt="Logo" style={{ height: '44px', objectFit: 'contain' }} />
-            ) : (
-              <div style={{ width: '44px', height: '44px', background: '#4f46e5', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900, fontSize: '20px' }}>
-                {company.name?.charAt(0) || 'B'}
+          <div
+            id="devis-pdf-template"
+            className="fixed top-0 left-0 opacity-0 pointer-events-none -z-[100] w-[800px] bg-white font-sans"
+            style={{ color: '#0f172a', backgroundColor: 'white' }}
+          >
+            {/* ===== HEADER ===== */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '3px solid #4f46e5', padding: '20px 32px 14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                {company.logoInvoice && company.logoInvoice !== '/logo.png' ? (
+                  <img src={company.logoInvoice} alt="Logo" style={{ height: '44px', objectFit: 'contain' }} />
+                ) : company.logoUrl && company.logoUrl !== '/logo.png' ? (
+                  <img src={company.logoUrl} alt="Logo" style={{ height: '44px', objectFit: 'contain' }} />
+                ) : (
+                  <div style={{ width: '44px', height: '44px', background: '#4f46e5', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900, fontSize: '20px' }}>
+                    {company.name?.charAt(0) || 'B'}
+                  </div>
+                )}
+                <div>
+                  <h1 style={{ fontSize: '18px', fontWeight: 900, color: '#1e1b4b', margin: 0, textTransform: 'uppercase' }}>{company.name || 'BEYA CREATIVE'}</h1>
+                  <p style={{ fontSize: '8px', fontWeight: 700, color: '#6366f1', margin: 0, textTransform: 'uppercase', letterSpacing: '2px' }}>{company.subtitle || 'Confection Textile'}</p>
+                </div>
               </div>
-            )}
-            <div>
-              <h1 style={{ fontSize: '18px', fontWeight: 900, color: '#1e1b4b', margin: 0, textTransform: 'uppercase' }}>{company.name || 'BEYA CREATIVE'}</h1>
-              <p style={{ fontSize: '8px', fontWeight: 700, color: '#6366f1', margin: 0, textTransform: 'uppercase', letterSpacing: '2px' }}>{company.subtitle || 'Confection Textile'}</p>
-            </div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: 900, margin: 0, color: '#1e1b4b', textTransform: 'uppercase' }}>DEVIS</h2>
-            <p style={{ fontSize: '9px', fontWeight: 700, color: '#94a3b8', margin: '2px 0 0' }}>N° {devisNum} — {new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
-          </div>
-        </div>
-
-        {/* ===== EMETTEUR / CLIENT ===== */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', margin: '12px 32px', fontSize: '11px' }}>
-          <div style={{ background: '#f8fafc', padding: '12px 14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-            <h3 style={{ fontSize: '8px', fontWeight: 900, color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 6px' }}>Émetteur</h3>
-            <p style={{ fontWeight: 900, fontSize: '11px', margin: '0 0 2px', textTransform: 'uppercase' }}>{company.name}</p>
-            <p style={{ fontWeight: 600, color: '#64748b', margin: '0 0 1px', fontSize: '10px' }}>{company.address}</p>
-            <p style={{ fontWeight: 600, color: '#64748b', margin: '0 0 1px', fontSize: '10px' }}>Tél: {company.phone}</p>
-            {company.email && <p style={{ fontWeight: 600, color: '#64748b', margin: '0', fontSize: '10px' }}>{company.email}</p>}
-            {company.ice && company.ice !== '000000000000000' && <p style={{ fontWeight: 600, color: '#94a3b8', margin: '3px 0 0', fontSize: '9px' }}>ICE: {company.ice} {company.rc && company.rc !== '123456' ? `| RC: ${company.rc}` : ''}</p>}
-          </div>
-          <div style={{ background: '#f8fafc', padding: '12px 14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-            <h3 style={{ fontSize: '8px', fontWeight: 900, color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 6px' }}>Client / Destinataire</h3>
-            <p style={{ fontWeight: 900, fontSize: '11px', margin: '0 0 2px', textTransform: 'uppercase' }}>{devisLead.name}</p>
-            <p style={{ fontWeight: 600, color: '#64748b', margin: '0 0 1px', fontSize: '10px' }}>{devisLead.phone}</p>
-            {devisLead.email && <p style={{ fontWeight: 600, color: '#64748b', margin: '0 0 1px', fontSize: '10px' }}>{devisLead.email}</p>}
-            {devisLead.ville && <p style={{ fontWeight: 600, color: '#64748b', margin: '0', fontSize: '10px' }}>{devisLead.ville}</p>}
-          </div>
-        </div>
-
-        {/* ===== OBJET ===== */}
-        <div style={{ margin: '0 32px 10px', background: '#eef2ff', padding: '8px 14px', borderRadius: '8px', border: '1px solid #c7d2fe' }}>
-          <p style={{ margin: 0, fontSize: '10px', fontWeight: 800, color: '#4338ca' }}>
-            Objet : Devis de confection — <span style={{ fontWeight: 900 }}>{devisLead.type}</span> × {devisLead.quantity} pièces
-          </p>
-        </div>
-
-        {/* ===== TABLE ===== */}
-        <div style={{ margin: '0 32px 10px' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
-            <thead>
-              <tr style={{ background: '#0f172a', color: 'white' }}>
-                <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '9px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', borderRadius: '8px 0 0 0' }}>Description</th>
-                <th style={{ padding: '10px 12px', textAlign: 'center', fontSize: '9px', fontWeight: 900, textTransform: 'uppercase' }}>Qté</th>
-                <th style={{ padding: '10px 12px', textAlign: 'center', fontSize: '9px', fontWeight: 900, textTransform: 'uppercase' }}>PU (MAD)</th>
-                <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '9px', fontWeight: 900, textTransform: 'uppercase', borderRadius: '0 8px 0 0' }}>Total (MAD)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Number(matierePrice) > 0 && (
-                <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '10px 12px', fontWeight: 800 }}>Tissu & Fournitures</td>
-                  <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600 }}>{devisLead.quantity}</td>
-                  <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600, color: '#64748b' }}>{Number(matierePrice).toFixed(2)}</td>
-                  <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 800 }}>{totalMatiere.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
-                </tr>
-              )}
-              <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                <td style={{ padding: '10px 12px', fontWeight: 800 }}>Confection & Main d'œuvre</td>
-                <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600 }}>{devisLead.quantity}</td>
-                <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600, color: '#64748b' }}>{Number(laborPrice || 0).toFixed(2)}</td>
-                <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 800 }}>{totalLabor.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        {/* ===== TOTALS ===== */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 32px 14px' }}>
-          <div style={{ width: '300px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 12px', fontSize: '10px', fontWeight: 700, color: '#64748b', borderBottom: '1px solid #f1f5f9' }}>
-              <span>Prix Unitaire</span>
-              <span style={{ fontWeight: 800 }}>{unitPrice.toFixed(2)} MAD</span>
-            </div>
-            {Number(matierePrice) > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 12px', fontSize: '10px', fontWeight: 700, color: '#64748b', borderBottom: '1px solid #f1f5f9' }}>
-                <span>Sous-total Matière</span>
-                <span style={{ fontWeight: 800 }}>{totalMatiere.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
+              <div style={{ textAlign: 'right' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: 900, margin: 0, color: '#1e1b4b', textTransform: 'uppercase' }}>DEVIS</h2>
+                <p style={{ fontSize: '9px', fontWeight: 700, color: '#94a3b8', margin: '2px 0 0' }}>N° {devisNum} — {new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
               </div>
-            )}
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 12px', fontSize: '10px', fontWeight: 700, color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>
-              <span>Sous-total MO</span>
-              <span style={{ fontWeight: 800 }}>{totalLabor.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
             </div>
-            <div style={{ 
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
-              background: 'linear-gradient(135deg, #312e81, #4f46e5)', 
-              color: 'white', padding: '16px', borderRadius: '12px', marginTop: '8px'
-            }}>
-              <div>
-                <span style={{ fontSize: '8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px', opacity: 0.7, display: 'block' }}>Total Général</span>
-                <span style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase' }}>TTC</span>
+
+            {/* ===== EMETTEUR / CLIENT ===== */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', margin: '12px 32px', fontSize: '11px' }}>
+              <div style={{ background: '#f8fafc', padding: '12px 14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                <h3 style={{ fontSize: '8px', fontWeight: 900, color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 6px' }}>Émetteur</h3>
+                <p style={{ fontWeight: 900, fontSize: '11px', margin: '0 0 2px', textTransform: 'uppercase' }}>{company.name}</p>
+                <p style={{ fontWeight: 600, color: '#64748b', margin: '0 0 1px', fontSize: '10px' }}>{company.address}</p>
+                <p style={{ fontWeight: 600, color: '#64748b', margin: '0 0 1px', fontSize: '10px' }}>Tél: {company.phone}</p>
+                {company.email && <p style={{ fontWeight: 600, color: '#64748b', margin: '0', fontSize: '10px' }}>{company.email}</p>}
+                {company.ice && company.ice !== '000000000000000' && <p style={{ fontWeight: 600, color: '#94a3b8', margin: '3px 0 0', fontSize: '9px' }}>ICE: {company.ice} {company.rc && company.rc !== '123456' ? `| RC: ${company.rc}` : ''}</p>}
               </div>
-              <span style={{ fontSize: '26px', fontWeight: 900, letterSpacing: '-1px' }}>{totalGeneral.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} <span style={{ fontSize: '13px', fontWeight: 800 }}>MAD</span></span>
+              <div style={{ background: '#f8fafc', padding: '12px 14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                <h3 style={{ fontSize: '8px', fontWeight: 900, color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 6px' }}>Client / Destinataire</h3>
+                <p style={{ fontWeight: 900, fontSize: '11px', margin: '0 0 2px', textTransform: 'uppercase' }}>{devisLead.name}</p>
+                <p style={{ fontWeight: 600, color: '#64748b', margin: '0 0 1px', fontSize: '10px' }}>{devisLead.phone}</p>
+                {devisLead.email && <p style={{ fontWeight: 600, color: '#64748b', margin: '0 0 1px', fontSize: '10px' }}>{devisLead.email}</p>}
+                {devisLead.ville && <p style={{ fontWeight: 600, color: '#64748b', margin: '0', fontSize: '10px' }}>{devisLead.ville}</p>}
+              </div>
+            </div>
+
+            {/* ===== OBJET ===== */}
+            <div style={{ margin: '0 32px 10px', background: '#eef2ff', padding: '8px 14px', borderRadius: '8px', border: '1px solid #c7d2fe' }}>
+              <p style={{ margin: 0, fontSize: '10px', fontWeight: 800, color: '#4338ca' }}>
+                Objet : Devis de confection — <span style={{ fontWeight: 900 }}>{devisLead.type}</span> × {devisLead.quantity} pièces
+              </p>
+            </div>
+
+            {/* ===== TABLE ===== */}
+            <div style={{ margin: '0 32px 10px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+                <thead>
+                  <tr style={{ background: '#0f172a', color: 'white' }}>
+                    <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '9px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', borderRadius: '8px 0 0 0' }}>Description</th>
+                    <th style={{ padding: '10px 12px', textAlign: 'center', fontSize: '9px', fontWeight: 900, textTransform: 'uppercase' }}>Qté</th>
+                    <th style={{ padding: '10px 12px', textAlign: 'center', fontSize: '9px', fontWeight: 900, textTransform: 'uppercase' }}>PU (MAD)</th>
+                    <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '9px', fontWeight: 900, textTransform: 'uppercase', borderRadius: '0 8px 0 0' }}>Total (MAD)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Number(matierePrice) > 0 && (
+                    <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '10px 12px', fontWeight: 800 }}>Tissu & Fournitures</td>
+                      <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600 }}>{devisLead.quantity}</td>
+                      <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600, color: '#64748b' }}>{Number(matierePrice).toFixed(2)}</td>
+                      <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 800 }}>{totalMatiere.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                  )}
+                  <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <td style={{ padding: '10px 12px', fontWeight: 800 }}>Confection & Main d'œuvre</td>
+                    <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600 }}>{devisLead.quantity}</td>
+                    <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600, color: '#64748b' }}>{Number(laborPrice || 0).toFixed(2)}</td>
+                    <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 800 }}>{totalLabor.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* ===== TOTALS ===== */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 32px 14px' }}>
+              <div style={{ width: '300px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 12px', fontSize: '10px', fontWeight: 700, color: '#64748b', borderBottom: '1px solid #f1f5f9' }}>
+                  <span>Prix Unitaire</span>
+                  <span style={{ fontWeight: 800 }}>{unitPrice.toFixed(2)} MAD</span>
+                </div>
+                {Number(matierePrice) > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 12px', fontSize: '10px', fontWeight: 700, color: '#64748b', borderBottom: '1px solid #f1f5f9' }}>
+                    <span>Sous-total Matière</span>
+                    <span style={{ fontWeight: 800 }}>{totalMatiere.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
+                  </div>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 12px', fontSize: '10px', fontWeight: 700, color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>
+                  <span>Sous-total MO</span>
+                  <span style={{ fontWeight: 800 }}>{totalLabor.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
+                </div>
+                <div style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  background: 'linear-gradient(135deg, #312e81, #4f46e5)',
+                  color: 'white', padding: '16px', borderRadius: '12px', marginTop: '8px'
+                }}>
+                  <div>
+                    <span style={{ fontSize: '8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px', opacity: 0.7, display: 'block' }}>Total Général</span>
+                    <span style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase' }}>TTC</span>
+                  </div>
+                  <span style={{ fontSize: '26px', fontWeight: 900, letterSpacing: '-1px' }}>{totalGeneral.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} <span style={{ fontSize: '13px', fontWeight: 800 }}>MAD</span></span>
+                </div>
+              </div>
+            </div>
+
+            {/* ===== CONDITIONS — CLEAR & READABLE ===== */}
+            <div style={{ margin: '0 32px 12px', padding: '14px 18px', borderRadius: '10px', border: '2px solid #312e81', borderLeft: '6px solid #4f46e5', background: '#fafaff' }}>
+              <p style={{ fontWeight: 900, color: '#1e1b4b', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 8px', borderBottom: '1px solid #e0e7ff', paddingBottom: '6px' }}>📋 Conditions Générales</p>
+              <div style={{ fontSize: '11px', color: '#334155', fontWeight: 600, lineHeight: '2' }}>
+                <p style={{ margin: '0 0 2px' }}><strong style={{ color: '#4f46e5' }}>1.</strong> Ce devis est <strong>valable 15 jours</strong> à compter de la date d'émission.</p>
+                <p style={{ margin: '0 0 2px' }}><strong style={{ color: '#4f46e5' }}>2.</strong> Un <strong>acompte de 50%</strong> est requis à la confirmation de la commande.</p>
+                <p style={{ margin: '0 0 2px' }}><strong style={{ color: '#4f46e5' }}>3.</strong> Le <strong>délai de production</strong> sera confirmé après validation de l'échantillon.</p>
+                <p style={{ margin: 0 }}><strong style={{ color: '#4f46e5' }}>4.</strong> Toute <strong>modification du modèle</strong> après lancement peut entraîner une révision tarifaire.</p>
+              </div>
+            </div>
+
+            {/* ===== FOOTER ===== */}
+            <div style={{ margin: '0 32px', borderTop: '2px solid #e2e8f0', paddingTop: '10px', textAlign: 'center' }}>
+              <p style={{ fontSize: '9px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 2px' }}>
+                Merci de votre confiance — {company.name}
+              </p>
+              <p style={{ fontSize: '8px', fontWeight: 700, color: '#cbd5e1', margin: 0 }}>
+                {company.address} | {company.phone} | {company.email}
+              </p>
             </div>
           </div>
-        </div>
-
-        {/* ===== CONDITIONS — CLEAR & READABLE ===== */}
-        <div style={{ margin: '0 32px 12px', padding: '14px 18px', borderRadius: '10px', border: '2px solid #312e81', borderLeft: '6px solid #4f46e5', background: '#fafaff' }}>
-          <p style={{ fontWeight: 900, color: '#1e1b4b', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 8px', borderBottom: '1px solid #e0e7ff', paddingBottom: '6px' }}>📋 Conditions Générales</p>
-          <div style={{ fontSize: '11px', color: '#334155', fontWeight: 600, lineHeight: '2' }}>
-            <p style={{ margin: '0 0 2px' }}><strong style={{ color: '#4f46e5' }}>1.</strong> Ce devis est <strong>valable 15 jours</strong> à compter de la date d'émission.</p>
-            <p style={{ margin: '0 0 2px' }}><strong style={{ color: '#4f46e5' }}>2.</strong> Un <strong>acompte de 50%</strong> est requis à la confirmation de la commande.</p>
-            <p style={{ margin: '0 0 2px' }}><strong style={{ color: '#4f46e5' }}>3.</strong> Le <strong>délai de production</strong> sera confirmé après validation de l'échantillon.</p>
-            <p style={{ margin: 0 }}><strong style={{ color: '#4f46e5' }}>4.</strong> Toute <strong>modification du modèle</strong> après lancement peut entraîner une révision tarifaire.</p>
-          </div>
-        </div>
-
-        {/* ===== FOOTER ===== */}
-        <div style={{ margin: '0 32px', borderTop: '2px solid #e2e8f0', paddingTop: '10px', textAlign: 'center' }}>
-          <p style={{ fontSize: '9px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 2px' }}>
-            Merci de votre confiance — {company.name}
-          </p>
-          <p style={{ fontSize: '8px', fontWeight: 700, color: '#cbd5e1', margin: 0 }}>
-            {company.address} | {company.phone} | {company.email}
-          </p>
-        </div>
-      </div>
         );
       })()}
       {/* Message Templates Settings Modal */}
@@ -1507,8 +1481,8 @@ export default function Demandes() {
                     key={opt.id}
                     onClick={() => handleContact(contactingLead, opt.id, opt.msg)}
                     className={`w-full text-left p-6 border-2 rounded-3xl transition-all group flex items-start gap-4 relative overflow-hidden ${isSent
-                        ? 'bg-emerald-50 border-emerald-500 shadow-lg shadow-emerald-100'
-                        : 'bg-slate-50 border-transparent hover:border-emerald-500 hover:bg-white'
+                      ? 'bg-emerald-50 border-emerald-500 shadow-lg shadow-emerald-100'
+                      : 'bg-slate-50 border-transparent hover:border-emerald-500 hover:bg-white'
                       }`}
                   >
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isSent ? 'bg-emerald-500 text-white shadow-md' : 'bg-white text-slate-400 group-hover:text-emerald-500 group-hover:shadow-lg'
@@ -1613,18 +1587,18 @@ export default function Demandes() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'الاسم' : 'Nom'}</label>
-                  <input 
-                    type="text" 
-                    value={editForm.name || ''} 
+                  <input
+                    type="text"
+                    value={editForm.name || ''}
                     onChange={e => setEditForm({ ...editForm, name: e.target.value })}
                     className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'الهاتف' : 'Téléphone'}</label>
-                  <input 
-                    type="text" 
-                    value={editForm.phone || ''} 
+                  <input
+                    type="text"
+                    value={editForm.phone || ''}
                     onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
                     className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
                   />
@@ -1634,18 +1608,18 @@ export default function Demandes() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'المدينة' : 'Ville'}</label>
-                  <input 
-                    type="text" 
-                    value={editForm.ville || ''} 
+                  <input
+                    type="text"
+                    value={editForm.ville || ''}
                     onChange={e => setEditForm({ ...editForm, ville: e.target.value })}
                     className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'البريد الإلكتروني' : 'Email'}</label>
-                  <input 
-                    type="email" 
-                    value={editForm.email || ''} 
+                  <input
+                    type="email"
+                    value={editForm.email || ''}
                     onChange={e => setEditForm({ ...editForm, email: e.target.value })}
                     className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
                   />
@@ -1655,9 +1629,9 @@ export default function Demandes() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'الموديل' : 'Modèle / Type'}</label>
-                  <input 
-                    type="text" 
-                    value={editForm.type || ''} 
+                  <input
+                    type="text"
+                    value={editForm.type || ''}
                     onChange={e => setEditForm({ ...editForm, type: e.target.value })}
                     className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
                   />
@@ -1665,9 +1639,9 @@ export default function Demandes() {
                 {!editForm.type?.startsWith('RECRUTEMENT:') && (
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'الكمية' : 'Quantité'}</label>
-                    <input 
-                      type="number" 
-                      value={editForm.quantity || 0} 
+                    <input
+                      type="number"
+                      value={editForm.quantity || 0}
                       onChange={e => setEditForm({ ...editForm, quantity: Number(e.target.value) })}
                       className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
                     />
@@ -1677,8 +1651,8 @@ export default function Demandes() {
 
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'تفاصيل إضافية' : 'Détails'}</label>
-                <textarea 
-                  value={editForm.details || ''} 
+                <textarea
+                  value={editForm.details || ''}
                   onChange={e => setEditForm({ ...editForm, details: e.target.value })}
                   rows={4}
                   className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors resize-none"
@@ -1704,5 +1678,11 @@ export default function Demandes() {
         </div>
       )}
     </div>
+  );
+}
+          </div >
+        </div >
+      )}
+    </div >
   );
 }

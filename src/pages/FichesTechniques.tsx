@@ -638,7 +638,7 @@ export default function FichesTechniques() {
           <h1 className="text-2xl font-bold text-slate-800">{t('fiches', lang)}</h1>
           <p className="text-slate-500 text-sm">{t('fiches_subtitle', lang)}</p>
         </div>
-        <div className={`flex gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+        <div className={`flex flex-col sm:flex-row gap-2 ${isAr ? 'sm:flex-row-reverse' : ''}`}>
           <button onClick={() => {
             Promise.all([
               loadData<FicheTechnique>('fiches'),
@@ -648,10 +648,10 @@ export default function FichesTechniques() {
               setTissus(t);
               setShowCalc(true);
             });
-          }} className="flex items-center gap-2 bg-green-600 text-white px-4 py-2.5 rounded-lg hover:bg-green-700 transition text-sm font-medium shadow-sm">
+          }} className="flex items-center justify-center gap-2 bg-green-600 text-white px-3 sm:px-4 py-2.5 rounded-lg hover:bg-green-700 transition text-xs sm:text-sm font-medium shadow-sm">
             <Calculator className="w-4 h-4" /> {t('calc_prix', lang)}
           </button>
-          <button onClick={openCreate} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-lg hover:bg-indigo-700 transition text-sm font-medium shadow-sm">
+          <button onClick={openCreate} className="flex items-center justify-center gap-2 bg-indigo-600 text-white px-3 sm:px-4 py-2.5 rounded-lg hover:bg-indigo-700 transition text-xs sm:text-sm font-medium shadow-sm">
             <Plus className="w-4 h-4" /> {t('new_fiche', lang)}
           </button>
         </div>
@@ -939,7 +939,7 @@ export default function FichesTechniques() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl flex flex-col">
+          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl flex flex-col mx-2 sm:mx-auto">
 
             {/* Header */}
             <div className={`p-6 border-b border-slate-100 flex items-center justify-between flex-shrink-0 ${isAr ? 'flex-row-reverse' : ''}`}>
@@ -962,7 +962,7 @@ export default function FichesTechniques() {
               {/* ── Photos ── */}
               <div>
                 <p className={`text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 ${isAr ? 'text-right' : ''}`}>{isAr ? 'الوسائط' : 'Médias'}</p>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className={`block text-xs font-semibold text-slate-600 ${isAr ? 'text-right' : ''}`}>{t('photo_modele', lang)}</label>
                     <div className="relative aspect-video rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 overflow-hidden group hover:border-indigo-400 transition-colors">
@@ -1028,7 +1028,7 @@ export default function FichesTechniques() {
               {/* ── Infos de base ── */}
               <div className={isAr ? 'text-right' : ''}>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">{isAr ? 'المعلومات' : 'Informations'}</p>
-                <div className="grid grid-cols-2 gap-3 mb-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                   <div>
                     <label className={`block text-xs font-semibold text-slate-600 mb-1.5 ${isAr ? 'text-right' : ''}`}>{t('modele_label', lang)} *</label>
                     <input value={form.modele || ''} onChange={e => setForm({ ...form, modele: e.target.value })}
@@ -1061,7 +1061,7 @@ export default function FichesTechniques() {
                   <input value={form.client || ''} onChange={e => setForm({ ...form, client: e.target.value })}
                     className={`w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors ${isAr ? 'text-right' : ''}`} />
                 </div>
-                <div className="grid grid-cols-2 gap-3 mb-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                   <div>
                     <label className={`block text-xs font-semibold text-slate-600 mb-1.5 ${isAr ? 'text-right' : ''}`}>
                       <Ruler className="w-3.5 h-3.5 inline mr-1 text-indigo-400" />
