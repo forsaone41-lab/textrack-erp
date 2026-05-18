@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Save, Image as ImageIcon, Building2, FileText, Phone, Play, Zap, Globe, Settings as SettingsIcon, ShieldCheck, X, Star, MapPin } from 'lucide-react';
-import { CompanyProfile, loadCompanyProfile, saveCompanyProfile } from '../types';
+import { Save, Image as ImageIcon, Building2, FileText, Phone, Play, Zap, Globe, Settings as SettingsIcon, ShieldCheck, X, Star, MapPin, RefreshCw, CloudUpload, Database, AlertTriangle } from 'lucide-react';
+import { CompanyProfile, loadCompanyProfile, saveCompanyProfile, saveRecord } from '../types';
+import { supabase } from '../supabase';
 import { compressImage } from '../utils/image';
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
@@ -12,8 +13,94 @@ export default function Settings() {
   const [debugInfo, setDebugInfo] = useState<string>('');
   const [showDebug, setShowDebug] = useState(false);
 
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'checking' | 'syncing' | 'success' | 'error'>('idle');
+  const [syncLogs, setSyncLogs] = useState<string[]>([]);
+  const [counts, setCounts] = useState<Record<string, { local: number, cloud: number }>>({});
+
+  const checkSyncStatus = async () => {
+    setSyncStatus('checking');
+    const tables = ['leads', 'users', 'employes', 'tissus', 'fournitures', 'commandes', 'fiches'];
+    const newCounts: Record<string, { local: number, cloud: number }> = {};
+    
+    for (const table of tables) {
+      let localCount = 0;
+      try {
+        const localKey = table === 'leads' ? 'textrack_leads' : `textrack_data_${table}`;
+        const localRaw = localStorage.getItem(localKey);
+        if (localRaw) {
+          const parsed = JSON.parse(localRaw);
+          if (Array.isArray(parsed)) {
+            localCount = parsed.filter(item => item && item.name !== '__SYSTEM_CONFIG__').length;
+          }
+        }
+      } catch (e) {}
+
+      let cloudCount = 0;
+      try {
+        const { count, error } = await supabase
+          .from(table)
+          .select('*', { count: 'exact', head: true });
+        if (!error && count !== null) {
+          cloudCount = count;
+          if (table === 'leads') {
+            const { count: cfgCount } = await supabase
+              .from('leads')
+              .select('*', { count: 'exact', head: true })
+              .eq('name', '__SYSTEM_CONFIG__');
+            if (cfgCount) {
+              cloudCount = Math.max(0, cloudCount - cfgCount);
+            }
+          }
+        }
+      } catch (e) {}
+
+      newCounts[table] = { local: localCount, cloud: cloudCount };
+    }
+    setCounts(newCounts);
+    setSyncStatus('idle');
+  };
+
+  const startMigration = async () => {
+    if (!window.confirm(isAr 
+      ? 'هل أنت متأكد من رغبتك في رفع جميع البيانات المحلية إلى السحابة؟ سيؤدي هذا إلى مزامنة بيانات هذا الجهاز مع السحابة لتتمكن من رؤيتها على الهاتف.'
+      : 'Voulez-vous vraiment uploader toutes vos données locales sur le Cloud ? Cela permettra de les synchroniser pour qu\'elles soient visibles sur votre téléphone.')) {
+      return;
+    }
+    
+    setSyncStatus('syncing');
+    setSyncLogs(['Début de la synchronisation...']);
+    const tables = ['leads', 'users', 'employes', 'tissus', 'fournitures', 'commandes', 'fiches'];
+    
+    try {
+      for (const table of tables) {
+        const localKey = table === 'leads' ? 'textrack_leads' : `textrack_data_${table}`;
+        const localRaw = localStorage.getItem(localKey);
+        if (localRaw) {
+          const parsed = JSON.parse(localRaw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setSyncLogs(prev => [...prev, `Mise en ligne de la table ${table} (${parsed.length} éléments)...`]);
+            for (const item of parsed) {
+              if (item && item.name !== '__SYSTEM_CONFIG__') {
+                await saveRecord(table, item, true);
+              }
+            }
+          }
+        }
+      }
+      setSyncLogs(prev => [...prev, '🎉 Synchronisation terminée avec succès !']);
+      setSyncStatus('success');
+      setTimeout(() => {
+        checkSyncStatus();
+      }, 2000);
+    } catch (err: any) {
+      setSyncLogs(prev => [...prev, `❌ Erreur : ${err.message}`]);
+      setSyncStatus('error');
+    }
+  };
+
   useEffect(() => {
     setProfile(loadCompanyProfile());
+    checkSyncStatus();
   }, []);
 
   if (!profile) return null;
@@ -590,6 +677,84 @@ export default function Settings() {
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1">{t('email_contact', lang)}</label>
               <input type="email" value={profile.email} onChange={e => handleChange('email', e.target.value)} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none text-left" dir="ltr" />
+            </div>
+          </div>
+        </div>
+
+        {/* MIGRATION ET CLOUD SYNC */}
+        <div className="p-6 border-t border-slate-100 bg-indigo-50/20">
+          <h2 className="text-lg font-black text-slate-800 mb-2 flex items-center gap-2">
+            <Database className="w-5 h-5 text-indigo-600" />
+            {isAr ? 'مزامنة البيانات المحلية مع السحاب (Supabase)' : 'Mise en ligne et Cloud Sync (Supabase)'}
+          </h2>
+          <p className="text-xs text-slate-500 mb-6 leading-relaxed">
+            {isAr 
+              ? 'إذا كنت قد سجلت زبناء أو فواتير أو طلبات من قبل على هذا الحاسوب، فيمكنك رفعها الآن لتظهر تلقائياً على هاتفك وعلى جميع أجهزتك المتصلة بنفس الحساب.'
+              : 'Si vous avez déjà enregistré des prospects, clients, factures ou commandes sur cet ordinateur, vous pouvez les envoyer sur le Cloud pour qu\'ils soient instantanément visibles sur votre téléphone.'}
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {/* Table status list */}
+            <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-3">
+              <div className="flex justify-between items-center pb-2 border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <span>{isAr ? 'نوع البيانات' : 'Type de Données'}</span>
+                <span className="flex gap-4">
+                  <span>{isAr ? 'جهازك' : 'Local'}</span>
+                  <span>{isAr ? 'السحابة' : 'Cloud'}</span>
+                </span>
+              </div>
+              {Object.keys(counts).length === 0 ? (
+                <div className="text-center py-4 text-xs text-slate-400">{isAr ? 'جاري التحقق...' : 'Vérification en cours...'}</div>
+              ) : (
+                Object.entries(counts).map(([table, val]) => (
+                  <div key={table} className="flex justify-between items-center text-xs font-bold text-slate-700">
+                    <span className="capitalize">{table === 'employes' ? (isAr ? 'العمال' : 'Employés') : table === 'fiches' ? (isAr ? 'البطاقات التقنية' : 'Fiches Tech') : table}</span>
+                    <span className="flex gap-8 font-mono">
+                      <span className={val.local > 0 ? 'text-indigo-600' : 'text-slate-400'}>{val.local}</span>
+                      <span className={val.cloud > 0 ? 'text-emerald-600' : 'text-slate-400'}>{val.cloud}</span>
+                    </span>
+                  </div>
+                ))
+              )}
+              <div className="pt-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={checkSyncStatus}
+                  disabled={syncStatus === 'checking'}
+                  className="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition"
+                >
+                  <RefreshCw className={`w-3 h-3 ${syncStatus === 'checking' ? 'animate-spin' : ''}`} />
+                  {isAr ? 'تحديث الحالة' : 'Rafraîchir'}
+                </button>
+              </div>
+            </div>
+
+            {/* Sync actions */}
+            <div className="space-y-4">
+              <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-col items-stretch">
+                <button
+                  type="button"
+                  onClick={startMigration}
+                  disabled={syncStatus === 'syncing'}
+                  className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black uppercase tracking-widest text-xs transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
+                >
+                  <CloudUpload className="w-4 h-4" />
+                  {isAr ? 'رفع ومزامنة البيانات الآن' : 'Envoyer les données locales sur le Cloud'}
+                </button>
+
+                {syncStatus === 'syncing' && (
+                  <div className="mt-4 p-3 bg-slate-900 text-slate-300 rounded-xl font-mono text-[9px] max-h-40 overflow-y-auto space-y-1">
+                    {syncLogs.map((log, idx) => (
+                      <div key={idx}>{log}</div>
+                    ))}
+                  </div>
+                )}
+                {syncStatus === 'success' && (
+                  <div className="mt-4 p-3 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-xl text-xs font-bold text-center">
+                    🎉 {isAr ? 'تمت المزامنة بنجاح! جميع البيانات متوفرة الآن على هاتفك.' : 'Mise en ligne réussie ! Vos données sont maintenant synchronisées.'}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
