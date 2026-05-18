@@ -1014,6 +1014,26 @@ export default function Demandes() {
                       <MessageSquare className="w-4 h-4" />
                       {isAr ? (lead.contactedAt ? 'تم التواصل' : 'واتساب') : (lead.contactedAt ? 'Contacté' : 'WhatsApp')}
                     </button>
+
+                    {/* Email: Demander numéro correct */}
+                    {lead.email && (
+                      <a
+                        href={`mailto:${lead.email}?subject=${encodeURIComponent(
+                          isAr 
+                            ? `طلبكم في BEYA CREATIVE - نحتاج رقم هاتفكم الصحيح`
+                            : `Votre demande chez BEYA CREATIVE - Numéro de téléphone requis`
+                        )}&body=${encodeURIComponent(
+                          isAr 
+                            ? `السلام عليكم ${lead.name}،\n\nشكراً لتقديم طلبكم الخاص بـ ${lead.type}.\n\nللأسف، لم نتمكن من الوصول إليكم عبر رقم الهاتف الذي أدخلتم: ${lead.phone}\n\nنرجو منكم:\n✅ إرسال رقم هاتفكم الصحيح رداً على هذا الإيميل\n✅ أو إعادة تقديم الطلب عبر موقعنا\n\nنحن في انتظار ردكم لنتمكن من خدمتكم بأسرع وقت.\n\nمع أطيب التحيات،\nفريق BEYA CREATIVE 🇲🇦`
+                            : `Bonjour ${lead.name},\n\nMerci pour votre demande concernant ${lead.type}.\n\nMalheureusement, nous n'avons pas pu vous joindre au numéro que vous avez fourni : ${lead.phone}\n\nNous vous prions de bien vouloir :\n✅ Nous envoyer votre numéro de téléphone correct en réponse à cet email\n✅ Ou soumettre une nouvelle demande via notre site\n\nNous restons à votre disposition et attendons votre retour pour vous accompagner au plus vite.\n\nCordialement,\nL'équipe BEYA CREATIVE 🇲🇦`
+                        )}`}
+                        className="w-11 h-11 bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white rounded-xl flex items-center justify-center transition-all border border-amber-200 shadow-sm"
+                        title={isAr ? 'طلب رقم صحيح عبر الإيميل' : 'Demander numéro correct par email'}
+                      >
+                        <Mail className="w-5 h-5" />
+                      </a>
+                    )}
+
                     {(() => {
                       const cvData = lead.details?.split('| CV_ATTACHMENT:')[1];
                       if (!cvData) return null;
