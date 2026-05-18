@@ -1680,9 +1680,3 @@ export default function Demandes() {
     </div>
   );
 }
-          </div >
-        </div >
-      )}
-    </div >
-  );
-}
