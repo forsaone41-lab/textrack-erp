@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, FileText, Eye, CheckCircle, Clock, AlertCircle, ArrowUpRight, X, Download, Table2 } from 'lucide-react';
-import { Facture, Commande, loadData, saveRecord, deleteRecord, genId, loadCompanyProfile } from '../types';
+import { Facture, Commande, User, loadData, saveRecord, deleteRecord, genId, loadCompanyProfile } from '../types';
 import { printFacture, exportFacturesCSV } from '../utils/print';
 import { printElement } from '../utils/pdf';
 import { InvoicePRO } from '../components/InvoicePRO';
@@ -12,6 +12,7 @@ export default function Factures() {
   const company = loadCompanyProfile();
   const [factures, setFactures] = useState<Facture[]>([]);
   const [commandes, setCommandes] = useState<Commande[]>([]);
+  const [clients, setClients] = useState<User[]>([]);
   const [search, setSearch] = useState('');
   const [filterStatut, setFilterStatut] = useState<string>('all');
   const [showModal, setShowModal] = useState(false);
@@ -23,10 +24,12 @@ export default function Factures() {
   useEffect(() => {
     Promise.all([
       loadData<Facture>('factures'),
-      loadData<Commande>('commandes')
-    ]).then(([facs, cmds]) => {
+      loadData<Commande>('commandes'),
+      loadData<User>('utilisateurs')
+    ]).then(([facs, cmds, users]) => {
       setFactures(facs);
       setCommandes(cmds);
+      setClients(users.filter(u => u.role === 'client'));
     });
   }, []);
 
@@ -455,12 +458,16 @@ export default function Factures() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5">Client *</label>
-                  <input
+                  <select
                     value={form.client || ''}
                     onChange={e => setForm({ ...form, client: e.target.value })}
-                    placeholder="Nom du client"
                     className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                  />
+                  >
+                    <option value="">Sélectionner un client</option>
+                    {clients.map(c => (
+                      <option key={c.id} value={c.nom}>{c.nom}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
