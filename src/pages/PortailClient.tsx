@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, Settings, ChevronDown, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw } from 'lucide-react';
+import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw } from 'lucide-react';
 import {
   Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile
 } from '../types';
@@ -36,7 +36,6 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [factures, setFactures] = useState<Facture[]>([]);
   const [fiches, setFiches] = useState<any[]>([]);
   const [reference, setReference] = useState('');
-  const [searched, setSearched] = useState(false);
   const [found, setFound] = useState<Commande[]>([]);
   const [notifsEnabled, setNotifsEnabled] = useState(true);
   const [showInvoiceView, setShowInvoiceView] = useState(false);
@@ -103,13 +102,11 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
           c.client.toLowerCase() === currentUser.nom.toLowerCase()
         );
         setFound(myCommandes);
-        setSearched(true);
       }
     });
   }, [currentUser]);
 
   function handleSearch() {
-    setSearched(true);
     const results = commandes.filter(c =>
       c.reference.toLowerCase() === reference.toLowerCase() ||
       (c.referenceClient && c.referenceClient.toLowerCase() === reference.toLowerCase()) ||
@@ -145,6 +142,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
         name: currentUser.nom,
         email: currentUser.email || '',
         phone: currentUser.telephone || '',
+        ville: '',
         type: newOrderForm.modele,
         quantity: parseInt(newOrderForm.quantite),
         photo: newOrderForm.photo,
@@ -686,57 +684,84 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                   </div>
                </div>
 
-               {/* Invoices Section */}
-               <div>
-                  <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-6 flex items-center gap-3">
-                     <div className="w-8 h-8 bg-emerald-500 text-white rounded-lg flex items-center justify-center"><Receipt className="w-4 h-4" /></div>
-                     {isAr ? 'الفواتير المالية' : 'Factures Financières'}
-                  </h3>
+               {/* Financial Documents Sections */}
+               {(() => {
+                 const clientDocs = factures.filter(f => f.client.toLowerCase() === currentUser?.nom.toLowerCase());
+                 const devisList = clientDocs.filter(f => f.typeDoc === 'devis');
+                 const recusList = clientDocs.filter(f => f.typeDoc === 'recu');
+                 const facturesList = clientDocs.filter(f => !f.typeDoc || f.typeDoc === 'facture');
+                 
+                 const renderList = (list: Facture[], titleAr: string, titleFr: string, bgClass: string, textClass: string, bgLightClass: string, hoverBorderClass: string) => (
+                   list.length > 0 && (
+                     <div className="mb-10">
+                        <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-6 flex items-center gap-3">
+                           <div className={`w-8 h-8 ${bgClass} text-white rounded-lg flex items-center justify-center`}><Receipt className="w-4 h-4" /></div>
+                           {isAr ? titleAr : titleFr}
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                           {list.map(f => (
+                              <div key={f.id} className={`bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 relative overflow-hidden group transition-all ${hoverBorderClass}`}>
+                                 <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity">
+                                    <Receipt className={`w-24 h-24 ${textClass}`} />
+                                 </div>
+                                 <div className="relative z-10 text-center md:text-left">
+                                    <div className="flex flex-col md:flex-row items-center gap-3 mb-6">
+                                       <div className={`w-10 h-10 ${bgLightClass} rounded-xl flex items-center justify-center ${textClass}`}>
+                                          <Receipt className="w-5 h-5" />
+                                       </div>
+                                       <div>
+                                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
+                                             {f.typeDoc === 'devis' ? 'Devis' : f.typeDoc === 'recu' ? 'Reçu d\'avance' : 'Facture'}
+                                          </p>
+                                          <p className="text-sm font-black text-slate-900 uppercase">{f.numero}</p>
+                                       </div>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 gap-6 mb-8">
+                                       <div>
+                                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'المبلغ' : 'Montant'}</p>
+                                          <p className={`text-xl font-black ${textClass}`}>{f.montant.toLocaleString()} MAD</p>
+                                       </div>
+                                       <div>
+                                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الحالة' : 'Statut'}</p>
+                                          <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                                            f.statut === 'payée' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
+                                          }`}>
+                                             {isAr ? (f.statut === 'payée' ? 'مؤداة' : 'في الانتظار') : f.statut}
+                                          </span>
+                                       </div>
+                                    </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                     {factures.filter(f => f.client.toLowerCase() === currentUser?.nom.toLowerCase()).map(f => (
-                       <div key={f.id} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 relative overflow-hidden group hover:border-emerald-200 transition-all">
-                          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity">
-                             <Receipt className="w-24 h-24 text-emerald-600" />
-                          </div>
-                          <div className="relative z-10 text-center md:text-left">
-                             <div className="flex flex-col md:flex-row items-center gap-3 mb-6">
-                                <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
-                                   <Receipt className="w-5 h-5" />
-                                </div>
-                                <div>
-                                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Facture</p>
-                                   <p className="text-sm font-black text-slate-900 uppercase">{f.numero}</p>
-                                </div>
-                             </div>
-                             
-                             <div className="grid grid-cols-2 gap-6 mb-8">
-                                <div>
-                                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'المبلغ' : 'Montant'}</p>
-                                   <p className="text-xl font-black text-emerald-600">{f.montant.toLocaleString()} MAD</p>
-                                </div>
-                                <div>
-                                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الحالة' : 'Statut'}</p>
-                                   <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                                     f.statut === 'payée' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
-                                   }`}>
-                                      {isAr ? (f.statut === 'payée' ? 'مؤداة' : 'في الانتظار') : f.statut}
-                                   </span>
-                                </div>
-                             </div>
+                                    <button 
+                                      onClick={() => { setSelectedFacture(f); setShowInvoiceView(true); }}
+                                      className={`w-full py-4 ${bgClass} text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:brightness-110 transition-all flex items-center justify-center gap-3 shadow-xl`}
+                                    >
+                                       <Download className="w-4 h-4" />
+                                       {isAr ? 'تحميل الوثيقة' : 'Télécharger PDF'}
+                                    </button>
+                                 </div>
+                              </div>
+                           ))}
+                        </div>
+                     </div>
+                   )
+                 );
 
-                             <button 
-                               onClick={() => { setSelectedFacture(f); setShowInvoiceView(true); }}
-                               className="w-full py-4 bg-emerald-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-emerald-700 transition-all flex items-center justify-center gap-3 shadow-xl shadow-emerald-100"
-                             >
-                                <Download className="w-4 h-4" />
-                                {isAr ? 'تحميل الفاتورة' : 'Télécharger PDF'}
-                             </button>
-                          </div>
-                       </div>
-                     ))}
-                  </div>
-               </div>
+                 return (
+                   <>
+                     {renderList(devisList, 'عروض الأسعار (Devis)', 'Devis et Estimations', 'bg-indigo-600', 'text-indigo-600', 'bg-indigo-50', 'hover:border-indigo-200')}
+                     {renderList(recusList, 'وصولات الأداء والأفونس', 'Reçus de Paiement', 'bg-emerald-600', 'text-emerald-600', 'bg-emerald-50', 'hover:border-emerald-200')}
+                     {renderList(facturesList, 'الفواتير المالية', 'Factures Financières', 'bg-slate-800', 'text-slate-800', 'bg-slate-100', 'hover:border-slate-300')}
+                     
+                     {clientDocs.length === 0 && (
+                        <div className="text-center py-12 bg-white rounded-[2rem] border border-slate-100 shadow-sm">
+                           <Receipt className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+                           <p className="text-slate-400 font-bold uppercase text-xs tracking-widest italic">{isAr ? 'لا توجد وثائق حاليا' : 'Aucun document disponible'}</p>
+                        </div>
+                     )}
+                   </>
+                 );
+               })()}
             </div>
           )}
 

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, FileText, Eye, CheckCircle, Clock, AlertCircle, ArrowUpRight, X, Download, Table2 } from 'lucide-react';
 import { Facture, Commande, loadData, saveRecord, deleteRecord, genId, loadCompanyProfile } from '../types';
 import { printFacture, exportFacturesCSV } from '../utils/print';
-import { generatePDF, printElement } from '../utils/pdf';
+import { printElement } from '../utils/pdf';
 import { InvoicePRO } from '../components/InvoicePRO';
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
@@ -76,6 +76,7 @@ export default function Factures() {
       date: today,
       echeance: due.toISOString().split('T')[0],
       statut: 'en_attente',
+      typeDoc: 'facture',
       // commandeId is omitted to allow null by default
     });
     setShowModal(true);
@@ -283,7 +284,12 @@ export default function Factures() {
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${overdue ? 'bg-red-100' : 'bg-indigo-50'}`}>
                           <FileText className={`w-3.5 h-3.5 ${overdue ? 'text-red-500' : 'text-indigo-500'}`} />
                         </div>
-                        <span className="text-sm font-semibold text-slate-700">{f.numero}</span>
+                        <span className="text-sm font-semibold text-slate-700">
+                          {f.numero}
+                          <span className="block text-[10px] text-slate-400 font-normal mt-0.5">
+                            {f.typeDoc === 'devis' ? 'Devis' : f.typeDoc === 'recu' ? 'Reçu d\'avance' : 'Facture'}
+                          </span>
+                        </span>
                       </div>
                     </td>
                     <td className="px-5 py-3.5">
@@ -456,6 +462,19 @@ export default function Factures() {
                     className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Type de document</label>
+                <select
+                  value={form.typeDoc || 'facture'}
+                  onChange={e => setForm({ ...form, typeDoc: e.target.value as Facture['typeDoc'] })}
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                >
+                  <option value="facture">Facture</option>
+                  <option value="devis">Devis</option>
+                  <option value="recu">Reçu de paiement / Avance</option>
+                </select>
               </div>
 
               <div>

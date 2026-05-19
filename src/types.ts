@@ -236,6 +236,7 @@ export interface Facture {
   date: string;
   echeance: string;
   statut: 'payée' | 'en_attente' | 'impayée';
+  typeDoc?: 'facture' | 'devis' | 'recu';
 }
 
 export interface Presence {

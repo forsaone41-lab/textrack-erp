@@ -33,7 +33,9 @@ export const InvoicePRO: React.FC<InvoicePROProps> = ({ facture, commande, compa
         </div>
         <div className="text-right">
           <div className="bg-slate-900 text-white px-6 py-4 rounded-2xl mb-6">
-            <h2 className="text-xs font-black uppercase tracking-[0.2em] opacity-60 mb-1">Facture N°</h2>
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] opacity-60 mb-1">
+              {facture.typeDoc === 'devis' ? 'Devis N°' : facture.typeDoc === 'recu' ? 'Reçu N°' : 'Facture N°'}
+            </h2>
             <p className="text-2xl font-black">{facture.numero}</p>
           </div>
           <div className="space-y-1 text-sm">
