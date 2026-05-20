@@ -20,6 +20,7 @@ export default function Factures() {
   const [form, setForm] = useState<Partial<Facture>>({});
   const [viewFacture, setViewFacture] = useState<Facture | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [isNewClient, setIsNewClient] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -89,12 +90,18 @@ export default function Factures() {
       typeDoc: 'facture',
       // commandeId is omitted to allow null by default
     });
+    setIsNewClient(false);
     setShowModal(true);
   }
 
   function openEdit(f: Facture) {
     setEditId(f.id);
     setForm({ ...f });
+    
+    // Check if client is in the known list
+    const knownClient = uniqueClientNames.includes(f.client);
+    setIsNewClient(!knownClient && !!f.client);
+    
     setShowModal(true);
   }
 
@@ -465,18 +472,44 @@ export default function Factures() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5">Client *</label>
-                  <input
-                    list="client-list"
-                    value={form.client || ''}
-                    onChange={e => setForm({ ...form, client: e.target.value })}
-                    placeholder="Nom du client"
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                  />
-                  <datalist id="client-list">
-                    {uniqueClientNames.map(name => (
-                      <option key={name} value={name} />
-                    ))}
-                  </datalist>
+                  {!isNewClient ? (
+                    <select
+                      value={form.client || ''}
+                      onChange={e => {
+                        if (e.target.value === '__NEW__') {
+                          setIsNewClient(true);
+                          setForm({ ...form, client: '' });
+                        } else {
+                          setForm({ ...form, client: e.target.value });
+                        }
+                      }}
+                      className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
+                    >
+                      <option value="">Sélectionner un client</option>
+                      <option value="__NEW__" className="font-bold text-indigo-600">➕ Nouveau Client (Saisir)</option>
+                      {uniqueClientNames.map(name => (
+                        <option key={name} value={name}>{name}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Nom du nouveau client..."
+                        value={form.client || ''}
+                        onChange={e => setForm({ ...form, client: e.target.value })}
+                        className="flex-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                        autoFocus
+                      />
+                      <button 
+                        type="button" 
+                        onClick={() => { setIsNewClient(false); setForm({ ...form, client: '' }); }}
+                        className="px-3 py-2 border border-slate-200 rounded-xl text-slate-500 hover:bg-slate-50 transition"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
