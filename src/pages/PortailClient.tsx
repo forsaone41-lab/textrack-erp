@@ -99,7 +99,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       // If a client is logged in, show their orders automatically
       if (currentUser?.role === 'client') {
         const myCommandes = allCommandes.filter(c =>
-          c.client.toLowerCase() === currentUser.nom.toLowerCase()
+          c.client.trim().toLowerCase() === currentUser.nom.trim().toLowerCase()
         );
         setFound(myCommandes);
       }
@@ -639,7 +639,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                      {isAr ? 'الملفات التقنية' : 'Dossiers Techniques'}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                     {fiches.filter(f => f.client.toLowerCase() === currentUser?.nom.toLowerCase()).map(f => (
+                     {fiches.filter(f => f.client.trim().toLowerCase() === currentUser?.nom.trim().toLowerCase()).map(f => (
                         <div key={f.id} className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 group hover:border-indigo-200 transition-all">
                            <div className="relative aspect-[4/5] bg-slate-50 rounded-2xl mb-6 overflow-hidden border border-slate-100">
                               {f.photo ? (
@@ -675,7 +675,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                            </div>
                         </div>
                      ))}
-                     {fiches.filter(f => f.client.toLowerCase() === currentUser?.nom.toLowerCase()).length === 0 && (
+                     {fiches.filter(f => f.client.trim().toLowerCase() === currentUser?.nom.trim().toLowerCase()).length === 0 && (
                         <div className="col-span-full py-12 text-center bg-slate-50 rounded-[32px] border-2 border-dashed border-slate-200">
                            <FileText className="w-12 h-12 text-slate-200 mx-auto mb-4" />
                            <p className="text-slate-400 font-bold uppercase text-xs tracking-widest italic">{isAr ? 'لا يوجد ملف تقني حاليا' : 'Aucun dossier technique disponible'}</p>
@@ -686,7 +686,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 
                {/* Financial Documents Sections */}
                {(() => {
-                 const clientDocs = factures.filter(f => f.client.toLowerCase() === currentUser?.nom.toLowerCase());
+                 const clientDocs = factures.filter(f => f.client.trim().toLowerCase() === currentUser?.nom.trim().toLowerCase());
                  const devisList = clientDocs.filter(f => f.typeDoc === 'devis');
                  const recusList = clientDocs.filter(f => f.typeDoc === 'recu');
                  const facturesList = clientDocs.filter(f => !f.typeDoc || f.typeDoc === 'facture');
