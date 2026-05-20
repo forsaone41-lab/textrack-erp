@@ -33,6 +33,13 @@ export default function Factures() {
     });
   }, []);
 
+  // Compute unique client names from users, orders, and invoices
+  const uniqueClientNames = Array.from(new Set([
+    ...clients.map(c => c.nom),
+    ...commandes.map(c => c.client),
+    ...factures.map(f => f.client)
+  ])).filter(Boolean).sort();
+
   const today = new Date().toISOString().split('T')[0];
 
   const isOverdue = (f: Facture) =>
@@ -458,16 +465,18 @@ export default function Factures() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5">Client *</label>
-                  <select
+                  <input
+                    list="client-list"
                     value={form.client || ''}
                     onChange={e => setForm({ ...form, client: e.target.value })}
+                    placeholder="Nom du client"
                     className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                  >
-                    <option value="">Sélectionner un client</option>
-                    {clients.map(c => (
-                      <option key={c.id} value={c.nom}>{c.nom}</option>
+                  />
+                  <datalist id="client-list">
+                    {uniqueClientNames.map(name => (
+                      <option key={name} value={name} />
                     ))}
-                  </select>
+                  </datalist>
                 </div>
               </div>
 
