@@ -884,11 +884,11 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
                                   <div className="space-y-2.5 text-xs leading-relaxed">
                                     <div className={`flex gap-2 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
                                       <span className="text-emerald-500 font-black mt-0.5">✔</span>
-                                      <span className="text-slate-600 font-medium"><strong className="text-emerald-600 font-bold">{isAr ? 'المزايا: ' : 'Membres: '}</strong>{alt.pros}</span>
+                                      <span className="text-slate-600 font-medium"><strong className="text-emerald-600 font-bold">{isAr ? 'المزايا: ' : 'Avantages: '}</strong>{alt.pros}</span>
                                     </div>
                                     <div className={`flex gap-2 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
                                       <span className="text-rose-500 font-black mt-0.5">✘</span>
-                                      <span className="text-slate-600 font-medium"><strong className="text-rose-600 font-bold">{isAr ? 'العيوب: ' : 'Cons: '}</strong>{alt.cons}</span>
+                                      <span className="text-slate-600 font-medium"><strong className="text-rose-600 font-bold">{isAr ? 'العيوب: ' : 'Inconvénients: '}</strong>{alt.cons}</span>
                                     </div>
                                   </div>
                                 </div>
@@ -1051,7 +1051,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
                   {(['Robe', 'Caftan', 'Djellaba', 'Chemise', 'Pantalon'] as const).map(cat => (
                     <button key={cat} onClick={() => handleCategoryChange(cat)}
                       className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${selectedCategory === cat ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
-                      {cat}
+                      {cat === 'Robe' ? (isAr ? 'فستان' : 'Robe') : cat === 'Caftan' ? (isAr ? 'قفطان' : 'Caftan') : cat === 'Djellaba' ? (isAr ? 'جلابة' : 'Djellaba') : cat === 'Chemise' ? (isAr ? 'قميص' : 'Chemise') : (isAr ? 'سروال' : 'Pantalon')}
                     </button>
                   ))}
                 </div>
