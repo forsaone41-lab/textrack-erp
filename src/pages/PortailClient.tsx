@@ -713,9 +713,19 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                            {list.map(f => (
                               <div key={f.id} className={`bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 relative overflow-hidden group transition-all ${hoverBorderClass}`}>
-                                 <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity">
-                                    <Receipt className={`w-24 h-24 ${textClass}`} />
-                                 </div>
+                                 {f.preuvePaiement ? (
+                                   <div 
+                                     onClick={() => { const w = window.open(); w?.document.write(`<img src="${f.preuvePaiement}" style="max-width:100%;" />`); }}
+                                     className="absolute top-6 right-6 w-16 h-16 rounded-2xl overflow-hidden border border-slate-100 shadow-lg shadow-slate-200/50 cursor-pointer hover:scale-110 transition-transform z-20 bg-slate-50"
+                                     title="Voir l'image"
+                                   >
+                                     <img src={f.preuvePaiement} alt="Preuve" className="w-full h-full object-cover" />
+                                   </div>
+                                 ) : (
+                                   <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity">
+                                      <Receipt className={`w-24 h-24 ${textClass}`} />
+                                   </div>
+                                 )}
                                  <div className="relative z-10 text-center md:text-left">
                                     <div className="flex flex-col md:flex-row items-center gap-3 mb-6">
                                        <div className={`w-10 h-10 ${bgLightClass} rounded-xl flex items-center justify-center ${textClass}`}>
@@ -764,21 +774,6 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                           <Eye className="w-4 h-4" />
                                           {isAr ? 'عرض إثبات الدفع' : 'Voir la preuve (Reçu)'}
                                         </button>
-                                      )}
-                                      
-                                      {f.statut !== 'payée' && (
-                                        <div className="relative mt-1">
-                                          <input 
-                                            type="file" 
-                                            accept="image/*" 
-                                            onChange={(e) => handleUploadProof(e, f)}
-                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                          />
-                                          <button className="w-full py-3 bg-white text-slate-700 border-2 border-dashed border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-slate-300 hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
-                                            <Camera className="w-4 h-4 text-slate-400" />
-                                            {f.preuvePaiement ? (isAr ? 'تغيير الصورة' : 'Changer la preuve') : (isAr ? 'إرسال إثبات الدفع (Reçu)' : 'Uploader Reçu / Avance')}
-                                          </button>
-                                        </div>
                                       )}
                                     </div>
                                  </div>
