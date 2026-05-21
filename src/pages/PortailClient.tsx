@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw } from 'lucide-react';
 import {
-  Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile
+  Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile, saveRecord
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { printElement } from '../utils/pdf';
@@ -119,6 +119,18 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     const file = e.target.files?.[0];
     if (file) {
       compressImage(file).then(res => { setNewOrderForm({ ...newOrderForm, photo: res }); }).catch(console.error);
+    }
+  };
+
+  const handleUploadProof = (e: React.ChangeEvent<HTMLInputElement>, facture: Facture) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      compressImage(file).then(async res => {
+        const updatedFacture = { ...facture, preuvePaiement: res, statut: 'en_attente' as const };
+        setFactures(factures.map(f => f.id === facture.id ? updatedFacture : f));
+        await saveRecord('factures', updatedFacture);
+        alert(isAr ? 'تم إرسال إثبات الدفع بنجاح!' : 'Preuve de paiement envoyée avec succès !');
+      }).catch(console.error);
     }
   };
 
@@ -732,13 +744,30 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                        </div>
                                     </div>
 
-                                    <button 
-                                      onClick={() => { setSelectedFacture(f); setShowInvoiceView(true); }}
-                                      className={`w-full py-4 ${bgClass} text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:brightness-110 transition-all flex items-center justify-center gap-3 shadow-xl`}
-                                    >
-                                       <Download className="w-4 h-4" />
-                                       {isAr ? 'تحميل الوثيقة' : 'Télécharger PDF'}
-                                    </button>
+                                    <div className="flex flex-col gap-3">
+                                      <button 
+                                        onClick={() => { setSelectedFacture(f); setShowInvoiceView(true); }}
+                                        className={`w-full py-4 ${bgClass} text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:brightness-110 transition-all flex items-center justify-center gap-3 shadow-xl`}
+                                      >
+                                         <Download className="w-4 h-4" />
+                                         {isAr ? 'تحميل الوثيقة' : 'Télécharger PDF'}
+                                      </button>
+                                      
+                                      {f.statut !== 'payée' && (
+                                        <div className="relative">
+                                          <input 
+                                            type="file" 
+                                            accept="image/*" 
+                                            onChange={(e) => handleUploadProof(e, f)}
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                          />
+                                          <button className="w-full py-4 bg-white text-slate-700 border-2 border-dashed border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-slate-300 hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
+                                            <Camera className="w-4 h-4 text-slate-400" />
+                                            {f.preuvePaiement ? (isAr ? 'تم الرفع (تغيير الصورة)' : 'Preuve envoyée (Changer)') : (isAr ? 'إرسال إثبات الدفع (Reçu)' : 'Uploader Reçu / Avance')}
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
                                  </div>
                               </div>
                            ))}

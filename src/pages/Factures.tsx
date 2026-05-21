@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, FileText, Eye, CheckCircle, Clock, AlertCircle, ArrowUpRight, X, Download, Table2 } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, FileText, Eye, CheckCircle, Clock, AlertCircle, ArrowUpRight, X, Download, Table2, Camera } from 'lucide-react';
 import { Facture, Commande, User, loadData, saveRecord, deleteRecord, genId, loadCompanyProfile } from '../types';
 import { printFacture, exportFacturesCSV } from '../utils/print';
 import { printElement } from '../utils/pdf';
@@ -353,6 +353,14 @@ export default function Factures() {
                         <button onClick={() => printFacture(f, cmdOf(f.commandeId || undefined))} title="Télécharger PDF" className="p-1.5 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition">
                           <Download className="w-3.5 h-3.5" />
                         </button>
+                        {f.preuvePaiement && (
+                          <button onClick={() => {
+                            const w = window.open();
+                            w?.document.write(`<img src="${f.preuvePaiement}" style="max-width:100%;" />`);
+                          }} title="Voir la preuve de paiement" className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">
+                            <Camera className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                         {f.statut !== 'payée' && (
                           <button onClick={() => markPaid(f.id)} title="Marquer payée" className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition">
                             <CheckCircle className="w-3.5 h-3.5" />
@@ -517,7 +525,16 @@ export default function Factures() {
                 <label className="block text-xs font-semibold text-slate-600 mb-1.5">Type de document</label>
                 <select
                   value={form.typeDoc || 'facture'}
-                  onChange={e => setForm({ ...form, typeDoc: e.target.value as Facture['typeDoc'] })}
+                  onChange={e => {
+                    const newType = e.target.value as Facture['typeDoc'];
+                    let newNum = form.numero;
+                    if (!editId) {
+                      const prefix = newType === 'devis' ? 'DEV-' : newType === 'recu' ? 'REC-' : 'FAC-';
+                      const typeCount = factures.filter(f => (f.typeDoc || 'facture') === newType).length;
+                      newNum = `${prefix}${String(typeCount + 1).padStart(3, '0')}`;
+                    }
+                    setForm({ ...form, typeDoc: newType, numero: newNum });
+                  }}
                   className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                 >
                   <option value="facture">Facture</option>
@@ -550,14 +567,25 @@ export default function Factures() {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Montant (MAD)</label>
-                <input
-                  type="number"
-                  value={form.montant || 0}
-                  onChange={e => setForm({ ...form, montant: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Montant Total (MAD)</label>
+                  <input
+                    type="number"
+                    value={form.montant || 0}
+                    onChange={e => setForm({ ...form, montant: parseFloat(e.target.value) || 0 })}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Avance (MAD)</label>
+                  <input
+                    type="number"
+                    value={form.avance || 0}
+                    onChange={e => setForm({ ...form, avance: parseFloat(e.target.value) || 0 })}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

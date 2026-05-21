@@ -233,6 +233,8 @@ export interface Facture {
   commandeId?: string | null;
   client: string;
   montant: number;
+  avance?: number;
+  preuvePaiement?: string;
   date: string;
   echeance: string;
   statut: 'payée' | 'en_attente' | 'impayée';
