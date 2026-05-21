@@ -15,7 +15,7 @@ export const T = {
   rh: { fr: 'Suivi RH & Façonniers', ar: 'الموارد البشرية' },
   commandes: { fr: 'Commandes', ar: 'الطلبيات' },
   clients: { fr: 'Clients', ar: 'الزبائن' },
-  factures: { fr: 'Factures', ar: 'الفواتير' },
+  factures: { fr: 'Ventes & Devis', ar: 'الفواتير والعروض' },
   charges: { fr: 'Charges & Dépenses', ar: 'المصاريف والنفقات' },
   pointage: { fr: 'Pointage Présences', ar: 'الحضور والغياب' },
   portail_client: { fr: 'Portail Client', ar: 'بوابة الزبون' },

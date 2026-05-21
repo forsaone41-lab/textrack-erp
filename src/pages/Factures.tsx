@@ -66,12 +66,13 @@ export default function Factures() {
     countRetard: factures.filter(f => isOverdue(f)).length,
   };
 
-  function openCreate() {
+  function openCreate(typeDoc: 'facture' | 'devis' | 'recu' = 'facture') {
     setEditId(null);
     const year = new Date().getFullYear();
 
     // Trouver le numéro le plus élevé pour l'année en cours
-    const prefix = `FAC-${year}-`;
+    const pfx = typeDoc === 'devis' ? 'DEV' : typeDoc === 'recu' ? 'REC' : 'FAC';
+    const prefix = `${pfx}-${year}-`;
     const existingNums = factures
       .filter(f => f.numero.startsWith(prefix))
       .map(f => parseInt(f.numero.replace(prefix, '')))
@@ -88,7 +89,7 @@ export default function Factures() {
       date: today,
       echeance: due.toISOString().split('T')[0],
       statut: 'en_attente',
-      typeDoc: 'facture',
+      typeDoc: typeDoc,
       // commandeId is omitted to allow null by default
     });
     setIsNewClient(false);
@@ -193,10 +194,16 @@ export default function Factures() {
             <Table2 className="w-4 h-4" /> CSV
           </button>
           <button
-            onClick={openCreate}
+            onClick={() => openCreate('facture')}
             className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl hover:bg-indigo-700 transition text-sm font-semibold shadow-sm"
           >
-            <Plus className="w-4 h-4" /> {t('new_facture', lang)}
+            <Plus className="w-4 h-4" /> Nouvelle Facture
+          </button>
+          <button
+            onClick={() => openCreate('devis')}
+            className="flex items-center gap-2 bg-slate-800 text-white px-4 py-2.5 rounded-xl hover:bg-slate-900 transition text-sm font-semibold shadow-sm"
+          >
+            <Plus className="w-4 h-4" /> Nouveau Devis
           </button>
         </div>
       </div>
