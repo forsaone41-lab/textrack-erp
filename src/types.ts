@@ -249,6 +249,7 @@ export interface Facture {
   statut: 'payée' | 'en_attente' | 'impayée';
   typeDoc?: 'facture' | 'devis' | 'recu';
   articles?: LigneFacture[];
+  banque?: string;
 }
 
 export interface Presence {

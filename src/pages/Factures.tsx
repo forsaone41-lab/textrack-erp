@@ -201,9 +201,15 @@ export default function Factures() {
           </button>
           <button
             onClick={() => openCreate('devis')}
-            className="flex items-center gap-2 bg-slate-800 text-white px-4 py-2.5 rounded-xl hover:bg-slate-900 transition text-sm font-semibold shadow-sm"
+            className="flex items-center gap-2 bg-slate-800 text-white px-4 py-2.5 rounded-xl hover:bg-slate-900 transition text-sm font-semibold shadow-sm hidden sm:flex"
           >
             <Plus className="w-4 h-4" /> Nouveau Devis
+          </button>
+          <button
+            onClick={() => openCreate('recu')}
+            className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2.5 rounded-xl hover:bg-emerald-700 transition text-sm font-semibold shadow-sm hidden sm:flex"
+          >
+            <Plus className="w-4 h-4" /> Nouveau Reçu
           </button>
         </div>
       </div>
@@ -576,8 +582,9 @@ export default function Factures() {
               </div>
 
               {/* Articles / Lignes de facture */}
-              <div className="border border-slate-200 rounded-xl overflow-hidden">
-                <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
+              {form.typeDoc !== 'recu' && (
+                <div className="border border-slate-200 rounded-xl overflow-hidden">
+                  <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
                   <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Détails (Main d'œuvre, Matière...)</h4>
                   <button
                     type="button"
@@ -676,6 +683,7 @@ export default function Factures() {
                   )}
                 </div>
               </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -733,6 +741,69 @@ export default function Factures() {
                 </select>
               </div>
 
+              {form.typeDoc === 'recu' && (
+                <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 space-y-4">
+                  <h4 className="text-xs font-black text-emerald-800 uppercase tracking-widest border-b border-emerald-200 pb-2">Informations du Reçu</h4>
+                  
+                  <div>
+                    <label className="block text-xs font-bold text-emerald-800 mb-1.5">Moyen de paiement / Banque</label>
+                    <select
+                      value={form.banque || ''}
+                      onChange={e => setForm({ ...form, banque: e.target.value })}
+                      className="w-full px-3 py-2.5 border border-emerald-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-white text-emerald-900"
+                    >
+                      <option value="">Sélectionner une banque / moyen</option>
+                      <option value="Espèces">Espèces</option>
+                      <option value="CIH Bank">CIH Bank</option>
+                      <option value="Attijariwafa Bank">Attijariwafa Bank</option>
+                      <option value="Banque Populaire">Banque Populaire (Chaabi)</option>
+                      <option value="BMCE Bank of Africa">BMCE Bank of Africa</option>
+                      <option value="Société Générale">Société Générale Maroc</option>
+                      <option value="BMCI">BMCI</option>
+                      <option value="Crédit Agricole">Crédit Agricole du Maroc</option>
+                      <option value="Cash Plus">Cash Plus</option>
+                      <option value="Wafacash">Wafacash</option>
+                      <option value="Autre">Autre virement</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-emerald-800 mb-1.5">Preuve de paiement</label>
+                    <div className="flex items-center gap-3">
+                      <div className="relative flex-1">
+                        <input 
+                          type="file" 
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              compressImage(file).then(res => setForm({ ...form, preuvePaiement: res })).catch(console.error);
+                            }
+                          }}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        />
+                        <div className="w-full px-3 py-2.5 border-2 border-dashed border-emerald-300 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-emerald-100 transition-colors bg-white/50 text-emerald-700">
+                          <Camera className="w-4 h-4" />
+                          <span className="font-bold truncate">
+                            {form.preuvePaiement ? 'Image sélectionnée (changer)' : 'Ajouter une capture d\'écran (Reçu)'}
+                          </span>
+                        </div>
+                      </div>
+                      {form.preuvePaiement && (
+                        <button 
+                          onClick={() => setForm({ ...form, preuvePaiement: undefined })}
+                          className="p-2.5 text-red-500 bg-white border border-red-100 hover:bg-red-50 rounded-xl transition-colors"
+                          title="Supprimer l'image"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {form.typeDoc !== 'recu' && (
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1.5">Preuve de paiement (Optionnel)</label>
                 <div className="flex items-center gap-3">
@@ -766,8 +837,9 @@ export default function Factures() {
                   )}
                 </div>
               </div>
+              )}
 
-              {(form.montant ?? 0) > 0 && (
+              {(form.montant ?? 0) > 0 && form.typeDoc !== 'recu' && (
                 <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3 flex items-center justify-between">
                   <span className="text-xs text-indigo-600 font-semibold">Montant à facturer</span>
                   <span className="text-base font-bold text-indigo-700">{Number(form.montant).toLocaleString()} MAD</span>
