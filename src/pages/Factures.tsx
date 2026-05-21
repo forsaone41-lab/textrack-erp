@@ -593,6 +593,7 @@ export default function Factures() {
                           <div>
                             <input
                               type="text"
+                              list="suggestions-designation"
                               placeholder="Ex: Main d'œuvre, Matière (Coton), Coupe..."
                               value={art.designation}
                               onChange={(e) => {
@@ -602,6 +603,17 @@ export default function Factures() {
                               }}
                               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                             />
+                            <datalist id="suggestions-designation">
+                              <option value="Main d'œuvre (Façonnage et Couture)" />
+                              <option value="Matière première (Tissu / Coton)" />
+                              <option value="Fournitures (Fils, Boutons, Zips...)" />
+                              <option value="Coupe et Patronage" />
+                              <option value="Sérigraphie / Impression" />
+                              <option value="Broderie" />
+                              <option value="Lavage / Traitement" />
+                              <option value="Emballage et Étiquetage" />
+                              <option value="Transport / Livraison" />
+                            </datalist>
                           </div>
                           <div className="flex gap-2">
                             <div className="w-1/3 relative">
