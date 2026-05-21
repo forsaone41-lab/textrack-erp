@@ -716,10 +716,13 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                  {f.preuvePaiement ? (
                                    <div 
                                      onClick={() => { const w = window.open(); w?.document.write(`<img src="${f.preuvePaiement}" style="max-width:100%;" />`); }}
-                                     className="absolute top-6 right-6 w-16 h-16 rounded-2xl overflow-hidden border border-slate-100 shadow-lg shadow-slate-200/50 cursor-pointer hover:scale-110 transition-transform z-20 bg-slate-50"
+                                     className="absolute top-6 right-6 w-28 h-16 rounded-xl overflow-hidden border-2 border-slate-200 shadow-sm cursor-pointer hover:scale-105 transition-transform z-20 bg-slate-50 flex items-center justify-center group/img"
                                      title="Voir l'image"
                                    >
-                                     <img src={f.preuvePaiement} alt="Preuve" className="w-full h-full object-cover" />
+                                     <img src={f.preuvePaiement} alt="Preuve" className="w-full h-full object-cover group-hover/img:opacity-80 transition-opacity" />
+                                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
+                                       <Eye className="w-5 h-5 text-slate-900 drop-shadow-md" />
+                                     </div>
                                    </div>
                                  ) : (
                                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity">
