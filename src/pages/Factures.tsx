@@ -568,6 +568,96 @@ export default function Factures() {
                 </select>
               </div>
 
+              {/* Articles / Lignes de facture */}
+              <div className="border border-slate-200 rounded-xl overflow-hidden">
+                <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
+                  <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Détails (Main d'œuvre, Matière...)</h4>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newArticles = [...(form.articles || []), { id: genId(), designation: '', quantite: 1, prixUnitaire: 0, total: 0 }];
+                      setForm({ ...form, articles: newArticles });
+                    }}
+                    className="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 bg-indigo-50 px-2 py-1 rounded-lg"
+                  >
+                    <Plus className="w-3 h-3" /> Ajouter une ligne
+                  </button>
+                </div>
+                <div className="p-4 space-y-3">
+                  {(form.articles || []).length === 0 ? (
+                    <p className="text-xs text-slate-400 text-center py-2">Aucun détail ajouté. Le montant global sera utilisé.</p>
+                  ) : (
+                    (form.articles || []).map((art, index) => (
+                      <div key={art.id} className="flex items-start gap-2 bg-slate-50 p-3 rounded-lg border border-slate-100 relative group">
+                        <div className="flex-1 space-y-3">
+                          <div>
+                            <input
+                              type="text"
+                              placeholder="Ex: Main d'œuvre, Matière (Coton), Coupe..."
+                              value={art.designation}
+                              onChange={(e) => {
+                                const updated = [...(form.articles || [])];
+                                updated[index].designation = e.target.value;
+                                setForm({ ...form, articles: updated });
+                              }}
+                              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <div className="w-1/3 relative">
+                              <label className="absolute -top-2 left-2 bg-white px-1 text-[9px] font-bold text-slate-500 uppercase tracking-wider">Qté</label>
+                              <input
+                                type="number"
+                                placeholder="Quantité"
+                                value={art.quantite === 0 ? '' : art.quantite}
+                                onChange={(e) => {
+                                  const updated = [...(form.articles || [])];
+                                  updated[index].quantite = parseFloat(e.target.value) || 0;
+                                  updated[index].total = updated[index].quantite * updated[index].prixUnitaire;
+                                  const newMontant = updated.reduce((acc, curr) => acc + curr.total, 0);
+                                  setForm({ ...form, articles: updated, montant: newMontant });
+                                }}
+                                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                              />
+                            </div>
+                            <div className="w-1/3 relative">
+                              <label className="absolute -top-2 left-2 bg-white px-1 text-[9px] font-bold text-slate-500 uppercase tracking-wider">Prix U.</label>
+                              <input
+                                type="number"
+                                placeholder="Prix (MAD)"
+                                value={art.prixUnitaire === 0 ? '' : art.prixUnitaire}
+                                onChange={(e) => {
+                                  const updated = [...(form.articles || [])];
+                                  updated[index].prixUnitaire = parseFloat(e.target.value) || 0;
+                                  updated[index].total = updated[index].quantite * updated[index].prixUnitaire;
+                                  const newMontant = updated.reduce((acc, curr) => acc + curr.total, 0);
+                                  setForm({ ...form, articles: updated, montant: newMontant });
+                                }}
+                                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                              />
+                            </div>
+                            <div className="w-1/3 px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm font-bold text-indigo-700 flex items-center justify-end">
+                              {art.total.toLocaleString()} MAD
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = (form.articles || []).filter(a => a.id !== art.id);
+                            const newMontant = updated.length > 0 ? updated.reduce((acc, curr) => acc + curr.total, 0) : form.montant;
+                            setForm({ ...form, articles: updated, montant: newMontant });
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg mt-1"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5">Montant Total (MAD)</label>
@@ -575,7 +665,8 @@ export default function Factures() {
                     type="number"
                     value={form.montant || 0}
                     onChange={e => setForm({ ...form, montant: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                    disabled={(form.articles && form.articles.length > 0)}
+                    className={`w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none ${(form.articles && form.articles.length > 0) ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''}`}
                   />
                 </div>
                 <div>

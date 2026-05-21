@@ -227,6 +227,15 @@ export interface SuiviHoraire {
   date_production: string;
 }
 
+export interface LigneFacture {
+  id: string;
+  designation: string;
+  type?: 'main_doeuvre' | 'matiere' | 'autre';
+  quantite: number;
+  prixUnitaire: number;
+  total: number;
+}
+
 export interface Facture {
   id: string;
   numero: string;
@@ -239,6 +248,7 @@ export interface Facture {
   echeance: string;
   statut: 'payée' | 'en_attente' | 'impayée';
   typeDoc?: 'facture' | 'devis' | 'recu';
+  articles?: LigneFacture[];
 }
 
 export interface Presence {

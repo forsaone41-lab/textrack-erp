@@ -88,25 +88,40 @@ export const InvoicePRO: React.FC<InvoicePROProps> = ({ facture, commande, compa
             </tr>
           </thead>
           <tbody className="border-b border-slate-200">
-            <tr>
-              <td className="py-5 px-4 text-left">
-                <p className="font-black text-slate-900 text-xs">Production Textile & Confection</p>
-                {commande?.modele && <p className="text-[10px] font-bold text-slate-500 mt-0.5">{commande.modele}</p>}
-              </td>
-              <td className="py-5 px-4 text-center font-black text-slate-800 text-xs">{qte}</td>
-              <td className="py-5 px-4 text-right font-black text-[#4F46E5] text-xs">{pu.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
-              <td className="py-5 px-4 text-right font-black text-slate-900 text-xs">{total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
-            </tr>
+            {facture.articles && facture.articles.length > 0 ? (
+              facture.articles.map((art, idx) => (
+                <tr key={art.id || idx}>
+                  <td className="py-5 px-4 text-left">
+                    <p className="font-black text-slate-900 text-xs">{art.designation || 'Article / Service'}</p>
+                  </td>
+                  <td className="py-5 px-4 text-center font-black text-slate-800 text-xs">{art.quantite}</td>
+                  <td className="py-5 px-4 text-right font-black text-[#4F46E5] text-xs">{art.prixUnitaire.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
+                  <td className="py-5 px-4 text-right font-black text-slate-900 text-xs">{art.total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td className="py-5 px-4 text-left">
+                  <p className="font-black text-slate-900 text-xs">Production Textile & Confection</p>
+                  {commande?.modele && <p className="text-[10px] font-bold text-slate-500 mt-0.5">{commande.modele}</p>}
+                </td>
+                <td className="py-5 px-4 text-center font-black text-slate-800 text-xs">{qte}</td>
+                <td className="py-5 px-4 text-right font-black text-[#4F46E5] text-xs">{pu.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
+                <td className="py-5 px-4 text-right font-black text-slate-900 text-xs">{total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
+              </tr>
+            )}
           </tbody>
         </table>
 
         {/* Totals Box */}
         <div className="flex justify-end mt-4">
           <div className="w-1/2">
-            <div className="flex justify-between py-2 px-4">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Prix Unitaire</span>
-              <span className="text-[11px] font-black text-slate-700">{pu.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
-            </div>
+            {(!facture.articles || facture.articles.length === 0) && (
+              <div className="flex justify-between py-2 px-4">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Prix Unitaire</span>
+                <span className="text-[11px] font-black text-slate-700">{pu.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
+              </div>
+            )}
             <div className="flex justify-between py-2 px-4 border-b border-slate-100 mb-2">
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Brut</span>
               <span className="text-[11px] font-black text-slate-700">{total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
