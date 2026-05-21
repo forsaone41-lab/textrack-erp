@@ -5,6 +5,7 @@ import { printFacture, exportFacturesCSV } from '../utils/print';
 import { printElement } from '../utils/pdf';
 import { InvoicePRO } from '../components/InvoicePRO';
 import { useLang } from '../contexts/LangContext';
+import { compressImage } from '../utils/image';
 import { t } from '../i18n';
 
 export default function Factures() {
@@ -620,6 +621,40 @@ export default function Factures() {
                   <option value="payée">Payée</option>
                   <option value="impayée">Impayée</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Preuve de paiement (Optionnel)</label>
+                <div className="flex items-center gap-3">
+                  <div className="relative flex-1">
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          compressImage(file).then(res => setForm({ ...form, preuvePaiement: res })).catch(console.error);
+                        }
+                      }}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    />
+                    <div className="w-full px-3 py-2.5 border-2 border-dashed border-slate-200 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors bg-white">
+                      <Camera className="w-4 h-4 text-slate-400" />
+                      <span className="text-slate-500 font-medium truncate">
+                        {form.preuvePaiement ? 'Image sélectionnée (changer)' : 'Ajouter une capture d\'écran du reçu'}
+                      </span>
+                    </div>
+                  </div>
+                  {form.preuvePaiement && (
+                    <button 
+                      onClick={() => setForm({ ...form, preuvePaiement: undefined })}
+                      className="p-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-xl transition-colors"
+                      title="Supprimer l'image"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </div>
 
               {(form.montant ?? 0) > 0 && (

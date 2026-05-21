@@ -752,18 +752,31 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                          <Download className="w-4 h-4" />
                                          {isAr ? 'تحميل الوثيقة' : 'Télécharger PDF'}
                                       </button>
+
+                                      {f.preuvePaiement && (
+                                        <button 
+                                          onClick={() => {
+                                            const w = window.open();
+                                            w?.document.write(`<img src="${f.preuvePaiement}" style="max-width:100%;" />`);
+                                          }}
+                                          className="w-full py-3 bg-blue-50 text-blue-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-100 transition-all flex items-center justify-center gap-2 border border-blue-100"
+                                        >
+                                          <Eye className="w-4 h-4" />
+                                          {isAr ? 'عرض إثبات الدفع' : 'Voir la preuve (Reçu)'}
+                                        </button>
+                                      )}
                                       
                                       {f.statut !== 'payée' && (
-                                        <div className="relative">
+                                        <div className="relative mt-1">
                                           <input 
                                             type="file" 
                                             accept="image/*" 
                                             onChange={(e) => handleUploadProof(e, f)}
                                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                           />
-                                          <button className="w-full py-4 bg-white text-slate-700 border-2 border-dashed border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-slate-300 hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
+                                          <button className="w-full py-3 bg-white text-slate-700 border-2 border-dashed border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-slate-300 hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
                                             <Camera className="w-4 h-4 text-slate-400" />
-                                            {f.preuvePaiement ? (isAr ? 'تم الرفع (تغيير الصورة)' : 'Preuve envoyée (Changer)') : (isAr ? 'إرسال إثبات الدفع (Reçu)' : 'Uploader Reçu / Avance')}
+                                            {f.preuvePaiement ? (isAr ? 'تغيير الصورة' : 'Changer la preuve') : (isAr ? 'إرسال إثبات الدفع (Reçu)' : 'Uploader Reçu / Avance')}
                                           </button>
                                         </div>
                                       )}
