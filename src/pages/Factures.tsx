@@ -7,6 +7,7 @@ import { InvoicePRO } from '../components/InvoicePRO';
 import { useLang } from '../contexts/LangContext';
 import { compressImage } from '../utils/image';
 import { t } from '../i18n';
+import { PageLoader } from '../components/PageLoader';
 
 export default function Factures() {
   const { lang, isAr } = useLang();
@@ -22,8 +23,10 @@ export default function Factures() {
   const [viewFacture, setViewFacture] = useState<Facture | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [isNewClient, setIsNewClient] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     Promise.all([
       loadData<Facture>('factures'),
       loadData<Commande>('commandes'),
@@ -32,6 +35,7 @@ export default function Factures() {
       setFactures(facs);
       setCommandes(cmds);
       setClients(users.filter(u => u.role === 'client'));
+      setLoading(false);
     });
   }, []);
 
@@ -170,7 +174,6 @@ export default function Factures() {
 
   const FILTERS = [
     { key: 'all', label: 'Toutes' },
-    { key: 'payée', label: 'Payées' },
     { key: 'all', label: t('all', lang) },
     { key: 'payée', label: t('paid', lang) },
     { key: 'en_attente', label: t('pending', lang) },
@@ -178,8 +181,12 @@ export default function Factures() {
     { key: 'en_retard', label: t('overdue', lang) },
   ] as const;
 
+  if (loading) {
+    return <PageLoader />;
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
       <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
         <div>
           <h1 className="text-2xl font-bold text-slate-800">{t('factures_title', lang)}</h1>

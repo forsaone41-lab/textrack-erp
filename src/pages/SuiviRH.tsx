@@ -5,6 +5,7 @@ import { Plus, Search, Edit2, Trash2, CreditCard, DollarSign, Image as ImageIcon
 import { QRCodeSVG } from 'qrcode.react';
 import { Employe, PaiementSalaire, Commande, loadData, genId, loadCompanyProfile, saveRecord, safeStorage } from '../types';
 import { generatePDF, printElement } from '../utils/pdf';
+import { PageLoader } from '../components/PageLoader';
 
 // Local storage helpers for RH specifically to avoid Supabase schema mismatch
 function getLocalRH<T>(key: string): T[] {
@@ -124,6 +125,7 @@ export default function SuiviRH() {
   const [syncing, setSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
   const [toast, setToast] = useState<{ nom: string; pin: string } | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const company = loadCompanyProfile();
 
@@ -148,6 +150,7 @@ export default function SuiviRH() {
 
     loadData<Commande>('commandes').then(remoteCmds => {
       setCommandes(remoteCmds || []);
+      setLoading(false);
     });
 
     setSyncStatus(null);
@@ -453,6 +456,10 @@ export default function SuiviRH() {
     const n = e.nom || '';
     return p ? `${p} ${n}` : n || (isAr ? 'بدون اسم' : 'Sans nom');
   };
+
+  if (loading) {
+    return <PageLoader />;
+  }
 
   return (
     <div className="space-y-6 relative">

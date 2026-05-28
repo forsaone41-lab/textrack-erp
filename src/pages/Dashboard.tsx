@@ -14,6 +14,7 @@ import {
 import { supabase } from '../supabase';
 import { useLang } from '../contexts/LangContext';
 import { NavLink } from 'react-router-dom';
+import { PageLoader } from '../components/PageLoader';
 
 interface DashboardProps {
   allUsers?: User[];
@@ -30,8 +31,10 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
   const [now, setNow] = useState(new Date());
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [workerPhotos, setWorkerPhotos] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
 
   function loadAll() {
+    setLoading(true);
     Promise.all([
       loadData<Commande>('commandes'),
       loadData<StockTissu>('tissus'),
@@ -47,6 +50,7 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
       setEmployes(emps || []);
       setPresences(pres || []);
       setNow(new Date());
+      setLoading(false);
     });
   }
 
@@ -176,6 +180,10 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
       textColor: 'text-orange-600',
     },
   ];
+
+  if (loading) {
+    return <PageLoader />;
+  }
 
   return (
     <div className={`space-y-8 pb-10 ${isAr ? 'text-right' : ''}`}>

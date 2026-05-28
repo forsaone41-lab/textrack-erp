@@ -42,15 +42,7 @@ const ListeAttente    = lazy(() => import('./pages/ListeAttente'));
 const Notifications   = lazy(() => import('./pages/Notifications'));
 const AISpace         = lazy(() => import('./pages/AISpace'));
 
-// Loading spinner for Suspense fallback
-const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-slate-50">
-    <div className="flex flex-col items-center gap-3">
-      <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-      <p className="text-xs font-black text-slate-400 uppercase tracking-widest animate-pulse">Chargement...</p>
-    </div>
-  </div>
-);
+import { PageLoader } from './components/PageLoader';
 
 import { initMockData, User, loadPermissions, AppPage, loadCompanyProfile, syncCompanyProfile, loadData, saveRecord } from './types';
 import { LangProvider, useLang } from './contexts/LangContext';

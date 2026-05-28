@@ -11,6 +11,7 @@ import {
 import { useLang } from '../contexts/LangContext';
 import { t, T, TKey } from '../i18n';
 import { supabase } from '../supabase';
+import { PageLoader } from '../components/PageLoader';
 
 export default function Commandes() {
   const { lang, isAr } = useLang();
@@ -22,6 +23,7 @@ export default function Commandes() {
 
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
   const ITEMS_PER_PAGE = 10;
@@ -99,6 +101,7 @@ export default function Commandes() {
       console.error("Error loading commands:", e);
     } finally {
       setLoading(false);
+      setInitialLoading(false);
     }
   }
 
@@ -190,6 +193,10 @@ export default function Commandes() {
     const e = employes.find(emp => emp.id === id);
     return e ? `${e.prenom} ${e.nom}` : '—';
   };
+
+  if (initialLoading) {
+    return <PageLoader />;
+  }
 
   return (
     <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
