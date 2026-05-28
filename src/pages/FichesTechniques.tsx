@@ -17,6 +17,7 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
   printFicheTechnique: (f: FicheTechnique) => void;
   onViewMesures: (f: FicheTechnique) => void;
   onLaunchSample: (f: FicheTechnique) => void;
+  onImageClick?: (img: string) => void;
   isSampleWaiting?: boolean;
   isSampleValidated?: boolean;
 }) {
@@ -35,7 +36,8 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
             <img
               src={f.photo}
               alt={f.modele}
-              className="w-full h-full object-cover group-hover/image:scale-110 transition-transform duration-700"
+              onClick={() => onImageClick?.(f.photo!)}
+              className="w-full h-full object-cover group-hover/image:scale-110 transition-transform duration-700 cursor-pointer"
             />
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-gradient-to-br from-slate-50 to-slate-100">
@@ -356,6 +358,7 @@ export default function FichesTechniques() {
   const [showCalc, setShowCalc] = useState(false);
   const [tissus, setTissus] = useState<StockTissu[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedImage, setExpandedImage] = useState<string | null>(null);
 
   // Calculateur state
   const [calcFicheId, setCalcFicheId] = useState('');
@@ -711,6 +714,7 @@ export default function FichesTechniques() {
                       modelePhoto: fiche.photo || ''
                     });
                   }}
+                  onImageClick={setExpandedImage}
                 />
 
 
@@ -751,6 +755,7 @@ export default function FichesTechniques() {
                       tailles: fiche.tailles.reduce((acc, t) => ({...acc, [t]: 0}), {})
                     }));
                   }}
+                  onImageClick={setExpandedImage}
                 />
               ))}
             </div>
@@ -1891,6 +1896,27 @@ export default function FichesTechniques() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Full-screen Image Modal */}
+      {expandedImage && (
+        <div 
+          className="fixed inset-0 z-[300] bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300"
+          onClick={() => setExpandedImage(null)}
+        >
+          <button 
+            className="absolute top-6 right-6 p-3 text-white/70 hover:text-white bg-black/20 hover:bg-black/40 rounded-full backdrop-blur-md transition-all"
+            onClick={(e) => { e.stopPropagation(); setExpandedImage(null); }}
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <img 
+            src={expandedImage} 
+            alt="Aperçu" 
+            className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </div>
