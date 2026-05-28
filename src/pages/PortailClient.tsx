@@ -125,18 +125,6 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     }
   };
 
-  const handleUploadProof = (e: React.ChangeEvent<HTMLInputElement>, facture: Facture) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      compressImage(file).then(async res => {
-        const updatedFacture = { ...facture, preuvePaiement: res, statut: 'en_attente' as const };
-        setFactures(factures.map(f => f.id === facture.id ? updatedFacture : f));
-        await saveRecord('factures', updatedFacture);
-        alert(isAr ? 'تم إرسال إثبات الدفع بنجاح!' : 'Preuve de paiement envoyée avec succès !');
-      }).catch(console.error);
-    }
-  };
-
   const submitNewOrder = async () => {
     if (!newOrderForm.modele || !newOrderForm.quantite || !currentUser) return;
     
