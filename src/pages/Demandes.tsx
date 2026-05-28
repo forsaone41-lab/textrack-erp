@@ -5,6 +5,7 @@ import { Lead, loadLeads, saveRecord, User, genId, deleteRecord, loadData, loadC
 import { useLang } from '../contexts/LangContext';
 import { generatePDF } from '../utils/pdf';
 import { compressImage } from '../utils/image';
+import { PageLoader } from '../components/PageLoader';
 
 const DEFAULT_TEMPLATES = {
   ar: {
@@ -26,6 +27,7 @@ export default function Demandes() {
   const [users, setUsers] = useState<User[]>([]);
   const [filter, setFilter] = useState<'all' | 'new' | 'completed'>('all');
   const [category, setCategory] = useState<'clients' | 'recrutement'>('clients');
+  const [loading, setLoading] = useState(true);
 
   const [confirmLead, setConfirmLead] = useState<Lead | null>(null);
   const [confirmDetails, setConfirmDetails] = useState({
@@ -87,6 +89,7 @@ export default function Demandes() {
       ]);
       setLeads(leadsData);
       setUsers(usersData || []);
+      setLoading(false);
     }
     refresh();
   }, []);
@@ -379,6 +382,10 @@ export default function Demandes() {
 
   const visibleLeads = useMemo(() => filteredLeads.slice(0, visibleCount), [filteredLeads, visibleCount]);
   const hasMore = visibleCount < filteredLeads.length;
+
+  if (loading) {
+    return <PageLoader />;
+  }
 
   return (
     <div className={`space-y-6 ${isAr ? 'text-right' : 'text-left'} relative`} dir={isAr ? 'rtl' : 'ltr'}>

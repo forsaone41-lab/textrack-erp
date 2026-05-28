@@ -8,6 +8,7 @@ import { printElement } from '../utils/pdf';
 import { compressImage } from '../utils/image';
 import { printFicheTechnique as printFT } from '../utils/print';
 import { InvoicePRO } from '../components/InvoicePRO';
+import { PageLoader } from '../components/PageLoader';
 
 interface PortailClientProps {
   currentUser?: User | null;
@@ -64,6 +65,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   });
   const [sendingOrder, setSendingOrder] = useState(false);
   const [orderSent, setOrderSent] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Helper for translating phase names
   const phaseAr: Record<string, string> = { 
@@ -103,6 +105,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
         );
         setFound(myCommandes);
       }
+      setLoading(false);
     });
   }, [currentUser]);
 
@@ -186,6 +189,10 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 
   function getPhaseIndex(phase: string): number {
     return PHASE_ORDER.indexOf(phase as any);
+  }
+
+  if (loading) {
+    return <PageLoader />;
   }
 
   return (

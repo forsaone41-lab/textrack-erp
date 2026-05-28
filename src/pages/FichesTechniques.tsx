@@ -7,6 +7,7 @@ import {
 import { printFicheTechnique as printFT } from '../utils/print';
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
+import { PageLoader } from '../components/PageLoader';
 
 function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onViewMesures, onLaunchSample, isSampleWaiting, isSampleValidated }: {
   f: FicheTechnique;
@@ -354,6 +355,7 @@ export default function FichesTechniques() {
   const [newMesureNom, setNewMesureNom] = useState('');
   const [showCalc, setShowCalc] = useState(false);
   const [tissus, setTissus] = useState<StockTissu[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Calculateur state
   const [calcFicheId, setCalcFicheId] = useState('');
@@ -385,6 +387,7 @@ export default function FichesTechniques() {
   }
 
   useEffect(() => {
+    setLoading(true);
     Promise.all([
       loadData<FicheTechnique>('fiches'),
       loadData<StockTissu>('tissus'),
@@ -415,6 +418,7 @@ export default function FichesTechniques() {
         // Clear history state to avoid re-opening on refresh
         window.history.replaceState({}, document.title);
       }
+      setLoading(false);
     });
   }, []);
 
@@ -629,6 +633,10 @@ export default function FichesTechniques() {
     mesure.valeurs = { ...mesure.valeurs, [taille]: val };
     updatedMesures[mesureIdx] = mesure;
     setForm({ ...form, mesures: updatedMesures });
+  }
+
+  if (loading) {
+    return <PageLoader />;
   }
 
   return (
