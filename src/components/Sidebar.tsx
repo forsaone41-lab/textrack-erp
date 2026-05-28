@@ -61,9 +61,19 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
     <NavLink to={to} className={linkClass} onClick={closeMobile} end={end}>
       {({ isActive }) => (
         <>
-          <div className="flex items-center gap-3">
-            <Icon className={`w-[18px] h-[18px] transition-colors ${isActive ? 'text-indigo-400' : 'text-slate-500'}`} />
-            <span className={isActive ? 'text-indigo-400' : ''}>{label}</span>
+          <div className="flex items-center gap-3.5">
+            {/* Icon Box */}
+            <div className={`
+              w-9 h-9 rounded-xl flex items-center justify-center shrink-0
+              transition-all duration-300
+              ${isActive
+                ? 'bg-indigo-500 shadow-lg shadow-indigo-500/40'
+                : 'bg-white/5 group-hover:bg-indigo-500/20 group-hover:scale-110'
+              }
+            `}>
+              <Icon className={`w-[18px] h-[18px] transition-colors ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-300'}`} />
+            </div>
+            <span className={isActive ? 'text-indigo-300 font-bold' : 'group-hover:text-white'}>{label}</span>
             {pro && !isActive && <Sparkles className="w-3 h-3 text-amber-500/50" />}
           </div>
           {isActive && (
