@@ -440,8 +440,9 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
           >
             <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${kpi.color} opacity-5 blur-2xl -mr-10 -mt-10 group-hover:opacity-10 transition-opacity`} />
 
-            <div className="flex items-start justify-between mb-4">
-              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg bg-gradient-to-br ${kpi.color} transform group-hover:scale-110 transition-transform duration-500`}>
+            {/* Icon at top */}
+            <div className="flex flex-col items-center mb-4">
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg bg-gradient-to-br ${kpi.color} transform group-hover:scale-110 transition-transform duration-500 mb-3`}>
                 <kpi.icon className="w-7 h-7" />
               </div>
               <div className="flex items-center gap-2">
@@ -450,9 +451,9 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
               </div>
             </div>
 
-            <div>
+            <div className="text-center">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mb-1">{kpi.title}</p>
-              <p className={`text-3xl font-black text-slate-900 tracking-tight`}>{kpi.value}</p>
+              <p className="text-3xl font-black text-slate-900 tracking-tight">{kpi.value}</p>
               <p className={`text-[10px] font-bold mt-2 ${kpi.textColor} opacity-80 italic`}>{kpi.subtitle}</p>
             </div>
           </div>
