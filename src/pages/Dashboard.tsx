@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 import {
   Shirt, AlertTriangle, Truck, TrendingUp, Users, Activity,
-  Clock, CheckCircle, UserCheck, UserX, UserPlus,
+  Clock, CheckCircle, UserCheck, UserX, UserPlus, X, ChevronRight,
 } from 'lucide-react';
 import {
   loadData, Commande, StockTissu, Employe, Facture, Presence,
@@ -32,6 +32,7 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [workerPhotos, setWorkerPhotos] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [kpiDetail, setKpiDetail] = useState<number | null>(null);
 
   function loadAll() {
     setLoading(true);
@@ -111,6 +112,55 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
     { name: 'En attente', value: factures.filter(f => f.statut === 'en_attente').length, color: '#f59e0b' },
     { name: 'Impayées', value: factures.filter(f => f.statut === 'impayée').length, color: '#ef4444' },
   ].filter(d => d.value > 0);
+
+  const kpiDetails: Record<number, React.ReactNode> = {
+    // KPI2 - retard (index 2)
+    2: commandesEnRetard.length === 0 ? (
+      <div className="flex flex-col items-center py-10 text-center">
+        <CheckCircle className="w-12 h-12 text-emerald-400 mb-4" />
+        <p className="font-black text-slate-800 uppercase tracking-wide">{isAr ? 'كل الطلبيات في وقتها!' : 'Toutes les commandes sont dans les temps !'}</p>
+      </div>
+    ) : (
+      <div className="space-y-3">
+        {commandesEnRetard.map(c => {
+          const daysLate = Math.ceil((Date.now() - new Date(c.dateLivraisonPrevue).getTime()) / 86400000);
+          return (
+            <div key={c.id} className="bg-rose-50 border border-rose-100 rounded-2xl p-4 flex items-center justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <p className="font-black text-slate-900 text-sm truncate">{c.modele}</p>
+                <p className="text-[11px] text-slate-500 font-bold truncate">{c.client} · <span className="text-indigo-600 uppercase">{PHASE_LABELS[c.phase] || c.phase}</span></p>
+              </div>
+              <div className="shrink-0 text-right">
+                <span className="inline-block bg-rose-500 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                  -{daysLate}j
+                </span>
+                <p className="text-[10px] text-slate-400 mt-1">{new Date(c.dateLivraisonPrevue).toLocaleDateString('fr-MA')}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    ),
+    // KPI0 - production en cours
+    0: commandesEnCours.length === 0 ? (
+      <p className="text-center text-slate-400 italic py-8">{isAr ? 'لا توجد طلبيات نشطة' : 'Aucune commande active'}</p>
+    ) : (
+      <div className="space-y-3">
+        {commandesEnCours.map(c => (
+          <div key={c.id} className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 flex items-center justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <p className="font-black text-slate-900 text-sm truncate">{c.modele}</p>
+              <p className="text-[11px] text-slate-500 font-bold">{c.client} · <span className="text-indigo-600 uppercase">{PHASE_LABELS[c.phase] || c.phase}</span></p>
+            </div>
+            <div className="shrink-0 text-right">
+              <span className="text-sm font-black text-indigo-700">{c.quantite} pcs</span>
+              <p className="text-[10px] text-slate-400">{new Date(c.dateLivraisonPrevue).toLocaleDateString('fr-MA')}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    ),
+  };
 
   const kpiCards = [
     {
@@ -383,14 +433,21 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
       {/* KPI Cards - High Fidelity Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 px-1">
         {kpiCards.map((kpi, i) => (
-          <div key={i} className="group relative bg-white p-6 rounded-[2.5rem] border border-slate-50 shadow-xl shadow-slate-100/30 hover:shadow-2xl transition-all duration-300 overflow-hidden">
+          <div
+            key={i}
+            onClick={() => kpiDetails[i] !== undefined ? setKpiDetail(i) : undefined}
+            className={`group relative bg-white p-6 rounded-[2.5rem] border border-slate-50 shadow-xl shadow-slate-100/30 hover:shadow-2xl transition-all duration-300 overflow-hidden ${kpiDetails[i] !== undefined ? 'cursor-pointer hover:scale-[1.02] active:scale-95' : ''}`}
+          >
             <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${kpi.color} opacity-5 blur-2xl -mr-10 -mt-10 group-hover:opacity-10 transition-opacity`} />
 
             <div className="flex items-start justify-between mb-4">
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg bg-gradient-to-br ${kpi.color} transform group-hover:scale-110 transition-transform duration-500`}>
                 <kpi.icon className="w-7 h-7" />
               </div>
-              <div className="px-3 py-1 rounded-full bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-tighter">KPI {i + 1}</div>
+              <div className="flex items-center gap-2">
+                <div className="px-3 py-1 rounded-full bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-tighter">KPI {i + 1}</div>
+                {kpiDetails[i] !== undefined && <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-400 transition-colors" />}
+              </div>
             </div>
 
             <div>
@@ -401,6 +458,31 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
           </div>
         ))}
       </div>
+
+      {/* KPI Detail Modal */}
+      {kpiDetail !== null && (
+        <div className="fixed inset-0 z-[200] bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-lg max-h-[80vh] flex flex-col shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white bg-gradient-to-br ${kpiCards[kpiDetail].color}`}>
+                  {React.createElement(kpiCards[kpiDetail].icon, { className: 'w-5 h-5' })}
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'تفاصيل' : 'Détails'}</p>
+                  <p className="font-black text-slate-900 text-sm uppercase tracking-tight">{kpiCards[kpiDetail].title}</p>
+                </div>
+              </div>
+              <button onClick={() => setKpiDetail(null)} className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-all">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="overflow-y-auto p-6">
+              {kpiDetails[kpiDetail]}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Charts Row - Premium Glass Containers */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
