@@ -31,7 +31,6 @@ import {
   Package,
   Wand2,
   Gauge,
-  Stitch,
   Camera,
   Image as ImageIcon
 } from 'lucide-react';

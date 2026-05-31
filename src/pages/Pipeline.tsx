@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { Lead, loadLeads, saveRecord } from '../types';
-import { toast, Toaster } from 'react-hot-toast';
+
 
 const STAGES = [
   { id: 'nouveau', labelAr: 'جديد', labelFr: 'Nouveau', color: 'bg-slate-100 text-slate-600 border-slate-200' },
@@ -54,10 +54,10 @@ export default function Pipeline() {
       await saveRecord('leads', updatedLead);
       
       setLeads(prev => prev.map(l => l.id === updatedLead.id ? updatedLead : l));
-      toast.success(isAr ? 'تم الحفظ بنجاح' : 'Enregistré avec succès');
+      alert(isAr ? 'تم الحفظ بنجاح' : 'Enregistré avec succès');
       setSelectedLead(null);
     } catch (e) {
-      toast.error(isAr ? 'حدث خطأ' : 'Une erreur est survenue');
+      alert(isAr ? 'حدث خطأ' : 'Une erreur est survenue');
     }
   };
 
@@ -67,7 +67,6 @@ export default function Pipeline() {
 
   return (
     <div className="space-y-6" dir={isAr ? 'rtl' : 'ltr'}>
-      <Toaster position="top-center" />
       
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
         <div className="flex items-center gap-4">
