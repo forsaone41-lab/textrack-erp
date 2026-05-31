@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Factory, 
   Settings, 
@@ -31,7 +31,6 @@ import {
   Package,
   Wand2,
   Gauge,
-  Gauge,
   Stitch,
   Camera,
   Image as ImageIcon
@@ -57,6 +56,137 @@ const HEURES_TRAVAIL = [
   '16:00 - 17:00', '17:00 - 18:00', '18:00 - 19:00', '19:00 - 20:00',
   '20:00 - 21:00', '21:00 - 22:00', '22:00 - 23:00', '23:00 - 00:00'
 ];
+
+function SketchCanvas({ src, className }: { src: string; className?: string }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    setLoading(true);
+    setError(false);
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const maxW = 500;
+      let w = img.naturalWidth;
+      let h = img.naturalHeight;
+      if (w > maxW) {
+        h = (maxW / w) * h;
+        w = maxW;
+      }
+      canvas.width = w;
+      canvas.height = h;
+      
+      ctx.drawImage(img, 0, 0, w, h);
+      
+      try {
+        const imgData = ctx.getImageData(0, 0, w, h);
+        const data = imgData.data;
+        const len = data.length;
+        
+        // 1. Grayscale
+        const gray = new Uint8ClampedArray(len / 4);
+        for (let i = 0; i < len; i += 4) {
+          const r = data[i];
+          const g = data[i+1];
+          const b = data[i+2];
+          const v = 0.299 * r + 0.587 * g + 0.114 * b;
+          gray[i/4] = v;
+        }
+        
+        // 2. Invert and Blur (radius 2)
+        const invertedBlurred = new Uint8ClampedArray(gray.length);
+        const radius = 2;
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            let sum = 0;
+            let count = 0;
+            for (let ky = -radius; ky <= radius; ky++) {
+              for (let kx = -radius; kx <= radius; kx++) {
+                const px = x + kx;
+                const py = y + ky;
+                if (px >= 0 && px < w && py >= 0 && py < h) {
+                  sum += (255 - gray[py * w + px]);
+                  count++;
+                }
+              }
+            }
+            invertedBlurred[y * w + x] = sum / count;
+          }
+        }
+        
+        // 3. Color Dodge
+        for (let i = 0; i < len; i += 4) {
+          const s = gray[i/4];
+          const b = invertedBlurred[i/4];
+          let dodge = 255;
+          if (b < 255) {
+            dodge = (s * 255) / (255 - b);
+            if (dodge > 255) dodge = 255;
+          }
+          
+          // High contrast threshold to make it look like a CAD vector drawing
+          if (dodge < 190) {
+            dodge = Math.max(0, dodge - 40); // make lines darker
+          } else {
+            dodge = 255; // clean background to white
+          }
+          
+          data[i] = dodge;
+          data[i+1] = dodge;
+          data[i+2] = dodge;
+          data[i+3] = 255;
+        }
+        
+        ctx.putImageData(imgData, 0, 0);
+        setLoading(false);
+      } catch (err) {
+        console.warn("Pixel conversion failed due to CORS. Using CSS fallback filters.", err);
+        // Fallback filter
+        ctx.clearRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        canvas.style.filter = "grayscale(100%) contrast(400%) brightness(110%)";
+        setLoading(false);
+      }
+    };
+    
+    img.onerror = () => {
+      setError(true);
+      setLoading(false);
+    };
+    
+    img.src = src;
+  }, [src]);
+
+  if (error) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-slate-50 text-slate-400 text-xs font-bold uppercase p-4">
+        Erreur de chargement du croquis
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative w-full h-full">
+      {loading && (
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-10">
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+            <span className="text-[8px] font-black text-indigo-600 uppercase tracking-widest animate-pulse">Génération du Croquis...</span>
+          </div>
+        </div>
+      )}
+      <canvas ref={canvasRef} className={`${className} bg-white`} />
+    </div>
+  );
+}
 
 interface AssignmentDetail {
   empId: string;
@@ -1224,23 +1354,51 @@ export default function ChaineDetaillee() {
               </div>
 
               <div className="w-full aspect-[4/5] bg-white rounded-2xl shadow-sm border border-indigo-100 overflow-hidden relative mb-6">
-                <img 
-                  src={imageMode === 'photo' ? (selectedCmd?.photo || selectedCmd?.modelePhoto || "/images/sewing_placeholder.png") : getTechnicalSketch()}
-                  alt="Modèle" 
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                     const target = e.target as HTMLImageElement;
-                     target.src = "/images/sewing_placeholder.png";
-                  }}
-                />
+                {imageMode === 'photo' ? (
+                  <img 
+                    src={selectedCmd?.photo || selectedCmd?.modelePhoto || "/images/sewing_placeholder.png"}
+                    alt="Modèle" 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                       const target = e.target as HTMLImageElement;
+                       target.src = "/images/sewing_placeholder.png";
+                    }}
+                  />
+                ) : (
+                  <SketchCanvas 
+                    src={selectedCmd?.photo || selectedCmd?.modelePhoto || "/images/sewing_placeholder.png"}
+                    className="w-full h-full object-cover animate-in fade-in duration-500"
+                  />
+                )}
+
                 {/* Operation zone badges - only show briefly on bottom if photo, or float them if sketch */}
-                {imageMode === 'photo' && (
+                {imageMode === 'photo' ? (
                   <div className="absolute bottom-2 left-2 right-2 flex flex-wrap gap-1">
                     {getSuggestions().slice(0,4).map((s,i) => (
                       <span key={i} className="bg-black/60 backdrop-blur-sm text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md border border-white/10">
                         {i+1} {isAr ? s.labelAr : s.label.split(' ')[0]}
                       </span>
                     ))}
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 pointer-events-none">
+                    {/* Floating blueprint markers representing the operation spots dynamically */}
+                    <div className="absolute top-1/4 left-6 bg-indigo-600/90 backdrop-blur-sm text-white text-[8px] md:text-[9px] font-black px-2.5 py-1 rounded-full shadow-lg border border-indigo-400/30 flex items-center gap-1.5 animate-bounce">
+                      <span className="w-2.5 h-2.5 bg-indigo-300 rounded-full animate-ping absolute -left-0.5" />
+                      1. {isAr ? 'القص / التحضير' : 'Coupe / Prep'}
+                    </div>
+                    <div className="absolute top-1/2 right-6 bg-purple-600/90 backdrop-blur-sm text-white text-[8px] md:text-[9px] font-black px-2.5 py-1 rounded-full shadow-lg border border-purple-400/30 flex items-center gap-1.5 animate-bounce" style={{ animationDelay: '0.2s' }}>
+                      <span className="w-2.5 h-2.5 bg-purple-300 rounded-full animate-ping absolute -left-0.5" />
+                      2. {isAr ? 'تركيب الأكمام / التفاصيل' : 'Sleeves / Detail'}
+                    </div>
+                    <div className="absolute bottom-1/4 left-10 bg-emerald-600/90 backdrop-blur-sm text-white text-[8px] md:text-[9px] font-black px-2.5 py-1 rounded-full shadow-lg border border-emerald-400/30 flex items-center gap-1.5 animate-bounce" style={{ animationDelay: '0.4s' }}>
+                      <span className="w-2.5 h-2.5 bg-emerald-300 rounded-full animate-ping absolute -left-0.5" />
+                      3. {isAr ? 'تجميع الجسم' : 'Assemblage Corps'}
+                    </div>
+                    <div className="absolute bottom-10 right-10 bg-rose-600/90 backdrop-blur-sm text-white text-[8px] md:text-[9px] font-black px-2.5 py-1 rounded-full shadow-lg border border-rose-400/30 flex items-center gap-1.5 animate-bounce" style={{ animationDelay: '0.6s' }}>
+                      <span className="w-2.5 h-2.5 bg-rose-300 rounded-full animate-ping absolute -left-0.5" />
+                      4. {isAr ? 'التشطيب / الكي' : 'Finition / Repassage'}
+                    </div>
                   </div>
                 )}
               </div>
