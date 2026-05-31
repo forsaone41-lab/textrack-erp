@@ -86,6 +86,10 @@ export default function ChaineDetaillee() {
   const [aiRecommendation, setAiRecommendation] = useState<Record<string, string>>({});
   const [showAIPanel, setShowAIPanel] = useState(false);
 
+  // Qty tracking state
+  const [editingQty, setEditingQty] = useState(false);
+  const [qtyForm, setQtyForm] = useState({ echantillon: 0, production: 0 });
+
   useEffect(() => {
     setLoading(true);
     Promise.all([
@@ -109,6 +113,29 @@ export default function ChaineDetaillee() {
 
   const selectedCmd = useMemo(() => 
     commandes.find(c => c.id === selectedCmdId), [commandes, selectedCmdId]);
+
+  useEffect(() => {
+    if (selectedCmd) {
+      setQtyForm({
+        echantillon: selectedCmd.quantiteEchantillon || 0,
+        production: selectedCmd.quantiteProduction || selectedCmd.quantite || 0
+      });
+      setEditingQty(false);
+    }
+  }, [selectedCmd]);
+
+  async function handleSaveQty() {
+    if (!selectedCmd) return;
+    const updated = {
+      ...selectedCmd,
+      quantiteEchantillon: qtyForm.echantillon,
+      quantiteProduction: qtyForm.production,
+      quantite: qtyForm.echantillon + qtyForm.production
+    };
+    setCommandes(commandes.map(c => c.id === selectedCmd.id ? updated : c));
+    setEditingQty(false);
+    await saveRecord('commandes', updated);
+  }
 
   const modelOps = useMemo(() => 
     operations.filter(o => o.modele === selectedCmd?.modele)
@@ -574,6 +601,85 @@ export default function ChaineDetaillee() {
           </div>
         </div>
       </div>
+
+      {/* Production Quantities Header */}
+      {selectedCmd && (
+        <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center border border-indigo-100">
+                <Package className="w-5 h-5 text-indigo-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight">{isAr ? 'الأهداف الإنتاجية (المطلوب)' : 'Cibles de Production'}</h3>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{isAr ? 'تحديد الكميات المراد إنتاجها' : 'Définir les quantités à produire'}</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-4 w-full md:w-auto">
+              {editingQty ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <div className="flex flex-col">
+                      <label className="text-[9px] font-black text-slate-500 uppercase">{isAr ? 'عينة (Échantillon)' : 'Échantillon'}</label>
+                      <input 
+                        type="number" 
+                        value={qtyForm.echantillon} 
+                        onChange={e => setQtyForm({...qtyForm, echantillon: parseInt(e.target.value) || 0})}
+                        className="w-20 md:w-24 bg-slate-50 border-2 border-slate-200 rounded-xl py-2 px-3 text-xs font-black text-slate-900 outline-none focus:border-indigo-500 text-center"
+                      />
+                    </div>
+                    <span className="text-slate-300 font-black mt-4">+</span>
+                    <div className="flex flex-col">
+                      <label className="text-[9px] font-black text-slate-500 uppercase">{isAr ? 'الإنتاج الكامل' : 'Prod Complète'}</label>
+                      <input 
+                        type="number" 
+                        value={qtyForm.production} 
+                        onChange={e => setQtyForm({...qtyForm, production: parseInt(e.target.value) || 0})}
+                        className="w-24 md:w-32 bg-slate-50 border-2 border-slate-200 rounded-xl py-2 px-3 text-xs font-black text-slate-900 outline-none focus:border-indigo-500 text-center"
+                      />
+                    </div>
+                    <div className="flex flex-col">
+                      <label className="text-[9px] font-black text-indigo-500 uppercase">{isAr ? 'المجموع' : 'Total'}</label>
+                      <div className="w-20 md:w-24 bg-indigo-50 border-2 border-indigo-200 rounded-xl py-2 px-3 text-xs font-black text-indigo-700 text-center flex items-center justify-center">
+                        {qtyForm.echantillon + qtyForm.production}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 mt-4 md:mt-0">
+                    <button onClick={handleSaveQty} className="p-2.5 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-200">
+                      <Save className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => setEditingQty(false)} className="p-2.5 bg-slate-100 text-slate-500 rounded-xl hover:bg-slate-200 transition-colors">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-6">
+                    <div className="text-center px-4 py-2 bg-slate-50 rounded-xl border border-slate-100">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{isAr ? 'العينة' : 'Échantillon'}</p>
+                      <p className="text-lg font-black text-slate-700">{selectedCmd.quantiteEchantillon || 0}</p>
+                    </div>
+                    <div className="text-center px-4 py-2 bg-indigo-50 rounded-xl border border-indigo-100">
+                      <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">{isAr ? 'الإنتاج الكامل' : 'Prod Complète'}</p>
+                      <p className="text-lg font-black text-indigo-700">{selectedCmd.quantiteProduction || selectedCmd.quantite || 0}</p>
+                    </div>
+                    <div className="text-center px-4 py-2 bg-emerald-50 rounded-xl border border-emerald-100">
+                      <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mb-0.5">{isAr ? 'المجموع الكلي' : 'Total Global'}</p>
+                      <p className="text-lg font-black text-emerald-700">{(selectedCmd.quantiteEchantillon || 0) + (selectedCmd.quantiteProduction || selectedCmd.quantite || 0)}</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setEditingQty(true)} className="p-3 bg-slate-100 text-slate-500 rounded-xl hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
+                    <Settings className="w-4 h-4" />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {activeTab === 'planning' && (
         <div className="space-y-6">

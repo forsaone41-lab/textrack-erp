@@ -83,6 +83,8 @@ export interface Commande {
   modele: string;
   tissu: string;
   quantite: number;
+  quantiteEchantillon?: number;
+  quantiteProduction?: number;
   quantiteLivre: number;
   dateCommande: string;
   dateLivraisonPrevue: string;
