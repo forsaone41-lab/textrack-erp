@@ -139,9 +139,13 @@ export default function Pipeline() {
                           <span dir="ltr">{lead.phone}</span>
                         </div>
                       </div>
-                      <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs uppercase border border-indigo-100">
-                        {lead.name.substring(0,2)}
-                      </div>
+                      {lead.photo ? (
+                        <img src={lead.photo} alt={lead.name} className="w-10 h-10 rounded-full object-cover border-2 border-indigo-100 shadow-sm" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs uppercase border border-indigo-100">
+                          {lead.name.substring(0,2)}
+                        </div>
+                      )}
                     </div>
 
                     <div className="text-xs font-bold text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100 flex items-center gap-2">
@@ -201,12 +205,21 @@ export default function Pipeline() {
 
             <div className="p-6 overflow-y-auto space-y-6">
               {/* Client Info Summary */}
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                <h3 className="font-bold text-slate-800 mb-2">{selectedLead.name}</h3>
-                <div className="grid grid-cols-2 gap-2 text-sm text-slate-600">
-                  <div className="flex items-center gap-2"><Phone className="w-4 h-4"/> <span dir="ltr">{selectedLead.phone}</span></div>
-                  <div className="flex items-center gap-2"><MapPin className="w-4 h-4"/> {selectedLead.ville}</div>
-                  <div className="flex items-center gap-2 col-span-2"><Store className="w-4 h-4"/> {selectedLead.type} - {selectedLead.quantity} pièces</div>
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-start gap-4">
+                {selectedLead.photo ? (
+                  <img src={selectedLead.photo} alt={selectedLead.name} className="w-20 h-20 rounded-xl object-cover border border-slate-200 shadow-sm shrink-0" />
+                ) : (
+                  <div className="w-20 h-20 rounded-xl bg-slate-200 flex items-center justify-center shrink-0">
+                    <span className="text-slate-400 font-bold text-xl uppercase">{selectedLead.name.substring(0, 2)}</span>
+                  </div>
+                )}
+                <div className="flex-1">
+                  <h3 className="font-bold text-slate-800 mb-2">{selectedLead.name}</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-slate-600">
+                    <div className="flex items-center gap-2"><Phone className="w-4 h-4"/> <span dir="ltr">{selectedLead.phone}</span></div>
+                    <div className="flex items-center gap-2"><MapPin className="w-4 h-4"/> {selectedLead.ville}</div>
+                    <div className="flex items-center gap-2 sm:col-span-2"><Store className="w-4 h-4"/> {selectedLead.type} - {selectedLead.quantity} {isAr ? 'قطعة' : 'pièces'}</div>
+                  </div>
                 </div>
               </div>
 
