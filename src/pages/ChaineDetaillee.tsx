@@ -23,7 +23,15 @@ import {
   PackageCheck,
   X,
   Sparkles,
-  Trophy
+  Trophy,
+  Scissors,
+  Shirt,
+  Layers,
+  Wind,
+  Package,
+  Wand2,
+  Gauge,
+  Stitch
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { 
@@ -444,17 +452,70 @@ export default function ChaineDetaillee() {
     return hoursCount * op.target_heure;
   };
 
-  const getSuggestions = () => {
+  type OpSuggestion = { label: string; emoji: string; target: number; color: string; desc: string };
+
+  const getSuggestions = (): OpSuggestion[] => {
     if (!selectedCmd) return [];
-    const modelLower = selectedCmd.modele.toLowerCase();
-    if (modelLower.includes('t-shirt') || modelLower.includes('tshirt') || modelLower.includes('تيشيرت') || modelLower.includes('قميص')) {
-      return ['Assemblage épaules', 'Pose col', 'Manches', 'Côtés', 'Ourlet bas', 'Coupe', 'Repassage'];
-    } else if (modelLower.includes('pantalon') || modelLower.includes('jeans') || modelLower.includes('سروال')) {
-      return ['Surjet', 'Assemblage fourche', 'Poches', 'Côtés', 'Ceinture', 'Ourlet', 'Fermeture'];
-    } else if (modelLower.includes('veste') || modelLower.includes('manteau') || modelLower.includes('جاكيت')) {
-      return ['Préparation Poches', 'Assemblage Corps', 'Manches', 'Col', 'Doublure', 'Finition'];
+    const m = selectedCmd.modele.toLowerCase();
+
+    if (m.includes('t-shirt') || m.includes('tshirt') || m.includes('تيشيرت') || m.includes('قميص')) {
+      return [
+        { label: 'Coupe',             emoji: '✂️', target: 60, color: 'rose',   desc: 'Découpe du tissu' },
+        { label: 'Surjet épaules',    emoji: '🧵', target: 50, color: 'indigo', desc: 'Surjet des épaules' },
+        { label: 'Pose Col',          emoji: '👕', target: 45, color: 'violet', desc: 'Montage du col' },
+        { label: 'Assemblage Manches',emoji: '💪', target: 40, color: 'blue',   desc: 'Fixation des manches' },
+        { label: 'Surjet Côtés',      emoji: '📐', target: 55, color: 'sky',    desc: 'Fermeture côtés' },
+        { label: 'Ourlet Bas',        emoji: '🔽', target: 50, color: 'teal',   desc: 'Ourlet du bas' },
+        { label: 'Repassage',         emoji: '🔥', target: 35, color: 'amber',  desc: 'Repassage final' },
+        { label: 'Contrôle Qualité',  emoji: '🔍', target: 80, color: 'emerald',desc: 'Inspection finale' },
+      ];
     }
-    return ['Coupe', 'Assemblage', 'Surjet', 'Finition', 'Repassage', 'Emballage'];
+    if (m.includes('pantalon') || m.includes('jeans') || m.includes('سروال')) {
+      return [
+        { label: 'Coupe',             emoji: '✂️', target: 55, color: 'rose',   desc: 'Découpe pantalon' },
+        { label: 'Surjet Jambes',     emoji: '🧵', target: 50, color: 'indigo', desc: 'Surjet des jambes' },
+        { label: 'Assemblage Fourche',emoji: '🔗', target: 40, color: 'violet', desc: 'Montage entre-jambe' },
+        { label: 'Poches',            emoji: '🗃️', target: 35, color: 'blue',   desc: 'Pose des poches' },
+        { label: 'Ceinture',          emoji: '⭕', target: 30, color: 'sky',    desc: 'Montage ceinture' },
+        { label: 'Fermeture Éclair',  emoji: '🤐', target: 45, color: 'teal',   desc: 'Pose fermeture' },
+        { label: 'Ourlet',            emoji: '🔽', target: 50, color: 'green',  desc: 'Ourlet bas jambes' },
+        { label: 'Repassage',         emoji: '🔥', target: 30, color: 'amber',  desc: 'Repassage final' },
+      ];
+    }
+    if (m.includes('veste') || m.includes('manteau') || m.includes('جاكيت') || m.includes('blazer')) {
+      return [
+        { label: 'Coupe & Patronage', emoji: '✂️', target: 40, color: 'rose',   desc: 'Découpe des pièces' },
+        { label: 'Doublure',          emoji: '🧥', target: 35, color: 'indigo', desc: 'Assemblage doublure' },
+        { label: 'Prépa Poches',      emoji: '🗃️', target: 30, color: 'violet', desc: 'Poches intérieures' },
+        { label: 'Assemblage Corps',  emoji: '🔗', target: 25, color: 'blue',   desc: 'Montage corps' },
+        { label: 'Manches',           emoji: '💪', target: 28, color: 'sky',    desc: 'Pose des manches' },
+        { label: 'Col & Revers',      emoji: '🎯', target: 22, color: 'teal',   desc: 'Montage col' },
+        { label: 'Finition',          emoji: '✨', target: 20, color: 'emerald',desc: 'Détails finaux' },
+        { label: 'Repassage',         emoji: '🔥', target: 25, color: 'amber',  desc: 'Repassage pro' },
+      ];
+    }
+    if (m.includes('robe') || m.includes('jilbab') || m.includes('قفطان') || m.includes('كفتان')) {
+      return [
+        { label: 'Coupe',             emoji: '✂️', target: 45, color: 'rose',   desc: 'Découpe tissu' },
+        { label: 'Surjet Épaules',    emoji: '🧵', target: 40, color: 'indigo', desc: 'Surjet épaules' },
+        { label: 'Pose Manches',      emoji: '💪', target: 35, color: 'violet', desc: 'Fixation manches' },
+        { label: 'Fermeture',         emoji: '🤐', target: 40, color: 'blue',   desc: 'Fermeture dos' },
+        { label: 'Surjet Côtés',      emoji: '📐', target: 45, color: 'sky',    desc: 'Fermeture côtés' },
+        { label: 'Ourlet Bas',        emoji: '🔽', target: 40, color: 'teal',   desc: 'Ourlet de la robe' },
+        { label: 'Broderie / Déco',   emoji: '🌸', target: 15, color: 'pink',   desc: 'Décoration finale' },
+        { label: 'Repassage',         emoji: '🔥', target: 30, color: 'amber',  desc: 'Repassage final' },
+      ];
+    }
+    return [
+      { label: 'Coupe',            emoji: '✂️', target: 50, color: 'rose',   desc: 'Découpe générale' },
+      { label: 'Assemblage',       emoji: '🔗', target: 40, color: 'indigo', desc: 'Montage pièces' },
+      { label: 'Surjet',           emoji: '🧵', target: 50, color: 'violet', desc: 'Surjet bords' },
+      { label: 'Fermeture',        emoji: '🤐', target: 45, color: 'blue',   desc: 'Pose fermeture' },
+      { label: 'Finition',         emoji: '✨', target: 35, color: 'emerald',desc: 'Nettoyage fils' },
+      { label: 'Repassage',        emoji: '🔥', target: 30, color: 'amber',  desc: 'Repassage final' },
+      { label: 'Contrôle Qualité', emoji: '🔍', target: 80, color: 'teal',   desc: 'Inspection pièces' },
+      { label: 'Emballage',        emoji: '📦', target: 60, color: 'slate',  desc: 'Conditionnement' },
+    ];
   };
 
   if (loading) return (
@@ -1057,19 +1118,53 @@ export default function ChaineDetaillee() {
                     placeholder={isAr ? "مثال: جيب، خياطة..." : "Ex: Jib, Ourlet, Montage..."}
                     className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-4 px-5 text-sm font-black text-slate-900 outline-none focus:border-indigo-500 transition-all shadow-sm" 
                   />
-                  {/* Quick Suggestions */}
-                  <div className="mt-3">
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'مقترحات ذكية للموديل:' : 'Suggestions pour ce modèle :'}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {getSuggestions().map(sug => (
-                        <button 
-                          key={sug}
-                          onClick={() => setOpForm({...opForm, nom_operation: sug, target_heure: opForm.target_heure || 40})}
-                          className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-[10px] font-black uppercase tracking-widest border border-indigo-100 hover:bg-indigo-600 hover:text-white transition-all"
-                        >
-                          + {sug}
-                        </button>
-                      ))}
+                  {/* Smart Suggestions */}
+                  <div className="mt-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{isAr ? '⚡ مقترحات ذكية:' : '⚡ Suggestions IA pour ce modèle :'}</span>
+                      <div className="flex-1 h-px bg-slate-100" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {getSuggestions().map(sug => {
+                        const isSelected = opForm.nom_operation === sug.label;
+                        const colorMap: Record<string, string> = {
+                          rose:    'bg-rose-50    border-rose-200    text-rose-700    hover:bg-rose-500    hover:text-white hover:border-rose-500',
+                          indigo:  'bg-indigo-50  border-indigo-200  text-indigo-700  hover:bg-indigo-500  hover:text-white hover:border-indigo-500',
+                          violet:  'bg-violet-50  border-violet-200  text-violet-700  hover:bg-violet-500  hover:text-white hover:border-violet-500',
+                          blue:    'bg-blue-50    border-blue-200    text-blue-700    hover:bg-blue-500    hover:text-white hover:border-blue-500',
+                          sky:     'bg-sky-50     border-sky-200     text-sky-700     hover:bg-sky-500     hover:text-white hover:border-sky-500',
+                          teal:    'bg-teal-50    border-teal-200    text-teal-700    hover:bg-teal-500    hover:text-white hover:border-teal-500',
+                          green:   'bg-green-50   border-green-200   text-green-700   hover:bg-green-500   hover:text-white hover:border-green-500',
+                          emerald: 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-500 hover:text-white hover:border-emerald-500',
+                          amber:   'bg-amber-50   border-amber-200   text-amber-700   hover:bg-amber-500   hover:text-white hover:border-amber-500',
+                          pink:    'bg-pink-50    border-pink-200    text-pink-700    hover:bg-pink-500    hover:text-white hover:border-pink-500',
+                          slate:   'bg-slate-50   border-slate-200   text-slate-600   hover:bg-slate-600   hover:text-white hover:border-slate-600',
+                        };
+                        const selectedMap: Record<string, string> = {
+                          rose: 'bg-rose-500 border-rose-500 text-white', indigo: 'bg-indigo-500 border-indigo-500 text-white',
+                          violet: 'bg-violet-500 border-violet-500 text-white', blue: 'bg-blue-500 border-blue-500 text-white',
+                          sky: 'bg-sky-500 border-sky-500 text-white', teal: 'bg-teal-500 border-teal-500 text-white',
+                          green: 'bg-green-500 border-green-500 text-white', emerald: 'bg-emerald-500 border-emerald-500 text-white',
+                          amber: 'bg-amber-500 border-amber-500 text-white', pink: 'bg-pink-500 border-pink-500 text-white',
+                          slate: 'bg-slate-600 border-slate-600 text-white',
+                        };
+                        return (
+                          <button
+                            key={sug.label}
+                            onClick={() => setOpForm({...opForm, nom_operation: sug.label, target_heure: sug.target})}
+                            className={`group flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left transition-all duration-200 ${
+                              isSelected ? (selectedMap[sug.color] || selectedMap.slate) : (colorMap[sug.color] || colorMap.slate)
+                            }`}
+                          >
+                            <span className="text-base leading-none flex-shrink-0">{sug.emoji}</span>
+                            <div className="min-w-0">
+                              <p className="text-[10px] font-black uppercase tracking-tight leading-tight truncate">{sug.label}</p>
+                              <p className={`text-[8px] font-bold uppercase tracking-widest mt-0.5 ${isSelected ? 'text-white/70' : 'opacity-50'}`}>{sug.target} pcs/h</p>
+                            </div>
+                            {isSelected && <span className="ml-auto text-base">✓</span>}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
