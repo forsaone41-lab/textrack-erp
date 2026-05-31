@@ -226,6 +226,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
           <div className="space-y-1">
             {!collapsed && <SectionTitle title={isAr ? 'المالية' : 'Finance'} isAr={isAr} />}
             {can('bilan') && <NavItem to="/bilan" icon={PieChart} label={isAr ? 'جدول البيانات' : 'Tableau de Bord'} />}
+            {can('factures') && <NavItem to="/devis" icon={FileText} label={isAr ? 'عروض الأسعار' : 'Devis'} />}
             {can('factures') && <NavItem to="/factures" icon={Receipt} label={isAr ? 'الفواتير' : 'Factures'} />}
             {can('charges') && <NavItem to="/charges" icon={TrendingUp} label={isAr ? 'المصاريف' : 'Charges'} />}
           </div>

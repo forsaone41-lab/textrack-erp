@@ -191,6 +191,68 @@ export default function ChaineDetaillee() {
     await deleteRecord('operations_modele', id);
   }
 
+  async function suggestOperationsByAI() {
+    if (!selectedCmd) return;
+    const modelLower = selectedCmd.modele.toLowerCase();
+    
+    let suggestedOps: { nom: string; target: number }[] = [];
+    
+    if (modelLower.includes('t-shirt') || modelLower.includes('tshirt') || modelLower.includes('تيشيرت') || modelLower.includes('قميص')) {
+      suggestedOps = [
+        { nom: 'Assemblage épaules', target: 80 },
+        { nom: 'Pose col', target: 60 },
+        { nom: 'Manches', target: 70 },
+        { nom: 'Côtés', target: 65 },
+        { nom: 'Ourlet bas', target: 75 }
+      ];
+    } else if (modelLower.includes('pantalon') || modelLower.includes('jeans') || modelLower.includes('سروال')) {
+      suggestedOps = [
+        { nom: 'Surjet', target: 100 },
+        { nom: 'Assemblage fourche', target: 50 },
+        { nom: 'Poches', target: 45 },
+        { nom: 'Côtés et entrejambe', target: 40 },
+        { nom: 'Ceinture', target: 35 },
+        { nom: 'Ourlet', target: 60 }
+      ];
+    } else if (modelLower.includes('veste') || modelLower.includes('manteau') || modelLower.includes('جاكيت')) {
+      suggestedOps = [
+        { nom: 'Préparation Poches', target: 30 },
+        { nom: 'Assemblage Corps', target: 20 },
+        { nom: 'Manches', target: 25 },
+        { nom: 'Col et Doublure', target: 15 },
+        { nom: 'Finition', target: 20 }
+      ];
+    } else {
+      suggestedOps = [
+        { nom: 'Coupe / Préparation', target: 50 },
+        { nom: 'Assemblage 1', target: 40 },
+        { nom: 'Assemblage 2', target: 40 },
+        { nom: 'Finition', target: 50 },
+        { nom: 'Repassage', target: 60 }
+      ];
+    }
+
+    const confirmMsg = isAr 
+      ? `يقترح الذكاء الاصطناعي إضافة ${suggestedOps.length} مهام قياسية للموديل "${selectedCmd.modele}". هل تريد المتابعة؟`
+      : `L'IA propose d'ajouter ${suggestedOps.length} postes standards pour le modèle "${selectedCmd.modele}". Voulez-vous continuer ?`;
+
+    if (!confirm(confirmMsg)) return;
+
+    let startOrder = modelOps.length;
+    const newOps: OperationModele[] = suggestedOps.map((op, idx) => ({
+      id: genId(),
+      modele: selectedCmd.modele,
+      nom_operation: op.nom,
+      target_heure: op.target,
+      ordre_sequence: startOrder + idx + 1
+    }));
+
+    const updated = [...operations, ...newOps];
+    setOperations(updated);
+    
+    await Promise.all(newOps.map(op => saveRecord('operations_modele', op)));
+  }
+
   async function handleUpdateSuivi(opId: string, empId: string, heure: string, qte: number) {
     const [hDebut, hFin] = heure.split(' - ');
     
@@ -593,20 +655,28 @@ export default function ChaineDetaillee() {
                 </h2>
                 <div className="flex items-center gap-3">
                   <button 
+                    onClick={suggestOperationsByAI}
+                    className="px-4 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:shadow-lg transition-all shadow-xl shadow-indigo-100 flex items-center gap-2 border border-indigo-400/20"
+                  >
+                    <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
+                    <span className="hidden sm:inline">{isAr ? 'اقتراح المراكز (AI)' : 'Suggestions IA'}</span>
+                    <span className="sm:hidden">IA</span>
+                  </button>
+                  <button 
                     onClick={() => {
                       setQrPost(null);
                       setShowQrModal(true);
                     }}
-                    className="px-6 py-3 bg-slate-100 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center gap-2"
+                    className="px-4 py-3 bg-slate-100 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center gap-2"
                   >
                     <Printer className="w-4 h-4" />
-                    Imprimer QR
+                    <span className="hidden sm:inline">Imprimer QR</span>
                   </button>
                   <button 
                     onClick={() => setShowOpModal(true)}
-                    className="px-6 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+                    className="px-4 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
                   >
-                    Ajouter un poste
+                    Ajouter
                   </button>
                 </div>
               </div>

@@ -9,7 +9,7 @@ import { compressImage } from '../utils/image';
 import { t } from '../i18n';
 import { PageLoader } from '../components/PageLoader';
 
-export default function Factures() {
+export default function Devis() {
   const { lang, isAr } = useLang();
   const company = loadCompanyProfile();
   const [factures, setFactures] = useState<Facture[]>([]);
@@ -51,7 +51,7 @@ export default function Factures() {
   const isOverdue = (f: Facture) =>
     !!f.echeance && f.echeance < today && f.statut !== 'payée';
 
-  const filtered = factures.filter(f => f.typeDoc !== 'devis').filter(f => {
+  const filtered = factures.filter(f => f.typeDoc === 'devis').filter(f => {
     const q = search.toLowerCase();
     const matchSearch = f.numero.toLowerCase().includes(q) || f.client.toLowerCase().includes(q);
     const matchStatut =
@@ -70,7 +70,7 @@ export default function Factures() {
     countRetard: factures.filter(f => isOverdue(f)).length,
   };
 
-  function openCreate(typeDoc: 'facture' | 'devis' | 'recu' = 'facture') {
+  function openCreate(typeDoc: 'facture' | 'devis' | 'recu' = 'devis') {
     setEditId(null);
     const year = new Date().getFullYear();
 
@@ -189,8 +189,8 @@ export default function Factures() {
     <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
       <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">{t('factures_title', lang)}</h1>
-          <p className="text-slate-500 mt-1">{factures.length} {t('factures_subtitle', lang)}</p>
+          <h1 className="text-2xl font-bold text-slate-800">{isAr ? 'عروض الأسعار' : 'Devis'}</h1>
+          <p className="text-slate-500 mt-1">{factures.length} {isAr ? 'عرض(عروض) مسجلة' : 'devis enregistré(s)'}</p>
         </div>
         <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
           <button
@@ -200,19 +200,14 @@ export default function Factures() {
           >
             <Table2 className="w-4 h-4" /> CSV
           </button>
-          <button
-            onClick={() => openCreate('facture')}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl hover:bg-indigo-700 transition text-sm font-semibold shadow-sm"
-          >
-            <Plus className="w-4 h-4" /> Nouvelle Facture
-          </button>
           
           <button
-            onClick={() => openCreate('recu')}
-            className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2.5 rounded-xl hover:bg-emerald-700 transition text-sm font-semibold shadow-sm hidden sm:flex"
+            onClick={() => openCreate('devis')}
+            className="flex items-center gap-2 bg-slate-800 text-white px-4 py-2.5 rounded-xl hover:bg-slate-900 transition text-sm font-semibold shadow-sm "
           >
-            <Plus className="w-4 h-4" /> Nouveau Reçu
+            <Plus className="w-4 h-4" /> Nouveau Devis
           </button>
+          
         </div>
       </div>
 
@@ -540,7 +535,7 @@ export default function Factures() {
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1.5">Type de document</label>
                 <select
-                  value={form.typeDoc || 'facture'}
+                  value={form.typeDoc || 'devis'}
                   onChange={e => {
                     const newType = e.target.value as Facture['typeDoc'];
                     let newNum = form.numero;
@@ -553,9 +548,9 @@ export default function Factures() {
                   }}
                   className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                 >
-                  <option value="facture">Facture</option>
+                  
                   <option value="devis">Devis</option>
-                  <option value="recu">Reçu de paiement / Avance</option>
+                  
                 </select>
               </div>
 
