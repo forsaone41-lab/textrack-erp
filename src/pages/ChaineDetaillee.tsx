@@ -725,7 +725,7 @@ export default function ChaineDetaillee() {
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-xl font-black text-slate-800 flex items-center gap-3">
                   <Settings className="w-6 h-6 text-indigo-600" />
-                  Gamme Opératoire : {selectedCmd?.modele}
+                  {isAr ? `تسلسل العمليات : ${selectedCmd?.modele}` : `Gamme Opératoire : ${selectedCmd?.modele}`}
                 </h2>
                 <div className="flex items-center gap-3">
                   <button 
@@ -744,13 +744,13 @@ export default function ChaineDetaillee() {
                     className="px-4 py-3 bg-slate-100 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center gap-2"
                   >
                     <Printer className="w-4 h-4" />
-                    <span className="hidden sm:inline">Imprimer QR</span>
+                    <span className="hidden sm:inline">{isAr ? 'طباعة QR' : 'Imprimer QR'}</span>
                   </button>
                   <button 
                     onClick={() => setShowOpModal(true)}
                     className="px-4 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
                   >
-                    Ajouter
+                    {isAr ? 'إضافة' : 'Ajouter'}
                   </button>
                 </div>
               </div>
@@ -759,7 +759,7 @@ export default function ChaineDetaillee() {
                 {modelOps.length === 0 ? (
                   <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-[2rem]">
                     <AlertCircle className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-                    <p className="text-sm font-bold text-slate-400 uppercase">Aucun poste défini pour ce modèle</p>
+                    <p className="text-sm font-bold text-slate-400 uppercase">{isAr ? 'لا توجد مراكز معرفة لهذا الموديل' : 'Aucun poste défini pour ce modèle'}</p>
                   </div>
                 ) : (
                   modelOps.map((op, idx) => (
@@ -770,7 +770,7 @@ export default function ChaineDetaillee() {
                         </div>
                         <div>
                           <p className="text-sm font-black text-slate-800 uppercase">{op.nom_operation}</p>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase">Cible : {op.target_heure} pcs / heure</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">{isAr ? `الهدف: ${op.target_heure} قطعة/ساعة` : `Cible : ${op.target_heure} pcs / heure`}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -802,15 +802,15 @@ export default function ChaineDetaillee() {
             <div className="bg-[#0f172a] rounded-[2.5rem] p-8 text-white shadow-xl shadow-slate-200">
               <h3 className="text-lg font-black mb-6 flex items-center gap-3">
                 <Timer className="w-5 h-5 text-indigo-400" />
-                Résumé Gamme
+                {isAr ? 'ملخص التسلسل' : 'Résumé Gamme'}
               </h3>
               <div className="space-y-6">
                 <div className="p-5 bg-white/5 rounded-2xl border border-white/5">
-                  <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Nombre de postes</p>
+                  <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">{isAr ? 'عدد المراكز' : 'Nombre de postes'}</p>
                   <p className="text-2xl font-black">{modelOps.length}</p>
                 </div>
                 <div className="p-5 bg-white/5 rounded-2xl border border-white/5">
-                  <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">Capacité Max (H)</p>
+                  <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">{isAr ? 'الطاقة الإنتاجية القصوى (ساعة)' : 'Capacité Max (H)'}</p>
                   <p className="text-2xl font-black">{modelOps.length > 0 ? Math.min(...modelOps.map(o => o.target_heure)) : 0} pcs</p>
                 </div>
               </div>
