@@ -10,6 +10,7 @@ import { CompanyProfile } from './types';
 // ✅ Lazy load all pages - each page loads only when visited
 const Dashboard        = lazy(() => import('./pages/Dashboard'));
 const Demandes         = lazy(() => import('./pages/Demandes'));
+const Pipeline         = lazy(() => import('./pages/Pipeline'));
 const FichesTechniques = lazy(() => import('./pages/FichesTechniques'));
 const OrdresDeCoupe    = lazy(() => import('./pages/OrdresDeCoupe'));
 const ChaineDeMontage  = lazy(() => import('./pages/ChaineDeMontage'));
@@ -352,6 +353,7 @@ function AppContent() {
         
         {/* Protected Production Routes */}
         <Route path="demandes" element={can('demandes') ? <Demandes /> : <Navigate to="/" replace />} />
+        <Route path="pipeline" element={can('crm') ? <Pipeline /> : <Navigate to="/" replace />} />
         <Route path="echantillons" element={can('demandes') ? <Echantillons /> : <Navigate to="/" replace />} />
         <Route path="fiches-techniques" element={can('fiches') ? <FichesTechniques /> : <Navigate to="/" replace />} />
         <Route path="ordres-de-coupe" element={can('ordres') ? <OrdresDeCoupe /> : <Navigate to="/" replace />} />
