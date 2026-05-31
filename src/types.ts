@@ -363,7 +363,7 @@ export const DEFAULT_PERMISSIONS: RolePermMap = {
   partenaire: ['partenaire_portal'],
 };
 
-const PERMISSIONS_VERSION = 12;
+const PERMISSIONS_VERSION = 13;
 
 export function loadPermissions(): RolePermMap {
   try {
