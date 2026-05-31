@@ -229,6 +229,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
             {can('factures') && <NavItem to="/devis" icon={FileText} label={isAr ? 'عروض الأسعار' : 'Devis'} />}
             {can('factures') && <NavItem to="/factures" icon={Receipt} label={isAr ? 'الفواتير' : 'Factures'} />}
             {can('factures') && <NavItem to="/recus" icon={CheckCircle} label={isAr ? 'إيصالات الدفع' : 'Reçus'} />}
+            <NavItem to="/prix-marche" icon={TrendingUp} label={isAr ? 'أسعار السوق' : 'Prix Marché'} />
             {can('charges') && <NavItem to="/charges" icon={TrendingUp} label={isAr ? 'المصاريف' : 'Charges'} />}
           </div>
 

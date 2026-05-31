@@ -25,6 +25,7 @@ const ManageOrder      = lazy(() => import('./pages/ManageOrder'));
 const Factures         = lazy(() => import('./pages/Factures'));
 const Devis            = lazy(() => import('./pages/Devis'));
 const Recus            = lazy(() => import('./pages/Recus'));
+const PrixMarche       = lazy(() => import('./pages/PrixMarche'));
 const Pointage         = lazy(() => import('./pages/Pointage'));
 const PortailClient    = lazy(() => import('./pages/PortailClient'));
 const Utilisateurs     = lazy(() => import('./pages/Utilisateurs'));
@@ -364,6 +365,7 @@ function AppContent() {
         <Route path="factures" element={can('factures') ? <Factures /> : <Navigate to="/" replace />} />
         <Route path="devis" element={can('factures') ? <Devis /> : <Navigate to="/" replace />} />
         <Route path="recus" element={can('factures') ? <Recus /> : <Navigate to="/" replace />} />
+        <Route path="prix-marche" element={<PrixMarche />} />
         <Route path="charges" element={can('charges') ? <Charges /> : <Navigate to="/" replace />} />
         <Route path="bilan" element={can('bilan') ? <BilanFinancier /> : <Navigate to="/" replace />} />
         
