@@ -220,6 +220,9 @@ export default function ChaineDetaillee() {
   const [showAIPanel, setShowAIPanel] = useState(false);
   const [imageMode, setImageMode] = useState<'photo' | 'sketch'>('photo');
 
+  const selectedCmd = useMemo(() => 
+    commandes.find(c => c.id === selectedCmdId), [commandes, selectedCmdId]);
+
   const hasSketch = useMemo(() => {
     if (!selectedCmd) return false;
     const m = selectedCmd.modele.toLowerCase();
@@ -258,8 +261,7 @@ export default function ChaineDetaillee() {
     });
   }, []);
 
-  const selectedCmd = useMemo(() => 
-    commandes.find(c => c.id === selectedCmdId), [commandes, selectedCmdId]);
+
 
   useEffect(() => {
     if (selectedCmd) {
