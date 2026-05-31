@@ -31,7 +31,10 @@ import {
   Package,
   Wand2,
   Gauge,
-  Stitch
+  Gauge,
+  Stitch,
+  Camera,
+  Image as ImageIcon
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { 
@@ -85,6 +88,7 @@ export default function ChaineDetaillee() {
   const [qrPost, setQrPost] = useState<OperationModele | null>(null);
   const [aiRecommendation, setAiRecommendation] = useState<Record<string, string>>({});
   const [showAIPanel, setShowAIPanel] = useState(false);
+  const [imageMode, setImageMode] = useState<'photo' | 'sketch'>('photo');
 
   // Qty tracking state
   const [editingQty, setEditingQty] = useState(false);
@@ -1194,9 +1198,34 @@ export default function ChaineDetaillee() {
             {/* Left Side: Image / Info */}
             <div className="md:w-5/12 bg-indigo-50 p-8 flex flex-col justify-center items-center text-center relative overflow-hidden border-b md:border-b-0 md:border-r border-indigo-100">
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 pointer-events-none" />
+              
+              {/* Toggle Photo / Sketch */}
+              <div className="absolute top-4 left-0 right-0 z-10 flex justify-center">
+                <div className="bg-white/80 backdrop-blur-md border border-white/40 p-1 rounded-xl shadow-sm flex items-center gap-1">
+                  <button 
+                    onClick={() => setImageMode('photo')}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                      imageMode === 'photo' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-indigo-600 hover:bg-white/50'
+                    }`}
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    {isAr ? 'الصورة' : 'Photo'}
+                  </button>
+                  <button 
+                    onClick={() => setImageMode('sketch')}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                      imageMode === 'sketch' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-indigo-600 hover:bg-white/50'
+                    }`}
+                  >
+                    <ImageIcon className="w-3.5 h-3.5" />
+                    {isAr ? 'الرسم' : 'Croquis'}
+                  </button>
+                </div>
+              </div>
+
               <div className="w-full aspect-[4/5] bg-white rounded-2xl shadow-sm border border-indigo-100 overflow-hidden relative mb-6">
                 <img 
-                  src={getTechnicalSketch()}
+                  src={imageMode === 'photo' ? (selectedCmd?.photo || selectedCmd?.modelePhoto || "/images/sewing_placeholder.png") : getTechnicalSketch()}
                   alt="Modèle" 
                   className="w-full h-full object-cover"
                   onError={(e) => {
@@ -1204,14 +1233,16 @@ export default function ChaineDetaillee() {
                      target.src = "/images/sewing_placeholder.png";
                   }}
                 />
-                {/* Operation zone badges */}
-                <div className="absolute bottom-2 left-2 right-2 flex flex-wrap gap-1">
-                  {getSuggestions().slice(0,4).map((s,i) => (
-                    <span key={i} className="bg-black/60 backdrop-blur-sm text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md">
-                      {i+1} {isAr ? s.labelAr : s.label.split(' ')[0]}
-                    </span>
-                  ))}
-                </div>
+                {/* Operation zone badges - only show briefly on bottom if photo, or float them if sketch */}
+                {imageMode === 'photo' && (
+                  <div className="absolute bottom-2 left-2 right-2 flex flex-wrap gap-1">
+                    {getSuggestions().slice(0,4).map((s,i) => (
+                      <span key={i} className="bg-black/60 backdrop-blur-sm text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md border border-white/10">
+                        {i+1} {isAr ? s.labelAr : s.label.split(' ')[0]}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
               <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">{selectedCmd?.modele}</h3>
               <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest mt-1">Réf: {selectedCmd?.reference}</p>
