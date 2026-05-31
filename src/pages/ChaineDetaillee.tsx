@@ -220,6 +220,19 @@ export default function ChaineDetaillee() {
   const [showAIPanel, setShowAIPanel] = useState(false);
   const [imageMode, setImageMode] = useState<'photo' | 'sketch'>('photo');
 
+  const hasSketch = useMemo(() => {
+    if (!selectedCmd) return false;
+    const m = selectedCmd.modele.toLowerCase();
+    return m.includes('robe') || m.includes('jilbab') || m.includes('قفطان') || 
+           m.includes('summer') || m.includes('ensemble') || m.includes('طقم') || m.includes('chemise');
+  }, [selectedCmd]);
+
+  useEffect(() => {
+    if (!hasSketch) {
+      setImageMode('photo');
+    }
+  }, [hasSketch]);
+
   // Qty tracking state
   const [editingQty, setEditingQty] = useState(false);
   const [qtyForm, setQtyForm] = useState({ echantillon: 0, production: 0 });
@@ -619,7 +632,8 @@ export default function ChaineDetaillee() {
     if (!selectedCmd) return '/images/sewing_placeholder.png';
     const m = selectedCmd.modele.toLowerCase();
     if (m.includes('robe') || m.includes('jilbab') || m.includes('قفطان')) return '/images/technical_flat_robe.png';
-    return selectedCmd.photo || selectedCmd.modelePhoto || '/images/sewing_placeholder.png';
+    if (m.includes('summer') || m.includes('ensemble') || m.includes('طقم') || m.includes('chemise')) return '/images/technical_flat_chemise_ensemble.png';
+    return '/images/sewing_placeholder.png';
   };
 
   const getSuggestions = (): OpSuggestion[] => {
@@ -1330,28 +1344,30 @@ export default function ChaineDetaillee() {
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 pointer-events-none" />
               
               {/* Toggle Photo / Sketch */}
-              <div className="absolute top-4 left-0 right-0 z-10 flex justify-center">
-                <div className="bg-white/80 backdrop-blur-md border border-white/40 p-1 rounded-xl shadow-sm flex items-center gap-1">
-                  <button 
-                    onClick={() => setImageMode('photo')}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                      imageMode === 'photo' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-indigo-600 hover:bg-white/50'
-                    }`}
-                  >
-                    <Camera className="w-3.5 h-3.5" />
-                    {isAr ? 'الصورة' : 'Photo'}
-                  </button>
-                  <button 
-                    onClick={() => setImageMode('sketch')}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                      imageMode === 'sketch' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-indigo-600 hover:bg-white/50'
-                    }`}
-                  >
-                    <ImageIcon className="w-3.5 h-3.5" />
-                    {isAr ? 'الرسم' : 'Croquis'}
-                  </button>
+              {hasSketch && (
+                <div className="absolute top-4 left-0 right-0 z-10 flex justify-center">
+                  <div className="bg-white/80 backdrop-blur-md border border-white/40 p-1 rounded-xl shadow-sm flex items-center gap-1">
+                    <button 
+                      onClick={() => setImageMode('photo')}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                        imageMode === 'photo' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-indigo-600 hover:bg-white/50'
+                      }`}
+                    >
+                      <Camera className="w-3.5 h-3.5" />
+                      {isAr ? 'الصورة' : 'Photo'}
+                    </button>
+                    <button 
+                      onClick={() => setImageMode('sketch')}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                        imageMode === 'sketch' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-indigo-600 hover:bg-white/50'
+                      }`}
+                    >
+                      <ImageIcon className="w-3.5 h-3.5" />
+                      {isAr ? 'الرسم' : 'Croquis'}
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="w-full aspect-[4/5] bg-white rounded-2xl shadow-sm border border-indigo-100 overflow-hidden relative mb-6">
                 {imageMode === 'photo' ? (
@@ -1365,9 +1381,14 @@ export default function ChaineDetaillee() {
                     }}
                   />
                 ) : (
-                  <SketchCanvas 
-                    src={selectedCmd?.photo || selectedCmd?.modelePhoto || "/images/sewing_placeholder.png"}
-                    className="w-full h-full object-cover animate-in fade-in duration-500"
+                  <img 
+                    src={getTechnicalSketch()}
+                    alt="Croquis CAD 2D" 
+                    className="w-full h-full object-contain p-4 bg-white"
+                    onError={(e) => {
+                       const target = e.target as HTMLImageElement;
+                       target.src = "/images/sewing_placeholder.png";
+                    }}
                   />
                 )}
 
