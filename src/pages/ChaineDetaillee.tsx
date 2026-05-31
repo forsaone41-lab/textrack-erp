@@ -452,7 +452,14 @@ export default function ChaineDetaillee() {
     return hoursCount * op.target_heure;
   };
 
-  type OpSuggestion = { label: string; emoji: string; target: number; color: string; desc: string };
+  type OpSuggestion = { label: string; labelAr: string; emoji: string; target: number; color: string; desc: string };
+
+  const getTechnicalSketch = () => {
+    if (!selectedCmd) return '/images/sewing_placeholder.png';
+    const m = selectedCmd.modele.toLowerCase();
+    if (m.includes('robe') || m.includes('jilbab') || m.includes('قفطان')) return '/images/technical_flat_robe.png';
+    return selectedCmd.photo || selectedCmd.modelePhoto || '/images/sewing_placeholder.png';
+  };
 
   const getSuggestions = (): OpSuggestion[] => {
     if (!selectedCmd) return [];
@@ -460,61 +467,61 @@ export default function ChaineDetaillee() {
 
     if (m.includes('t-shirt') || m.includes('tshirt') || m.includes('تيشيرت') || m.includes('قميص')) {
       return [
-        { label: 'Coupe',             emoji: '✂️', target: 60, color: 'rose',   desc: 'Découpe du tissu' },
-        { label: 'Surjet épaules',    emoji: '🧵', target: 50, color: 'indigo', desc: 'Surjet des épaules' },
-        { label: 'Pose Col',          emoji: '👕', target: 45, color: 'violet', desc: 'Montage du col' },
-        { label: 'Assemblage Manches',emoji: '💪', target: 40, color: 'blue',   desc: 'Fixation des manches' },
-        { label: 'Surjet Côtés',      emoji: '📐', target: 55, color: 'sky',    desc: 'Fermeture côtés' },
-        { label: 'Ourlet Bas',        emoji: '🔽', target: 50, color: 'teal',   desc: 'Ourlet du bas' },
-        { label: 'Repassage',         emoji: '🔥', target: 35, color: 'amber',  desc: 'Repassage final' },
-        { label: 'Contrôle Qualité',  emoji: '🔍', target: 80, color: 'emerald',desc: 'Inspection finale' },
+        { label: 'Coupe',              labelAr: 'القص',              emoji: '✂️', target: 60, color: 'rose',   desc: 'Découpe du tissu' },
+        { label: 'Surjet épaules',     labelAr: 'سورجي الكتف',      emoji: '🧵', target: 50, color: 'indigo', desc: 'Surjet des épaules' },
+        { label: 'Pose Col',           labelAr: 'تركيب الكول',      emoji: '👕', target: 45, color: 'violet', desc: 'Montage du col' },
+        { label: 'Assemblage Manches', labelAr: 'تركيب الأكمام',    emoji: '💪', target: 40, color: 'blue',   desc: 'Fixation des manches' },
+        { label: 'Surjet Côtés',       labelAr: 'سورجي الجانبين',   emoji: '📐', target: 55, color: 'sky',    desc: 'Fermeture côtés' },
+        { label: 'Ourlet Bas',         labelAr: 'حاشية الأسفل',      emoji: '🔽', target: 50, color: 'teal',   desc: 'Ourlet du bas' },
+        { label: 'Repassage',          labelAr: 'الكي',              emoji: '🔥', target: 35, color: 'amber',  desc: 'Repassage final' },
+        { label: 'Contrôle Qualité',   labelAr: 'مراقبة الجودة',    emoji: '🔍', target: 80, color: 'emerald',desc: 'Inspection finale' },
       ];
     }
     if (m.includes('pantalon') || m.includes('jeans') || m.includes('سروال')) {
       return [
-        { label: 'Coupe',             emoji: '✂️', target: 55, color: 'rose',   desc: 'Découpe pantalon' },
-        { label: 'Surjet Jambes',     emoji: '🧵', target: 50, color: 'indigo', desc: 'Surjet des jambes' },
-        { label: 'Assemblage Fourche',emoji: '🔗', target: 40, color: 'violet', desc: 'Montage entre-jambe' },
-        { label: 'Poches',            emoji: '🗃️', target: 35, color: 'blue',   desc: 'Pose des poches' },
-        { label: 'Ceinture',          emoji: '⭕', target: 30, color: 'sky',    desc: 'Montage ceinture' },
-        { label: 'Fermeture Éclair',  emoji: '🤐', target: 45, color: 'teal',   desc: 'Pose fermeture' },
-        { label: 'Ourlet',            emoji: '🔽', target: 50, color: 'green',  desc: 'Ourlet bas jambes' },
-        { label: 'Repassage',         emoji: '🔥', target: 30, color: 'amber',  desc: 'Repassage final' },
+        { label: 'Coupe',              labelAr: 'القص',              emoji: '✂️', target: 55, color: 'rose',   desc: 'Découpe pantalon' },
+        { label: 'Surjet Jambes',      labelAr: 'سورجي الساقين',    emoji: '🧵', target: 50, color: 'indigo', desc: 'Surjet des jambes' },
+        { label: 'Assemblage Fourche', labelAr: 'تركيب الفرجة',     emoji: '🔗', target: 40, color: 'violet', desc: 'Montage entre-jambe' },
+        { label: 'Poches',             labelAr: 'الجيوب',             emoji: '🗃️', target: 35, color: 'blue',   desc: 'Pose des poches' },
+        { label: 'Ceinture',           labelAr: 'الحزام',             emoji: '⭕', target: 30, color: 'sky',    desc: 'Montage ceinture' },
+        { label: 'Fermeture Éclair',   labelAr: 'السوستة',            emoji: '🤐', target: 45, color: 'teal',   desc: 'Pose fermeture' },
+        { label: 'Ourlet',             labelAr: 'حاشية الساقين',    emoji: '🔽', target: 50, color: 'green',  desc: 'Ourlet bas jambes' },
+        { label: 'Repassage',          labelAr: 'الكي',              emoji: '🔥', target: 30, color: 'amber',  desc: 'Repassage final' },
       ];
     }
     if (m.includes('veste') || m.includes('manteau') || m.includes('جاكيت') || m.includes('blazer')) {
       return [
-        { label: 'Coupe & Patronage', emoji: '✂️', target: 40, color: 'rose',   desc: 'Découpe des pièces' },
-        { label: 'Doublure',          emoji: '🧥', target: 35, color: 'indigo', desc: 'Assemblage doublure' },
-        { label: 'Prépa Poches',      emoji: '🗃️', target: 30, color: 'violet', desc: 'Poches intérieures' },
-        { label: 'Assemblage Corps',  emoji: '🔗', target: 25, color: 'blue',   desc: 'Montage corps' },
-        { label: 'Manches',           emoji: '💪', target: 28, color: 'sky',    desc: 'Pose des manches' },
-        { label: 'Col & Revers',      emoji: '🎯', target: 22, color: 'teal',   desc: 'Montage col' },
-        { label: 'Finition',          emoji: '✨', target: 20, color: 'emerald',desc: 'Détails finaux' },
-        { label: 'Repassage',         emoji: '🔥', target: 25, color: 'amber',  desc: 'Repassage pro' },
+        { label: 'Coupe & Patronage',  labelAr: 'القص والباترون',  emoji: '✂️', target: 40, color: 'rose',   desc: 'Découpe des pièces' },
+        { label: 'Doublure',           labelAr: 'البطانة',           emoji: '🧥', target: 35, color: 'indigo', desc: 'Assemblage doublure' },
+        { label: 'Prépa Poches',       labelAr: 'تحضير الجيوب',    emoji: '🗃️', target: 30, color: 'violet', desc: 'Poches intérieures' },
+        { label: 'Assemblage Corps',   labelAr: 'تركيب الجسم',     emoji: '🔗', target: 25, color: 'blue',   desc: 'Montage corps' },
+        { label: 'Manches',            labelAr: 'الأكمام',            emoji: '💪', target: 28, color: 'sky',    desc: 'Pose des manches' },
+        { label: 'Col & Revers',       labelAr: 'الكول والطيات',   emoji: '🎯', target: 22, color: 'teal',   desc: 'Montage col' },
+        { label: 'Finition',           labelAr: 'التشطيب',           emoji: '✨', target: 20, color: 'emerald',desc: 'Détails finaux' },
+        { label: 'Repassage',          labelAr: 'الكي',              emoji: '🔥', target: 25, color: 'amber',  desc: 'Repassage pro' },
       ];
     }
     if (m.includes('robe') || m.includes('jilbab') || m.includes('قفطان') || m.includes('كفتان')) {
       return [
-        { label: 'Coupe',             emoji: '✂️', target: 45, color: 'rose',   desc: 'Découpe tissu' },
-        { label: 'Surjet Épaules',    emoji: '🧵', target: 40, color: 'indigo', desc: 'Surjet épaules' },
-        { label: 'Pose Manches',      emoji: '💪', target: 35, color: 'violet', desc: 'Fixation manches' },
-        { label: 'Fermeture',         emoji: '🤐', target: 40, color: 'blue',   desc: 'Fermeture dos' },
-        { label: 'Surjet Côtés',      emoji: '📐', target: 45, color: 'sky',    desc: 'Fermeture côtés' },
-        { label: 'Ourlet Bas',        emoji: '🔽', target: 40, color: 'teal',   desc: 'Ourlet de la robe' },
-        { label: 'Broderie / Déco',   emoji: '🌸', target: 15, color: 'pink',   desc: 'Décoration finale' },
-        { label: 'Repassage',         emoji: '🔥', target: 30, color: 'amber',  desc: 'Repassage final' },
+        { label: 'Coupe',              labelAr: 'القص',              emoji: '✂️', target: 45, color: 'rose',   desc: 'Découpe tissu' },
+        { label: 'Surjet Épaules',     labelAr: 'سورجي الكتف',      emoji: '🧵', target: 40, color: 'indigo', desc: 'Surjet épaules' },
+        { label: 'Pose Manches',       labelAr: 'تركيب الأكمام',    emoji: '💪', target: 35, color: 'violet', desc: 'Fixation manches' },
+        { label: 'Fermeture',          labelAr: 'السوستة',            emoji: '🤐', target: 40, color: 'blue',   desc: 'Fermeture dos' },
+        { label: 'Surjet Côtés',       labelAr: 'سورجي الجانبين',   emoji: '📐', target: 45, color: 'sky',    desc: 'Fermeture côtés' },
+        { label: 'Ourlet Bas',         labelAr: 'حاشية الفستان',    emoji: '🔽', target: 40, color: 'teal',   desc: 'Ourlet de la robe' },
+        { label: 'Broderie / Déco',    labelAr: 'التطريز / ديكور', emoji: '🌸', target: 15, color: 'pink',   desc: 'Décoration finale' },
+        { label: 'Repassage',          labelAr: 'الكي',              emoji: '🔥', target: 30, color: 'amber',  desc: 'Repassage final' },
       ];
     }
     return [
-      { label: 'Coupe',            emoji: '✂️', target: 50, color: 'rose',   desc: 'Découpe générale' },
-      { label: 'Assemblage',       emoji: '🔗', target: 40, color: 'indigo', desc: 'Montage pièces' },
-      { label: 'Surjet',           emoji: '🧵', target: 50, color: 'violet', desc: 'Surjet bords' },
-      { label: 'Fermeture',        emoji: '🤐', target: 45, color: 'blue',   desc: 'Pose fermeture' },
-      { label: 'Finition',         emoji: '✨', target: 35, color: 'emerald',desc: 'Nettoyage fils' },
-      { label: 'Repassage',        emoji: '🔥', target: 30, color: 'amber',  desc: 'Repassage final' },
-      { label: 'Contrôle Qualité', emoji: '🔍', target: 80, color: 'teal',   desc: 'Inspection pièces' },
-      { label: 'Emballage',        emoji: '📦', target: 60, color: 'slate',  desc: 'Conditionnement' },
+      { label: 'Coupe',             labelAr: 'القص',              emoji: '✂️', target: 50, color: 'rose',   desc: 'Découpe générale' },
+      { label: 'Assemblage',        labelAr: 'التجميع',           emoji: '🔗', target: 40, color: 'indigo', desc: 'Montage pièces' },
+      { label: 'Surjet',            labelAr: 'سورجي',             emoji: '🧵', target: 50, color: 'violet', desc: 'Surjet bords' },
+      { label: 'Fermeture',         labelAr: 'السوستة',            emoji: '🤐', target: 45, color: 'blue',   desc: 'Pose fermeture' },
+      { label: 'Finition',          labelAr: 'التشطيب',           emoji: '✨', target: 35, color: 'emerald',desc: 'Nettoyage fils' },
+      { label: 'Repassage',         labelAr: 'الكي',              emoji: '🔥', target: 30, color: 'amber',  desc: 'Repassage final' },
+      { label: 'Contrôle Qualité',  labelAr: 'مراقبة الجودة',    emoji: '🔍', target: 80, color: 'teal',   desc: 'Inspection pièces' },
+      { label: 'Emballage',         labelAr: 'التغليف',           emoji: '📦', target: 60, color: 'slate',  desc: 'Conditionnement' },
     ];
   };
 
@@ -1083,7 +1090,7 @@ export default function ChaineDetaillee() {
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 pointer-events-none" />
               <div className="w-full aspect-[4/5] bg-white rounded-2xl shadow-sm border border-indigo-100 overflow-hidden relative mb-6">
                 <img 
-                  src={selectedCmd?.photo || selectedCmd?.modelePhoto || "/images/sewing_placeholder.png"} 
+                  src={getTechnicalSketch()}
                   alt="Modèle" 
                   className="w-full h-full object-cover"
                   onError={(e) => {
@@ -1091,6 +1098,14 @@ export default function ChaineDetaillee() {
                      target.src = "/images/sewing_placeholder.png";
                   }}
                 />
+                {/* Operation zone badges */}
+                <div className="absolute bottom-2 left-2 right-2 flex flex-wrap gap-1">
+                  {getSuggestions().slice(0,4).map((s,i) => (
+                    <span key={i} className="bg-black/60 backdrop-blur-sm text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md">
+                      {i+1} {isAr ? s.labelAr : s.label.split(' ')[0]}
+                    </span>
+                  ))}
+                </div>
               </div>
               <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">{selectedCmd?.modele}</h3>
               <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest mt-1">Réf: {selectedCmd?.reference}</p>
@@ -1126,7 +1141,7 @@ export default function ChaineDetaillee() {
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       {getSuggestions().map(sug => {
-                        const isSelected = opForm.nom_operation === sug.label;
+                        const isSelected = opForm.nom_operation === sug.label || opForm.nom_operation === sug.labelAr;
                         const colorMap: Record<string, string> = {
                           rose:    'bg-rose-50    border-rose-200    text-rose-700    hover:bg-rose-500    hover:text-white hover:border-rose-500',
                           indigo:  'bg-indigo-50  border-indigo-200  text-indigo-700  hover:bg-indigo-500  hover:text-white hover:border-indigo-500',
@@ -1151,14 +1166,14 @@ export default function ChaineDetaillee() {
                         return (
                           <button
                             key={sug.label}
-                            onClick={() => setOpForm({...opForm, nom_operation: sug.label, target_heure: sug.target})}
+                            onClick={() => setOpForm({...opForm, nom_operation: isAr ? sug.labelAr : sug.label, target_heure: sug.target})}
                             className={`group flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left transition-all duration-200 ${
                               isSelected ? (selectedMap[sug.color] || selectedMap.slate) : (colorMap[sug.color] || colorMap.slate)
                             }`}
                           >
                             <span className="text-base leading-none flex-shrink-0">{sug.emoji}</span>
                             <div className="min-w-0">
-                              <p className="text-[10px] font-black uppercase tracking-tight leading-tight truncate">{sug.label}</p>
+                              <p className="text-[10px] font-black uppercase tracking-tight leading-tight truncate">{isAr ? sug.labelAr : sug.label}</p>
                               <p className={`text-[8px] font-bold uppercase tracking-widest mt-0.5 ${isSelected ? 'text-white/70' : 'opacity-50'}`}>{sug.target} pcs/h</p>
                             </div>
                             {isSelected && <span className="ml-auto text-base">✓</span>}

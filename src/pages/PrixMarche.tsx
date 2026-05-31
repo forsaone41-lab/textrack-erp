@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { TrendingUp, Edit2, Save, X, Calculator, RefreshCw, ChevronDown, ChevronUp, Sparkles, FileText, Info } from 'lucide-react';
+import { TrendingUp, Edit2, Save, X, Calculator, RefreshCw, Sparkles, Info, Percent } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
+import { loadData, Commande } from '../types';
 
 interface PrixTier { min: number; max: number; }
 interface PrixItem {
@@ -37,13 +38,28 @@ export default function PrixMarche() {
   const [editId, setEditId] = useState<string|null>(null);
   const [editForm, setEditForm] = useState<PrixItem|null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>(localStorage.getItem(UPDATED_KEY)||'');
-  const [showCalc, setShowCalc] = useState(false);
+  const [showCalc, setShowCalc] = useState(true);
+  const [commandes, setCommandes] = useState<Commande[]>([]);
+
+  useEffect(() => {
+    loadData<Commande>('commandes').then(setCommandes);
+  }, []);
+
+  // Unique model names from existing orders
+  const modelSuggestions = Array.from(new Set(commandes.map(c => c.modele).filter(Boolean))).sort();
 
   // Calculator state
   const [calcModel, setCalcModel] = useState('');
   const [calcQty, setCalcQty] = useState(100);
   const [calcTier, setCalcTier] = useState<'souk'|'moyen'|'export'>('moyen');
-  const [calcResult, setCalcResult] = useState<{item:PrixItem; total:{min:number;max:number}}|null>(null);
+  const [calcResult, setCalcResult] = useState<{
+    item: PrixItem;
+    unitMin: number; unitMax: number;
+    totalMin: number; totalMax: number;
+    discount: number;
+    marginMin: number; marginMax: number;
+    sellingMin: number; sellingMax: number;
+  }|null>(null);
 
   function startEdit(item: PrixItem) {
     setEditId(item.id);
@@ -70,7 +86,32 @@ export default function PrixMarche() {
     const matched = prix.find(p => p.keywords.some(k => m.includes(k)));
     if (!matched) { setCalcResult(null); return; }
     const tier = matched[calcTier];
-    setCalcResult({ item: matched, total: { min: tier.min * calcQty, max: tier.max * calcQty }});
+
+    // Quantity discount: -5% per 500 pcs bracket, max -30%
+    const discount = Math.min(30, Math.floor(calcQty / 500) * 5);
+    const factor = 1 - discount / 100;
+    const unitMin = Math.round(tier.min * factor * 10) / 10;
+    const unitMax = Math.round(tier.max * factor * 10) / 10;
+
+    // Suggested margin: based on tier and quantity
+    const baseMargin = calcTier === 'export' ? 35 : calcTier === 'moyen' ? 25 : 15;
+    const qtyBonus = calcQty >= 1000 ? 5 : calcQty >= 500 ? 3 : 0;
+    const marginMin = baseMargin;
+    const marginMax = baseMargin + qtyBonus + 10;
+
+    // Suggested selling price (façonnage + margin)
+    const sellingMin = Math.round(unitMin * (1 + marginMin / 100));
+    const sellingMax = Math.round(unitMax * (1 + marginMax / 100));
+
+    setCalcResult({
+      item: matched,
+      unitMin, unitMax,
+      totalMin: Math.round(unitMin * calcQty),
+      totalMax: Math.round(unitMax * calcQty),
+      discount,
+      marginMin, marginMax,
+      sellingMin, sellingMax,
+    });
   }
 
   const fmtDate = (s: string) => s ? new Date(s).toLocaleDateString('fr-MA',{day:'2-digit',month:'long',year:'numeric'}) : '—';
@@ -142,11 +183,20 @@ export default function PrixMarche() {
             <div>
               <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">{isAr?'نوع الموديل':'Type de modèle'}</label>
               <input
+                list="model-suggestions"
                 value={calcModel}
-                onChange={e=>setCalcModel(e.target.value)}
+                onChange={e=>{ setCalcModel(e.target.value); setCalcResult(null); }}
                 placeholder={isAr?'مثال: Robe longue, Pantalon...':'Ex: Robe longue, T-shirt...'}
                 className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-3.5 px-4 text-sm font-bold text-slate-900 outline-none focus:border-amber-400 transition-all"
               />
+              <datalist id="model-suggestions">
+                {modelSuggestions.map(m => <option key={m} value={m} />)}
+              </datalist>
+              {modelSuggestions.length > 0 && (
+                <p className="text-[9px] text-slate-400 font-bold mt-1.5 flex items-center gap-1">
+                  ✨ {isAr?`${modelSuggestions.length} موديل موجود في طلبياتك`:`${modelSuggestions.length} modèles depuis vos commandes`}
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">{isAr?'الكمية (قطعة)':'Quantité (pcs)'}</label>
@@ -176,26 +226,74 @@ export default function PrixMarche() {
           </button>
 
           {calcResult && (
-            <div className="mt-6 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-6 text-white">
-              <div className={`flex items-center justify-between ${isAr?'flex-row-reverse':''}`}>
-                <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr?'موديل مكتشف:':'Modèle détecté :'}</p>
-                  <p className="text-sm font-black text-white">{calcResult.item.emoji} {calcResult.item.categorie}</p>
+            <div className="mt-6 space-y-4">
+              {/* Main result card */}
+              <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-6 text-white">
+                <div className={`flex items-center justify-between mb-4 ${isAr?'flex-row-reverse':''}`}>
+                  <div>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr?'موديل:':'Modèle :'}</p>
+                    <p className="text-sm font-black">{calcResult.item.emoji} {calcResult.item.categorie}</p>
+                  </div>
+                  {calcResult.discount > 0 && (
+                    <span className="bg-emerald-500/20 text-emerald-400 text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border border-emerald-500/30">
+                      🎁 -{calcResult.discount}% {isAr?'تخفيض الكمية':'remise quantité'}
+                    </span>
+                  )}
                 </div>
-                <div className={`text-${isAr?'left':'right'}`}>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr?'السعر/قطعة:':'Prix unitaire :'}</p>
-                  <p className="text-sm font-black text-amber-400">
-                    {calcResult.item[calcTier].min}–{calcResult.item[calcTier].max} MAD
-                  </p>
+
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr?'السعر/قطعة':'Prix/pcs'}</p>
+                    <p className="text-xl font-black text-amber-400">{calcResult.unitMin}–{calcResult.unitMax} <span className="text-xs">MAD</span></p>
+                  </div>
+                  <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr?`الإجمالي (${calcQty} قطعة)`:`Total (${calcQty} pcs)`}</p>
+                    <p className="text-xl font-black text-white">{calcResult.totalMin.toLocaleString()}–{calcResult.totalMax.toLocaleString()} <span className="text-xs text-amber-400">MAD</span></p>
+                  </div>
                 </div>
+
+                <p className="text-[9px] font-bold text-slate-500 uppercase">* {isAr?'فاصون فقط، بلا قماش':'Façonnage uniquement, hors tissu'}</p>
               </div>
-              <div className="mt-4 pt-4 border-t border-white/10">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr?`التقدير الإجمالي (${calcQty} قطعة):`:`Estimation totale (${calcQty} pcs) :`}</p>
-                <p className="text-3xl font-black text-white">
-                  {calcResult.total.min.toLocaleString()} – {calcResult.total.max.toLocaleString()}
-                  <span className="text-lg text-amber-400 ml-2">MAD</span>
-                </p>
-                <p className="text-[9px] font-bold text-slate-500 uppercase mt-2">{isAr?'* هاد السعر هو فقط الفاصون، بلا قماش':'* Prix façonnage uniquement, hors tissu'}</p>
+
+              {/* Margin suggestion card */}
+              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-100">
+                <div className={`flex items-center gap-3 mb-4 ${isAr?'flex-row-reverse':''}`}>
+                  <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center">
+                    <Percent className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-black text-indigo-900 uppercase tracking-tight">{isAr?'نسبة الربح المقترحة':'Marge bénéficiaire suggérée'}</p>
+                    <p className="text-[9px] font-bold text-indigo-500 uppercase tracking-widest">{isAr?'على أساس الجودة والكمية':'Basée sur qualité et quantité'}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex-1 bg-white rounded-xl p-4 border border-indigo-100 text-center">
+                    <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-1">{isAr?'هامش الربح':'Marge conseillée'}</p>
+                    <p className="text-2xl font-black text-indigo-700">{calcResult.marginMin}–{calcResult.marginMax}%</p>
+                  </div>
+                  <div className="text-2xl">→</div>
+                  <div className="flex-1 bg-indigo-600 rounded-xl p-4 border border-indigo-700 text-center">
+                    <p className="text-[9px] font-black text-indigo-200 uppercase tracking-widest mb-1">{isAr?'سعر البيع المقترح':'Prix vente suggéré'}</p>
+                    <p className="text-2xl font-black text-white">{calcResult.sellingMin}–{calcResult.sellingMax} <span className="text-xs">MAD</span></p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { pct: calcResult.marginMin,     label: isAr?'هامش أدنى':'Marge min' },
+                    { pct: Math.round((calcResult.marginMin+calcResult.marginMax)/2), label: isAr?'هامش متوسط':'Marge moy.' },
+                    { pct: calcResult.marginMax,     label: isAr?'هامش أعلى':'Marge max' },
+                  ].map((row,i) => (
+                    <div key={i} className="bg-white rounded-xl p-3 border border-indigo-100 text-center">
+                      <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">{row.label}</p>
+                      <p className="text-sm font-black text-indigo-700">{row.pct}%</p>
+                      <p className="text-[9px] text-slate-500 font-bold mt-0.5">
+                        {Math.round(calcResult.unitMin*(1+row.pct/100))}–{Math.round(calcResult.unitMax*(1+row.pct/100))} MAD
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
