@@ -444,6 +444,19 @@ export default function ChaineDetaillee() {
     return hoursCount * op.target_heure;
   };
 
+  const getSuggestions = () => {
+    if (!selectedCmd) return [];
+    const modelLower = selectedCmd.modele.toLowerCase();
+    if (modelLower.includes('t-shirt') || modelLower.includes('tshirt') || modelLower.includes('تيشيرت') || modelLower.includes('قميص')) {
+      return ['Assemblage épaules', 'Pose col', 'Manches', 'Côtés', 'Ourlet bas', 'Coupe', 'Repassage'];
+    } else if (modelLower.includes('pantalon') || modelLower.includes('jeans') || modelLower.includes('سروال')) {
+      return ['Surjet', 'Assemblage fourche', 'Poches', 'Côtés', 'Ceinture', 'Ourlet', 'Fermeture'];
+    } else if (modelLower.includes('veste') || modelLower.includes('manteau') || modelLower.includes('جاكيت')) {
+      return ['Préparation Poches', 'Assemblage Corps', 'Manches', 'Col', 'Doublure', 'Finition'];
+    }
+    return ['Coupe', 'Assemblage', 'Surjet', 'Finition', 'Repassage', 'Emballage'];
+  };
+
   if (loading) return (
     <div className="flex items-center justify-center min-h-[400px]">
       <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
@@ -1000,45 +1013,93 @@ export default function ChaineDetaillee() {
         </div>
       )}
 
-      {/* Operation Modal */}
+      {/* Operation Modal with Image and Suggestions */}
       {showOpModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-[250] p-4">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl animate-in zoom-in duration-300">
-            <div className="p-8 border-b border-slate-100 flex items-center justify-between">
-              <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Nouveau Poste</h2>
-              <button onClick={() => setShowOpModal(false)} className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
-                <XIcon className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-8 space-y-6">
-              <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nom de l'opération (Poste)</label>
-                <input 
-                  autoFocus
-                  value={opForm.nom_operation || ''} 
-                  onChange={e => setOpForm({...opForm, nom_operation: e.target.value})} 
-                  placeholder="Ex: Jib, Ourlet, Montage..."
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-5 text-sm font-black text-slate-900 outline-none focus:border-indigo-500 transition-all" 
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-[250] p-4">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-4xl shadow-2xl animate-in zoom-in duration-300 overflow-hidden flex flex-col md:flex-row">
+            {/* Left Side: Image / Info */}
+            <div className="md:w-5/12 bg-indigo-50 p-8 flex flex-col justify-center items-center text-center relative overflow-hidden border-b md:border-b-0 md:border-r border-indigo-100">
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 pointer-events-none" />
+              <div className="w-full aspect-[4/5] bg-white rounded-2xl shadow-sm border border-indigo-100 overflow-hidden relative mb-6">
+                <img 
+                  src={selectedCmd?.photo || selectedCmd?.modelePhoto || "/images/sewing_placeholder.png"} 
+                  alt="Modèle" 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                     const target = e.target as HTMLImageElement;
+                     target.src = "/images/sewing_placeholder.png";
+                  }}
                 />
               </div>
-              <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Objectif de Production (Pièces / Heure)</label>
-                <input 
-                  type="number"
-                  value={opForm.target_heure || ''} 
-                  onChange={e => setOpForm({...opForm, target_heure: parseInt(e.target.value) || 0})} 
-                  placeholder="40"
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-5 text-sm font-black text-slate-900 outline-none focus:border-indigo-500 transition-all" 
-                />
-              </div>
+              <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">{selectedCmd?.modele}</h3>
+              <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest mt-1">Réf: {selectedCmd?.reference}</p>
             </div>
-            <div className="p-8 bg-slate-50">
-              <button 
-                onClick={handleAddOperation}
-                className="w-full h-16 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-200 active:scale-95 transition-all"
-              >
-                Confirmer le poste
-              </button>
+
+            {/* Right Side: Form */}
+            <div className="md:w-7/12 flex flex-col">
+              <div className="p-8 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter italic">{isAr ? 'مركز جديد' : 'Nouveau Poste'}</h2>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{isAr ? 'إضافة عملية للإنتاج' : 'Ajouter une opération'}</p>
+                </div>
+                <button onClick={() => setShowOpModal(false)} className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
+                  <XIcon className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-8 space-y-8 flex-1">
+                <div>
+                  <label className="block text-xs font-black text-slate-600 uppercase tracking-widest mb-3">{isAr ? 'اسم العملية (المركز)' : 'Nom de l\'opération (Poste)'}</label>
+                  <input 
+                    autoFocus
+                    value={opForm.nom_operation || ''} 
+                    onChange={e => setOpForm({...opForm, nom_operation: e.target.value})} 
+                    placeholder={isAr ? "مثال: جيب، خياطة..." : "Ex: Jib, Ourlet, Montage..."}
+                    className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-4 px-5 text-sm font-black text-slate-900 outline-none focus:border-indigo-500 transition-all shadow-sm" 
+                  />
+                  {/* Quick Suggestions */}
+                  <div className="mt-3">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'مقترحات ذكية للموديل:' : 'Suggestions pour ce modèle :'}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {getSuggestions().map(sug => (
+                        <button 
+                          key={sug}
+                          onClick={() => setOpForm({...opForm, nom_operation: sug, target_heure: opForm.target_heure || 40})}
+                          className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-[10px] font-black uppercase tracking-widest border border-indigo-100 hover:bg-indigo-600 hover:text-white transition-all"
+                        >
+                          + {sug}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-black text-slate-600 uppercase tracking-widest mb-3">{isAr ? 'الهدف (قطعة / ساعة)' : 'Objectif (Pièces / Heure)'}</label>
+                  <div className="relative">
+                    <input 
+                      type="number"
+                      value={opForm.target_heure || ''} 
+                      onChange={e => setOpForm({...opForm, target_heure: parseInt(e.target.value) || 0})} 
+                      placeholder="40"
+                      className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-4 px-5 text-lg font-black text-slate-900 outline-none focus:border-indigo-500 transition-all shadow-sm" 
+                    />
+                    <div className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400">
+                      <TrendingUp className="w-5 h-5" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-8 bg-slate-50 border-t border-slate-100">
+                <button 
+                  onClick={handleAddOperation}
+                  disabled={!opForm.nom_operation}
+                  className="w-full h-16 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-slate-200 active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100"
+                >
+                  {isAr ? 'تأكيد المركز' : 'Confirmer le poste'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

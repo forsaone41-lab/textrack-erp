@@ -9,7 +9,7 @@ import { compressImage } from '../utils/image';
 import { t } from '../i18n';
 import { PageLoader } from '../components/PageLoader';
 
-export default function Factures() {
+export default function Recus() {
   const { lang, isAr } = useLang();
   const company = loadCompanyProfile();
   const [factures, setFactures] = useState<Facture[]>([]);
@@ -51,7 +51,7 @@ export default function Factures() {
   const isOverdue = (f: Facture) =>
     !!f.echeance && f.echeance < today && f.statut !== 'payée';
 
-  const filtered = factures.filter(f => f.typeDoc !== 'devis' && f.typeDoc !== 'recu').filter(f => {
+  const filtered = factures.filter(f => f.typeDoc === 'recu').filter(f => {
     const q = search.toLowerCase();
     const matchSearch = f.numero.toLowerCase().includes(q) || f.client.toLowerCase().includes(q);
     const matchStatut =
@@ -70,7 +70,7 @@ export default function Factures() {
     countRetard: factures.filter(f => isOverdue(f)).length,
   };
 
-  function openCreate(typeDoc: 'facture' | 'devis' | 'recu' = 'facture') {
+  function openCreate(typeDoc: 'facture' | 'devis' | 'recu' = 'recu') {
     setEditId(null);
     const year = new Date().getFullYear();
 
@@ -186,74 +186,87 @@ export default function Factures() {
   }
 
   return (
-    <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
-      <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">{t('factures_title', lang)}</h1>
-          <p className="text-slate-500 mt-1">{factures.length} {t('factures_subtitle', lang)}</p>
+    <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
+      {/* Premium Header */}
+      <div className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-[#0f172a] p-8 md:p-10 rounded-[2.5rem] border border-slate-800 shadow-2xl relative overflow-hidden ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none -mr-32 -mt-32" />
+        
+        <div className={`flex items-center gap-5 relative z-10 ${isAr ? 'flex-row-reverse' : ''}`}>
+          <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-[1.5rem] flex items-center justify-center shadow-xl shadow-emerald-500/20">
+            <CheckCircle className="w-8 h-8 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight uppercase italic">{isAr ? 'إيصالات الدفع' : 'Gestion des Reçus'}</h1>
+            <p className="text-emerald-400 text-sm font-bold uppercase tracking-widest opacity-80 mt-1">{factures.length} {isAr ? 'إيصال مسجل' : 'Reçu(s) enregistré(s)'}</p>
+          </div>
         </div>
-        <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+        
+        <div className={`flex flex-wrap items-center gap-3 relative z-10 ${isAr ? 'flex-row-reverse' : ''}`}>
           <button
             onClick={() => exportFacturesCSV(filtered)}
             title="Exporter CSV"
-            className="flex items-center gap-2 bg-white border border-slate-200 text-slate-600 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition text-sm font-semibold shadow-sm"
+            className="flex items-center gap-2 bg-white/5 text-slate-300 px-5 py-3 rounded-2xl hover:bg-white/10 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest border border-white/10 backdrop-blur-sm"
           >
             <Table2 className="w-4 h-4" /> CSV
           </button>
+          
           <button
-            onClick={() => openCreate('facture')}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl hover:bg-indigo-700 transition text-sm font-semibold shadow-sm"
+            onClick={() => openCreate('recu')}
+            className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-6 py-3 rounded-2xl hover:shadow-lg hover:shadow-emerald-500/30 active:scale-95 transition-all text-[10px] font-black uppercase tracking-widest border border-emerald-400/20"
           >
-            <Plus className="w-4 h-4" /> Nouvelle Facture
+            <Plus className="w-4 h-4" /> {isAr ? 'إيصال جديد' : 'Nouveau Reçu'}
           </button>
-          
-          
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-          <div className="flex items-start justify-between mb-3">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('total_invoiced', lang)}</p>
-            <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
-              <FileText className="w-4 h-4 text-slate-500" />
+      {/* Premium Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white rounded-[2rem] border border-slate-100 p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 rounded-full blur-2xl -mr-12 -mt-12 group-hover:scale-110 transition-transform" />
+          <div className="flex items-start justify-between mb-4 relative z-10">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('total_invoiced', lang)}</p>
+            <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center border border-slate-100">
+              <FileText className="w-5 h-5 text-slate-400" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-slate-800">{stats.total.toLocaleString()}</p>
-          <p className="text-xs text-slate-400 mt-1">MAD</p>
+          <p className="text-3xl font-black text-slate-800 tracking-tight relative z-10">{stats.total.toLocaleString()}</p>
+          <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase relative z-10">MAD</p>
         </div>
 
-        <div className="bg-gradient-to-br from-emerald-50 to-white rounded-xl border border-emerald-200 p-5 shadow-sm">
-          <div className="flex items-start justify-between mb-3">
-            <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wider">{t('paid', lang)}</p>
-            <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-              <CheckCircle className="w-4 h-4 text-emerald-500" />
+        <div className="bg-emerald-50 rounded-[2rem] border border-emerald-100 p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-200/50 rounded-full blur-2xl -mr-12 -mt-12 group-hover:scale-110 transition-transform" />
+          <div className="flex items-start justify-between mb-4 relative z-10">
+            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">{t('paid', lang)}</p>
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-emerald-100 shadow-sm">
+              <CheckCircle className="w-5 h-5 text-emerald-500" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-emerald-700">{stats.payee.toLocaleString()}</p>
-          <p className="text-xs text-emerald-500 mt-1">MAD</p>
+          <p className="text-3xl font-black text-emerald-700 tracking-tight relative z-10">{stats.payee.toLocaleString()}</p>
+          <p className="text-[10px] font-bold text-emerald-500 mt-1 uppercase relative z-10">MAD</p>
         </div>
 
-        <div className="bg-gradient-to-br from-amber-50 to-white rounded-xl border border-amber-200 p-5 shadow-sm">
-          <div className="flex items-start justify-between mb-3">
-            <p className="text-xs font-semibold text-amber-600 uppercase tracking-wider">{t('pending', lang)}</p>
-            <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
-              <Clock className="w-4 h-4 text-amber-500" />
+        <div className="bg-amber-50 rounded-[2rem] border border-amber-100 p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-amber-200/50 rounded-full blur-2xl -mr-12 -mt-12 group-hover:scale-110 transition-transform" />
+          <div className="flex items-start justify-between mb-4 relative z-10">
+            <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest">{t('pending', lang)}</p>
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-amber-100 shadow-sm">
+              <Clock className="w-5 h-5 text-amber-500" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-amber-700">{stats.attente.toLocaleString()}</p>
-          <p className="text-xs text-amber-500 mt-1">MAD</p>
+          <p className="text-3xl font-black text-amber-700 tracking-tight relative z-10">{stats.attente.toLocaleString()}</p>
+          <p className="text-[10px] font-bold text-amber-500 mt-1 uppercase relative z-10">MAD</p>
         </div>
 
-        <div className="bg-gradient-to-br from-red-50 to-white rounded-xl border border-red-200 p-5 shadow-sm">
-          <div className="flex items-start justify-between mb-3">
-            <p className="text-xs font-semibold text-red-600 uppercase tracking-wider">{t('overdue', lang)}</p>
-            <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
-              <AlertCircle className="w-4 h-4 text-red-500" />
+        <div className="bg-red-50 rounded-[2rem] border border-red-100 p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-red-200/50 rounded-full blur-2xl -mr-12 -mt-12 group-hover:scale-110 transition-transform" />
+          <div className="flex items-start justify-between mb-4 relative z-10">
+            <p className="text-[10px] font-black text-red-600 uppercase tracking-widest">{t('overdue', lang)}</p>
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-red-100 shadow-sm">
+              <AlertCircle className="w-5 h-5 text-red-500" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-red-700">{stats.retard.toLocaleString()}</p>
-          <p className="text-xs text-red-500 mt-1">MAD</p>
+          <p className="text-3xl font-black text-red-700 tracking-tight relative z-10">{stats.retard.toLocaleString()}</p>
+          <p className="text-[10px] font-bold text-red-500 mt-1 uppercase relative z-10">MAD</p>
         </div>
       </div>
 
@@ -284,11 +297,11 @@ export default function Factures() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
+              <tr className="bg-slate-50 border-b border-slate-100">
                 <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-5 py-3.5">{t('num_facture', lang)}</th>
                 <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-5 py-3.5">{t('client', lang)}</th>
                 <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-5 py-3.5">{t('commande_liee', lang)}</th>
@@ -425,10 +438,10 @@ export default function Factures() {
           <div className="bg-white rounded-[2.5rem] w-full max-w-4xl max-h-[95vh] overflow-y-auto shadow-2xl">
             <div className="p-8 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md z-10">
               <div className="flex items-center gap-3">
-                <div className="bg-indigo-600 p-2 rounded-xl">
-                  <FileText className="w-5 h-5 text-white" />
+                <div className="bg-emerald-600 p-2.5 rounded-xl shadow-lg shadow-emerald-500/20">
+                  <CheckCircle className="w-5 h-5 text-white" />
                 </div>
-                <h2 className="text-xl font-black text-slate-800 tracking-tight">Détails de la Facture</h2>
+                <h2 className="text-xl font-black text-slate-800 tracking-tight uppercase italic">{isAr ? 'تفاصيل الإيصال' : 'Détails du Reçu'}</h2>
               </div>
               <div className="flex items-center gap-3">
                 <button onClick={() => setViewFacture(null)} className="px-5 py-2.5 text-xs font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest transition-all">Fermer</button>
@@ -466,17 +479,20 @@ export default function Factures() {
 
       {/* Create/Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] flex flex-col">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-indigo-100 rounded-xl flex items-center justify-center">
-                  <FileText className="w-4 h-4 text-indigo-600" />
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-300 border border-slate-100">
+            <div className="p-8 border-b border-slate-100 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center border border-emerald-100">
+                  <CheckCircle className="w-6 h-6 text-emerald-600" />
                 </div>
-                <h2 className="text-lg font-bold text-slate-800">{editId ? 'Modifier la Facture' : 'Nouvelle Facture'}</h2>
+                <div>
+                  <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight italic">{editId ? (isAr ? 'تعديل الإيصال' : 'Modifier le Reçu') : (isAr ? 'إيصال جديد' : 'Nouveau Reçu')}</h2>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{isAr ? 'إدارة الدفعات' : 'Gestion des paiements'}</p>
+                </div>
               </div>
-              <button onClick={() => setShowModal(false)} className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition">
-                <X className="w-4 h-4" />
+              <button onClick={() => setShowModal(false)} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
+                <X className="w-5 h-5" />
               </button>
             </div>
             <div className="p-6 space-y-4 overflow-y-auto">
@@ -535,7 +551,7 @@ export default function Factures() {
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1.5">Type de document</label>
                 <select
-                  value={form.typeDoc || 'facture'}
+                  value={form.typeDoc || 'recu'}
                   onChange={e => {
                     const newType = e.target.value as Facture['typeDoc'];
                     let newNum = form.numero;
@@ -548,8 +564,8 @@ export default function Factures() {
                   }}
                   className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                 >
-                  <option value="facture">Facture</option>
-                  <option value="devis">Devis</option>
+                  
+                  
                   <option value="recu">Reçu de paiement / Avance</option>
                 </select>
               </div>

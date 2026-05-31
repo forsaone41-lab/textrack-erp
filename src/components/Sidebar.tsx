@@ -2,7 +2,7 @@ import * as React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, FileText, Settings, LogOut, ShoppingCart, 
-  Package, Scissors, Activity, Receipt, PieChart, TrendingUp, UserCheck, Globe, X, ClipboardCheck, Trophy, ShieldCheck, QrCode, User as UserIcon,
+  Package, Scissors, Activity, Receipt, PieChart, TrendingUp, UserCheck, Globe, X, ClipboardCheck, Trophy, ShieldCheck, QrCode, User as UserIcon, CheckCircle,
   Sparkles,
   RefreshCw,
   CalendarDays,
@@ -228,6 +228,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
             {can('bilan') && <NavItem to="/bilan" icon={PieChart} label={isAr ? 'جدول البيانات' : 'Tableau de Bord'} />}
             {can('factures') && <NavItem to="/devis" icon={FileText} label={isAr ? 'عروض الأسعار' : 'Devis'} />}
             {can('factures') && <NavItem to="/factures" icon={Receipt} label={isAr ? 'الفواتير' : 'Factures'} />}
+            {can('factures') && <NavItem to="/recus" icon={CheckCircle} label={isAr ? 'إيصالات الدفع' : 'Reçus'} />}
             {can('charges') && <NavItem to="/charges" icon={TrendingUp} label={isAr ? 'المصاريف' : 'Charges'} />}
           </div>
 
