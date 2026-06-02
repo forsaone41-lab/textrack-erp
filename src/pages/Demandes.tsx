@@ -46,6 +46,7 @@ export default function Demandes() {
   const [contactingLead, setContactingLead] = useState<Lead | null>(null);
   const [matierePrice, setMatierePrice] = useState<string>('');
   const [laborPrice, setLaborPrice] = useState<string>('');
+  const [factureCreated, setFactureCreated] = useState<{numero: string; client: string; montant: number} | null>(null);
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
@@ -383,10 +384,7 @@ export default function Demandes() {
       typeDoc: 'facture',
     };
     await saveRecord('factures', facture);
-    alert(`✓ Facture ${facture.numero} créée — ${devisLead.name} — ${total.toLocaleString()} MAD`);
-    setDevisLead(null);
-    setMatierePrice('');
-    setLaborPrice('');
+    setFactureCreated({ numero: facture.numero, client: devisLead.name, montant: total });
   };
 
   const handleDownloadPDF = async () => {
@@ -537,6 +535,44 @@ export default function Demandes() {
                 {isAr ? 'يخلق فاتورة تلقائيا في قسم الفواتير' : 'Crée automatiquement dans Factures & Docs'}
               </p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Facture Created Success Modal */}
+      {factureCreated && (
+        <div className="fixed inset-0 z-[140] flex items-center justify-center p-6 bg-slate-900/70 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="bg-white rounded-[3rem] p-10 max-w-sm w-full shadow-[0_50px_100px_rgba(0,0,0,0.3)] text-center relative overflow-hidden">
+            <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-emerald-400 to-teal-500" />
+            <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="w-10 h-10 text-emerald-500" />
+            </div>
+            <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter mb-1">
+              {isAr ? 'تم إنشاء الفاتورة!' : 'Facture Créée !'}
+            </h3>
+            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-8">
+              {isAr ? 'تمت العملية بنجاح' : 'Ajoutée dans Factures & Docs'}
+            </p>
+            <div className="bg-slate-50 rounded-2xl p-5 mb-8 text-left space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">N° Facture</span>
+                <span className="text-sm font-black text-indigo-600">{factureCreated.numero}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Client</span>
+                <span className="text-sm font-black text-slate-800">{factureCreated.client}</span>
+              </div>
+              <div className="flex justify-between items-center border-t border-slate-200 pt-3">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Montant Total</span>
+                <span className="text-xl font-black text-emerald-600">{factureCreated.montant.toLocaleString()} MAD</span>
+              </div>
+            </div>
+            <button
+              onClick={() => { setFactureCreated(null); setDevisLead(null); setMatierePrice(''); setLaborPrice(''); }}
+              className="w-full h-14 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-all"
+            >
+              {isAr ? 'حسناً' : 'OK'}
+            </button>
           </div>
         </div>
       )}
