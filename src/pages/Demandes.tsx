@@ -28,6 +28,8 @@ export default function Demandes() {
   const [filter, setFilter] = useState<'all' | 'new' | 'completed'>('all');
   const [category, setCategory] = useState<'clients' | 'recrutement'>('clients');
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'date_desc' | 'date_asc' | 'qty_desc' | 'qty_asc'>('date_desc');
+  const [filterType, setFilterType] = useState<string>('all');
   const [loading, setLoading] = useState(true);
 
   const [confirmLead, setConfirmLead] = useState<Lead | null>(null);
@@ -445,8 +447,15 @@ export default function Demandes() {
     const matchFilter = filter === 'all' || l.status === filter;
     const q = searchQuery.toLowerCase();
     const matchSearch = !q || l.name.toLowerCase().includes(q) || l.phone.includes(q) || l.type.toLowerCase().includes(q) || (l.ville || '').toLowerCase().includes(q);
-    return matchCategory && matchFilter && matchSearch;
-  }), [leads, category, filter, searchQuery]);
+    const matchType = filterType === 'all' || l.type === filterType;
+    return matchCategory && matchFilter && matchSearch && matchType;
+  }).sort((a, b) => {
+    if (sortBy === 'date_desc') return new Date(b.date).getTime() - new Date(a.date).getTime();
+    if (sortBy === 'date_asc') return new Date(a.date).getTime() - new Date(b.date).getTime();
+    if (sortBy === 'qty_desc') return b.quantity - a.quantity;
+    if (sortBy === 'qty_asc') return a.quantity - b.quantity;
+    return 0;
+  }), [leads, category, filter, searchQuery, sortBy, filterType]);
 
   // Reset visible count when filters change
   useEffect(() => { setVisibleCount(10); }, [category, filter]);
@@ -1163,6 +1172,35 @@ export default function Demandes() {
                   <X className="w-4 h-4" />
                 </button>
               )}
+            </div>
+
+            {/* Sort + Type filters */}
+            <div className="flex flex-wrap gap-2 items-center">
+              {/* Sort */}
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Trier:</span>
+              {[
+                { id: 'date_desc', label: '🕐 Nouveaux' },
+                { id: 'date_asc', label: '🕐 Anciens' },
+                { id: 'qty_desc', label: '📦 Qté ↓' },
+                { id: 'qty_asc', label: '📦 Qté ↑' },
+              ].map(s => (
+                <button key={s.id} onClick={() => setSortBy(s.id as any)}
+                  className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${sortBy === s.id ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}>
+                  {s.label}
+                </button>
+              ))}
+
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">Type:</span>
+              <select
+                value={filterType}
+                onChange={e => setFilterType(e.target.value)}
+                className="px-3 py-1.5 rounded-xl text-[10px] font-black border border-slate-200 bg-white text-slate-600 outline-none focus:border-indigo-400"
+              >
+                <option value="all">Tous les types</option>
+                {Array.from(new Set(clientLeads.map(l => l.type).filter(t => !t.startsWith('RECRUTEMENT:')))).sort().map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
             </div>
           </div>
         );
