@@ -809,6 +809,8 @@ export default function Recus() {
                       <option value="Société Générale">Société Générale Maroc</option>
                       <option value="BMCI">BMCI</option>
                       <option value="Crédit Agricole">Crédit Agricole du Maroc</option>
+                      <option value="Al Barid Bank">Al Barid Bank</option>
+                      <option value="Saham Bank">Saham Bank</option>
                       <option value="Cash Plus">Cash Plus</option>
                       <option value="Wafacash">Wafacash</option>
                       <option value="Autre">Autre virement</option>
