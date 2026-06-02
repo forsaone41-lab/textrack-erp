@@ -580,7 +580,7 @@ export default function Recus() {
                       ...form,
                       commandeId: e.target.value,
                       client: cmd?.client || form.client || '',
-                      montant: cmd ? cmd.quantite * cmd.prix : form.montant || 0,
+                      montant: form.montant || 0,
                     });
                   }}
                   className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
@@ -588,10 +588,45 @@ export default function Recus() {
                   <option value="">— Sans commande —</option>
                   {commandes.map(c => (
                     <option key={c.id} value={c.id}>
-                      {c.reference} — {c.client} ({(c.quantite * c.prix).toLocaleString()} MAD)
+                      {c.reference} — {c.client}
                     </option>
                   ))}
                 </select>
+                {form.commandeId && (() => {
+                  const cmd = commandes.find(c => c.id === form.commandeId);
+                  if (!cmd) return null;
+                  const prixEch = (cmd.quantiteEchantillon || 0) * (cmd.prixUnitaire || cmd.prix || 0);
+                  const prixProd = (cmd.quantiteProduction || cmd.quantite || 0) * (cmd.prixUnitaire || cmd.prix || 0);
+                  const prixTotal = cmd.quantite * cmd.prix;
+                  return (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {prixEch > 0 && (
+                        <button type="button"
+                          onClick={() => setForm({ ...form, montant: prixEch })}
+                          className="flex-1 text-[10px] font-black uppercase tracking-wide px-3 py-2 bg-purple-50 text-purple-700 border border-purple-200 rounded-xl hover:bg-purple-100 transition-all text-center"
+                        >
+                          Échantillon<br /><span className="text-sm">{prixEch.toLocaleString()} MAD</span>
+                        </button>
+                      )}
+                      {prixProd > 0 && prixProd !== prixEch && (
+                        <button type="button"
+                          onClick={() => setForm({ ...form, montant: prixProd })}
+                          className="flex-1 text-[10px] font-black uppercase tracking-wide px-3 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-xl hover:bg-blue-100 transition-all text-center"
+                        >
+                          Production<br /><span className="text-sm">{prixProd.toLocaleString()} MAD</span>
+                        </button>
+                      )}
+                      {prixTotal > 0 && (
+                        <button type="button"
+                          onClick={() => setForm({ ...form, montant: prixTotal })}
+                          className="flex-1 text-[10px] font-black uppercase tracking-wide px-3 py-2 bg-slate-50 text-slate-700 border border-slate-200 rounded-xl hover:bg-slate-100 transition-all text-center"
+                        >
+                          Total commande<br /><span className="text-sm">{prixTotal.toLocaleString()} MAD</span>
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Articles / Lignes de facture */}
