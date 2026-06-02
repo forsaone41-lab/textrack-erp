@@ -33,7 +33,7 @@ export default function LandingPage() {
     sync();
   }, []);
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const _unusedPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
@@ -124,19 +124,62 @@ export default function LandingPage() {
   const embedUrl = getEmbedUrl(company.landingVideoUrl);
 
   const [showSuccess, setShowSuccess] = useState(false);
-  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
-  const [selectedType, setSelectedType] = useState('T-Shirt');
-  const [tailles, setTailles] = useState<Record<string, string>>({ XS: '', S: '', M: '', L: '', XL: '', XXL: '' });
-  const [quantity, setQuantity] = useState('');
 
-  // Auto-calculate total quantity from sizes
-  useEffect(() => {
-    const total = Object.values(tailles).reduce((acc, val) => acc + (Number(val) || 0), 0);
-    if (total > 0) {
-      setQuantity(total.toString());
-    }
-  }, [tailles]);
+  interface ModelEntry {
+    id: string;
+    type: string;
+    customType: string;
+    quantity: string;
+    tailles: Record<string, string>;
+    details: string;
+    photo: string | null;
+  }
+
+  const emptyModel = (): ModelEntry => ({
+    id: Math.random().toString(36).slice(2),
+    type: 'T-Shirt', customType: '', quantity: '',
+    tailles: { XS: '', S: '', M: '', L: '', XL: '', XXL: '' },
+    details: '', photo: null,
+  });
+
+  const [models, setModels] = useState<ModelEntry[]>([emptyModel()]);
+
+  const updateModel = (id: string, field: Partial<ModelEntry>) => {
+    setModels(prev => prev.map(m => m.id === id ? { ...m, ...field } : m));
+  };
+
+  const updateModelTaille = (id: string, size: string, val: string) => {
+    setModels(prev => prev.map(m => {
+      if (m.id !== id) return m;
+      const newTailles = { ...m.tailles, [size]: val };
+      const total = Object.values(newTailles).reduce((a, v) => a + (Number(v) || 0), 0);
+      return { ...m, tailles: newTailles, quantity: total > 0 ? total.toString() : m.quantity };
+    }));
+  };
+
+  const handleModelPhoto = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) { alert(isAr ? 'الصورة كبيرة جداً (Max 10MB)' : 'Photo trop grande (Max 10MB)'); return; }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX = 800;
+        let w = img.width, h = img.height;
+        if (w > h && w > MAX) { h = h * MAX / w; w = MAX; }
+        else if (h > MAX) { w = w * MAX / h; h = MAX; }
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (ctx) { ctx.drawImage(img, 0, 0, w, h); updateModel(id, { photo: canvas.toDataURL('image/jpeg', 0.6) }); }
+        else { updateModel(id, { photo: ev.target?.result as string }); }
+      };
+      img.src = ev.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Dynamic SEO Title & Description
   useEffect(() => {
@@ -361,40 +404,38 @@ export default function LandingPage() {
                     e.preventDefault();
                     const formElement = e.currentTarget;
                     const formData = new FormData(formElement);
-                    const countryCode = (formElement.querySelector('select') as HTMLSelectElement).value;
+                    const countryCode = (formElement.querySelector('select[name="countryCode"]') as HTMLSelectElement)?.value || '+212';
                     const rawPhone = formData.get('phone') as string;
                     const fullPhone = countryCode + (rawPhone.startsWith('0') ? rawPhone.substring(1) : rawPhone);
+                    const clientName = formData.get('name') as string;
+                    const clientEmail = formData.get('email') as string;
+                    const clientVille = formData.get('ville') as string;
 
-                    let finalType = formData.get('type') as string;
-                    if (finalType === 'Autre' || finalType === 'آخر') {
-                      finalType = formData.get('customType') as string;
+                    const missingPhoto = models.find(m => !m.photo);
+                    if (missingPhoto) {
+                      alert(isAr ? '⚠️ كل موديل خاصو عندو صورة (إجباري)' : '⚠️ Chaque modèle doit avoir une photo (Obligatoire)');
+                      return;
                     }
 
                     setIsSending(true);
                     try {
-                      if (!selectedPhoto) {
-                        setIsSending(false);
-                        alert(isAr ? '⚠️ من فضلك أضف صورة الموديل (إجباري)' : '⚠️ Veuillez ajouter une photo du modèle (Obligatoire)');
-                        return;
+                      for (const m of models) {
+                        const finalType = (m.type === 'Autre' || m.type === 'آخر') ? m.customType : m.type;
+                        await saveLead({
+                          name: clientName,
+                          email: clientEmail,
+                          phone: fullPhone,
+                          ville: clientVille,
+                          type: finalType,
+                          quantity: Number(m.quantity) || 1,
+                          tailles: Object.fromEntries(Object.entries(m.tailles).filter(([_, v]) => v !== '').map(([k, v]) => [k, Number(v)])),
+                          details: m.details,
+                          photo: m.photo!,
+                        });
                       }
-                      const leadData = {
-                        name: formData.get('name') as string,
-                        email: formData.get('email') as string,
-                        phone: fullPhone,
-                        ville: formData.get('ville') as string,
-                        type: finalType,
-                        quantity: Number(formData.get('quantity')),
-                        tailles: Object.fromEntries(Object.entries(tailles).filter(([_, v]) => v !== '').map(([k, v]) => [k, Number(v)])),
-                        details: formData.get('details') as string,
-                        photo: selectedPhoto
-                      };
-                      
-                      await saveLead(leadData);
                       setIsSending(false);
                       setShowSuccess(true);
-                      setSelectedPhoto(null);
-                      setSelectedType('T-Shirt');
-                      setTailles({ XS: '', S: '', M: '', L: '', XL: '', XXL: '' });
+                      setModels([emptyModel()]);
                       formElement.reset();
                     } catch (err: any) {
                       setIsSending(false);
@@ -425,7 +466,7 @@ export default function LandingPage() {
                       <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">{isAr ? 'رقم الهاتف' : 'Téléphone / WhatsApp'}</label>
                       <div className="flex gap-3">
                         <div className="relative w-[100px] flex-shrink-0">
-                          <select className="w-full appearance-none bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 pl-4 pr-8 text-xs font-black outline-none focus:border-indigo-600 transition-colors h-[58px]">
+                          <select name="countryCode" className="w-full appearance-none bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 pl-4 pr-8 text-xs font-black outline-none focus:border-indigo-600 transition-colors h-[58px]">
                             <option value="+212">🇲🇦 212</option>
                             <option value="+33">🇫🇷 33</option>
                             <option value="+34">🇪🇸 34</option>
@@ -440,122 +481,100 @@ export default function LandingPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">{isAr ? 'نوع اللباس' : 'Type de Vêtement'}</label>
-                        <div className="relative">
-                          <select
-                            name="type"
-                            value={selectedType}
-                            onChange={(e) => setSelectedType(e.target.value)}
-                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors appearance-none"
-                          >
-                            <option>T-Shirt</option>
-                            <option>Polo</option>
-                            <option>T-Shirt Oversize</option>
-                            <option>Sweat / Hoodie</option>
-                            <option>Djellaba / Gandoura</option>
-                            <option>Ensemble / Survêtement</option>
-                            <option>Pyjama</option>
-                            <option>Uniforme / Travail</option>
-                            <option>Pantalon</option>
-                            <option value="Autre">{isAr ? 'نوع آخر' : 'Autre Type'}</option>
-                          </select>
-                          <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-400">
-                            <ChevronDown className="w-4 h-4" />
-                          </div>
-                        </div>
-                      </div>
-
-                      {(selectedType === 'Autre' || selectedType === 'آخر') && (
-                        <div className="animate-in slide-in-from-top-2 duration-300">
-                          <label className="block text-[13px] font-extrabold text-indigo-700 uppercase tracking-widest mb-3 italic">{isAr ? 'حدد النوع من فضلك' : 'Précisez le type svp'}</label>
-                          <input
-                            type="text"
-                            name="customType"
-                            placeholder={isAr ? 'مثال: ملابس أطفال' : 'Ex: Vêtements enfants'}
-                            className="w-full bg-indigo-50 border-2 border-indigo-200 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-all shadow-lg shadow-indigo-100"
-                            required
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">{isAr ? 'الكمية التقديرية' : 'Quantité Estimeé'}</label>
-                      <input 
-                        type="number" 
-                        name="quantity" 
-                        placeholder="100" 
-                        min="1" 
-                        value={quantity}
-                        onChange={(e) => setQuantity(e.target.value)}
-                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors h-[58px]" 
-                        required 
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-6">
-                    <div>
-                      <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-4">
-                        {isAr ? 'المقاسات (اختياري)' : 'Tailles & Répartition (Optionnel)'}
-                      </label>
-                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-                        {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map(size => (
-                          <div key={size} className="relative group">
-                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 bg-indigo-50 text-[8px] font-black text-indigo-600 rounded-full border border-indigo-100 z-10 group-hover:bg-indigo-600 group-hover:text-white transition-all">
-                              {size}
-                            </div>
-                            <input
-                              type="number"
-                              value={tailles[size]}
-                              onChange={(e) => setTailles({...tailles, [size]: e.target.value})}
-                              placeholder="0"
-                              className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl pt-4 pb-2 px-1 text-center text-xs font-black outline-none focus:border-indigo-600 focus:bg-white transition-all h-[58px]"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">{isAr ? 'تفاصيل إضافية' : 'Détails du Projet'}</label>
-                      <textarea name="details" rows={4} placeholder={isAr ? 'اشرح لينا شنو باغي تصاوب...' : 'Décrivez votre projet...'} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors resize-none" />
-                    </div>
-                    <div>
-                      <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">
-                        {isAr ? 'صورة الموديل' : 'Photo du Modèle'} 
-                        <span className="text-rose-500 ml-2 font-black">({isAr ? 'إجباري' : 'Obligatoire'} *)</span>
-                      </label>
-                      <div className={`relative group h-[120px] transition-all ${!selectedPhoto ? 'ring-2 ring-indigo-100 ring-offset-4 rounded-2xl' : ''}`}>
-                        {selectedPhoto ? (
-                          <div className="relative h-full w-full rounded-2xl overflow-hidden border-2 border-indigo-100 shadow-md">
-                            <img src={selectedPhoto} alt="Preview" className="w-full h-full object-cover" />
-                            <button
-                              type="button"
-                              onClick={() => setSelectedPhoto(null)}
-                              className="absolute top-2 right-2 p-1.5 bg-rose-500 text-white rounded-full shadow-lg hover:scale-110 transition-transform"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        ) : (
-                          <label className="flex flex-col items-center justify-center h-full w-full bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-100 hover:border-indigo-300 transition-all group">
-                            <ImageIcon className="w-8 h-8 text-slate-300 group-hover:text-indigo-400 transition-colors mb-2" />
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest group-hover:text-indigo-600">{isAr ? 'إضافة صورة' : 'Ajouter une Photo'}</span>
-                            <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" required={!selectedPhoto} />
-                          </label>
+                  {/* Dynamic models */}
+                  {models.map((m, idx) => (
+                    <div key={m.id} className="border-2 border-indigo-100 rounded-2xl p-4 space-y-4 bg-indigo-50/30 relative">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-[11px] font-black text-indigo-600 uppercase tracking-widest">
+                          {isAr ? `الموديل ${idx + 1}` : `Modèle ${idx + 1}`}
+                        </p>
+                        {models.length > 1 && (
+                          <button type="button" onClick={() => setModels(prev => prev.filter(x => x.id !== m.id))}
+                            className="w-7 h-7 bg-rose-100 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg flex items-center justify-center transition-all text-xs font-black">
+                            <X className="w-3.5 h-3.5" />
+                          </button>
                         )}
                       </div>
-                    </div>
-                  </div>
 
-                  <button type="submit" className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-3">
-                    {isAr ? 'إرسال الطلب' : 'Envoyer ma demande'}
-                    <ArrowRight className="w-5 h-5" />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">{isAr ? 'نوع اللباس' : 'Type de Vêtement'}</label>
+                          <div className="relative">
+                            <select value={m.type} onChange={e => updateModel(m.id, { type: e.target.value })}
+                              className="w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors appearance-none">
+                              {['T-Shirt','Polo','T-Shirt Oversize','Sweat / Hoodie','Djellaba / Gandoura','Ensemble / Survêtement','Pyjama','Uniforme / Travail','Pantalon'].map(t => <option key={t}>{t}</option>)}
+                              <option value="Autre">{isAr ? 'نوع آخر' : 'Autre Type'}</option>
+                            </select>
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                          </div>
+                          {m.type === 'Autre' && (
+                            <input type="text" value={m.customType} onChange={e => updateModel(m.id, { customType: e.target.value })}
+                              placeholder={isAr ? 'حدد النوع' : 'Précisez le type'}
+                              className="mt-2 w-full bg-indigo-50 border-2 border-indigo-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600" required />
+                          )}
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">{isAr ? 'الكمية' : 'Quantité'}</label>
+                          <input type="number" min="1" placeholder="100" value={m.quantity} onChange={e => updateModel(m.id, { quantity: e.target.value })}
+                            className="w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600 h-[50px]" required />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">{isAr ? 'المقاسات (اختياري)' : 'Tailles (Optionnel)'}</label>
+                        <div className="grid grid-cols-6 gap-2">
+                          {['XS','S','M','L','XL','XXL'].map(size => (
+                            <div key={size} className="relative group">
+                              <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 bg-indigo-50 text-[8px] font-black text-indigo-600 rounded-full border border-indigo-100 z-10">{size}</div>
+                              <input type="number" value={m.tailles[size]} onChange={e => updateModelTaille(m.id, size, e.target.value)} placeholder="0"
+                                className="w-full bg-white border-2 border-slate-200 rounded-xl pt-3 pb-1 px-1 text-center text-xs font-black outline-none focus:border-indigo-600 h-[50px]" />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">{isAr ? 'تفاصيل' : 'Détails'}</label>
+                          <textarea rows={3} value={m.details} onChange={e => updateModel(m.id, { details: e.target.value })}
+                            placeholder={isAr ? 'اشرح شنو باغي...' : 'Décrivez votre modèle...'}
+                            className="w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600 resize-none" />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">
+                            {isAr ? 'صورة الموديل' : 'Photo du Modèle'} <span className="text-rose-500">*</span>
+                          </label>
+                          <div className="h-[100px]">
+                            {m.photo ? (
+                              <div className="relative h-full rounded-xl overflow-hidden border-2 border-indigo-200">
+                                <img src={m.photo} className="w-full h-full object-cover" alt="" />
+                                <button type="button" onClick={() => updateModel(m.id, { photo: null })}
+                                  className="absolute top-1.5 right-1.5 p-1 bg-rose-500 text-white rounded-full">
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ) : (
+                              <label className="flex flex-col items-center justify-center h-full w-full bg-white border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-indigo-300 hover:bg-indigo-50 transition-all">
+                                <ImageIcon className="w-7 h-7 text-slate-300 mb-1" />
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'أضف صورة' : 'Ajouter photo'}</span>
+                                <input type="file" accept="image/*" onChange={e => handleModelPhoto(m.id, e)} className="hidden" />
+                              </label>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Add model button */}
+                  <button type="button" onClick={() => setModels(prev => [...prev, emptyModel()])}
+                    className="w-full py-3 border-2 border-dashed border-indigo-300 text-indigo-600 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-indigo-50 transition-all flex items-center justify-center gap-2">
+                    + {isAr ? 'إضافة موديل آخر' : 'Ajouter un autre modèle'}
+                  </button>
+
+                  <button type="submit" disabled={isSending} className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-3 disabled:opacity-60">
+                    {isSending ? (isAr ? 'جاري الإرسال...' : 'Envoi en cours...') : (isAr ? `إرسال ${models.length > 1 ? `(${models.length} موديلات)` : 'الطلب'}` : `Envoyer ma demande${models.length > 1 ? ` (${models.length} modèles)` : ''}`)}
+                    {!isSending && <ArrowRight className="w-5 h-5" />}
                   </button>
                 </form>
               </div>
