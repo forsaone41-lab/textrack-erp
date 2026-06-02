@@ -27,6 +27,7 @@ export default function Demandes() {
   const [users, setUsers] = useState<User[]>([]);
   const [filter, setFilter] = useState<'all' | 'new' | 'completed'>('all');
   const [category, setCategory] = useState<'clients' | 'recrutement'>('clients');
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
 
   const [confirmLead, setConfirmLead] = useState<Lead | null>(null);
@@ -435,7 +436,9 @@ export default function Demandes() {
     const isRecrutement = l.type.startsWith('RECRUTEMENT:');
     const matchCategory = category === 'recrutement' ? isRecrutement : !isRecrutement;
     const matchFilter = filter === 'all' || l.status === filter;
-    return matchCategory && matchFilter;
+    const q = searchQuery.toLowerCase();
+    const matchSearch = !q || l.name.toLowerCase().includes(q) || l.phone.includes(q) || l.type.toLowerCase().includes(q) || (l.ville || '').toLowerCase().includes(q);
+    return matchCategory && matchFilter && matchSearch;
   }), [leads, category, filter]);
 
   // Reset visible count when filters change
@@ -1099,6 +1102,46 @@ export default function Demandes() {
           </div>
         </div>
       </div>
+
+      {/* Stats Dashboard + Search */}
+      {category === 'clients' && (() => {
+        const clientLeads = leads.filter(l => !l.type.startsWith('RECRUTEMENT:'));
+        const stats = [
+          { label: isAr ? 'المجموع' : 'Total', value: clientLeads.length, color: 'bg-slate-800 text-white', onClick: () => setFilter('all') },
+          { label: isAr ? 'جدد' : 'Nouveaux', value: clientLeads.filter(l => !l.contactedAt).length, color: 'bg-indigo-500 text-white', onClick: () => setFilter('new') },
+          { label: isAr ? 'تم التواصل' : 'Contactés', value: clientLeads.filter(l => !!l.contactedAt).length, color: 'bg-emerald-500 text-white', onClick: () => setFilter('all') },
+          { label: isAr ? 'ديفيز أُرسل' : 'Devis envoyé', value: clientLeads.filter(l => (l.crmPrice || 0) > 0).length, color: 'bg-amber-500 text-white', onClick: () => setFilter('all') },
+          { label: isAr ? 'مؤكدون' : 'Confirmés', value: clientLeads.filter(l => l.crmStage === 'confirme').length, color: 'bg-teal-500 text-white', onClick: () => setFilter('completed') },
+          { label: isAr ? 'قيد الانتظار' : 'En attente', value: clientLeads.filter(l => l.crmStage === 'attente_confirmation').length, color: 'bg-orange-400 text-white', onClick: () => setFilter('all') },
+        ];
+        return (
+          <div className="space-y-3">
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+              {stats.map(s => (
+                <button key={s.label} onClick={s.onClick} className={`${s.color} rounded-2xl p-3 text-center hover:opacity-90 transition-all hover:scale-105 shadow-sm`}>
+                  <p className="text-2xl font-black leading-none">{s.value}</p>
+                  <p className="text-[9px] font-black uppercase tracking-widest opacity-80 mt-1">{s.label}</p>
+                </button>
+              ))}
+            </div>
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder={isAr ? 'بحث بالاسم، الهاتف، النوع، المدينة...' : 'Rechercher par nom, téléphone, type, ville...'}
+                className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all shadow-sm"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       <div className="grid grid-cols-1 gap-4">
         {filteredLeads.length === 0 ? (
