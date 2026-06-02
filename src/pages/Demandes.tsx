@@ -315,6 +315,11 @@ export default function Demandes() {
 
     const encoded = encodeURIComponent(message);
     window.open(`https://wa.me/${formattedPhone}?text=${encoded}`, '_blank');
+
+    // Save price to lead automatically
+    const updatedLead = { ...devisLead, crmPrice: total, crmStage: devisLead.crmStage || 'contact_en_cours' };
+    saveRecord('leads', updatedLead);
+
     if (!isPDF) {
       setDevisLead(null);
       setMatierePrice('');

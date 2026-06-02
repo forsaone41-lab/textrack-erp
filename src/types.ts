@@ -445,6 +445,7 @@ export interface Lead {
   crmRdvDate?: string;
   crmNotes?: string;
   crmPrice?: number;
+  crmPriceConfirmed?: boolean;
 }
 
 export const DEFAULT_COMPANY: CompanyProfile = {
@@ -690,7 +691,7 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
           'clientId', 'rebut', 'planningReady', 'ville', 'employeId', 'telephone', 'tailles', 'rejectionNote', 'tissus',
           'partenaireId', 'externalTasks', 'typeDossier',
           'photo', 'adresse',
-          'crmStage', 'crmContactMethod', 'crmRdvDate', 'crmNotes', 'crmPrice'
+          'crmStage', 'crmContactMethod', 'crmRdvDate', 'crmNotes', 'crmPrice', 'crmPriceConfirmed'
         ];
         newCols.forEach(col => delete fallbackRecord[col]);
         

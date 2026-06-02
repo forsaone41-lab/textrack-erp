@@ -131,7 +131,8 @@ export default function Pipeline() {
                         crmContactMethod: lead.crmContactMethod,
                         crmRdvDate: lead.crmRdvDate,
                         crmNotes: lead.crmNotes,
-                        crmPrice: lead.crmPrice
+                        crmPrice: lead.crmPrice,
+                        crmPriceConfirmed: lead.crmPriceConfirmed
                       });
                     }}
                     className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-300 cursor-pointer transition-all flex flex-col gap-3 active:scale-[0.98]"
@@ -284,11 +285,25 @@ export default function Pipeline() {
                 </div>
               </div>
 
-              {/* Price */}
+              {/* Price + confirmed toggle */}
               <div>
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">{isAr ? 'السعر (درهم)' : 'Prix proposé (DH)'}</label>
-                <input type="number" value={editForm.crmPrice || ''} onChange={(e) => setEditForm({ ...editForm, crmPrice: Number(e.target.value) })}
-                  placeholder="0" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-2 focus:ring-indigo-500/20" />
+                <div className="flex gap-2 items-center">
+                  <input type="number" value={editForm.crmPrice || ''} onChange={(e) => setEditForm({ ...editForm, crmPrice: Number(e.target.value) })}
+                    placeholder="0" className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-2 focus:ring-indigo-500/20" />
+                  <button
+                    type="button"
+                    onClick={() => setEditForm({ ...editForm, crmPriceConfirmed: !editForm.crmPriceConfirmed })}
+                    className={`shrink-0 flex items-center gap-2 px-3 py-2.5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${
+                      editForm.crmPriceConfirmed
+                        ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                        : 'bg-slate-50 border-slate-200 text-slate-400'
+                    }`}
+                  >
+                    <CheckCircle className={`w-4 h-4 ${editForm.crmPriceConfirmed ? 'text-emerald-500' : 'text-slate-300'}`} />
+                    {editForm.crmPriceConfirmed ? (isAr ? 'مقبول ✓' : 'Accepté ✓') : (isAr ? 'بانتظار' : 'En attente')}
+                  </button>
+                </div>
               </div>
 
               {/* Notes */}
