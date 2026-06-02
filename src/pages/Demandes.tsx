@@ -332,6 +332,12 @@ export default function Demandes() {
     }
   };
 
+  const togglePriority = async (lead: Lead) => {
+    const updated = { ...lead, crmPriority: !lead.crmPriority };
+    setLeads(prev => prev.map(l => l.id === lead.id ? updated : l));
+    await saveRecord('leads', updated);
+  };
+
   const handleContact = async (lead: Lead, typeId: string, customMsg?: string) => {
     const rawPhone = lead.phone.replace(/\D/g, '');
     let formattedPhone = rawPhone;
@@ -1220,217 +1226,126 @@ export default function Demandes() {
           visibleLeads.map(lead => (
             <div
               key={lead.id}
-              className={`bg-white rounded-2xl sm:rounded-[2.5rem] p-4 sm:p-6 border-2 transition-all hover:border-indigo-100 shadow-sm hover:shadow-xl group relative overflow-hidden ${lead.status === 'new' ? 'border-indigo-500/20 ring-1 ring-indigo-500/10' : 'border-slate-100'
-                }`}
+              className={`bg-white rounded-2xl p-4 border transition-all shadow-sm hover:shadow-md group relative ${
+                lead.crmPriority ? 'border-amber-300 ring-1 ring-amber-200' : lead.status === 'new' ? 'border-indigo-200' : 'border-slate-100'
+              }`}
             >
-              {lead.status === 'new' && (
-                <div className="absolute top-0 right-0 px-6 py-1 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-bl-2xl">
-                  New Lead
-                </div>
-              )}
+              {/* Top-right badges row */}
+              <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                {lead.crmPriority && <span className="text-xs">⭐</span>}
+                {lead.status === 'new' && (
+                  <span className="px-2 py-0.5 bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest rounded-full">New</span>
+                )}
+              </div>
 
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div className="flex items-start gap-5">
-                  <div className="relative group/photo shrink-0">
-                    <div className="w-14 h-14 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center text-slate-400 group-hover:scale-110 transition-transform overflow-hidden">
-                      {lead.photo ? (
-                        <img src={lead.photo} className="w-full h-full object-cover" alt="Model" loading="lazy" />
-                      ) : (
-                        <ImageIcon className="w-5 h-5 opacity-50" />
-                      )}
-                    </div>
-                    {lead.photo && (
-                      <button
-                        onClick={() => setPreviewPhoto(lead.photo!)}
-                        className="absolute -bottom-1 -right-1 w-6 h-6 bg-white rounded-lg shadow-lg border border-slate-100 flex items-center justify-center opacity-0 group-hover/photo:opacity-100 transition-opacity"
-                      >
-                        <Eye className="w-3.5 h-3.5 text-indigo-600" />
-                      </button>
-                    )}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <h3 className="text-base sm:text-xl font-black text-slate-900 uppercase tracking-tight">{lead.name}</h3>
-                      {(lead.crmPrice || 0) > 0 && (
-                        <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded-full uppercase tracking-widest">
-                          Devis: {(lead.crmPrice || 0).toLocaleString()} MAD
-                        </span>
-                      )}
-                      {lead.contactedAt && (
-                        <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-black rounded-full uppercase tracking-widest flex items-center gap-1">
-                          <MessageSquare className="w-2.5 h-2.5" /> msg ✓
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-2 sm:gap-4 text-[10px] sm:text-xs font-bold text-slate-500">
-                      <span className="flex items-center gap-1.5"><Phone className="w-4 h-4 text-indigo-500" /> {lead.phone}</span>
-                      <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-rose-500" /> {lead.ville || '-'}</span>
-                      {lead.email && <span className="flex items-center gap-1.5"><Mail className="w-4 h-4 text-slate-400" /> {lead.email}</span>}
-                      <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-slate-400" />
-                        {new Date(lead.date).toLocaleDateString()} {new Date(lead.date).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}
-                      </span>
-                      {lead.contactedAt && (
-                        <span className="flex items-center gap-1.5 text-emerald-600">
-                          <MessageSquare className="w-3 h-3" />
-                          {isAr ? 'تم التواصل:' : 'Contacté:'} {new Date(lead.contactedAt).toLocaleDateString()} {new Date(lead.contactedAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}
-                        </span>
-                      )}
-                      <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full">
-                        {lead.type.startsWith('RECRUTEMENT:') ? (
-                          <>
-                            <UserPlus className="w-3.5 h-3.5" />
-                            <span className="font-black text-[11px] uppercase tracking-tighter">
-                              {lead.type.replace('RECRUTEMENT:', '')}
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <Package className="w-3.5 h-3.5" /> {lead.type} ({lead.quantity} pcs)
-                          </>
-                        )}
-                      </span>
-                    </div>
+              <div className="flex items-start gap-4">
+                {/* Photo */}
+                <div className="relative shrink-0 cursor-pointer" onClick={() => lead.photo && setPreviewPhoto(lead.photo)}>
+                  <div className="w-12 h-12 bg-slate-50 border border-slate-200 rounded-xl overflow-hidden flex items-center justify-center text-slate-300">
+                    {lead.photo ? <img src={lead.photo} className="w-full h-full object-cover" alt="" loading="lazy" /> : <ImageIcon className="w-5 h-5" />}
                   </div>
                 </div>
 
-                <div className="flex flex-col items-stretch sm:items-center gap-3">
-
-                  {/* Primary Action Removed: Sample Launch now handled in FichesTechniques */}
-
-                  {/* Contact Actions */}
-                  <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                    <a
-                      href={`tel:${lead.phone.replace(/\D/g, '').startsWith('0') ? '212' + lead.phone.replace(/\D/g, '').substring(1) : lead.phone.replace(/\D/g, '')}`}
-                      className="w-11 h-11 bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl flex items-center justify-center transition-colors border border-slate-100 shadow-sm"
-                      title={isAr ? 'اتصال مباشر' : 'Appel Direct'}
-                    >
-                      <PhoneCall className="w-5 h-5" />
-                    </a>
-                    <button
-                      onClick={() => setContactingLead(lead)}
-                      className={`h-11 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 border shadow-sm ${lead.contactedAt
-                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                        : 'bg-emerald-500 text-white hover:bg-emerald-600 border-emerald-500'
-                        }`}
-                    >
-                      <MessageSquare className="w-4 h-4" />
-                      {isAr ? (lead.contactedAt ? 'تم التواصل' : 'واتساب') : (lead.contactedAt ? 'Contacté' : 'WhatsApp')}
-                    </button>
-                    {(() => {
-                      const cvData = lead.details?.split('| CV_ATTACHMENT:')[1];
-                      if (!cvData) return null;
-                      return (
-                        <button
-                          onClick={() => {
-                            const link = document.createElement('a');
-                            link.href = cvData;
-                            link.download = `CV_${lead.name.replace(/\s/g, '_')}`;
-                            link.click();
-                          }}
-                          className="w-11 h-11 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-xl flex items-center justify-center transition-all border border-indigo-100 shadow-sm"
-                          title={isAr ? 'تحميل السيرة الذاتية' : 'Télécharger le CV'}
-                        >
-                          <FileText className="w-5 h-5" />
-                        </button>
-                      );
-                    })()}
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">{lead.name}</h3>
+                    {(lead.crmPrice || 0) > 0 && (
+                      <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[9px] font-black rounded-full">
+                        Devis: {(lead.crmPrice || 0).toLocaleString()} MAD
+                      </span>
+                    )}
+                    {lead.contactedAt && (
+                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[9px] font-black rounded-full flex items-center gap-1">
+                        <MessageSquare className="w-2.5 h-2.5" /> msg ✓
+                      </span>
+                    )}
                   </div>
-
-                  {/* Secondary Tools: Devis, Fiche, Convert Client */}
-                  <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-50/50 p-1 sm:p-1.5 rounded-2xl border border-slate-100 shadow-inner flex-wrap">
-                    {/* Recruitment Add Button - Navigates to Waiting List with candidate data */}
-                    {category === 'recrutement' ? (
-                      <button
-                        onClick={() => navigate('/liste-attente', { state: { fromRecruitment: lead } })}
-                        className="w-12 h-12 flex items-center justify-center bg-rose-500 text-white hover:bg-rose-600 rounded-xl transition-all shadow-lg shadow-rose-200 group/btn animate-pulse hover:animate-none"
-                        title={isAr ? 'إضافة إلى لائحة الانتظار' : 'Ajouter à la liste d\'attente'}
-                      >
-                        <UserPlus className="w-5 h-5 group-hover/btn:scale-110 transition-transform" />
-                      </button>
-                    ) : (
-                      /* Convert to Client Button - Disappears if already a client */
-                      !users.some(u => u.nom.toLowerCase() === lead.name.toLowerCase() && u.role === 'client') ? (
-                        <button
-                          onClick={() => convertToClient(lead)}
-                          className="w-9 h-9 flex items-center justify-center bg-white text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-xl transition-all shadow-sm border border-emerald-100 group/btn"
-                          title={isAr ? 'تسجيل كزبون جديد' : 'Enregistrer comme nouveau client'}
-                        >
-                          <UserPlus className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => navigate('/clients', { state: { openClientName: lead.name } })}
-                          className="h-9 px-3 flex items-center justify-center gap-1.5 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100 hover:bg-emerald-600 hover:text-white transition-all text-[9px] font-black uppercase tracking-widest group/btn"
-                          title={isAr ? 'فتح ملف الزبون' : 'Ouvrir fiche client'}
-                        >
-                          <CheckCircle className="w-3.5 h-3.5" />
-                          {isAr ? 'ملف' : 'Fiche →'}
-                        </button>
-                      )
-                    )}
-
-                    {(lead.details || (lead.tailles && Object.values(lead.tailles).some(v => v > 0))) && !lead.type.startsWith('RECRUTEMENT:') && (
-                      <button
-                        onClick={() => setDetailsLead(lead)}
-                        className="h-9 px-3 flex items-center justify-center gap-1.5 bg-slate-50 text-slate-500 rounded-xl border border-slate-200 hover:bg-slate-100 transition-all text-[9px] font-black uppercase tracking-widest"
-                        title="Détails du projet"
-                      >
-                        <MessageSquare className="w-3.5 h-3.5" />
-                        {isAr ? 'تفاصيل' : 'Détails'}
-                      </button>
-                    )}
-
-                    {!lead.type.startsWith('RECRUTEMENT:') && (
-                      <button
-                        onClick={() => setDevisLead(lead)}
-                        className="w-9 h-9 flex items-center justify-center bg-white text-amber-500 hover:bg-amber-500 hover:text-white rounded-xl transition-all shadow-sm border border-amber-100 group/btn"
-                        title={isAr ? 'حساب التكلفة' : 'Devis'}
-                      >
-                        <Calculator className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
-                      </button>
-                    )}
-
-                    {/* Fiche Technique Button - Hidden for recruitment, otherwise active only if client is registered */}
-                    {!lead.type.startsWith('RECRUTEMENT:') && (() => {
-                      const clientExists = users.some(u => u.nom.toLowerCase() === lead.name.toLowerCase() && u.role === 'client');
-                      return (
-                        <button
-                          onClick={() => clientExists && navigate('/fiches-techniques', { state: { fromLead: lead } })}
-                          disabled={!clientExists}
-                          className={`h-9 px-3 flex items-center justify-center gap-2 rounded-xl transition-all shadow-sm border font-black text-[9px] uppercase tracking-widest ${clientExists
-                            ? 'bg-indigo-50 text-indigo-600 border-indigo-100 hover:bg-indigo-600 hover:text-white hover:shadow-indigo-100 group/btn'
-                            : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed opacity-60'
-                            }`}
-                          title={!clientExists ? (isAr ? 'يجب تسجيل الزبون أولاً' : 'Enregistrez le client d\'abord') : (isAr ? 'إنشاء بطاقة تقنية' : 'Créer Fiche Technique')}
-                        >
-                          <FileText className={`w-3.5 h-3.5 ${clientExists ? 'group-hover/btn:scale-110 transition-transform' : ''}`} />
-                          {!isAr && "Fiche"}
-                          {isAr && "بطاقة"}
-                        </button>
-                      );
-                    })()}
-                  </div>
-
-                  {/* Edit/Delete Actions */}
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => { setEditingLead(lead); setEditForm(lead); }}
-                      className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
-                      title={isAr ? 'تعديل' : 'Modifier'}
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => setDeleteId(lead.id)}
-                      className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
-                      title={isAr ? 'حذف الطلب' : 'Supprimer'}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] font-bold text-slate-500 mt-1">
+                    <span className="flex items-center gap-1"><Phone className="w-3 h-3 text-indigo-400" /> {lead.phone}</span>
+                    <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-rose-400" /> {lead.ville || '-'}</span>
+                    <span className="flex items-center gap-1"><Calendar className="w-3 h-3 text-slate-400" /> {new Date(lead.date).toLocaleDateString()} {new Date(lead.date).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span>
+                    {lead.contactedAt && <span className="flex items-center gap-1 text-emerald-600"><MessageSquare className="w-3 h-3" /> {new Date(lead.contactedAt).toLocaleDateString()} {new Date(lead.contactedAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span>}
+                    <span className="flex items-center gap-1 text-emerald-600 font-black"><Package className="w-3 h-3" /> {lead.type} ({lead.quantity} pcs)</span>
                   </div>
                 </div>
               </div>
 
+              {/* Actions — single compact row */}
+              <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-slate-50 flex-wrap">
+                {/* ⭐ Priority */}
+                <button onClick={() => togglePriority(lead)} title={lead.crmPriority ? 'Retirer priorité' : 'Marquer important'}
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all border ${lead.crmPriority ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-200 opacity-40 hover:opacity-80'}`}>
+                  ⭐
+                </button>
+
+                <div className="w-px h-5 bg-slate-200 mx-0.5" />
+
+                {/* Call */}
+                <a href={`tel:${lead.phone.replace(/\D/g, '').startsWith('0') ? '212' + lead.phone.replace(/\D/g, '').substring(1) : lead.phone.replace(/\D/g, '')}`}
+                  className="w-8 h-8 bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg flex items-center justify-center transition-all border border-slate-200">
+                  <PhoneCall className="w-3.5 h-3.5" />
+                </a>
+                {/* WhatsApp */}
+                <button onClick={() => setContactingLead(lead)}
+                  className={`h-8 px-3 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 border transition-all ${lead.contactedAt ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-600'}`}>
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  {lead.contactedAt ? (isAr ? 'تواصل ✓' : 'Contacté ✓') : 'WhatsApp'}
+                </button>
+
+                <div className="w-px h-5 bg-slate-200 mx-0.5" />
+
+                {/* Convert / Fiche client */}
+                {category !== 'recrutement' && (
+                  !users.some(u => u.nom.toLowerCase() === lead.name.toLowerCase() && u.role === 'client') ? (
+                    <button onClick={() => convertToClient(lead)} title={isAr ? 'تسجيل كزبون' : 'Créer client'}
+                      className="w-8 h-8 bg-white text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-lg border border-emerald-200 flex items-center justify-center transition-all">
+                      <UserPlus className="w-3.5 h-3.5" />
+                    </button>
+                  ) : (
+                    <button onClick={() => navigate('/clients', { state: { openClientName: lead.name } })} title="Ouvrir fiche client"
+                      className="h-8 px-2.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-lg border border-emerald-200 text-[9px] font-black flex items-center gap-1 transition-all">
+                      <CheckCircle className="w-3 h-3" /> Fiche →
+                    </button>
+                  )
+                )}
+                {/* Détails */}
+                {(lead.details || (lead.tailles && Object.values(lead.tailles).some(v => v > 0))) && !lead.type.startsWith('RECRUTEMENT:') && (
+                  <button onClick={() => setDetailsLead(lead)} title="Détails"
+                    className="w-8 h-8 bg-slate-50 text-slate-500 hover:bg-slate-200 rounded-lg border border-slate-200 flex items-center justify-center transition-all">
+                    <MessageSquare className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                {/* Devis */}
+                {!lead.type.startsWith('RECRUTEMENT:') && (
+                  <button onClick={() => setDevisLead(lead)} title="Devis"
+                    className="w-8 h-8 bg-amber-50 text-amber-500 hover:bg-amber-500 hover:text-white rounded-lg border border-amber-200 flex items-center justify-center transition-all">
+                    <Calculator className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                {/* Fiche technique */}
+                {!lead.type.startsWith('RECRUTEMENT:') && (() => {
+                  const clientExists = users.some(u => u.nom.toLowerCase() === lead.name.toLowerCase() && u.role === 'client');
+                  return (
+                    <button onClick={() => clientExists && navigate('/fiches-techniques', { state: { fromLead: lead } })} disabled={!clientExists}
+                      className={`w-8 h-8 rounded-lg border flex items-center justify-center transition-all ${clientExists ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white border-indigo-200' : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed opacity-50'}`}
+                      title={clientExists ? 'Fiche Technique' : 'Enregistrez le client d\'abord'}>
+                      <FileText className="w-3.5 h-3.5" />
+                    </button>
+                  );
+                })()}
+
+                <div className="ml-auto flex items-center gap-1">
+                  <button onClick={() => { setEditingLead(lead); setEditForm(lead); }}
+                    className="w-8 h-8 text-slate-300 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg flex items-center justify-center transition-all">
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => setDeleteId(lead.id)}
+                    className="w-8 h-8 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg flex items-center justify-center transition-all">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
             </div>
           ))
         )}
