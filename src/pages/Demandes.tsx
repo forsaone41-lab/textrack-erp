@@ -1143,12 +1143,32 @@ export default function Demandes() {
                     )}
                   </div>
                   <div>
-                    <h3 className="text-base sm:text-xl font-black text-slate-900 uppercase tracking-tight mb-1">{lead.name}</h3>
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <h3 className="text-base sm:text-xl font-black text-slate-900 uppercase tracking-tight">{lead.name}</h3>
+                      {(lead.crmPrice || 0) > 0 && (
+                        <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded-full uppercase tracking-widest">
+                          Devis: {(lead.crmPrice || 0).toLocaleString()} MAD
+                        </span>
+                      )}
+                      {lead.contactedAt && (
+                        <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-black rounded-full uppercase tracking-widest flex items-center gap-1">
+                          <MessageSquare className="w-2.5 h-2.5" /> msg ✓
+                        </span>
+                      )}
+                    </div>
                     <div className="flex flex-wrap gap-2 sm:gap-4 text-[10px] sm:text-xs font-bold text-slate-500">
                       <span className="flex items-center gap-1.5"><Phone className="w-4 h-4 text-indigo-500" /> {lead.phone}</span>
                       <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-rose-500" /> {lead.ville || '-'}</span>
                       {lead.email && <span className="flex items-center gap-1.5"><Mail className="w-4 h-4 text-slate-400" /> {lead.email}</span>}
-                      <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-slate-400" /> {new Date(lead.date).toLocaleDateString()}</span>
+                      <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-slate-400" />
+                        {new Date(lead.date).toLocaleDateString()} {new Date(lead.date).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}
+                      </span>
+                      {lead.contactedAt && (
+                        <span className="flex items-center gap-1.5 text-emerald-600">
+                          <MessageSquare className="w-3 h-3" />
+                          {isAr ? 'تم التواصل:' : 'Contacté:'} {new Date(lead.contactedAt).toLocaleDateString()} {new Date(lead.contactedAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}
+                        </span>
+                      )}
                       <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full">
                         {lead.type.startsWith('RECRUTEMENT:') ? (
                           <>
@@ -1232,9 +1252,14 @@ export default function Demandes() {
                           <UserPlus className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
                         </button>
                       ) : (
-                        <div className="w-9 h-9 flex items-center justify-center bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100" title={isAr ? 'زبون مسجل' : 'Client déjà enregistré'}>
-                          <CheckCircle className="w-4 h-4" />
-                        </div>
+                        <button
+                          onClick={() => navigate('/clients', { state: { openClientName: lead.name } })}
+                          className="h-9 px-3 flex items-center justify-center gap-1.5 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100 hover:bg-emerald-600 hover:text-white transition-all text-[9px] font-black uppercase tracking-widest group/btn"
+                          title={isAr ? 'فتح ملف الزبون' : 'Ouvrir fiche client'}
+                        >
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          {isAr ? 'ملف' : 'Fiche →'}
+                        </button>
                       )
                     )}
 
@@ -1289,14 +1314,32 @@ export default function Demandes() {
                 </div>
               </div>
 
-              {lead.details && (
-                <div className="mt-6 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                  <div className="flex items-center gap-2 mb-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    <MessageSquare className="w-3.5 h-3.5" /> {isAr ? 'تفاصيل المشروع' : 'Détails du projet'}
-                  </div>
-                  <p className="text-sm text-slate-600 font-medium leading-relaxed">
-                    {lead.details.split('| CV_ATTACHMENT:')[0]}
-                  </p>
+              {(lead.details || (lead.tailles && Object.values(lead.tailles).some(v => v > 0))) && (
+                <div className="mt-4 flex flex-col sm:flex-row gap-3">
+                  {lead.details && (
+                    <div className="flex-1 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                      <div className="flex items-center gap-2 mb-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <MessageSquare className="w-3.5 h-3.5" /> {isAr ? 'تفاصيل المشروع' : 'Détails du projet'}
+                      </div>
+                      <p className="text-sm text-slate-600 font-medium leading-relaxed line-clamp-3">
+                        {lead.details.split('| CV_ATTACHMENT:')[0]}
+                      </p>
+                    </div>
+                  )}
+                  {lead.tailles && Object.values(lead.tailles).some(v => v > 0) && (
+                    <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 shrink-0">
+                      <div className="flex items-center gap-2 mb-2 text-[10px] font-black text-indigo-400 uppercase tracking-widest">
+                        <Package className="w-3.5 h-3.5" /> Tailles
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {Object.entries(lead.tailles).filter(([,v]) => v > 0).map(([size, qty]) => (
+                          <span key={size} className="px-2 py-1 bg-white text-indigo-700 text-[10px] font-black rounded-lg border border-indigo-100">
+                            {size}: <strong>{qty}</strong>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
