@@ -683,7 +683,7 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
           'tissuPrix', 'coutMainOeuvre', 'tissuSourcing', 
           'tissuConsommation', 'fournisseurTel', 'fournisseurEmail',
           'pinCode',
-          'avance', 'retouche', 'lastActive',
+          'retouche', 'lastActive',
           'composition', 'metrageTotal', 'largeur', 'zone', 'etagere',
           'cin', 'rib', 'banque', 'salaireMensuel', 'remunerationType', 'actif',
           'dateEntree', 'contrat', 'cnss', 'mutuelle', 'enfants', 'situation_familiale',
