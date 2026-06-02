@@ -737,6 +737,32 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                        </div>
                                     </div>
                                     
+                                    {f.typeDoc === 'recu' ? (
+                                      <div className="space-y-2 mb-8">
+                                        <div className="flex items-center justify-between bg-slate-50 rounded-xl px-4 py-2.5">
+                                          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{isAr ? 'إجمالي الطلب' : 'Total commande'}</p>
+                                          <p className="text-sm font-black text-slate-700">{f.montant.toLocaleString()} MAD</p>
+                                        </div>
+                                        <div className="flex items-center justify-between bg-emerald-50 rounded-xl px-4 py-2.5">
+                                          <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">✓ {isAr ? 'أفونس مدفوع' : 'Avance payée'}</p>
+                                          <p className="text-sm font-black text-emerald-700">{(f.avance || 0).toLocaleString()} MAD</p>
+                                        </div>
+                                        {(() => {
+                                          const reste = f.montant - (f.avance || 0);
+                                          return reste > 0 ? (
+                                            <div className="flex items-center justify-between bg-amber-50 rounded-xl px-4 py-2.5">
+                                              <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest">{isAr ? 'المتبقي للأداء' : 'Reste à payer'}</p>
+                                              <p className="text-sm font-black text-amber-700">{reste.toLocaleString()} MAD</p>
+                                            </div>
+                                          ) : (
+                                            <div className="flex items-center justify-between bg-emerald-50 rounded-xl px-4 py-2.5">
+                                              <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">{isAr ? 'المتبقي للأداء' : 'Reste à payer'}</p>
+                                              <p className="text-sm font-black text-emerald-700">0 MAD ✓</p>
+                                            </div>
+                                          );
+                                        })()}
+                                      </div>
+                                    ) : (
                                     <div className="grid grid-cols-2 gap-6 mb-8">
                                        <div>
                                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'المبلغ' : 'Montant'}</p>
@@ -751,6 +777,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                           </span>
                                        </div>
                                     </div>
+                                    )}
 
                                     <div className="flex flex-col gap-3">
                                       <button 
@@ -785,6 +812,23 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                  return (
                    <>
                      {renderList(devisList, 'عروض الأسعار (Devis)', 'Devis et Estimations', 'bg-indigo-600', 'text-indigo-600', 'bg-indigo-50', 'hover:border-indigo-200')}
+                     {recusList.length > 0 && (
+                       <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-6 py-4 flex items-start gap-4 -mb-4">
+                         <div className="w-9 h-9 bg-emerald-600 text-white rounded-xl flex items-center justify-center shrink-0 mt-0.5">
+                           <Receipt className="w-4 h-4" />
+                         </div>
+                         <div>
+                           <p className="text-xs font-black text-emerald-700 uppercase tracking-widest">
+                             {isAr ? 'وصولات الأفونس والمدفوعات' : 'Reçus d\'avance & Paiements'}
+                           </p>
+                           <p className="text-xs text-emerald-600 mt-1 leading-relaxed">
+                             {isAr
+                               ? 'هنا تجد تفاصيل دفعاتك: المبلغ الإجمالي، ما تم دفعه كأفونس، والمبلغ المتبقي لكل طلب.'
+                               : 'Retrouvez ici le détail de vos avances payées et le reste dû pour chaque commande.'}
+                           </p>
+                         </div>
+                       </div>
+                     )}
                      {renderList(recusList, 'وصولات الأداء والأفونس', 'Reçus de Paiement', 'bg-emerald-600', 'text-emerald-600', 'bg-emerald-50', 'hover:border-emerald-200')}
                      {renderList(facturesList, 'الفواتير المالية', 'Factures Financières', 'bg-slate-800', 'text-slate-800', 'bg-slate-100', 'hover:border-slate-300')}
                      
