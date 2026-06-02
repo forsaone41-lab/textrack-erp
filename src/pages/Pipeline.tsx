@@ -24,7 +24,8 @@ export default function Pipeline() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  
+  const [zoomedPhoto, setZoomedPhoto] = useState<string | null>(null);
+
   // Edit Form State
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
 
@@ -146,7 +147,7 @@ export default function Pipeline() {
                         </div>
                       </div>
                       {lead.photo ? (
-                        <img src={lead.photo} alt={lead.name} className="w-10 h-10 rounded-full object-cover border-2 border-indigo-100 shadow-sm" />
+                        <img src={lead.photo} alt={lead.name} onClick={e => { e.stopPropagation(); setZoomedPhoto(lead.photo!); }} className="w-10 h-10 rounded-full object-cover border-2 border-indigo-100 shadow-sm cursor-zoom-in hover:scale-110 transition-transform" />
                       ) : (
                         <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs uppercase border border-indigo-100">
                           {lead.name.substring(0,2)}
@@ -204,7 +205,13 @@ export default function Pipeline() {
             <div className="flex items-center justify-between px-6 pt-6 pb-4">
               <div className="flex items-center gap-3">
                 {selectedLead.photo ? (
-                  <img src={selectedLead.photo} alt={selectedLead.name} className="w-12 h-12 rounded-2xl object-cover border-2 border-indigo-100" />
+                  <img
+                    src={selectedLead.photo}
+                    alt={selectedLead.name}
+                    onClick={() => setZoomedPhoto(selectedLead.photo!)}
+                    className="w-12 h-12 rounded-2xl object-cover border-2 border-indigo-100 cursor-zoom-in hover:scale-105 transition-transform"
+                    title="Cliquer pour zoomer"
+                  />
                 ) : (
                   <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-sm uppercase border border-indigo-100">
                     {selectedLead.name.substring(0,2)}
@@ -329,6 +336,24 @@ export default function Pipeline() {
         </div>
         );
       })()}
+
+      {/* Zoom Photo Modal */}
+      {zoomedPhoto && (
+        <div
+          className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center p-4"
+          onClick={() => setZoomedPhoto(null)}
+        >
+          <button onClick={() => setZoomedPhoto(null)} className="absolute top-4 right-4 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+          <img
+            src={zoomedPhoto}
+            alt="Zoom"
+            className="max-h-[90vh] max-w-[90vw] rounded-2xl object-contain shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 }
