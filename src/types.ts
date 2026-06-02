@@ -685,7 +685,7 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
           'pinCode',
           'retouche', 'lastActive',
           'composition', 'metrageTotal', 'largeur', 'zone', 'etagere',
-          'cin', 'rib', 'banque', 'salaireMensuel', 'remunerationType', 'actif',
+          'cin', 'rib', 'salaireMensuel', 'remunerationType', 'actif',
           'dateEntree', 'contrat', 'cnss', 'mutuelle', 'enfants', 'situation_familiale',
           'clientId', 'rebut', 'planningReady', 'ville', 'employeId', 'telephone', 'tailles', 'rejectionNote', 'tissus',
           'partenaireId', 'externalTasks', 'typeDossier',
