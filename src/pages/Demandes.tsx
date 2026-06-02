@@ -53,6 +53,7 @@ export default function Demandes() {
   const [pdfProgress, setPdfProgress] = useState<'idle' | 'generating' | 'sharing' | 'done' | 'error'>('idle');
   const [detailsLead, setDetailsLead] = useState<Lead | null>(null);
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
+  const [zoomLevel, setZoomLevel] = useState(1);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
   const [newClientCode, setNewClientCode] = useState<{ name: string, code: string } | null>(null);
@@ -1053,20 +1054,40 @@ export default function Demandes() {
 
       {/* Photo Preview Modal */}
       {previewPhoto && (
-        <div className="fixed inset-0 z-[140] flex items-center justify-center p-6 bg-slate-900/90 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="relative max-w-4xl w-full h-full flex items-center justify-center">
-            <button
-              onClick={() => setPreviewPhoto(null)}
-              className="absolute top-0 right-0 p-3 bg-white text-slate-900 rounded-full shadow-xl hover:scale-110 transition-transform z-10"
-            >
-              <X className="w-6 h-6" />
-            </button>
+        <div className="fixed inset-0 z-[140] flex items-center justify-center bg-black/95 animate-in fade-in duration-200"
+          onClick={() => { setPreviewPhoto(null); setZoomLevel(1); }}>
+          {/* Zoom controls */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-2xl px-4 py-2 z-20" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setZoomLevel(z => Math.max(0.5, z - 0.25))}
+              className="w-9 h-9 bg-white/20 hover:bg-white/40 rounded-xl text-white font-black text-xl flex items-center justify-center transition-all">−</button>
+            <span className="text-white text-xs font-black w-12 text-center">{Math.round(zoomLevel * 100)}%</span>
+            <button onClick={() => setZoomLevel(z => Math.min(4, z + 0.25))}
+              className="w-9 h-9 bg-white/20 hover:bg-white/40 rounded-xl text-white font-black text-xl flex items-center justify-center transition-all">+</button>
+            <div className="w-px h-5 bg-white/30 mx-1" />
+            <button onClick={() => setZoomLevel(1)}
+              className="px-3 h-9 bg-white/20 hover:bg-white/40 rounded-xl text-white text-[10px] font-black uppercase tracking-widest transition-all">Reset</button>
+          </div>
+
+          {/* Close button */}
+          <button onClick={() => { setPreviewPhoto(null); setZoomLevel(1); }}
+            className="absolute top-4 right-4 w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center text-white z-20 transition-all">
+            <X className="w-5 h-5" />
+          </button>
+
+          {/* Image */}
+          <div className="overflow-auto max-w-full max-h-full flex items-center justify-center p-16" onClick={e => e.stopPropagation()}>
             <img
               src={previewPhoto}
               alt="Model Preview"
-              className="max-w-full max-h-full object-contain rounded-3xl shadow-2xl border-4 border-white"
+              style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center', transition: 'transform 0.2s ease' }}
+              className="max-w-[90vw] max-h-[85vh] object-contain rounded-2xl shadow-2xl cursor-zoom-in"
+              onClick={() => setZoomLevel(z => z >= 3 ? 1 : z + 0.5)}
             />
           </div>
+
+          <p className="absolute bottom-4 text-white/40 text-[10px] font-bold uppercase tracking-widest">
+            Cliquer sur l'image pour zoomer — cliquer ailleurs pour fermer
+          </p>
         </div>
       )}
 
