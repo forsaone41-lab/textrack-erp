@@ -60,14 +60,15 @@ export default function Recus() {
     return matchSearch && matchStatut;
   });
 
+  const recus = factures.filter(f => f.typeDoc === 'recu');
   const stats = {
-    total: factures.reduce((a, f) => a + f.montant, 0),
-    payee: factures.filter(f => f.statut === 'payée').reduce((a, f) => a + f.montant, 0),
-    attente: factures.filter(f => f.statut === 'en_attente' && !isOverdue(f)).reduce((a, f) => a + f.montant, 0),
-    retard: factures.filter(f => isOverdue(f)).reduce((a, f) => a + f.montant, 0),
-    countPayee: factures.filter(f => f.statut === 'payée').length,
-    countAttente: factures.filter(f => f.statut === 'en_attente' && !isOverdue(f)).length,
-    countRetard: factures.filter(f => isOverdue(f)).length,
+    total: recus.reduce((a, f) => a + f.montant, 0),
+    payee: recus.reduce((a, f) => a + (f.avance || 0), 0),
+    baqi: recus.reduce((a, f) => a + Math.max(0, f.montant - (f.avance || 0)), 0),
+    retard: recus.filter(f => isOverdue(f)).reduce((a, f) => a + f.montant, 0),
+    countPayee: recus.filter(f => (f.avance || 0) > 0).length,
+    countAttente: recus.filter(f => f.montant - (f.avance || 0) > 0).length,
+    countRetard: recus.filter(f => isOverdue(f)).length,
   };
 
   function openCreate(typeDoc: 'facture' | 'devis' | 'recu' = 'recu') {
@@ -236,7 +237,7 @@ export default function Recus() {
         <div className="bg-emerald-50 rounded-[2rem] border border-emerald-100 p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-200/50 rounded-full blur-2xl -mr-12 -mt-12 group-hover:scale-110 transition-transform" />
           <div className="flex items-start justify-between mb-4 relative z-10">
-            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">{t('paid', lang)}</p>
+            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Avances Reçues</p>
             <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-emerald-100 shadow-sm">
               <CheckCircle className="w-5 h-5 text-emerald-500" />
             </div>
@@ -248,12 +249,12 @@ export default function Recus() {
         <div className="bg-amber-50 rounded-[2rem] border border-amber-100 p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-amber-200/50 rounded-full blur-2xl -mr-12 -mt-12 group-hover:scale-110 transition-transform" />
           <div className="flex items-start justify-between mb-4 relative z-10">
-            <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest">{t('pending', lang)}</p>
+            <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Reste à Encaisser</p>
             <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-amber-100 shadow-sm">
               <Clock className="w-5 h-5 text-amber-500" />
             </div>
           </div>
-          <p className="text-3xl font-black text-amber-700 tracking-tight relative z-10">{stats.attente.toLocaleString()}</p>
+          <p className="text-3xl font-black text-amber-700 tracking-tight relative z-10">{stats.baqi.toLocaleString()}</p>
           <p className="text-[10px] font-bold text-amber-500 mt-1 uppercase relative z-10">MAD</p>
         </div>
 
