@@ -415,16 +415,22 @@ export default function Demandes() {
       if (!blob) { setPdfProgress('error'); setTimeout(() => setPdfProgress('idle'), 2500); return; }
       const file = new File([blob], `${filename}.pdf`, { type: 'application/pdf' });
       setPdfProgress('sharing');
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: `Devis BEYA CREATIVE — ${devisLead.name}` });
-        setPdfProgress('done');
-      } else {
+      let shared = false;
+      try {
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: `Devis BEYA CREATIVE — ${devisLead.name}` });
+          shared = true;
+        }
+      } catch (shareErr: any) {
+        if (shareErr?.name === 'AbortError') { setPdfProgress('idle'); return; }
+      }
+      if (!shared) {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url; a.download = `${filename}.pdf`; a.click();
         URL.revokeObjectURL(url);
-        setPdfProgress('done');
       }
+      setPdfProgress('done');
       setTimeout(() => setPdfProgress('idle'), 2000);
     } catch {
       setPdfProgress('error');
