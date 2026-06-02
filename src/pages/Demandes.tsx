@@ -439,7 +439,7 @@ export default function Demandes() {
     const q = searchQuery.toLowerCase();
     const matchSearch = !q || l.name.toLowerCase().includes(q) || l.phone.includes(q) || l.type.toLowerCase().includes(q) || (l.ville || '').toLowerCase().includes(q);
     return matchCategory && matchFilter && matchSearch;
-  }), [leads, category, filter]);
+  }), [leads, category, filter, searchQuery]);
 
   // Reset visible count when filters change
   useEffect(() => { setVisibleCount(10); }, [category, filter]);
