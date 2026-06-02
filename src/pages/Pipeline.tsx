@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Users, Phone, MapPin, Search, Calendar, 
   MessageCircle, PhoneCall, Video, Store,
@@ -26,6 +26,8 @@ export default function Pipeline() {
   const [quickFilter, setQuickFilter] = useState<'all' | 'devis_sent' | 'attente' | 'confirme' | 'annule'>('all');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [zoomedPhoto, setZoomedPhoto] = useState<string | null>(null);
+  const [activeStage, setActiveStage] = useState<string>('nouveau');
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Edit Form State
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
@@ -60,7 +62,7 @@ export default function Pipeline() {
     try {
       const updatedLead = { ...selectedLead, ...editForm, ...(nextStage ? { crmStage: nextStage } : {}) };
       await saveRecord('leads', updatedLead);
-      setLeads(prev => prev.map(l => l.id === updatedLead.id ? updatedLead : l));
+      setLeads(prev => prev.map(l => l.id === updatedLead.id ? updatedLead as Lead : l));
       setSavedOk(true);
       setTimeout(() => { setSavedOk(false); setSelectedLead(null); }, 1200);
     } catch (e) {
@@ -144,10 +146,30 @@ export default function Pipeline() {
           <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="flex gap-4 overflow-x-auto pb-4 snap-x">
+        <>
+          {/* Mobile: stage tabs */}
+          <div className="flex md:hidden overflow-x-auto gap-2 pb-2 snap-x">
+            {STAGES.map(stage => (
+              <button key={stage.id} onClick={() => setActiveStage(stage.id)}
+                className={`flex-none snap-center px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all whitespace-nowrap flex items-center gap-2 ${
+                  activeStage === stage.id ? stage.color + ' shadow-sm' : 'bg-white text-slate-400 border-slate-200'
+                }`}>
+                {isAr ? stage.labelAr : stage.labelFr}
+                <span className="bg-white/60 px-1.5 py-0.5 rounded-md text-[9px]">{getLeadsByStage(stage.id).length}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Desktop: scroll with arrows */}
+          <div className="hidden md:flex items-start gap-2">
+            <button onClick={() => scrollRef.current?.scrollBy({ left: -340, behavior: 'smooth' })}
+              className="shrink-0 mt-16 w-8 h-8 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-50 shadow-sm transition-all">
+              ‹
+            </button>
+            <div ref={scrollRef} className="flex gap-3 overflow-x-auto pb-4 flex-1 scroll-smooth" style={{ scrollbarWidth: 'none' }}>
           {STAGES.map(stage => (
-            <div key={stage.id} className="flex-none w-[320px] snap-center">
-              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 h-[calc(100vh-220px)] overflow-y-auto flex flex-col gap-3">
+            <div key={stage.id} className="flex-none w-[280px]">
+              <div className="bg-slate-50 rounded-2xl p-3 border border-slate-200 h-[calc(100vh-260px)] overflow-y-auto flex flex-col gap-2">
                 
                 {/* Stage Header */}
                 <div className="flex items-center justify-between mb-2">
@@ -228,7 +250,39 @@ export default function Pipeline() {
               </div>
             </div>
           ))}
-        </div>
+            </div>
+            <button onClick={() => scrollRef.current?.scrollBy({ left: 340, behavior: 'smooth' })}
+              className="shrink-0 mt-16 w-8 h-8 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-50 shadow-sm transition-all">
+              ›
+            </button>
+          </div>
+
+          {/* Mobile: single stage view */}
+          <div className="md:hidden">
+            {STAGES.filter(s => s.id === activeStage).map(stage => (
+              <div key={stage.id} className="bg-slate-50 rounded-2xl p-3 border border-slate-200 min-h-[60vh] flex flex-col gap-2">
+                {getLeadsByStage(stage.id).length === 0 ? (
+                  <p className="text-center text-slate-400 text-xs font-bold py-10 uppercase tracking-widest">Aucun prospect</p>
+                ) : getLeadsByStage(stage.id).map(lead => (
+                  <div key={lead.id} onClick={() => { setSelectedLead(lead); setEditForm({ crmStage: lead.crmStage || 'nouveau', crmContactMethod: lead.crmContactMethod, crmRdvDate: lead.crmRdvDate, crmNotes: lead.crmNotes, crmPrice: lead.crmPrice, crmPriceConfirmed: lead.crmPriceConfirmed }); }}
+                    className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm cursor-pointer active:scale-[0.98] flex items-center gap-3">
+                    {lead.photo ? (
+                      <img src={lead.photo} className="w-10 h-10 rounded-full object-cover border border-indigo-100 shrink-0" alt="" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs uppercase border border-indigo-100 shrink-0">{lead.name.substring(0,2)}</div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-slate-800 text-sm truncate">{lead.name}</p>
+                      <p className="text-xs text-slate-500 truncate">{lead.type} ({lead.quantity} pcs)</p>
+                      {lead.crmPrice ? <p className="text-xs font-black text-emerald-600">{lead.crmPrice.toLocaleString()} MAD</p> : null}
+                    </div>
+                    <span className="text-slate-300 text-lg">›</span>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Edit Modal */}
