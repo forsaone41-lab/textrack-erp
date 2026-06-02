@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, UserPlus, Users, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy, Edit2 } from 'lucide-react';
 import { Lead, loadLeads, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile, Facture } from '../types';
 import { useLang } from '../contexts/LangContext';
-import { generatePDF } from '../utils/pdf';
+import { generatePDF, generatePDFBlob } from '../utils/pdf';
 import { compressImage } from '../utils/image';
 import { PageLoader } from '../components/PageLoader';
 
@@ -395,14 +395,30 @@ export default function Demandes() {
   const handleDownloadPDF = async () => {
     if (!devisLead) return;
     const filename = `Devis_${devisLead.name.replace(/\s/g, '_')}_${new Date().getTime()}`;
-
-    // Delay to ensure template is rendered with data
     setTimeout(async () => {
       await generatePDF('devis-pdf-template', filename);
       setDevisLead(null);
       setMatierePrice('');
       setLaborPrice('');
     }, 500);
+  };
+
+  const handleSharePDF = async () => {
+    if (!devisLead || (!matierePrice && !laborPrice)) return;
+    const filename = `Devis_${devisLead.name.replace(/\s/g, '_')}`;
+    await new Promise(r => setTimeout(r, 500));
+    const blob = await generatePDFBlob('devis-pdf-template');
+    if (!blob) return;
+    const file = new File([blob], `${filename}.pdf`, { type: 'application/pdf' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: `Devis BEYA CREATIVE — ${devisLead.name}` });
+    } else {
+      // Desktop fallback: download
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `${filename}.pdf`; a.click();
+      URL.revokeObjectURL(url);
+    }
   };
 
   const filteredLeads = useMemo(() => leads.filter(l => {
@@ -512,7 +528,7 @@ export default function Demandes() {
             </div>
 
             <button
-              onClick={() => sendDevis(true)}
+              onClick={handleSharePDF}
               disabled={!matierePrice && !laborPrice}
               className="w-full mt-4 h-16 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-[20px] font-black uppercase tracking-widest text-xs hover:shadow-2xl hover:scale-[1.01] transition-all shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale"
             >
@@ -524,7 +540,7 @@ export default function Demandes() {
                   <FileText className="w-5 h-5" />
                 </div>
               </div>
-              {isAr ? '2. إرسال الثمن + PDF' : '2. WhatsApp + PDF'}
+              {isAr ? '2. مشاركة PDF مباشرة' : '2. Partager PDF direct'}
             </button>
 
             <div className="mt-4 border-t border-slate-100 pt-4">

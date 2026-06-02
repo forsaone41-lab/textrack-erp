@@ -127,6 +127,7 @@ export async function generatePDF(elementId: string, filename: string) {
 
       pdf.save(`${filename}.pdf`);
       success = true;
+      return null;
     }
   } catch (err) {
     console.error('html2canvas failed:', err);
@@ -140,4 +141,52 @@ export async function generatePDF(elementId: string, filename: string) {
     console.warn('Falling back to printElement');
     printElement(elementId);
   }
+}
+
+export async function generatePDFBlob(elementId: string): Promise<Blob | null> {
+  const element = document.getElementById(elementId);
+  if (!element) return null;
+
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = 'position:absolute;left:-9999px;top:0;width:800px;background:white;z-index:99999;overflow:visible;';
+  const clone = element.cloneNode(true) as HTMLElement;
+  stripAllClasses(clone);
+  clone.style.cssText = 'opacity:1;visibility:visible;display:block;position:relative;width:800px;background:white;color:#0f172a;font-family:sans-serif;';
+  wrapper.appendChild(clone);
+  document.body.appendChild(wrapper);
+
+  await new Promise(r => setTimeout(r, 500));
+
+  try {
+    const [html2canvas, jsPDF] = await Promise.all([getHtml2Canvas(), getJsPDF()]);
+    const canvas = await html2canvas(wrapper, { scale: 2, useCORS: true, allowTaint: true, logging: false, backgroundColor: '#ffffff' });
+    if (canvas.width > 0 && canvas.height > 0) {
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfW = pdf.internal.pageSize.getWidth();
+      const pdfH = pdf.internal.pageSize.getHeight();
+      const imgH = (canvas.height * pdfW) / canvas.width;
+      if (imgH <= pdfH) {
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfW, imgH, undefined, 'FAST');
+      } else {
+        const pageH = (pdfH * canvas.width) / pdfW;
+        let rem = canvas.height, pos = 0, pg = 0;
+        while (rem > 0) {
+          if (pg > 0) pdf.addPage();
+          const sh = Math.min(pageH, rem);
+          const pc = document.createElement('canvas');
+          pc.width = canvas.width; pc.height = sh;
+          pc.getContext('2d')?.drawImage(canvas, 0, pos, canvas.width, sh, 0, 0, canvas.width, sh);
+          pdf.addImage(pc.toDataURL('image/png'), 'PNG', 0, 0, pdfW, (sh * pdfW) / canvas.width, undefined, 'FAST');
+          pos += sh; rem -= sh; pg++;
+        }
+      }
+      return pdf.output('blob');
+    }
+  } catch (err) {
+    console.error('generatePDFBlob failed:', err);
+  } finally {
+    try { document.body.removeChild(wrapper); } catch (_) {}
+  }
+  return null;
 }
