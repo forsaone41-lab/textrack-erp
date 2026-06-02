@@ -45,20 +45,25 @@ export default function Pipeline() {
     l.type.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSave = async () => {
+  const [savedOk, setSavedOk] = useState(false);
+
+  const handleSave = async (nextStage?: string) => {
     if (!selectedLead) return;
     try {
-      const updatedLead = { ...selectedLead, ...editForm };
-      
-      // We use saveRecord instead of saveLead because it's an update
+      const updatedLead = { ...selectedLead, ...editForm, ...(nextStage ? { crmStage: nextStage } : {}) };
       await saveRecord('leads', updatedLead);
-      
       setLeads(prev => prev.map(l => l.id === updatedLead.id ? updatedLead : l));
-      alert(isAr ? 'تم الحفظ بنجاح' : 'Enregistré avec succès');
-      setSelectedLead(null);
+      setSavedOk(true);
+      setTimeout(() => { setSavedOk(false); setSelectedLead(null); }, 1200);
     } catch (e) {
       alert(isAr ? 'حدث خطأ' : 'Une erreur est survenue');
     }
+  };
+
+  const getNextStage = (currentStage: string) => {
+    const idx = STAGES.findIndex(s => s.id === currentStage);
+    if (idx >= 0 && idx < STAGES.length - 2) return STAGES[idx + 1];
+    return null;
   };
 
   const getLeadsByStage = (stageId: string) => {
@@ -187,142 +192,128 @@ export default function Pipeline() {
       )}
 
       {/* Edit Modal */}
-      {selectedLead && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-xl flex flex-col max-h-[90vh]">
-            
-            <div className="flex items-center justify-between p-6 border-b border-slate-100">
-              <h2 className="text-lg font-black text-slate-800">
-                {isAr ? 'تحديث معلومات الزبون' : 'Mise à jour du prospect'}
-              </h2>
-              <button 
-                onClick={() => setSelectedLead(null)}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-              >
+      {selectedLead && (() => {
+        const currentStage = STAGES.find(s => s.id === (editForm.crmStage || 'nouveau'));
+        const nextStage = getNextStage(editForm.crmStage || 'nouveau');
+        return (
+        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg flex flex-col max-h-[92vh] overflow-hidden">
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 pt-6 pb-4">
+              <div className="flex items-center gap-3">
+                {selectedLead.photo ? (
+                  <img src={selectedLead.photo} alt={selectedLead.name} className="w-12 h-12 rounded-2xl object-cover border-2 border-indigo-100" />
+                ) : (
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-sm uppercase border border-indigo-100">
+                    {selectedLead.name.substring(0,2)}
+                  </div>
+                )}
+                <div>
+                  <h2 className="text-base font-black text-slate-900">{selectedLead.name}</h2>
+                  <p className="text-xs text-slate-400 font-bold" dir="ltr">{selectedLead.phone}</p>
+                </div>
+              </div>
+              <button onClick={() => setSelectedLead(null)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto space-y-6">
-              {/* Client Info Summary */}
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-start gap-4">
-                {selectedLead.photo ? (
-                  <img src={selectedLead.photo} alt={selectedLead.name} className="w-20 h-20 rounded-xl object-cover border border-slate-200 shadow-sm shrink-0" />
-                ) : (
-                  <div className="w-20 h-20 rounded-xl bg-slate-200 flex items-center justify-center shrink-0">
-                    <span className="text-slate-400 font-bold text-xl uppercase">{selectedLead.name.substring(0, 2)}</span>
-                  </div>
-                )}
-                <div className="flex-1">
-                  <h3 className="font-bold text-slate-800 mb-2">{selectedLead.name}</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-slate-600">
-                    <div className="flex items-center gap-2"><Phone className="w-4 h-4"/> <span dir="ltr">{selectedLead.phone}</span></div>
-                    <div className="flex items-center gap-2"><MapPin className="w-4 h-4"/> {selectedLead.ville}</div>
-                    <div className="flex items-center gap-2 sm:col-span-2"><Store className="w-4 h-4"/> {selectedLead.type} - {selectedLead.quantity} {isAr ? 'قطعة' : 'pièces'}</div>
-                  </div>
+            {/* Current stage pill */}
+            <div className="px-6 pb-4 flex items-center gap-2">
+              <Store className="w-3.5 h-3.5 text-slate-400" />
+              <span className="text-xs text-slate-500 font-bold">{selectedLead.type} — {selectedLead.quantity} pcs</span>
+              <span className={`ml-auto text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border ${currentStage?.color}`}>
+                {isAr ? currentStage?.labelAr : currentStage?.labelFr}
+              </span>
+            </div>
+
+            {/* Next stage button — prominent */}
+            {nextStage && (
+              <div className="px-6 pb-4">
+                <button
+                  onClick={() => { setEditForm(f => ({ ...f, crmStage: nextStage.id as any })); handleSave(nextStage.id); }}
+                  className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black uppercase tracking-widest text-sm transition-all shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2"
+                >
+                  <CheckCircle className="w-5 h-5" />
+                  → {isAr ? nextStage.labelAr : nextStage.labelFr}
+                </button>
+              </div>
+            )}
+
+            {savedOk && (
+              <div className="mx-6 mb-4 bg-emerald-50 border border-emerald-200 rounded-2xl p-3 flex items-center gap-2 text-emerald-700 text-sm font-bold">
+                <CheckCircle className="w-4 h-4" /> {isAr ? 'تم الحفظ' : 'Enregistré !'}
+              </div>
+            )}
+
+            <div className="px-6 pb-4 overflow-y-auto space-y-4 border-t border-slate-100 pt-4">
+
+              {/* Stage selector */}
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">{isAr ? 'المرحلة' : 'Étape actuelle'}</label>
+                <select
+                  value={editForm.crmStage || 'nouveau'}
+                  onChange={(e) => setEditForm({ ...editForm, crmStage: e.target.value as any })}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-2 focus:ring-indigo-500/20"
+                >
+                  {STAGES.map(s => <option key={s.id} value={s.id}>{isAr ? s.labelAr : s.labelFr}</option>)}
+                </select>
+              </div>
+
+              {/* Contact method & RDV */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">{isAr ? 'طريقة التواصل' : 'Contact'}</label>
+                  <select
+                    value={editForm.crmContactMethod || ''}
+                    onChange={(e) => setEditForm({ ...editForm, crmContactMethod: e.target.value as any })}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-bold focus:ring-2 focus:ring-indigo-500/20"
+                  >
+                    <option value="">--</option>
+                    <option value="appel">Appel</option>
+                    <option value="whatsapp">WhatsApp</option>
+                    <option value="live">Visio</option>
+                    <option value="visite">Visite</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">RDV</label>
+                  <input type="datetime-local" value={editForm.crmRdvDate || ''} onChange={(e) => setEditForm({ ...editForm, crmRdvDate: e.target.value })}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-bold focus:ring-2 focus:ring-indigo-500/20" />
                 </div>
               </div>
 
-              {/* CRM Form */}
-              <div className="space-y-4">
-                
-                {/* Stage */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
-                    {isAr ? 'المرحلة' : 'Étape'}
-                  </label>
-                  <select
-                    value={editForm.crmStage || 'nouveau'}
-                    onChange={(e) => setEditForm({ ...editForm, crmStage: e.target.value as any })}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-indigo-500/20"
-                  >
-                    {STAGES.map(s => (
-                      <option key={s.id} value={s.id}>{isAr ? s.labelAr : s.labelFr}</option>
-                    ))}
-                  </select>
-                </div>
+              {/* Price */}
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">{isAr ? 'السعر (درهم)' : 'Prix proposé (DH)'}</label>
+                <input type="number" value={editForm.crmPrice || ''} onChange={(e) => setEditForm({ ...editForm, crmPrice: Number(e.target.value) })}
+                  placeholder="0" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-2 focus:ring-indigo-500/20" />
+              </div>
 
-                {/* Contact Method & Date */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
-                      {isAr ? 'طريقة التواصل' : 'Méthode de contact'}
-                    </label>
-                    <select
-                      value={editForm.crmContactMethod || ''}
-                      onChange={(e) => setEditForm({ ...editForm, crmContactMethod: e.target.value as any })}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-indigo-500/20"
-                    >
-                      <option value="">{isAr ? '-- اختر --' : '-- Choisir --'}</option>
-                      <option value="appel">{isAr ? 'اتصال هاتفي' : 'Appel téléphonique'}</option>
-                      <option value="whatsapp">{isAr ? 'واتساب' : 'WhatsApp'}</option>
-                      <option value="live">{isAr ? 'مكالمة فيديو' : 'Appel Visio'}</option>
-                      <option value="visite">{isAr ? 'زيارة للمحل' : 'Visite sur place'}</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
-                      {isAr ? 'تاريخ الموعد' : 'Date RDV'}
-                    </label>
-                    <input
-                      type="datetime-local"
-                      value={editForm.crmRdvDate || ''}
-                      onChange={(e) => setEditForm({ ...editForm, crmRdvDate: e.target.value })}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-indigo-500/20"
-                    />
-                  </div>
-                </div>
-
-                {/* Price Quote */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
-                    {isAr ? 'السعر المقترح (درهم)' : 'Prix proposé (DH)'}
-                  </label>
-                  <input
-                    type="number"
-                    value={editForm.crmPrice || ''}
-                    onChange={(e) => setEditForm({ ...editForm, crmPrice: Number(e.target.value) })}
-                    placeholder="0.00"
-                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-indigo-500/20"
-                  />
-                </div>
-
-                {/* Notes */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
-                    {isAr ? 'ملاحظات وتفاصيل' : 'Notes & Détails'}
-                  </label>
-                  <textarea
-                    value={editForm.crmNotes || ''}
-                    onChange={(e) => setEditForm({ ...editForm, crmNotes: e.target.value })}
-                    rows={4}
-                    placeholder={isAr ? 'أضف ملاحظات حول الاتصال، شروط العميل...' : 'Ajoutez des notes sur le prospect...'}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-indigo-500/20"
-                  />
-                </div>
-
+              {/* Notes */}
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">{isAr ? 'ملاحظات' : 'Notes'}</label>
+                <textarea value={editForm.crmNotes || ''} onChange={(e) => setEditForm({ ...editForm, crmNotes: e.target.value })}
+                  rows={3} placeholder={isAr ? 'ملاحظات...' : 'Notes sur le prospect...'}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 resize-none" />
               </div>
             </div>
 
-            <div className="p-6 border-t border-slate-100 flex gap-3">
-              <button
-                onClick={() => setSelectedLead(null)}
-                className="flex-1 py-3 px-4 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors"
-              >
+            <div className="p-4 border-t border-slate-100 flex gap-3">
+              <button onClick={() => setSelectedLead(null)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors text-sm">
                 {isAr ? 'إلغاء' : 'Annuler'}
               </button>
-              <button
-                onClick={handleSave}
-                className="flex-1 py-3 px-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2"
-              >
+              <button onClick={() => handleSave()} className="flex-1 py-3 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition-colors text-sm flex items-center justify-center gap-2">
                 <Save className="w-4 h-4" />
-                {isAr ? 'حفظ التحديث' : 'Enregistrer'}
+                {isAr ? 'حفظ' : 'Enregistrer'}
               </button>
             </div>
 
           </div>
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
