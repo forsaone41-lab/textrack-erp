@@ -28,99 +28,85 @@ export const InvoicePRO: React.FC<InvoicePROProps> = ({ facture, commande, compa
 
   if (isRecu) {
     return (
-      <div id={id} className="bg-white mx-auto text-slate-800" style={{ width: '210mm', minHeight: '297mm', fontFamily: 'Georgia, serif', padding: '14mm 16mm' }}>
+      <div id={id} className="bg-white mx-auto" style={{ width: '210mm', minHeight: '297mm', fontFamily: 'Georgia, serif', padding: '14mm 16mm', color: '#1e293b', fontSize: '13px', lineHeight: '1.6' }}>
 
         {/* Top: company left, title right */}
-        <div className="flex justify-between items-start mb-10">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2.5rem' }}>
           <div>
             {(company.logoInvoice || company.logoUrl) && (
-              <img src={company.logoInvoice || company.logoUrl} className="h-10 object-contain mb-3" alt={company.name} />
+              <img src={company.logoInvoice || company.logoUrl} style={{ height: '40px', objectFit: 'contain', marginBottom: '12px' }} alt={company.name} />
             )}
-            <p className="text-sm font-bold text-slate-900">{company.name}</p>
-            <p className="text-xs text-slate-600 mt-0.5">{company.address || 'Zone Industrielle, Meknès'}</p>
-            <p className="text-xs text-slate-600">Tél : {company.phone}</p>
-            <p className="text-xs text-slate-600">{company.email || 'contact@beyacreative.com'}</p>
+            <p style={{ fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>{company.name}</p>
+            <p style={{ fontSize: '12px', color: '#475569', margin: '0 0 2px' }}>{company.address || 'Zone Industrielle, Meknès'}</p>
+            <p style={{ fontSize: '12px', color: '#475569', margin: '0 0 2px' }}>Tél : {company.phone}</p>
+            <p style={{ fontSize: '12px', color: '#475569', margin: 0 }}>{company.email || 'contact@beyacreative.com'}</p>
           </div>
-          <div className="text-right">
-            <h1 className="text-2xl font-bold text-slate-900 underline underline-offset-4 mb-6">Reçu de Paiement</h1>
-            <p className="text-xs text-slate-600">{facture.client}</p>
-            <p className="text-xs text-slate-600">Client Partenaire</p>
-            <p className="text-xs text-slate-600">Maroc</p>
+          <div style={{ textAlign: 'right' }}>
+            <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', textDecoration: 'underline', marginBottom: '24px' }}>Reçu de Paiement</h1>
+            <p style={{ fontSize: '12px', color: '#475569', margin: '0 0 2px' }}>{facture.client}</p>
+            <p style={{ fontSize: '12px', color: '#475569', margin: '0 0 2px' }}>Client Partenaire</p>
+            <p style={{ fontSize: '12px', color: '#475569', margin: 0 }}>Maroc</p>
           </div>
         </div>
 
         {/* Section: Reçu de Paiement */}
-        <div className="mb-8">
-          <p className="text-sm font-bold text-slate-900 mb-4">Reçu de Paiement</p>
-          <div className="space-y-2 text-sm text-slate-800">
-            <div className="flex gap-2">
-              <span className="w-40 shrink-0">Date :</span>
-              <span className="flex-1 border-b border-slate-400 pb-0.5">{fmtDate(facture.date)}</span>
-            </div>
-            <div className="flex gap-2">
-              <span className="w-40 shrink-0">N° du reçu :</span>
-              <span className="flex-1 border-b border-slate-400 pb-0.5">{facture.numero}</span>
-            </div>
-            <div className="flex gap-2">
-              <span className="w-40 shrink-0">Reçu de la part de :</span>
-              <span className="flex-1 border-b border-slate-400 pb-0.5">{facture.client}</span>
-            </div>
-            {commande && (
-              <div className="flex gap-2">
-                <span className="w-40 shrink-0">Commande référencée :</span>
-                <span className="flex-1 border-b border-slate-400 pb-0.5">{commande.reference} — {commande.modele || ''}</span>
+        <div style={{ marginBottom: '2rem' }}>
+          <p style={{ fontWeight: 700, color: '#0f172a', marginBottom: '1rem' }}>Reçu de Paiement</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', color: '#1e293b' }}>
+            {[
+              ['Date :', fmtDate(facture.date)],
+              ['N° du reçu :', facture.numero],
+              ['Reçu de la part de :', facture.client],
+              ...(commande ? [['Commande référencée :', `${commande.reference}${commande.modele ? ' — ' + commande.modele : ''}`]] : [])
+            ].map(([label, value]) => (
+              <div key={label} style={{ display: 'flex', gap: '8px' }}>
+                <span style={{ width: '160px', flexShrink: 0, color: '#1e293b' }}>{label}</span>
+                <span style={{ flex: 1, borderBottom: '1px solid #94a3b8', paddingBottom: '2px', color: '#1e293b' }}>{value}</span>
               </div>
-            )}
+            ))}
           </div>
         </div>
 
         {/* Section: Détails du Paiement */}
-        <div className="mb-10">
-          <p className="text-sm font-bold text-slate-900 mb-4">Détails du Paiement</p>
-          <div className="space-y-2 text-sm text-slate-800">
-            <div className="flex gap-2">
-              <span className="w-40 shrink-0">Total commande :</span>
-              <span className="flex-1 border-b border-slate-400 pb-0.5 font-semibold">{facture.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
-            </div>
-            <div className="flex gap-2">
-              <span className="w-40 shrink-0">Montant payé (avance) :</span>
-              <span className="flex-1 border-b border-slate-400 pb-0.5 font-bold text-slate-900">{avance.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
-            </div>
-            <div className="flex gap-2">
-              <span className="w-40 shrink-0">Reste à payer :</span>
-              <span className="flex-1 border-b border-slate-400 pb-0.5">{reste.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
-            </div>
-            <div className="flex gap-2">
-              <span className="w-40 shrink-0">Mode de paiement :</span>
-              <span className="flex-1 border-b border-slate-400 pb-0.5">{facture.banque || 'Espèces / Virement'}</span>
-            </div>
-            <div className="flex gap-2">
-              <span className="w-40 shrink-0">Motif du paiement :</span>
-              <span className="flex-1 border-b border-slate-400 pb-0.5">Avance sur commande de confection textile</span>
-            </div>
+        <div style={{ marginBottom: '2.5rem' }}>
+          <p style={{ fontWeight: 700, color: '#0f172a', marginBottom: '1rem' }}>Détails du Paiement</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', color: '#1e293b' }}>
+            {[
+              ['Total commande :', `${facture.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD`, false],
+              ['Montant payé (avance) :', `${avance.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD`, true],
+              ['Reste à payer :', `${reste.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD`, false],
+              ['Mode de paiement :', facture.banque || 'Espèces / Virement', false],
+              ['Motif du paiement :', 'Avance sur commande de confection textile', false],
+            ].map(([label, value, bold]) => (
+              <div key={label as string} style={{ display: 'flex', gap: '8px' }}>
+                <span style={{ width: '160px', flexShrink: 0, color: '#1e293b' }}>{label}</span>
+                <span style={{ flex: 1, borderBottom: '1px solid #94a3b8', paddingBottom: '2px', fontWeight: bold ? 700 : 400, color: '#1e293b' }}>{value}</span>
+              </div>
+            ))}
           </div>
         </div>
 
         {/* Confirmation */}
-        <div className="mb-16 text-sm text-slate-800">
-          <p className="mb-4">Le montant mentionné ci-dessus a été dûment payé et reçu par :</p>
-          <div className="space-y-2">
-            <div className="flex gap-2">
-              <span className="w-40 shrink-0">Nom du destinataire :</span>
-              <span className="flex-1 border-b border-slate-400 pb-0.5">{company.name}</span>
-            </div>
-            <div className="flex gap-2">
-              <span className="w-40 shrink-0">Signature :</span>
-              <span className="flex-1 border-b border-slate-400 pb-0.5 h-8" />
-            </div>
+        <div style={{ marginBottom: '4rem', color: '#1e293b' }}>
+          <p style={{ marginBottom: '1rem' }}>Le montant mentionné ci-dessus a été dûment payé et reçu par :</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {[
+              ['Nom du destinataire :', company.name],
+              ['Signature :', ''],
+            ].map(([label, value]) => (
+              <div key={label} style={{ display: 'flex', gap: '8px' }}>
+                <span style={{ width: '160px', flexShrink: 0 }}>{label}</span>
+                <span style={{ flex: 1, borderBottom: '1px solid #94a3b8', paddingBottom: '2px', minHeight: '24px' }}>{value}</span>
+              </div>
+            ))}
           </div>
         </div>
 
         {/* Barcode + Footer */}
-        <div className="border-t border-slate-300 pt-6 flex items-end justify-between">
+        <div style={{ borderTop: '1px solid #cbd5e1', paddingTop: '1.5rem', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
           <div>
-            <p className="text-sm font-semibold text-slate-700 mb-1">Merci pour votre paiement !</p>
-            <p className="text-xs text-slate-500">{company.name} — {company.address || 'Zone Industrielle, Meknès'} — {company.phone}</p>
+            <p style={{ fontWeight: 600, color: '#334155', marginBottom: '4px' }}>Merci pour votre paiement !</p>
+            <p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>{company.name} — {company.address || 'Zone Industrielle, Meknès'} — {company.phone}</p>
           </div>
           <div className="flex flex-col items-center gap-1">
             <svg width="120" height="40" viewBox="0 0 120 40" xmlns="http://www.w3.org/2000/svg">
