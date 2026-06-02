@@ -47,6 +47,7 @@ export default function Demandes() {
   const [matierePrice, setMatierePrice] = useState<string>('');
   const [laborPrice, setLaborPrice] = useState<string>('');
   const [factureCreated, setFactureCreated] = useState<{numero: string; client: string; montant: number} | null>(null);
+  const [pdfProgress, setPdfProgress] = useState<'idle' | 'generating' | 'sharing' | 'done' | 'error'>('idle');
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
@@ -406,18 +407,27 @@ export default function Demandes() {
   const handleSharePDF = async () => {
     if (!devisLead || (!matierePrice && !laborPrice)) return;
     const filename = `Devis_${devisLead.name.replace(/\s/g, '_')}`;
-    await new Promise(r => setTimeout(r, 500));
-    const blob = await generatePDFBlob('devis-pdf-template');
-    if (!blob) return;
-    const file = new File([blob], `${filename}.pdf`, { type: 'application/pdf' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title: `Devis BEYA CREATIVE — ${devisLead.name}` });
-    } else {
-      // Desktop fallback: download
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `${filename}.pdf`; a.click();
-      URL.revokeObjectURL(url);
+    try {
+      setPdfProgress('generating');
+      await new Promise(r => setTimeout(r, 600));
+      const blob = await generatePDFBlob('devis-pdf-template');
+      if (!blob) { setPdfProgress('error'); setTimeout(() => setPdfProgress('idle'), 2500); return; }
+      const file = new File([blob], `${filename}.pdf`, { type: 'application/pdf' });
+      setPdfProgress('sharing');
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: `Devis BEYA CREATIVE — ${devisLead.name}` });
+        setPdfProgress('done');
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `${filename}.pdf`; a.click();
+        URL.revokeObjectURL(url);
+        setPdfProgress('done');
+      }
+      setTimeout(() => setPdfProgress('idle'), 2000);
+    } catch {
+      setPdfProgress('error');
+      setTimeout(() => setPdfProgress('idle'), 2500);
     }
   };
 
@@ -556,6 +566,62 @@ export default function Demandes() {
                 {isAr ? 'يخلق فاتورة تلقائيا في قسم الفواتير' : 'Crée automatiquement dans Factures & Docs'}
               </p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* PDF Progress Modal */}
+      {pdfProgress !== 'idle' && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-8 max-w-xs w-full shadow-2xl text-center">
+            {pdfProgress === 'generating' && (
+              <>
+                <div className="w-16 h-16 mx-auto mb-4 relative">
+                  <div className="w-16 h-16 border-4 border-indigo-100 rounded-full" />
+                  <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin absolute inset-0" />
+                  <FileText className="w-6 h-6 text-indigo-600 absolute inset-0 m-auto" />
+                </div>
+                <p className="font-black text-slate-800 text-sm uppercase tracking-widest mb-1">
+                  {isAr ? 'جاري إنشاء PDF...' : 'Génération PDF...'}
+                </p>
+                <p className="text-xs text-slate-400">{isAr ? 'ثانية من فضلك' : 'Patientez quelques secondes'}</p>
+                <div className="mt-4 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-indigo-500 rounded-full animate-pulse w-2/3" />
+                </div>
+              </>
+            )}
+            {pdfProgress === 'sharing' && (
+              <>
+                <div className="w-16 h-16 mx-auto mb-4 bg-emerald-50 rounded-full flex items-center justify-center">
+                  <Download className="w-7 h-7 text-emerald-500 animate-bounce" />
+                </div>
+                <p className="font-black text-slate-800 text-sm uppercase tracking-widest mb-1">
+                  {isAr ? 'جاري المشاركة...' : 'Partage en cours...'}
+                </p>
+                <p className="text-xs text-slate-400">{isAr ? 'اختر التطبيق' : 'Choisissez l\'application'}</p>
+              </>
+            )}
+            {pdfProgress === 'done' && (
+              <>
+                <div className="w-16 h-16 mx-auto mb-4 bg-emerald-50 rounded-full flex items-center justify-center">
+                  <CheckCircle className="w-8 h-8 text-emerald-500" />
+                </div>
+                <p className="font-black text-emerald-700 text-sm uppercase tracking-widest">
+                  {isAr ? 'تم بنجاح ✓' : 'PDF Envoyé ✓'}
+                </p>
+              </>
+            )}
+            {pdfProgress === 'error' && (
+              <>
+                <div className="w-16 h-16 mx-auto mb-4 bg-red-50 rounded-full flex items-center justify-center">
+                  <X className="w-8 h-8 text-red-400" />
+                </div>
+                <p className="font-black text-red-600 text-sm uppercase tracking-widest mb-1">
+                  {isAr ? 'حدث خطأ' : 'Erreur'}
+                </p>
+                <p className="text-xs text-slate-400">{isAr ? 'حاول مجدداً' : 'Réessayez'}</p>
+              </>
+            )}
           </div>
         </div>
       )}
