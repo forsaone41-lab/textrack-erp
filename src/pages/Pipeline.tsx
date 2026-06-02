@@ -23,6 +23,7 @@ export default function Pipeline() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [quickFilter, setQuickFilter] = useState<'all' | 'devis_sent' | 'attente' | 'confirme' | 'annule'>('all');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [zoomedPhoto, setZoomedPhoto] = useState<string | null>(null);
 
@@ -40,11 +41,17 @@ export default function Pipeline() {
     setLoading(false);
   };
 
-  const filteredLeads = leads.filter(l => 
-    l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    l.phone.includes(searchQuery) ||
-    l.type.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredLeads = leads.filter(l => {
+    const matchSearch = l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      l.phone.includes(searchQuery) ||
+      l.type.toLowerCase().includes(searchQuery.toLowerCase());
+    if (!matchSearch) return false;
+    if (quickFilter === 'devis_sent') return (l.crmPrice || 0) > 0;
+    if (quickFilter === 'attente') return l.crmStage === 'attente_confirmation';
+    if (quickFilter === 'confirme') return l.crmStage === 'confirme';
+    if (quickFilter === 'annule') return l.crmStage === 'annule';
+    return true;
+  });
 
   const [savedOk, setSavedOk] = useState(false);
 
@@ -74,30 +81,61 @@ export default function Pipeline() {
   return (
     <div className="space-y-6" dir={isAr ? 'rtl' : 'ltr'}>
       
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white">
-            <Users className="w-6 h-6" />
+      <div className="flex flex-col gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white">
+              <Users className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-black text-slate-800 tracking-tight">
+                {isAr ? 'تتبع الزبناء (CRM)' : 'Suivi des Prospects (CRM)'}
+              </h1>
+              <p className="text-sm font-bold text-slate-400 mt-1">
+                {isAr ? 'تتبع مراحل التواصل وتأكيد الطلبيات' : 'Gérez vos prospects et confirmations'}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-black text-slate-800 tracking-tight">
-              {isAr ? 'تتبع الزبناء (CRM)' : 'Suivi des Prospects (CRM)'}
-            </h1>
-            <p className="text-sm font-bold text-slate-400 mt-1">
-              {isAr ? 'تتبع مراحل التواصل وتأكيد الطلبيات' : 'Gérez vos prospects et confirmations'}
-            </p>
+          <div className="relative">
+            <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 ${isAr ? 'right-3' : 'left-3'}`} />
+            <input
+              type="text"
+              placeholder={isAr ? 'بحث بالاسم أو الهاتف...' : 'Rechercher...'}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={`w-full md:w-64 pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all ${isAr ? 'pr-10 pl-4' : ''}`}
+            />
           </div>
         </div>
 
-        <div className="relative">
-          <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 ${isAr ? 'right-3' : 'left-3'}`} />
-          <input
-            type="text"
-            placeholder={isAr ? 'بحث بالاسم أو الهاتف...' : 'Rechercher...'}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={`w-full md:w-64 pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all ${isAr ? 'pr-10 pl-4' : ''}`}
-          />
+        {/* Quick filters */}
+        <div className="flex flex-wrap gap-2">
+          {[
+            { id: 'all', label: isAr ? 'الكل' : 'Tous', color: 'bg-slate-100 text-slate-600 border-slate-200' },
+            { id: 'devis_sent', label: isAr ? 'أُرسل لهم ديفيز' : 'Devis envoyé', color: 'bg-indigo-50 text-indigo-600 border-indigo-200' },
+            { id: 'attente', label: isAr ? 'قيد الانتظار' : 'En attente conf.', color: 'bg-amber-50 text-amber-600 border-amber-200' },
+            { id: 'confirme', label: isAr ? 'مؤكد ✓' : 'Validé ✓', color: 'bg-emerald-50 text-emerald-600 border-emerald-200' },
+            { id: 'annule', label: isAr ? 'ملغى' : 'Annulé', color: 'bg-rose-50 text-rose-600 border-rose-200' },
+          ].map(f => (
+            <button
+              key={f.id}
+              onClick={() => setQuickFilter(f.id as any)}
+              className={`px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest border transition-all ${
+                quickFilter === f.id
+                  ? f.color + ' shadow-sm scale-105'
+                  : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'
+              }`}
+            >
+              {f.label}
+              <span className="ml-1.5 opacity-60">
+                {f.id === 'all' ? leads.length :
+                 f.id === 'devis_sent' ? leads.filter(l => (l.crmPrice || 0) > 0).length :
+                 f.id === 'attente' ? leads.filter(l => l.crmStage === 'attente_confirmation').length :
+                 f.id === 'confirme' ? leads.filter(l => l.crmStage === 'confirme').length :
+                 leads.filter(l => l.crmStage === 'annule').length}
+              </span>
+            </button>
+          ))}
         </div>
       </div>
 
