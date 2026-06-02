@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, UserPlus, Users, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy, Edit2 } from 'lucide-react';
-import { Lead, loadLeads, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile } from '../types';
+import { Lead, loadLeads, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile, Facture } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { generatePDF } from '../utils/pdf';
 import { compressImage } from '../utils/image';
@@ -357,6 +357,38 @@ export default function Demandes() {
   };
 
 
+  const handleCreateFacture = async () => {
+    if (!devisLead || (!matierePrice && !laborPrice)) return;
+    const unitPrice = Number(matierePrice || 0) + Number(laborPrice || 0);
+    const total = unitPrice * devisLead.quantity;
+    const existingFactures = await loadData<Facture>('factures');
+    const year = new Date().getFullYear();
+    const prefix = `FAC-${year}-`;
+    const existingNums = existingFactures
+      .filter(f => f.numero?.startsWith(prefix))
+      .map(f => parseInt(f.numero.replace(prefix, '')))
+      .filter(n => !isNaN(n));
+    const nextNum = existingNums.length > 0 ? Math.max(...existingNums) + 1 : 1;
+    const due = new Date();
+    due.setDate(due.getDate() + 30);
+    const facture: Facture = {
+      id: genId(),
+      numero: `${prefix}${String(nextNum).padStart(3, '0')}`,
+      client: devisLead.name,
+      montant: total,
+      avance: 0,
+      date: new Date().toISOString().split('T')[0],
+      echeance: due.toISOString().split('T')[0],
+      statut: 'en_attente',
+      typeDoc: 'facture',
+    };
+    await saveRecord('factures', facture);
+    alert(`✓ Facture ${facture.numero} créée — ${devisLead.name} — ${total.toLocaleString()} MAD`);
+    setDevisLead(null);
+    setMatierePrice('');
+    setLaborPrice('');
+  };
+
   const handleDownloadPDF = async () => {
     if (!devisLead) return;
     const filename = `Devis_${devisLead.name.replace(/\s/g, '_')}_${new Date().getTime()}`;
@@ -491,6 +523,20 @@ export default function Demandes() {
               </div>
               {isAr ? '2. إرسال الثمن + PDF' : '2. WhatsApp + PDF'}
             </button>
+
+            <div className="mt-4 border-t border-slate-100 pt-4">
+              <button
+                onClick={handleCreateFacture}
+                disabled={!matierePrice && !laborPrice}
+                className="w-full h-16 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-[20px] font-black uppercase tracking-widest text-xs hover:shadow-2xl hover:scale-[1.01] transition-all shadow-xl shadow-indigo-500/20 flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale"
+              >
+                <CheckCircle className="w-5 h-5" />
+                {isAr ? '✓ قبل العميل ← إنشاء فاتورة' : '✓ Client accepté → Créer Facture'}
+              </button>
+              <p className="text-center text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-2">
+                {isAr ? 'يخلق فاتورة تلقائيا في قسم الفواتير' : 'Crée automatiquement dans Factures & Docs'}
+              </p>
+            </div>
           </div>
         </div>
       )}
