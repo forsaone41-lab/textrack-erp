@@ -812,23 +812,6 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                  return (
                    <>
                      {renderList(devisList, 'عروض الأسعار (Devis)', 'Devis et Estimations', 'bg-indigo-600', 'text-indigo-600', 'bg-indigo-50', 'hover:border-indigo-200')}
-                     {recusList.length > 0 && (
-                       <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-6 py-4 flex items-start gap-4 -mb-4">
-                         <div className="w-9 h-9 bg-emerald-600 text-white rounded-xl flex items-center justify-center shrink-0 mt-0.5">
-                           <Receipt className="w-4 h-4" />
-                         </div>
-                         <div>
-                           <p className="text-xs font-black text-emerald-700 uppercase tracking-widest">
-                             {isAr ? 'وصولات الأفونس والمدفوعات' : 'Reçus d\'avance & Paiements'}
-                           </p>
-                           <p className="text-xs text-emerald-600 mt-1 leading-relaxed">
-                             {isAr
-                               ? 'هنا تجد تفاصيل دفعاتك: المبلغ الإجمالي، ما تم دفعه كأفونس، والمبلغ المتبقي لكل طلب.'
-                               : 'Retrouvez ici le détail de vos avances payées et le reste dû pour chaque commande.'}
-                           </p>
-                         </div>
-                       </div>
-                     )}
                      {renderList(recusList, 'وصولات الأداء والأفونس', 'Reçus de Paiement', 'bg-emerald-600', 'text-emerald-600', 'bg-emerald-50', 'hover:border-emerald-200')}
                      {renderList(facturesList, 'الفواتير المالية', 'Factures Financières', 'bg-slate-800', 'text-slate-800', 'bg-slate-100', 'hover:border-slate-300')}
                      
