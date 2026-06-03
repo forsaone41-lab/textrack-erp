@@ -109,9 +109,13 @@ export default function Recrutement() {
           {isAr ? 'كن جزءاً من' : 'Devenez acteur de'} <br />
           <span className="text-indigo-600">{isAr ? 'نجاحنا' : 'notre succès'}</span>
         </h1>
-        <p className="text-slate-500 font-medium text-lg max-w-xl mx-auto">
+        <p className="text-slate-500 font-medium text-lg max-w-xl mx-auto mb-6">
           {isAr ? 'نحن نبحث عن محترفين في الخياطة والفصالة للعمل في بيئة احترافية ومحفزة.' : 'Nous recherchons des talents passionnés par la confection textile pour renforcer notre atelier.'}
         </p>
+        <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-full text-sm font-black shadow-lg shadow-indigo-200">
+          <MapPin className="w-4 h-4" />
+          {isAr ? 'مكناس — البساتين' : 'Meknès — El Bassatine'}
+        </div>
       </header>
 
       <div className="max-w-2xl mx-auto px-6">
