@@ -362,8 +362,27 @@ export default function LandingPage() {
             </div>
           </div>
 
+          {/* CTA → Info page */}
+          <div className="mt-10 mb-6 flex flex-col items-center gap-3 text-center px-4">
+            <p className="text-slate-500 text-sm font-medium">
+              {isAr ? '💡 عندك أسئلة قبل ما تبدأ؟' : '💡 Des questions avant de commencer ?'}
+            </p>
+            <a
+              href="/#/info"
+              className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl transition-all hover:scale-105 active:scale-95 group"
+              style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)', color: 'white', boxShadow: '0 10px 40px rgba(79,70,229,0.35)' }}
+            >
+              <span className="text-xl">📋</span>
+              {isAr ? 'تعرف على أسعارنا وخدماتنا' : 'Voir les Prix, Délais & Services'}
+              <span className="text-white/70 group-hover:translate-x-1 transition-transform text-base">→</span>
+            </a>
+            <p className="text-[11px] text-slate-400 font-medium">
+              {isAr ? 'أسعار · مواعيد · أسئلة شائعة · كل ما تحتاج معرفته' : 'Prix · Délais · FAQ · Tout ce que vous devez savoir'}
+            </p>
+          </div>
+
           {/* Lead Generation Form Section */}
-          <div id="contact-form" className="mt-20 bg-white rounded-3xl md:rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.1)] border border-slate-100 overflow-hidden">
+          <div id="contact-form" className="mt-6 bg-white rounded-3xl md:rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.1)] border border-slate-100 overflow-hidden">
             <div className="grid grid-cols-1 lg:grid-cols-2">
               <div className="p-6 md:p-12 lg:p-16 bg-slate-900 text-white relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600 rounded-full blur-3xl opacity-20 -mr-32 -mt-32" />
