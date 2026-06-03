@@ -91,8 +91,8 @@ export default function ClientInfo({ company: companyProp, standalone = false }:
             >AR</button>
           </div>
 
-          {company.logoUrl && (
-            <img src={company.logoUrl} alt={company.name} className="h-14 mx-auto mb-4 object-contain" />
+          {(company.logoClient || company.logoLanding || company.logoUrl) && (
+            <img src={company.logoClient || company.logoLanding || company.logoUrl} alt={company.name} className="h-14 mx-auto mb-4 object-contain" />
           )}
           <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-1">
             {isAr ? 'مركز المعلومات' : 'Centre d\'Info'}
