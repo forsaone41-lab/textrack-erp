@@ -24,15 +24,18 @@ export default function Recrutement() {
     setIsSending(true);
     const formData = new FormData(e.currentTarget);
     
-    const leadData = {
+    const experience = formData.get('experience') as string;
+    const message = formData.get('message') as string;
+    const leadData: any = {
       name: formData.get('name') as string,
-      email: 'recrutement@beya.ma', // Placeholder for recruitment type
+      email: 'recrutement@beya.ma',
       phone: formData.get('phone') as string,
       ville: formData.get('ville') as string,
       type: 'RECRUTEMENT: ' + formData.get('specialty'),
       quantity: 0,
-      details: `Expérience: ${formData.get('experience')} ans. Message: ${formData.get('message')} | CV_ATTACHMENT:${cvFile}`,
-      photo: '', // Optional for recruitment
+      details: [experience && `Expérience: ${experience} ans`, message].filter(Boolean).join(' | '),
+      photo: '',
+      cv: cvFile || undefined,
     };
 
     try {
