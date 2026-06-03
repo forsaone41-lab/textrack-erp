@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Search, ChevronDown, ChevronUp, CheckCircle2, XCircle, MapPin, Clock, DollarSign, Package, Palette, HelpCircle, Phone, Mail, MessageCircle, Globe, Sparkles } from 'lucide-react';
-import { CompanyProfile, FaqItem, ServiceItem } from '../types';
-import { useLang } from '../contexts/LangContext';
+import { Search, ChevronDown, ChevronUp, CheckCircle2, XCircle, MapPin, Clock, DollarSign, Package, HelpCircle, Phone, Mail, MessageCircle, Globe, Sparkles } from 'lucide-react';
+import { CompanyProfile, FaqItem, ServiceItem, loadCompanyProfile } from '../types';
 
 const DEFAULT_FAQ: FaqItem[] = [
   { id: '1', emoji: '💰', category: 'prix', questionFr: 'Quels sont vos tarifs ?', questionAr: 'ما هي أسعاركم؟', answerFr: 'Nos prix varient selon la quantité, le modèle et les matières. Plus la quantité est grande, plus le prix unitaire baisse. Contactez-nous pour un devis personnalisé.', answerAr: 'أسعارنا تتفاوت حسب الكمية، النموذج والأقمشة. كلما زادت الكمية، انخفض السعر الفردي. تواصلوا معنا للحصول على عرض سعر مخصص.' },
@@ -40,12 +39,14 @@ const CATEGORIES = [
 ];
 
 interface ClientInfoProps {
-  company: CompanyProfile;
+  company?: CompanyProfile;
   standalone?: boolean;
 }
 
-export default function ClientInfo({ company, standalone = false }: ClientInfoProps) {
-  const { isAr } = useLang();
+export default function ClientInfo({ company: companyProp, standalone = false }: ClientInfoProps) {
+  const company = companyProp || loadCompanyProfile();
+  const [lang, setLang] = useState<'fr' | 'ar'>('fr');
+  const isAr = lang === 'ar';
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
   const [openFaq, setOpenFaq] = useState<string | null>(null);
@@ -68,13 +69,25 @@ export default function ClientInfo({ company, standalone = false }: ClientInfoPr
   const notAvailable = services.filter(s => !s.available);
 
   return (
-    <div className={`${standalone ? 'min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50/30' : ''}`} dir={isAr ? 'rtl' : 'ltr'}>
+    <div className={`${standalone ? 'min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30' : ''}`} dir={isAr ? 'rtl' : 'ltr'}>
       <div className="max-w-2xl mx-auto px-4 py-8">
 
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 relative">
+          {/* Language toggle */}
+          <div className={`absolute top-0 ${isAr ? 'left-0' : 'right-0'} flex items-center gap-1 bg-white border border-slate-200 rounded-full p-1 shadow-sm`}>
+            <button
+              onClick={() => setLang('fr')}
+              className={`px-3 py-1 rounded-full text-xs font-black transition-all ${lang === 'fr' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-700'}`}
+            >FR</button>
+            <button
+              onClick={() => setLang('ar')}
+              className={`px-3 py-1 rounded-full text-xs font-black transition-all ${lang === 'ar' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-700'}`}
+            >AR</button>
+          </div>
+
           {company.logoUrl && (
-            <img src={company.logoUrl} alt={company.name} className="h-12 mx-auto mb-4 object-contain" />
+            <img src={company.logoUrl} alt={company.name} className="h-14 mx-auto mb-4 object-contain" />
           )}
           <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-1">
             {isAr ? 'مركز المعلومات' : 'Centre d\'Info'}
@@ -112,38 +125,36 @@ export default function ClientInfo({ company, standalone = false }: ClientInfoPr
         </div>
 
         {/* Services oui / non */}
-        <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 p-6 mb-8">
+        <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 p-6 mb-6">
           <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-5 flex items-center gap-2">
             <Package className="w-4 h-4 text-indigo-500" />
             {isAr ? 'خدماتنا' : 'Nos Services'}
           </h2>
-          <div className="grid grid-cols-1 gap-3 mb-4">
-            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1.5 mb-1">
-              <CheckCircle2 className="w-3.5 h-3.5" />{isAr ? 'ما نقدمه' : 'Ce qu\'on fait'}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {available.map(s => (
-                <span key={s.id} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-full text-[11px] font-bold">
-                  <CheckCircle2 className="w-3 h-3" />
-                  {isAr ? s.labelAr : s.labelFr}
-                </span>
-              ))}
-            </div>
+          <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1.5 mb-2">
+            <CheckCircle2 className="w-3.5 h-3.5" />{isAr ? 'ما نقدمه' : 'Ce qu\'on fait'}
+          </p>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {available.map(s => (
+              <span key={s.id} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-full text-[11px] font-bold">
+                <CheckCircle2 className="w-3 h-3" />
+                {isAr ? s.labelAr : s.labelFr}
+              </span>
+            ))}
           </div>
           {notAvailable.length > 0 && (
-            <div>
+            <>
               <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest flex items-center gap-1.5 mb-2 mt-3">
                 <XCircle className="w-3.5 h-3.5" />{isAr ? 'ما لا نقدمه' : 'Ce qu\'on ne fait pas'}
               </p>
               <div className="flex flex-wrap gap-2">
                 {notAvailable.map(s => (
-                  <span key={s.id} className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 border border-rose-100 text-rose-500 rounded-full text-[11px] font-bold line-through opacity-70">
+                  <span key={s.id} className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 border border-rose-100 text-rose-400 rounded-full text-[11px] font-bold line-through opacity-70">
                     <XCircle className="w-3 h-3" />
                     {isAr ? s.labelAr : s.labelFr}
                   </span>
                 ))}
               </div>
-            </div>
+            </>
           )}
         </div>
 
@@ -152,7 +163,7 @@ export default function ClientInfo({ company, standalone = false }: ClientInfoPr
           <div className="p-6 border-b border-slate-50">
             <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4 flex items-center gap-2">
               <HelpCircle className="w-4 h-4 text-indigo-500" />
-              {isAr ? 'الأسئلة الشائعة' : 'FAQ'}
+              {isAr ? 'الأسئلة الشائعة' : 'Questions Fréquentes'}
             </h2>
             {/* Search */}
             <div className="relative mb-4">
@@ -161,10 +172,10 @@ export default function ClientInfo({ company, standalone = false }: ClientInfoPr
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder={isAr ? 'ابحث عن سؤال...' : 'Rechercher une question...'}
-                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium outline-none focus:border-indigo-400 transition-colors"
+                className="w-full pl-10 pr-8 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium outline-none focus:border-indigo-400 transition-colors"
               />
               {search && (
-                <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">×</button>
+                <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-lg leading-none">×</button>
               )}
             </div>
             {/* Category chips */}
@@ -186,7 +197,6 @@ export default function ClientInfo({ company, standalone = false }: ClientInfoPr
             </div>
           </div>
 
-          {/* FAQ list */}
           <div className="divide-y divide-slate-50">
             {filtered.length === 0 ? (
               <div className="py-12 text-center text-slate-400 text-sm font-medium">
@@ -196,10 +206,10 @@ export default function ClientInfo({ company, standalone = false }: ClientInfoPr
               <div key={item.id}>
                 <button
                   onClick={() => setOpenFaq(openFaq === item.id ? null : item.id)}
-                  className="w-full px-6 py-5 flex items-center gap-4 text-left hover:bg-slate-50 transition-colors"
+                  className="w-full px-6 py-5 flex items-center gap-4 hover:bg-slate-50/80 transition-colors"
                 >
-                  <span className="text-2xl shrink-0">{item.emoji}</span>
-                  <span className="flex-1 text-sm font-bold text-slate-800 text-left">
+                  <span className="text-xl shrink-0">{item.emoji}</span>
+                  <span className={`flex-1 text-sm font-bold text-slate-800 ${isAr ? 'text-right' : 'text-left'}`}>
                     {isAr ? item.questionAr : item.questionFr}
                   </span>
                   {openFaq === item.id
@@ -208,9 +218,9 @@ export default function ClientInfo({ company, standalone = false }: ClientInfoPr
                   }
                 </button>
                 {openFaq === item.id && (
-                  <div className="px-6 pb-5 pt-0">
-                    <div className="ml-10 bg-indigo-50/50 rounded-2xl px-5 py-4 border border-indigo-100/50">
-                      <p className="text-sm text-slate-700 leading-relaxed font-medium">
+                  <div className={`px-6 pb-5 ${isAr ? 'pr-16' : 'pl-16'}`}>
+                    <div className="bg-indigo-50/60 rounded-2xl px-5 py-4 border border-indigo-100/50">
+                      <p className={`text-sm text-slate-700 leading-relaxed font-medium ${isAr ? 'text-right' : 'text-left'}`}>
                         {isAr ? item.answerAr : item.answerFr}
                       </p>
                     </div>
@@ -229,16 +239,20 @@ export default function ClientInfo({ company, standalone = false }: ClientInfoPr
           </p>
           {company.phone && (
             <a
-              href={`https://wa.me/${company.phone.replace(/\D/g,'')}?text=${encodeURIComponent(isAr ? 'السلام عليكم، عندي سؤال حول الطلبية...' : 'Bonjour, j\'ai une question concernant...')}`}
+              href={`https://wa.me/${company.phone.replace(/\D/g,'')}?text=${encodeURIComponent(isAr ? 'السلام عليكم، عندي سؤال...' : 'Bonjour, j\'ai une question...')}`}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 px-6 py-3 bg-white text-indigo-700 rounded-2xl text-sm font-black hover:bg-indigo-50 transition-all shadow-lg"
             >
               <MessageCircle className="w-4 h-4" />
-              {isAr ? 'تواصل عبر واتساب' : 'Nous contacter sur WhatsApp'}
+              {isAr ? 'تواصل عبر واتساب' : 'WhatsApp'}
             </a>
           )}
         </div>
+
+        <p className="text-center text-[10px] text-slate-300 mt-6 font-medium">
+          {company.name} · {isAr ? 'جميع الحقوق محفوظة' : 'Tous droits réservés'}
+        </p>
       </div>
     </div>
   );

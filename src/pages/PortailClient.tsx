@@ -248,7 +248,6 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                 { id: 'overview', icon: <Globe className="w-5 h-5" />, label: isAr ? 'نظرة عامة' : 'Vue d\'ensemble' },
                 { id: 'orders', icon: <Package className="w-5 h-5" />, label: isAr ? 'طلبياتي' : 'Mes Commandes' },
                 { id: 'docs', icon: <Receipt className="w-5 h-5" />, label: isAr ? 'الفواتير والوثائق' : 'Factures & Docs' },
-                { id: 'info', icon: <MessageCircle className="w-5 h-5" />, label: isAr ? 'معلومات وأسعار' : 'Infos & Prix' },
                 { id: 'support', icon: <Bell className="w-5 h-5" />, label: isAr ? 'الدعم الفني VIP' : 'Support VIP' },
               ].map((item) => (
                 <button

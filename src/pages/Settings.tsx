@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Save, Image as ImageIcon, Building2, FileText, Phone, Play, Zap, Globe, Settings as SettingsIcon, ShieldCheck, X, Star, MapPin, RefreshCw, CloudUpload, Database, AlertTriangle } from 'lucide-react';
-import { CompanyProfile, loadCompanyProfile, saveCompanyProfile, saveRecord } from '../types';
+import { Save, Image as ImageIcon, Building2, FileText, Phone, Play, Zap, Globe, Settings as SettingsIcon, ShieldCheck, X, Star, MapPin, RefreshCw, CloudUpload, Database, AlertTriangle, HelpCircle, Plus, Trash2, CheckCircle2, XCircle, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
+import { CompanyProfile, FaqItem, ServiceItem, loadCompanyProfile, saveCompanyProfile, saveRecord } from '../types';
+import { genId } from '../types';
 import { supabase } from '../supabase';
 import { compressImage } from '../utils/image';
 import { useLang } from '../contexts/LangContext';
@@ -759,6 +760,9 @@ export default function Settings() {
           </div>
         </div>
 
+        {/* FAQ & Services Editor */}
+        <FaqEditor profile={profile} setProfile={setProfile} isAr={isAr} />
+
         {/* Footer actions */}
         <div className={`bg-slate-50 px-6 py-4 border-t border-slate-200 flex ${isAr ? 'justify-start' : 'justify-end'} items-center gap-4`}>
           {saved && <span className="text-green-600 text-sm font-medium">{t('modifs_enreg', lang)}</span>}
@@ -770,6 +774,161 @@ export default function Settings() {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+const DEFAULT_FAQ_ITEMS: FaqItem[] = [
+  { id: '1', emoji: '💰', category: 'prix', questionFr: 'Quels sont vos tarifs ?', questionAr: 'ما هي أسعاركم؟', answerFr: 'Nos prix varient selon la quantité, le modèle et les matières. Contactez-nous pour un devis.', answerAr: 'أسعارنا تتفاوت حسب الكمية والنموذج. تواصلوا معنا للحصول على عرض سعر.' },
+  { id: '2', emoji: '📦', category: 'prix', questionFr: 'Quel est le minimum de commande (MOQ) ?', questionAr: 'ما هو الحد الأدنى للطلب؟', answerFr: 'Notre minimum est généralement 50 pièces par modèle.', answerAr: 'الحد الأدنى عادةً 50 قطعة لكل نموذج.' },
+  { id: '3', emoji: '⏱️', category: 'delai', questionFr: 'Quel est le délai de production ?', questionAr: 'ما هو وقت الإنتاج؟', answerFr: 'En général 15 à 30 jours selon la complexité.', answerAr: 'عادةً من 15 إلى 30 يوم حسب التعقيد.' },
+];
+
+const DEFAULT_SERVICES_ITEMS: ServiceItem[] = [
+  { id: 's1', labelFr: 'Confection sur mesure', labelAr: 'تفصيل حسب الطلب', available: true },
+  { id: 's2', labelFr: 'Broderie & Logo', labelAr: 'تطريز وشعار', available: true },
+  { id: 's3', labelFr: 'Vente au détail', labelAr: 'بيع بالتجزئة', available: false },
+];
+
+function FaqEditor({ profile, setProfile, isAr }: { profile: CompanyProfile; setProfile: (p: CompanyProfile) => void; isAr: boolean }) {
+  const [open, setOpen] = useState(false);
+  const [tab, setTab] = useState<'faq' | 'services'>('faq');
+
+  const faq: FaqItem[] = profile.faq?.length ? profile.faq : DEFAULT_FAQ_ITEMS;
+  const services: ServiceItem[] = profile.services?.length ? profile.services : DEFAULT_SERVICES_ITEMS;
+
+  const updateFaq = (items: FaqItem[]) => setProfile({ ...profile, faq: items });
+  const updateServices = (items: ServiceItem[]) => setProfile({ ...profile, services: items });
+
+  const addFaq = () => updateFaq([...faq, { id: genId(), emoji: '❓', category: 'autre', questionFr: '', questionAr: '', answerFr: '', answerAr: '' }]);
+  const removeFaq = (id: string) => updateFaq(faq.filter(f => f.id !== id));
+  const updateFaqField = (id: string, field: keyof FaqItem, val: string) => updateFaq(faq.map(f => f.id === id ? { ...f, [field]: val } : f));
+
+  const addService = () => updateServices([...services, { id: genId(), labelFr: '', labelAr: '', available: true }]);
+  const removeService = (id: string) => updateServices(services.filter(s => s.id !== id));
+  const updateService = (id: string, field: keyof ServiceItem, val: any) => updateServices(services.map(s => s.id === id ? { ...s, [field]: val } : s));
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden mt-6">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-indigo-50 rounded-xl flex items-center justify-center">
+            <HelpCircle className="w-4 h-4 text-indigo-600" />
+          </div>
+          <div className={isAr ? 'text-right' : 'text-left'}>
+            <p className="text-sm font-black text-slate-800 uppercase tracking-tight">
+              {isAr ? 'محتوى صفحة المعلومات' : 'Page Info Client — FAQ & Services'}
+            </p>
+            <p className="text-[10px] text-slate-400 font-medium">
+              {isAr ? `${faq.length} سؤال · ${services.length} خدمة` : `${faq.length} questions · ${services.length} services`}
+              {' · '}
+              <a href={`${window.location.origin}/#/info`} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} className="text-indigo-500 hover:underline inline-flex items-center gap-0.5">
+                {isAr ? 'فتح الصفحة' : 'Voir la page'} <ExternalLink className="w-2.5 h-2.5" />
+              </a>
+            </p>
+          </div>
+        </div>
+        {open ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+      </button>
+
+      {open && (
+        <div className="border-t border-slate-100 p-6">
+          {/* Tabs */}
+          <div className="flex gap-2 mb-6">
+            <button onClick={() => setTab('faq')} className={`px-4 py-2 rounded-xl text-xs font-black uppercase transition-all ${tab === 'faq' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+              <HelpCircle className="w-3.5 h-3.5 inline mr-1" />FAQ ({faq.length})
+            </button>
+            <button onClick={() => setTab('services')} className={`px-4 py-2 rounded-xl text-xs font-black uppercase transition-all ${tab === 'services' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+              <CheckCircle2 className="w-3.5 h-3.5 inline mr-1" />Services ({services.length})
+            </button>
+          </div>
+
+          {tab === 'faq' && (
+            <div className="space-y-4">
+              {faq.map((item, i) => (
+                <div key={item.id} className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <input value={item.emoji} onChange={e => updateFaqField(item.id, 'emoji', e.target.value)}
+                      className="w-12 text-center text-xl bg-white border border-slate-200 rounded-lg py-1 outline-none" maxLength={2} />
+                    <select value={item.category} onChange={e => updateFaqField(item.id, 'category', e.target.value)}
+                      className="flex-1 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold outline-none">
+                      <option value="prix">💰 Prix / MOQ</option>
+                      <option value="delai">⏱️ Délai</option>
+                      <option value="services">👕 Services</option>
+                      <option value="qualite">✅ Qualité</option>
+                      <option value="contact">📍 Contact</option>
+                      <option value="autre">❓ Autre</option>
+                    </select>
+                    <button onClick={() => removeFaq(item.id)} className="p-1.5 text-rose-400 hover:bg-rose-50 rounded-lg transition">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Question FR</p>
+                      <input value={item.questionFr} onChange={e => updateFaqField(item.id, 'questionFr', e.target.value)}
+                        placeholder="Question en français..."
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-indigo-400" />
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black text-slate-400 uppercase mb-1">السؤال AR</p>
+                      <input value={item.questionAr} onChange={e => updateFaqField(item.id, 'questionAr', e.target.value)}
+                        placeholder="السؤال بالعربية..." dir="rtl"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-indigo-400 text-right" />
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Réponse FR</p>
+                      <textarea value={item.answerFr} onChange={e => updateFaqField(item.id, 'answerFr', e.target.value)}
+                        placeholder="Réponse en français..."
+                        rows={2} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-indigo-400 resize-none" />
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black text-slate-400 uppercase mb-1">الجواب AR</p>
+                      <textarea value={item.answerAr} onChange={e => updateFaqField(item.id, 'answerAr', e.target.value)}
+                        placeholder="الجواب بالعربية..." dir="rtl"
+                        rows={2} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-indigo-400 resize-none text-right" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <button onClick={addFaq} className="w-full py-3 border-2 border-dashed border-indigo-200 text-indigo-500 rounded-2xl text-xs font-black hover:border-indigo-400 hover:bg-indigo-50/30 transition-all flex items-center justify-center gap-2">
+                <Plus className="w-4 h-4" /> {isAr ? 'إضافة سؤال' : 'Ajouter une question'}
+              </button>
+            </div>
+          )}
+
+          {tab === 'services' && (
+            <div className="space-y-3">
+              {services.map(s => (
+                <div key={s.id} className="flex items-center gap-3 bg-slate-50 rounded-xl p-3 border border-slate-200">
+                  <button
+                    onClick={() => updateService(s.id, 'available', !s.available)}
+                    className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all ${s.available ? 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200' : 'bg-rose-100 text-rose-400 hover:bg-rose-200'}`}
+                  >
+                    {s.available ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                  </button>
+                  <input value={s.labelFr} onChange={e => updateService(s.id, 'labelFr', e.target.value)}
+                    placeholder="Label FR..." className="flex-1 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium outline-none focus:border-indigo-400" />
+                  <input value={s.labelAr} onChange={e => updateService(s.id, 'labelAr', e.target.value)}
+                    placeholder="التسمية AR..." dir="rtl" className="flex-1 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium outline-none focus:border-indigo-400 text-right" />
+                  <button onClick={() => removeService(s.id)} className="p-1.5 text-rose-400 hover:bg-rose-50 rounded-lg transition shrink-0">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+              <button onClick={addService} className="w-full py-3 border-2 border-dashed border-indigo-200 text-indigo-500 rounded-2xl text-xs font-black hover:border-indigo-400 hover:bg-indigo-50/30 transition-all flex items-center justify-center gap-2">
+                <Plus className="w-4 h-4" /> {isAr ? 'إضافة خدمة' : 'Ajouter un service'}
+              </button>
+              <p className="text-[10px] text-slate-400 font-medium text-center">
+                {isAr ? 'اضغط على الزر الأخضر/الأحمر لتغيير الحالة' : 'Cliquer sur ✅/❌ pour changer la disponibilité'}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
