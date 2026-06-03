@@ -547,9 +547,15 @@ export async function syncCompanyProfile(): Promise<CompanyProfile> {
 
 export async function loadLeads(): Promise<Lead[]> {
   try {
-    // Select all fields EXCEPT photo (base64) to keep payload light
-    // Note: avoid selecting columns that may not exist in Supabase
-    const { data, error } = await supabase
+    // Get deleted IDs to exclude
+    let deletedIds: string[] = [];
+    try {
+      const raw = localStorage.getItem('textrack_deleted_ids');
+      if (raw) deletedIds = JSON.parse(raw) || [];
+    } catch (_) {}
+
+    // 1. Load from Supabase
+    const { data: supaData, error } = await supabase
       .from('leads')
       .select('*')
       .neq('name', '__WORKER_PHOTO__')
@@ -557,35 +563,53 @@ export async function loadLeads(): Promise<Lead[]> {
       .neq('name', '__DELETED__')
       .order('date', { ascending: false });
 
-    if (!error && Array.isArray(data)) {
-      // Strip heavy photo field client-side to save memory
-      data.forEach((lead: any) => { delete lead.photo; });
+    // 2. Load from BOTH localStorage keys (old + new format)
+    let localLeads: Lead[] = [];
+    try {
+      const oldRaw = safeStorage.getItem('textrack_leads');
+      const newRaw = safeStorage.getItem('textrack_data_leads');
+      const old = oldRaw ? JSON.parse(oldRaw) : [];
+      const newCache = newRaw ? JSON.parse(newRaw) : [];
+      const combined = [...(Array.isArray(old) ? old : []), ...(Array.isArray(newCache) ? newCache : [])];
+      localLeads = combined.filter((l: any) => l && l.id && l.name && l.name !== '__SYSTEM_CONFIG__' && l.name !== '__WORKER_PHOTO__' && !deletedIds.includes(l.id));
+    } catch (_) {}
 
-      // ✅ Filter out locally deleted IDs just in case RLS blocked the delete
-      let finalData = data;
-      try {
-        const deletedIdsRaw = localStorage.getItem('textrack_deleted_ids');
-        if (deletedIdsRaw) {
-          const deletedIds = JSON.parse(deletedIdsRaw);
-          if (Array.isArray(deletedIds) && deletedIds.length > 0) {
-            finalData = data.filter(item => !deletedIds.includes(item.id));
-          }
-        }
-      } catch (e) {}
-
-      // ✅ Update the cache
-      localStorage.setItem('textrack_data_leads', JSON.stringify(finalData));
-      _cache['leads'] = { data: finalData, ts: Date.now() };
-      return finalData;
+    // 3. Merge: Supabase takes priority, add localStorage-only leads
+    let finalData: Lead[] = [];
+    if (!error && Array.isArray(supaData)) {
+      // Strip photos from Supabase data
+      supaData.forEach((l: any) => { delete l.photo; });
+      const supaIds = new Set(supaData.map((l: any) => l.id));
+      // Add leads from localStorage that are NOT in Supabase (missing leads!)
+      const missingLocal = localLeads.filter(l => !supaIds.has(l.id) && !deletedIds.includes(l.id));
+      finalData = [...supaData, ...missingLocal.map((l: any) => { const c = {...l}; delete c.photo; return c; })];
+      // Sync missing leads back to Supabase in background
+      if (missingLocal.length > 0) {
+        console.log(`Recovering ${missingLocal.length} leads missing from Supabase...`);
+        missingLocal.forEach(lead => saveRecord('leads', lead, true).catch(() => {}));
+      }
+    } else {
+      // Supabase failed — use localStorage only
+      finalData = localLeads.map((l: any) => { const c = {...l}; delete c.photo; return c; });
     }
-    
-    // Fallback to local
-    const local = safeStorage.getItem('textrack_leads');
-    const parsed = local ? JSON.parse(local) : [];
-    return Array.isArray(parsed) ? parsed.filter((l: any) => l && l.name !== '__SYSTEM_CONFIG__' && l.name !== '__WORKER_PHOTO__') : [];
+
+    // Filter deleted
+    finalData = finalData.filter(l => !deletedIds.includes(l.id));
+    // Sort by date desc
+    finalData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    // Update cache
+    localStorage.setItem('textrack_data_leads', JSON.stringify(finalData));
+    _cache['leads'] = { data: finalData, ts: Date.now() };
+    return finalData;
   } catch (err) {
     console.error("Error in loadLeads:", err);
-    return [];
+    // Emergency fallback
+    try {
+      const raw = safeStorage.getItem('textrack_leads') || safeStorage.getItem('textrack_data_leads');
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed.filter((l: any) => l && l.name !== '__SYSTEM_CONFIG__') : [];
+    } catch { return []; }
   }
 }
 
