@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, UserPlus, Users, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy, Edit2, Search } from 'lucide-react';
+import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, UserPlus, Users, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy, Edit2, Search, Globe } from 'lucide-react';
 import { Lead, loadLeads, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile, Facture } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { generatePDF, generatePDFBlob } from '../utils/pdf';
@@ -375,6 +375,35 @@ export default function Demandes() {
   };
 
 
+  const handleSendToPortail = async () => {
+    if (!devisLead || (!matierePrice && !laborPrice)) return;
+    const unitPrice = Number(matierePrice || 0) + Number(laborPrice || 0);
+    const total = unitPrice * devisLead.quantity;
+    const existingFactures = await loadData<Facture>('factures');
+    const year = new Date().getFullYear();
+    const prefix = `DEV-${year}-`;
+    const existingNums = existingFactures
+      .filter(f => f.numero?.startsWith(prefix))
+      .map(f => parseInt(f.numero.replace(prefix, '')))
+      .filter(n => !isNaN(n));
+    const nextNum = existingNums.length > 0 ? Math.max(...existingNums) + 1 : 1;
+    const due = new Date();
+    due.setDate(due.getDate() + 15);
+    const devis: Facture = {
+      id: genId(),
+      numero: `${prefix}${String(nextNum).padStart(3, '0')}`,
+      client: devisLead.name,
+      montant: total,
+      avance: 0,
+      date: new Date().toISOString().split('T')[0],
+      echeance: due.toISOString().split('T')[0],
+      statut: 'en_attente',
+      typeDoc: 'devis',
+    };
+    await saveRecord('factures', devis);
+    setFactureCreated({ numero: devis.numero, client: devisLead.name, montant: total });
+  };
+
   const handleCreateFacture = async () => {
     if (!devisLead || (!matierePrice && !laborPrice)) return;
     const unitPrice = Number(matierePrice || 0) + Number(laborPrice || 0);
@@ -557,6 +586,12 @@ export default function Demandes() {
                 className="w-full h-11 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-40 shadow-lg shadow-emerald-200">
                 <MessageSquare className="w-4 h-4" /><FileText className="w-4 h-4" />
                 {isAr ? 'مشاركة PDF مباشرة' : 'Partager PDF direct'}
+              </button>
+
+              <button onClick={handleSendToPortail} disabled={!matierePrice && !laborPrice}
+                className="w-full h-11 bg-gradient-to-r from-slate-700 to-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-40 shadow-lg">
+                <Globe className="w-4 h-4" />
+                {isAr ? 'إرسال للبورتال (Devis)' : 'Envoyer au Portail Client'}
               </button>
 
               <button onClick={handleCreateFacture} disabled={!matierePrice && !laborPrice}
