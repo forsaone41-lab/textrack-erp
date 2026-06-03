@@ -3,6 +3,7 @@ import { Play, ShieldCheck, Zap, Users, ArrowRight, MessageCircle, Star, Package
 import { useLang } from '../contexts/LangContext';
 import { Link } from 'react-router-dom';
 import { loadCompanyProfile, saveLead, syncCompanyProfile, CompanyProfile } from '../types';
+import { sendPushToAll } from '../utils/pushNotifications';
 
 const LogoWithFallback = ({ src, alt }: { src: string; alt: string }) => {
   const [error, setError] = useState(false);
@@ -436,6 +437,12 @@ export default function LandingPage() {
                       setIsSending(false);
                       setShowSuccess(true);
                       setModels([emptyModel()]);
+                      // Notify all admins of new demande
+                      sendPushToAll(
+                        '🧵 Nouvelle Demande!',
+                        `${clientName} — ${models.map(m => m.type).join(', ')}`,
+                        '/demandes'
+                      ).catch(() => {});
                       formElement.reset();
                     } catch (err: any) {
                       setIsSending(false);

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, X, UserPlus, Package, AlertCircle, CreditCard, Clock, CheckCircle2, RotateCw, Globe } from 'lucide-react';
+import { Bell, X, UserPlus, Package, AlertCircle, CreditCard, Clock, CheckCircle2, RotateCw, Globe, BellRing } from 'lucide-react';
+import { subscribeToPush } from '../../utils/pushNotifications';
 import { useLang } from '../../contexts/LangContext';
 import { loadData, saveRecord, Lead, Commande, Facture, loadPermissions, AppPage } from '../../types';
 
@@ -215,20 +216,21 @@ export default function NotificationCenter() {
                     {isAr ? 'إشعارات الهاتف' : 'Notifications Phone'}
                   </span>
                 </div>
-                <button 
+                <button
                   onClick={async (e) => {
                     e.stopPropagation();
-                    const permission = await Notification.requestPermission();
-                    if (permission === 'granted') {
-                      alert(isAr ? 'تم تفعيل الإشعارات بنجاح! ✅' : 'Notifications activées avec succès ! ✅');
+                    const sub = await subscribeToPush(currentUser?.username || 'admin');
+                    if (sub) {
+                      alert(isAr ? '✅ تم تفعيل الإشعارات! ستصلك إشعارات حتى لو كان التطبيق مغلقاً.' : '✅ Notifications activées ! Vous recevrez des alertes même si l\'app est fermée.');
                       window.location.reload();
                     } else {
-                      alert(isAr ? 'يجب السماح بالإشعارات من إعدادات المتصفح.' : 'Veuillez autoriser les notifications dans les paramètres.');
+                      alert(isAr ? 'يجب السماح بالإشعارات من إعدادات المتصفح.' : 'Veuillez autoriser les notifications dans les paramètres du navigateur.');
                     }
                   }}
-                  className="px-3 py-1 bg-white border border-indigo-200 rounded-full text-[9px] font-black text-indigo-600 uppercase hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+                  className="px-3 py-1 bg-white border border-indigo-200 rounded-full text-[9px] font-black text-indigo-600 uppercase hover:bg-indigo-600 hover:text-white transition-all shadow-sm flex items-center gap-1"
                 >
-                  {isAr ? 'تفعيل الآن' : 'Activer Maintenant'}
+                  <BellRing className="w-3 h-3" />
+                  {isAr ? 'تفعيل الآن' : 'Activer'}
                 </button>
               </div>
             )}

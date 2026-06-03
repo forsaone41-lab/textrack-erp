@@ -4,6 +4,7 @@ import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, Use
 import { Lead, loadLeads, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile, Facture } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { generatePDF, generatePDFBlob, printElement } from '../utils/pdf';
+import { sendPushToClient, sendPushToAll } from '../utils/pushNotifications';
 import { compressImage } from '../utils/image';
 import { PageLoader } from '../components/PageLoader';
 
@@ -403,6 +404,13 @@ export default function Demandes() {
     };
     await saveRecord('factures', devis);
     setFactureCreated({ numero: devis.numero, client: devisLead.name, montant: total });
+    // Push notification to client
+    sendPushToClient(
+      devisLead.name,
+      isAr ? '📄 لديك عرض سعر جديد' : '📄 Nouveau Devis BEYA CREATIVE',
+      isAr ? `عرض سعر ${devis.numero} - ${total.toLocaleString()} درهم` : `Devis ${devis.numero} — ${total.toLocaleString()} MAD`,
+      '/portail'
+    ).catch(() => {});
   };
 
   const handleCreateFacture = async () => {

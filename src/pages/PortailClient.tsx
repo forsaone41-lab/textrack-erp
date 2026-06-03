@@ -5,6 +5,7 @@ import {
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { printElement } from '../utils/pdf';
+import { subscribeToPush } from '../utils/pushNotifications';
 import { compressImage } from '../utils/image';
 import { printFicheTechnique as printFT } from '../utils/print';
 import { InvoicePRO } from '../components/InvoicePRO';
@@ -104,6 +105,8 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
           (c.client || '').trim().toLowerCase() === (currentUser?.nom || '').trim().toLowerCase()
         );
         setFound(myCommandes);
+        // Auto-subscribe to push notifications silently
+        subscribeToPush(currentUser.username || currentUser.nom).catch(() => {});
       }
       setLoading(false);
     });
