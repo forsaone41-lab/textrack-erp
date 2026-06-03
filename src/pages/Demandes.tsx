@@ -1465,10 +1465,32 @@ export default function Demandes() {
                       </span>
                     </label>
                     {(lead as any).cv && (
-                      <a href={(lead as any).cv} target="_blank" rel="noreferrer"
+                      <button onClick={() => {
+                        const cv = (lead as any).cv;
+                        if (cv.startsWith('data:image/')) {
+                          setPreviewPhoto(cv);
+                        } else {
+                          try {
+                            const arr = cv.split(',');
+                            const mime = arr[0].match(/:(.*?);/)?.[1] || 'application/pdf';
+                            const bstr = atob(arr[1]);
+                            let n = bstr.length;
+                            const u8arr = new Uint8Array(n);
+                            while(n--){ u8arr[n] = bstr.charCodeAt(n); }
+                            const blob = new Blob([u8arr], {type: mime});
+                            const url = URL.createObjectURL(blob);
+                            window.open(url, '_blank');
+                          } catch (e) {
+                            const a = document.createElement('a');
+                            a.href = cv;
+                            a.download = `CV_${lead.name.replace(/\s+/g, '_')}`;
+                            a.click();
+                          }
+                        }
+                      }}
                         className="h-8 px-2 rounded-lg text-[9px] font-black uppercase border bg-blue-500 text-white border-blue-500 flex items-center gap-1 hover:bg-blue-600 transition-all">
                         <Eye className="w-3.5 h-3.5" /> Voir
-                      </a>
+                      </button>
                     )}
                     <button
                       onClick={async () => {
