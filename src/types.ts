@@ -548,16 +548,19 @@ export async function syncCompanyProfile(): Promise<CompanyProfile> {
 export async function loadLeads(): Promise<Lead[]> {
   try {
     // Select all fields EXCEPT photo (base64) to keep payload light
+    // Note: avoid selecting columns that may not exist in Supabase
     const { data, error } = await supabase
       .from('leads')
-      .select('id,name,phone,email,ville,type,quantity,tailles,details,date,status,contactedAt,contactedType,crmStage,crmContactMethod,crmRdvDate,crmNotes,crmPrice,crmPriceConfirmed,crmPriority')
+      .select('*')
       .neq('name', '__WORKER_PHOTO__')
       .neq('name', '__SYSTEM_CONFIG__')
       .neq('name', '__DELETED__')
-      .order('date', { ascending: false })
-      .limit(200);
+      .order('date', { ascending: false });
 
     if (!error && Array.isArray(data)) {
+      // Strip heavy photo field client-side to save memory
+      data.forEach((lead: any) => { delete lead.photo; });
+
       // ✅ Filter out locally deleted IDs just in case RLS blocked the delete
       let finalData = data;
       try {
