@@ -41,8 +41,19 @@ export default function Achats() {
     seuilAlerte: 10
   });
 
+  const [clients, setClients] = useState<any[]>([]);
+  const [recus, setRecus] = useState<any[]>([]);
+
   useEffect(() => {
-    loadData<BesoinAchat>('achats').then(data => setBesoins(data || []));
+    Promise.all([
+      loadData<BesoinAchat>('achats'),
+      loadData<any>('clients'),
+      loadData<any>('recus')
+    ]).then(([achatsData, clientsData, recusData]) => {
+      setBesoins(achatsData || []);
+      setClients(clientsData || []);
+      setRecus(recusData || []);
+    });
   }, []);
 
   const saveBesoins = async (newBesoins: BesoinAchat[]) => {
@@ -290,19 +301,52 @@ export default function Achats() {
                 </div>
                 <div>
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'اسم الكليان' : 'Client'}</label>
-                  <input type="text" value={form.client || ''} onChange={e => setForm({...form, client: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-500" placeholder={isAr ? "أحمد..." : "Ahmed..."} />
+                  <input list="achats-clients" type="text" value={form.client || ''} onChange={e => setForm({...form, client: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-500" placeholder={isAr ? "أحمد..." : "Ahmed..."} />
+                  <datalist id="achats-clients">
+                    {Array.from(new Set(clients.map(c => c.name || c.nom))).map(name => (
+                      <option key={name} value={name} />
+                    ))}
+                  </datalist>
                 </div>
               </div>
 
+              {form.client && (
+                <div className="bg-indigo-50/50 rounded-xl p-3 border border-indigo-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Coins className="w-4 h-4 text-indigo-500" />
+                    <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{isAr ? 'التسبيق المدفوع (Avance)' : 'Avance Client'}</span>
+                  </div>
+                  <span className="text-sm font-black text-indigo-700">
+                    {(() => {
+                      const clientName = form.client.trim().toLowerCase();
+                      const sum = recus
+                        .filter(r => r.client && r.client.trim().toLowerCase() === clientName && r.statut !== 'annulé')
+                        .reduce((total, r) => total + (r.montant || 0), 0);
+                      return sum.toLocaleString() + ' MAD';
+                    })()}
+                  </span>
+                </div>
+              )}
+
               <div>
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'اسم السلعة / الثوب' : 'Article / Tissu'}</label>
-                <input type="text" value={form.article || ''} onChange={e => setForm({...form, article: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-500" placeholder={isAr ? "قطن 100%..." : "Coton 100%..."} />
+                <input list="achats-tissus" type="text" value={form.article || ''} onChange={e => setForm({...form, article: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-500" placeholder={isAr ? "قطن 100%..." : "Coton 100%..."} />
+                <datalist id="achats-tissus">
+                  {['Coton', 'Satin', 'Soie', 'Polyester', 'Lin', 'Viscose', 'Denim', 'Velours', 'Jersey', 'Crepe', 'Popeline', 'Lycra'].map(t => (
+                    <option key={t} value={t} />
+                  ))}
+                </datalist>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'اللون (اختياري)' : 'Couleur (Optionnel)'}</label>
-                  <input type="text" value={form.couleur || ''} onChange={e => setForm({...form, couleur: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-500" placeholder="Noir, Blanc..." />
+                  <input list="achats-couleurs" type="text" value={form.couleur || ''} onChange={e => setForm({...form, couleur: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-500" placeholder="Noir, Blanc..." />
+                  <datalist id="achats-couleurs">
+                    {['Noir', 'Blanc', 'Bleu Marine', 'Rouge', 'Vert', 'Gris', 'Beige', 'Rose', 'Jaune', 'Bordeaux', 'Ciel', 'Marron', 'Kaki', 'Argent', 'Or'].map(c => (
+                      <option key={c} value={c} />
+                    ))}
+                  </datalist>
                 </div>
                 <div>
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الكمية المطلوبة' : 'Quantité Requise'}</label>
