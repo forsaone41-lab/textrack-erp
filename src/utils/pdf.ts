@@ -93,11 +93,12 @@ export async function generatePDF(elementId: string, filename: string) {
     const [html2canvas, jsPDF] = await Promise.all([getHtml2Canvas(), getJsPDF()]);
 
     const canvas = await html2canvas(wrapper, {
-      scale: 2,
+      scale: 1.5,
       useCORS: true,
       allowTaint: true,
       logging: false,
       backgroundColor: '#ffffff',
+      imageTimeout: 5000,
     });
 
     if (canvas.width > 0 && canvas.height > 0) {
@@ -155,11 +156,13 @@ export async function generatePDFBlob(elementId: string): Promise<Blob | null> {
   wrapper.appendChild(clone);
   document.body.appendChild(wrapper);
 
-  await new Promise(r => setTimeout(r, 500));
+  await new Promise(r => setTimeout(r, 300));
+  // Let browser breathe before heavy canvas work
+  await new Promise(r => requestAnimationFrame(r));
 
   try {
     const [html2canvas, jsPDF] = await Promise.all([getHtml2Canvas(), getJsPDF()]);
-    const canvas = await html2canvas(wrapper, { scale: 2, useCORS: true, allowTaint: true, logging: false, backgroundColor: '#ffffff' });
+    const canvas = await html2canvas(wrapper, { scale: 1.5, useCORS: true, allowTaint: true, logging: false, backgroundColor: '#ffffff', imageTimeout: 5000 });
     if (canvas.width > 0 && canvas.height > 0) {
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
