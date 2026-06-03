@@ -31,6 +31,7 @@ export default function Demandes() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'date_desc' | 'date_asc' | 'qty_desc' | 'qty_asc'>('date_desc');
   const [filterType, setFilterType] = useState<string>('all');
+  const [filterExperience, setFilterExperience] = useState<string>('all');
   const [loading, setLoading] = useState(true);
 
   const [confirmLead, setConfirmLead] = useState<Lead | null>(null);
@@ -533,18 +534,32 @@ export default function Demandes() {
     const matchFilter = filter === 'all' || l.status === filter;
     const q = searchQuery.toLowerCase();
     const matchSearch = !q || l.name.toLowerCase().includes(q) || l.phone.includes(q) || l.type.toLowerCase().includes(q) || (l.ville || '').toLowerCase().includes(q);
-    const matchType = filterType === 'all' || l.type === filterType;
-    return matchCategory && matchFilter && matchSearch && matchType;
+    
+    let matchType = true;
+    let matchExperience = true;
+
+    if (category === 'recrutement') {
+      const typeStr = l.type.replace('RECRUTEMENT:', '').trim();
+      matchType = filterType === 'all' || typeStr === filterType;
+      
+      const m = l.details?.match(/Expérience:\s*(\d+)/);
+      const expStr = m ? m[1] : '0';
+      matchExperience = filterExperience === 'all' || expStr === filterExperience;
+    } else {
+      matchType = filterType === 'all' || l.type === filterType;
+    }
+
+    return matchCategory && matchFilter && matchSearch && matchType && matchExperience;
   }).sort((a, b) => {
     if (sortBy === 'date_desc') return new Date(b.date).getTime() - new Date(a.date).getTime();
     if (sortBy === 'date_asc') return new Date(a.date).getTime() - new Date(b.date).getTime();
     if (sortBy === 'qty_desc') return b.quantity - a.quantity;
     if (sortBy === 'qty_asc') return a.quantity - b.quantity;
     return 0;
-  }), [leads, category, filter, searchQuery, sortBy, filterType]);
+  }), [leads, category, filter, searchQuery, sortBy, filterType, filterExperience]);
 
   // Reset visible count + filterType when category changes
-  useEffect(() => { setVisibleCount(10); setFilterType('all'); setSearchQuery(''); }, [category]);
+  useEffect(() => { setVisibleCount(10); setFilterType('all'); setFilterExperience('all'); setSearchQuery(''); }, [category]);
   useEffect(() => { setVisibleCount(10); }, [filter]);
 
   const visibleLeads = useMemo(() => filteredLeads.slice(0, visibleCount), [filteredLeads, visibleCount]);
@@ -1330,6 +1345,59 @@ export default function Demandes() {
                 <option value="all">Tous les types</option>
                 {Array.from(new Set(clientLeads.map(l => l.type).filter(t => !t.startsWith('RECRUTEMENT:')))).sort().map(t => (
                   <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Recrutement Search + Filters */}
+      {category === 'recrutement' && (() => {
+        const recrutementLeads = leads.filter(l => l.type.startsWith('RECRUTEMENT:'));
+        return (
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder={isAr ? 'بحث بالاسم، الهاتف، المدينة...' : 'Rechercher par nom, téléphone, ville...'}
+                className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all shadow-sm"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">{isAr ? 'التخصص:' : 'Poste:'}</span>
+              <select
+                value={filterType}
+                onChange={e => setFilterType(e.target.value)}
+                className="px-3 py-1.5 rounded-xl text-[10px] font-black border border-slate-200 bg-white text-slate-600 outline-none focus:border-indigo-400"
+              >
+                <option value="all">{isAr ? 'جميع التخصصات' : 'Tous les postes'}</option>
+                {Array.from(new Set(recrutementLeads.map(l => l.type.replace('RECRUTEMENT:', '').trim()))).sort().map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">{isAr ? 'الخبرة:' : 'Expérience:'}</span>
+              <select
+                value={filterExperience}
+                onChange={e => setFilterExperience(e.target.value)}
+                className="px-3 py-1.5 rounded-xl text-[10px] font-black border border-slate-200 bg-white text-slate-600 outline-none focus:border-indigo-400"
+              >
+                <option value="all">{isAr ? 'الكل' : 'Toutes'}</option>
+                {Array.from(new Set(recrutementLeads.map(l => {
+                  const m = l.details?.match(/Expérience:\s*(\d+)/);
+                  return m ? m[1] : '0';
+                }))).sort((a, b) => parseInt(a) - parseInt(b)).map(exp => (
+                  <option key={exp} value={exp}>{exp === '0' ? (isAr ? 'بدون خبرة' : 'Sans expérience') : `${exp} ${isAr ? 'سنوات' : 'ans'}`}</option>
                 ))}
               </select>
             </div>
