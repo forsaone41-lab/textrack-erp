@@ -323,24 +323,10 @@ export default function Achats() {
               {form.client && (() => {
                 const clientName = form.client.trim().toLowerCase();
                 const clientCommandes = commandes.filter(c => c.client && c.client.trim().toLowerCase() === clientName);
+                const selectedCmd = form.commandeRef ? clientCommandes.find(c => c.reference === form.commandeRef) : null;
                 
                 return (
                   <div className="space-y-4">
-                    <div className="bg-indigo-50/50 rounded-xl p-3 border border-indigo-100 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Coins className="w-4 h-4 text-indigo-500" />
-                        <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{isAr ? 'التسبيق المدفوع (Avance)' : 'Avance Client'}</span>
-                      </div>
-                      <span className="text-sm font-black text-indigo-700">
-                        {(() => {
-                          const sum = factures
-                            .filter(r => r.typeDoc === 'recu' && r.client && r.client.trim().toLowerCase() === clientName && r.statut !== 'annulé')
-                            .reduce((total, r) => total + (r.avance || 0), 0);
-                          return sum.toLocaleString() + ' MAD';
-                        })()}
-                      </span>
-                    </div>
-
                     {clientCommandes.length > 0 && (
                       <div>
                         <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'مرتبطة بطلبية؟ (اختياري)' : 'Lié à une commande ? (Optionnel)'}</label>
@@ -356,6 +342,27 @@ export default function Achats() {
                         </select>
                       </div>
                     )}
+
+                    <div className="bg-indigo-50/50 rounded-xl p-3 border border-indigo-100 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Coins className="w-4 h-4 text-indigo-500" />
+                        <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">
+                          {isAr ? 'التسبيق المدفوع (Avance)' : 'Avance Client'}
+                        </span>
+                      </div>
+                      <span className="text-sm font-black text-indigo-700">
+                        {(() => {
+                          if (selectedCmd) {
+                            return (selectedCmd.avance || 0).toLocaleString() + ' MAD';
+                          } else {
+                            const sum = factures
+                              .filter(r => r.typeDoc === 'recu' && r.client && r.client.trim().toLowerCase() === clientName && r.statut !== 'annulé')
+                              .reduce((total, r) => total + (r.avance || 0), 0);
+                            return sum.toLocaleString() + ' MAD';
+                          }
+                        })()}
+                      </span>
+                    </div>
                   </div>
                 );
               })()}
