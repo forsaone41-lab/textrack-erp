@@ -61,11 +61,6 @@ export default function Achats() {
     });
   }, []);
 
-  const saveBesoins = async (newBesoins: BesoinAchat[]) => {
-    setBesoins(newBesoins);
-    localStorage.setItem('textrack_data_achats', JSON.stringify(newBesoins));
-  };
-
   const handleAdd = async () => {
     if (!form.article || !form.client || !form.quantiteRequise) return;
     
@@ -83,20 +78,25 @@ export default function Achats() {
     };
 
     const updated = [...besoins, newItem];
-    await saveBesoins(updated);
+    setBesoins(updated);
+    await saveRecord('achats', newItem as any);
+    
     setShowAddModal(false);
     setForm({ categorie: 'tissus', unite: 'm', statut: 'a_acheter', quantiteRequise: 0, dateDemande: new Date().toISOString().split('T')[0], commandeRef: '' });
   };
 
   const moveStatus = async (item: BesoinAchat, newStatus: 'a_acheter' | 'commande') => {
-    const updated = besoins.map(b => b.id === item.id ? { ...b, statut: newStatus } : b);
-    await saveBesoins(updated);
+    const updatedItem = { ...item, statut: newStatus };
+    const updated = besoins.map(b => b.id === item.id ? updatedItem : b);
+    setBesoins(updated);
+    await saveRecord('achats', updatedItem as any);
   };
 
   const handleDelete = async (id: string) => {
     if (confirm(isAr ? 'هل أنت متأكد أنك تريد حذف هذا الطلب؟' : 'Voulez-vous vraiment supprimer cet achat ?')) {
       const updated = besoins.filter(b => b.id !== id);
-      await saveBesoins(updated);
+      setBesoins(updated);
+      await deleteRecord('achats', id);
     }
   };
 
@@ -104,14 +104,18 @@ export default function Achats() {
     if (!showReceiveModal || !receiveForm.quantite || !receiveForm.prixUnitaire) return;
     
     const b = showReceiveModal;
+    const updatedItem: BesoinAchat = { 
+      ...b, 
+      statut: 'recu', 
+      quantiteLivre: receiveForm.quantite, 
+      prixUnitaire: receiveForm.prixUnitaire, 
+      fournisseur: receiveForm.fournisseur 
+    };
     
     // 1. Mark as received in Achats
-    const updatedBesoins = besoins.map(item => 
-      item.id === b.id 
-        ? { ...item, statut: 'recu', quantiteLivre: receiveForm.quantite, prixUnitaire: receiveForm.prixUnitaire, fournisseur: receiveForm.fournisseur } 
-        : item
-    );
-    await saveBesoins(updatedBesoins);
+    const updatedBesoins = besoins.map(item => item.id === b.id ? updatedItem : item);
+    setBesoins(updatedBesoins);
+    await saveRecord('achats', updatedItem as any);
 
     // 2. Add to Stock
     const totalCost = receiveForm.quantite * receiveForm.prixUnitaire;
