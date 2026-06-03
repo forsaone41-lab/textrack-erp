@@ -47,11 +47,11 @@ export default function Achats() {
   useEffect(() => {
     Promise.all([
       loadData<BesoinAchat>('achats'),
-      loadData<any>('clients'),
+      loadData<any>('users'),
       loadData<any>('recus')
-    ]).then(([achatsData, clientsData, recusData]) => {
+    ]).then(([achatsData, usersData, recusData]) => {
       setBesoins(achatsData || []);
-      setClients(clientsData || []);
+      setClients((usersData || []).filter((u: any) => u.role === 'client'));
       setRecus(recusData || []);
     });
   }, []);
