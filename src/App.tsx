@@ -46,6 +46,7 @@ const Recrutement     = lazy(() => import('./pages/Recrutement'));
 const ListeAttente    = lazy(() => import('./pages/ListeAttente'));
 const Notifications   = lazy(() => import('./pages/Notifications'));
 const AISpace         = lazy(() => import('./pages/AISpace'));
+const Achats          = lazy(() => import('./pages/Achats'));
 
 import { PageLoader } from './components/PageLoader';
 
@@ -391,6 +392,7 @@ function AppContent() {
         
         {/* Shared / Public ERP Routes */}
         <Route path="stocks" element={can('stocks') ? <StockMateriaux /> : <Navigate to="/" replace />} />
+        <Route path="achats" element={can('stocks') ? <Achats /> : <Navigate to="/" replace />} />
         <Route path="commandes" element={can('commandes') ? <Commandes /> : <Navigate to="/" replace />} />
         <Route path="agenda" element={can('agenda') ? <Agenda /> : <Navigate to="/" replace />} />
         <Route path="commandes/manage" element={can('commandes') ? <ManageOrder /> : <Navigate to="/" replace />} />

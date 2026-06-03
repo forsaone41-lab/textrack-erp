@@ -208,7 +208,12 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
                 <NavItem to="/commandes/manage" icon={Sparkles} label={isAr ? 'إعداد طلبية (PRO)' : 'Master Setup (PRO)'} pro />
               </>
             )}
-            {can('stocks') && <NavItem to="/stocks" icon={Package} label={isAr ? 'المخزون' : 'Stocks'} />}
+            {can('stocks') && (
+              <>
+                <NavItem to="/achats" icon={ShoppingCart} label={isAr ? 'المشتريات' : 'Achats'} />
+                <NavItem to="/stocks" icon={Package} label={isAr ? 'المخزون' : 'Stocks'} />
+              </>
+            )}
             {can('fiches') && (
               <NavItem to="/fiches-techniques" icon={FileText} label={isAr ? 'البطاقات التقنية' : 'Fiches Tech.'} />
             )}
