@@ -9,6 +9,7 @@ import { subscribeToPush } from '../utils/pushNotifications';
 import { compressImage } from '../utils/image';
 import { printFicheTechnique as printFT } from '../utils/print';
 import { InvoicePRO } from '../components/InvoicePRO';
+import ClientInfo from './ClientInfo';
 import { PageLoader } from '../components/PageLoader';
 
 interface PortailClientProps {
@@ -52,7 +53,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     };
     sync();
   }, []);
-  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'docs' | 'support'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'docs' | 'support' | 'info'>('overview');
   const [showNotifs, setShowNotifs] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [viewMesuresFiche, setViewMesuresFiche] = useState<FicheTechnique | null>(null);
@@ -247,6 +248,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                 { id: 'overview', icon: <Globe className="w-5 h-5" />, label: isAr ? 'نظرة عامة' : 'Vue d\'ensemble' },
                 { id: 'orders', icon: <Package className="w-5 h-5" />, label: isAr ? 'طلبياتي' : 'Mes Commandes' },
                 { id: 'docs', icon: <Receipt className="w-5 h-5" />, label: isAr ? 'الفواتير والوثائق' : 'Factures & Docs' },
+                { id: 'info', icon: <MessageCircle className="w-5 h-5" />, label: isAr ? 'معلومات وأسعار' : 'Infos & Prix' },
                 { id: 'support', icon: <Bell className="w-5 h-5" />, label: isAr ? 'الدعم الفني VIP' : 'Support VIP' },
               ].map((item) => (
                 <button
@@ -301,7 +303,9 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
               <h2 className="text-base md:text-2xl font-black text-slate-900 uppercase tracking-tighter truncate max-w-[150px] md:max-w-none">
                 {activeTab === 'overview' ? (isAr ? 'لوحة التحكم' : 'Tableau de Bord') :
                  activeTab === 'orders' ? (isAr ? 'الطلبيات' : 'Commandes') :
-                 activeTab === 'docs' ? (isAr ? 'الوثائق' : 'Documents') : (isAr ? 'الدعم' : 'Support')}
+                 activeTab === 'docs' ? (isAr ? 'الوثائق' : 'Documents') :
+                 activeTab === 'info' ? (isAr ? 'معلومات وأسعار' : 'Infos & Prix') :
+                 (isAr ? 'الدعم' : 'Support')}
               </h2>
            </div>
            
@@ -967,6 +971,32 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                    </>
                  );
                })()}
+            </div>
+          )}
+
+          {activeTab === 'info' && (
+            <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">
+                  {isAr ? 'معلومات وأسعار' : 'Infos & Prix'}
+                </h2>
+                <button
+                  onClick={() => {
+                    const url = `${window.location.origin}/#/info`;
+                    if (navigator.share) {
+                      navigator.share({ title: `${company.name} — Info`, url });
+                    } else {
+                      navigator.clipboard.writeText(url);
+                      alert(isAr ? '✅ تم نسخ الرابط' : '✅ Lien copié !');
+                    }
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-black hover:bg-indigo-100 transition-all"
+                >
+                  <ArrowRight className="w-3.5 h-3.5" />
+                  {isAr ? 'مشاركة الرابط' : 'Partager'}
+                </button>
+              </div>
+              <ClientInfo company={company} />
             </div>
           )}
 

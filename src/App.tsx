@@ -5,7 +5,7 @@ import { Menu, Package } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import Calculator from './components/Tools/Calculator';
 import NotificationCenter from './components/Tools/NotificationCenter';
-import { CompanyProfile } from './types';
+import { CompanyProfile, loadCompanyProfile } from './types';
 
 // ✅ Lazy load all pages - each page loads only when visited
 const Dashboard        = lazy(() => import('./pages/Dashboard'));
@@ -29,6 +29,7 @@ const Recus            = lazy(() => import('./pages/Recus'));
 const PrixMarche       = lazy(() => import('./pages/PrixMarche'));
 const Pointage         = lazy(() => import('./pages/Pointage'));
 const PortailClient    = lazy(() => import('./pages/PortailClient'));
+const ClientInfo       = lazy(() => import('./pages/ClientInfo'));
 const Utilisateurs     = lazy(() => import('./pages/Utilisateurs'));
 const Performance      = lazy(() => import('./pages/Performance'));
 const Charges          = lazy(() => import('./pages/Charges'));
@@ -172,6 +173,15 @@ function PointageLayout() {
   );
 }
 
+function ClientInfoRoute() {
+  const company = loadCompanyProfile();
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" /></div>}>
+      <ClientInfo company={company} standalone={true} />
+    </Suspense>
+  );
+}
+
 function AppContent() {
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     try {
@@ -298,6 +308,7 @@ function AppContent() {
         </Route>
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
         <Route path="/portal" element={<PortailClient />} />
+        <Route path="/info" element={<ClientInfoRoute />} />
         <Route path="/recrutement" element={<Recrutement />} />
         <Route path="/" element={<LandingPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

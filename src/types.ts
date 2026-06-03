@@ -423,6 +423,25 @@ export interface CompanyProfile {
   experienceYears?: string;
   experienceTextFr?: string;
   experienceTextAr?: string;
+  faq?: FaqItem[];
+  services?: ServiceItem[];
+}
+
+export interface FaqItem {
+  id: string;
+  emoji: string;
+  questionFr: string;
+  questionAr: string;
+  answerFr: string;
+  answerAr: string;
+  category: 'prix' | 'delai' | 'services' | 'contact' | 'qualite' | 'autre';
+}
+
+export interface ServiceItem {
+  id: string;
+  labelFr: string;
+  labelAr: string;
+  available: boolean;
 }
 
 export interface Lead {
