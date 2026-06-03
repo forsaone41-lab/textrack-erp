@@ -1295,11 +1295,13 @@ export default function Demandes() {
                 lead.crmPriority ? 'border-amber-300 ring-1 ring-amber-200' : lead.status === 'new' ? 'border-indigo-200' : 'border-slate-100'
               }`}
             >
-              {/* Top-right badges row */}
-              <div className="absolute top-3 right-3 flex items-center gap-1.5">
+              {/* Top-left badges row */}
+              <div className="absolute top-3 left-3 flex items-center gap-1.5">
                 {lead.crmPriority && <span className="text-xs">⭐</span>}
                 {lead.status === 'new' && (
-                  <span className="px-2 py-0.5 bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest rounded-full">New</span>
+                  <span className="px-2 py-0.5 bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest rounded-full">
+                    {isAr ? 'جديد' : 'New'}
+                  </span>
                 )}
               </div>
 
