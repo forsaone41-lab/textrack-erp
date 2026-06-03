@@ -823,7 +823,10 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                         className={`w-full py-4 ${bgClass} text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:brightness-110 transition-all flex items-center justify-center gap-3 shadow-xl`}
                                       >
                                          <Download className="w-4 h-4" />
-                                         {isAr ? 'تحميل الوثيقة' : 'Télécharger PDF'}
+                                         {isAr
+                                           ? f.typeDoc === 'recu' ? 'وصل الأداء الرسمي' : f.typeDoc === 'devis' ? 'تحميل العرض' : 'الفاتورة الرسمية'
+                                           : f.typeDoc === 'recu' ? 'Reçu d\'Avance Officiel' : f.typeDoc === 'devis' ? 'Télécharger le Devis' : 'Facture Officielle'
+                                         }
                                       </button>
 
                                       {/* Admin-uploaded proof — shown as visible image */}
