@@ -541,8 +541,9 @@ export default function Demandes() {
     return 0;
   }), [leads, category, filter, searchQuery, sortBy, filterType]);
 
-  // Reset visible count when filters change
-  useEffect(() => { setVisibleCount(10); }, [category, filter]);
+  // Reset visible count + filterType when category changes
+  useEffect(() => { setVisibleCount(10); setFilterType('all'); setSearchQuery(''); }, [category]);
+  useEffect(() => { setVisibleCount(10); }, [filter]);
 
   const visibleLeads = useMemo(() => filteredLeads.slice(0, visibleCount), [filteredLeads, visibleCount]);
   const hasMore = visibleCount < filteredLeads.length;
@@ -1407,6 +1408,42 @@ export default function Demandes() {
                 </button>
 
                 <div className="w-px h-5 bg-slate-200 mx-0.5" />
+
+                {/* Recrutement actions */}
+                {category === 'recrutement' && (
+                  <>
+                    <button
+                      onClick={async () => {
+                        const next = lead.status === 'new' ? 'processed' : 'new';
+                        const updated = { ...lead, status: next as Lead['status'], crmStage: next === 'processed' ? 'entretien' : undefined };
+                        setLeads(prev => prev.map(l => l.id === lead.id ? updated : l));
+                        await saveRecord('leads', updated, true);
+                      }}
+                      title={lead.status === 'processed' ? 'Convoqué ✓' : 'Convoquer à l\'entretien'}
+                      className={`h-8 px-3 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 border transition-all ${lead.status === 'processed' ? 'bg-indigo-50 text-indigo-600 border-indigo-200' : 'bg-indigo-500 text-white border-indigo-500 hover:bg-indigo-600'}`}
+                    >
+                      {lead.status === 'processed' ? '✓ Convoqué' : '📅 Entretien'}
+                    </button>
+                    <button
+                      onClick={async () => {
+                        const updated = { ...lead, status: 'completed' as Lead['status'], crmStage: 'retenu' };
+                        setLeads(prev => prev.map(l => l.id === lead.id ? updated : l));
+                        await saveRecord('leads', updated, true);
+                      }}
+                      title="Retenu / Embauché"
+                      className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border flex items-center gap-1 transition-all bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-500 hover:text-white"
+                    >✅ Retenu</button>
+                    <button
+                      onClick={async () => {
+                        const updated = { ...lead, status: 'completed' as Lead['status'], crmStage: 'rejeté' };
+                        setLeads(prev => prev.map(l => l.id === lead.id ? updated : l));
+                        await saveRecord('leads', updated, true);
+                      }}
+                      title="Rejeter candidature"
+                      className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border flex items-center gap-1 transition-all bg-rose-50 text-rose-500 border-rose-200 hover:bg-rose-500 hover:text-white"
+                    >✕ Rejeter</button>
+                  </>
+                )}
 
                 {/* Convert / Fiche client */}
                 {category !== 'recrutement' && (
