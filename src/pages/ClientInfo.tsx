@@ -74,30 +74,39 @@ export default function ClientInfo({ company: companyProp, standalone = false }:
   const notAvailable = services.filter(s => !s.available);
 
   return (
-    <div className={`${standalone ? 'min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30' : ''}`} dir={isAr ? 'rtl' : 'ltr'}>
-      <div className="max-w-2xl mx-auto px-4 py-8">
+    <div className={`${standalone ? 'min-h-screen' : ''} relative overflow-hidden`} dir={isAr ? 'rtl' : 'ltr'}
+      style={{ background: 'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)' }}>
+      {/* Decorative blobs */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #6366f1, transparent)' }} />
+        <div className="absolute top-1/3 -right-24 w-72 h-72 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #8b5cf6, transparent)' }} />
+        <div className="absolute bottom-0 left-1/4 w-80 h-80 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #4f46e5, transparent)' }} />
+        {/* Grid pattern */}
+        <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+      </div>
+      <div className="max-w-2xl mx-auto px-4 py-8 relative z-10">
 
         {/* Header */}
         <div className="text-center mb-8 relative">
           {/* Language toggle */}
-          <div className={`absolute top-0 ${isAr ? 'left-0' : 'right-0'} flex items-center gap-1 bg-white border border-slate-200 rounded-full p-1 shadow-sm`}>
+          <div className={`absolute top-0 ${isAr ? 'left-0' : 'right-0'} flex items-center gap-1 bg-white/10 border border-white/20 rounded-full p-1 backdrop-blur-sm`}>
             <button
               onClick={() => setLang('fr')}
-              className={`px-3 py-1 rounded-full text-xs font-black transition-all ${lang === 'fr' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`px-3 py-1 rounded-full text-xs font-black transition-all ${lang === 'fr' ? 'bg-white text-indigo-700' : 'text-white/60 hover:text-white'}`}
             >FR</button>
             <button
               onClick={() => setLang('ar')}
-              className={`px-3 py-1 rounded-full text-xs font-black transition-all ${lang === 'ar' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`px-3 py-1 rounded-full text-xs font-black transition-all ${lang === 'ar' ? 'bg-white text-indigo-700' : 'text-white/60 hover:text-white'}`}
             >AR</button>
           </div>
 
           {(company.logoClient || company.logoLanding || company.logoUrl) && (
-            <img src={company.logoClient || company.logoLanding || company.logoUrl} alt={company.name} className="h-14 mx-auto mb-4 object-contain" />
+            <img src={company.logoClient || company.logoLanding || company.logoUrl} alt={company.name} className="h-16 mx-auto mb-5 object-contain drop-shadow-xl" />
           )}
-          <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-1">
+          <h1 className="text-3xl font-black text-white uppercase tracking-tight mb-2">
             {isAr ? 'مركز المعلومات' : 'Centre d\'Info'}
           </h1>
-          <p className="text-sm text-slate-500 font-medium">
+          <p className="text-sm text-white/60 font-medium">
             {isAr ? 'جميع أسئلتكم، بإجابات واضحة' : 'Toutes vos questions, répondues clairement'}
           </p>
         </div>
@@ -112,19 +121,19 @@ export default function ClientInfo({ company: companyProp, standalone = false }:
           )}
           {company.phone && (
             <a href={`tel:${company.phone}`}
-              className="flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-full text-xs font-black shadow-sm hover:border-indigo-300 transition-all">
+              className="flex items-center gap-1.5 px-4 py-2 bg-white/10 border border-white/20 text-white rounded-full text-xs font-black backdrop-blur-sm hover:bg-white/20 transition-all">
               <Phone className="w-3.5 h-3.5" />{company.phone}
             </a>
           )}
           {company.email && (
             <a href={`mailto:${company.email}`}
-              className="flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-full text-xs font-black shadow-sm hover:border-indigo-300 transition-all">
+              className="flex items-center gap-1.5 px-4 py-2 bg-white/10 border border-white/20 text-white rounded-full text-xs font-black backdrop-blur-sm hover:bg-white/20 transition-all">
               <Mail className="w-3.5 h-3.5" />{company.email}
             </a>
           )}
           {company.address && (
-            <span className="flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-full text-xs font-bold">
-              <MapPin className="w-3.5 h-3.5 text-rose-400" />{company.address}
+            <span className="flex items-center gap-1.5 px-4 py-2 bg-white/10 border border-white/20 text-white/80 rounded-full text-xs font-bold backdrop-blur-sm">
+              <MapPin className="w-3.5 h-3.5 text-rose-300" />{company.address}
             </span>
           )}
         </div>
@@ -255,7 +264,7 @@ export default function ClientInfo({ company: companyProp, standalone = false }:
           )}
         </div>
 
-        <p className="text-center text-[10px] text-slate-300 mt-6 font-medium">
+        <p className="text-center text-[10px] text-white/30 mt-6 font-medium">
           {company.name} · {isAr ? 'جميع الحقوق محفوظة' : 'Tous droits réservés'}
         </p>
       </div>
