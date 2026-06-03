@@ -11,11 +11,13 @@ import { PageLoader } from '../components/PageLoader';
 const DEFAULT_TEMPLATES = {
   ar: {
     firstContact: "السلام عليكم *{name}*، معكم *BEYA CREATIVE*. 😊\n\nشكراً على طلبكم الخاص بـ *{type}*. باش نقدروا نعاونوكم أحسن، واش ممكن تجاوبونا على هاد الأسئلة:\n1. فوقاش محتاجين الطلبية (أقصى أجل)؟\n2. واش نتوما علامة تجارية واجدة (Brand) ولا كتبيعوا في الأنترنيت (E-com) وباغين تصاوبوا الماركة ديالكم؟\n3. واش عندكم التصميم (Logo/Design) واجد؟\n4. واش محتاجين الثوب من عندنا ولا عندكم الثوب ديالكم؟\n\nحنا في الخدمة! 🇲🇦",
+    firstContactRecrutement: "السلام عليكم *{name}*، معاكم مصنع *BEYA CREATIVE* بمكناس. 😊\n\nشفنا الطلب ديالك بخصوص خدمة *{type}*. بغينا غير نتأكدو من بعض المعلومات:\n1. شحال من عام ديال الخبرة عندك فهاد التخصص؟\n2. واش فايت ليك خدمتي فشي معمل ديال الخياطة من قبل؟\n3. واش ساكن(ة) في مكناس أو النواحي؟\n4. فوقاش تقدر تبدا الخدمة معنا يلا تفاهمنا؟\n\nحنا كنتسناو الجواب ديالك باش نحددو معاك موعد ديال لانتريتيان. 🇲🇦",
     devisTxt: "السلام عليكم *{name}*، معكم *BEYA CREATIVE*. 😊\n\nإليكم عرض السعر لطلبكم الخاص بـ *{type}*:\n- الكمية: *{quantity} قطعة*\n- الثمن للقطعة: *{unitPrice} درهم*\n- المجموع الإجمالي: *{total} درهم* {note}\n\n*(ملاحظة: كلما زادت الكمية، ينخفض ثمن القطعة)*\n\nباش نضمنوا الجودة، كنقترحوا نصاوبوا **عينة (Échantillon)** هي الأولى باش نصاوبوا الورقة التقنية. واش نبداو العينة؟ 🧵🇲🇦",
     devisPdf: "السلام عليكم *{name}*، معكم *BEYA CREATIVE*. 😊\n\nيسعدنا أن نقدم لكم تقدير الثمن الخاص بطلبكم. لقد حرصنا على دراسة طلبكم بعناية لنضمن لكم أفضل جودة لمنتجات *{type}*.\n\nنحن في انتظار تأكيدكم للبدء في العمل. شكراً لثقتكم!"
   },
   fr: {
-    firstContact: "Bonjour *{name}*, ici *BEYA CREATIVE*. 😊\n\nMerci pour votre demande de *{type}*. Pour mieux vous accompagner, pourriez-vous nous préciser :\n1. Quel est votre délai souhaité ?\n2. Êtes-vous une marque établie ou vendez-vous en ligne (E-com) et souhaitez-vous créer votre propre branding ?\n3. Avez-vous déjà le design ou logo prêt ?\n4. Souhaitez-vous que nous fournissions le tissu ou avez-vous déjà le vôtre ?\n\nNous sommes à votre disposition ! 🇲🇦",
+    firstContact: "Bonjour *{name}*, ici *BEYA CREATIVE*. 😊\n\nMerci pour votre demande de *{type}*. Pour mieux vous accompagner, pourriez-vous nous préciser :\n1. Quel est votre délai souhaité ?\n2. Êtes-vous une marque établie ou vendez-vous en ligne (E-com) et souhaitez-vous créer votre propre branding ?\n3. Avez-vous déjà le design ou logo prêt ?\n4. Souhaitez-vous que nous fournissions le tissu ou avez-vous déjà le vôtre ?\n\nNous sommes à disposition ! 🇲🇦",
+    firstContactRecrutement: "Bonjour *{name}*, ici l'usine *BEYA CREATIVE* à Meknès. 😊\n\nNous avons bien reçu votre candidature pour le poste de *{type}*. Pour compléter votre dossier, pourriez-vous répondre à ces questions :\n1. Combien d'années d'expérience avez-vous dans ce domaine ?\n2. Avez-vous déjà travaillé dans une usine de confection ?\n3. Habitez-vous à Meknès ou aux alentours ?\n4. Quelle est votre disponibilité pour commencer ?\n\nNous attendons votre retour pour programmer un entretien. 🇲🇦",
     devisTxt: "Bonjour *{name}*, ici *BEYA CREATIVE*. 😊\n\nVoici notre proposition pour votre commande de *{type}* :\n- Quantité : *{quantity} pcs*\n- Prix Unitaire : *{unitPrice} MAD*\n- TOTAL : *{total} MAD* {note}\n\n*(Note : Tarif dégressif selon la quantité)*\n\nPour garantir la qualité, nous suggérons de commencer par un **Échantillon** pour créer la Fiche Technique. On lance l'échantillon ? 🧵🇲🇦",
     devisPdf: "Bonjour *{name}*, ici *BEYA CREATIVE*. 😊\n\nNous avons le plaisir de vous transmettre votre devis. Nous avons étudié votre demande avec soin pour vous garantir la meilleure qualité pour vos *{type}*.\n\nNous attendons votre confirmation pour lancer la production. Merci de votre confiance !"
   }
@@ -387,9 +389,15 @@ export default function Demandes() {
     }
 
     const lang = isAr ? 'ar' : 'fr';
-    const message = customMsg || templates[lang].firstContact
+    const isRecrutement = lead.type.startsWith('RECRUTEMENT:');
+    const templateName = isRecrutement ? 'firstContactRecrutement' : 'firstContact';
+    
+    // Use stored template if available, fallback to default (in case of old cache)
+    const tplStr = templates[lang]?.[templateName] || DEFAULT_TEMPLATES[lang][templateName];
+
+    const message = customMsg || tplStr
       .replace(/{name}/g, lead.name)
-      .replace(/{type}/g, lead.type);
+      .replace(/{type}/g, isRecrutement ? lead.type.replace('RECRUTEMENT:', '').trim() : lead.type);
 
     const encoded = encodeURIComponent(message);
     window.open(`https://wa.me/${formattedPhone}?text=${encoded}`, '_blank');
@@ -1963,33 +1971,68 @@ export default function Demandes() {
             </div>
 
             <div className="p-8 space-y-4">
-              {[
-                {
-                  id: 'standard',
-                  title: isAr ? 'رسالة تواصل قياسية' : 'Contact Standard',
-                  icon: <FileText className="w-5 h-5" />,
-                  desc: isAr ? 'الرسالة التي قمت بإعدادها في الإعدادات (تحية + أسئلة)' : 'Le message par défaut configuré dans les paramètres.',
-                  msg: templates[isAr ? 'ar' : 'fr'].firstContact.replace(/{name}/g, contactingLead.name).replace(/{type}/g, contactingLead.type)
-                },
-                {
-                  id: 'strategic',
-                  title: isAr ? 'تركيز على العلامة التجارية (Brand)' : 'Focus Branding/E-com',
-                  icon: <Settings className="w-5 h-5" />,
-                  desc: isAr ? 'سؤال مباشر عن نوع العمل (Brand أو E-com)' : 'Question directe sur le profil (Marque ou E-commerce).',
-                  msg: isAr
-                    ? `السلام عليكم *${contactingLead.name}*، معكم *BEYA CREATIVE*. 😊\n\nشكراً على اهتمامكم بـ *${contactingLead.type}*. واش نتوما علامة تجارية واجدة (Brand) ولا كتبيعوا في الأنترنيت (E-com) وبغيتو تصاوبوا الماركة الخاصة ديالكم؟`
-                    : `Bonjour *${contactingLead.name}*, ici *BEYA CREATIVE*. 😊\n\nMerci pour votre intérêt pour les *${contactingLead.type}*. Êtes-vous une marque établie ou vendez-vous en ligne (E-com) et souhaitez-vous créer votre propre branding ?`
-                },
-                {
-                  id: 'short',
-                  title: isAr ? 'تحية سريعة' : 'Salut Rapide',
-                  icon: <MessageSquare className="w-5 h-5" />,
-                  desc: isAr ? 'تحية بسيطة لفتح باب النقاش' : 'Un message court pour engager la discussion.',
-                  msg: isAr
-                    ? `السلام عليكم *${contactingLead.name}*، معكم *BEYA CREATIVE*. 😊 شكراً على طلبكم الخاص بـ *${contactingLead.type}*. واش ممكن تعطينا تفاصيل أكثر؟`
-                    : `Bonjour *${contactingLead.name}*, ici *BEYA CREATIVE*. 😊 Merci pour votre demande de *${contactingLead.type}*. Pourriez-vous nous donner plus de détails ?`
-                }
-              ].map(opt => {
+              {(() => {
+                const lang = isAr ? 'ar' : 'fr';
+                const isRecrutement = contactingLead.type.startsWith('RECRUTEMENT:');
+                const cleanType = isRecrutement ? contactingLead.type.replace('RECRUTEMENT:', '').trim() : contactingLead.type;
+
+                const clientOptions = [
+                  {
+                    id: 'standard',
+                    title: isAr ? 'رسالة تواصل قياسية' : 'Contact Standard',
+                    icon: <FileText className="w-5 h-5" />,
+                    desc: isAr ? 'الرسالة التي قمت بإعدادها في الإعدادات (تحية + أسئلة)' : 'Le message par défaut configuré dans les paramètres.',
+                    msg: (templates[lang]?.firstContact || DEFAULT_TEMPLATES[lang].firstContact).replace(/{name}/g, contactingLead.name).replace(/{type}/g, cleanType)
+                  },
+                  {
+                    id: 'strategic',
+                    title: isAr ? 'تركيز على العلامة التجارية (Brand)' : 'Focus Branding/E-com',
+                    icon: <Settings className="w-5 h-5" />,
+                    desc: isAr ? 'سؤال مباشر عن نوع العمل (Brand أو E-com)' : 'Question directe sur le profil (Marque ou E-commerce).',
+                    msg: isAr
+                      ? `السلام عليكم *${contactingLead.name}*، معكم *BEYA CREATIVE*. 😊\n\nشكراً على اهتمامكم بـ *${cleanType}*. واش نتوما علامة تجارية واجدة (Brand) ولا كتبيعوا في الأنترنيت (E-com) وبغيتو تصاوبوا الماركة الخاصة ديالكم؟`
+                      : `Bonjour *${contactingLead.name}*, ici *BEYA CREATIVE*. 😊\n\nMerci pour votre intérêt pour les *${cleanType}*. Êtes-vous une marque établie ou vendez-vous en ligne (E-com) et souhaitez-vous créer votre propre branding ?`
+                  },
+                  {
+                    id: 'short',
+                    title: isAr ? 'تحية سريعة' : 'Salut Rapide',
+                    icon: <MessageSquare className="w-5 h-5" />,
+                    desc: isAr ? 'تحية بسيطة لفتح باب النقاش' : 'Un message court pour engager la discussion.',
+                    msg: isAr
+                      ? `السلام عليكم *${contactingLead.name}*، معكم *BEYA CREATIVE*. 😊 شكراً على طلبكم الخاص بـ *${cleanType}*. واش ممكن تعطينا تفاصيل أكثر؟`
+                      : `Bonjour *${contactingLead.name}*, ici *BEYA CREATIVE*. 😊 Merci pour votre demande de *${cleanType}*. Pourriez-vous nous donner plus de détails ?`
+                  }
+                ];
+
+                const recruitmentOptions = [
+                  {
+                    id: 'recrutement_standard',
+                    title: isAr ? 'رسالة مقابلة العمل (قياسية)' : 'Message Entretien (Standard)',
+                    icon: <FileText className="w-5 h-5" />,
+                    desc: isAr ? 'أسئلة حول الخبرة والسكن لبدء التوظيف' : 'Questions sur l\'expérience et logement.',
+                    msg: (templates[lang]?.firstContactRecrutement || DEFAULT_TEMPLATES[lang].firstContactRecrutement).replace(/{name}/g, contactingLead.name).replace(/{type}/g, cleanType)
+                  },
+                  {
+                    id: 'recrutement_test',
+                    title: isAr ? 'استدعاء لاختبار عملي (Test)' : 'Convocation Test Pratique',
+                    icon: <Scissors className="w-5 h-5" />,
+                    desc: isAr ? 'دعوة المترشح لإجراء اختبار مباشرة في المصنع' : 'Inviter le candidat pour un test à l\'usine.',
+                    msg: isAr
+                      ? `السلام عليكم *${contactingLead.name}*، معاكم مصنع *BEYA CREATIVE* بمكناس. 😊\n\nبخصوص طلب العمل ديالك (${cleanType})، بغينا نعرضوك دوز اختبار عملي عندنا فالمصنع باش نشوفو الخدمة ديالك. فوقاش تقدر تجي؟`
+                      : `Bonjour *${contactingLead.name}*, ici l'usine *BEYA CREATIVE*. 😊\n\nSuite à votre candidature (${cleanType}), nous vous invitons à passer un test pratique à notre usine. Quand seriez-vous disponible ?`
+                  },
+                  {
+                    id: 'recrutement_waitlist',
+                    title: isAr ? 'وضع في لائحة الانتظار' : 'Mise en Liste d\'attente',
+                    icon: <Calendar className="w-5 h-5" />,
+                    desc: isAr ? 'إخبار المترشح بالاحتفاظ بملفه للمستقبل' : 'Informer le candidat que son CV est conservé.',
+                    msg: isAr
+                      ? `السلام عليكم *${contactingLead.name}*. 😊\n\nشكراً على اهتمامك بالعمل معنا كـ (${cleanType}). حالياً الفريق مكتمل، ولكن احتفظنا بالملف ديالك في لائحة الانتظار وغادي نتواصلو معاك ملي تكون بلاصة خاوية. بالتوفيق! 🇲🇦`
+                      : `Bonjour *${contactingLead.name}*. 😊\n\nMerci pour votre candidature (${cleanType}). Notre équipe est complète actuellement, mais nous conservons votre profil en liste d'attente. Nous vous contacterons dès qu'une place se libère ! 🇲🇦`
+                  }
+                ];
+
+                return (isRecrutement ? recruitmentOptions : clientOptions).map(opt => {
                 const isSent = contactingLead.contactedType === opt.id;
                 return (
                   <button
@@ -2027,7 +2070,7 @@ export default function Demandes() {
                     )}
                   </button>
                 );
-              })}
+              })()}
             </div>
 
             <div className="p-8 bg-slate-50 border-t border-slate-100 flex items-center gap-3 text-emerald-600">
