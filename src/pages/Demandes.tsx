@@ -1881,84 +1881,109 @@ export default function Demandes() {
             </div>
           </div>
 
-          {/* Hidden Welcome PDF Template */}
-          <div id={`welcome-pdf-${newClientCode.code}`} style={{ display: 'none' }}>
-            <div style={{ width: '210mm', minHeight: '297mm', fontFamily: 'Georgia, serif', padding: '20mm', color: '#1e293b', background: 'white' }}>
-              {/* Header */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '30px', borderBottom: '3px solid #4f46e5', paddingBottom: '20px' }}>
-                <div>
-                  <h1 style={{ fontSize: '28px', fontWeight: 900, color: '#1e1b4b', letterSpacing: '-1px', margin: 0 }}>BEYA<span style={{ color: '#4f46e5' }}>CREATIVE</span></h1>
-                  <p style={{ fontSize: '10px', color: '#6366f1', fontWeight: 700, letterSpacing: '3px', margin: '4px 0 0', textTransform: 'uppercase' }}>Manufacturing Excellence</p>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>beyacreative.com</p>
-                  <p style={{ fontSize: '11px', color: '#64748b', margin: '2px 0 0' }}>{company.phone}</p>
-                </div>
-              </div>
-
-              {/* Welcome */}
-              <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '12px', padding: '20px', marginBottom: '24px' }}>
-                <p style={{ fontSize: '11px', fontWeight: 700, color: '#0369a1', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 8px' }}>Bienvenue dans votre espace client</p>
-                <p style={{ fontSize: '18px', fontWeight: 900, color: '#1e293b', margin: '0 0 12px' }}>Bonjour, {newClientCode.name} 👋</p>
-                <p style={{ fontSize: '13px', color: '#475569', lineHeight: 1.6, margin: 0 }}>Votre compte BEYA CREATIVE est activé. Vous pouvez désormais suivre vos commandes, télécharger vos documents et communiquer avec notre équipe directement depuis votre portail.</p>
-              </div>
-
-              {/* Credentials */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '16px' }}>
-                  <p style={{ fontSize: '9px', fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 6px' }}>Email de connexion</p>
-                  <p style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b', margin: 0 }}>{newClientCode.email}</p>
-                </div>
-                <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '10px', padding: '16px' }}>
-                  <p style={{ fontSize: '9px', fontWeight: 900, color: '#059669', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 6px' }}>Code secret</p>
-                  <p style={{ fontSize: '22px', fontWeight: 900, color: '#1e293b', letterSpacing: '6px', margin: 0, fontFamily: 'monospace' }}>{newClientCode.code}</p>
-                </div>
-              </div>
-
-              {/* Who we are */}
-              <div style={{ marginBottom: '24px' }}>
-                <h2 style={{ fontSize: '13px', fontWeight: 900, color: '#1e1b4b', textTransform: 'uppercase', letterSpacing: '2px', borderLeft: '4px solid #4f46e5', paddingLeft: '12px', margin: '0 0 14px' }}>Qui sommes-nous ?</h2>
-                <p style={{ fontSize: '12px', color: '#475569', lineHeight: 1.7, margin: 0 }}>
-                  BEYA CREATIVE est une manufacture textile marocaine spécialisée dans la confection sur-mesure. Notre équipe de couturières expertes travaille avec des patrons de précision et des échantillons validés pour garantir que chaque pièce correspond exactement à votre vision.
-                </p>
-              </div>
-
-              {/* Process */}
-              <div style={{ marginBottom: '24px' }}>
-                <h2 style={{ fontSize: '13px', fontWeight: 900, color: '#1e1b4b', textTransform: 'uppercase', letterSpacing: '2px', borderLeft: '4px solid #4f46e5', paddingLeft: '12px', margin: '0 0 14px' }}>Notre processus de travail</h2>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                  {[
-                    ['01', 'Demande & Devis', 'Vous soumettez votre projet avec photo du modèle et quantités. Nous établissons un devis personnalisé.'],
-                    ['02', 'Patron & Échantillon', 'Nos expertes créent le patron technique et confectionnent un échantillon pour validation.'],
-                    ['03', 'Validation qualité', 'Vous validez l\'échantillon. Nos équipes vérifient chaque détail avant le lancement.'],
-                    ['04', 'Production & Livraison', 'Lancement de la production en série avec contrôle qualité à chaque étape.'],
-                  ].map(([num, title, desc]) => (
-                    <div key={num} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '14px' }}>
-                      <p style={{ fontSize: '22px', fontWeight: 900, color: '#e2e8f0', margin: '0 0 6px', fontFamily: 'monospace' }}>{num}</p>
-                      <p style={{ fontSize: '11px', fontWeight: 900, color: '#1e293b', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{title}</p>
-                      <p style={{ fontSize: '10px', color: '#64748b', lineHeight: 1.6, margin: 0 }}>{desc}</p>
+          {/* Hidden Welcome PDF Template — bilingual */}
+          {(() => {
+            const t = isAr ? {
+              welcomeLabel: 'مرحباً بك في فضائك الخاص',
+              hi: `مرحباً، ${newClientCode.name} 👋`,
+              welcomeDesc: 'تم تفعيل حسابك في BEYA CREATIVE. يمكنك الآن متابعة طلباتك وتحميل وثائقك والتواصل مع فريقنا مباشرة من بوابتك.',
+              emailLabel: 'البريد الإلكتروني',
+              codeLabel: 'الرمز السري',
+              whoTitle: 'من نحن؟',
+              whoDesc: 'BEYA CREATIVE مصنع نسيج مغربي متخصص في الخياطة المخصصة. فريقنا من الخياطات الخبيرات يعملن بأنماط دقيقة وعينات مصادق عليها لضمان أن كل قطعة تتوافق تمامًا مع رؤيتك.',
+              processTitle: 'طريقة عملنا',
+              steps: [
+                ['01', 'الطلب والتسعير', 'تقدم مشروعك بصورة النموذج والكميات. نقوم بإعداد عرض سعر مخصص.'],
+                ['02', 'الباترون والعينة', 'خبيراتنا يصنعن الباترون التقني ويخطن عينة للتحقق.'],
+                ['03', 'مراقبة الجودة', 'تصادق على العينة. فرقنا تتحقق من كل تفصيل قبل الإطلاق.'],
+                ['04', 'الإنتاج والتسليم', 'إطلاق الإنتاج التسلسلي مع مراقبة الجودة في كل مرحلة.'],
+              ],
+              guaranteesTitle: 'التزاماتنا للجودة',
+              guarantees: ['✓ خياطات خبيرات ومعتمدات', '✓ أقمشة مختارة من موردين موثوقين', '✓ كل قطعة تُفحص قبل التسليم', '✓ احترام صارم للمواعيد المتفق عليها'],
+              thanks: 'شكراً لثقتكم 🇲🇦',
+            } : {
+              welcomeLabel: 'Bienvenue dans votre espace client',
+              hi: `Bonjour, ${newClientCode.name} 👋`,
+              welcomeDesc: 'Votre compte BEYA CREATIVE est activé. Vous pouvez désormais suivre vos commandes, télécharger vos documents et communiquer avec notre équipe directement depuis votre portail.',
+              emailLabel: 'Email de connexion',
+              codeLabel: 'Code secret',
+              whoTitle: 'Qui sommes-nous ?',
+              whoDesc: 'BEYA CREATIVE est une manufacture textile marocaine spécialisée dans la confection sur-mesure. Notre équipe de couturières expertes travaille avec des patrons de précision et des échantillons validés pour garantir que chaque pièce correspond exactement à votre vision.',
+              processTitle: 'Notre processus de travail',
+              steps: [
+                ['01', 'Demande & Devis', 'Vous soumettez votre projet avec photo du modèle. Nous établissons un devis personnalisé.'],
+                ['02', 'Patron & Échantillon', 'Nos expertes créent le patron technique et confectionnent un échantillon pour validation.'],
+                ['03', 'Validation qualité', 'Vous validez l\'échantillon. Nos équipes vérifient chaque détail avant le lancement.'],
+                ['04', 'Production & Livraison', 'Lancement de la production en série avec contrôle qualité à chaque étape.'],
+              ],
+              guaranteesTitle: 'Nos engagements qualité',
+              guarantees: ['✓ Couturières expertes et certifiées', '✓ Matières sélectionnées chez des fournisseurs fiables', '✓ Chaque pièce inspectée avant livraison', '✓ Respect strict des délais convenus'],
+              thanks: 'Merci de votre confiance 🇲🇦',
+            };
+            return (
+              <div id={`welcome-pdf-${newClientCode.code}`} style={{ display: 'none' }}>
+                <div dir={isAr ? 'rtl' : 'ltr'} style={{ width: '210mm', minHeight: '297mm', fontFamily: isAr ? 'Arial, sans-serif' : 'Georgia, serif', padding: '20mm', color: '#1e293b', background: 'white' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '30px', borderBottom: '3px solid #4f46e5', paddingBottom: '20px' }}>
+                    <div>
+                      <h1 style={{ fontSize: '28px', fontWeight: 900, color: '#1e1b4b', letterSpacing: '-1px', margin: 0 }}>BEYA<span style={{ color: '#4f46e5' }}>CREATIVE</span></h1>
+                      <p style={{ fontSize: '10px', color: '#6366f1', fontWeight: 700, letterSpacing: '3px', margin: '4px 0 0', textTransform: 'uppercase' }}>Manufacturing Excellence</p>
                     </div>
-                  ))}
+                    <div style={{ textAlign: isAr ? 'left' : 'right' }}>
+                      <p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>beyacreative.com</p>
+                      <p style={{ fontSize: '11px', color: '#64748b', margin: '2px 0 0' }}>{company.phone}</p>
+                    </div>
+                  </div>
+
+                  <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '12px', padding: '20px', marginBottom: '24px' }}>
+                    <p style={{ fontSize: '11px', fontWeight: 700, color: '#0369a1', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 8px' }}>{t.welcomeLabel}</p>
+                    <p style={{ fontSize: '18px', fontWeight: 900, color: '#1e293b', margin: '0 0 12px' }}>{t.hi}</p>
+                    <p style={{ fontSize: '13px', color: '#475569', lineHeight: 1.6, margin: 0 }}>{t.welcomeDesc}</p>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
+                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '16px' }}>
+                      <p style={{ fontSize: '9px', fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 6px' }}>{t.emailLabel}</p>
+                      <p style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b', margin: 0 }}>{newClientCode.email}</p>
+                    </div>
+                    <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '10px', padding: '16px' }}>
+                      <p style={{ fontSize: '9px', fontWeight: 900, color: '#059669', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 6px' }}>{t.codeLabel}</p>
+                      <p style={{ fontSize: '22px', fontWeight: 900, color: '#1e293b', letterSpacing: '6px', margin: 0, fontFamily: 'monospace' }}>{newClientCode.code}</p>
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '24px' }}>
+                    <h2 style={{ fontSize: '13px', fontWeight: 900, color: '#1e1b4b', textTransform: 'uppercase', letterSpacing: '2px', borderRight: isAr ? '4px solid #4f46e5' : 'none', borderLeft: isAr ? 'none' : '4px solid #4f46e5', paddingRight: isAr ? '12px' : 0, paddingLeft: isAr ? 0 : '12px', margin: '0 0 14px' }}>{t.whoTitle}</h2>
+                    <p style={{ fontSize: '12px', color: '#475569', lineHeight: 1.7, margin: 0 }}>{t.whoDesc}</p>
+                  </div>
+
+                  <div style={{ marginBottom: '24px' }}>
+                    <h2 style={{ fontSize: '13px', fontWeight: 900, color: '#1e1b4b', textTransform: 'uppercase', letterSpacing: '2px', borderRight: isAr ? '4px solid #4f46e5' : 'none', borderLeft: isAr ? 'none' : '4px solid #4f46e5', paddingRight: isAr ? '12px' : 0, paddingLeft: isAr ? 0 : '12px', margin: '0 0 14px' }}>{t.processTitle}</h2>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                      {t.steps.map(([num, title, desc]) => (
+                        <div key={num} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '14px' }}>
+                          <p style={{ fontSize: '22px', fontWeight: 900, color: '#e2e8f0', margin: '0 0 6px', fontFamily: 'monospace' }}>{num}</p>
+                          <p style={{ fontSize: '11px', fontWeight: 900, color: '#1e293b', margin: '0 0 6px', textTransform: 'uppercase' }}>{title}</p>
+                          <p style={{ fontSize: '10px', color: '#64748b', lineHeight: 1.6, margin: 0 }}>{desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ background: '#1e1b4b', borderRadius: '12px', padding: '20px', color: 'white', marginBottom: '20px' }}>
+                    <h2 style={{ fontSize: '13px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 12px', opacity: 0.9 }}>{t.guaranteesTitle}</h2>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                      {t.guarantees.map(item => <p key={item} style={{ fontSize: '11px', fontWeight: 600, margin: 0, opacity: 0.9 }}>{item}</p>)}
+                    </div>
+                  </div>
+
+                  <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '16px', display: 'flex', justifyContent: 'space-between' }}>
+                    <p style={{ fontSize: '10px', color: '#94a3b8', margin: 0 }}>BEYA CREATIVE — {company.address || 'Zone Industrielle, Meknès'}</p>
+                    <p style={{ fontSize: '10px', color: '#94a3b8', margin: 0 }}>{t.thanks}</p>
+                  </div>
                 </div>
               </div>
-
-              {/* Guarantees */}
-              <div style={{ background: '#1e1b4b', borderRadius: '12px', padding: '20px', color: 'white', marginBottom: '20px' }}>
-                <h2 style={{ fontSize: '13px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 12px', opacity: 0.9 }}>Nos engagements qualité</h2>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                  {['✓ Couturières expertes et certifiées', '✓ Matières sélectionnées chez des fournisseurs fiables', '✓ Chaque pièce inspectée avant livraison', '✓ Respect strict des délais convenus'].map(item => (
-                    <p key={item} style={{ fontSize: '11px', fontWeight: 600, margin: 0, opacity: 0.9 }}>{item}</p>
-                  ))}
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <p style={{ fontSize: '10px', color: '#94a3b8', margin: 0 }}>BEYA CREATIVE — {company.address || 'Zone Industrielle, Meknès'}</p>
-                <p style={{ fontSize: '10px', color: '#94a3b8', margin: 0 }}>Merci de votre confiance 🇲🇦</p>
-              </div>
-            </div>
-          </div>
+            );
+          })()}
         </div>
       )}
       {/* Edit Lead Modal */}
