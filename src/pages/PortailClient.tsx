@@ -822,23 +822,40 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                          {isAr ? 'تحميل الوثيقة' : 'Télécharger PDF'}
                                       </button>
 
-                                      {/* Admin-uploaded proof */}
+                                      {/* Admin-uploaded proof — shown as visible image */}
                                       {f.preuvePaiement && (
-                                        <button
-                                          onClick={() => {
-                                            const a = document.createElement('a');
-                                            a.href = f.preuvePaiement!;
-                                            a.download = `Preuve_${f.numero || 'recu'}.jpg`;
-                                            a.target = '_blank';
-                                            document.body.appendChild(a);
-                                            a.click();
-                                            document.body.removeChild(a);
-                                          }}
-                                          className="w-full py-3 bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 shadow-md"
-                                        >
-                                          <Download className="w-4 h-4" />
-                                          {isAr ? '✅ تحميل وصل الاستلام' : '✅ Reçu Officiel BEYA'}
-                                        </button>
+                                        <div className="rounded-2xl overflow-hidden border-2 border-emerald-200 bg-emerald-50/50">
+                                          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-emerald-100">
+                                            <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+                                              <span className="text-white text-[10px] font-black">✓</span>
+                                            </div>
+                                            <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest flex-1">
+                                              {isAr ? 'وصل الاستلام الرسمي' : 'Reçu officiel BEYA'}
+                                            </p>
+                                            <button
+                                              onClick={() => {
+                                                const a = document.createElement('a');
+                                                a.href = f.preuvePaiement!;
+                                                a.download = `Preuve_${f.numero || 'recu'}.jpg`;
+                                                a.target = '_blank';
+                                                document.body.appendChild(a);
+                                                a.click();
+                                                document.body.removeChild(a);
+                                              }}
+                                              className="p-1.5 bg-emerald-100 hover:bg-emerald-200 rounded-lg transition-all"
+                                              title="Télécharger"
+                                            >
+                                              <Download className="w-3.5 h-3.5 text-emerald-700" />
+                                            </button>
+                                          </div>
+                                          <img
+                                            src={f.preuvePaiement}
+                                            alt="Preuve paiement"
+                                            className="w-full object-cover cursor-zoom-in"
+                                            style={{ maxHeight: '200px' }}
+                                            onClick={() => window.open(f.preuvePaiement, '_blank')}
+                                          />
+                                        </div>
                                       )}
 
                                       {/* Client proof upload zone — only for reçu */}
