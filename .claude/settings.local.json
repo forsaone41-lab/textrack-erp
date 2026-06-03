@@ -1,7 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(git commit *)",
+      "Bash(npx tsc *)",
+      "Bash(xargs grep -l \"lead.*client\\\\|client.*lead\")",
+      "Bash(node -e \"const crypto = require\\('crypto'\\); const {privateKey, publicKey} = crypto.generateKeyPairSync\\('ec', {namedCurve:'P-256'}\\); const pub = publicKey.export\\({type:'spki',format:'der'}\\); const priv = privateKey.export\\({type:'pkcs8',format:'der'}\\); const b64url = b => Buffer.from\\(b\\).toString\\('base64'\\).replace\\(/\\\\+/g,'-'\\).replace\\(/\\\\//g,'_'\\).replace\\(/=/g,''\\); console.log\\('PUBLIC_VAPID:', b64url\\(pub.slice\\(-65\\)\\)\\); console.log\\('PRIVATE_VAPID:', b64url\\(priv.slice\\(-32\\)\\)\\);\")",
+      "Bash(npx web-push *)",
+      "Bash(node -e ' *)"
     ]
   }
 }
