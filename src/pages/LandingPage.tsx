@@ -97,7 +97,7 @@ export default function LandingPage() {
   // Helper to format video URL (Instagram or direct)
   const getEmbedUrl = (url?: string) => {
     if (!url) return null;
-    
+
     // Instagram
     if (url.includes('instagram.com')) {
       const cleanUrl = url.split('?')[0].replace(/\/$/, '');
@@ -255,12 +255,12 @@ export default function LandingPage() {
       <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/80 backdrop-blur-xl border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-             <LogoWithFallback src={company.logoLanding || company.logoUrl} alt={company.name} />
+            <LogoWithFallback src={company.logoLanding || company.logoUrl} alt={company.name} />
           </div>
 
           <div className="flex items-center gap-2 md:gap-4">
 
-            <button 
+            <button
               onClick={toggle}
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-100 text-slate-600 hover:bg-slate-100 transition-all"
             >
@@ -268,7 +268,7 @@ export default function LandingPage() {
               <span className="text-[10px] font-black uppercase tracking-widest">{isAr ? 'FR' : 'العربية'}</span>
             </button>
 
-            <Link 
+            <Link
               to={isLoggedIn ? "/dashboard" : "/login"}
               className="px-4 md:px-8 py-2 md:py-3 bg-slate-900 text-white rounded-xl md:rounded-2xl text-[10px] md:text-xs font-black uppercase tracking-widest shadow-xl shadow-slate-200 hover:bg-indigo-600 transition-all"
             >
@@ -297,7 +297,7 @@ export default function LandingPage() {
               : 'Votre partenaire stratégique en production de prêt-à-porter. Qualité internationale, respect des délais et expertise marocaine authentique.'}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button 
+            <button
               onClick={() => document.getElementById('contact-form')?.scrollIntoView({ behavior: 'smooth' })}
               className="w-full sm:w-auto px-10 py-5 bg-indigo-600 text-white rounded-[2rem] font-black uppercase tracking-widest shadow-2xl shadow-indigo-200 hover:scale-105 transition-all flex items-center justify-center gap-3"
             >
@@ -327,9 +327,9 @@ export default function LandingPage() {
             <div className="relative aspect-video bg-slate-900 rounded-3xl md:rounded-[3rem] overflow-hidden shadow-[0_30px_100px_rgba(0,0,0,0.2)] border-8 border-white">
               {embedUrl ? (
                 embedUrl.match(/\.(mp4|webm|ogg)$/i) ? (
-                  <video 
-                    src={embedUrl} 
-                    controls 
+                  <video
+                    src={embedUrl}
+                    controls
                     className="absolute inset-0 w-full h-full object-cover"
                     poster={company.logoUrl}
                   />
@@ -362,46 +362,23 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* WOW CTA → Info page (Wide Banner) */}
-          <div className="mt-16 mb-16 relative w-full max-w-6xl mx-auto px-4">
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-rose-500 rounded-[2rem] md:rounded-[3rem] blur-xl opacity-20 animate-pulse" />
-            <div className="relative bg-white border-2 border-slate-100 rounded-[2rem] md:rounded-[3rem] p-6 md:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
-              {/* Decorative corner blobs */}
-              <div className="absolute -top-16 -left-16 w-32 h-32 bg-indigo-50 rounded-full blur-2xl pointer-events-none" />
-              <div className="absolute -bottom-16 -right-16 w-32 h-32 bg-rose-50 rounded-full blur-2xl pointer-events-none" />
-              
-              <div className={`relative z-10 flex-1 flex flex-col justify-center ${isAr ? 'md:items-start text-center md:text-right' : 'md:items-start text-center md:text-left'}`}>
-                <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 bg-amber-100 text-amber-700 rounded-full text-[11px] font-black uppercase tracking-widest mb-4 border border-amber-200 shadow-sm mx-auto md:mx-0">
-                  💡 {isAr ? 'عندك أسئلة قبل ما تبدأ؟' : 'Des questions avant de commencer ?'}
-                </div>
-                
-                <h2 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tighter mb-4 leading-tight">
-                  {isAr ? 'اكتشف كل تفاصيل مشروعك' : 'Découvrez tous les détails'}
-                </h2>
-                
-                <div className="flex flex-wrap justify-center md:justify-start gap-2">
-                  {(isAr ? ['الأسعار والموك 💰', 'مدة الإنتاج ⏱️', 'خدماتنا 🛠️', 'الأسئلة ❓'] : ['Prix & MOQ 💰', 'Délais ⏱️', 'Services 🛠️', 'FAQ ❓']).map((badge, idx) => (
-                    <span key={idx} className="px-3 py-1.5 bg-slate-50 text-slate-600 rounded-full text-[10px] md:text-xs font-extrabold border border-slate-200 shadow-sm">
-                      {badge}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="relative z-10 shrink-0 w-full md:w-auto">
-                <a
-                  href="/#/info"
-                  className="group w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 rounded-full font-black text-sm md:text-lg uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-xl hover:shadow-indigo-500/50"
-                  style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}
-                >
-                  <span className="relative text-white flex items-center justify-center gap-3 drop-shadow-md w-full">
-                    <span className="text-xl md:text-2xl">📋</span>
-                    {isAr ? 'تعرف على التفاصيل' : 'Voir les Détails'}
-                    <ArrowRight className={`w-5 h-5 md:w-6 md:h-6 transition-transform ${isAr ? 'group-hover:-translate-x-2' : 'group-hover:translate-x-2'}`} />
-                  </span>
-                </a>
-              </div>
-            </div>
+          {/* CTA → Info page */}
+          <div className="mt-10 mb-6 flex flex-col items-center gap-3 text-center px-4">
+            <p className="text-slate-500 text-sm font-medium">
+              {isAr ? '💡 عندك أسئلة قبل ما تبدأ؟' : '💡 Des questions avant de commencer ?'}
+            </p>
+            <a
+              href="/#/info"
+              className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl transition-all hover:scale-105 active:scale-95 group"
+              style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)', color: 'white', boxShadow: '0 10px 40px rgba(79,70,229,0.35)' }}
+            >
+              <span className="text-xl">📋</span>
+              {isAr ? 'تعرف على أسعارنا وخدماتنا' : 'Voir les Prix, Délais & Services'}
+              <span className="text-white/70 group-hover:translate-x-1 transition-transform text-base">→</span>
+            </a>
+            <p className="text-[11px] text-slate-400 font-medium">
+              {isAr ? 'أسعار · مواعيد · أسئلة شائعة · كل ما تحتاج معرفته' : 'Prix · Délais · FAQ · Tout ce que vous devez savoir'}
+            </p>
           </div>
 
           {/* Lead Generation Form Section */}
@@ -484,7 +461,7 @@ export default function LandingPage() {
                         '🧵 Nouvelle Demande!',
                         `${clientName} — ${models.map(m => m.type).join(', ')}`,
                         '/demandes'
-                      ).catch(() => {});
+                      ).catch(() => { });
                       formElement.reset();
                     } catch (err: any) {
                       setIsSending(false);
@@ -551,7 +528,7 @@ export default function LandingPage() {
                           <div className="relative">
                             <select value={m.type} onChange={e => updateModel(m.id, { type: e.target.value })}
                               className="w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors appearance-none">
-                              {['T-Shirt','Polo','T-Shirt Oversize','Sweat / Hoodie','Djellaba / Gandoura','Ensemble / Survêtement','Pyjama','Uniforme / Travail','Pantalon'].map(t => <option key={t}>{t}</option>)}
+                              {['T-Shirt', 'Polo', 'T-Shirt Oversize', 'Sweat / Hoodie', 'Djellaba / Gandoura', 'Ensemble / Survêtement', 'Pyjama', 'Uniforme / Travail', 'Pantalon'].map(t => <option key={t}>{t}</option>)}
                               <option value="Autre">{isAr ? 'نوع آخر' : 'Autre Type'}</option>
                             </select>
                             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
@@ -572,7 +549,7 @@ export default function LandingPage() {
                       <div>
                         <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">{isAr ? 'المقاسات (اختياري)' : 'Tailles (Optionnel)'}</label>
                         <div className="grid grid-cols-6 gap-2">
-                          {['XS','S','M','L','XL','XXL'].map(size => (
+                          {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map(size => (
                             <div key={size} className="relative group">
                               <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 bg-indigo-50 text-[8px] font-black text-indigo-600 rounded-full border border-indigo-100 z-10">{size}</div>
                               <input type="number" value={m.tailles[size]} onChange={e => updateModelTaille(m.id, size, e.target.value)} placeholder="0"
@@ -668,7 +645,7 @@ export default function LandingPage() {
         <div className="fixed inset-0 z-[300] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-300">
           <div className="bg-white/90 backdrop-blur-2xl rounded-[3rem] p-12 max-w-sm w-full shadow-2xl border border-white/50 relative overflow-hidden flex flex-col items-center text-center animate-in zoom-in-95 duration-300">
             <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 animate-pulse" />
-            
+
             <div className="relative mb-8">
               <div className="w-24 h-24 bg-indigo-50 rounded-[2.5rem] flex items-center justify-center text-indigo-600 shadow-xl shadow-indigo-100 border-4 border-white animate-bounce duration-1000">
                 <RotateCw className="w-10 h-10 animate-spin" />
@@ -684,7 +661,7 @@ export default function LandingPage() {
             <p className="text-xs font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
               {isAr ? 'نحن نسجل طلبك، انتظر لحظة من فضلك' : 'Nous enregistrons votre demande, un instant s\'il vous plaît'}
             </p>
-            
+
             <div className="mt-8 flex gap-1">
               <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce [animation-delay:-0.3s]" />
               <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce [animation-delay:-0.15s]" />
@@ -697,17 +674,17 @@ export default function LandingPage() {
       {/* About Us Section - "Man Nahnu" */}
       <section id="about" className="py-32 px-6 bg-slate-900 text-white relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-            <div className="absolute top-0 left-0 w-64 h-64 bg-indigo-500 rounded-full blur-[100px] -ml-32 -mt-32" />
-            <div className="absolute bottom-0 right-0 w-64 h-64 bg-rose-500 rounded-full blur-[100px] -mr-32 -mb-32" />
+          <div className="absolute top-0 left-0 w-64 h-64 bg-indigo-500 rounded-full blur-[100px] -ml-32 -mt-32" />
+          <div className="absolute bottom-0 right-0 w-64 h-64 bg-rose-500 rounded-full blur-[100px] -mr-32 -mb-32" />
         </div>
 
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
             <div className="relative">
               <div className="absolute -inset-4 bg-indigo-600 rounded-[3rem] blur-2xl opacity-20 animate-pulse" />
-              <img 
-                src={company.aboutPhotoUrl || "https://images.unsplash.com/photo-1524234107056-1c1f48f64ab8?q=80&w=2070"} 
-                alt="Atelier BEYA" 
+              <img
+                src={company.aboutPhotoUrl || "https://images.unsplash.com/photo-1524234107056-1c1f48f64ab8?q=80&w=2070"}
+                alt="Atelier BEYA"
                 className="relative rounded-[3rem] shadow-2xl border-4 border-white/5 object-cover h-[500px] w-full"
               />
               <div className={`absolute -bottom-10 ${isAr ? '-left-10' : '-right-10'} bg-white p-8 rounded-[2rem] shadow-2xl hidden md:block border border-slate-100 animate-in slide-in-from-bottom-10 duration-700`}>
@@ -724,19 +701,19 @@ export default function LandingPage() {
                 {isAr ? 'من نحن' : 'Qui Sommes-Nous'}
               </div>
               <h2 className="text-5xl md:text-6xl font-black mb-8 tracking-tighter leading-none italic">
-                {isAr 
-                  ? (company.aboutTitleAr || 'قصة نجاح مغربية') 
+                {isAr
+                  ? (company.aboutTitleAr || 'قصة نجاح مغربية')
                   : (company.aboutTitleFr || 'Une Excellence')} <br />
                 <span className="text-indigo-400">
                   {isAr ? (company.aboutTitleAr ? '' : 'بمعايير عالمية') : (company.aboutTitleFr ? '' : 'Marocaine.')}
                 </span>
               </h2>
               <p className="text-slate-400 text-lg font-medium leading-relaxed mb-10">
-                {isAr 
+                {isAr
                   ? (company.aboutTextAr || 'BEYA CREATIVE هي ثمرة سنوات من الشغف في مجال النسيج والخياطة. نحن لسنا مجرد مصنع، بل شريك استراتيجي يساعدك على تحويل أفكارك إلى واقع ملموس بجودة تضاهي كبريات الماركات العالمية.')
                   : (company.aboutTextFr || 'BEYA CREATIVE est le fruit de plusieurs années de passion pour le textile. Nous ne sommes pas qu\'une simple usine, mais un partenaire stratégique qui transforme vos idées en réalité avec une qualité digne des plus grandes marques internationales.')}
               </p>
-              
+
               <div className="grid grid-cols-2 gap-8">
                 <div>
                   <h4 className="text-indigo-400 font-black uppercase tracking-widest text-xs mb-3">{isAr ? 'رؤيتنا' : 'Notre Vision'}</h4>
@@ -797,23 +774,23 @@ export default function LandingPage() {
           </div>
 
           {/* Interactive Map (Link to Google Maps) */}
-          <a 
-            href={company.googleMapsUrl || "https://www.google.com/maps/search/?api=1&query=Meknes+Morocco"} 
-            target="_blank" 
+          <a
+            href={company.googleMapsUrl || "https://www.google.com/maps/search/?api=1&query=Meknes+Morocco"}
+            target="_blank"
             rel="noopener noreferrer"
             className="mt-20 relative rounded-[3rem] overflow-hidden h-[400px] border-8 border-slate-50 group block cursor-pointer"
           >
-             <div className="absolute inset-0 bg-slate-900/40 group-hover:bg-slate-900/20 transition-all flex items-center justify-center z-10">
-                <div className="bg-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 animate-bounce group-hover:scale-110 transition-transform">
-                   <MapPin className="w-6 h-6 text-rose-500" />
-                   <span className="text-sm font-black uppercase tracking-widest text-slate-900">{isAr ? 'تجدوننا هنا' : 'Nous trouver ici'}</span>
-                </div>
-             </div>
-             <img 
-               src="https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=2074" 
-               alt="Map" 
-               className="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform duration-1000"
-             />
+            <div className="absolute inset-0 bg-slate-900/40 group-hover:bg-slate-900/20 transition-all flex items-center justify-center z-10">
+              <div className="bg-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 animate-bounce group-hover:scale-110 transition-transform">
+                <MapPin className="w-6 h-6 text-rose-500" />
+                <span className="text-sm font-black uppercase tracking-widest text-slate-900">{isAr ? 'تجدوننا هنا' : 'Nous trouver ici'}</span>
+              </div>
+            </div>
+            <img
+              src="https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=2074"
+              alt="Map"
+              className="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform duration-1000"
+            />
           </a>
         </div>
       </section>
@@ -866,5 +843,9 @@ export default function LandingPage() {
         </div>
       </footer>
     </div>
+  );
+}
+      </footer >
+    </div >
   );
 }
