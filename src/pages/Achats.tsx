@@ -6,6 +6,7 @@ import { loadData, saveRecord, deleteRecord, genId, StockTissu, StockFourniture 
 export interface BesoinAchat {
   id: string;
   client: string;
+  commandeRef?: string;
   article: string;
   couleur?: string;
   quantiteRequise: number;
@@ -30,7 +31,8 @@ export default function Achats() {
     unite: 'm',
     statut: 'a_acheter',
     quantiteRequise: 0,
-    dateDemande: new Date().toISOString().split('T')[0]
+    dateDemande: new Date().toISOString().split('T')[0],
+    commandeRef: ''
   });
 
   const [showReceiveModal, setShowReceiveModal] = useState<BesoinAchat | null>(null);
@@ -43,16 +45,19 @@ export default function Achats() {
 
   const [clients, setClients] = useState<any[]>([]);
   const [recus, setRecus] = useState<any[]>([]);
+  const [commandes, setCommandes] = useState<any[]>([]);
 
   useEffect(() => {
     Promise.all([
       loadData<BesoinAchat>('achats'),
       loadData<any>('users'),
-      loadData<any>('recus')
-    ]).then(([achatsData, usersData, recusData]) => {
+      loadData<any>('recus'),
+      loadData<any>('commandes')
+    ]).then(([achatsData, usersData, recusData, commandesData]) => {
       setBesoins(achatsData || []);
       setClients((usersData || []).filter((u: any) => u.role === 'client'));
       setRecus(recusData || []);
+      setCommandes(commandesData || []);
     });
   }, []);
 
@@ -67,6 +72,7 @@ export default function Achats() {
     const newItem: BesoinAchat = {
       id: genId(),
       client: form.client,
+      commandeRef: form.commandeRef || '',
       article: form.article,
       couleur: form.couleur || '',
       quantiteRequise: Number(form.quantiteRequise),
@@ -79,7 +85,7 @@ export default function Achats() {
     const updated = [...besoins, newItem];
     await saveBesoins(updated);
     setShowAddModal(false);
-    setForm({ categorie: 'tissus', unite: 'm', statut: 'a_acheter', quantiteRequise: 0, dateDemande: new Date().toISOString().split('T')[0] });
+    setForm({ categorie: 'tissus', unite: 'm', statut: 'a_acheter', quantiteRequise: 0, dateDemande: new Date().toISOString().split('T')[0], commandeRef: '' });
   };
 
   const moveStatus = async (item: BesoinAchat, newStatus: 'a_acheter' | 'commande') => {
@@ -310,23 +316,45 @@ export default function Achats() {
                 </div>
               </div>
 
-              {form.client && (
-                <div className="bg-indigo-50/50 rounded-xl p-3 border border-indigo-100 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Coins className="w-4 h-4 text-indigo-500" />
-                    <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{isAr ? 'التسبيق المدفوع (Avance)' : 'Avance Client'}</span>
+              {form.client && (() => {
+                const clientName = form.client.trim().toLowerCase();
+                const clientCommandes = commandes.filter(c => c.client && c.client.trim().toLowerCase() === clientName);
+                
+                return (
+                  <div className="space-y-4">
+                    <div className="bg-indigo-50/50 rounded-xl p-3 border border-indigo-100 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Coins className="w-4 h-4 text-indigo-500" />
+                        <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{isAr ? 'التسبيق المدفوع (Avance)' : 'Avance Client'}</span>
+                      </div>
+                      <span className="text-sm font-black text-indigo-700">
+                        {(() => {
+                          const sum = recus
+                            .filter(r => r.client && r.client.trim().toLowerCase() === clientName && r.statut !== 'annulé')
+                            .reduce((total, r) => total + (r.montant || 0), 0);
+                          return sum.toLocaleString() + ' MAD';
+                        })()}
+                      </span>
+                    </div>
+
+                    {clientCommandes.length > 0 && (
+                      <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'مرتبطة بطلبية؟ (اختياري)' : 'Lié à une commande ? (Optionnel)'}</label>
+                        <select 
+                          value={form.commandeRef || ''} 
+                          onChange={e => setForm({...form, commandeRef: e.target.value})}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-500"
+                        >
+                          <option value="">{isAr ? '-- بدون طلبية --' : '-- Sans commande --'}</option>
+                          {clientCommandes.map(cmd => (
+                            <option key={cmd.id} value={cmd.reference}>{cmd.reference} - {cmd.modele}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                   </div>
-                  <span className="text-sm font-black text-indigo-700">
-                    {(() => {
-                      const clientName = form.client.trim().toLowerCase();
-                      const sum = recus
-                        .filter(r => r.client && r.client.trim().toLowerCase() === clientName && r.statut !== 'annulé')
-                        .reduce((total, r) => total + (r.montant || 0), 0);
-                      return sum.toLocaleString() + ' MAD';
-                    })()}
-                  </span>
-                </div>
-              )}
+                );
+              })()}
 
               <div>
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'اسم السلعة / الثوب' : 'Article / Tissu'}</label>
