@@ -6,7 +6,7 @@ const DEFAULT_FAQ: FaqItem[] = [
   { id: '1', emoji: '💰', category: 'prix', questionFr: 'Quels sont vos tarifs ?', questionAr: 'ما هي أسعاركم؟', answerFr: 'Nos prix varient selon la quantité, le modèle et les matières. Plus la quantité est grande, plus le prix unitaire baisse. Contactez-nous pour un devis personnalisé.', answerAr: 'أسعارنا تتفاوت حسب الكمية، النموذج والأقمشة. كلما زادت الكمية، انخفض السعر الفردي. تواصلوا معنا للحصول على عرض سعر مخصص.' },
   { id: '2', emoji: '📦', category: 'prix', questionFr: 'Quel est le minimum de commande (MOQ) ?', questionAr: 'ما هو الحد الأدنى للطلب؟', answerFr: 'Notre minimum est généralement 50 pièces par modèle/coloris. Pour les échantillons, on peut descendre à 1 pièce.', answerAr: 'الحد الأدنى عادةً 50 قطعة لكل نموذج/لون. للعينات يمكن طلب قطعة واحدة.' },
   { id: '3', emoji: '⏱️', category: 'delai', questionFr: 'Quel est le délai de production ?', questionAr: 'ما هو وقت الإنتاج؟', answerFr: 'En général 15 à 30 jours ouvrables selon la complexité et la quantité. Les échantillons sont livrés en 5-7 jours.', answerAr: 'عادةً من 15 إلى 30 يوم عمل حسب التعقيد والكمية. العينات تُسلَّم خلال 5-7 أيام.' },
-  { id: '4', emoji: '📍', category: 'contact', questionFr: 'Où êtes-vous situés ?', questionAr: 'أين تقعون؟', answerFr: 'Nous sommes basés à Casablanca, Maroc. On peut livrer partout au Maroc et à l\'international.', answerAr: 'نحن في الدار البيضاء، المغرب. نوصل في كل مكان بالمغرب وخارجه.' },
+  { id: '4', emoji: '📍', category: 'contact', questionFr: 'Où êtes-vous situés ?', questionAr: 'أين تقعون؟', answerFr: '__ADDRESS_FR__', answerAr: '__ADDRESS_AR__' },
   { id: '5', emoji: '🎨', category: 'services', questionFr: 'Pouvez-vous mettre notre logo ?', questionAr: 'هل يمكنكم وضع شعارنا؟', answerFr: 'Oui ! Broderie, sérigraphie, impression DTF ou étiquettes tissées. Envoyez-nous votre logo en haute définition.', answerAr: 'نعم! تطريز، حرير، طباعة DTF أو ملصقات منسوجة. أرسلوا لنا شعاركم بجودة عالية.' },
   { id: '6', emoji: '🧵', category: 'services', questionFr: 'On peut apporter notre propre tissu ?', questionAr: 'هل يمكن توفير القماش من طرفنا؟', answerFr: 'Bien sûr ! Vous pouvez apporter votre tissu ou on peut le sourcer pour vous au meilleur prix.', answerAr: 'بالطبع! يمكنكم إحضار قماشكم أو نحن نوفره لكم بأفضل سعر.' },
   { id: '7', emoji: '👗', category: 'services', questionFr: 'Faites-vous des échantillons avant production ?', questionAr: 'هل تصنعون عينة قبل الإنتاج؟', answerFr: 'Oui, on recommande toujours une étape échantillon pour valider les mesures, les matières et la qualité avant de lancer la production en série.', answerAr: 'نعم، دائماً ننصح بمرحلة العينة للتحقق من القياسات والأقمشة والجودة قبل الإنتاج الكامل.' },
@@ -51,7 +51,12 @@ export default function ClientInfo({ company: companyProp, standalone = false }:
   const [activeCategory, setActiveCategory] = useState('all');
   const [openFaq, setOpenFaq] = useState<string | null>(null);
 
-  const faq = company.faq?.length ? company.faq : DEFAULT_FAQ;
+  const addr = company.address || '';
+  const faq = (company.faq?.length ? company.faq : DEFAULT_FAQ).map(item => ({
+    ...item,
+    answerFr: item.answerFr.replace('__ADDRESS_FR__', addr ? `Nous sommes situés au : ${addr}. On peut livrer partout au Maroc et à l'international.` : 'Contactez-nous pour plus d\'informations sur notre localisation.'),
+    answerAr: item.answerAr.replace('__ADDRESS_AR__', addr ? `نحن موجودون في: ${addr}. نوصل في كل أنحاء المغرب وخارجه.` : 'تواصلوا معنا للمزيد من المعلومات حول موقعنا.'),
+  }));
   const services = company.services?.length ? company.services : DEFAULT_SERVICES;
 
   const filtered = useMemo(() => {
