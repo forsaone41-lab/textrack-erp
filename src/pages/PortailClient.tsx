@@ -53,7 +53,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     };
     sync();
   }, []);
-  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'docs' | 'support' | 'info'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'atelier' | 'orders' | 'docs' | 'support' | 'info'>('overview');
   const [showNotifs, setShowNotifs] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [viewMesuresFiche, setViewMesuresFiche] = useState<FicheTechnique | null>(null);
@@ -276,6 +276,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
             <nav className="space-y-2">
               {[
                 { id: 'overview', icon: <Globe className="w-5 h-5" />, label: isAr ? 'نظرة عامة' : 'Vue d\'ensemble' },
+                { id: 'atelier', icon: <Scissors className="w-5 h-5" />, label: isAr ? 'مصنعنا' : 'Notre Atelier' },
                 { id: 'orders', icon: <Package className="w-5 h-5" />, label: isAr ? 'طلبياتي' : 'Mes Commandes' },
                 { id: 'docs', icon: <Receipt className="w-5 h-5" />, label: isAr ? 'الفواتير والوثائق' : 'Factures & Docs' },
                 { id: 'support', icon: <Bell className="w-5 h-5" />, label: isAr ? 'الدعم الفني VIP' : 'Support VIP' },
@@ -331,6 +332,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
               </button>
               <h2 className="text-base md:text-2xl font-black text-slate-900 uppercase tracking-tighter truncate max-w-[150px] md:max-w-none">
                 {activeTab === 'overview' ? (isAr ? 'لوحة التحكم' : 'Tableau de Bord') :
+                 activeTab === 'atelier' ? (isAr ? 'مصنعنا' : 'Notre Atelier') :
                  activeTab === 'orders' ? (isAr ? 'الطلبيات' : 'Commandes') :
                  activeTab === 'docs' ? (isAr ? 'الوثائق' : 'Documents') :
                  activeTab === 'info' ? (isAr ? 'معلومات وأسعار' : 'Infos & Prix') :
@@ -1036,6 +1038,124 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                    </>
                  );
                })()}
+            </div>
+          )}
+
+          {activeTab === 'atelier' && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+              {/* Hero banner */}
+              <div className="relative rounded-[2.5rem] overflow-hidden" style={{ background: 'linear-gradient(135deg, #0f0c29, #302b63)' }}>
+                {company.aboutPhotoUrl && (
+                  <img src={company.aboutPhotoUrl} alt="Atelier" className="w-full h-52 object-cover opacity-30 mix-blend-luminosity" />
+                )}
+                <div className={`${company.aboutPhotoUrl ? 'absolute inset-0' : 'py-12'} flex flex-col items-center justify-center text-center p-8`}>
+                  <div className="w-16 h-16 bg-white/10 rounded-[1.5rem] flex items-center justify-center mb-4 backdrop-blur-sm border border-white/20">
+                    <Scissors className="w-8 h-8 text-white" />
+                  </div>
+                  <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-1">
+                    {isAr ? company.aboutTitleAr || 'مصنعنا' : company.aboutTitleFr || 'Notre Atelier'}
+                  </h2>
+                  <p className="text-white/60 text-sm font-medium max-w-sm">
+                    {isAr ? 'نصنع بدقة وشغف منذ سنوات' : 'Fabrication avec précision et passion'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-4">
+                {[
+                  { value: company.experienceYears || '5+', label: isAr ? 'سنوات خبرة' : 'Ans d\'exp.', icon: '🏆' },
+                  { value: '50+', label: isAr ? 'زبون راضٍ' : 'Clients', icon: '🤝' },
+                  { value: '1000+', label: isAr ? 'قطعة منجزة' : 'Pièces', icon: '👗' },
+                ].map((s, i) => (
+                  <div key={i} className="bg-white rounded-[1.5rem] border border-slate-100 shadow-lg p-4 text-center">
+                    <div className="text-2xl mb-1">{s.icon}</div>
+                    <p className="text-xl font-black text-slate-900">{s.value}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* About text */}
+              {(company.aboutTextFr || company.aboutTextAr) && (
+                <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl p-6">
+                  <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+                    {isAr ? 'من نحن' : 'Qui sommes-nous'}
+                  </h3>
+                  <p className="text-sm text-slate-700 leading-relaxed font-medium">
+                    {isAr ? company.aboutTextAr : company.aboutTextFr}
+                  </p>
+                </div>
+              )}
+
+              {/* Production steps */}
+              <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl p-6">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-5 flex items-center gap-2">
+                  <Layers className="w-3.5 h-3.5 text-indigo-500" />
+                  {isAr ? 'مراحل الإنتاج' : 'Notre Process de Production'}
+                </h3>
+                <div className="space-y-3">
+                  {[
+                    { step: '01', icon: '📐', labelFr: 'Patronage & Modélisme', labelAr: 'الباترون والتصميم', descFr: 'Création du patron de base selon vos mesures', descAr: 'إنشاء الباترون حسب قياساتكم' },
+                    { step: '02', icon: '✂️', labelFr: 'Coupe', labelAr: 'الفصالة', descFr: 'Découpe précise du tissu', descAr: 'قص دقيق للقماش' },
+                    { step: '03', icon: '🧵', labelFr: 'Montage & Couture', labelAr: 'الخياطة', descFr: 'Assemblage soigné de toutes les pièces', descAr: 'تجميع دقيق لجميع القطع' },
+                    { step: '04', icon: '✨', labelFr: 'Finition', labelAr: 'الفينيسيون', descFr: 'Broderie, étiquettes, détails finaux', descAr: 'تطريز، ملصقات، التفاصيل النهائية' },
+                    { step: '05', icon: '🔍', labelFr: 'Contrôle Qualité', labelAr: 'مراقبة الجودة', descFr: 'Vérification rigoureuse avant livraison', descAr: 'فحص دقيق قبل التسليم' },
+                    { step: '06', icon: '📦', labelFr: 'Emballage & Livraison', labelAr: 'التغليف والتسليم', descFr: 'Emballage soigné et livraison sécurisée', descAr: 'تغليف عناية وتسليم آمن' },
+                  ].map((p, i) => (
+                    <div key={i} className="flex items-center gap-4 p-3 rounded-2xl hover:bg-slate-50 transition-colors">
+                      <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-lg shrink-0">{p.icon}</div>
+                      <div className="flex-1">
+                        <p className="text-xs font-black text-slate-800">{isAr ? p.labelAr : p.labelFr}</p>
+                        <p className="text-[10px] text-slate-400 font-medium">{isAr ? p.descAr : p.descFr}</p>
+                      </div>
+                      <span className="text-[10px] font-black text-indigo-300">{p.step}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Certifications / Engagements */}
+              <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl p-6">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                  {isAr ? 'التزاماتنا' : 'Nos Engagements'}
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { icon: '✅', labelFr: 'Échantillon validé', labelAr: 'عينة معتمدة' },
+                    { icon: '🔒', labelFr: 'Confidentialité design', labelAr: 'سرية التصميم' },
+                    { icon: '📸', labelFr: 'Photos de production', labelAr: 'صور الإنتاج' },
+                    { icon: '💬', labelFr: 'Suivi WhatsApp', labelAr: 'متابعة واتساب' },
+                    { icon: '🏷️', labelFr: 'Étiquettes sur mesure', labelAr: 'ملصقات مخصصة' },
+                    { icon: '🚚', labelFr: 'Livraison assurée', labelAr: 'توصيل مضمون' },
+                  ].map((e, i) => (
+                    <div key={i} className="flex items-center gap-2.5 bg-emerald-50/50 border border-emerald-100 rounded-2xl px-3 py-2.5">
+                      <span className="text-base">{e.icon}</span>
+                      <p className="text-[11px] font-bold text-slate-700">{isAr ? e.labelAr : e.labelFr}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Vision/Mission */}
+              {(company.visionTextFr || company.missionTextFr) && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {company.visionTextFr && (
+                    <div className="bg-indigo-50 rounded-[2rem] border border-indigo-100 p-6">
+                      <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2">👁 {isAr ? 'رؤيتنا' : 'Notre Vision'}</p>
+                      <p className="text-sm text-indigo-900 font-medium leading-relaxed">{isAr ? company.visionTextAr : company.visionTextFr}</p>
+                    </div>
+                  )}
+                  {company.missionTextFr && (
+                    <div className="bg-violet-50 rounded-[2rem] border border-violet-100 p-6">
+                      <p className="text-[10px] font-black text-violet-400 uppercase tracking-widest mb-2">🎯 {isAr ? 'مهمتنا' : 'Notre Mission'}</p>
+                      <p className="text-sm text-violet-900 font-medium leading-relaxed">{isAr ? company.missionTextAr : company.missionTextFr}</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
