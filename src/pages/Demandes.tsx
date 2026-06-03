@@ -1493,26 +1493,12 @@ export default function Demandes() {
                       </button>
                     )}
                     <button
-                      onClick={async () => {
-                        const next = lead.status === 'new' ? 'processed' : 'new';
-                        const updated = { ...lead, status: next as Lead['status'], crmStage: next === 'processed' ? 'entretien' : undefined };
-                        setLeads(prev => prev.map(l => l.id === lead.id ? updated : l));
-                        await saveRecord('leads', updated, true);
-                      }}
-                      title={lead.status === 'processed' ? 'Convoqué ✓' : 'Convoquer à l\'entretien'}
-                      className={`h-8 px-3 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 border transition-all ${lead.status === 'processed' ? 'bg-indigo-50 text-indigo-600 border-indigo-200' : 'bg-indigo-500 text-white border-indigo-500 hover:bg-indigo-600'}`}
+                      onClick={() => navigate('/liste-attente', { state: { fromRecruitment: lead } })}
+                      title={isAr ? 'نقل إلى لائحة الانتظار' : 'Envoyer à la liste d\'attente'}
+                      className="h-8 px-3 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 border transition-all bg-indigo-500 text-white border-indigo-500 hover:bg-indigo-600"
                     >
-                      {lead.status === 'processed' ? '✓ Convoqué' : '📅 Entretien'}
+                      <UserPlus className="w-3.5 h-3.5" /> {isAr ? 'لائحة الانتظار' : 'Liste d\'attente'}
                     </button>
-                    <button
-                      onClick={async () => {
-                        const updated = { ...lead, status: 'completed' as Lead['status'], crmStage: 'retenu' };
-                        setLeads(prev => prev.map(l => l.id === lead.id ? updated : l));
-                        await saveRecord('leads', updated, true);
-                      }}
-                      title="Retenu / Embauché"
-                      className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border flex items-center gap-1 transition-all bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-500 hover:text-white"
-                    >✅ Retenu</button>
                     <button
                       onClick={async () => {
                         const updated = { ...lead, status: 'completed' as Lead['status'], crmStage: 'rejeté' };
