@@ -613,8 +613,12 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                       <div className="p-3 md:p-8 bg-gradient-to-r from-slate-900 via-indigo-950 to-indigo-900 text-white flex flex-col md:flex-row items-center justify-between gap-3 md:gap-8 relative overflow-hidden text-center md:text-left">
                          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -mr-32 -mt-32" />
                          <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8 relative z-10 w-full md:w-auto">
-                            <div className="w-10 h-10 md:w-20 md:h-20 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl md:rounded-[2rem] flex items-center justify-center text-white shadow-2xl group-hover:scale-110 transition-transform duration-500">
-                               <Package className="w-5 h-5 md:w-10 md:h-10" />
+                            <div className="w-10 h-10 md:w-20 md:h-20 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl md:rounded-[2rem] flex items-center justify-center text-white shadow-2xl group-hover:scale-110 transition-transform duration-500 overflow-hidden shrink-0">
+                               {(cmd as any).modelePhoto || (cmd as any).photo ? (
+                                  <img src={(cmd as any).modelePhoto || (cmd as any).photo} className="w-full h-full object-cover" alt={cmd.modele} />
+                               ) : (
+                                  <Package className="w-5 h-5 md:w-10 md:h-10" />
+                               )}
                             </div>
                             <div>
                                <div className="flex items-center justify-center md:justify-start gap-3 mb-1.5 md:mb-2">
