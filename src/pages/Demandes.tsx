@@ -97,19 +97,40 @@ export default function Demandes() {
     // If we have cache, hide loader immediately
     if (hasCached) setLoading(false);
 
-    // 2. Refresh from network with timeout
+    // 2. Refresh from network
     async function refresh() {
       try {
-        const timeout = new Promise<null>(r => setTimeout(() => r(null), 8000));
         const [leadsData, usersData] = await Promise.all([
-          Promise.race([loadLeads(), timeout]),
-          Promise.race([loadData<User>('users'), timeout])
+          loadLeads(),
+          loadData<User>('users')
         ]);
-        if (leadsData) setLeads(leadsData as Lead[]);
+        if (leadsData) {
+          setLeads(leadsData as Lead[]);
+          // 3. Load photos in background (batch of 10)
+          loadPhotosInBackground(leadsData as Lead[]);
+        }
         if (usersData) setUsers((usersData as User[]) || []);
       } catch (e) { console.warn('Refresh failed, using cache'); }
       finally { setLoading(false); }
     }
+
+    async function loadPhotosInBackground(leadsArr: Lead[]) {
+      const withoutPhoto = leadsArr.filter(l => !l.photo).slice(0, 30);
+      if (!withoutPhoto.length) return;
+      // Load in batches of 5
+      for (let i = 0; i < withoutPhoto.length; i += 5) {
+        const batch = withoutPhoto.slice(i, i + 5);
+        const results = await Promise.allSettled(
+          batch.map(l => loadLeadPhoto(l.id).then(photo => ({ id: l.id, photo })))
+        );
+        const updates: Record<string, string> = {};
+        results.forEach(r => { if (r.status === 'fulfilled' && r.value.photo) updates[r.value.id] = r.value.photo; });
+        if (Object.keys(updates).length > 0) {
+          setLeads(prev => prev.map(l => updates[l.id] ? { ...l, photo: updates[l.id] } : l));
+        }
+      }
+    }
+
     refresh();
   }, []);
 
