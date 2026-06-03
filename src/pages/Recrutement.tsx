@@ -12,6 +12,8 @@ export default function Recrutement() {
 
   const specialties = [
     { id: 'piqueuse', fr: 'Piqueuse / Machiniste', ar: 'خياطة / بيكوز' },
+    { id: 'surjeteuse', fr: 'Surjeteuse', ar: 'خياطة / سورجي' },
+    { id: 'finition', fr: 'Finition', ar: 'فينيسيون' },
     { id: 'coupeur', fr: 'Coupeur', ar: 'فصّال' },
     { id: 'repasseur', fr: 'Repasseur', ar: 'بريسور / مصلوح' },
     { id: 'controleur', fr: 'Contrôleur Qualité', ar: 'مراقب جودة' },
@@ -137,7 +139,7 @@ export default function Recrutement() {
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{isAr ? 'المدينة' : 'Ville'}</label>
                 <div className="relative">
                   <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input name="ville" type="text" required placeholder="Casablanca" className="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl text-sm font-bold focus:bg-white focus:border-indigo-600 outline-none transition-all" />
+                  <input name="ville" type="text" required placeholder="Meknès, El Bassatine" className="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl text-sm font-bold focus:bg-white focus:border-indigo-600 outline-none transition-all" />
                 </div>
               </div>
               <div className="space-y-2">
