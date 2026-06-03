@@ -838,7 +838,7 @@ export default function LandingPage() {
           </div>
 
           <div className="mt-20 pt-8 border-t border-white/5 text-center text-slate-500 text-xs font-bold uppercase tracking-[0.2em]">
-            &copy; 2024 BEYA CREATIVE PORTAL. ALL RIGHTS RESERVED.
+            &copy; {new Date().getFullYear()} {company.name || 'BEYA CREATIVE'}. ALL RIGHTS RESERVED.
           </div>
         </div>
       </footer>
