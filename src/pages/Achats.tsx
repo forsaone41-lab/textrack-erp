@@ -9,7 +9,8 @@ export interface BesoinAchat {
   commandeRef?: string;
   article: string;
   couleur?: string;
-  quantiteRequise: number;
+  quantiteRequise: number; // Mètres
+  quantiteKg?: number; // Kg
   unite: string;
   statut: 'a_acheter' | 'commande' | 'recu';
   dateDemande: string;
@@ -71,6 +72,7 @@ export default function Achats() {
       article: form.article,
       couleur: form.couleur || '',
       quantiteRequise: Number(form.quantiteRequise),
+      quantiteKg: form.quantiteKg ? Number(form.quantiteKg) : undefined,
       unite: form.unite || 'm',
       statut: 'a_acheter',
       dateDemande: form.dateDemande || new Date().toISOString().split('T')[0],
@@ -82,7 +84,7 @@ export default function Achats() {
     await saveRecord('achats', newItem as any);
     
     setShowAddModal(false);
-    setForm({ categorie: 'tissus', unite: 'm', statut: 'a_acheter', quantiteRequise: 0, dateDemande: new Date().toISOString().split('T')[0], commandeRef: '' });
+    setForm({ categorie: 'tissus', unite: 'm', statut: 'a_acheter', quantiteRequise: 0, quantiteKg: undefined, dateDemande: new Date().toISOString().split('T')[0], commandeRef: '' });
   };
 
   const moveStatus = async (item: BesoinAchat, newStatus: 'a_acheter' | 'commande') => {
@@ -260,7 +262,18 @@ export default function Achats() {
                         </div>
                         <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-100">
                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1"><Calculator className="w-3 h-3"/> {isAr ? 'الكمية المطلوبة' : 'Qté Requise'}</p>
-                          <p className="text-xs font-black text-indigo-600">{item.quantiteRequise} <span className="text-[10px]">{item.unite}</span></p>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {item.quantiteRequise > 0 && (
+                              <p className="text-xs font-black text-indigo-600">{item.quantiteRequise} <span className="text-[10px]">m</span></p>
+                            )}
+                            {item.quantiteRequise > 0 && item.quantiteKg ? <span className="text-slate-300">|</span> : null}
+                            {item.quantiteKg && (
+                              <p className="text-xs font-black text-amber-600">{item.quantiteKg} <span className="text-[10px]">Kg</span></p>
+                            )}
+                            {!item.quantiteRequise && !item.quantiteKg && (
+                              <p className="text-xs font-black text-slate-400">-</p>
+                            )}
+                          </div>
                         </div>
                       </div>
 
@@ -393,15 +406,36 @@ export default function Achats() {
                   </datalist>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الكمية المطلوبة' : 'Quantité Requise'}</label>
-                  <div className="flex">
-                    <input type="number" min="0" value={form.quantiteRequise || ''} onChange={e => setForm({...form, quantiteRequise: Number(e.target.value)})} className="w-full bg-slate-50 border border-slate-200 rounded-l-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-500" />
-                    <select value={form.unite} onChange={e => setForm({...form, unite: e.target.value})} className="bg-slate-100 border border-l-0 border-slate-200 rounded-r-xl px-3 text-xs font-bold text-slate-600 outline-none">
-                      <option value="m">m</option>
-                      <option value="kg">Kg</option>
-                      <option value="pcs">Pcs</option>
-                      <option value="rouleau">Rouleau</option>
-                    </select>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الكمية المطلوبة' : 'Quantités (Mètre & Kg)'}</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex bg-slate-50 border border-slate-200 rounded-xl overflow-hidden focus-within:border-indigo-500">
+                      <input 
+                        type="number" 
+                        min="0" 
+                        step="0.01"
+                        value={form.quantiteKg || ''} 
+                        onChange={e => setForm({...form, quantiteKg: Number(e.target.value)})} 
+                        className="w-full py-3 px-3 text-sm font-bold outline-none bg-transparent" 
+                        placeholder={isAr ? "بالكيلو" : "En Kg"}
+                      />
+                      <span className="flex items-center px-3 bg-slate-100 text-slate-500 text-xs font-bold border-l border-slate-200">
+                        Kg
+                      </span>
+                    </div>
+                    <div className="flex bg-slate-50 border border-slate-200 rounded-xl overflow-hidden focus-within:border-indigo-500">
+                      <input 
+                        type="number" 
+                        min="0" 
+                        step="0.01"
+                        value={form.quantiteRequise || ''} 
+                        onChange={e => setForm({...form, quantiteRequise: Number(e.target.value)})} 
+                        className="w-full py-3 px-3 text-sm font-bold outline-none bg-transparent" 
+                        placeholder={isAr ? "بالمتر" : "En M"}
+                      />
+                      <span className="flex items-center px-3 bg-slate-100 text-slate-500 text-xs font-bold border-l border-slate-200">
+                        m
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
