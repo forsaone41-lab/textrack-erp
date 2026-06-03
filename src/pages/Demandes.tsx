@@ -418,33 +418,41 @@ export default function Demandes() {
   const handleSharePDF = async () => {
     if (!devisLead || (!matierePrice && !laborPrice)) return;
     const filename = `Devis_${devisLead.name.replace(/\s/g, '_')}`;
+    setPdfProgress('generating');
     try {
-      setPdfProgress('generating');
-      await new Promise(r => setTimeout(r, 600));
+      await new Promise(r => setTimeout(r, 400));
+      await new Promise(r => requestAnimationFrame(r));
       const blob = await generatePDFBlob('devis-pdf-template');
-      if (!blob) { setPdfProgress('error'); setTimeout(() => setPdfProgress('idle'), 2500); return; }
-      const file = new File([blob], `${filename}.pdf`, { type: 'application/pdf' });
-      setPdfProgress('sharing');
-      let shared = false;
-      try {
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: `Devis BEYA CREATIVE — ${devisLead.name}` });
-          shared = true;
+      if (blob) {
+        const file = new File([blob], `${filename}.pdf`, { type: 'application/pdf' });
+        setPdfProgress('sharing');
+        let shared = false;
+        try {
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], title: `Devis BEYA CREATIVE — ${devisLead.name}` });
+            shared = true;
+          }
+        } catch (shareErr: any) {
+          if (shareErr?.name === 'AbortError') { setPdfProgress('idle'); return; }
         }
-      } catch (shareErr: any) {
-        if (shareErr?.name === 'AbortError') { setPdfProgress('idle'); return; }
+        if (!shared) {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = `${filename}.pdf`; a.click();
+          URL.revokeObjectURL(url);
+        }
+        setPdfProgress('done');
+        setTimeout(() => setPdfProgress('idle'), 2000);
+      } else {
+        // Fallback: send WhatsApp text + download via print
+        setPdfProgress('idle');
+        sendDevis(false);
+        setTimeout(() => handleDownloadPDF(), 500);
       }
-      if (!shared) {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = `${filename}.pdf`; a.click();
-        URL.revokeObjectURL(url);
-      }
-      setPdfProgress('done');
-      setTimeout(() => setPdfProgress('idle'), 2000);
     } catch {
-      setPdfProgress('error');
-      setTimeout(() => setPdfProgress('idle'), 2500);
+      // Fallback silently
+      setPdfProgress('idle');
+      sendDevis(false);
     }
   };
 
