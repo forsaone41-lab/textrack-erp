@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, UserPlus, Users, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy, Edit2, Search, Globe } from 'lucide-react';
+import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, UserPlus, Users, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy, Edit2, Search, Globe, Briefcase } from 'lucide-react';
 import { Lead, loadLeads, loadLeadPhoto, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile, Facture } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { generatePDF, generatePDFBlob, printElement } from '../utils/pdf';
@@ -1409,10 +1409,18 @@ export default function Demandes() {
                     )}
                     {/* CV indicator */}
                     {lead.type.startsWith('RECRUTEMENT:') && (
-                      <span className={`flex items-center gap-1 font-black ${(lead as any).cv ? 'text-emerald-600' : 'text-slate-300'}`}>
-                        <FileText className="w-3 h-3" />
-                        {(lead as any).cv ? 'CV ✓' : 'Sans CV'}
-                      </span>
+                      <>
+                        <span className={`flex items-center gap-1 font-black ${(lead as any).cv ? 'text-emerald-600' : 'text-slate-300'}`}>
+                          <FileText className="w-3 h-3" />
+                          {(lead as any).cv ? 'CV ✓' : 'Sans CV'}
+                        </span>
+                        {lead.details?.includes('Expérience:') && (
+                          <span className="flex items-center gap-1 font-black text-amber-600">
+                            <Briefcase className="w-3 h-3" />
+                            {lead.details.split('|')[0].replace('Expérience:', '').replace('ans', isAr ? 'سنوات خبرة' : 'ans').trim()}
+                          </span>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
