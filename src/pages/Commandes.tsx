@@ -446,20 +446,28 @@ export default function Commandes() {
                       </td>
                       <td className="px-6 py-6 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          {/* Annulation demandée — confirm or reject */}
+                          {/* Annulation demandée — raison + confirm or reject */}
                           {(c.statut as any) === 'annulation_demandee' && (
-                            <>
-                              <button
-                                onClick={async (e) => { e.stopPropagation(); const updated = { ...c, statut: 'annulé' as any }; await saveRecord('commandes', updated); setCommandes(prev => prev.map(x => x.id === c.id ? updated : x)); }}
-                                title="Confirmer l'annulation"
-                                className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-xl text-[10px] font-black uppercase hover:bg-red-500 hover:text-white transition-all"
-                              >✓ Confirmer</button>
-                              <button
-                                onClick={async (e) => { e.stopPropagation(); const updated = { ...c, statut: 'en_cours' as any }; await saveRecord('commandes', updated); setCommandes(prev => prev.map(x => x.id === c.id ? updated : x)); }}
-                                title="Rejeter la demande"
-                                className="flex items-center gap-1 px-3 py-1.5 bg-slate-50 text-slate-600 border border-slate-200 rounded-xl text-[10px] font-black uppercase hover:bg-slate-200 transition-all"
-                              >✕ Rejeter</button>
-                            </>
+                            <div className="flex flex-col items-end gap-2">
+                              {(c as any).annulationRaison && (
+                                <div className="flex items-start gap-2 bg-orange-50 border border-orange-200 rounded-xl px-3 py-2 max-w-[260px]">
+                                  <span className="text-orange-400 text-sm shrink-0">💬</span>
+                                  <p className="text-[10px] text-orange-700 font-bold leading-relaxed text-left">
+                                    "{(c as any).annulationRaison}"
+                                  </p>
+                                </div>
+                              )}
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={async (e) => { e.stopPropagation(); const updated = { ...c, statut: 'annulé' as any }; await saveRecord('commandes', updated); setCommandes(prev => prev.map(x => x.id === c.id ? updated : x)); }}
+                                  className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-xl text-[10px] font-black uppercase hover:bg-red-500 hover:text-white transition-all"
+                                >✓ Confirmer</button>
+                                <button
+                                  onClick={async (e) => { e.stopPropagation(); const updated = { ...c, statut: 'en_cours' as any }; await saveRecord('commandes', updated); setCommandes(prev => prev.map(x => x.id === c.id ? updated : x)); }}
+                                  className="flex items-center gap-1 px-3 py-1.5 bg-slate-50 text-slate-600 border border-slate-200 rounded-xl text-[10px] font-black uppercase hover:bg-slate-200 transition-all"
+                                >✕ Rejeter</button>
+                              </div>
+                            </div>
                           )}
                           {(c.statut === 'echantillon_en_cours' || c.statut === 'echantillon_valide') && (
                             <button 
