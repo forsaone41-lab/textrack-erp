@@ -1221,7 +1221,7 @@ export default function Demandes() {
                 <Package className="w-4 h-4" />
                 {isAr ? 'زبناء محتملون' : 'Prospects'}
                 {prospectsCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-indigo-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full shadow-lg animate-in zoom-in border-2 border-white">
+                  <span className="absolute -top-2 -right-2 bg-indigo-600 text-white text-[10px] min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full shadow-lg animate-in zoom-in border-2 border-white">
                     {prospectsCount}
                   </span>
                 )}
@@ -1233,7 +1233,7 @@ export default function Demandes() {
                 <UserPlus className="w-4 h-4" />
                 {isAr ? 'توظيف' : 'Recrutement'}
                 {recruitmentCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-rose-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full shadow-lg animate-in zoom-in border-2 border-white">
+                  <span className="absolute -top-2 -right-2 bg-rose-600 text-white text-[10px] min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full shadow-lg animate-in zoom-in border-2 border-white">
                     {recruitmentCount}
                   </span>
                 )}
