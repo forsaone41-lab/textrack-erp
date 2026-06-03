@@ -1400,7 +1400,20 @@ export default function Demandes() {
                     <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-rose-400" /> {lead.ville || '-'}</span>
                     <span className="flex items-center gap-1"><Calendar className="w-3 h-3 text-slate-400" /> {new Date(lead.date).toLocaleDateString()} {new Date(lead.date).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span>
                     {lead.contactedAt && <span className="flex items-center gap-1 text-emerald-600"><MessageSquare className="w-3 h-3" /> {new Date(lead.contactedAt).toLocaleDateString()} {new Date(lead.contactedAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span>}
-                    <span className="flex items-center gap-1 text-emerald-600 font-black"><Package className="w-3 h-3" /> {lead.type} ({lead.quantity} pcs)</span>
+                    {lead.type.startsWith('RECRUTEMENT:') ? (
+                      <span className="flex items-center gap-1 text-indigo-600 font-black">
+                        <Package className="w-3 h-3" /> {lead.type.replace('RECRUTEMENT:', '').trim()}
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-emerald-600 font-black"><Package className="w-3 h-3" /> {lead.type} ({lead.quantity} pcs)</span>
+                    )}
+                    {/* CV indicator */}
+                    {lead.type.startsWith('RECRUTEMENT:') && (
+                      <span className={`flex items-center gap-1 font-black ${(lead as any).cv ? 'text-emerald-600' : 'text-slate-300'}`}>
+                        <FileText className="w-3 h-3" />
+                        {(lead as any).cv ? 'CV ✓' : 'Sans CV'}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1432,6 +1445,31 @@ export default function Demandes() {
                 {/* Recrutement actions */}
                 {category === 'recrutement' && (
                   <>
+                    {/* CV upload/view */}
+                    <label className="cursor-pointer">
+                      <input type="file" accept=".pdf,.doc,.docx,image/*" className="hidden" onChange={async e => {
+                        const file = e.target.files?.[0]; if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = async ev => {
+                          const cv = ev.target?.result as string;
+                          const updated = { ...lead, cv } as any;
+                          setLeads(prev => prev.map(l => l.id === lead.id ? updated : l));
+                          await saveRecord('leads', updated, true);
+                        };
+                        reader.readAsDataURL(file);
+                        e.target.value = '';
+                      }} />
+                      <span className={`h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border flex items-center gap-1 cursor-pointer transition-all ${(lead as any).cv ? 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100' : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'}`}>
+                        <FileText className="w-3.5 h-3.5" />
+                        {(lead as any).cv ? 'CV ✓' : 'CV +'}
+                      </span>
+                    </label>
+                    {(lead as any).cv && (
+                      <a href={(lead as any).cv} target="_blank" rel="noreferrer"
+                        className="h-8 px-2 rounded-lg text-[9px] font-black uppercase border bg-blue-500 text-white border-blue-500 flex items-center gap-1 hover:bg-blue-600 transition-all">
+                        <Eye className="w-3.5 h-3.5" /> Voir
+                      </a>
+                    )}
                     <button
                       onClick={async () => {
                         const next = lead.status === 'new' ? 'processed' : 'new';
