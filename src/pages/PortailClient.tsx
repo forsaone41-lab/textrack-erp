@@ -67,6 +67,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [sendingOrder, setSendingOrder] = useState(false);
   const [orderSent, setOrderSent] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [uploadingPreuve, setUploadingPreuve] = useState<string | null>(null); // factureId being uploaded
 
   // Helper for translating phase names
   const phaseAr: Record<string, string> = { 
@@ -120,6 +121,35 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     );
     setFound(results);
   }
+
+  const handleUploadPreuveClient = async (factureId: string, file: File) => {
+    setUploadingPreuve(factureId);
+    try {
+      const compressed = await compressImage(file);
+      const updated = factures.map(f => f.id === factureId
+        ? { ...f, preuveClient: compressed, statut: 'en_verification' as const }
+        : f
+      );
+      setFactures(updated);
+      const facture = updated.find(f => f.id === factureId);
+      if (facture) {
+        await saveRecord('factures', { ...facture, preuveClient: compressed, statut: 'en_verification' }, true);
+        // Notify admin
+        try {
+          const { sendPushToAll } = await import('../utils/pushNotifications');
+          sendPushToAll(
+            isAr ? '💳 إثبات دفع جديد' : '💳 Nouvelle preuve de paiement',
+            `${facture.client} — ${facture.numero}`,
+            '/recus'
+          );
+        } catch (_) {}
+      }
+    } catch (err) {
+      console.error('Upload preuve failed:', err);
+    } finally {
+      setUploadingPreuve(null);
+    }
+  };
 
   const handleOrderPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -783,7 +813,8 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                     )}
 
                                     <div className="flex flex-col gap-3">
-                                      <button 
+                                      {/* PDF Download */}
+                                      <button
                                         onClick={() => { setSelectedFacture(f); setShowInvoiceView(true); }}
                                         className={`w-full py-4 ${bgClass} text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:brightness-110 transition-all flex items-center justify-center gap-3 shadow-xl`}
                                       >
@@ -791,6 +822,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                          {isAr ? 'تحميل الوثيقة' : 'Télécharger PDF'}
                                       </button>
 
+                                      {/* Admin-uploaded proof */}
                                       {f.preuvePaiement && (
                                         <button
                                           onClick={() => {
@@ -802,11 +834,97 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                             a.click();
                                             document.body.removeChild(a);
                                           }}
-                                          className="w-full py-3 bg-green-50 text-green-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-green-100 transition-all flex items-center justify-center gap-2 border border-green-100"
+                                          className="w-full py-3 bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 shadow-md"
                                         >
                                           <Download className="w-4 h-4" />
-                                          {isAr ? 'تحميل إثبات الدفع' : 'Télécharger la preuve'}
+                                          {isAr ? '✅ تحميل وصل الاستلام' : '✅ Reçu Officiel BEYA'}
                                         </button>
+                                      )}
+
+                                      {/* Client proof upload zone — only for reçu */}
+                                      {f.typeDoc === 'recu' && (
+                                        <div className="mt-1">
+                                          <div className="flex items-center gap-2 mb-2">
+                                            <div className="flex-1 h-px bg-slate-100" />
+                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                                              {isAr ? 'إثبات الدفع' : 'Ma Preuve de Paiement'}
+                                            </span>
+                                            <div className="flex-1 h-px bg-slate-100" />
+                                          </div>
+
+                                          {f.statut === 'en_verification' || f.preuveClient ? (
+                                            /* Already uploaded */
+                                            <div className="rounded-2xl overflow-hidden border-2 border-amber-200 bg-amber-50/50">
+                                              {f.preuveClient && (
+                                                <div className="relative">
+                                                  <img src={f.preuveClient} alt="Preuve" className="w-full h-24 object-cover" />
+                                                  <div className="absolute inset-0 bg-amber-900/10" />
+                                                </div>
+                                              )}
+                                              <div className="flex items-center gap-2 px-4 py-3">
+                                                <div className="w-6 h-6 bg-amber-100 rounded-full flex items-center justify-center">
+                                                  <Clock className="w-3.5 h-3.5 text-amber-600" />
+                                                </div>
+                                                <div className="flex-1">
+                                                  <p className="text-[10px] font-black text-amber-700 uppercase tracking-wide">
+                                                    {isAr ? 'في انتظار التأكيد' : 'En attente de vérification'}
+                                                  </p>
+                                                  <p className="text-[9px] text-amber-500 font-medium">
+                                                    {isAr ? 'سيتم التأكيد خلال 24 ساعة' : 'Confirmation sous 24h'}
+                                                  </p>
+                                                </div>
+                                                {/* Re-upload option */}
+                                                <label className="cursor-pointer">
+                                                  <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={e => { const file = e.target.files?.[0]; if (file) handleUploadPreuveClient(f.id, file); e.target.value = ''; }}
+                                                  />
+                                                  <span className="text-[9px] text-amber-500 font-black uppercase underline cursor-pointer">
+                                                    {isAr ? 'تغيير' : 'Changer'}
+                                                  </span>
+                                                </label>
+                                              </div>
+                                            </div>
+                                          ) : (
+                                            /* Upload zone */
+                                            <label className="cursor-pointer block">
+                                              <input
+                                                type="file"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={e => { const file = e.target.files?.[0]; if (file) handleUploadPreuveClient(f.id, file); e.target.value = ''; }}
+                                              />
+                                              <div className={`w-full rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center gap-2 py-5 px-4
+                                                ${uploadingPreuve === f.id
+                                                  ? 'border-indigo-300 bg-indigo-50/50'
+                                                  : 'border-slate-200 bg-slate-50/50 hover:border-indigo-300 hover:bg-indigo-50/30'
+                                                }`}>
+                                                {uploadingPreuve === f.id ? (
+                                                  <>
+                                                    <RotateCw className="w-5 h-5 text-indigo-500 animate-spin" />
+                                                    <p className="text-[10px] font-black text-indigo-600 uppercase">{isAr ? 'جاري الرفع...' : 'Envoi...'}</p>
+                                                  </>
+                                                ) : (
+                                                  <>
+                                                    <div className="w-9 h-9 bg-white rounded-xl border border-slate-200 shadow-sm flex items-center justify-center">
+                                                      <Camera className="w-4.5 h-4.5 text-slate-400" />
+                                                    </div>
+                                                    <div className="text-center">
+                                                      <p className="text-[10px] font-black text-slate-700 uppercase tracking-wide">
+                                                        {isAr ? 'أرسل صورة الدفع' : 'Envoyer screenshot virement'}
+                                                      </p>
+                                                      <p className="text-[9px] text-slate-400 font-medium mt-0.5">
+                                                        {isAr ? 'صورة من التطبيق البنكي' : 'Photo app bancaire / chèque'}
+                                                      </p>
+                                                    </div>
+                                                  </>
+                                                )}
+                                              </div>
+                                            </label>
+                                          )}
+                                        </div>
                                       )}
                                     </div>
                                  </div>

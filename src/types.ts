@@ -246,9 +246,10 @@ export interface Facture {
   montant: number;
   avance?: number;
   preuvePaiement?: string;
+  preuveClient?: string;
   date: string;
   echeance: string;
-  statut: 'payée' | 'en_attente' | 'impayée';
+  statut: 'payée' | 'en_attente' | 'impayée' | 'en_verification';
   typeDoc?: 'facture' | 'devis' | 'recu';
   articles?: LigneFacture[];
   banque?: string;
@@ -692,7 +693,8 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
           'clientId', 'rebut', 'planningReady', 'ville', 'employeId', 'telephone', 'tailles', 'rejectionNote', 'tissus',
           'partenaireId', 'externalTasks', 'typeDossier',
           'photo', 'adresse',
-          'crmStage', 'crmContactMethod', 'crmRdvDate', 'crmNotes', 'crmPrice', 'crmPriceConfirmed', 'crmPriority'
+          'crmStage', 'crmContactMethod', 'crmRdvDate', 'crmNotes', 'crmPrice', 'crmPriceConfirmed', 'crmPriority',
+          'preuveClient'
         ];
         newCols.forEach(col => delete fallbackRecord[col]);
         

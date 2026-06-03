@@ -160,6 +160,7 @@ export default function Recus() {
   function getStatutInfo(f: Facture) {
     if (isOverdue(f)) return { bg: 'bg-red-100 text-red-700', dot: 'bg-red-500', label: 'En retard' };
     if (f.statut === 'payée') return { bg: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500', label: 'Payée' };
+    if (f.statut === 'en_verification' || (f as any).preuveClient) return { bg: 'bg-orange-100 text-orange-700', dot: 'bg-orange-400 animate-pulse', label: '💳 Preuve reçue' };
     if (f.statut === 'en_attente') return { bg: 'bg-amber-100 text-amber-700', dot: 'bg-amber-400', label: 'En attente' };
     return { bg: 'bg-red-100 text-red-700', dot: 'bg-red-500', label: 'Impayée' };
   }
@@ -378,11 +379,16 @@ export default function Recus() {
                         <button onClick={() => printFacture(f, cmdOf(f.commandeId || undefined))} title="Télécharger PDF" className="p-1.5 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition">
                           <Download className="w-3.5 h-3.5" />
                         </button>
-                        {f.preuvePaiement && (
-                          <button onClick={() => {
-                            const w = window.open();
-                            w?.document.write(`<img src="${f.preuvePaiement}" style="max-width:100%;" />`);
-                          }} title="Voir la preuve de paiement" className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">
+                        {(f.preuvePaiement || (f as any).preuveClient) && (
+                          <button
+                            onClick={() => {
+                              const img = (f as any).preuveClient || f.preuvePaiement;
+                              const w = window.open();
+                              w?.document.write(`<img src="${img}" style="max-width:100%;max-height:100vh;" />`);
+                            }}
+                            title={(f as any).preuveClient && f.statut === 'en_verification' ? '💳 Preuve client — à vérifier !' : 'Voir la preuve'}
+                            className={`p-1.5 rounded-lg transition ${(f as any).preuveClient && f.statut === 'en_verification' ? 'text-amber-500 bg-amber-50 hover:bg-amber-100 animate-pulse' : 'text-slate-400 hover:text-blue-600 hover:bg-blue-50'}`}
+                          >
                             <Camera className="w-3.5 h-3.5" />
                           </button>
                         )}
@@ -785,6 +791,7 @@ export default function Recus() {
                   className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                 >
                   <option value="en_attente">En attente</option>
+                  <option value="en_verification">💳 Preuve reçue (vérification)</option>
                   <option value="payée">Payée</option>
                   <option value="impayée">Impayée</option>
                 </select>
