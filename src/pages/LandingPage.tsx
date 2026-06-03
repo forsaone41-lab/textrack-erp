@@ -362,23 +362,42 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* CTA → Info page */}
-          <div className="mt-10 mb-6 flex flex-col items-center gap-3 text-center px-4">
-            <p className="text-slate-500 text-sm font-medium">
-              {isAr ? '💡 عندك أسئلة قبل ما تبدأ؟' : '💡 Des questions avant de commencer ?'}
-            </p>
-            <a
-              href="/#/info"
-              className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl transition-all hover:scale-105 active:scale-95 group"
-              style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)', color: 'white', boxShadow: '0 10px 40px rgba(79,70,229,0.35)' }}
-            >
-              <span className="text-xl">📋</span>
-              {isAr ? 'تعرف على أسعارنا وخدماتنا' : 'Voir les Prix, Délais & Services'}
-              <span className="text-white/70 group-hover:translate-x-1 transition-transform text-base">→</span>
-            </a>
-            <p className="text-[11px] text-slate-400 font-medium">
-              {isAr ? 'أسعار · مواعيد · أسئلة شائعة · كل ما تحتاج معرفته' : 'Prix · Délais · FAQ · Tout ce que vous devez savoir'}
-            </p>
+          {/* WOW CTA → Info page */}
+          <div className="mt-24 mb-16 relative w-full max-w-4xl mx-auto px-4">
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-rose-500 rounded-[3rem] blur-2xl opacity-20 animate-pulse" />
+            <div className="relative bg-white border-2 border-slate-100 rounded-[3rem] p-10 md:p-16 text-center shadow-[0_30px_60px_rgba(0,0,0,0.1)] flex flex-col items-center overflow-hidden">
+              {/* Decorative corner blobs */}
+              <div className="absolute -top-16 -left-16 w-32 h-32 bg-indigo-50 rounded-full blur-2xl" />
+              <div className="absolute -bottom-16 -right-16 w-32 h-32 bg-rose-50 rounded-full blur-2xl" />
+              
+              <div className="relative z-10 inline-flex items-center gap-2 px-5 py-2 bg-amber-100 text-amber-700 rounded-full text-sm font-black uppercase tracking-widest mb-6 border border-amber-200 shadow-sm">
+                💡 {isAr ? 'عندك أسئلة قبل ما تبدأ؟' : 'Des questions avant de commencer ?'}
+              </div>
+              
+              <h2 className="relative z-10 text-3xl md:text-5xl font-black text-slate-900 tracking-tighter mb-10 leading-tight">
+                {isAr ? 'اكتشف كل تفاصيل مشروعك' : 'Découvrez tous les détails'}
+              </h2>
+              
+              <a
+                href="/#/info"
+                className="relative z-10 group inline-flex items-center gap-4 px-8 md:px-12 py-5 md:py-6 rounded-full font-black text-lg md:text-2xl uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-2xl hover:shadow-indigo-500/50"
+                style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}
+              >
+                <span className="relative text-white flex items-center gap-3 drop-shadow-md">
+                  <span className="text-3xl">📋</span>
+                  {isAr ? 'تعرف على أسعارنا وخدماتنا' : 'Voir Prix, Délais & Services'}
+                  <ArrowRight className="w-6 h-6 md:w-8 md:h-8 group-hover:translate-x-2 transition-transform" />
+                </span>
+              </a>
+              
+              <div className="relative z-10 mt-10 flex flex-wrap justify-center gap-3 md:gap-4">
+                {(isAr ? ['الأسعار والموك 💰', 'مدة الإنتاج ⏱️', 'خدماتنا 🛠️', 'الأسئلة الشائعة ❓'] : ['Prix & MOQ 💰', 'Délais ⏱️', 'Services 🛠️', 'FAQ ❓']).map((badge, idx) => (
+                  <span key={idx} className="px-5 py-2.5 bg-slate-50 text-slate-700 rounded-full text-xs md:text-sm font-extrabold border border-slate-200 shadow-sm">
+                    {badge}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Lead Generation Form Section */}
