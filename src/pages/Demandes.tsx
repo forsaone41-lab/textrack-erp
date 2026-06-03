@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, UserPlus, Users, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy, Edit2, Search, Globe } from 'lucide-react';
 import { Lead, loadLeads, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile, Facture } from '../types';
 import { useLang } from '../contexts/LangContext';
-import { generatePDF, generatePDFBlob } from '../utils/pdf';
+import { generatePDF, generatePDFBlob, printElement } from '../utils/pdf';
 import { compressImage } from '../utils/image';
 import { PageLoader } from '../components/PageLoader';
 
@@ -56,7 +56,8 @@ export default function Demandes() {
   const [zoomLevel, setZoomLevel] = useState(1);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
-  const [newClientCode, setNewClientCode] = useState<{ name: string, code: string } | null>(null);
+  const [newClientCode, setNewClientCode] = useState<{ name: string, code: string, email: string, phone: string } | null>(null);
+  const company = loadCompanyProfile();
   const [showSettings, setShowSettings] = useState(false);
   const [visibleCount, setVisibleCount] = useState(10);
   const [templates, setTemplates] = useState(() => {
@@ -274,7 +275,7 @@ export default function Demandes() {
       };
       await saveRecord('users', newClient);
       setUsers(prev => [...prev, newClient]);
-      setNewClientCode({ name: lead.name, code: autoCode });
+      setNewClientCode({ name: lead.name, code: autoCode, email: newClient.email, phone: lead.phone });
     } catch (e: any) {
       alert(isAr ? 'مشكل: ' + e.message : 'Erreur: ' + e.message);
     }
@@ -1812,44 +1813,151 @@ export default function Demandes() {
 
       {/* New Client Code Modal */}
       {newClientCode && (
-        <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300" dir={isAr ? 'rtl' : 'ltr'}>
-          <div className="bg-white rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl text-center relative overflow-hidden border border-slate-100">
-            <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-emerald-400 to-emerald-600" />
-            <button
-              onClick={() => setNewClientCode(null)}
-              className="absolute top-6 right-6 p-2 text-slate-400 hover:text-rose-500 bg-slate-50 hover:bg-rose-50 rounded-full transition-all"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-[1.5rem] flex items-center justify-center mx-auto mb-6 shadow-sm border border-emerald-100/50">
-              <CheckCircle className="w-10 h-10" />
-            </div>
-            <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-2">
-              {isAr ? 'تم التسجيل بنجاح' : 'Client Enregistré'}
-            </h3>
-            <p className="text-sm font-bold text-slate-500 mb-8">
-              {isAr ? 'تم إنشاء الحساب، يرجى مشاركة هذا الرقم السري مع الكليان:' : 'Le compte a été créé. Voici le mot de passe à partager :'}
-            </p>
+        <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden border border-slate-100">
+            <div className="h-1.5 bg-gradient-to-r from-emerald-400 to-teal-500" />
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-emerald-50 text-emerald-500 rounded-xl flex items-center justify-center">
+                    <CheckCircle className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-black text-slate-800 uppercase tracking-tight">{isAr ? 'تم إنشاء الحساب' : 'Client Enregistré ✓'}</p>
+                    <p className="text-[10px] text-slate-400 font-bold">{newClientCode.name}</p>
+                  </div>
+                </div>
+                <button onClick={() => setNewClientCode(null)} className="w-8 h-8 bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-500 rounded-xl flex items-center justify-center transition-all">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
 
-            <div className="bg-slate-50 p-3 rounded-2xl flex items-center justify-between border-2 border-slate-100 mb-8 group hover:border-emerald-200 transition-colors">
-              <span className="text-4xl font-black tracking-[0.2em] text-slate-900 font-mono ml-3">{newClientCode.code}</span>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(newClientCode.code);
-                }}
-                className="w-14 h-14 flex items-center justify-center bg-white border-2 border-slate-200 text-slate-400 rounded-xl shadow-sm hover:bg-emerald-500 hover:border-emerald-500 hover:text-white transition-all hover:scale-105 active:scale-95"
-                title={isAr ? 'نسخ الكود' : 'Copier le code'}
-              >
-                <Copy className="w-6 h-6" />
-              </button>
-            </div>
+              {/* Email + Code */}
+              <div className="space-y-2 mb-5">
+                <div className="bg-slate-50 rounded-xl px-4 py-3 flex items-center justify-between border border-slate-100">
+                  <div>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Email</p>
+                    <p className="text-xs font-bold text-slate-700">{newClientCode.email}</p>
+                  </div>
+                  <button onClick={() => navigator.clipboard.writeText(newClientCode.email)}
+                    className="w-8 h-8 bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 rounded-lg flex items-center justify-center transition-all">
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <div className="bg-emerald-50 rounded-xl px-4 py-3 flex items-center justify-between border border-emerald-100">
+                  <div>
+                    <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mb-0.5">Code secret</p>
+                    <p className="text-2xl font-black tracking-[0.2em] text-slate-900 font-mono">{newClientCode.code}</p>
+                  </div>
+                  <button onClick={() => navigator.clipboard.writeText(newClientCode.code)}
+                    className="w-8 h-8 bg-white border border-emerald-200 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-lg flex items-center justify-center transition-all">
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
 
-            <button
-              onClick={() => setNewClientCode(null)}
-              className="w-full h-14 bg-slate-900 text-white rounded-xl font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200 active:scale-95"
-            >
-              {isAr ? 'إغلاق النافذة' : 'Fermer'}
-            </button>
+              {/* Action buttons */}
+              <div className="space-y-2">
+                <button
+                  onClick={() => {
+                    const rawPhone = newClientCode.phone.replace(/\D/g, '');
+                    const phone = rawPhone.startsWith('0') ? '212' + rawPhone.substring(1) : rawPhone.startsWith('212') ? rawPhone : '212' + rawPhone;
+                    const msg = `🎉 Bienvenue chez *BEYA CREATIVE* !\n\nBonjour *${newClientCode.name}*, votre espace client est prêt :\n\n🌐 *https://beyacreative.com*\n📧 Email : *${newClientCode.email}*\n🔑 Code : *${newClientCode.code}*\n\nConnectez-vous pour suivre vos commandes et documents. À bientôt ! 🇲🇦`;
+                    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+                  }}
+                  className="w-full h-11 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-100">
+                  <MessageSquare className="w-4 h-4" /> Envoyer via WhatsApp
+                </button>
+                <button
+                  onClick={() => { printElement('welcome-pdf-' + newClientCode.code); }}
+                  className="w-full h-11 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all">
+                  <Download className="w-4 h-4" /> Télécharger Welcome PDF
+                </button>
+                <button onClick={() => setNewClientCode(null)}
+                  className="w-full h-9 text-slate-400 hover:text-slate-600 text-[10px] font-bold uppercase tracking-widest transition-all">
+                  Fermer
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Hidden Welcome PDF Template */}
+          <div id={`welcome-pdf-${newClientCode.code}`} style={{ display: 'none' }}>
+            <div style={{ width: '210mm', minHeight: '297mm', fontFamily: 'Georgia, serif', padding: '20mm', color: '#1e293b', background: 'white' }}>
+              {/* Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '30px', borderBottom: '3px solid #4f46e5', paddingBottom: '20px' }}>
+                <div>
+                  <h1 style={{ fontSize: '28px', fontWeight: 900, color: '#1e1b4b', letterSpacing: '-1px', margin: 0 }}>BEYA<span style={{ color: '#4f46e5' }}>CREATIVE</span></h1>
+                  <p style={{ fontSize: '10px', color: '#6366f1', fontWeight: 700, letterSpacing: '3px', margin: '4px 0 0', textTransform: 'uppercase' }}>Manufacturing Excellence</p>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>beyacreative.com</p>
+                  <p style={{ fontSize: '11px', color: '#64748b', margin: '2px 0 0' }}>{company.phone}</p>
+                </div>
+              </div>
+
+              {/* Welcome */}
+              <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '12px', padding: '20px', marginBottom: '24px' }}>
+                <p style={{ fontSize: '11px', fontWeight: 700, color: '#0369a1', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 8px' }}>Bienvenue dans votre espace client</p>
+                <p style={{ fontSize: '18px', fontWeight: 900, color: '#1e293b', margin: '0 0 12px' }}>Bonjour, {newClientCode.name} 👋</p>
+                <p style={{ fontSize: '13px', color: '#475569', lineHeight: 1.6, margin: 0 }}>Votre compte BEYA CREATIVE est activé. Vous pouvez désormais suivre vos commandes, télécharger vos documents et communiquer avec notre équipe directement depuis votre portail.</p>
+              </div>
+
+              {/* Credentials */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '16px' }}>
+                  <p style={{ fontSize: '9px', fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 6px' }}>Email de connexion</p>
+                  <p style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b', margin: 0 }}>{newClientCode.email}</p>
+                </div>
+                <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '10px', padding: '16px' }}>
+                  <p style={{ fontSize: '9px', fontWeight: 900, color: '#059669', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 6px' }}>Code secret</p>
+                  <p style={{ fontSize: '22px', fontWeight: 900, color: '#1e293b', letterSpacing: '6px', margin: 0, fontFamily: 'monospace' }}>{newClientCode.code}</p>
+                </div>
+              </div>
+
+              {/* Who we are */}
+              <div style={{ marginBottom: '24px' }}>
+                <h2 style={{ fontSize: '13px', fontWeight: 900, color: '#1e1b4b', textTransform: 'uppercase', letterSpacing: '2px', borderLeft: '4px solid #4f46e5', paddingLeft: '12px', margin: '0 0 14px' }}>Qui sommes-nous ?</h2>
+                <p style={{ fontSize: '12px', color: '#475569', lineHeight: 1.7, margin: 0 }}>
+                  BEYA CREATIVE est une manufacture textile marocaine spécialisée dans la confection sur-mesure. Notre équipe de couturières expertes travaille avec des patrons de précision et des échantillons validés pour garantir que chaque pièce correspond exactement à votre vision.
+                </p>
+              </div>
+
+              {/* Process */}
+              <div style={{ marginBottom: '24px' }}>
+                <h2 style={{ fontSize: '13px', fontWeight: 900, color: '#1e1b4b', textTransform: 'uppercase', letterSpacing: '2px', borderLeft: '4px solid #4f46e5', paddingLeft: '12px', margin: '0 0 14px' }}>Notre processus de travail</h2>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  {[
+                    ['01', 'Demande & Devis', 'Vous soumettez votre projet avec photo du modèle et quantités. Nous établissons un devis personnalisé.'],
+                    ['02', 'Patron & Échantillon', 'Nos expertes créent le patron technique et confectionnent un échantillon pour validation.'],
+                    ['03', 'Validation qualité', 'Vous validez l\'échantillon. Nos équipes vérifient chaque détail avant le lancement.'],
+                    ['04', 'Production & Livraison', 'Lancement de la production en série avec contrôle qualité à chaque étape.'],
+                  ].map(([num, title, desc]) => (
+                    <div key={num} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '14px' }}>
+                      <p style={{ fontSize: '22px', fontWeight: 900, color: '#e2e8f0', margin: '0 0 6px', fontFamily: 'monospace' }}>{num}</p>
+                      <p style={{ fontSize: '11px', fontWeight: 900, color: '#1e293b', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{title}</p>
+                      <p style={{ fontSize: '10px', color: '#64748b', lineHeight: 1.6, margin: 0 }}>{desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Guarantees */}
+              <div style={{ background: '#1e1b4b', borderRadius: '12px', padding: '20px', color: 'white', marginBottom: '20px' }}>
+                <h2 style={{ fontSize: '13px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 12px', opacity: 0.9 }}>Nos engagements qualité</h2>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  {['✓ Couturières expertes et certifiées', '✓ Matières sélectionnées chez des fournisseurs fiables', '✓ Chaque pièce inspectée avant livraison', '✓ Respect strict des délais convenus'].map(item => (
+                    <p key={item} style={{ fontSize: '11px', fontWeight: 600, margin: 0, opacity: 0.9 }}>{item}</p>
+                  ))}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <p style={{ fontSize: '10px', color: '#94a3b8', margin: 0 }}>BEYA CREATIVE — {company.address || 'Zone Industrielle, Meknès'}</p>
+                <p style={{ fontSize: '10px', color: '#94a3b8', margin: 0 }}>Merci de votre confiance 🇲🇦</p>
+              </div>
+            </div>
           </div>
         </div>
       )}
