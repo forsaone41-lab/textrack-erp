@@ -87,17 +87,19 @@ export default function ClientInfo({ company: companyProp, standalone = false }:
       <div className="max-w-2xl mx-auto px-4 py-8 relative z-10">
 
         {/* Header */}
-        <div className="text-center mb-8 relative">
-          {/* Language toggle */}
-          <div className={`absolute top-0 ${isAr ? 'left-0' : 'right-0'} flex items-center gap-1 bg-white/10 border border-white/20 rounded-full p-1 backdrop-blur-sm`}>
-            <button
-              onClick={() => setLang('fr')}
-              className={`px-3 py-1 rounded-full text-xs font-black transition-all ${lang === 'fr' ? 'bg-white text-indigo-700' : 'text-white/60 hover:text-white'}`}
-            >FR</button>
-            <button
-              onClick={() => setLang('ar')}
-              className={`px-3 py-1 rounded-full text-xs font-black transition-all ${lang === 'ar' ? 'bg-white text-indigo-700' : 'text-white/60 hover:text-white'}`}
-            >AR</button>
+        <div className="text-center mb-8">
+          {/* Language toggle — separate row */}
+          <div className="flex justify-end mb-6">
+            <div className="flex items-center gap-1 bg-white/10 border border-white/20 rounded-full p-1 backdrop-blur-sm">
+              <button
+                onClick={() => setLang('fr')}
+                className={`px-3 py-1 rounded-full text-xs font-black transition-all ${lang === 'fr' ? 'bg-white text-indigo-700' : 'text-white/60 hover:text-white'}`}
+              >FR</button>
+              <button
+                onClick={() => setLang('ar')}
+                className={`px-3 py-1 rounded-full text-xs font-black transition-all ${lang === 'ar' ? 'bg-white text-indigo-700' : 'text-white/60 hover:text-white'}`}
+              >AR</button>
+            </div>
           </div>
 
           {(company.logoClient || company.logoLanding || company.logoUrl) && (
