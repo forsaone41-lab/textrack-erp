@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useLang } from '../contexts/LangContext';
-import { Users, Search, Trash2, CheckCircle, UserPlus, Clock, Phone, FileText } from 'lucide-react';
+import { Users, Search, Trash2, CheckCircle, UserPlus, Clock, Phone, FileText, ArrowLeft, X } from 'lucide-react';
 import { saveRecord, deleteRecord, genId, Employe } from '../types';
 
 interface WaitlistedCandidate {
@@ -106,6 +106,24 @@ export default function ListeAttente() {
     navigate('/suivi-rh', { state: { fromWaitlist: newEmployee } });
   };
 
+  const handleReturnToRecruitment = async (candidate: WaitlistedCandidate) => {
+    // Return candidate to leads table
+    const lead = {
+      id: genId(),
+      name: `${candidate.prenom} ${candidate.nom}`.trim(),
+      phone: candidate.telephone,
+      ville: '', // Unknown at this stage
+      type: `RECRUTEMENT: ${candidate.poste}`,
+      quantity: 0,
+      details: candidate.notes || '',
+      date: new Date().toISOString(),
+      status: 'new' as const,
+      crmStage: 'entretien' as const
+    };
+    await saveRecord('leads', lead, true);
+    handleDelete(candidate.id);
+  };
+
   const filtered = candidates.filter(c => 
     `${c.prenom} ${c.nom}`.toLowerCase().includes(search.toLowerCase()) ||
     c.poste.toLowerCase().includes(search.toLowerCase())
@@ -162,32 +180,50 @@ export default function ListeAttente() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 mb-8">
-              <button 
-                onClick={() => setShowConfirmModal(c)}
-                className="flex-1 py-4 bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-100"
-              >
-                <UserPlus className="w-4 h-4" />
-                {isAr ? 'توظيف رسمي (RH)' : 'Embaucher Officiellement'}
-              </button>
-              {(() => {
-                const cvData = c.notes?.split('| CV_ATTACHMENT:')[1];
-                if (!cvData) return null;
-                return (
-                  <button 
-                    onClick={() => {
-                      const link = document.createElement('a');
-                      link.href = cvData;
-                      link.download = `CV_${c.nom.replace(/\s/g, '_')}`;
-                      link.click();
-                    }}
-                    className="w-12 h-12 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-2xl flex items-center justify-center transition-all border border-indigo-100"
-                    title={isAr ? 'تحميل السيرة الذاتية' : 'Télécharger le CV'}
-                  >
-                    <FileText className="w-5 h-5" />
-                  </button>
-                );
-              })()}
+            <div className="flex flex-col gap-2 mb-6">
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setShowConfirmModal(c)}
+                  className="flex-1 py-4 bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-100"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  {isAr ? 'توظيف رسمي (RH)' : 'Embaucher Officiellement'}
+                </button>
+                {(() => {
+                  const cvData = c.notes?.split('| CV_ATTACHMENT:')[1];
+                  if (!cvData) return null;
+                  return (
+                    <button 
+                      onClick={() => {
+                        const link = document.createElement('a');
+                        link.href = cvData;
+                        link.download = `CV_${c.nom.replace(/\s/g, '_')}`;
+                        link.click();
+                      }}
+                      className="w-12 h-12 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-2xl flex items-center justify-center transition-all border border-indigo-100"
+                      title={isAr ? 'تحميل السيرة الذاتية' : 'Télécharger le CV'}
+                    >
+                      <FileText className="w-5 h-5" />
+                    </button>
+                  );
+                })()}
+              </div>
+              <div className="flex items-center gap-2 mt-1">
+                <button 
+                  onClick={() => handleReturnToRecruitment(c)}
+                  className="flex-1 py-2.5 bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-100 rounded-xl font-bold text-[9px] uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all"
+                >
+                  <ArrowLeft className="w-3 h-3" />
+                  {isAr ? 'إرجاع لإدارة التوظيف' : 'Retour au recrutement'}
+                </button>
+                <button 
+                  onClick={() => handleDelete(c.id)}
+                  className="px-4 py-2.5 bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl font-bold text-[9px] uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all"
+                >
+                  <X className="w-3 h-3" />
+                  {isAr ? 'رفض' : 'Rejeter'}
+                </button>
+              </div>
             </div>
           </div>
         ))}
