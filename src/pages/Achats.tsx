@@ -44,19 +44,19 @@ export default function Achats() {
   });
 
   const [clients, setClients] = useState<any[]>([]);
-  const [recus, setRecus] = useState<any[]>([]);
+  const [factures, setFactures] = useState<any[]>([]);
   const [commandes, setCommandes] = useState<any[]>([]);
 
   useEffect(() => {
     Promise.all([
       loadData<BesoinAchat>('achats'),
       loadData<any>('users'),
-      loadData<any>('recus'),
+      loadData<any>('factures'),
       loadData<any>('commandes')
-    ]).then(([achatsData, usersData, recusData, commandesData]) => {
+    ]).then(([achatsData, usersData, facturesData, commandesData]) => {
       setBesoins(achatsData || []);
       setClients((usersData || []).filter((u: any) => u.role === 'client'));
-      setRecus(recusData || []);
+      setFactures(facturesData || []);
       setCommandes(commandesData || []);
     });
   }, []);
@@ -329,9 +329,9 @@ export default function Achats() {
                       </div>
                       <span className="text-sm font-black text-indigo-700">
                         {(() => {
-                          const sum = recus
-                            .filter(r => r.client && r.client.trim().toLowerCase() === clientName && r.statut !== 'annulé')
-                            .reduce((total, r) => total + (r.montant || 0), 0);
+                          const sum = factures
+                            .filter(r => r.typeDoc === 'recu' && r.client && r.client.trim().toLowerCase() === clientName && r.statut !== 'annulé')
+                            .reduce((total, r) => total + (r.avance || 0), 0);
                           return sum.toLocaleString() + ' MAD';
                         })()}
                       </span>
