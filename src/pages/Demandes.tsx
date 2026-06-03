@@ -55,6 +55,8 @@ export default function Demandes() {
   const [detailsLead, setDetailsLead] = useState<Lead | null>(null);
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [lensEnabled, setLensEnabled] = useState(false);
+  const [lensPos, setLensPos] = useState({ x: 50, y: 50 });
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
   const [newClientCode, setNewClientCode] = useState<{ name: string, code: string, email: string, phone: string } | null>(null);
@@ -1139,7 +1141,7 @@ export default function Demandes() {
       {/* Photo Preview Modal */}
       {previewPhoto && (
         <div className="fixed inset-0 z-[140] flex items-center justify-center bg-black/95 animate-in fade-in duration-200"
-          onClick={() => { setPreviewPhoto(null); setZoomLevel(1); }}>
+          onClick={() => { setPreviewPhoto(null); setZoomLevel(1); setLensEnabled(false); }}>
           {/* Zoom controls */}
           <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-2xl px-4 py-2 z-20" onClick={e => e.stopPropagation()}>
             <button onClick={() => setZoomLevel(z => Math.max(0.5, z - 0.25))}
@@ -1148,12 +1150,18 @@ export default function Demandes() {
             <button onClick={() => setZoomLevel(z => Math.min(4, z + 0.25))}
               className="w-9 h-9 bg-white/20 hover:bg-white/40 rounded-xl text-white font-black text-xl flex items-center justify-center transition-all">+</button>
             <div className="w-px h-5 bg-white/30 mx-1" />
-            <button onClick={() => setZoomLevel(1)}
+            <button onClick={() => { setZoomLevel(1); setLensEnabled(false); }}
               className="px-3 h-9 bg-white/20 hover:bg-white/40 rounded-xl text-white text-[10px] font-black uppercase tracking-widest transition-all">Reset</button>
+            <div className="w-px h-5 bg-white/30 mx-1" />
+            <button onClick={() => setLensEnabled(!lensEnabled)}
+              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${lensEnabled ? 'bg-indigo-500 text-white shadow-lg' : 'bg-white/20 hover:bg-white/40 text-white'}`}
+              title="Loupe magique">
+              <Search className="w-4 h-4" />
+            </button>
           </div>
 
           {/* Close button */}
-          <button onClick={() => { setPreviewPhoto(null); setZoomLevel(1); }}
+          <button onClick={() => { setPreviewPhoto(null); setZoomLevel(1); setLensEnabled(false); }}
             className="absolute top-4 right-4 w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center text-white z-20 transition-all">
             <X className="w-5 h-5" />
           </button>
@@ -1163,9 +1171,21 @@ export default function Demandes() {
             <img
               src={previewPhoto}
               alt="Model Preview"
-              style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center', transition: 'transform 0.2s ease' }}
-              className="max-w-[90vw] max-h-[85vh] object-contain rounded-2xl shadow-2xl cursor-zoom-in"
-              onClick={() => setZoomLevel(z => z >= 3 ? 1 : z + 0.5)}
+              onMouseMove={(e) => {
+                if (!lensEnabled) return;
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+                setLensPos({ x, y });
+              }}
+              style={{ 
+                transform: lensEnabled ? 'scale(3)' : `scale(${zoomLevel})`, 
+                transformOrigin: lensEnabled ? `${lensPos.x}% ${lensPos.y}%` : 'center', 
+                transition: lensEnabled ? 'transform 0.1s ease-out' : 'transform 0.2s ease',
+                cursor: lensEnabled ? 'crosshair' : 'zoom-in'
+              }}
+              className="max-w-[90vw] max-h-[85vh] object-contain rounded-2xl shadow-2xl"
+              onClick={() => !lensEnabled && setZoomLevel(z => z >= 3 ? 1 : z + 0.5)}
             />
           </div>
 
