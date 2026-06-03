@@ -88,8 +88,15 @@ export default function ClientInfo({ company: companyProp, standalone = false }:
 
         {/* Header */}
         <div className="text-center mb-8">
-          {/* Language toggle — separate row */}
-          <div className="flex justify-end mb-6">
+          {/* Top bar: back button + language toggle */}
+          <div className="flex justify-between items-center mb-6">
+            <a
+              href="/"
+              className="flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/20 rounded-full text-white/80 text-xs font-black backdrop-blur-sm hover:bg-white/20 transition-all group"
+            >
+              <span className="group-hover:-translate-x-1 transition-transform">←</span>
+              {isAr ? 'رجوع' : 'Retour'}
+            </a>
             <div className="flex items-center gap-1 bg-white/10 border border-white/20 rounded-full p-1 backdrop-blur-sm">
               <button
                 onClick={() => setLang('fr')}
