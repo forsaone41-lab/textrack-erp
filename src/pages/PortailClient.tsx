@@ -68,7 +68,10 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [sendingOrder, setSendingOrder] = useState(false);
   const [orderSent, setOrderSent] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [uploadingPreuve, setUploadingPreuve] = useState<string | null>(null); // factureId being uploaded
+  const [uploadingPreuve, setUploadingPreuve] = useState<string | null>(null);
+  const [annulationModal, setAnnulationModal] = useState<{ cmdId: string; ref: string } | null>(null);
+  const [annulationRaison, setAnnulationRaison] = useState('');
+  const [annulationSending, setAnnulationSending] = useState(false);
 
   // Helper for translating phase names
   const phaseAr: Record<string, string> = { 
@@ -122,6 +125,33 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     );
     setFound(results);
   }
+
+  const handleDemandeAnnulation = async () => {
+    if (!annulationModal) return;
+    setAnnulationSending(true);
+    try {
+      const cmd = found.find(c => c.id === annulationModal.cmdId);
+      if (!cmd) return;
+      const updated = { ...cmd, statut: 'annulation_demandee' as any, annulationRaison: annulationRaison || 'Raison non précisée' };
+      await saveRecord('commandes', updated);
+      setFound(prev => prev.map(c => c.id === annulationModal.cmdId ? updated : c));
+      // Notify admin
+      try {
+        const { sendPushToAll } = await import('../utils/pushNotifications');
+        sendPushToAll(
+          isAr ? '⚠️ طلب إلغاء طلبية' : '⚠️ Demande d\'annulation',
+          `${cmd.client} — ${cmd.reference}`,
+          '/commandes'
+        );
+      } catch (_) {}
+      setAnnulationModal(null);
+      setAnnulationRaison('');
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setAnnulationSending(false);
+    }
+  };
 
   const handleUploadPreuveClient = async (factureId: string, file: File) => {
     setUploadingPreuve(factureId);
@@ -639,6 +669,29 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                           </div>
                       </div>
                       
+                      {/* Annulation status banner */}
+                      {cmd.statut === 'annulation_demandee' && (
+                        <div className="mx-4 md:mx-8 mb-3 flex items-center gap-3 bg-orange-50 border border-orange-200 rounded-2xl px-4 py-3">
+                          <span className="text-lg">⏳</span>
+                          <div>
+                            <p className="text-xs font-black text-orange-700 uppercase tracking-wide">
+                              {isAr ? 'طلب الإلغاء قيد المعالجة' : 'Demande d\'annulation en cours'}
+                            </p>
+                            <p className="text-[10px] text-orange-500 font-medium">
+                              {isAr ? 'في انتظار تأكيد الفريق' : 'En attente de confirmation par notre équipe'}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {cmd.statut === 'annulé' && (
+                        <div className="mx-4 md:mx-8 mb-3 flex items-center gap-3 bg-red-50 border border-red-200 rounded-2xl px-4 py-3">
+                          <span className="text-lg">❌</span>
+                          <p className="text-xs font-black text-red-700 uppercase tracking-wide">
+                            {isAr ? 'تم إلغاء الطلبية' : 'Commande annulée'}
+                          </p>
+                        </div>
+                      )}
+
                       {/* Footer Section with Separator */}
                       <div className="px-4 md:px-8 pb-4 md:pb-6 flex flex-col md:flex-row items-center justify-between gap-2 md:gap-6 border-t border-slate-100 pt-3 md:pt-6 bg-slate-50/40 text-center md:text-left">
                          <div className="flex flex-col md:flex-row flex-wrap gap-2 md:gap-4 w-full md:w-auto">
@@ -652,6 +705,16 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                             </div>
                          </div>
                          
+                         {/* Annulation button */}
+                         {cmd.statut !== 'annulé' && cmd.statut !== 'annulation_demandee' && cmd.statut !== 'livré' && (
+                           <button
+                             onClick={() => { setAnnulationModal({ cmdId: cmd.id, ref: cmd.reference }); setAnnulationRaison(''); }}
+                             className="flex items-center gap-1.5 px-3 py-1.5 text-rose-400 border border-rose-200 bg-rose-50 hover:bg-rose-100 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all"
+                           >
+                             ✕ {isAr ? 'طلب الإلغاء' : 'Annuler'}
+                           </button>
+                         )}
+
                          {/* Secondary Countdown Badge - Full width on Mobile */}
                          <div className="flex items-center justify-center gap-3 px-5 py-2.5 bg-slate-900 text-white rounded-xl shadow-xl shadow-slate-200 w-full md:w-auto">
                             <span className="text-[7px] md:text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">{isAr ? 'الوقت المتبقي' : 'Temps Restant'}</span>
@@ -1064,6 +1127,61 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
         </div>
       </main>
 
+
+      {/* Annulation Modal */}
+      {annulationModal && (
+        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-end md:items-center justify-center z-[300] p-4">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex items-center gap-3">
+              <div className="w-10 h-10 bg-rose-100 rounded-2xl flex items-center justify-center text-rose-600 text-lg">✕</div>
+              <div>
+                <p className="text-sm font-black text-slate-900 uppercase tracking-tight">
+                  {isAr ? 'طلب إلغاء الطلبية' : 'Demander l\'annulation'}
+                </p>
+                <p className="text-[10px] text-slate-400 font-medium">{annulationModal.ref}</p>
+              </div>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3">
+                <p className="text-xs font-bold text-amber-700">
+                  {isAr
+                    ? '⚠️ طلبك سيُرسل للمراجعة. لن يُلغى تلقائياً حتى يوافق فريقنا.'
+                    : '⚠️ Votre demande sera examinée. Elle ne sera pas annulée automatiquement sans confirmation de notre équipe.'
+                  }
+                </p>
+              </div>
+              <div>
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">
+                  {isAr ? 'سبب الإلغاء' : 'Raison de l\'annulation'}
+                </label>
+                <textarea
+                  value={annulationRaison}
+                  onChange={e => setAnnulationRaison(e.target.value)}
+                  placeholder={isAr ? 'اشرح سبب طلب الإلغاء...' : 'Expliquez la raison de votre demande...'}
+                  rows={3}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:border-rose-400 resize-none"
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => { setAnnulationModal(null); setAnnulationRaison(''); }}
+                  className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-2xl text-xs font-black uppercase hover:bg-slate-200 transition-all"
+                >
+                  {isAr ? 'رجوع' : 'Retour'}
+                </button>
+                <button
+                  onClick={handleDemandeAnnulation}
+                  disabled={annulationSending}
+                  className="flex-1 py-3 bg-rose-500 text-white rounded-2xl text-xs font-black uppercase hover:bg-rose-600 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {annulationSending ? <RotateCw className="w-4 h-4 animate-spin" /> : '✕'}
+                  {isAr ? 'إرسال الطلب' : 'Envoyer la demande'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Invoice Preview Modal */}
       {showInvoiceView && selectedFacture && (

@@ -121,6 +121,8 @@ export default function Commandes() {
 
   function getDynamicStatus(c: Commande) {
 
+    if ((c.statut as any) === 'annulation_demandee') return { label: '⚠️ Annulation demandée', color: 'bg-orange-50 text-orange-600 animate-pulse', dot: 'bg-orange-500 animate-pulse' };
+    if ((c.statut as any) === 'annulé') return { label: '❌ Annulée', color: 'bg-red-50 text-red-600', dot: 'bg-red-500' };
     if (c.statut === 'livré') return { label: t('status_livree', lang), color: 'bg-emerald-50 text-emerald-600', dot: 'bg-emerald-500' };
     if (c.statut === 'terminé') return { label: t('status_terminee', lang), color: 'bg-blue-50 text-blue-600', dot: 'bg-blue-500' };
     if (c.statut === 'echantillon_en_cours') return { label: t('echantillon_en_cours', lang), color: 'bg-fuchsia-50 text-fuchsia-600', dot: 'bg-fuchsia-500' };
@@ -444,6 +446,21 @@ export default function Commandes() {
                       </td>
                       <td className="px-6 py-6 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          {/* Annulation demandée — confirm or reject */}
+                          {(c.statut as any) === 'annulation_demandee' && (
+                            <>
+                              <button
+                                onClick={async (e) => { e.stopPropagation(); const updated = { ...c, statut: 'annulé' as any }; await saveRecord('commandes', updated); setCommandes(prev => prev.map(x => x.id === c.id ? updated : x)); }}
+                                title="Confirmer l'annulation"
+                                className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-xl text-[10px] font-black uppercase hover:bg-red-500 hover:text-white transition-all"
+                              >✓ Confirmer</button>
+                              <button
+                                onClick={async (e) => { e.stopPropagation(); const updated = { ...c, statut: 'en_cours' as any }; await saveRecord('commandes', updated); setCommandes(prev => prev.map(x => x.id === c.id ? updated : x)); }}
+                                title="Rejeter la demande"
+                                className="flex items-center gap-1 px-3 py-1.5 bg-slate-50 text-slate-600 border border-slate-200 rounded-xl text-[10px] font-black uppercase hover:bg-slate-200 transition-all"
+                              >✕ Rejeter</button>
+                            </>
+                          )}
                           {(c.statut === 'echantillon_en_cours' || c.statut === 'echantillon_valide') && (
                             <button 
                               onClick={(e) => { e.stopPropagation(); navigate(`/commandes/manage?edit=${c.id}`); }}
