@@ -15,6 +15,7 @@ export default function Recrutement() {
     { id: 'surjeteuse', fr: 'Surjeteuse', ar: 'خياطة / سورجي' },
     { id: 'finition', fr: 'Finition', ar: 'فينيسيون' },
     { id: 'coupeur', fr: 'Coupeur', ar: 'فصّال' },
+    { id: 'patronnier', fr: 'Patronnier / Modéliste', ar: 'باترونيي / موديليست' },
     { id: 'repasseur', fr: 'Repasseur', ar: 'بريسور / مصلوح' },
     { id: 'controleur', fr: 'Contrôleur Qualité', ar: 'مراقب جودة' },
     { id: 'chef', fr: 'Chef de Chaîne', ar: 'شاف دو شين' },
