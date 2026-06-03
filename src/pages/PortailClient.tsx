@@ -443,33 +443,55 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                     </div>
                   </div>
 
-                  {/* WhatsApp Notification Toggle */}
-                  {currentUser?.role === 'client' && (
-                    <div className="mt-8 md:mt-12 flex flex-col md:flex-row items-center gap-4 md:gap-6 p-4 md:p-6 bg-white/5 backdrop-blur-md border border-white/10 rounded-[2rem] md:rounded-[2.5rem]">
-                       <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${notifsEnabled ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-white/10 text-slate-400'}`}>
-                          <MessageCircle className="w-7 h-7" />
-                       </div>
-                       <div className="flex-1 text-center md:text-left">
-                          <h4 className="text-lg font-black text-white uppercase tracking-tight mb-1">
+                  {/* WhatsApp Notification — CallMeBot setup */}
+                  {currentUser?.role === 'client' && currentUser.telephone && (
+                    <div className="mt-8 md:mt-12 p-4 md:p-6 bg-white/5 backdrop-blur-md border border-white/10 rounded-[2rem] md:rounded-[2.5rem]">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shrink-0">
+                          <MessageCircle className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-black text-white uppercase tracking-tight">
                             {isAr ? 'تنبيهات الواتساب' : 'Notifications WhatsApp'}
                           </h4>
-                          <p className="text-slate-400 text-sm font-medium">
-                            {isAr 
-                              ? `توصل بآخر التحديثات مباشرة على الرقم: ${currentUser.telephone || '...'} ` 
-                              : `Recevez les mises à jour en direct sur votre mobile.`}
+                          <p className="text-[10px] text-slate-400 font-medium">
+                            {isAr ? 'تفعيل مرة واحدة، يصلك كل شيء تلقائياً' : 'Activer une fois, recevez tout automatiquement'}
                           </p>
-                       </div>
-                       <div className="flex items-center gap-4">
-                          <span className={`text-[10px] font-black uppercase tracking-widest ${notifsEnabled ? 'text-emerald-400' : 'text-slate-500'}`}>
-                             {notifsEnabled ? (isAr ? 'مفعّلة' : 'Activé') : (isAr ? 'معطلة' : 'Désactivé')}
-                          </span>
+                        </div>
+                      </div>
+                      <div className="bg-white/5 rounded-2xl p-4 mb-3 border border-white/10">
+                        <p className="text-[11px] text-white/70 font-medium mb-3">
+                          {isAr
+                            ? '📲 خطوة واحدة فقط: أرسل هذه الرسالة من هاتفك عبر واتساب:'
+                            : '📲 Une seule étape : envoyez ce message depuis votre WhatsApp :'}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <code className="flex-1 bg-black/30 text-emerald-300 text-xs font-mono px-3 py-2 rounded-xl truncate">
+                            I allow callmebot to send me messages
+                          </code>
                           <button
-                            onClick={() => setNotifsEnabled(!notifsEnabled)}
-                            className={`relative inline-flex h-8 w-14 items-center rounded-full transition-all duration-500 outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900 ${notifsEnabled ? 'bg-emerald-500' : 'bg-white/20'}`}
+                            onClick={() => navigator.clipboard?.writeText('I allow callmebot to send me messages')}
+                            className="px-2 py-2 bg-white/10 rounded-xl text-white/60 hover:bg-white/20 transition text-[10px]"
+                          >📋</button>
+                        </div>
+                        <p className="text-[10px] text-slate-500 mt-2">
+                          {isAr ? 'أرسل للرقم: ' : 'Envoyer à : '}
+                          <strong className="text-white/70">+34 644 59 78 07</strong>
+                          {' → '}
+                          <a
+                            href={`https://wa.me/34644597807?text=${encodeURIComponent('I allow callmebot to send me messages')}`}
+                            target="_blank" rel="noreferrer"
+                            className="text-emerald-400 underline font-bold"
                           >
-                            <span className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-lg transition-all duration-500 ${notifsEnabled ? (isAr ? '-translate-x-7' : 'translate-x-7') : (isAr ? '-translate-x-1' : 'translate-x-1')}`} />
-                          </button>
-                       </div>
+                            {isAr ? 'افتح واتساب' : 'Ouvrir WhatsApp'}
+                          </a>
+                        </p>
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-medium text-center">
+                        {isAr
+                          ? '✅ بعد الإرسال ستصلك رسالة تأكيد — بعدها تصلك تحديثات طلبيتك تلقائياً'
+                          : '✅ Après envoi, vous recevrez un message de confirmation — puis toutes les mises à jour automatiquement'}
+                      </p>
                     </div>
                   )}
                </div>

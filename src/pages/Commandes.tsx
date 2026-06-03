@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Search, Plus, Package, ChevronRight, ChevronDown, 
-  Edit2, ShoppingCart, Scissors, Trash2, Layers, Binary, AlertTriangle, Check, CheckCircle2
+  Edit2, ShoppingCart, Scissors, Trash2, Layers, Binary, AlertTriangle, Check, CheckCircle2, MessageCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -118,6 +118,23 @@ export default function Commandes() {
       return matchType;
     });
   }, [commandes, filterType]);
+
+  async function notifyClientWhatsApp(c: Commande, message: string) {
+    try {
+      const allUsers = await loadData<any>('users');
+      const user = allUsers.find((u: any) =>
+        (u.nom || '').toLowerCase() === (c.client || '').toLowerCase()
+      );
+      const phone = user?.telephone || user?.phone || '';
+      if (!phone) return;
+      const raw = phone.replace(/\D/g, '');
+      let formatted = raw;
+      if (raw.startsWith('0')) formatted = '212' + raw.substring(1);
+      else if (!raw.startsWith('212')) formatted = '212' + raw;
+      const encoded = encodeURIComponent(message);
+      window.open(`https://wa.me/${formatted}?text=${encoded}`, '_blank');
+    } catch (_) {}
+  }
 
   function getDynamicStatus(c: Commande) {
 
@@ -459,11 +476,23 @@ export default function Commandes() {
                               )}
                               <div className="flex gap-2">
                                 <button
-                                  onClick={async (e) => { e.stopPropagation(); const updated = { ...c, statut: 'annulé' as any }; await saveRecord('commandes', updated); setCommandes(prev => prev.map(x => x.id === c.id ? updated : x)); }}
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    const updated = { ...c, statut: 'annulé' as any };
+                                    await saveRecord('commandes', updated);
+                                    setCommandes(prev => prev.map(x => x.id === c.id ? updated : x));
+                                    notifyClientWhatsApp(c, `Bonjour ${c.client}, votre demande d'annulation pour la commande ${c.reference} a été confirmée. Merci de nous contacter pour plus d'informations. — BEYA CREATIVE`);
+                                  }}
                                   className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-xl text-[10px] font-black uppercase hover:bg-red-500 hover:text-white transition-all"
                                 >✓ Confirmer</button>
                                 <button
-                                  onClick={async (e) => { e.stopPropagation(); const updated = { ...c, statut: 'en_cours' as any }; await saveRecord('commandes', updated); setCommandes(prev => prev.map(x => x.id === c.id ? updated : x)); }}
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    const updated = { ...c, statut: 'en_cours' as any };
+                                    await saveRecord('commandes', updated);
+                                    setCommandes(prev => prev.map(x => x.id === c.id ? updated : x));
+                                    notifyClientWhatsApp(c, `Bonjour ${c.client}, votre demande d'annulation pour la commande ${c.reference} a été refusée. Votre production continue normalement. Contactez-nous si vous avez des questions. — BEYA CREATIVE`);
+                                  }}
                                   className="flex items-center gap-1 px-3 py-1.5 bg-slate-50 text-slate-600 border border-slate-200 rounded-xl text-[10px] font-black uppercase hover:bg-slate-200 transition-all"
                                 >✕ Rejeter</button>
                               </div>
@@ -508,7 +537,19 @@ export default function Commandes() {
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
-                          <button 
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const si = getDynamicStatus(c);
+                              const msg = `Bonjour ${c.client} 👋\n\nMise à jour de votre commande *${c.reference}* :\n\n📌 Statut : *${si.label}*\n📅 Livraison prévue : *${c.dateLivraisonPrevue}*\n\nMerci de votre confiance 🙏\n— BEYA CREATIVE`;
+                              notifyClientWhatsApp(c, msg);
+                            }}
+                            title="Notifier le client par WhatsApp"
+                            className="w-9 h-9 text-emerald-500 hover:text-white hover:bg-emerald-500 bg-emerald-50 rounded-xl flex items-center justify-center transition-all"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                          </button>
+                          <button
                             onClick={(e) => { e.stopPropagation(); setDeleteConfirm(c); }}
                             className="w-9 h-9 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl flex items-center justify-center transition-all"
                           >
