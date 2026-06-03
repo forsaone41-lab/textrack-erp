@@ -547,13 +547,15 @@ export async function syncCompanyProfile(): Promise<CompanyProfile> {
 
 export async function loadLeads(): Promise<Lead[]> {
   try {
-    // 1. Try to get from Supabase but FILTER OUT photos to keep it fast
+    // Select all fields EXCEPT photo (base64) to keep payload light
     const { data, error } = await supabase
       .from('leads')
-      .select('*')
+      .select('id,name,phone,email,ville,type,quantity,tailles,details,date,status,contactedAt,contactedType,crmStage,crmContactMethod,crmRdvDate,crmNotes,crmPrice,crmPriceConfirmed,crmPriority')
       .neq('name', '__WORKER_PHOTO__')
       .neq('name', '__SYSTEM_CONFIG__')
-      .neq('name', '__DELETED__');
+      .neq('name', '__DELETED__')
+      .order('date', { ascending: false })
+      .limit(200);
 
     if (!error && Array.isArray(data)) {
       // ✅ Filter out locally deleted IDs just in case RLS blocked the delete
@@ -582,6 +584,17 @@ export async function loadLeads(): Promise<Lead[]> {
     console.error("Error in loadLeads:", err);
     return [];
   }
+}
+
+export async function loadLeadPhoto(leadId: string): Promise<string | null> {
+  try {
+    const { data } = await supabase
+      .from('leads')
+      .select('photo')
+      .eq('id', leadId)
+      .single();
+    return data?.photo || null;
+  } catch { return null; }
 }
 
 export async function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'>) {

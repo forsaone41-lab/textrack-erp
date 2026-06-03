@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, UserPlus, Users, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy, Edit2, Search, Globe } from 'lucide-react';
-import { Lead, loadLeads, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile, Facture } from '../types';
+import { Lead, loadLeads, loadLeadPhoto, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile, Facture } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { generatePDF, generatePDFBlob, printElement } from '../utils/pdf';
 import { sendPushToClient, sendPushToAll } from '../utils/pushNotifications';
@@ -76,29 +76,39 @@ export default function Demandes() {
   });
 
   useEffect(() => {
-    // Show cached data instantly (no blank screen)
+    // 1. Show cached data INSTANTLY — no blank screen
+    let hasCached = false;
     try {
       const cachedLeads = localStorage.getItem('textrack_data_leads');
       if (cachedLeads) {
         const parsed = JSON.parse(cachedLeads);
-        if (Array.isArray(parsed)) setLeads(parsed.filter((l: any) => l && l.name !== '__SYSTEM_CONFIG__'));
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setLeads(parsed.filter((l: any) => l && l.name !== '__SYSTEM_CONFIG__'));
+          hasCached = true;
+        }
       }
       const cachedUsers = localStorage.getItem('textrack_data_users');
       if (cachedUsers) {
         const parsed = JSON.parse(cachedUsers);
         if (Array.isArray(parsed)) setUsers(parsed);
       }
-    } catch { /* ignore parse errors */ }
+    } catch { /* ignore */ }
 
-    // Then refresh from network in background
+    // If we have cache, hide loader immediately
+    if (hasCached) setLoading(false);
+
+    // 2. Refresh from network with timeout
     async function refresh() {
-      const [leadsData, usersData] = await Promise.all([
-        loadLeads(),
-        loadData<User>('users')
-      ]);
-      setLeads(leadsData);
-      setUsers(usersData || []);
-      setLoading(false);
+      try {
+        const timeout = new Promise<null>(r => setTimeout(() => r(null), 8000));
+        const [leadsData, usersData] = await Promise.all([
+          Promise.race([loadLeads(), timeout]),
+          Promise.race([loadData<User>('users'), timeout])
+        ]);
+        if (leadsData) setLeads(leadsData as Lead[]);
+        if (usersData) setUsers((usersData as User[]) || []);
+      } catch (e) { console.warn('Refresh failed, using cache'); }
+      finally { setLoading(false); }
     }
     refresh();
   }, []);
@@ -1315,9 +1325,16 @@ export default function Demandes() {
 
               <div className="flex items-start gap-4">
                 {/* Photo */}
-                <div className="relative shrink-0 cursor-pointer" onClick={() => lead.photo && setPreviewPhoto(lead.photo)}>
+                <div className="relative shrink-0 cursor-pointer" onClick={async () => {
+                  if (lead.photo) { setPreviewPhoto(lead.photo); return; }
+                  const photo = await loadLeadPhoto(lead.id);
+                  if (photo) { setPreviewPhoto(photo); setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, photo } : l)); }
+                }}>
                   <div className="w-12 h-12 bg-slate-50 border border-slate-200 rounded-xl overflow-hidden flex items-center justify-center text-slate-300">
-                    {lead.photo ? <img src={lead.photo} className="w-full h-full object-cover" alt="" loading="lazy" /> : <ImageIcon className="w-5 h-5" />}
+                    {lead.photo
+                      ? <img src={lead.photo} className="w-full h-full object-cover" alt="" loading="lazy" />
+                      : <ImageIcon className="w-5 h-5" />
+                    }
                   </div>
                 </div>
 
