@@ -53,7 +53,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     };
     sync();
   }, []);
-  const [activeTab, setActiveTab] = useState<'overview' | 'atelier' | 'orders' | 'docs' | 'support' | 'info'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'docs' | 'support' | 'info'>('overview');
   const [showNotifs, setShowNotifs] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [viewMesuresFiche, setViewMesuresFiche] = useState<FicheTechnique | null>(null);
@@ -276,7 +276,6 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
             <nav className="space-y-2">
               {[
                 { id: 'overview', icon: <Globe className="w-5 h-5" />, label: isAr ? 'نظرة عامة' : 'Vue d\'ensemble' },
-                { id: 'atelier', icon: <Scissors className="w-5 h-5" />, label: isAr ? 'مصنعنا' : 'Notre Atelier' },
                 { id: 'orders', icon: <Package className="w-5 h-5" />, label: isAr ? 'طلبياتي' : 'Mes Commandes' },
                 { id: 'docs', icon: <Receipt className="w-5 h-5" />, label: isAr ? 'الفواتير والوثائق' : 'Factures & Docs' },
                 { id: 'support', icon: <Bell className="w-5 h-5" />, label: isAr ? 'الدعم الفني VIP' : 'Support VIP' },
@@ -332,7 +331,6 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
               </button>
               <h2 className="text-base md:text-2xl font-black text-slate-900 uppercase tracking-tighter truncate max-w-[150px] md:max-w-none">
                 {activeTab === 'overview' ? (isAr ? 'لوحة التحكم' : 'Tableau de Bord') :
-                 activeTab === 'atelier' ? (isAr ? 'مصنعنا' : 'Notre Atelier') :
                  activeTab === 'orders' ? (isAr ? 'الطلبيات' : 'Commandes') :
                  activeTab === 'docs' ? (isAr ? 'الوثائق' : 'Documents') :
                  activeTab === 'info' ? (isAr ? 'معلومات وأسعار' : 'Infos & Prix') :
@@ -1041,7 +1039,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
             </div>
           )}
 
-          {activeTab === 'atelier' && (
+          {activeTab === 'DISABLED_atelier' && (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               {/* Hero banner */}
               <div className="relative rounded-[2.5rem] overflow-hidden" style={{ background: 'linear-gradient(135deg, #0f0c29, #302b63)' }}>
