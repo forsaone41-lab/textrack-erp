@@ -789,15 +789,20 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                       </button>
 
                                       {f.preuvePaiement && (
-                                        <button 
+                                        <button
                                           onClick={() => {
-                                            const w = window.open();
-                                            w?.document.write(`<img src="${f.preuvePaiement}" style="max-width:100%;" />`);
+                                            const a = document.createElement('a');
+                                            a.href = f.preuvePaiement!;
+                                            a.download = `Preuve_${f.numero || 'recu'}.jpg`;
+                                            a.target = '_blank';
+                                            document.body.appendChild(a);
+                                            a.click();
+                                            document.body.removeChild(a);
                                           }}
-                                          className="w-full py-3 bg-blue-50 text-blue-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-100 transition-all flex items-center justify-center gap-2 border border-blue-100"
+                                          className="w-full py-3 bg-green-50 text-green-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-green-100 transition-all flex items-center justify-center gap-2 border border-green-100"
                                         >
-                                          <Eye className="w-4 h-4" />
-                                          {isAr ? 'عرض إثبات الدفع' : 'Voir la preuve (Reçu)'}
+                                          <Download className="w-4 h-4" />
+                                          {isAr ? 'تحميل إثبات الدفع' : 'Télécharger la preuve'}
                                         </button>
                                       )}
                                     </div>
