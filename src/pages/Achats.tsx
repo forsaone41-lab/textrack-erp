@@ -343,26 +343,24 @@ export default function Achats() {
                       </div>
                     )}
 
-                    <div className="bg-indigo-50/50 rounded-xl p-3 border border-indigo-100 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Coins className="w-4 h-4 text-indigo-500" />
-                        <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">
-                          {isAr ? 'التسبيق المدفوع (Avance)' : 'Avance Client'}
-                        </span>
-                      </div>
-                      <span className="text-sm font-black text-indigo-700">
-                        {(() => {
-                          if (selectedCmd) {
-                            return (selectedCmd.avance || 0).toLocaleString() + ' MAD';
-                          } else {
+                    {selectedCmd && (
+                      <div className="bg-indigo-50/50 rounded-xl p-3 border border-indigo-100 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Coins className="w-4 h-4 text-indigo-500" />
+                          <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">
+                            {isAr ? 'التسبيق الخاص بالطلبية' : 'Avance de la Commande'}
+                          </span>
+                        </div>
+                        <span className="text-sm font-black text-indigo-700">
+                          {(() => {
                             const sum = factures
-                              .filter(r => r.typeDoc === 'recu' && r.client && r.client.trim().toLowerCase() === clientName && r.statut !== 'annulé')
+                              .filter(r => r.typeDoc === 'recu' && r.commandeId === selectedCmd.id && r.statut !== 'annulé')
                               .reduce((total, r) => total + (r.avance || 0), 0);
                             return sum.toLocaleString() + ' MAD';
-                          }
-                        })()}
-                      </span>
-                    </div>
+                          })()}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 );
               })()}
