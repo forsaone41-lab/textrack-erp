@@ -369,7 +369,14 @@ export default function Achats() {
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'اسم السلعة / الثوب' : 'Article / Tissu'}</label>
                 <input list="achats-tissus" type="text" value={form.article || ''} onChange={e => setForm({...form, article: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-500" placeholder={isAr ? "قطن 100%..." : "Coton 100%..."} />
                 <datalist id="achats-tissus">
-                  {['Coton', 'Satin', 'Soie', 'Polyester', 'Lin', 'Viscose', 'Denim', 'Velours', 'Jersey', 'Crepe', 'Popeline', 'Lycra'].map(t => (
+                  {[
+                    'Coton 100%', 'Coton / Élasthanne', 'Coton Peigné', 'Lin', 'Soie', 'Soie Naturelle', 'Laine', 'Cachemire',
+                    'Polyester', 'Polyamide (Nylon)', 'Viscose', 'Lycra / Spandex', 'Acrylique', 'Rayonne',
+                    'Jersey', 'French Terry', 'Fleece (Polaire)', 'Rib (Côte)', 'Interlock', 'Piqué (Polo)',
+                    'Denim / Jean', 'Popeline', 'Gabardine', 'Flanelle', 'Tweed', 'Toile (Canvas)', 'Velours Côtelé', 'Velours Lisse',
+                    'Crêpe', 'Crêpe Georgette', 'Chiffon', 'Mousseline', 'Satin', 'Tulle', 'Dentelle', 'Organza',
+                    'Mlifa', 'Mlifa Cachemire', 'Jawhara', 'Tlija', 'Brocard', 'Sousdi', 'Drap de Soie', 'Sfifa'
+                  ].map(t => (
                     <option key={t} value={t} />
                   ))}
                 </datalist>
