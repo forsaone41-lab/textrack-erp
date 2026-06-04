@@ -62,6 +62,17 @@ export default function Achats() {
     });
   }, []);
 
+  const saveBesoins = async (newBesoins: BesoinAchat[], updatedItem?: BesoinAchat) => {
+    setBesoins(newBesoins);
+    // Save to localStorage as a primary backup (so it works even if the Supabase table isn't created yet)
+    localStorage.setItem('textrack_data_achats', JSON.stringify(newBesoins));
+    
+    // Try to save to Supabase silently (so it doesn't throw an alert if the table is missing)
+    if (updatedItem) {
+      saveRecord('achats', updatedItem as any, true).catch(console.error);
+    }
+  };
+
   const handleAdd = async () => {
     if (!form.article || !form.client || !form.quantiteRequise) return;
     
@@ -80,8 +91,7 @@ export default function Achats() {
     };
 
     const updated = [...besoins, newItem];
-    setBesoins(updated);
-    await saveRecord('achats', newItem as any);
+    await saveBesoins(updated, newItem);
     
     setShowAddModal(false);
     setForm({ categorie: 'tissus', unite: 'm', statut: 'a_acheter', quantiteRequise: 0, quantiteKg: undefined, dateDemande: new Date().toISOString().split('T')[0], commandeRef: '' });
@@ -90,15 +100,15 @@ export default function Achats() {
   const moveStatus = async (item: BesoinAchat, newStatus: 'a_acheter' | 'commande') => {
     const updatedItem = { ...item, statut: newStatus };
     const updated = besoins.map(b => b.id === item.id ? updatedItem : b);
-    setBesoins(updated);
-    await saveRecord('achats', updatedItem as any);
+    await saveBesoins(updated, updatedItem);
   };
 
   const handleDelete = async (id: string) => {
     if (confirm(isAr ? 'هل أنت متأكد أنك تريد حذف هذا الطلب؟' : 'Voulez-vous vraiment supprimer cet achat ?')) {
       const updated = besoins.filter(b => b.id !== id);
       setBesoins(updated);
-      await deleteRecord('achats', id);
+      localStorage.setItem('textrack_data_achats', JSON.stringify(updated));
+      deleteRecord('achats', id, true).catch(console.error);
     }
   };
 
@@ -116,8 +126,7 @@ export default function Achats() {
     
     // 1. Mark as received in Achats
     const updatedBesoins = besoins.map(item => item.id === b.id ? updatedItem : item);
-    setBesoins(updatedBesoins);
-    await saveRecord('achats', updatedItem as any);
+    await saveBesoins(updatedBesoins, updatedItem);
 
     // 2. Add to Stock
     const totalCost = receiveForm.quantite * receiveForm.prixUnitaire;
