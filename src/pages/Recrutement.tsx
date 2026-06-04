@@ -20,6 +20,7 @@ export default function Recrutement() {
     { id: 'repasseur', fr: 'Repasseur', ar: 'بريسور / مصلوح' },
     { id: 'controleur', fr: 'Contrôleur Qualité', ar: 'مراقب جودة' },
     { id: 'chef', fr: 'Chef de Chaîne', ar: 'شاف دو شين' },
+    { id: 'saisie', fr: 'Agent de saisie', ar: 'مُدخل بيانات (Agent de saisie)' },
     { id: 'stage', fr: 'Stage / Stagiaire', ar: 'تدريب / ستاجيير' },
     { id: 'autre', fr: 'Autre', ar: 'تخصص آخر' }
   ];
