@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw } from 'lucide-react';
 import {
-  Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile, saveRecord
+  Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile, saveRecord, Lead, loadLeads
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { printElement } from '../utils/pdf';
@@ -38,6 +38,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [factures, setFactures] = useState<Facture[]>([]);
   const [fiches, setFiches] = useState<any[]>([]);
+  const [mesDemandes, setMesDemandes] = useState<Lead[]>([]);
   const [reference, setReference] = useState('');
   const [found, setFound] = useState<Commande[]>([]);
   const [notifsEnabled, setNotifsEnabled] = useState(true);
@@ -53,7 +54,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     };
     sync();
   }, []);
-  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'docs' | 'support' | 'info'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'demandes' | 'docs' | 'support' | 'info'>('overview');
   const [showNotifs, setShowNotifs] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [viewMesuresFiche, setViewMesuresFiche] = useState<FicheTechnique | null>(null);
@@ -98,8 +99,9 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     Promise.all([
       loadData<Commande>('commandes'),
       loadData<Facture>('factures'),
-      loadData<any>('fiches')
-    ]).then(([allCommandes, allFactures, allFiches]) => {
+      loadData<any>('fiches'),
+      loadLeads()
+    ]).then(([allCommandes, allFactures, allFiches, allLeads]) => {
       setCommandes(allCommandes);
       setFactures(allFactures);
       setFiches(allFiches);
@@ -109,7 +111,12 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
         const myCommandes = allCommandes.filter(c =>
           (c.client || '').trim().toLowerCase() === (currentUser?.nom || '').trim().toLowerCase()
         );
+        const myLeads = allLeads.filter(l =>
+          (l.name || '').trim().toLowerCase() === (currentUser?.nom || '').trim().toLowerCase() ||
+          (l.email || '').trim().toLowerCase() === (currentUser?.email || '').trim().toLowerCase()
+        );
         setFound(myCommandes);
+        setMesDemandes(myLeads);
         // Auto-subscribe to push notifications silently
         subscribeToPush(currentUser.username || currentUser.nom).catch(() => {});
       }
@@ -276,6 +283,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
             <nav className="space-y-2">
               {[
                 { id: 'overview', icon: <Globe className="w-5 h-5" />, label: isAr ? 'نظرة عامة' : 'Vue d\'ensemble' },
+                { id: 'demandes', icon: <MessageCircle className="w-5 h-5" />, label: isAr ? 'طلباتي' : 'Mes Demandes' },
                 { id: 'orders', icon: <Package className="w-5 h-5" />, label: isAr ? 'طلبياتي' : 'Mes Commandes' },
                 { id: 'docs', icon: <Receipt className="w-5 h-5" />, label: isAr ? 'الفواتير والوثائق' : 'Factures & Docs' },
                 { id: 'support', icon: <Bell className="w-5 h-5" />, label: isAr ? 'الدعم الفني VIP' : 'Support VIP' },
@@ -583,6 +591,60 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                     })}
                   </div>
                </div>
+            </div>
+          )}
+          {activeTab === 'demandes' && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+               <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 text-center md:text-left">
+                  <div>
+                    <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-2">{isAr ? 'تتبع طلباتي' : 'Mes Demandes'}</h1>
+                    <p className="text-slate-500 font-medium italic">{isAr ? 'حالة الطلبات اللي صيفطتي' : 'Statut de vos demandes envoyées'}</p>
+                  </div>
+               </div>
+
+               {mesDemandes.length === 0 ? (
+                 <div className="text-center py-20 bg-white rounded-3xl border border-slate-100 shadow-sm">
+                   <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                     <MessageCircle className="w-10 h-10 text-indigo-300" />
+                   </div>
+                   <h3 className="text-xl font-black text-slate-800 mb-2">{isAr ? 'ماكاين حتى طلب' : 'Aucune demande'}</h3>
+                   <p className="text-slate-500">{isAr ? 'باقي ما صيفطتي لينا حتى موديل' : 'Vous n\'avez encore envoyé aucun modèle.'}</p>
+                 </div>
+               ) : (
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                   {mesDemandes.map(d => {
+                     const isAccepted = d.crmStage === 'confirme';
+                     const isRejected = d.crmStage === 'annule';
+                     const isPending = !isAccepted && !isRejected;
+                     
+                     return (
+                       <div key={d.id} className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden group">
+                         <div className="h-48 bg-slate-100 relative overflow-hidden">
+                           {d.photo ? (
+                             <img src={d.photo} alt={d.type} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                           ) : (
+                             <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-300">
+                               <Camera className="w-12 h-12" />
+                             </div>
+                           )}
+                           <div className="absolute top-4 left-4">
+                             {isAccepted && <span className="px-3 py-1 bg-emerald-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg">{isAr ? 'مقبول ✅' : 'Accepté ✅'}</span>}
+                             {isRejected && <span className="px-3 py-1 bg-rose-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg">{isAr ? 'مرفوض ❌' : 'Refusé ❌'}</span>}
+                             {isPending && <span className="px-3 py-1 bg-amber-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg">{isAr ? 'قيد المراجعة ⏳' : 'En attente ⏳'}</span>}
+                           </div>
+                         </div>
+                         <div className="p-6">
+                           <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">REF: {d.id.substring(0, 8)}</div>
+                           <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight mb-2 truncate" title={d.type}>{d.type}</h3>
+                           <div className="text-sm font-bold text-slate-500 bg-slate-50 px-4 py-2 rounded-xl inline-block">
+                             {isAr ? 'الكمية:' : 'Quantité :'} <span className="text-indigo-600">{d.quantity}</span>
+                           </div>
+                         </div>
+                       </div>
+                     );
+                   })}
+                 </div>
+               )}
             </div>
           )}
 
