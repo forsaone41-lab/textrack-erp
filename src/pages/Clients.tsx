@@ -763,9 +763,6 @@ export default function Clients() {
            </div>
         </div>
       )}
-    </div>
-      )}
-
       {/* Client Credentials Modal */}
       {showClientCode && (
         <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md animate-in fade-in duration-300">
