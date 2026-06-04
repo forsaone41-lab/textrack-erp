@@ -1,5 +1,5 @@
 // Dynamic imports for heavy libraries to keep bundle light
-const getHtml2Canvas = () => import('html2canvas').then(m => m.default);
+const getHtmlToImage = () => import('html-to-image').then(m => m);
 const getJsPDF = () => import('jspdf').then(m => m.jsPDF || m.default);
 
 /**
@@ -93,38 +93,43 @@ export async function generatePDF(elementId: string, filename: string) {
   let lastError: any = null;
 
   try {
-    const [html2canvas, jsPDF] = await Promise.all([getHtml2Canvas(), getJsPDF()]);
+    const [htmlToImage, jsPDF] = await Promise.all([getHtmlToImage(), getJsPDF()]);
 
-    const canvas = await html2canvas(wrapper, {
-      scale: 1.5,
-      useCORS: true,
-      allowTaint: false,
-      logging: true,
+    const dataUrl = await htmlToImage.toPng(wrapper, {
+      pixelRatio: 1.5,
       backgroundColor: '#ffffff',
-      imageTimeout: 5000,
     });
 
-    if (canvas.width > 0 && canvas.height > 0) {
-      const imgData = canvas.toDataURL('image/png');
+    if (dataUrl) {
+      // Create image object to get natural dimensions
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise(r => { img.onload = r; });
+
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfW = pdf.internal.pageSize.getWidth();
       const pdfH = pdf.internal.pageSize.getHeight();
       const imgW = pdfW;
-      const imgH = (canvas.height * imgW) / canvas.width;
+      const imgH = (img.height * imgW) / img.width;
 
       if (imgH <= pdfH) {
-        pdf.addImage(imgData, 'PNG', 0, 0, imgW, imgH, undefined, 'FAST');
+        pdf.addImage(dataUrl, 'PNG', 0, 0, imgW, imgH, undefined, 'FAST');
       } else {
         // Multi-page
-        const pageH = (pdfH * canvas.width) / pdfW;
-        let rem = canvas.height, pos = 0, pg = 0;
+        const pageH = (pdfH * img.width) / pdfW;
+        let rem = img.height, pos = 0, pg = 0;
+        
+        // We need a canvas to slice the image
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
         while (rem > 0) {
           if (pg > 0) pdf.addPage();
           const sh = Math.min(pageH, rem);
-          const pc = document.createElement('canvas');
-          pc.width = canvas.width; pc.height = sh;
-          pc.getContext('2d')?.drawImage(canvas, 0, pos, canvas.width, sh, 0, 0, canvas.width, sh);
-          pdf.addImage(pc.toDataURL('image/png'), 'PNG', 0, 0, imgW, (sh * imgW) / canvas.width, undefined, 'FAST');
+          canvas.width = img.width;
+          canvas.height = sh;
+          ctx?.drawImage(img, 0, pos, img.width, sh, 0, 0, img.width, sh);
+          pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgW, (sh * imgW) / img.width, undefined, 'FAST');
           pos += sh; rem -= sh; pg++;
         }
       }
@@ -166,26 +171,34 @@ export async function generatePDFBlob(elementId: string): Promise<Blob | null> {
   await new Promise(r => requestAnimationFrame(r));
 
   try {
-    const [html2canvas, jsPDF] = await Promise.all([getHtml2Canvas(), getJsPDF()]);
-    const canvas = await html2canvas(wrapper, { scale: 1.5, useCORS: true, allowTaint: false, logging: false, backgroundColor: '#ffffff', imageTimeout: 5000 });
-    if (canvas.width > 0 && canvas.height > 0) {
-      const imgData = canvas.toDataURL('image/png');
+    const [htmlToImage, jsPDF] = await Promise.all([getHtmlToImage(), getJsPDF()]);
+    const dataUrl = await htmlToImage.toPng(wrapper, { pixelRatio: 1.5, backgroundColor: '#ffffff' });
+    
+    if (dataUrl) {
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise(r => { img.onload = r; });
+
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfW = pdf.internal.pageSize.getWidth();
       const pdfH = pdf.internal.pageSize.getHeight();
-      const imgH = (canvas.height * pdfW) / canvas.width;
+      const imgH = (img.height * pdfW) / img.width;
+      
       if (imgH <= pdfH) {
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfW, imgH, undefined, 'FAST');
+        pdf.addImage(dataUrl, 'PNG', 0, 0, pdfW, imgH, undefined, 'FAST');
       } else {
-        const pageH = (pdfH * canvas.width) / pdfW;
-        let rem = canvas.height, pos = 0, pg = 0;
+        const pageH = (pdfH * img.width) / pdfW;
+        let rem = img.height, pos = 0, pg = 0;
+        
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
         while (rem > 0) {
           if (pg > 0) pdf.addPage();
           const sh = Math.min(pageH, rem);
-          const pc = document.createElement('canvas');
-          pc.width = canvas.width; pc.height = sh;
-          pc.getContext('2d')?.drawImage(canvas, 0, pos, canvas.width, sh, 0, 0, canvas.width, sh);
-          pdf.addImage(pc.toDataURL('image/png'), 'PNG', 0, 0, pdfW, (sh * pdfW) / canvas.width, undefined, 'FAST');
+          canvas.width = img.width; canvas.height = sh;
+          ctx?.drawImage(img, 0, pos, img.width, sh, 0, 0, img.width, sh);
+          pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pdfW, (sh * pdfW) / img.width, undefined, 'FAST');
           pos += sh; rem -= sh; pg++;
         }
       }
