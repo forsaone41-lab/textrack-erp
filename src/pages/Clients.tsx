@@ -906,73 +906,77 @@ export default function Clients() {
                 className="fixed top-0 left-0 opacity-0 pointer-events-none -z-[100] w-[800px] bg-slate-50 font-sans"
                 style={{ color: '#0f172a', direction: isAr ? 'rtl' : 'ltr' }}
               >
-                <div className="h-4 bg-gradient-to-r from-emerald-400 to-teal-500" />
-                <div className="p-12">
-                  <div className="flex items-center justify-between mb-16 pb-8 border-b-2 border-slate-200/60">
+                <div className="h-3 bg-gradient-to-r from-indigo-400 to-blue-500" />
+                <div className="p-10">
+                  <div className="flex items-center justify-between mb-12 pb-6 border-b-2 border-slate-200/60">
                     <div>
-                      <h1 className="text-4xl font-black tracking-tighter text-slate-900 mb-2">BEYA<span className="text-emerald-500">CREATIVE</span></h1>
-                      <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">{company.name}</p>
+                      {company.logo ? (
+                        <img src={company.logo} alt="Logo" className="h-10 object-contain mb-2" />
+                      ) : (
+                        <h1 className="text-3xl font-black tracking-tighter text-slate-900 mb-2">BEYA<span className="text-indigo-500">CREATIVE</span></h1>
+                      )}
+                      <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">{company.name}</p>
                     </div>
                     <div className={isAr ? 'text-left' : 'text-right'}>
-                      <span className="px-4 py-2 bg-emerald-100 text-emerald-700 font-black text-sm uppercase tracking-widest rounded-full">
+                      <span className="px-4 py-2 bg-indigo-100 text-indigo-700 font-black text-xs uppercase tracking-widest rounded-full">
                         {t.welcomeLabel}
                       </span>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-12 mb-16">
+                  <div className="grid grid-cols-2 gap-10 mb-12">
                     <div>
-                      <h2 className="text-3xl font-black tracking-tight text-slate-900 mb-4">{t.hi}</h2>
-                      <p className="text-slate-600 leading-relaxed text-lg">{t.welcomeDesc}</p>
+                      <h2 className="text-2xl font-black tracking-tight text-slate-900 mb-3">{t.hi}</h2>
+                      <p className="text-slate-600 leading-relaxed text-base">{t.welcomeDesc}</p>
                     </div>
-                    <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50">
-                      <div className="mb-6">
+                    <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50">
+                      <div className="mb-5">
                         <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{t.emailLabel}</p>
-                        <p className="text-lg font-bold text-slate-900">{showClientCode.email}</p>
+                        <p className="text-base font-bold text-slate-900">{showClientCode.email}</p>
                       </div>
-                      <div className="p-6 bg-emerald-50 rounded-2xl border border-emerald-100 relative overflow-hidden">
-                        <div className={`absolute top-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl ${isAr ? 'left-0' : 'right-0'} -translate-y-1/2`} />
-                        <p className="text-xs font-black text-emerald-600 uppercase tracking-widest mb-2 relative z-10">{t.codeLabel}</p>
-                        <p className="text-4xl font-black tracking-[0.2em] text-slate-900 font-mono relative z-10">{showClientCode.pinCode || showClientCode.password || '------'}</p>
+                      <div className="p-5 bg-indigo-50 rounded-2xl border border-indigo-100 relative overflow-hidden">
+                        <div className={`absolute top-0 w-24 h-24 bg-indigo-500/10 rounded-full blur-xl ${isAr ? 'left-0' : 'right-0'} -translate-y-1/2`} />
+                        <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-2 relative z-10">{t.codeLabel}</p>
+                        <p className="text-3xl font-black tracking-[0.2em] text-slate-900 font-mono relative z-10">{showClientCode.pinCode || showClientCode.password || '------'}</p>
                       </div>
-                      <p className="text-xs text-center text-slate-400 font-bold mt-4">https://beyacreative.com</p>
+                      <p className="text-[10px] text-center text-slate-400 font-bold mt-4">https://beyacreative.com</p>
                     </div>
                   </div>
 
-                  <div className="bg-slate-900 text-white rounded-3xl p-10 mb-12 relative overflow-hidden">
+                  <div className="bg-slate-900 text-white rounded-3xl p-8 mb-10 relative overflow-hidden">
                     <div className={`absolute top-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl ${isAr ? 'left-0' : 'right-0'}`} />
-                    <h3 className="text-xl font-black uppercase tracking-widest mb-4 text-emerald-400">{t.whoTitle}</h3>
-                    <p className="text-slate-300 leading-relaxed text-lg relative z-10">{t.whoDesc}</p>
+                    <h3 className="text-lg font-black uppercase tracking-widest mb-3 text-indigo-400">{t.whoTitle}</h3>
+                    <p className="text-slate-300 leading-relaxed text-base relative z-10">{t.whoDesc}</p>
                   </div>
 
-                  <div className="mb-16">
-                    <h3 className="text-xl font-black uppercase tracking-widest mb-8 text-slate-900">{t.processTitle}</h3>
-                    <div className="grid grid-cols-2 gap-6">
+                  <div className="mb-10">
+                    <h3 className="text-lg font-black uppercase tracking-widest mb-6 text-slate-900">{t.processTitle}</h3>
+                    <div className="grid grid-cols-2 gap-5">
                       {t.steps.map((step, idx) => (
-                        <div key={idx} className="bg-white p-6 rounded-2xl border border-slate-200 flex gap-4 items-start">
-                          <span className="text-3xl font-black text-emerald-200 leading-none">{step[0]}</span>
+                        <div key={idx} className="bg-white p-5 rounded-2xl border border-slate-200 flex gap-4 items-start">
+                          <span className="text-2xl font-black text-indigo-200 leading-none">{step[0]}</span>
                           <div>
-                            <h4 className="font-black text-slate-900 uppercase tracking-tight mb-2">{step[1]}</h4>
-                            <p className="text-slate-500 text-sm">{step[2]}</p>
+                            <h4 className="font-black text-slate-900 uppercase tracking-tight mb-1 text-sm">{step[1]}</h4>
+                            <p className="text-slate-500 text-xs">{step[2]}</p>
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  <div className="bg-emerald-50 rounded-3xl p-8 border border-emerald-100 flex items-center justify-between">
+                  <div className="bg-indigo-50 rounded-3xl p-6 border border-indigo-100 flex items-center justify-between">
                     <div>
-                      <h3 className="text-lg font-black uppercase tracking-widest text-slate-900 mb-1">{t.contactTitle}</h3>
-                      <p className="text-emerald-600 font-bold text-sm">{t.contactSub}</p>
+                      <h3 className="text-base font-black uppercase tracking-widest text-slate-900 mb-1">{t.contactTitle}</h3>
+                      <p className="text-indigo-600 font-bold text-xs">{t.contactSub}</p>
                     </div>
-                    <div className="flex gap-8">
+                    <div className="flex gap-6">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-emerald-500 shadow-sm"><Phone className="w-5 h-5" /></div>
-                        <span className="font-bold text-slate-700">{company.phone}</span>
+                        <div className="w-9 h-9 bg-white rounded-full flex items-center justify-center text-indigo-500 shadow-sm"><Phone className="w-4 h-4" /></div>
+                        <span className="font-bold text-slate-700 text-sm">{company.phone}</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-emerald-500 shadow-sm"><Mail className="w-5 h-5" /></div>
-                        <span className="font-bold text-slate-700">{company.email}</span>
+                        <div className="w-9 h-9 bg-white rounded-full flex items-center justify-center text-indigo-500 shadow-sm"><Mail className="w-4 h-4" /></div>
+                        <span className="font-bold text-slate-700 text-sm">{company.email}</span>
                       </div>
                     </div>
                   </div>
