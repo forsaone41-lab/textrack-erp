@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Search, Plus, User, Phone, Mail, MapPin, ExternalLink, MessageSquare, DollarSign, ChevronRight, TrendingUp, History, FileText, X, Printer, Download, Edit2, Copy, Check, Trash2 } from 'lucide-react';
+import { Search, Plus, User, Phone, Mail, MapPin, ExternalLink, MessageSquare, DollarSign, ChevronRight, TrendingUp, History, FileText, X, Printer, Download, Edit2, Copy, Check, Trash2, Key } from 'lucide-react';
 import { Commande, loadData, genId, loadCompanyProfile, deleteRecord } from '../types';
 import { generatePDF } from '../utils/pdf';
 
@@ -12,6 +12,8 @@ interface Client {
   adresse: string;
   ville: string;
   notes: string;
+  pinCode?: string;
+  password?: string;
 }
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
@@ -40,6 +42,7 @@ export default function Clients() {
   const [factures, setFactures] = useState<any[]>([]);
   const [activeClientId, setActiveClientId] = useState<string | null>(null);
   const [selectedOrderDoc, setSelectedOrderDoc] = useState<Commande | null>(null);
+  const [showClientCode, setShowClientCode] = useState<Client | null>(null);
   const company = loadCompanyProfile();
   
   const location = useLocation();
@@ -200,6 +203,9 @@ export default function Clients() {
               </div>
             </div>
             <div className={`flex gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
+              <button onClick={() => setShowClientCode(activeClient)} className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-emerald-100 transition-all shadow-sm">
+                <Key className="w-4 h-4" /> {isAr ? 'بيانات الدخول' : 'Identifiants'}
+              </button>
               <button onClick={() => openEdit(activeClient)} className="flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
                 <Edit2 className="w-4 h-4" /> {isAr ? 'تعديل' : 'Modifier'}
               </button>
@@ -755,6 +761,228 @@ export default function Clients() {
                 </button>
               </div>
            </div>
+        </div>
+      )}
+    </div>
+      )}
+
+      {/* Client Credentials Modal */}
+      {showClientCode && (
+        <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden border border-slate-100">
+            <div className="h-1.5 bg-gradient-to-r from-emerald-400 to-teal-500" />
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-emerald-50 text-emerald-500 rounded-xl flex items-center justify-center">
+                    <Check className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-black text-slate-800 uppercase tracking-tight">{isAr ? 'بيانات الدخول' : 'Identifiants Client'}</p>
+                    <p className="text-[10px] text-slate-400 font-bold">{showClientCode.nom}</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowClientCode(null)} className="w-8 h-8 bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-500 rounded-xl flex items-center justify-center transition-all">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Email + Code */}
+              <div className="space-y-2 mb-5">
+                <div className="bg-slate-50 rounded-xl px-4 py-3 flex items-center justify-between border border-slate-100">
+                  <div>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Email</p>
+                    <p className="text-xs font-bold text-slate-700">{showClientCode.email}</p>
+                  </div>
+                  <button onClick={() => navigator.clipboard.writeText(showClientCode.email)}
+                    className="w-8 h-8 bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 rounded-lg flex items-center justify-center transition-all">
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <div className="bg-emerald-50 rounded-xl px-4 py-3 flex items-center justify-between border border-emerald-100">
+                  <div>
+                    <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mb-0.5">{isAr ? 'الرمز السري' : 'Code secret'}</p>
+                    <p className="text-2xl font-black tracking-[0.2em] text-slate-900 font-mono">{showClientCode.pinCode || showClientCode.password || '------'}</p>
+                  </div>
+                  <button onClick={() => navigator.clipboard.writeText(showClientCode.pinCode || showClientCode.password || '')}
+                    className="w-8 h-8 bg-white border border-emerald-200 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-lg flex items-center justify-center transition-all">
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className="space-y-2">
+                {(() => {
+                  const storageKey = `beya_welcome_${showClientCode.email}`;
+                  const sentData = (() => { try { return JSON.parse(localStorage.getItem(storageKey) || 'null'); } catch { return null; } })();
+                  return (
+                    <>
+                      {sentData && (
+                        <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 flex items-center gap-2 text-emerald-700 text-[10px] font-black uppercase tracking-widest">
+                          <Check className="w-3.5 h-3.5 shrink-0" />
+                          {isAr ? `أُرسل في ${new Date(sentData.date).toLocaleDateString('ar-MA')}` : `Envoyé le ${new Date(sentData.date).toLocaleDateString('fr-FR')}`}
+                          {sentData.method === 'whatsapp' ? ' • WhatsApp' : ' • PDF'}
+                        </div>
+                      )}
+                      <button
+                        onClick={() => {
+                          const rawPhone = showClientCode.telephone.replace(/\D/g, '');
+                          const phone = rawPhone.startsWith('0') ? '212' + rawPhone.substring(1) : rawPhone.startsWith('212') ? rawPhone : '212' + rawPhone;
+                          const code = showClientCode.pinCode || showClientCode.password || '------';
+                          const msg = isAr
+                            ? `🎉 مرحباً بك في *BEYA CREATIVE* !\n\nأهلاً *${showClientCode.nom}*، حسابك جاهز :\n\n🌐 *https://beyacreative.com*\n📧 البريد : *${showClientCode.email}*\n🔑 الرمز : *${code}*\n\nسجل دخولك لمتابعة طلباتك. 🇲🇦`
+                            : `🎉 Bienvenue chez *BEYA CREATIVE* !\n\nBonjour *${showClientCode.nom}*, votre espace client est prêt :\n\n🌐 *https://beyacreative.com*\n📧 Email : *${showClientCode.email}*\n🔑 Code : *${code}*\n\nConnectez-vous pour suivre vos commandes. À bientôt ! 🇲🇦`;
+                          window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+                          localStorage.setItem(storageKey, JSON.stringify({ date: new Date().toISOString(), method: 'whatsapp' }));
+                        }}
+                        className="w-full h-11 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-100">
+                        <MessageSquare className="w-4 h-4" />
+                        {sentData ? (isAr ? 'إعادة الإرسال — WhatsApp' : 'Renvoyer — WhatsApp') : (isAr ? 'إرسال عبر WhatsApp' : 'Envoyer via WhatsApp')}
+                      </button>
+                      <button
+                        onClick={async () => {
+                          const clientName = showClientCode.nom.replace(/\s+/g, '_');
+                          const filename = `BeyaCreative_Bienvenue_${clientName}`;
+                          const el = document.getElementById('welcome-pdf-' + showClientCode.id);
+                          if (el) el.style.display = 'block';
+                          await generatePDF('welcome-pdf-' + showClientCode.id, filename);
+                          if (el) el.style.display = 'none';
+                          localStorage.setItem(storageKey, JSON.stringify({ date: new Date().toISOString(), method: 'pdf' }));
+                        }}
+                        className="w-full h-11 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all">
+                        <Download className="w-4 h-4" />
+                        {sentData ? (isAr ? 'إعادة التحميل — PDF' : 'Re-télécharger PDF') : (isAr ? 'تحميل Welcome PDF' : 'Télécharger Welcome PDF')}
+                      </button>
+                    </>
+                  );
+                })()}
+                <button onClick={() => setShowClientCode(null)}
+                  className="w-full h-9 text-slate-400 hover:text-slate-600 text-[10px] font-bold uppercase tracking-widest transition-all">
+                  {isAr ? 'إغلاق' : 'Fermer'}
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          {/* Hidden Welcome PDF Template */}
+          {(() => {
+            const t = isAr ? {
+              welcomeLabel: 'مرحباً بك في فضائك الخاص',
+              hi: `مرحباً، ${showClientCode.nom} 👋`,
+              welcomeDesc: 'تم تفعيل حسابك في BEYA CREATIVE. يمكنك الآن متابعة طلباتك وتحميل وثائقك والتواصل مع فريقنا مباشرة من بوابتك.',
+              emailLabel: 'البريد الإلكتروني',
+              codeLabel: 'الرمز السري',
+              whoTitle: 'من نحن؟',
+              whoDesc: 'BEYA CREATIVE مصنع نسيج مغربي متخصص في الخياطة المخصصة. فريقنا من الخياطات الخبيرات يعملن بأنماط دقيقة وعينات مصادق عليها لضمان أن كل قطعة تتوافق تمامًا مع رؤيتك.',
+              processTitle: 'طريقة عملنا',
+              steps: [
+                ['01', 'الطلب والتسعير', 'تقدم مشروعك بصورة النموذج والكميات. نقوم بإعداد عرض سعر مخصص.'],
+                ['02', 'الباترون والعينة', 'خبيراتنا يصنعن الباترون التقني ويخطن عينة للتحقق.'],
+                ['03', 'مراقبة الجودة', 'تصادق على العينة. فرقنا تتحقق من كل تفصيل قبل الإطلاق.'],
+                ['04', 'الإنتاج والتسليم', 'إطلاق الإنتاج التسلسلي مع مراقبة الجودة في كل مرحلة.'],
+              ],
+              contactTitle: 'تواصل معنا',
+              contactSub: 'نحن دائماً في خدمتك',
+            } : {
+              welcomeLabel: 'BIENVENUE DANS VOTRE ESPACE',
+              hi: `Bonjour, ${showClientCode.nom} 👋`,
+              welcomeDesc: 'Votre compte client BEYA CREATIVE a été activé. Vous pouvez désormais suivre vos commandes, télécharger vos documents et échanger avec notre équipe directement depuis votre portail.',
+              emailLabel: 'Adresse Email',
+              codeLabel: 'Code Secret',
+              whoTitle: 'QUI SOMMES-NOUS ?',
+              whoDesc: 'BEYA CREATIVE est un atelier de confection textile marocain spécialisé dans le sur-mesure. Notre équipe de couturières expertes travaille avec des patronages précis et des échantillons validés pour garantir que chaque pièce correspond exactement à votre vision.',
+              processTitle: 'NOTRE PROCESSUS',
+              steps: [
+                ['01', 'DEMANDE & DEVIS', 'Vous soumettez votre projet avec photo du modèle et quantités. Nous établissons un devis sur-mesure.'],
+                ['02', 'PATRONAGE & ÉCHANTILLON', 'Nos expertes créent le patronage technique et confectionnent un échantillon pour validation.'],
+                ['03', 'CONTRÔLE QUALITÉ', 'Vous validez l\'échantillon. Nos équipes vérifient chaque détail avant le lancement.'],
+                ['04', 'PRODUCTION & LIVRAISON', 'Lancement de la production en série avec contrôle qualité à chaque étape.'],
+              ],
+              contactTitle: 'CONTACTEZ-NOUS',
+              contactSub: 'Nous sommes à votre écoute',
+            };
+
+            return (
+              <div
+                id={`welcome-pdf-${showClientCode.id}`}
+                className="fixed top-0 left-0 opacity-0 pointer-events-none -z-[100] w-[800px] bg-slate-50 font-sans"
+                style={{ color: '#0f172a', direction: isAr ? 'rtl' : 'ltr' }}
+              >
+                <div className="h-4 bg-gradient-to-r from-emerald-400 to-teal-500" />
+                <div className="p-12">
+                  <div className="flex items-center justify-between mb-16 pb-8 border-b-2 border-slate-200/60">
+                    <div>
+                      <h1 className="text-4xl font-black tracking-tighter text-slate-900 mb-2">BEYA<span className="text-emerald-500">CREATIVE</span></h1>
+                      <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">{company.name}</p>
+                    </div>
+                    <div className={isAr ? 'text-left' : 'text-right'}>
+                      <span className="px-4 py-2 bg-emerald-100 text-emerald-700 font-black text-sm uppercase tracking-widest rounded-full">
+                        {t.welcomeLabel}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-12 mb-16">
+                    <div>
+                      <h2 className="text-3xl font-black tracking-tight text-slate-900 mb-4">{t.hi}</h2>
+                      <p className="text-slate-600 leading-relaxed text-lg">{t.welcomeDesc}</p>
+                    </div>
+                    <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50">
+                      <div className="mb-6">
+                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{t.emailLabel}</p>
+                        <p className="text-lg font-bold text-slate-900">{showClientCode.email}</p>
+                      </div>
+                      <div className="p-6 bg-emerald-50 rounded-2xl border border-emerald-100 relative overflow-hidden">
+                        <div className={`absolute top-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl ${isAr ? 'left-0' : 'right-0'} -translate-y-1/2`} />
+                        <p className="text-xs font-black text-emerald-600 uppercase tracking-widest mb-2 relative z-10">{t.codeLabel}</p>
+                        <p className="text-4xl font-black tracking-[0.2em] text-slate-900 font-mono relative z-10">{showClientCode.pinCode || showClientCode.password || '------'}</p>
+                      </div>
+                      <p className="text-xs text-center text-slate-400 font-bold mt-4">https://beyacreative.com</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-900 text-white rounded-3xl p-10 mb-12 relative overflow-hidden">
+                    <div className={`absolute top-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl ${isAr ? 'left-0' : 'right-0'}`} />
+                    <h3 className="text-xl font-black uppercase tracking-widest mb-4 text-emerald-400">{t.whoTitle}</h3>
+                    <p className="text-slate-300 leading-relaxed text-lg relative z-10">{t.whoDesc}</p>
+                  </div>
+
+                  <div className="mb-16">
+                    <h3 className="text-xl font-black uppercase tracking-widest mb-8 text-slate-900">{t.processTitle}</h3>
+                    <div className="grid grid-cols-2 gap-6">
+                      {t.steps.map((step, idx) => (
+                        <div key={idx} className="bg-white p-6 rounded-2xl border border-slate-200 flex gap-4 items-start">
+                          <span className="text-3xl font-black text-emerald-200 leading-none">{step[0]}</span>
+                          <div>
+                            <h4 className="font-black text-slate-900 uppercase tracking-tight mb-2">{step[1]}</h4>
+                            <p className="text-slate-500 text-sm">{step[2]}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="bg-emerald-50 rounded-3xl p-8 border border-emerald-100 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-black uppercase tracking-widest text-slate-900 mb-1">{t.contactTitle}</h3>
+                      <p className="text-emerald-600 font-bold text-sm">{t.contactSub}</p>
+                    </div>
+                    <div className="flex gap-8">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-emerald-500 shadow-sm"><Phone className="w-5 h-5" /></div>
+                        <span className="font-bold text-slate-700">{company.phone}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-emerald-500 shadow-sm"><Mail className="w-5 h-5" /></div>
+                        <span className="font-bold text-slate-700">{company.email}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
     </div>
