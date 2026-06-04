@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw } from 'lucide-react';
 import {
-  Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile, saveRecord, Lead, loadLeads
+  Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile, saveRecord, Lead, loadLeads, loadLeadPhoto
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { printElement } from '../utils/pdf';
@@ -39,6 +39,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [factures, setFactures] = useState<Facture[]>([]);
   const [fiches, setFiches] = useState<any[]>([]);
   const [mesDemandes, setMesDemandes] = useState<Lead[]>([]);
+  const [leadPhotos, setLeadPhotos] = useState<Record<string, string>>({});
   const [reference, setReference] = useState('');
   const [found, setFound] = useState<Commande[]>([]);
   const [notifsEnabled, setNotifsEnabled] = useState(true);
@@ -112,11 +113,21 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
           (c.client || '').trim().toLowerCase() === (currentUser?.nom || '').trim().toLowerCase()
         );
         const myLeads = allLeads.filter(l =>
-          (l.name || '').trim().toLowerCase() === (currentUser?.nom || '').trim().toLowerCase() ||
-          (l.email || '').trim().toLowerCase() === (currentUser?.email || '').trim().toLowerCase()
+          (l.name || '').trim().toLowerCase().includes((currentUser?.nom || '').trim().toLowerCase()) ||
+          ((l.email || '').trim().toLowerCase() === (currentUser?.email || '').trim().toLowerCase() && currentUser?.email) ||
+          ((l.phone || '').trim() === (currentUser?.telephone || '').trim() && currentUser?.telephone)
         );
         setFound(myCommandes);
         setMesDemandes(myLeads);
+        
+        // Load photos for these leads asynchronously
+        myLeads.forEach(async (lead) => {
+          const photo = await loadLeadPhoto(lead.id);
+          if (photo) {
+            setLeadPhotos(prev => ({ ...prev, [lead.id]: photo }));
+          }
+        });
+        
         // Auto-subscribe to push notifications silently
         subscribeToPush(currentUser.username || currentUser.nom).catch(() => {});
       }
@@ -620,11 +631,12 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                      return (
                        <div key={d.id} className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden group">
                          <div className="h-48 bg-slate-100 relative overflow-hidden">
-                           {d.photo ? (
-                             <img src={d.photo} alt={d.type} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                           {leadPhotos[d.id] ? (
+                             <img src={leadPhotos[d.id]} alt={d.type} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                            ) : (
-                             <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-300">
-                               <Camera className="w-12 h-12" />
+                             <div className="w-full h-full flex flex-col gap-2 items-center justify-center bg-slate-50 text-slate-300">
+                               <Camera className="w-10 h-10" />
+                               <span className="text-[10px] font-bold uppercase tracking-widest">{isAr ? 'بدون صورة' : 'Pas de photo'}</span>
                              </div>
                            )}
                            <div className="absolute top-4 left-4">
