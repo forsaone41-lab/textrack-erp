@@ -78,8 +78,10 @@ export async function generatePDF(elementId: string, filename: string) {
 
   // Deep clone and strip ALL Tailwind/CSS classes
   const clone = element.cloneNode(true) as HTMLElement;
-  stripAllClasses(clone);
-  clone.style.cssText = 'opacity:1;visibility:visible;display:block;position:relative;width:800px;background:white;color:#0f172a;font-family:sans-serif;';
+  // Do NOT strip classes. Stripping classes removes SVG dimensions, causing html2canvas to crash.
+  // Instead, just remove the Tailwind classes that hide the element on the root wrapper.
+  clone.classList.remove('opacity-0', 'pointer-events-none', '-z-[100]');
+  clone.style.cssText = 'opacity: 1 !important; visibility: visible !important; display: block !important; position: relative !important; width: 800px !important; background: white !important; z-index: 1 !important; pointer-events: auto !important;';
 
   wrapper.appendChild(clone);
   document.body.appendChild(wrapper);
@@ -88,6 +90,7 @@ export async function generatePDF(elementId: string, filename: string) {
   await new Promise(r => setTimeout(r, 500));
 
   let success = false;
+  let lastError: any = null;
 
   try {
     const [html2canvas, jsPDF] = await Promise.all([getHtml2Canvas(), getJsPDF()]);
@@ -96,7 +99,7 @@ export async function generatePDF(elementId: string, filename: string) {
       scale: 1.5,
       useCORS: true,
       allowTaint: false,
-      logging: false,
+      logging: true,
       backgroundColor: '#ffffff',
       imageTimeout: 5000,
     });
@@ -131,6 +134,7 @@ export async function generatePDF(elementId: string, filename: string) {
       return null;
     }
   } catch (err) {
+    lastError = err;
     console.error('html2canvas failed:', err);
   }
 
@@ -139,8 +143,9 @@ export async function generatePDF(elementId: string, filename: string) {
 
   // If html2canvas failed entirely, alert the user instead of falling back to print
   if (!success) {
-    console.warn('generatePDF failed.');
-    alert('Le téléchargement du PDF a échoué. Veuillez réessayer.');
+    console.warn('generatePDF failed.', lastError);
+    const msg = lastError instanceof Error ? lastError.message : String(lastError);
+    alert('Le téléchargement du PDF a échoué. Erreur: ' + msg);
   }
 }
 
@@ -151,8 +156,8 @@ export async function generatePDFBlob(elementId: string): Promise<Blob | null> {
   const wrapper = document.createElement('div');
   wrapper.style.cssText = 'position:absolute;left:-9999px;top:0;width:800px;background:white;z-index:99999;overflow:visible;';
   const clone = element.cloneNode(true) as HTMLElement;
-  stripAllClasses(clone);
-  clone.style.cssText = 'opacity:1;visibility:visible;display:block;position:relative;width:800px;background:white;color:#0f172a;font-family:sans-serif;';
+  clone.classList.remove('opacity-0', 'pointer-events-none', '-z-[100]');
+  clone.style.cssText = 'opacity: 1 !important; visibility: visible !important; display: block !important; position: relative !important; width: 800px !important; background: white !important; z-index: 1 !important; pointer-events: auto !important;';
   wrapper.appendChild(clone);
   document.body.appendChild(wrapper);
 
