@@ -395,47 +395,46 @@ export default function Achats() {
                 </datalist>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'اللون (اختياري)' : 'Couleur (Optionnel)'}</label>
-                  <input list="achats-couleurs" type="text" value={form.couleur || ''} onChange={e => setForm({...form, couleur: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-500" placeholder="Noir, Blanc..." />
-                  <datalist id="achats-couleurs">
-                    {['Noir', 'Blanc', 'Bleu Marine', 'Rouge', 'Vert', 'Gris', 'Beige', 'Rose', 'Jaune', 'Bordeaux', 'Ciel', 'Marron', 'Kaki', 'Argent', 'Or'].map(c => (
-                      <option key={c} value={c} />
-                    ))}
-                  </datalist>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الكمية المطلوبة' : 'Quantités (Mètre & Kg)'}</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="flex bg-slate-50 border border-slate-200 rounded-xl overflow-hidden focus-within:border-indigo-500">
-                      <input 
-                        type="number" 
-                        min="0" 
-                        step="0.01"
-                        value={form.quantiteKg || ''} 
-                        onChange={e => setForm({...form, quantiteKg: Number(e.target.value)})} 
-                        className="w-full py-3 px-3 text-sm font-bold outline-none bg-transparent" 
-                        placeholder={isAr ? "بالكيلو" : "En Kg"}
-                      />
-                      <span className="flex items-center px-3 bg-slate-100 text-slate-500 text-xs font-bold border-l border-slate-200">
-                        Kg
-                      </span>
-                    </div>
-                    <div className="flex bg-slate-50 border border-slate-200 rounded-xl overflow-hidden focus-within:border-indigo-500">
-                      <input 
-                        type="number" 
-                        min="0" 
-                        step="0.01"
-                        value={form.quantiteRequise || ''} 
-                        onChange={e => setForm({...form, quantiteRequise: Number(e.target.value)})} 
-                        className="w-full py-3 px-3 text-sm font-bold outline-none bg-transparent" 
-                        placeholder={isAr ? "بالمتر" : "En M"}
-                      />
-                      <span className="flex items-center px-3 bg-slate-100 text-slate-500 text-xs font-bold border-l border-slate-200">
-                        m
-                      </span>
-                    </div>
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'اللون (اختياري)' : 'Couleur (Optionnel)'}</label>
+                <input list="achats-couleurs" type="text" value={form.couleur || ''} onChange={e => setForm({...form, couleur: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-500" placeholder="Noir, Blanc..." />
+                <datalist id="achats-couleurs">
+                  {['Noir', 'Blanc', 'Bleu Marine', 'Rouge', 'Vert', 'Gris', 'Beige', 'Rose', 'Jaune', 'Bordeaux', 'Ciel', 'Marron', 'Kaki', 'Argent', 'Or'].map(c => (
+                    <option key={c} value={c} />
+                  ))}
+                </datalist>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'الكمية المطلوبة' : 'Quantités (Mètre & Kg)'}</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex bg-slate-50 border border-slate-200 rounded-xl overflow-hidden focus-within:border-indigo-500 shadow-sm">
+                    <input 
+                      type="number" 
+                      min="0" 
+                      step="0.01"
+                      value={form.quantiteKg || ''} 
+                      onChange={e => setForm({...form, quantiteKg: Number(e.target.value)})} 
+                      className="w-full py-3.5 px-4 text-sm font-black outline-none bg-transparent placeholder-slate-300" 
+                      placeholder={isAr ? "بالكيلو" : "En Kg"}
+                    />
+                    <span className="flex items-center px-4 bg-slate-100 text-slate-600 text-sm font-black border-l border-slate-200">
+                      Kg
+                    </span>
+                  </div>
+                  <div className="flex bg-slate-50 border border-slate-200 rounded-xl overflow-hidden focus-within:border-indigo-500 shadow-sm">
+                    <input 
+                      type="number" 
+                      min="0" 
+                      step="0.01"
+                      value={form.quantiteRequise || ''} 
+                      onChange={e => setForm({...form, quantiteRequise: Number(e.target.value)})} 
+                      className="w-full py-3.5 px-4 text-sm font-black outline-none bg-transparent placeholder-slate-300" 
+                      placeholder={isAr ? "بالمتر" : "En M"}
+                    />
+                    <span className="flex items-center px-4 bg-slate-100 text-slate-600 text-sm font-black border-l border-slate-200">
+                      m
+                    </span>
                   </div>
                 </div>
               </div>
