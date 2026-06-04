@@ -220,3 +220,19 @@ CREATE TABLE IF NOT EXISTS leads (
   "contactedType" text
 );
 
+CREATE TABLE IF NOT EXISTS achats (
+  "id" text PRIMARY KEY,
+  "client" text,
+  "commandeRef" text,
+  "article" text,
+  "couleur" text,
+  "quantiteRequise" numeric,
+  "quantiteKg" numeric,
+  "unite" text,
+  "statut" text,
+  "dateDemande" text,
+  "categorie" text,
+  "prixUnitaire" numeric,
+  "fournisseur" text,
+  "quantiteLivre" numeric
+);
