@@ -113,7 +113,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
           (c.client || '').trim().toLowerCase() === (currentUser?.nom || '').trim().toLowerCase()
         );
         const myLeads = allLeads.filter(l =>
-          (l.name || '').trim().toLowerCase().includes((currentUser?.nom || '').trim().toLowerCase()) ||
+          (l.name || '').trim().toLowerCase() === (currentUser?.nom || '').trim().toLowerCase() ||
           ((l.email || '').trim().toLowerCase() === (currentUser?.email || '').trim().toLowerCase() && currentUser?.email) ||
           ((l.phone || '').trim() === (currentUser?.telephone || '').trim() && currentUser?.telephone)
         );
