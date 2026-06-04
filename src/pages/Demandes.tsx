@@ -2157,14 +2157,12 @@ export default function Demandes() {
                         {sentData ? (isAr ? 'إعادة الإرسال — WhatsApp' : 'Renvoyer — WhatsApp') : (isAr ? 'إرسال عبر WhatsApp' : 'Envoyer via WhatsApp')}
                       </button>
                       <button
-                        onClick={async () => {
+                        onClick={() => {
                           const clientName = newClientCode.name.replace(/\s+/g, '_');
-                          const filename = `BeyaCreative_Bienvenue_${clientName}`;
-                          // Make element visible temporarily for generatePDF
-                          const el = document.getElementById('welcome-pdf-' + newClientCode.code);
-                          if (el) el.style.display = 'block';
-                          await generatePDF('welcome-pdf-' + newClientCode.code, filename);
-                          if (el) el.style.display = 'none';
+                          const prevTitle = document.title;
+                          document.title = `BeyaCreative_Bienvenue_${clientName}`;
+                          printElement('welcome-pdf-' + newClientCode.code);
+                          setTimeout(() => { document.title = prevTitle; }, 2000);
                           localStorage.setItem(storageKey, JSON.stringify({ date: new Date().toISOString(), method: 'pdf' }));
                         }}
                         className="w-full h-11 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all">
