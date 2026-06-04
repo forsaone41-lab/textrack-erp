@@ -113,33 +113,16 @@ export async function generatePDF(elementId: string, filename: string) {
       img.src = dataUrl;
       await new Promise(r => { img.onload = r; });
 
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfW = pdf.internal.pageSize.getWidth();
-      const pdfH = pdf.internal.pageSize.getHeight();
-      const imgW = pdfW;
-      const imgH = (img.height * imgW) / img.width;
+      const pdfW = 210; // Standard A4 width in mm
+      const pdfH = Math.max(297, (img.height * pdfW) / img.width); // Adjust height to fit the whole image in one page
 
-      if (imgH <= pdfH) {
-        pdf.addImage(dataUrl, 'PNG', 0, 0, imgW, imgH, undefined, 'FAST');
-      } else {
-        // Multi-page
-        const pageH = (pdfH * img.width) / pdfW;
-        let rem = img.height, pos = 0, pg = 0;
-        
-        // We need a canvas to slice the image
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        
-        while (rem > 0) {
-          if (pg > 0) pdf.addPage();
-          const sh = Math.min(pageH, rem);
-          canvas.width = img.width;
-          canvas.height = sh;
-          ctx?.drawImage(img, 0, pos, img.width, sh, 0, 0, img.width, sh);
-          pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgW, (sh * imgW) / img.width, undefined, 'FAST');
-          pos += sh; rem -= sh; pg++;
-        }
-      }
+      const pdf = new jsPDF({
+        orientation: 'p',
+        unit: 'mm',
+        format: [pdfW, pdfH]
+      });
+
+      pdf.addImage(dataUrl, 'PNG', 0, 0, pdfW, pdfH, undefined, 'FAST');
 
       pdf.save(`${filename}.pdf`);
       success = true;
@@ -191,29 +174,16 @@ export async function generatePDFBlob(elementId: string): Promise<Blob | null> {
       img.src = dataUrl;
       await new Promise(r => { img.onload = r; });
 
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfW = pdf.internal.pageSize.getWidth();
-      const pdfH = pdf.internal.pageSize.getHeight();
-      const imgH = (img.height * pdfW) / img.width;
+      const pdfW = 210; // Standard A4 width in mm
+      const pdfH = Math.max(297, (img.height * pdfW) / img.width);
+
+      const pdf = new jsPDF({
+        orientation: 'p',
+        unit: 'mm',
+        format: [pdfW, pdfH]
+      });
       
-      if (imgH <= pdfH) {
-        pdf.addImage(dataUrl, 'PNG', 0, 0, pdfW, imgH, undefined, 'FAST');
-      } else {
-        const pageH = (pdfH * img.width) / pdfW;
-        let rem = img.height, pos = 0, pg = 0;
-        
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        
-        while (rem > 0) {
-          if (pg > 0) pdf.addPage();
-          const sh = Math.min(pageH, rem);
-          canvas.width = img.width; canvas.height = sh;
-          ctx?.drawImage(img, 0, pos, img.width, sh, 0, 0, img.width, sh);
-          pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pdfW, (sh * pdfW) / img.width, undefined, 'FAST');
-          pos += sh; rem -= sh; pg++;
-        }
-      }
+      pdf.addImage(dataUrl, 'PNG', 0, 0, pdfW, pdfH, undefined, 'FAST');
       return pdf.output('blob');
     }
   } catch (err) {
