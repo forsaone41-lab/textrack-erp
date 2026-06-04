@@ -46,6 +46,29 @@ CREATE TABLE IF NOT EXISTS commandes (
   "date" text
 );
 
+-- UPDATE: Add missing columns for new features if they don't exist
+DO $$ 
+BEGIN 
+    BEGIN ALTER TABLE commandes ADD COLUMN "tissus" jsonb; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE commandes ADD COLUMN "fournituresDetails" jsonb; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE commandes ADD COLUMN "prixValide" boolean DEFAULT false; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE commandes ADD COLUMN "quantiteEchantillon" numeric; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE commandes ADD COLUMN "quantiteProduction" numeric; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE commandes ADD COLUMN "annulationRaison" text; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE commandes ADD COLUMN "couleurs" jsonb; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE commandes ADD COLUMN "tailles" jsonb; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE commandes ADD COLUMN "tissuPhoto" text; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE commandes ADD COLUMN "modelePhoto" text; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE commandes ADD COLUMN "preuveValidation" text; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE commandes ADD COLUMN "tissuSourcing" text; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE commandes ADD COLUMN "tissuPrix" numeric; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE commandes ADD COLUMN "coutMainOeuvre" numeric; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE commandes ADD COLUMN "planningReady" boolean DEFAULT false; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE commandes ADD COLUMN "partenaireId" text; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE commandes ADD COLUMN "externalTasks" jsonb; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE commandes ADD COLUMN "piecesData" jsonb; EXCEPTION WHEN duplicate_column THEN END;
+END $$;
+
 CREATE TABLE IF NOT EXISTS stocks (
   "id" text PRIMARY KEY,
   "type" text,
