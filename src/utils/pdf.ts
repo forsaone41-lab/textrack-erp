@@ -1,6 +1,6 @@
 // Dynamic imports for heavy libraries to keep bundle light
 const getHtml2Canvas = () => import('html2canvas').then(m => m.default);
-const getJsPDF = () => import('jspdf').then(m => m.default);
+const getJsPDF = () => import('jspdf').then(m => m.jsPDF || m.default);
 
 /**
  * Recursively strips all class attributes from an element and its children
@@ -95,7 +95,7 @@ export async function generatePDF(elementId: string, filename: string) {
     const canvas = await html2canvas(wrapper, {
       scale: 1.5,
       useCORS: true,
-      allowTaint: true,
+      allowTaint: false,
       logging: false,
       backgroundColor: '#ffffff',
       imageTimeout: 5000,
@@ -137,10 +137,10 @@ export async function generatePDF(elementId: string, filename: string) {
   // Cleanup
   try { document.body.removeChild(wrapper); } catch (_) {}
 
-  // If html2canvas failed entirely, fallback to print
+  // If html2canvas failed entirely, alert the user instead of falling back to print
   if (!success) {
-    console.warn('Falling back to printElement');
-    printElement(elementId);
+    console.warn('generatePDF failed.');
+    alert('Le téléchargement du PDF a échoué. Veuillez réessayer.');
   }
 }
 
@@ -162,7 +162,7 @@ export async function generatePDFBlob(elementId: string): Promise<Blob | null> {
 
   try {
     const [html2canvas, jsPDF] = await Promise.all([getHtml2Canvas(), getJsPDF()]);
-    const canvas = await html2canvas(wrapper, { scale: 1.5, useCORS: true, allowTaint: true, logging: false, backgroundColor: '#ffffff', imageTimeout: 5000 });
+    const canvas = await html2canvas(wrapper, { scale: 1.5, useCORS: true, allowTaint: false, logging: false, backgroundColor: '#ffffff', imageTimeout: 5000 });
     if (canvas.width > 0 && canvas.height > 0) {
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
