@@ -9,6 +9,7 @@ export default function Recrutement() {
   const [isSending, setIsSending] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [cvFile, setCvFile] = useState<string>('');
+  const [selectedSpecialty, setSelectedSpecialty] = useState<string>('Piqueuse / Machiniste');
 
   const specialties = [
     { id: 'piqueuse', fr: 'Piqueuse / Machiniste', ar: 'خياطة / بيكوز' },
@@ -19,6 +20,7 @@ export default function Recrutement() {
     { id: 'repasseur', fr: 'Repasseur', ar: 'بريسور / مصلوح' },
     { id: 'controleur', fr: 'Contrôleur Qualité', ar: 'مراقب جودة' },
     { id: 'chef', fr: 'Chef de Chaîne', ar: 'شاف دو شين' },
+    { id: 'stage', fr: 'Stage / Stagiaire', ar: 'تدريب / ستاجيير' },
     { id: 'autre', fr: 'Autre', ar: 'تخصص آخر' }
   ];
 
@@ -151,7 +153,13 @@ export default function Recrutement() {
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{isAr ? 'التخصص' : 'Spécialité'}</label>
                 <div className="relative">
                   <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                  <select name="specialty" required className="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl text-sm font-bold focus:bg-white focus:border-indigo-600 outline-none transition-all appearance-none">
+                  <select 
+                    name="specialty" 
+                    required 
+                    value={selectedSpecialty}
+                    onChange={(e) => setSelectedSpecialty(e.target.value)}
+                    className="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl text-sm font-bold focus:bg-white focus:border-indigo-600 outline-none transition-all appearance-none"
+                  >
                     {specialties.map(s => (
                       <option key={s.id} value={s.fr}>{isAr ? s.ar : s.fr}</option>
                     ))}
@@ -160,10 +168,12 @@ export default function Recrutement() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{isAr ? 'سنوات الخبرة' : 'Années d\'expérience'}</label>
-              <input name="experience" type="number" required placeholder="Ex: 5" className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl text-sm font-bold focus:bg-white focus:border-indigo-600 outline-none transition-all" />
-            </div>
+            {selectedSpecialty !== 'Stage / Stagiaire' && (
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{isAr ? 'سنوات الخبرة' : 'Années d\'expérience'}</label>
+                <input name="experience" type="number" required placeholder="Ex: 5" className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl text-sm font-bold focus:bg-white focus:border-indigo-600 outline-none transition-all" />
+              </div>
+            )}
 
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{isAr ? 'السيرة الذاتية (CV)' : 'Votre CV (PDF ou Image)'}</label>
