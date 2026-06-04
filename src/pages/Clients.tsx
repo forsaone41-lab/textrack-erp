@@ -910,8 +910,8 @@ export default function Clients() {
                 <div className="p-10">
                   <div className="flex items-center justify-between mb-12 pb-6 border-b-2 border-slate-200/60">
                     <div>
-                      {company.logo ? (
-                        <img src={company.logo} alt="Logo" className="h-10 object-contain mb-2" />
+                      {company.logoUrl ? (
+                        <img src={company.logoUrl} alt="Logo" className="h-10 object-contain mb-2" />
                       ) : (
                         <h1 className="text-3xl font-black tracking-tighter text-slate-900 mb-2">BEYA<span className="text-indigo-500">CREATIVE</span></h1>
                       )}
