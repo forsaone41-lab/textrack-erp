@@ -110,9 +110,23 @@ export default function Demandes() {
           loadData<User>('users')
         ]);
         if (leadsData) {
-          setLeads(leadsData as Lead[]);
+          let validLeads = leadsData as Lead[];
+          
+          // Auto-delete logic: remove if crmStage === 'annule' and rejectedAt is > 48 hours ago
+          const now = Date.now();
+          const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
+          const toDelete = validLeads.filter(l => l.crmStage === 'annule' && l.rejectedAt && (now - new Date(l.rejectedAt).getTime() > FORTY_EIGHT_HOURS));
+          
+          if (toDelete.length > 0) {
+            toDelete.forEach(async l => {
+              await deleteRecord('leads', l.id, l.email);
+            });
+            validLeads = validLeads.filter(l => !toDelete.includes(l));
+          }
+
+          setLeads(validLeads);
           // 3. Load photos in background (batch of 10)
-          loadPhotosInBackground(leadsData as Lead[]);
+          loadPhotosInBackground(validLeads);
         }
         if (usersData) setUsers((usersData as User[]) || []);
       } catch (e) { console.warn('Refresh failed, using cache'); }
@@ -1596,19 +1610,34 @@ export default function Demandes() {
                   </>
                 )}
 
-                {/* Convert / Fiche client */}
+                {/* Convert / Fiche client & Refuser */}
                 {category !== 'recrutement' && (
-                  !users.some(u => u.nom.toLowerCase() === lead.name.toLowerCase() && u.role === 'client') ? (
-                    <button onClick={() => convertToClient(lead)} title={isAr ? 'تسجيل كزبون' : 'Créer client'}
-                      className="w-8 h-8 bg-white text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-lg border border-emerald-200 flex items-center justify-center transition-all">
-                      <UserPlus className="w-3.5 h-3.5" />
-                    </button>
-                  ) : (
-                    <button onClick={() => navigate('/clients', { state: { openClientName: lead.name } })} title="Ouvrir fiche client"
-                      className="h-8 px-2.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-lg border border-emerald-200 text-[9px] font-black flex items-center gap-1 transition-all">
-                      <CheckCircle className="w-3 h-3" /> Fiche →
-                    </button>
-                  )
+                  <>
+                    {lead.crmStage !== 'annule' && (
+                      <button
+                        onClick={async () => {
+                          if (window.confirm(isAr ? 'هل أنت متأكد من رفض هذا الطلب؟' : 'Voulez-vous vraiment refuser cette demande ?')) {
+                            const updated = { ...lead, crmStage: 'annule' as const, rejectedAt: new Date().toISOString() };
+                            setLeads(prev => prev.map(l => l.id === lead.id ? updated : l));
+                            await saveRecord('leads', updated, true);
+                          }
+                        }}
+                        title={isAr ? "رفض الطلب" : "Refuser"}
+                        className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border flex items-center gap-1 transition-all bg-rose-50 text-rose-500 border-rose-200 hover:bg-rose-500 hover:text-white"
+                      >✕ {isAr ? 'رفض' : 'Refuser'}</button>
+                    )}
+                    {!users.some(u => u.nom.toLowerCase() === lead.name.toLowerCase() && u.role === 'client') ? (
+                      <button onClick={() => convertToClient(lead)} title={isAr ? 'تسجيل كزبون' : 'Créer client'}
+                        className="w-8 h-8 bg-white text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-lg border border-emerald-200 flex items-center justify-center transition-all">
+                        <UserPlus className="w-3.5 h-3.5" />
+                      </button>
+                    ) : (
+                      <button onClick={() => navigate('/clients', { state: { openClientName: lead.name } })} title="Ouvrir fiche client"
+                        className="h-8 px-2.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-lg border border-emerald-200 text-[9px] font-black flex items-center gap-1 transition-all">
+                        <CheckCircle className="w-3 h-3" /> Fiche →
+                      </button>
+                    )}
+                  </>
                 )}
                 {/* Détails */}
                 {(lead.details || (lead.tailles && Object.values(lead.tailles).some(v => v > 0))) && !lead.type.startsWith('RECRUTEMENT:') && (

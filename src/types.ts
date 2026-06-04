@@ -468,6 +468,7 @@ export interface Lead {
   crmPrice?: number;
   crmPriceConfirmed?: boolean;
   crmPriority?: boolean;
+  rejectedAt?: string;
 }
 
 export const DEFAULT_COMPANY: CompanyProfile = {
