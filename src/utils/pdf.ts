@@ -95,12 +95,19 @@ export async function generatePDF(elementId: string, filename: string) {
   try {
     const [htmlToImage, jsPDF] = await Promise.all([getHtmlToImage(), getJsPDF()]);
 
-    const dataUrl = await htmlToImage.toPng(wrapper, {
+    const options = {
       pixelRatio: 1.5,
       backgroundColor: '#ffffff',
-    });
+      skipFonts: true, // Prevents blank image issues caused by font CORS/encoding
+    };
 
-    if (dataUrl) {
+    // WARM-UP CALL (html-to-image bug: first render is often blank)
+    await htmlToImage.toPng(clone, options).catch(() => {});
+    
+    // ACTUAL CALL
+    const dataUrl = await htmlToImage.toPng(clone, options);
+
+    if (dataUrl && dataUrl !== 'data:,') {
       // Create image object to get natural dimensions
       const img = new Image();
       img.src = dataUrl;
@@ -137,6 +144,8 @@ export async function generatePDF(elementId: string, filename: string) {
       pdf.save(`${filename}.pdf`);
       success = true;
       return null;
+    } else {
+        throw new Error('Image rendered empty.');
     }
   } catch (err) {
     lastError = err;
@@ -172,9 +181,12 @@ export async function generatePDFBlob(elementId: string): Promise<Blob | null> {
 
   try {
     const [htmlToImage, jsPDF] = await Promise.all([getHtmlToImage(), getJsPDF()]);
-    const dataUrl = await htmlToImage.toPng(wrapper, { pixelRatio: 1.5, backgroundColor: '#ffffff' });
+    const options = { pixelRatio: 1.5, backgroundColor: '#ffffff', skipFonts: true };
     
-    if (dataUrl) {
+    await htmlToImage.toPng(clone, options).catch(() => {});
+    const dataUrl = await htmlToImage.toPng(clone, options);
+    
+    if (dataUrl && dataUrl !== 'data:,') {
       const img = new Image();
       img.src = dataUrl;
       await new Promise(r => { img.onload = r; });
