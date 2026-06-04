@@ -120,9 +120,10 @@ export default function Demandes() {
     }
 
     async function loadPhotosInBackground(leadsArr: Lead[]) {
-      const withoutPhoto = leadsArr.filter(l => !l.photo).slice(0, 30);
+      // Load all missing photos progressively
+      const withoutPhoto = leadsArr.filter(l => !l.photo);
       if (!withoutPhoto.length) return;
-      // Load in batches of 5
+      // Load in batches of 5 to not block the thread
       for (let i = 0; i < withoutPhoto.length; i += 5) {
         const batch = withoutPhoto.slice(i, i + 5);
         const results = await Promise.allSettled(
