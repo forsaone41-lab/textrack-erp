@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check } from 'lucide-react';
+import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info } from 'lucide-react';
 import {
   Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile, saveRecord, Lead, loadLeads, loadLeadPhoto
 } from '../types';
@@ -1239,7 +1239,22 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                   {/* Upload Receipt */}
                   <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/40 flex flex-col">
                      <h3 className="text-xl font-black uppercase tracking-tighter mb-2 text-slate-800">{isAr ? 'تأكيد الدفع' : 'Confirmer un paiement'}</h3>
-                     <p className="text-xs text-slate-500 font-bold mb-6">{isAr ? 'أرسل لنا صورة من التوصيل البنكي أو السكرينشوت' : 'Envoyez-nous le reçu ou screenshot de votre virement'}</p>
+                     
+                     <div className={`mb-6 p-4 rounded-xl border flex items-start gap-3 bg-indigo-50 border-indigo-100 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                       <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                         <Info className="w-4 h-4" />
+                       </div>
+                       <div className="flex-1">
+                         <p className="text-xs font-bold text-indigo-900 mb-1">
+                           {isAr ? 'خطوة ضرورية لبدء الإنتاج' : 'Étape nécessaire pour lancer la production'}
+                         </p>
+                         <p className="text-[10px] text-indigo-700 leading-relaxed font-medium">
+                           {isAr 
+                             ? 'المرجو تحديد الطلبية المعنية، إدخال مبلغ التحويل، وإرفاق صورة التوصيل البنكي. هذا الإجراء ضروري جداً باش نقدروا نشريو السلعة (الثوب واللوازم) ونبدأو الخدمة على طلبيتك في أسرع وقت!' 
+                             : "Veuillez sélectionner la commande, saisir le montant viré et joindre le reçu de paiement. Cette étape est indispensable pour nous permettre d'acheter la matière première et de commencer à travailler sur votre commande !"}
+                         </p>
+                       </div>
+                     </div>
                      
                      {virementSent ? (
                         <div className="flex-1 flex flex-col items-center justify-center text-center py-8 animate-in zoom-in duration-500">
