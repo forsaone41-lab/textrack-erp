@@ -1519,6 +1519,13 @@ export default function Demandes() {
                                 <button onClick={() => setConfirmLead(lead)}
                                   className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-500 hover:text-white transition-all shadow-sm">✓ {isAr ? 'تأكيد' : 'Valider'}</button>
                               )}
+                              {lead.photo && !lead.type.startsWith('RECRUTEMENT:') && (
+                                <button onClick={() => navigate('/ai', { state: { leadAnalysis: lead } })}
+                                  className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-fuchsia-50 text-fuchsia-600 border-fuchsia-200 hover:bg-fuchsia-500 hover:text-white transition-all shadow-sm flex items-center gap-1"
+                                  title={isAr ? 'تحليل الموديل واستخراج القياسات' : 'Analyser le modèle et extraire les mesures'}>
+                                  <Scissors className="w-3.5 h-3.5" /> {isAr ? 'تحليل الموديل' : 'Analyser Modèle'}
+                                </button>
+                              )}
                             </>
                           )}
                           

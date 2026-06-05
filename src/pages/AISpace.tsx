@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { saveRecord, genId, FicheTechnique, loadLeads, Lead } from '../types';
 
 const STANDARD_MESURES: Record<string, { nom: string; valeurs: Record<string, number> }[]> = {
@@ -79,6 +79,7 @@ export default function AISpace() {
   const [exporting, setExporting] = useState(false);
   const [showFullImage, setShowFullImage] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Gemini API integration
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
@@ -131,6 +132,18 @@ export default function AISpace() {
     }
     setShowLeadsModal(false);
   };
+
+  useEffect(() => {
+    if (location.state?.leadAnalysis && leads.length > 0) {
+      const lead = leads.find(l => l.id === location.state.leadAnalysis.id) || location.state.leadAnalysis;
+      // Small timeout to let the UI settle
+      setTimeout(() => {
+        selectLeadModel(lead);
+        // Clean up state so refreshing the page doesn't re-trigger
+        navigate('/ai', { replace: true, state: {} });
+      }, 500);
+    }
+  }, [location.state?.leadAnalysis, leads]);
 
   const handleCategoryChange = (cat: 'Robe' | 'Caftan' | 'Djellaba' | 'Chemise' | 'Pantalon') => {
     setSelectedCategory(cat);
