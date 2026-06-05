@@ -555,10 +555,11 @@ export async function loadLeads(): Promise<Lead[]> {
       if (raw) deletedIds = JSON.parse(raw) || [];
     } catch (_) {}
 
-    // 1. Load from Supabase
+    // 1. Load from Supabase (EXCLUDE PHOTO TO PREVENT PAYLOAD TOO LARGE)
+    const columns = 'id, name, phone, ville, type, quantity, details, tailles, date, status, email, contactedAt, contactedType, crmStage, crmContactMethod, crmRdvDate, crmNotes, crmPrice, crmPriceConfirmed, crmPriority, rejectedAt, cv';
     const { data: supaData, error } = await supabase
       .from('leads')
-      .select('*')
+      .select(columns)
       .neq('name', '__WORKER_PHOTO__')
       .neq('name', '__SYSTEM_CONFIG__')
       .neq('name', '__DELETED__')
