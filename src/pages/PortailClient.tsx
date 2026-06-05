@@ -1184,11 +1184,9 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                           setRibCopied(true);
                           setTimeout(() => setRibCopied(false), 2000);
                         }}>
-                           <div className={`absolute inset-0 bg-emerald-500/20 backdrop-blur-sm transition-all duration-300 flex items-center justify-center ${ribCopied ? 'opacity-100 z-20' : 'opacity-0 -z-10'}`}>
-                              <p className="text-emerald-100 font-black text-lg flex items-center gap-2">
-                                <Check className="w-6 h-6" />
-                                {isAr ? 'تم النسخ!' : 'Copié !'}
-                              </p>
+                           <div className={`absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-500 text-white px-4 py-1.5 rounded-full shadow-lg shadow-emerald-500/20 transition-all duration-300 flex items-center gap-2 ${ribCopied ? 'opacity-100 translate-y-6 z-20' : 'opacity-0 translate-y-0 -z-10'}`}>
+                              <Check className="w-3.5 h-3.5" />
+                              <span className="text-[10px] font-black uppercase tracking-widest">{isAr ? 'تم النسخ بنجاح' : 'RIB Copié !'}</span>
                            </div>
                            <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest mb-1 relative z-10">{isAr ? 'رقم الحساب (RIB)' : 'RIB (24 chiffres)'}</p>
                            <div className="flex items-center justify-between relative z-10">
