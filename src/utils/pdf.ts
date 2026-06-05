@@ -37,9 +37,10 @@ export function printElement(elementId: string) {
   doc.write(`<!DOCTYPE html><html dir="auto"><head><title>Document</title>
     ${stylesHtml}
     <style>
-      body { margin: 0; padding: 20px; background: white !important; font-family: sans-serif; color: #0f172a !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      body { margin: 0; padding: 0; background: white !important; font-family: sans-serif; color: #0f172a !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; display: flex; justify-content: center; }
+      body > div { max-width: 100% !important; margin: 0 auto; }
       img { max-width: 100% !important; height: auto !important; }
-      @page { margin: 0.5cm; size: auto; }
+      @page { margin: 1.5cm; size: auto; }
       @media print { 
         html, body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         /* Ensure background colors are printed */
@@ -109,7 +110,10 @@ export async function generatePDF(elementId: string, filename: string) {
       await new Promise(r => { img.onload = r; });
 
       const pdfW = 210; // Standard A4 width in mm
-      const pdfH = Math.max(297, (img.height * pdfW) / img.width); // Adjust height to fit the whole image in one page
+      const margin = 12; // 12mm margin
+      const contentW = pdfW - (margin * 2);
+      const contentH = (img.height * contentW) / img.width;
+      const pdfH = Math.max(297, contentH + (margin * 2)); // Adjust height to fit the whole image in one page
 
       const pdf = new jsPDF({
         orientation: 'p',
@@ -117,7 +121,7 @@ export async function generatePDF(elementId: string, filename: string) {
         format: [pdfW, pdfH]
       });
 
-      pdf.addImage(dataUrl, 'PNG', 0, 0, pdfW, pdfH, undefined, 'FAST');
+      pdf.addImage(dataUrl, 'PNG', margin, margin, contentW, contentH, undefined, 'FAST');
 
       pdf.save(`${filename}.pdf`);
       success = true;
@@ -169,7 +173,10 @@ export async function generatePDFBlob(elementId: string): Promise<Blob | null> {
       await new Promise(r => { img.onload = r; });
 
       const pdfW = 210; // Standard A4 width in mm
-      const pdfH = Math.max(297, (img.height * pdfW) / img.width);
+      const margin = 12; // 12mm margin
+      const contentW = pdfW - (margin * 2);
+      const contentH = (img.height * contentW) / img.width;
+      const pdfH = Math.max(297, contentH + (margin * 2));
 
       const pdf = new jsPDF({
         orientation: 'p',
@@ -177,7 +184,7 @@ export async function generatePDFBlob(elementId: string): Promise<Blob | null> {
         format: [pdfW, pdfH]
       });
       
-      pdf.addImage(dataUrl, 'PNG', 0, 0, pdfW, pdfH, undefined, 'FAST');
+      pdf.addImage(dataUrl, 'PNG', margin, margin, contentW, contentH, undefined, 'FAST');
       return pdf.output('blob');
     }
   } catch (err) {
