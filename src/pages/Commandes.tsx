@@ -498,30 +498,46 @@ export default function Commandes() {
                               </div>
                             </div>
                           )}
-                          {/* Advance Phase Button */}
-                          {c.statut !== 'annulé' && c.statut !== 'annulation_demandee' && c.phase !== 'livré' && (
+                          {/* Advance Phase for normal orders */}
+                          {c.statut !== 'annulé' && c.statut !== 'annulation_demandee' && c.phase !== 'livré' && c.statut !== 'echantillon_en_cours' && c.statut !== 'echantillon_valide' && (
                             <button
                               onClick={async (e) => {
                                 e.stopPropagation();
                                 const currentIndex = PHASE_ORDER.indexOf(c.phase);
                                 if (currentIndex < PHASE_ORDER.length - 1) {
-                                  // For Echantillons, jump directly to livré to trigger confirmation
-                                  const isEchantillon = c.statut === 'echantillon_en_cours';
-                                  const nextPhase = isEchantillon ? 'livré' : PHASE_ORDER[currentIndex + 1];
+                                  const nextPhase = PHASE_ORDER[currentIndex + 1];
                                   const updated = { ...c, phase: nextPhase as any };
                                   await saveRecord('commandes', updated);
                                   setCommandes(prev => prev.map(x => x.id === c.id ? updated : x));
-                                  // Auto-notification for Echantillons that reached delivery
-                                  if (isEchantillon && nextPhase === 'livré') {
-                                    notifyClientWhatsApp(c, `Bonjour ${c.client} 👋\n\nVotre échantillon *${c.reference}* est prêt et a été livré ! 🚚\n\nMerci de vous connecter sur le portail client pour confirmer sa réception et valider la qualité afin de lancer la production.\n\n— BEYA CREATIVE`);
-                                  }
                                 }
                               }}
-                              title={c.statut === 'echantillon_en_cours' ? (isAr ? 'إرسال للتسليم' : 'Passer à la livraison') : (isAr ? 'تمرير للمرحلة التالية' : 'Passer à la phase suivante')}
+                              title={isAr ? 'تمرير للمرحلة التالية' : 'Passer à la phase suivante'}
                               className="w-9 h-9 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all shadow-sm active:scale-90"
                             >
-                              {c.statut === 'echantillon_en_cours' ? <Truck className="w-4 h-4" /> : <FastForward className="w-4 h-4" />}
+                              <FastForward className="w-4 h-4" />
                             </button>
+                          )}
+
+                          {/* Phase Dropdown for Echantillons */}
+                          {(c.statut === 'echantillon_en_cours' || c.statut === 'echantillon_valide') && (
+                            <select
+                               onClick={(e) => e.stopPropagation()}
+                               onChange={async (e) => {
+                                  const newPhase = e.target.value as any;
+                                  const updated = { ...c, phase: newPhase };
+                                  await saveRecord('commandes', updated);
+                                  setCommandes(prev => prev.map(x => x.id === c.id ? updated : x));
+                                  if (newPhase === 'livré') {
+                                    notifyClientWhatsApp(c, `Bonjour ${c.client} 👋\n\nVotre échantillon *${c.reference}* est prêt et a été livré ! 🚚\n\nMerci de vous connecter sur le portail client pour confirmer sa réception et valider la qualité afin de lancer la production.\n\n— BEYA CREATIVE`);
+                                  }
+                               }}
+                               value={c.phase}
+                               className="h-9 px-2 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-xl text-[10px] font-black uppercase outline-none cursor-pointer max-w-[100px]"
+                            >
+                               {PHASE_ORDER.map(p => (
+                                  <option key={p} value={p}>{isAr ? phaseAr[p] : PHASE_LABELS[p]}</option>
+                               ))}
+                            </select>
                           )}
                           {(c.statut === 'echantillon_en_cours' || c.statut === 'echantillon_valide') && (
                             <button 
@@ -533,6 +549,9 @@ export default function Commandes() {
                             </button>
                           )}
                           {(() => {
+                            const isEchantillon = c.statut === 'echantillon_en_cours' || c.statut === 'echantillon_valide';
+                            if (isEchantillon) return null; // Echantillons do not enter production
+
                             const isST = !!(c.partenaireId || (c.externalTasks && c.externalTasks.length > 0));
                             if (isST) return null;
 
