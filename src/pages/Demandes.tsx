@@ -1311,7 +1311,12 @@ export default function Demandes() {
               {/* Top badges row */}
               <div className={`absolute top-3 ${isAr ? 'left-3' : 'right-3'} flex items-center gap-1.5`}>
                 {lead.crmPriority && <span className="text-xs">⭐</span>}
-                {lead.status === 'new' && (
+                {lead.crmStage === 'confirme' && (
+                  <span className="px-2 py-0.5 bg-emerald-100 text-emerald-600 border border-emerald-200 text-[9px] font-black uppercase tracking-widest rounded-full flex items-center gap-1 shadow-sm">
+                    <CheckCircle className="w-3 h-3" /> {isAr ? 'مؤكد' : 'Validé'}
+                  </span>
+                )}
+                {lead.status === 'new' && lead.crmStage !== 'confirme' && (
                   <span className="px-2 py-0.5 bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest rounded-full">
                     {isAr ? 'جديد' : 'New'}
                   </span>
