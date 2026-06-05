@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send } from 'lucide-react';
+import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check } from 'lucide-react';
 import {
   Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile, saveRecord, Lead, loadLeads, loadLeadPhoto
 } from '../types';
@@ -80,6 +80,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [virementMontant, setVirementMontant] = useState('');
   const [sendingVirement, setSendingVirement] = useState(false);
   const [virementSent, setVirementSent] = useState(false);
+  const [ribCopied, setRibCopied] = useState(false);
 
   // Helper for translating phase names
   const phaseAr: Record<string, string> = { 
@@ -1178,14 +1179,25 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                            <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest mb-1">{isAr ? 'اسم المستفيد' : 'Bénéficiaire'}</p>
                            <p className="text-lg font-bold tracking-tight">{company.bankBeneficiary || company.name}</p>
                         </div>
-                        <div className="bg-white/10 backdrop-blur-sm p-5 rounded-2xl border border-white/10 group cursor-pointer hover:bg-white/20 transition-all" onClick={() => {
+                        <div className="bg-white/10 backdrop-blur-sm p-5 rounded-2xl border border-white/10 group cursor-pointer hover:bg-white/20 transition-all relative overflow-hidden" onClick={() => {
                           navigator.clipboard.writeText(company.rib || '230000000000000000000000');
-                          alert(isAr ? 'تم النسخ!' : 'RIB copié !');
+                          setRibCopied(true);
+                          setTimeout(() => setRibCopied(false), 2000);
                         }}>
-                           <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest mb-1">{isAr ? 'رقم الحساب (RIB)' : 'RIB (24 chiffres)'}</p>
-                           <div className="flex items-center justify-between">
+                           <div className={`absolute inset-0 bg-emerald-500/20 backdrop-blur-sm transition-all duration-300 flex items-center justify-center ${ribCopied ? 'opacity-100 z-20' : 'opacity-0 -z-10'}`}>
+                              <p className="text-emerald-100 font-black text-lg flex items-center gap-2">
+                                <Check className="w-6 h-6" />
+                                {isAr ? 'تم النسخ!' : 'Copié !'}
+                              </p>
+                           </div>
+                           <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest mb-1 relative z-10">{isAr ? 'رقم الحساب (RIB)' : 'RIB (24 chiffres)'}</p>
+                           <div className="flex items-center justify-between relative z-10">
                              <p className="text-xl font-black tracking-[0.1em] font-mono">{company.rib || '230 000 00000000000000 00'}</p>
-                             <FileText className="w-4 h-4 text-indigo-300 group-hover:text-white transition-colors" />
+                             {ribCopied ? (
+                               <Check className="w-5 h-5 text-emerald-400" />
+                             ) : (
+                               <FileText className="w-4 h-4 text-indigo-300 group-hover:text-white transition-colors" />
+                             )}
                            </div>
                         </div>
 
