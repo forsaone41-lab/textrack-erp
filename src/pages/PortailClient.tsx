@@ -1168,7 +1168,9 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                            </div>
                            <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center overflow-hidden">
                              {(company.bankName || 'CIH BANK').toLowerCase().includes('cih') ? (
-                               <img src="https://upload.wikimedia.org/wikipedia/commons/1/1f/CIH_Bank_logo.svg" className="w-full h-full object-contain bg-white p-2" alt="CIH" />
+                               <div className="w-full h-full bg-[#f25c27] flex items-center justify-center shadow-inner">
+                                  <span className="text-white font-black text-sm tracking-tighter">CIH</span>
+                               </div>
                              ) : (
                                <Building className="w-6 h-6 text-indigo-300" />
                              )}
