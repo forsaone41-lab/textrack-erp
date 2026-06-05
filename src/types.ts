@@ -555,11 +555,12 @@ export async function loadLeads(): Promise<Lead[]> {
       if (raw) deletedIds = JSON.parse(raw) || [];
     } catch (_) {}
 
-    // 1. Load from Supabase — simple query, filter client-side
+    // 1. Load from Supabase — simplest possible query
     const { data: supaData, error } = await supabase
       .from('leads')
-      .select('*')
-      .order('date', { ascending: false });
+      .select('*');
+
+    if (error) console.error('[loadLeads] Supabase error:', error.message, error.code);
 
     // 2. Load from BOTH localStorage keys (old + new format)
     let localLeads: Lead[] = [];
