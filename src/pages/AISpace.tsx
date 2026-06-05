@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { saveRecord, genId, FicheTechnique, loadLeads, Lead, loadLeadPhoto } from '../types';
+import { useNavigate } from 'react-router-dom';
+import { saveRecord, genId, FicheTechnique, loadLeads, Lead } from '../types';
 
 const STANDARD_MESURES: Record<string, { nom: string; valeurs: Record<string, number> }[]> = {
   Robe: [
@@ -79,7 +79,6 @@ export default function AISpace() {
   const [exporting, setExporting] = useState(false);
   const [showFullImage, setShowFullImage] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
 
   // Gemini API integration
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
@@ -102,23 +101,6 @@ export default function AISpace() {
       setLeads(data.filter(l => l.photo));
     });
   }, []);
-
-  useEffect(() => {
-    if (location.state?.fromLead) {
-      const lead = location.state.fromLead;
-      if (lead.photo) {
-        selectLeadModel(lead);
-      } else {
-        loadLeadPhoto(lead.id).then(photo => {
-          if (photo) {
-            selectLeadModel({ ...lead, photo });
-          }
-        });
-      }
-      // Clear state to avoid reopening if page refreshes
-      window.history.replaceState({}, document.title);
-    }
-  }, [location.state]);
 
   const selectLeadModel = (lead: Lead) => {
     if (lead.photo) {

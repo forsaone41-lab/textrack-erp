@@ -26,9 +26,8 @@ export default function Settings() {
     for (const table of tables) {
       let localCount = 0;
       try {
-        const localKey = `textrack_data_${table}`;
-        const oldKey = table === 'leads' ? 'textrack_leads' : localKey;
-        const localRaw = localStorage.getItem(localKey) || localStorage.getItem(oldKey);
+        const localKey = table === 'leads' ? 'textrack_leads' : `textrack_data_${table}`;
+        const localRaw = localStorage.getItem(localKey);
         if (localRaw) {
           const parsed = JSON.parse(localRaw);
           if (Array.isArray(parsed)) {
