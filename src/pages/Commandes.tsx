@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Search, Plus, Package, ChevronRight, ChevronDown, 
-  Edit2, ShoppingCart, Scissors, Trash2, Layers, Binary, AlertTriangle, Check, CheckCircle2, MessageCircle, FastForward, Truck
+  Edit2, ShoppingCart, Scissors, Trash2, Layers, Binary, AlertTriangle, Check, CheckCircle2, MessageCircle, FastForward, Truck, Settings
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -531,13 +531,13 @@ export default function Commandes() {
                                ))}
                             </select>
                           )}
-                          {(c.statut === 'echantillon_en_cours' || c.statut === 'echantillon_valide') && (
+                          {c.statut !== 'echantillon_en_cours' && c.statut !== 'echantillon_valide' && (
                             <button 
                               onClick={(e) => { e.stopPropagation(); navigate(`/commandes/manage?edit=${c.id}`); }}
                               title={t('master_setup' as any, lang)}
                               className="w-9 h-9 bg-fuchsia-50 text-fuchsia-600 rounded-xl flex items-center justify-center hover:bg-fuchsia-600 hover:text-white transition-all shadow-sm active:scale-90"
                             >
-                              <Binary className="w-4 h-4" />
+                              <Settings className="w-4 h-4" />
                             </button>
                           )}
                           {(() => {
