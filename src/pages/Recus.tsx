@@ -366,10 +366,25 @@ export default function Recus() {
                       ) : <span className="text-slate-300 text-sm">—</span>}
                     </td>
                     <td className="px-5 py-3.5 text-center">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${si.bg}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${si.dot}`} />
-                        {si.label}
-                      </span>
+                      {(f.preuvePaiement || (f as any).preuveClient) ? (
+                        <button 
+                          onClick={() => {
+                            const img = (f as any).preuveClient || f.preuvePaiement;
+                            const w = window.open();
+                            w?.document.write(`<html><body style="margin:0;display:flex;align-items:center;justify-content:center;background:#0f172a;min-height:100vh;"><img src="${img}" style="max-width:100%;max-height:100vh;" /></body></html>`);
+                          }}
+                          title="Voir le reçu"
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold hover:opacity-80 transition-opacity cursor-pointer shadow-sm ${si.bg}`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${si.dot}`} />
+                          {si.label}
+                        </button>
+                      ) : (
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${si.bg}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${si.dot}`} />
+                          {si.label}
+                        </span>
+                      )}
                     </td>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center justify-center gap-1">
