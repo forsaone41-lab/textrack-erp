@@ -243,7 +243,10 @@ export default function Demandes() {
 
       await saveRecord('commandes', newOrder);
 
-      updateStatus(lead.id, 'completed');
+      const updatedLead = { ...lead, status: 'completed' as const, crmStage: 'confirme' as const };
+      setLeads(prev => prev.map(l => l.id === lead.id ? updatedLead : l));
+      await saveRecord('leads', updatedLead, true);
+
       setSuccessLead(confirmLead);
       setConfirmLead(null);
       setConfirmDetails({
@@ -1614,7 +1617,7 @@ export default function Demandes() {
                 {/* Convert / Fiche client & Refuser */}
                 {category !== 'recrutement' && (
                   <>
-                    {lead.crmStage !== 'annule' && (
+                    {lead.crmStage !== 'annule' && lead.crmStage !== 'confirme' && (
                       <button
                         onClick={async () => {
                           if (window.confirm(isAr ? 'هل أنت متأكد من رفض هذا الطلب؟' : 'Voulez-vous vraiment refuser cette demande ?')) {
@@ -1626,6 +1629,13 @@ export default function Demandes() {
                         title={isAr ? "رفض الطلب" : "Refuser"}
                         className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border flex items-center gap-1 transition-all bg-rose-50 text-rose-500 border-rose-200 hover:bg-rose-500 hover:text-white"
                       >✕ {isAr ? 'رفض' : 'Refuser'}</button>
+                    )}
+                    {lead.crmStage !== 'confirme' && lead.crmStage !== 'annule' && (
+                      <button
+                        onClick={() => setConfirmLead(lead)}
+                        title={isAr ? "تأكيد وتحويل لطلبية" : "Valider et créer commande"}
+                        className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border flex items-center gap-1 transition-all bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-500 hover:text-white"
+                      >✓ {isAr ? 'تأكيد' : 'Valider'}</button>
                     )}
                     {!users.some(u => u.nom.toLowerCase() === lead.name.toLowerCase() && u.role === 'client') ? (
                       <button onClick={() => convertToClient(lead)} title={isAr ? 'تسجيل كزبون' : 'Créer client'}
