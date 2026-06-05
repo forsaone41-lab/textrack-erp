@@ -815,17 +815,25 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                         {/* Rating */}
                                         <div className="flex flex-col items-center gap-3">
                                           <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">{isAr ? 'تقييمك العام للعينة' : 'Votre note globale'}</p>
-                                          <div className="flex gap-2" onMouseLeave={() => setHoverRating(0)}>
+                                          <div className="flex gap-2 group/stars" onMouseLeave={() => setHoverRating(0)}>
                                             {[1, 2, 3, 4, 5].map(star => {
-                                              const isActive = hoverRating ? hoverRating >= star : feedbackData.rating >= star;
+                                              const isClicked = feedbackData.rating >= star;
                                               return (
                                                 <button
                                                   key={star}
                                                   onMouseEnter={() => setHoverRating(star)}
                                                   onClick={() => setFeedbackData(prev => ({ ...prev, rating: star }))}
-                                                  className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${isActive ? 'bg-amber-400 text-white scale-110 shadow-lg shadow-amber-200' : 'bg-slate-50 text-slate-300 hover:bg-amber-50 hover:text-amber-300'}`}
+                                                  className={`peer w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300
+                                                    ${isClicked ? 'bg-amber-400 text-white shadow-lg shadow-amber-200 scale-110' : 'bg-slate-50 text-slate-300'}
+                                                    group-hover/stars:bg-amber-400 group-hover/stars:text-white group-hover/stars:scale-110 group-hover/stars:shadow-lg group-hover/stars:shadow-amber-200
+                                                    peer-hover:!bg-slate-50 peer-hover:!text-slate-300 peer-hover:!scale-100 peer-hover:!shadow-none
+                                                  `}
                                                 >
-                                                  <Star className={`w-6 h-6 ${isActive ? 'fill-white' : ''}`} />
+                                                  <Star className={`w-6 h-6 
+                                                    ${isClicked ? 'fill-white' : ''}
+                                                    group-hover/stars:fill-white 
+                                                    peer-hover:!fill-transparent
+                                                  `} />
                                                 </button>
                                               );
                                             })}
