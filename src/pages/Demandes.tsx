@@ -1040,34 +1040,42 @@ export default function Demandes() {
 
       {/* Photo Preview Modal */}
       {previewPhoto && (
-        <div className="fixed inset-0 z-[140] flex items-center justify-center bg-black/95 animate-in fade-in duration-200"
+        <div className="fixed inset-0 z-[150] flex flex-col items-center justify-center bg-black/95 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-300"
           onClick={() => { setPreviewPhoto(null); setZoomLevel(1); setLensEnabled(false); }}>
+          
+          {/* Top Bar with Close Button */}
+          <div className="absolute top-0 left-0 w-full p-4 md:p-8 flex items-center justify-between z-[160] bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
+             <div className="pointer-events-auto">
+                <span className="text-white/50 text-[10px] font-black uppercase tracking-widest hidden md:block">BEYA CREATIVE GALLERY</span>
+             </div>
+             
+             <button onClick={() => { setPreviewPhoto(null); setZoomLevel(1); setLensEnabled(false); }}
+               className="pointer-events-auto px-5 py-3 md:w-14 md:h-14 md:p-0 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 shadow-2xl rounded-2xl md:rounded-full flex items-center justify-center gap-2 text-white transition-all hover:scale-105 active:scale-95">
+               <X className="w-5 h-5 md:w-6 md:h-6" />
+               <span className="text-[10px] font-black uppercase tracking-widest md:hidden">Fermer</span>
+             </button>
+          </div>
+
           {/* Zoom controls */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-2xl px-4 py-2 z-20" onClick={e => e.stopPropagation()}>
+          <div className="absolute bottom-6 md:top-8 md:bottom-auto left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl px-4 py-2 z-[160]" onClick={e => e.stopPropagation()}>
             <button onClick={() => setZoomLevel(z => Math.max(0.5, z - 0.25))}
-              className="w-9 h-9 bg-white/20 hover:bg-white/40 rounded-xl text-white font-black text-xl flex items-center justify-center transition-all">−</button>
+              className="w-9 h-9 bg-white/10 hover:bg-white/30 rounded-xl text-white font-black text-xl flex items-center justify-center transition-all">−</button>
             <span className="text-white text-xs font-black w-12 text-center">{Math.round(zoomLevel * 100)}%</span>
             <button onClick={() => setZoomLevel(z => Math.min(4, z + 0.25))}
-              className="w-9 h-9 bg-white/20 hover:bg-white/40 rounded-xl text-white font-black text-xl flex items-center justify-center transition-all">+</button>
-            <div className="w-px h-5 bg-white/30 mx-1" />
+              className="w-9 h-9 bg-white/10 hover:bg-white/30 rounded-xl text-white font-black text-xl flex items-center justify-center transition-all">+</button>
+            <div className="w-px h-5 bg-white/20 mx-1 hidden md:block" />
             <button onClick={() => { setZoomLevel(1); setLensEnabled(false); }}
-              className="px-3 h-9 bg-white/20 hover:bg-white/40 rounded-xl text-white text-[10px] font-black uppercase tracking-widest transition-all">Reset</button>
-            <div className="w-px h-5 bg-white/30 mx-1" />
+              className="hidden md:block px-3 h-9 bg-white/10 hover:bg-white/30 rounded-xl text-white text-[10px] font-black uppercase tracking-widest transition-all">Reset</button>
+            <div className="w-px h-5 bg-white/20 mx-1" />
             <button onClick={() => setLensEnabled(!lensEnabled)}
-              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${lensEnabled ? 'bg-indigo-500 text-white shadow-lg' : 'bg-white/20 hover:bg-white/40 text-white'}`}
+              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${lensEnabled ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/50' : 'bg-white/10 hover:bg-white/30 text-white'}`}
               title="Loupe magique">
               <Search className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Close button */}
-          <button onClick={() => { setPreviewPhoto(null); setZoomLevel(1); setLensEnabled(false); }}
-            className="absolute top-4 right-4 w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center text-white z-20 transition-all">
-            <X className="w-5 h-5" />
-          </button>
-
           {/* Image */}
-          <div className="overflow-auto max-w-full max-h-full flex items-center justify-center p-16" onClick={e => e.stopPropagation()}>
+          <div className="overflow-auto w-full h-full flex items-center justify-center p-4 md:p-16 mt-8 md:mt-0" onClick={e => e.stopPropagation()}>
             <img
               src={previewPhoto}
               alt="Model Preview"
@@ -1084,12 +1092,12 @@ export default function Demandes() {
                 transition: lensEnabled ? 'transform 0.1s ease-out' : 'transform 0.2s ease',
                 cursor: lensEnabled ? 'crosshair' : 'zoom-in'
               }}
-              className="max-w-[90vw] max-h-[85vh] object-contain rounded-2xl shadow-2xl"
+              className="max-w-[95vw] md:max-w-4xl max-h-[70vh] md:max-h-[85vh] object-contain rounded-2xl md:rounded-3xl shadow-2xl ring-1 ring-white/10"
               onClick={() => !lensEnabled && setZoomLevel(z => z >= 3 ? 1 : z + 0.5)}
             />
           </div>
 
-          <p className="absolute bottom-4 text-white/40 text-[10px] font-bold uppercase tracking-widest">
+          <p className="hidden md:block absolute bottom-4 text-white/40 text-[10px] font-bold uppercase tracking-widest">
             Cliquer sur l'image pour zoomer — cliquer ailleurs pour fermer
           </p>
         </div>
