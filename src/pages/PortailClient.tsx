@@ -1271,17 +1271,53 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                         <div className="space-y-6 flex-1 flex flex-col">
                            <div className="grid grid-cols-1 gap-6">
                              <div>
-                                <label className={`block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ${isAr ? 'text-right' : ''}`}>{isAr ? 'الطلبية المعنية (ضروري)' : 'Commande concernée (Obligatoire)'}</label>
-                                <select
-                                  value={virementCommandeId}
-                                  onChange={e => setVirementCommandeId(e.target.value)}
-                                  className={`w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-black text-slate-700 outline-none focus:border-indigo-500 transition-colors cursor-pointer ${isAr ? 'text-right' : ''}`}
-                                >
-                                  <option value="">{isAr ? '— بدون تحديد طلبية —' : '— Sans commande spécifique —'}</option>
-                                  {found.map(c => (
-                                    <option key={c.id} value={c.id}>{c.reference} — {c.modele}</option>
-                                  ))}
-                                </select>
+                                <label className={`block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ${isAr ? 'text-right' : ''}`}>{isAr ? 'الطلبية المعنية (ضروري)' : 'Commande concernée (Obligatoire)'}</label>
+                                
+                                {found.length > 0 ? (
+                                  <div className={`grid grid-cols-2 sm:grid-cols-3 gap-3 ${isAr ? 'direction-rtl' : ''}`}>
+                                    {found.map(c => {
+                                      const isSelected = virementCommandeId === c.id;
+                                      const imgUrl = (c as any).modelePhoto || c.photo || (c as any).tissuPhoto || null;
+                                      return (
+                                        <div 
+                                          key={c.id}
+                                          onClick={() => setVirementCommandeId(c.id)}
+                                          className={`relative cursor-pointer rounded-2xl overflow-hidden border-2 transition-all duration-300 flex flex-col ${isSelected ? 'border-indigo-600 shadow-xl shadow-indigo-500/20 transform scale-[1.02] z-10 bg-indigo-50/30' : 'border-slate-100 hover:border-indigo-300 bg-white hover:bg-slate-50'}`}
+                                        >
+                                          {isSelected && (
+                                            <div className="absolute top-2 right-2 w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center z-20 shadow-md animate-in zoom-in duration-200">
+                                              <Check className="w-3.5 h-3.5" />
+                                            </div>
+                                          )}
+                                          
+                                          <div className="h-28 w-full bg-slate-100 relative overflow-hidden flex items-center justify-center shrink-0 group">
+                                            {imgUrl ? (
+                                              <img src={imgUrl} alt={c.modele} className={`w-full h-full object-cover transition-transform duration-500 ${isSelected ? 'scale-110' : 'group-hover:scale-105'}`} />
+                                            ) : (
+                                              <Package className="w-8 h-8 text-slate-300" />
+                                            )}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent" />
+                                            <span className="absolute bottom-2 left-3 right-3 text-white text-[10px] font-black uppercase tracking-widest truncate drop-shadow-md">{c.reference}</span>
+                                          </div>
+                                          
+                                          <div className={`p-3 flex-1 flex flex-col justify-between ${isAr ? 'text-right' : 'text-left'}`}>
+                                            <p className="text-xs font-black text-slate-800 line-clamp-2 leading-tight mb-2" title={c.modele}>{c.modele || 'SANS MODÈLE'}</p>
+                                            <div className="flex items-center justify-between mt-auto">
+                                              <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">{c.quantite} PCS</span>
+                                              {c.prix && (
+                                                <span className="text-[10px] font-black text-emerald-600">{(c.quantite * c.prix).toLocaleString()} MAD</span>
+                                              )}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                ) : (
+                                  <div className="p-4 bg-slate-50 rounded-2xl text-center border-2 border-dashed border-slate-200">
+                                    <p className="text-xs font-bold text-slate-400">{isAr ? 'لا توجد طلبيات مسجلة حالياً' : 'Aucune commande trouvée'}</p>
+                                  </div>
+                                )}
                              </div>
 
                              <div>
