@@ -1304,8 +1304,15 @@ export default function Demandes() {
           (() => {
             // Group visibleLeads by name/phone
             const groupedLeads = visibleLeads.reduce((acc, lead) => {
-              const key = lead.phone + '-' + lead.name.toLowerCase().trim();
-              if (!acc[key]) acc[key] = { client: lead, requests: [] };
+              const key = lead.name.toLowerCase().trim();
+              if (!acc[key]) {
+                acc[key] = { client: { ...lead }, requests: [] };
+              } else {
+                // Merge info (if one is missing phone/email, take from the other)
+                if (!acc[key].client.phone && lead.phone) acc[key].client.phone = lead.phone;
+                if (!acc[key].client.email && lead.email) acc[key].client.email = lead.email;
+                if (!acc[key].client.ville && lead.ville) acc[key].client.ville = lead.ville;
+              }
               acc[key].requests.push(lead);
               return acc;
             }, {} as Record<string, { client: Lead, requests: Lead[] }>);
