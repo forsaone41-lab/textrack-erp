@@ -1671,10 +1671,17 @@ export default function Demandes() {
                     <button onClick={() => clientExists && navigate('/fiches-techniques', { state: { fromLead: lead } })} disabled={!clientExists}
                       className={`w-8 h-8 rounded-lg border flex items-center justify-center transition-all ${clientExists ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white border-indigo-200' : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed opacity-50'}`}
                       title={clientExists ? 'Fiche Technique' : 'Enregistrez le client d\'abord'}>
-                      <FileText className="w-3.5 h-3.5" />
                     </button>
                   );
                 })()}
+
+                {/* Analyse AI */}
+                {!lead.type.startsWith('RECRUTEMENT:') && (
+                  <button onClick={() => navigate('/espace-ai', { state: { fromLead: lead } })} title={isAr ? 'تحليل الموديل بالذكاء الاصطناعي' : 'Analyse IA du modèle'}
+                    className="w-8 h-8 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-lg border border-indigo-200 flex items-center justify-center transition-all">
+                    <Sparkles className="w-3.5 h-3.5" />
+                  </button>
+                )}
 
                 <div className="ml-auto flex items-center gap-1">
                   <button onClick={() => { setEditingLead(lead); setEditForm(lead); }}
