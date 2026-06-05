@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   Users, Phone, MapPin, Search, Calendar, 
   MessageCircle, PhoneCall, Video, Store,
@@ -54,21 +54,23 @@ export default function Pipeline() {
 
   const activeStages = category === 'recrutement' ? RECRUTEMENT_STAGES : STAGES;
 
-  const filteredLeads = leads.filter(l => {
-    const isRecrutement = l.type.startsWith('RECRUTEMENT:');
-    if (category === 'clients' && isRecrutement) return false;
-    if (category === 'recrutement' && !isRecrutement) return false;
+  const filteredLeads = useMemo(() => {
+    return leads.filter(l => {
+      const isRecrutement = l.type.startsWith('RECRUTEMENT:');
+      if (category === 'clients' && isRecrutement) return false;
+      if (category === 'recrutement' && !isRecrutement) return false;
 
-    const matchSearch = l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      l.phone.includes(searchQuery) ||
-      l.type.toLowerCase().includes(searchQuery.toLowerCase());
-    if (!matchSearch) return false;
-    if (quickFilter === 'devis_sent') return (l.crmPrice || 0) > 0;
-    if (quickFilter === 'attente') return l.crmStage === 'attente_confirmation';
-    if (quickFilter === 'confirme') return l.crmStage === 'confirme';
-    if (quickFilter === 'annule') return l.crmStage === 'annule';
-    return true;
-  });
+      const matchSearch = l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        l.phone.includes(searchQuery) ||
+        l.type.toLowerCase().includes(searchQuery.toLowerCase());
+      if (!matchSearch) return false;
+      if (quickFilter === 'devis_sent') return (l.crmPrice || 0) > 0;
+      if (quickFilter === 'attente') return l.crmStage === 'attente_confirmation';
+      if (quickFilter === 'confirme') return l.crmStage === 'confirme';
+      if (quickFilter === 'annule') return l.crmStage === 'annule';
+      return true;
+    });
+  }, [leads, category, searchQuery, quickFilter]);
 
   const [savedOk, setSavedOk] = useState(false);
 
@@ -91,8 +93,19 @@ export default function Pipeline() {
     return null;
   };
 
+  const leadsByStage = useMemo(() => {
+    const grouped: Record<string, Lead[]> = {};
+    activeStages.forEach(s => { grouped[s.id] = []; });
+    filteredLeads.forEach(l => {
+      const stage = l.crmStage || 'nouveau';
+      if (!grouped[stage]) grouped[stage] = [];
+      grouped[stage].push(l);
+    });
+    return grouped;
+  }, [filteredLeads, activeStages]);
+
   const getLeadsByStage = (stageId: string) => {
-    return filteredLeads.filter(l => (l.crmStage || 'nouveau') === stageId);
+    return leadsByStage[stageId] || [];
   };
 
   return (
