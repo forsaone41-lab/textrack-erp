@@ -28,7 +28,7 @@ export default function Demandes() {
   const navigate = useNavigate();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [filter, setFilter] = useState<'all' | 'new' | 'completed'>('all');
+  const [filter, setFilter] = useState<'all' | 'new' | 'contacted' | 'devis_sent' | 'completed' | 'attente'>('all');
   const [category, setCategory] = useState<'clients' | 'recrutement'>('clients');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'date_desc' | 'date_asc' | 'qty_desc' | 'qty_asc'>('date_desc');
@@ -557,7 +557,12 @@ export default function Demandes() {
   const filteredLeads = useMemo(() => leads.filter(l => {
     const isRecrutement = (l.type || '').startsWith('RECRUTEMENT:');
     const matchCategory = category === 'recrutement' ? isRecrutement : !isRecrutement;
-    const matchFilter = filter === 'all' || l.status === filter;
+    let matchFilter = true;
+    if (filter === 'new') matchFilter = !l.contactedAt && l.crmStage !== 'confirme';
+    else if (filter === 'contacted') matchFilter = !!l.contactedAt;
+    else if (filter === 'devis_sent') matchFilter = (l.crmPrice || 0) > 0;
+    else if (filter === 'completed') matchFilter = l.crmStage === 'confirme';
+    else if (filter === 'attente') matchFilter = l.crmStage === 'attente_confirmation';
     const q = searchQuery.toLowerCase();
     const matchSearch = !q || l.name.toLowerCase().includes(q) || l.phone.includes(q) || (l.type || '').toLowerCase().includes(q) || (l.ville || '').toLowerCase().includes(q);
     
@@ -1302,7 +1307,7 @@ export default function Demandes() {
                 className={`px-3 sm:px-6 py-2.5 sm:py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filter === f ? 'bg-slate-900 text-white shadow-xl' : 'text-slate-500 hover:bg-slate-50'
                   }`}
               >
-                {isAr ? (f === 'all' ? 'الكل' : f === 'new' ? 'جديد' : 'مكتمل') : f}
+                {isAr ? (f === 'all' ? 'الكل' : f === 'new' ? 'جديد' : f === 'contacted' ? 'تم التواصل' : f === 'devis_sent' ? 'ديفيز' : f === 'completed' ? 'مكتمل' : 'قيد الانتظار') : (f === 'all' ? 'Tous' : f === 'new' ? 'Nouveaux' : f === 'contacted' ? 'Contactés' : f === 'devis_sent' ? 'Devis envoyé' : f === 'completed' ? 'Confirmés' : 'En attente')}
               </button>
             ))}
           </div>
@@ -1314,11 +1319,11 @@ export default function Demandes() {
         const clientLeads = leads.filter(l => !(l.type || '').startsWith('RECRUTEMENT:'));
         const stats = [
           { label: isAr ? 'المجموع' : 'Total', value: clientLeads.length, color: 'bg-slate-800 text-white', onClick: () => setFilter('all') },
-          { label: isAr ? 'جدد' : 'Nouveaux', value: clientLeads.filter(l => !l.contactedAt).length, color: 'bg-indigo-500 text-white', onClick: () => setFilter('new') },
-          { label: isAr ? 'تم التواصل' : 'Contactés', value: clientLeads.filter(l => !!l.contactedAt).length, color: 'bg-emerald-500 text-white', onClick: () => setFilter('all') },
-          { label: isAr ? 'ديفيز أُرسل' : 'Devis envoyé', value: clientLeads.filter(l => (l.crmPrice || 0) > 0).length, color: 'bg-amber-500 text-white', onClick: () => setFilter('all') },
+          { label: isAr ? 'جدد' : 'Nouveaux', value: clientLeads.filter(l => !l.contactedAt && l.crmStage !== 'confirme').length, color: 'bg-indigo-500 text-white', onClick: () => setFilter('new') },
+          { label: isAr ? 'تم التواصل' : 'Contactés', value: clientLeads.filter(l => !!l.contactedAt).length, color: 'bg-emerald-500 text-white', onClick: () => setFilter('contacted') },
+          { label: isAr ? 'ديفيز أُرسل' : 'Devis envoyé', value: clientLeads.filter(l => (l.crmPrice || 0) > 0).length, color: 'bg-amber-500 text-white', onClick: () => setFilter('devis_sent') },
           { label: isAr ? 'مؤكدون' : 'Confirmés', value: clientLeads.filter(l => l.crmStage === 'confirme').length, color: 'bg-teal-500 text-white', onClick: () => setFilter('completed') },
-          { label: isAr ? 'قيد الانتظار' : 'En attente', value: clientLeads.filter(l => l.crmStage === 'attente_confirmation').length, color: 'bg-orange-400 text-white', onClick: () => setFilter('all') },
+          { label: isAr ? 'قيد الانتظار' : 'En attente', value: clientLeads.filter(l => l.crmStage === 'attente_confirmation').length, color: 'bg-orange-400 text-white', onClick: () => setFilter('attente') },
         ];
         return (
           <div className="space-y-3">
