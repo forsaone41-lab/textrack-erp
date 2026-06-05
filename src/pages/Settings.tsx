@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, Image as ImageIcon, Building2, FileText, Phone, Play, Zap, Globe, Settings as SettingsIcon, ShieldCheck, X, Star, MapPin, RefreshCw, CloudUpload, Database, AlertTriangle, HelpCircle, Plus, Trash2, CheckCircle2, XCircle, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
+import { Save, Image as ImageIcon, Building2, FileText, Phone, Play, Zap, Globe, Settings as SettingsIcon, ShieldCheck, X, Star, MapPin, RefreshCw, CloudUpload, Database, AlertTriangle, HelpCircle, Plus, Trash2, CheckCircle2, XCircle, ChevronDown, ChevronUp, ExternalLink, CreditCard } from 'lucide-react';
 import { CompanyProfile, FaqItem, ServiceItem, loadCompanyProfile, saveCompanyProfile, saveRecord } from '../types';
 import { genId } from '../types';
 import { supabase } from '../supabase';
@@ -678,6 +678,24 @@ export default function Settings() {
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1">{t('email_contact', lang)}</label>
               <input type="email" value={profile.email} onChange={e => handleChange('email', e.target.value)} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none text-left" dir="ltr" />
+            </div>
+          </div>
+        </div>
+
+        {/* Informations Bancaires */}
+        <div className="p-6 border-t border-slate-100">
+          <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <CreditCard className="w-5 h-5 text-indigo-500" />
+            {isAr ? 'المعلومات البنكية (تظهر للعملاء في البوابة)' : 'Coordonnées Bancaires (Portail Client)'}
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">{isAr ? 'اسم البنك' : 'Nom de la Banque'}</label>
+              <input type="text" value={profile.bankName || ''} onChange={e => handleChange('bankName', e.target.value)} placeholder="ex: CIH BANK" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">{isAr ? 'رقم الحساب (RIB)' : 'RIB (24 chiffres)'}</label>
+              <input type="text" value={profile.rib || ''} onChange={e => handleChange('rib', e.target.value)} placeholder="000 000 0000000000000000 00" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-left" dir="ltr" />
             </div>
           </div>
         </div>

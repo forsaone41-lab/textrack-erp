@@ -1164,7 +1164,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                         <div className="bg-white/10 backdrop-blur-sm p-5 rounded-2xl border border-white/10 flex items-center justify-between">
                            <div>
                              <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest mb-1">{isAr ? 'البنك' : 'Banque'}</p>
-                             <p className="text-lg font-bold tracking-tight">CIH BANK</p>
+                             <p className="text-lg font-bold tracking-tight">{company.bankName || 'CIH BANK'}</p>
                            </div>
                            <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
                              <Building className="w-5 h-5 text-indigo-300" />
@@ -1175,12 +1175,12 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                            <p className="text-lg font-bold tracking-tight">{company.name}</p>
                         </div>
                         <div className="bg-white/10 backdrop-blur-sm p-5 rounded-2xl border border-white/10 group cursor-pointer hover:bg-white/20 transition-all" onClick={() => {
-                          navigator.clipboard.writeText('230000000000000000000000');
+                          navigator.clipboard.writeText(company.rib || '230000000000000000000000');
                           alert(isAr ? 'تم النسخ!' : 'RIB copié !');
                         }}>
                            <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest mb-1">{isAr ? 'رقم الحساب (RIB)' : 'RIB (24 chiffres)'}</p>
                            <div className="flex items-center justify-between">
-                             <p className="text-xl font-black tracking-[0.1em] font-mono">230 000 00000000000000 00</p>
+                             <p className="text-xl font-black tracking-[0.1em] font-mono">{company.rib || '230 000 00000000000000 00'}</p>
                              <FileText className="w-4 h-4 text-indigo-300 group-hover:text-white transition-colors" />
                            </div>
                         </div>

@@ -409,6 +409,8 @@ export interface CompanyProfile {
   patente: string;
   phone: string;
   email: string;
+  bankName?: string;
+  rib?: string;
   landingVideoUrl?: string;
   // About Us Content
   aboutTitleFr?: string;
@@ -487,7 +489,9 @@ export const DEFAULT_COMPANY: CompanyProfile = {
   if_tax: '0000000',
   patente: '00000000',
   phone: '+212 6 00 00 00 00',
-  email: 'contact@beyacreative.ma'
+  email: 'contact@beyacreative.ma',
+  bankName: 'CIH BANK',
+  rib: '230 000 0000000000000000 00'
 };
 
 export function loadCompanyProfile(): CompanyProfile {
