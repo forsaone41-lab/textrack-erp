@@ -1166,9 +1166,14 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                              <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest mb-1">{isAr ? 'البنك' : 'Banque'}</p>
                              <p className="text-lg font-bold tracking-tight">{company.bankName || 'CIH BANK'}</p>
                            </div>
-                           <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center overflow-hidden">
+                           <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center p-2 shadow-sm">
                              {(company.bankName || 'CIH BANK').toLowerCase().includes('cih') ? (
-                               <img src={`data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><rect width="120" height="120" rx="20" fill="%23f25c27"/><text x="60" y="60" fill="white" font-size="36" font-family="Arial, sans-serif" font-weight="900" text-anchor="middle">CIH</text><text x="60" y="90" fill="white" font-size="18" font-family="Arial, sans-serif" font-weight="900" text-anchor="middle">BANK</text></svg>`} className="w-full h-full object-contain p-1" alt="CIH" />
+                               <svg viewBox="0 0 100 100" className="w-full h-full">
+                                 {/* Blue Ribbon (Back) */}
+                                 <path d="M 15 85 L 75 55 A 10 10 0 0 0 75 35 L 15 65 Z" fill="#00AEEF" />
+                                 {/* Orange Ribbon (Front) */}
+                                 <path d="M 15 15 L 75 45 A 10 10 0 0 1 75 65 L 15 35 Z" fill="#F26522" />
+                               </svg>
                              ) : (
                                <Building className="w-6 h-6 text-indigo-300" />
                              )}
