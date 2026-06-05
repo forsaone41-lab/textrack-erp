@@ -578,6 +578,17 @@ export async function loadLeads(): Promise<Lead[]> {
     // 3. Merge: Supabase takes priority, add localStorage-only leads
     let finalData: Lead[] = [];
     if (!error && Array.isArray(supaData)) {
+      // If Supabase returns 0 but localStorage has data → RLS blocking anon reads
+      // Fall back to localStorage only in this case
+      if (supaData.length === 0 && localLeads.length > 0) {
+        console.warn('Supabase returned 0 leads but localStorage has data → possible RLS issue. Using local cache.');
+        finalData = localLeads.map((l: any) => { const c = {...l}; delete c.photo; return c; });
+        finalData = finalData.filter(l => !deletedIds.includes(l.id));
+        finalData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        localStorage.setItem('textrack_data_leads', JSON.stringify(finalData));
+        _cache['leads'] = { data: finalData, ts: Date.now() };
+        return finalData;
+      }
       // Strip photos from Supabase data
       supaData.forEach((l: any) => { delete l.photo; });
       const supaIds = new Set(supaData.map((l: any) => l.id));
