@@ -941,7 +941,20 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
                                              {f.typeDoc === 'devis' ? 'Devis' : f.typeDoc === 'recu' ? 'Reçu d\'avance' : 'Facture'}
                                           </p>
-                                          <p className="text-sm font-black text-slate-900 uppercase">{f.numero}</p>
+                                          <p className="text-sm font-black text-slate-900 uppercase mb-0.5">{f.numero}</p>
+                                          <p className="text-[9px] font-bold text-slate-400 flex items-center gap-1">
+                                            <Clock className="w-3 h-3" />
+                                            {(() => {
+                                              const dateStr = (f as any).created_at || f.date;
+                                              if (!dateStr) return '—';
+                                              const d = new Date(dateStr);
+                                              // Check if it has time component
+                                              if (dateStr.includes('T') || (f as any).created_at) {
+                                                return d.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit' }).replace(',', ' à');
+                                              }
+                                              return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                                            })()}
+                                          </p>
                                        </div>
                                     </div>
                                     
@@ -1286,7 +1299,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                    id: Math.random().toString(36).substr(2, 9),
                                    numero: `REC-${Date.now().toString().slice(-6)}`,
                                    client: currentUser.nom,
-                                   date: new Date().toISOString().split('T')[0],
+                                   date: new Date().toISOString(),
                                    echeance: new Date().toISOString().split('T')[0],
                                    montant: parseFloat(virementMontant),
                                    typeDoc: 'recu',
