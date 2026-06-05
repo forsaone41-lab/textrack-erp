@@ -838,17 +838,23 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                             />
                                           </div>
                                           <div className="space-y-2">
-                                            <div className="flex justify-between items-center">
+                                            <div className="flex justify-between items-center mb-1">
                                               <label className="text-xs font-black text-slate-400 uppercase tracking-widest">{isAr ? 'ملاحظات حول القياسات' : 'Remarques sur les tailles'}</label>
-                                              <label className="flex items-center gap-2 cursor-pointer group">
-                                                <input 
-                                                  type="checkbox" 
-                                                  checked={feedbackData.useSizeTable}
-                                                  onChange={(e) => setFeedbackData(prev => ({ ...prev, useSizeTable: e.target.checked }))}
-                                                  className="accent-amber-500 w-3.5 h-3.5 cursor-pointer"
-                                                />
-                                                <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest group-hover:text-amber-700 transition-colors">{isAr ? 'تعديل حسب كل مقاس' : 'Détailler par taille'}</span>
-                                              </label>
+                                            </div>
+
+                                            <div className="flex bg-slate-100 p-1 rounded-xl w-full mb-3">
+                                              <button 
+                                                onClick={() => setFeedbackData(prev => ({ ...prev, useSizeTable: false }))}
+                                                className={`flex-1 text-[10px] font-black uppercase tracking-widest py-2 rounded-lg transition-all ${!feedbackData.useSizeTable ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+                                              >
+                                                {isAr ? 'ملاحظة عامة' : 'Note Générale'}
+                                              </button>
+                                              <button 
+                                                onClick={() => setFeedbackData(prev => ({ ...prev, useSizeTable: true }))}
+                                                className={`flex-1 text-[10px] font-black uppercase tracking-widest py-2 rounded-lg transition-all ${feedbackData.useSizeTable ? 'bg-white shadow-sm text-amber-600' : 'text-slate-400 hover:text-slate-600'}`}
+                                              >
+                                                {isAr ? 'تعديل بالجدول' : 'Par Taille'}
+                                              </button>
                                             </div>
                                             {feedbackData.useSizeTable ? (
                                               <div className="bg-slate-50 border border-slate-100 rounded-2xl p-3 space-y-2 h-24 overflow-y-auto custom-scrollbar">
