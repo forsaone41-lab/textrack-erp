@@ -1166,9 +1166,9 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                              <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest mb-1">{isAr ? 'البنك' : 'Banque'}</p>
                              <p className="text-lg font-bold tracking-tight">{company.bankName || 'CIH BANK'}</p>
                            </div>
-                           <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center p-2 shadow-sm">
+                           <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
                              {(company.bankName || 'CIH BANK').toLowerCase().includes('cih') ? (
-                               <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-sm">
+                               <svg viewBox="0 0 100 100" className="w-8 h-8 drop-shadow-sm">
                                  <path d="M 20 15 L 70 40 Q 80 45 80 50 L 45 50 L 20 35 Z" fill="#F26522" />
                                  <path d="M 20 85 L 70 60 Q 80 55 80 50 L 45 50 L 20 65 Z" fill="#00AEEF" />
                                </svg>
