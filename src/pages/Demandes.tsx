@@ -1488,6 +1488,7 @@ export default function Demandes() {
                   </div>
                   <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] font-bold text-slate-500 mt-1">
                     <span className="flex items-center gap-1"><Phone className="w-3 h-3 text-indigo-400" /> {lead.phone}</span>
+                    {lead.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3 text-indigo-400" /> {lead.email}</span>}
                     <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-rose-400" /> {lead.ville || '-'}</span>
                     <span className="flex items-center gap-1"><Calendar className="w-3 h-3 text-slate-400" /> {new Date(lead.date).toLocaleDateString()} {new Date(lead.date).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span>
                     {lead.contactedAt && <span className="flex items-center gap-1 text-emerald-600"><MessageSquare className="w-3 h-3" /> {new Date(lead.contactedAt).toLocaleDateString()} {new Date(lead.contactedAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span>}
