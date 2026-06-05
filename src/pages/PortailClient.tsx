@@ -48,6 +48,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [company, setCompany] = useState<CompanyProfile>(loadCompanyProfile());
   const [feedbackCmdId, setFeedbackCmdId] = useState<string | null>(null);
   const [feedbackData, setFeedbackData] = useState<{rating: number, fabricNotes: string, sizeNotes: string, generalNotes: string, useSizeTable: boolean, sizeTableNotes: Record<string, string>}>({ rating: 0, fabricNotes: '', sizeNotes: '', generalNotes: '', useSizeTable: false, sizeTableNotes: {} });
+  const [hoverRating, setHoverRating] = useState<number>(0);
   const { isAr, toggle } = useLang();
 
   useEffect(() => {
@@ -815,22 +816,31 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                         <div className="flex flex-col items-center gap-3">
                                           <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">{isAr ? 'تقييمك العام للعينة' : 'Votre note globale'}</p>
                                           <div className="flex gap-2">
-                                            {[1, 2, 3, 4, 5].map(star => (
-                                              <button
-                                                key={star}
-                                                onClick={() => setFeedbackData(prev => ({ ...prev, rating: star }))}
-                                                className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${feedbackData.rating >= star ? 'bg-amber-400 text-white scale-110 shadow-lg shadow-amber-200' : 'bg-slate-50 text-slate-300 hover:bg-amber-100 hover:text-amber-400'}`}
-                                              >
-                                                <Star className={`w-6 h-6 ${feedbackData.rating >= star ? 'fill-white' : ''}`} />
-                                              </button>
-                                            ))}
+                                            {[1, 2, 3, 4, 5].map(star => {
+                                              const isActive = hoverRating ? hoverRating >= star : feedbackData.rating >= star;
+                                              return (
+                                                <button
+                                                  key={star}
+                                                  onMouseEnter={() => setHoverRating(star)}
+                                                  onMouseLeave={() => setHoverRating(0)}
+                                                  onClick={() => setFeedbackData(prev => ({ ...prev, rating: star }))}
+                                                  className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${isActive ? 'bg-amber-400 text-white scale-110 shadow-lg shadow-amber-200' : 'bg-slate-50 text-slate-300 hover:bg-amber-50 hover:text-amber-300'}`}
+                                                >
+                                                  <Star className={`w-6 h-6 ${isActive ? 'fill-white' : ''}`} />
+                                                </button>
+                                              );
+                                            })}
                                           </div>
                                           <div className="h-6 flex items-center justify-center mt-1">
-                                            {feedbackData.rating === 1 && <span className="text-xs font-black text-rose-500 uppercase tracking-widest animate-in fade-in zoom-in duration-300">{isAr ? 'سيئة جداً ولا تصلح 😞' : 'Très Mauvais 😞'}</span>}
-                                            {feedbackData.rating === 2 && <span className="text-xs font-black text-orange-500 uppercase tracking-widest animate-in fade-in zoom-in duration-300">{isAr ? 'غير مرضية تماماً 😕' : 'Insatisfaisant 😕'}</span>}
-                                            {feedbackData.rating === 3 && <span className="text-xs font-black text-amber-500 uppercase tracking-widest animate-in fade-in zoom-in duration-300">{isAr ? 'مقبولة وتحتاج تعديلات 😐' : 'Acceptable Mais 😐'}</span>}
-                                            {feedbackData.rating === 4 && <span className="text-xs font-black text-lime-500 uppercase tracking-widest animate-in fade-in zoom-in duration-300">{isAr ? 'جيدة جداً 😊' : 'Très Bien 😊'}</span>}
-                                            {feedbackData.rating === 5 && <span className="text-xs font-black text-emerald-500 uppercase tracking-widest animate-in fade-in zoom-in duration-300">{isAr ? 'ممتازة ومثالية! 😍' : 'Excellent et Parfait ! 😍'}</span>}
+                                            {(() => {
+                                              const r = hoverRating || feedbackData.rating;
+                                              if (r === 1) return <span className="text-xs font-black text-rose-500 uppercase tracking-widest animate-in fade-in zoom-in duration-200">{isAr ? 'سيئة جداً ولا تصلح 😞' : 'Très Mauvais 😞'}</span>;
+                                              if (r === 2) return <span className="text-xs font-black text-orange-500 uppercase tracking-widest animate-in fade-in zoom-in duration-200">{isAr ? 'غير مرضية تماماً 😕' : 'Insatisfaisant 😕'}</span>;
+                                              if (r === 3) return <span className="text-xs font-black text-amber-500 uppercase tracking-widest animate-in fade-in zoom-in duration-200">{isAr ? 'مقبولة وتحتاج تعديلات 😐' : 'Acceptable Mais 😐'}</span>;
+                                              if (r === 4) return <span className="text-xs font-black text-lime-500 uppercase tracking-widest animate-in fade-in zoom-in duration-200">{isAr ? 'جيدة جداً 😊' : 'Très Bien 😊'}</span>;
+                                              if (r === 5) return <span className="text-xs font-black text-emerald-500 uppercase tracking-widest animate-in fade-in zoom-in duration-200">{isAr ? 'ممتازة ومثالية! 😍' : 'Excellent et Parfait ! 😍'}</span>;
+                                              return null;
+                                            })()}
                                           </div>
                                         </div>
 
