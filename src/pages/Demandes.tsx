@@ -7,6 +7,7 @@ import { generatePDF, generatePDFBlob, printElement } from '../utils/pdf';
 import { sendPushToClient, sendPushToAll } from '../utils/pushNotifications';
 import { compressImage } from '../utils/image';
 import { PageLoader } from '../components/PageLoader';
+import AISpace from './AISpace';
 
 const DEFAULT_TEMPLATES = {
   ar: {
@@ -57,6 +58,7 @@ export default function Demandes() {
   const [pdfProgress, setPdfProgress] = useState<'idle' | 'generating' | 'sharing' | 'done' | 'error'>('idle');
   const [detailsLead, setDetailsLead] = useState<Lead | null>(null);
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
+  const [aiAnalysisLead, setAiAnalysisLead] = useState<Lead | null>(null);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [lensEnabled, setLensEnabled] = useState(false);
   const [lensPos, setLensPos] = useState({ x: 50, y: 50 });
@@ -1520,7 +1522,7 @@ export default function Demandes() {
                                   className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-500 hover:text-white transition-all shadow-sm">✓ {isAr ? 'تأكيد' : 'Valider'}</button>
                               )}
                               {lead.photo && !lead.type.startsWith('RECRUTEMENT:') && (
-                                <button onClick={() => navigate('/ai', { state: { leadAnalysis: lead } })}
+                                <button onClick={() => setAiAnalysisLead(lead)}
                                   className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-fuchsia-50 text-fuchsia-600 border-fuchsia-200 hover:bg-fuchsia-500 hover:text-white transition-all shadow-sm flex items-center gap-1"
                                   title={isAr ? 'تحليل الموديل واستخراج القياسات' : 'Analyser le modèle et extraire les mesures'}>
                                   <Scissors className="w-3.5 h-3.5" /> {isAr ? 'تحليل الموديل' : 'Analyser Modèle'}
@@ -2302,6 +2304,16 @@ export default function Demandes() {
               >
                 {isAr ? 'حفظ التعديلات' : 'Enregistrer'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* AI Analysis Modal */}
+      {aiAnalysisLead && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-6 animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-t-[40px] md:rounded-[40px] w-full max-w-[1400px] h-[95vh] md:h-full mt-[5vh] md:mt-0 overflow-y-auto shadow-2xl relative">
+            <div className="p-4 md:p-8">
+              <AISpace initialLead={aiAnalysisLead} onClose={() => setAiAnalysisLead(null)} />
             </div>
           </div>
         </div>

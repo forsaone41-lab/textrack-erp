@@ -35,7 +35,7 @@ const STANDARD_MESURES: Record<string, { nom: string; valeurs: Record<string, nu
     { nom: 'الطول (Longueur)', valeurs: { S: 100, M: 102, L: 104, XL: 106, XXL: 108 } }
   ]
 };
-export default function AISpace() {
+export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, onClose?: () => void }) {
   const { isAr } = useLang();
   const [aiLangOverride, setAiLangOverride] = useState<'ar' | 'fr' | null>(null);
   const [image, setImage] = useState<string | null>(null);
@@ -134,7 +134,11 @@ export default function AISpace() {
   };
 
   useEffect(() => {
-    if (location.state?.leadAnalysis && leads.length > 0) {
+    if (initialLead) {
+      setTimeout(() => {
+        selectLeadModel(initialLead);
+      }, 300);
+    } else if (location.state?.leadAnalysis && leads.length > 0) {
       const lead = leads.find(l => l.id === location.state.leadAnalysis.id) || location.state.leadAnalysis;
       // Small timeout to let the UI settle
       setTimeout(() => {
@@ -143,7 +147,7 @@ export default function AISpace() {
         navigate('/ai', { replace: true, state: {} });
       }, 500);
     }
-  }, [location.state?.leadAnalysis, leads]);
+  }, [initialLead, location.state?.leadAnalysis, leads]);
 
   const handleCategoryChange = (cat: 'Robe' | 'Caftan' | 'Djellaba' | 'Chemise' | 'Pantalon') => {
     setSelectedCategory(cat);
@@ -703,14 +707,21 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
     <div className="space-y-6 max-w-6xl mx-auto pb-10">
       {/* Header Section */}
       <div className={`flex flex-col md:flex-row md:items-center justify-between gap-6 ${isAr ? 'flex-row-reverse' : ''}`}>
-        <div className={isAr ? 'text-right' : ''}>
-          <div className="flex items-center gap-3 mb-2 justify-start md:justify-start">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-600/20">
-              <Sparkles className="w-6 h-6 text-white" />
+        <div className={`flex items-start gap-4 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+          {onClose && (
+            <button onClick={onClose} className="mt-1 p-2 bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-600 rounded-full transition-all flex-shrink-0">
+               <X className="w-6 h-6" />
+            </button>
+          )}
+          <div>
+            <div className={`flex items-center gap-3 mb-2 justify-start md:justify-start ${isAr ? 'flex-row-reverse' : ''}`}>
+              <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-600/20 flex-shrink-0">
+                <Sparkles className="w-6 h-6 text-white" />
+              </div>
+              <h1 className="text-3xl font-black text-slate-900 tracking-tight uppercase italic">BEYA <span className="text-indigo-600 not-italic">AI</span></h1>
             </div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight uppercase italic">BEYA <span className="text-indigo-600 not-italic">AI</span></h1>
+            <p className="text-slate-500 font-bold text-sm uppercase tracking-widest">{isAr ? 'مساعدك الذكي للتصميم والإنتاج' : 'Votre assistant intelligent de design & production'}</p>
           </div>
-          <p className="text-slate-500 font-bold text-sm uppercase tracking-widest">{isAr ? 'مساعدك الذكي للتصميم والإنتاج' : 'Votre assistant intelligent de design & production'}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
