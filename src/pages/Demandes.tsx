@@ -1643,10 +1643,10 @@ export default function Demandes() {
                         <UserPlus className="w-3.5 h-3.5" />
                       </button>
                     ) : (
-                      <button onClick={() => navigate('/clients', { state: { openClientName: lead.name } })} title="Ouvrir fiche client"
-                        className="h-8 px-2.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-lg border border-emerald-200 text-[9px] font-black flex items-center gap-1 transition-all">
-                        <CheckCircle className="w-3 h-3" /> Fiche →
-                      </button>
+                      <div title={isAr ? "تم إضافته كزبون" : "Ajouté comme Client"}
+                        className="h-8 px-2.5 bg-emerald-50 text-emerald-600 rounded-lg border border-emerald-200 text-[9px] font-black flex items-center gap-1 opacity-80 cursor-default">
+                        <CheckCircle className="w-3 h-3" /> {isAr ? 'تمت الإضافة كزبون' : 'Client Ajouté'}
+                      </div>
                     )}
                   </>
                 )}
