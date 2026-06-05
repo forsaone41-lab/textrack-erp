@@ -1,6 +1,5 @@
-// Dynamic imports for heavy libraries to keep bundle light
-const getHtmlToImage = () => import('html-to-image').then(m => m);
-const getJsPDF = () => import('jspdf').then(m => m.jsPDF || m.default);
+import { jsPDF } from 'jspdf';
+import { toPng } from 'html-to-image';
 
 /**
  * Recursively strips all class attributes from an element and its children
@@ -93,8 +92,6 @@ export async function generatePDF(elementId: string, filename: string) {
   let lastError: any = null;
 
   try {
-    const [htmlToImage, jsPDF] = await Promise.all([getHtmlToImage(), getJsPDF()]);
-
     const options = {
       pixelRatio: 1.5,
       backgroundColor: '#ffffff',
@@ -102,10 +99,10 @@ export async function generatePDF(elementId: string, filename: string) {
     };
 
     // WARM-UP CALL (html-to-image bug: first render is often blank)
-    await htmlToImage.toPng(clone, options).catch(() => {});
+    await toPng(clone, options).catch(() => {});
     
     // ACTUAL CALL
-    const dataUrl = await htmlToImage.toPng(clone, options);
+    const dataUrl = await toPng(clone, options);
 
     if (dataUrl && dataUrl !== 'data:,') {
       // Create image object to get natural dimensions
@@ -163,11 +160,10 @@ export async function generatePDFBlob(elementId: string): Promise<Blob | null> {
   await new Promise(r => requestAnimationFrame(r));
 
   try {
-    const [htmlToImage, jsPDF] = await Promise.all([getHtmlToImage(), getJsPDF()]);
     const options = { pixelRatio: 1.5, backgroundColor: '#ffffff', skipFonts: true };
     
-    await htmlToImage.toPng(clone, options).catch(() => {});
-    const dataUrl = await htmlToImage.toPng(clone, options);
+    await toPng(clone, options).catch(() => {});
+    const dataUrl = await toPng(clone, options);
     
     if (dataUrl && dataUrl !== 'data:,') {
       const img = new Image();
