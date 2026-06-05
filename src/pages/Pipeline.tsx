@@ -56,13 +56,13 @@ export default function Pipeline() {
 
   const filteredLeads = useMemo(() => {
     return leads.filter(l => {
-      const isRecrutement = l.type.startsWith('RECRUTEMENT:');
+      const isRecrutement = (l.type || '').startsWith('RECRUTEMENT:');
       if (category === 'clients' && isRecrutement) return false;
       if (category === 'recrutement' && !isRecrutement) return false;
 
       const matchSearch = l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         l.phone.includes(searchQuery) ||
-        l.type.toLowerCase().includes(searchQuery.toLowerCase());
+        (l.type || '').toLowerCase().includes(searchQuery.toLowerCase());
       if (!matchSearch) return false;
       if (quickFilter === 'devis_sent') return (l.crmPrice || 0) > 0;
       if (quickFilter === 'attente') return l.crmStage === 'attente_confirmation';

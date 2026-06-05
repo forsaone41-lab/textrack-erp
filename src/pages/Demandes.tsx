@@ -162,8 +162,8 @@ export default function Demandes() {
 
   const { prospectsCount, recruitmentCount } = useMemo(() => {
     return {
-      prospectsCount: leads.filter(l => !l.type.startsWith('RECRUTEMENT:')).length,
-      recruitmentCount: leads.filter(l => l.type.startsWith('RECRUTEMENT:')).length
+      prospectsCount: leads.filter(l => !(l.type || '').startsWith('RECRUTEMENT:')).length,
+      recruitmentCount: leads.filter(l => (l.type || '').startsWith('RECRUTEMENT:')).length
     };
   }, [leads]);
 
@@ -555,17 +555,17 @@ export default function Demandes() {
   };
 
   const filteredLeads = useMemo(() => leads.filter(l => {
-    const isRecrutement = l.type.startsWith('RECRUTEMENT:');
+    const isRecrutement = (l.type || '').startsWith('RECRUTEMENT:');
     const matchCategory = category === 'recrutement' ? isRecrutement : !isRecrutement;
     const matchFilter = filter === 'all' || l.status === filter;
     const q = searchQuery.toLowerCase();
-    const matchSearch = !q || l.name.toLowerCase().includes(q) || l.phone.includes(q) || l.type.toLowerCase().includes(q) || (l.ville || '').toLowerCase().includes(q);
+    const matchSearch = !q || l.name.toLowerCase().includes(q) || l.phone.includes(q) || (l.type || '').toLowerCase().includes(q) || (l.ville || '').toLowerCase().includes(q);
     
     let matchType = true;
     let matchExperience = true;
 
     if (category === 'recrutement') {
-      const typeStr = l.type.replace('RECRUTEMENT:', '').trim();
+      const typeStr = (l.type || '').replace('RECRUTEMENT:', '').trim();
       matchType = filterType === 'all' || typeStr === filterType;
       
       const m = l.details?.match(/Expérience:\s*(\d+)/);
@@ -1311,7 +1311,7 @@ export default function Demandes() {
 
       {/* Stats Dashboard + Search */}
       {category === 'clients' && (() => {
-        const clientLeads = leads.filter(l => !l.type.startsWith('RECRUTEMENT:'));
+        const clientLeads = leads.filter(l => !(l.type || '').startsWith('RECRUTEMENT:'));
         const stats = [
           { label: isAr ? 'المجموع' : 'Total', value: clientLeads.length, color: 'bg-slate-800 text-white', onClick: () => setFilter('all') },
           { label: isAr ? 'جدد' : 'Nouveaux', value: clientLeads.filter(l => !l.contactedAt).length, color: 'bg-indigo-500 text-white', onClick: () => setFilter('new') },
@@ -1369,7 +1369,7 @@ export default function Demandes() {
                 className="px-3 py-1.5 rounded-xl text-[10px] font-black border border-slate-200 bg-white text-slate-600 outline-none focus:border-indigo-400"
               >
                 <option value="all">Tous les types</option>
-                {Array.from(new Set(clientLeads.map(l => l.type).filter(t => !t.startsWith('RECRUTEMENT:')))).sort().map(t => (
+                {Array.from(new Set(clientLeads.map(l => l.type || '').filter(t => !t.startsWith('RECRUTEMENT:')))).sort().map(t => (
                   <option key={t} value={t}>{t}</option>
                 ))}
               </select>
@@ -1380,7 +1380,7 @@ export default function Demandes() {
 
       {/* Recrutement Search + Filters */}
       {category === 'recrutement' && (() => {
-        const recrutementLeads = leads.filter(l => l.type.startsWith('RECRUTEMENT:'));
+        const recrutementLeads = leads.filter(l => (l.type || '').startsWith('RECRUTEMENT:'));
         return (
           <div className="space-y-3">
             <div className="relative">
@@ -1407,7 +1407,7 @@ export default function Demandes() {
                 className="px-3 py-1.5 rounded-xl text-[10px] font-black border border-slate-200 bg-white text-slate-600 outline-none focus:border-indigo-400"
               >
                 <option value="all">{isAr ? 'جميع التخصصات' : 'Tous les postes'}</option>
-                {Array.from(new Set(recrutementLeads.map(l => l.type.replace('RECRUTEMENT:', '').trim()))).sort().map(t => (
+                {Array.from(new Set(recrutementLeads.map(l => (l.type || '').replace('RECRUTEMENT:', '').trim()))).sort().map(t => (
                   <option key={t} value={t}>{t}</option>
                 ))}
               </select>
@@ -1671,6 +1671,7 @@ export default function Demandes() {
                     <button onClick={() => clientExists && navigate('/fiches-techniques', { state: { fromLead: lead } })} disabled={!clientExists}
                       className={`w-8 h-8 rounded-lg border flex items-center justify-center transition-all ${clientExists ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white border-indigo-200' : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed opacity-50'}`}
                       title={clientExists ? 'Fiche Technique' : 'Enregistrez le client d\'abord'}>
+                      <FileText className="w-3.5 h-3.5" />
                     </button>
                   );
                 })()}
