@@ -1172,7 +1172,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                         </div>
                         <div className="bg-white/10 backdrop-blur-sm p-5 rounded-2xl border border-white/10">
                            <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest mb-1">{isAr ? 'اسم المستفيد' : 'Bénéficiaire'}</p>
-                           <p className="text-lg font-bold tracking-tight">{company.name}</p>
+                           <p className="text-lg font-bold tracking-tight">{company.bankBeneficiary || company.name}</p>
                         </div>
                         <div className="bg-white/10 backdrop-blur-sm p-5 rounded-2xl border border-white/10 group cursor-pointer hover:bg-white/20 transition-all" onClick={() => {
                           navigator.clipboard.writeText(company.rib || '230000000000000000000000');
@@ -1184,6 +1184,15 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                              <FileText className="w-4 h-4 text-indigo-300 group-hover:text-white transition-colors" />
                            </div>
                         </div>
+
+                        {company.bankQrCode && (
+                          <div className="mt-6 flex flex-col items-center">
+                            <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest mb-3">{isAr ? 'مسح QR Code للدفع السريع' : 'Scanner pour payer'}</p>
+                            <div className="bg-white p-3 rounded-2xl shadow-xl shadow-black/20">
+                              <img src={company.bankQrCode} alt="Bank QR Code" className="w-40 h-40 object-cover rounded-xl" />
+                            </div>
+                          </div>
+                        )}
                      </div>
                   </div>
 

@@ -411,6 +411,8 @@ export interface CompanyProfile {
   email: string;
   bankName?: string;
   rib?: string;
+  bankBeneficiary?: string;
+  bankQrCode?: string;
   landingVideoUrl?: string;
   // About Us Content
   aboutTitleFr?: string;
@@ -491,7 +493,8 @@ export const DEFAULT_COMPANY: CompanyProfile = {
   phone: '+212 6 00 00 00 00',
   email: 'contact@beyacreative.ma',
   bankName: 'CIH BANK',
-  rib: '230 000 0000000000000000 00'
+  rib: '230 000 0000000000000000 00',
+  bankBeneficiary: 'BEYA CREATIVE'
 };
 
 export function loadCompanyProfile(): CompanyProfile {

@@ -688,14 +688,48 @@ export default function Settings() {
             <CreditCard className="w-5 h-5 text-indigo-500" />
             {isAr ? 'المعلومات البنكية (تظهر للعملاء في البوابة)' : 'Coordonnées Bancaires (Portail Client)'}
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1">{isAr ? 'اسم البنك' : 'Nom de la Banque'}</label>
               <input type="text" value={profile.bankName || ''} onChange={e => handleChange('bankName', e.target.value)} placeholder="ex: CIH BANK" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
             </div>
             <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">{isAr ? 'اسم المستفيد' : 'Nom du Bénéficiaire'}</label>
+              <input type="text" value={profile.bankBeneficiary || ''} onChange={e => handleChange('bankBeneficiary', e.target.value)} placeholder="ex: BEYA CREATIVE" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+            </div>
+            <div className="md:col-span-2">
               <label className="block text-sm font-semibold text-slate-700 mb-1">{isAr ? 'رقم الحساب (RIB)' : 'RIB (24 chiffres)'}</label>
               <input type="text" value={profile.rib || ''} onChange={e => handleChange('rib', e.target.value)} placeholder="000 000 0000000000000000 00" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-left" dir="ltr" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">{isAr ? 'كود QR (للدفع السريع)' : 'QR Code (Paiement rapide)'}</label>
+            <div className="flex items-center gap-4">
+              <div className="w-24 h-24 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl overflow-hidden flex items-center justify-center">
+                {profile.bankQrCode ? (
+                  <img src={profile.bankQrCode} className="w-full h-full object-cover" />
+                ) : (
+                  <ImageIcon className="w-6 h-6 text-slate-300" />
+                )}
+              </div>
+              <div className="flex-1">
+                <label className="cursor-pointer bg-white px-4 py-2 border border-slate-200 rounded-lg text-sm font-semibold hover:bg-slate-50 transition-colors inline-block text-slate-700">
+                  {isAr ? 'تحميل صورة QR' : 'Uploader le QR'}
+                  <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const compressed = await compressImage(file);
+                      handleChange('bankQrCode', compressed);
+                    }
+                  }} />
+                </label>
+                {profile.bankQrCode && (
+                  <button onClick={() => handleChange('bankQrCode', '')} className="ml-2 px-3 py-2 text-rose-500 text-sm font-semibold hover:bg-rose-50 rounded-lg transition-colors">
+                    {isAr ? 'إزالة' : 'Supprimer'}
+                  </button>
+                )}
+                <p className="text-xs text-slate-500 mt-2">{isAr ? 'سيظهر الكود في بوابة الكليان ليسهل عليه تحويل المبلغ مباشرة.' : 'Ce QR sera affiché dans le portail client.'}</p>
+              </div>
             </div>
           </div>
         </div>
