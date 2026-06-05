@@ -509,25 +509,6 @@ export default function Commandes() {
                               </div>
                             </div>
                           )}
-                          {/* Advance Phase for normal orders */}
-                          {c.statut !== 'annulé' && c.statut !== 'annulation_demandee' && c.phase !== 'livré' && c.statut !== 'echantillon_en_cours' && c.statut !== 'echantillon_valide' && (
-                            <button
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                const currentIndex = PHASE_ORDER.indexOf(c.phase);
-                                if (currentIndex < PHASE_ORDER.length - 1) {
-                                  const nextPhase = PHASE_ORDER[currentIndex + 1];
-                                  const updated = { ...c, phase: nextPhase as any };
-                                  await saveRecord('commandes', updated);
-                                  setCommandes(prev => prev.map(x => x.id === c.id ? updated : x));
-                                }
-                              }}
-                              title={isAr ? 'تمرير للمرحلة التالية' : 'Passer à la phase suivante'}
-                              className="w-9 h-9 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all shadow-sm active:scale-90"
-                            >
-                              <FastForward className="w-4 h-4" />
-                            </button>
-                          )}
 
                           {/* Phase Dropdown for Echantillons */}
                           {(c.statut === 'echantillon_en_cours' || c.statut === 'echantillon_valide') && (
