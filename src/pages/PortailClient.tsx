@@ -815,14 +815,13 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                         {/* Rating */}
                                         <div className="flex flex-col items-center gap-3">
                                           <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">{isAr ? 'تقييمك العام للعينة' : 'Votre note globale'}</p>
-                                          <div className="flex gap-2">
+                                          <div className="flex gap-2" onMouseLeave={() => setHoverRating(0)}>
                                             {[1, 2, 3, 4, 5].map(star => {
                                               const isActive = hoverRating ? hoverRating >= star : feedbackData.rating >= star;
                                               return (
                                                 <button
                                                   key={star}
                                                   onMouseEnter={() => setHoverRating(star)}
-                                                  onMouseLeave={() => setHoverRating(0)}
                                                   onClick={() => setFeedbackData(prev => ({ ...prev, rating: star }))}
                                                   className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${isActive ? 'bg-amber-400 text-white scale-110 shadow-lg shadow-amber-200' : 'bg-slate-50 text-slate-300 hover:bg-amber-50 hover:text-amber-300'}`}
                                                 >
