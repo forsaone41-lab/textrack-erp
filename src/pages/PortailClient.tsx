@@ -876,7 +876,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                             </div>
                                             {feedbackData.useSizeTable ? (
                                               <div className="space-y-3">
-                                                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-3 h-40 overflow-auto custom-scrollbar relative">
+                                                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-3 w-full overflow-x-auto custom-scrollbar relative">
                                                 <table className="w-full text-left border-collapse">
                                                   <thead>
                                                     <tr>
