@@ -127,6 +127,13 @@ export interface Commande {
   tissus?: { id: string; type: string; couleur: string; conso: number; prix: number; sourcing: string }[];
   tissuConsommation?: number;
   typeDossier?: 'creations' | 'sous_traitance' | 'uniformes' | 'production' | 'service';
+  sampleFeedback?: {
+    rating: number;
+    fabricNotes?: string;
+    sizeNotes?: string;
+    generalNotes?: string;
+    approved: boolean;
+  };
 }
 
 export interface Stock {

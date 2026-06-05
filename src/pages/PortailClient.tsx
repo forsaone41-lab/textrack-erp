@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info } from 'lucide-react';
+import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star } from 'lucide-react';
 import {
   Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile, saveRecord, Lead, loadLeads, loadLeadPhoto
 } from '../types';
@@ -46,6 +46,8 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [showInvoiceView, setShowInvoiceView] = useState(false);
   const [selectedFacture, setSelectedFacture] = useState<Facture | null>(null);
   const [company, setCompany] = useState<CompanyProfile>(loadCompanyProfile());
+  const [feedbackCmdId, setFeedbackCmdId] = useState<string | null>(null);
+  const [feedbackData, setFeedbackData] = useState({ rating: 0, fabricNotes: '', sizeNotes: '', generalNotes: '' });
   const { isAr, toggle } = useLang();
 
   useEffect(() => {
@@ -803,29 +805,110 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 
                            {/* Confirmation Box when Delivered but not validated */}
                            {cmd.phase === 'livré' && cmd.statut === 'echantillon_en_cours' && (
-                              <div className="mt-8 bg-white border border-amber-200 rounded-[2rem] p-6 shadow-xl shadow-amber-100 animate-in fade-in slide-in-from-bottom-4 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
-                                 <div>
-                                    <h5 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-1">{isAr ? 'هل توصلت بالعينة؟' : 'Avez-vous reçu l\'échantillon ?'}</h5>
-                                    <p className="text-xs font-bold text-slate-500">{isAr ? 'قم بتأكيد الموافقة لبدء الإنتاج الفعلي.' : 'Confirmez pour valider et lancer la production.'}</p>
-                                 </div>
-                                 <button 
-                                   onClick={async () => {
-                                      try {
-                                         const updated = { ...cmd, statut: 'echantillon_valide' as const };
-                                         await saveRecord('commandes', updated);
-                                         setFound(prev => prev.map(c => c.id === cmd.id ? updated : c));
-                                         const { sendPushToAll } = await import('../utils/pushNotifications');
-                                         sendPushToAll(
-                                           isAr ? '✅ عينة مقبولة' : '✅ Échantillon validé',
-                                           `${cmd.client} — ${cmd.modele}`,
-                                           '/commandes'
-                                         );
-                                      } catch(err) {}
-                                   }}
-                                   className="w-full md:w-auto px-8 py-4 bg-emerald-500 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-emerald-200 hover:bg-emerald-600 hover:scale-105 transition-all group/btn flex items-center justify-center gap-2"
-                                 >
-                                   <Check className="w-5 h-5 group-hover:scale-125 transition-transform" /> {isAr ? 'تأكيد وموافقة' : 'Confirmer & Valider'}
-                                 </button>
+                              <div className="mt-8 bg-white border border-amber-200 rounded-[2rem] p-6 shadow-xl shadow-amber-100 animate-in fade-in slide-in-from-bottom-4">
+                                {feedbackCmdId === cmd.id ? (
+                                  <div className="animate-in fade-in slide-in-from-bottom-4 text-left">
+                                     <h5 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-6 text-center">{isAr ? 'تقييم العينة والملاحظات' : 'Évaluation et Remarques'}</h5>
+                                     
+                                     <div className="space-y-6 max-w-2xl mx-auto">
+                                        {/* Rating */}
+                                        <div className="flex flex-col items-center gap-3">
+                                          <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">{isAr ? 'تقييمك العام للعينة' : 'Votre note globale'}</p>
+                                          <div className="flex gap-2">
+                                            {[1, 2, 3, 4, 5].map(star => (
+                                              <button
+                                                key={star}
+                                                onClick={() => setFeedbackData(prev => ({ ...prev, rating: star }))}
+                                                className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${feedbackData.rating >= star ? 'bg-amber-400 text-white scale-110 shadow-lg shadow-amber-200' : 'bg-slate-50 text-slate-300 hover:bg-amber-50 hover:text-amber-300'}`}
+                                              >
+                                                <Star className={`w-6 h-6 ${feedbackData.rating >= star ? 'fill-white' : ''}`} />
+                                              </button>
+                                            ))}
+                                          </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                          <div className="space-y-2">
+                                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest">{isAr ? 'ملاحظات حول القماش / الثوب' : 'Remarques sur le tissu'}</label>
+                                            <textarea 
+                                              value={feedbackData.fabricNotes}
+                                              onChange={(e) => setFeedbackData(prev => ({ ...prev, fabricNotes: e.target.value }))}
+                                              className={`w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-medium focus:ring-2 focus:ring-amber-400 outline-none resize-none h-24 ${isAr ? 'text-right' : 'text-left'}`}
+                                              placeholder={isAr ? 'هل أعجبك نوع الثوب؟...' : 'Avez-vous aimé le type de tissu ?...'}
+                                            />
+                                          </div>
+                                          <div className="space-y-2">
+                                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest">{isAr ? 'ملاحظات حول القياسات' : 'Remarques sur les tailles'}</label>
+                                            <textarea 
+                                              value={feedbackData.sizeNotes}
+                                              onChange={(e) => setFeedbackData(prev => ({ ...prev, sizeNotes: e.target.value }))}
+                                              className={`w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-medium focus:ring-2 focus:ring-amber-400 outline-none resize-none h-24 ${isAr ? 'text-right' : 'text-left'}`}
+                                              placeholder={isAr ? 'هل القياسات مضبوطة؟...' : 'Les mensurations sont-elles correctes ?...'}
+                                            />
+                                          </div>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                          <label className="text-xs font-black text-slate-400 uppercase tracking-widest">{isAr ? 'ملاحظات عامة وتعديلات مطلوبة' : 'Modifications requises & Remarques'}</label>
+                                          <textarea 
+                                            value={feedbackData.generalNotes}
+                                            onChange={(e) => setFeedbackData(prev => ({ ...prev, generalNotes: e.target.value }))}
+                                            className={`w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-medium focus:ring-2 focus:ring-amber-400 outline-none resize-none h-24 ${isAr ? 'text-right' : 'text-left'}`}
+                                            placeholder={isAr ? 'أي تعديلات أخرى قبل بدء الإنتاج...' : 'Toute autre modification avant la production...'}
+                                          />
+                                        </div>
+
+                                        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                                           <button 
+                                             onClick={() => setFeedbackCmdId(null)}
+                                             className="px-6 py-4 bg-slate-100 text-slate-500 font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-200 transition-all"
+                                           >
+                                             {isAr ? 'إلغاء' : 'Annuler'}
+                                           </button>
+                                           <button 
+                                             disabled={feedbackData.rating === 0}
+                                             onClick={async () => {
+                                                try {
+                                                   const updated: Commande = { 
+                                                     ...cmd, 
+                                                     statut: 'echantillon_valide',
+                                                     sampleFeedback: { ...feedbackData, approved: true } 
+                                                   };
+                                                   await saveRecord('commandes', updated);
+                                                   setFound(prev => prev.map(c => c.id === cmd.id ? updated : c));
+                                                   const { sendPushToAll } = await import('../utils/pushNotifications');
+                                                   sendPushToAll(
+                                                     isAr ? '✅ عينة مقبولة مع ملاحظات' : '✅ Échantillon validé avec remarques',
+                                                     `${cmd.client} — ${cmd.modele}`,
+                                                     '/commandes'
+                                                   );
+                                                   setFeedbackCmdId(null);
+                                                } catch(err) {}
+                                             }}
+                                             className="px-8 py-4 bg-emerald-500 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-emerald-200 hover:bg-emerald-600 hover:scale-105 transition-all disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2"
+                                           >
+                                             <Check className="w-5 h-5" /> {isAr ? 'إرسال وموافقة' : 'Envoyer & Valider'}
+                                           </button>
+                                        </div>
+                                     </div>
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+                                     <div>
+                                        <h5 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-1">{isAr ? 'هل توصلت بالعينة؟' : 'Avez-vous reçu l\'échantillon ?'}</h5>
+                                        <p className="text-xs font-bold text-slate-500">{isAr ? 'قم بإضافة ملاحظاتك وتأكيد الموافقة لبدء الإنتاج الفعلي.' : 'Ajoutez vos remarques et confirmez pour lancer la production.'}</p>
+                                     </div>
+                                     <button 
+                                       onClick={() => {
+                                          setFeedbackCmdId(cmd.id);
+                                          setFeedbackData({ rating: 0, fabricNotes: '', sizeNotes: '', generalNotes: '' });
+                                       }}
+                                       className="w-full md:w-auto px-8 py-4 bg-emerald-500 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-emerald-200 hover:bg-emerald-600 hover:scale-105 transition-all group/btn flex items-center justify-center gap-2"
+                                     >
+                                       <Star className="w-5 h-5 group-hover:scale-125 transition-transform" /> {isAr ? 'تقييم وموافقة' : 'Évaluer & Valider'}
+                                     </button>
+                                  </div>
+                                )}
                               </div>
                            )}
                         </div>
