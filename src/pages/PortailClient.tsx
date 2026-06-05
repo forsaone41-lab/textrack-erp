@@ -1194,9 +1194,15 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                            <div className="flex items-center justify-between relative z-10">
                              <p className="text-xl font-black tracking-[0.1em] font-mono">{company.rib || '230 000 00000000000000 00'}</p>
                              {ribCopied ? (
-                               <Check className="w-5 h-5 text-emerald-400" />
+                               <div className="flex items-center gap-1.5 bg-emerald-500/20 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+                                 <Check className="w-4 h-4 text-emerald-400" />
+                                 <span className="text-[10px] font-black uppercase text-emerald-400">{isAr ? 'تم' : 'Copié'}</span>
+                               </div>
                              ) : (
-                               <FileText className="w-4 h-4 text-indigo-300 group-hover:text-white transition-colors" />
+                               <div className="flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-lg border border-white/10 group-hover:bg-white/20 group-hover:border-white/30 transition-all">
+                                 <FileText className="w-4 h-4 text-indigo-300 group-hover:text-white transition-colors" />
+                                 <span className="text-[10px] font-black uppercase text-indigo-300 group-hover:text-white transition-colors">{isAr ? 'نسخ' : 'Copier'}</span>
+                               </div>
                              )}
                            </div>
                         </div>
