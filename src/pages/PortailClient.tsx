@@ -1277,7 +1277,9 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                   <div className={`grid grid-cols-2 sm:grid-cols-3 gap-3 ${isAr ? 'direction-rtl' : ''}`}>
                                     {found.map(c => {
                                       const isSelected = virementCommandeId === c.id;
-                                      const imgUrl = (c as any).modelePhoto || c.photo || (c as any).tissuPhoto || null;
+                                      const matchingLead = mesDemandes.find(l => l.type === c.modele);
+                                      const leadImgUrl = matchingLead ? leadPhotos[matchingLead.id] : null;
+                                      const imgUrl = (c as any).modelePhoto || c.photo || (c as any).tissuPhoto || leadImgUrl || null;
                                       return (
                                         <div 
                                           key={c.id}

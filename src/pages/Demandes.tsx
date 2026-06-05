@@ -225,7 +225,7 @@ export default function Demandes() {
         modele: lead.type,
         tissu: confirmDetails.tissu || 'À définir',
         tissuPhoto: confirmDetails.tissuPhoto || undefined,
-        modelePhoto: confirmDetails.modelePhoto || undefined,
+        modelePhoto: confirmDetails.modelePhoto || lead.photo || undefined,
         couleurs: confirmDetails.couleurs.split(',').map(c => c.trim()).filter(c => c),
         tailles: confirmDetails.tailles,
         quantite: lead.quantity,
@@ -238,7 +238,7 @@ export default function Demandes() {
         avance: Number(confirmDetails.avance) || 0,
         rebut: 0,
         statut: 'echantillon_en_cours',
-        suivi: [{ phase: 'patronage', date: new Date().toISOString(), note: 'Demande d\'échantillon envoyée au modélisme' }]
+        suivi: [{ phase: 'patronage', date: new Date().toISOString(), note: 'Prix/délai validés et échantillon lancé (Avance payée)' }]
       };
 
       await saveRecord('commandes', newOrder);
@@ -853,10 +853,10 @@ export default function Demandes() {
               </div>
               <div>
                 <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">
-                  {isAr ? 'طلب عينة (Échantillon)' : 'Demande d\'Échantillon'}
+                  {isAr ? 'تأكيد السعر والوقت' : 'Validation Prix & Délai'}
                 </h3>
                 <p className="text-slate-500 font-bold text-xs uppercase tracking-widest mt-1">
-                  {isAr ? 'مرحلة الموافقة قبل الإنتاج الشامل' : 'Phase de validation avant production'}
+                  {isAr ? 'مرحلة تأكيد التكلفة والوقت لإطلاق العينة' : 'Validation du coût et délai pour lancer l\'échantillon'}
                 </p>
               </div>
             </div>
@@ -1100,8 +1100,8 @@ export default function Demandes() {
                 onClick={handleConvert}
                 className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-200 flex items-center justify-center gap-2"
               >
-                <Scissors className="w-4 h-4" />
-                {isAr ? 'إطلاق العينة (Échantillon)' : 'Lancer l\'Échantillon'}
+                <CheckCircle className="w-4 h-4" />
+                {isAr ? 'تأكيد وإطلاق العينة' : 'Valider & Lancer l\'Échantillon'}
               </button>
             </div>
           </div>
@@ -1123,8 +1123,8 @@ export default function Demandes() {
             </h3>
             <p className="text-slate-500 font-medium leading-relaxed mb-8">
               {isAr
-                ? `لقد تم طلب العينة لـ "${successLead.name}" بنجاح. بمجرد موافقة الزبون على العينة، يمكنك إطلاق الإنتاج الشامل واقتطاع الثوب من الستوك.`
-                : `La demande d'échantillon pour "${successLead.name}" a été lancée. Une fois validée par le client, vous pourrez lancer la production globale et déduire le tissu du stock.`}
+                ? `تم تأكيد السعر والوقت لـ "${successLead.name}" بنجاح. سيتم إطلاق العينة بما أنه تم دفع التسبيق (ثمن العينة أو 50% من الطلبية).`
+                : `Prix et délai validés pour "${successLead.name}". L'échantillon est lancé suite au paiement de l'avance (prix échantillon ou 50%).`}
             </p>
 
             <div className="bg-amber-50 rounded-2xl p-4 mb-10 border border-amber-100">
