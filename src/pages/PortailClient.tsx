@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw } from 'lucide-react';
+import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send } from 'lucide-react';
 import {
   Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile, saveRecord, Lead, loadLeads, loadLeadPhoto
 } from '../types';
@@ -71,9 +71,15 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [orderSent, setOrderSent] = useState(false);
   const [loading, setLoading] = useState(true);
   const [uploadingPreuve, setUploadingPreuve] = useState<string | null>(null);
-  const [annulationModal, setAnnulationModal] = useState<{ cmdId: string; ref: string } | null>(null);
+  const [annulationModal, setAnnulationModal] = useState<{ cmdId: string, cmdRef: string } | null>(null);
   const [annulationRaison, setAnnulationRaison] = useState('');
   const [annulationSending, setAnnulationSending] = useState(false);
+
+  // Virement states
+  const [virementPhoto, setVirementPhoto] = useState<string | null>(null);
+  const [virementMontant, setVirementMontant] = useState('');
+  const [sendingVirement, setSendingVirement] = useState(false);
+  const [virementSent, setVirementSent] = useState(false);
 
   // Helper for translating phase names
   const phaseAr: Record<string, string> = { 
@@ -297,6 +303,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                 { id: 'demandes', icon: <MessageCircle className="w-5 h-5" />, label: isAr ? 'طلباتي' : 'Mes Demandes' },
                 { id: 'orders', icon: <Package className="w-5 h-5" />, label: isAr ? 'طلبياتي' : 'Mes Commandes' },
                 { id: 'docs', icon: <Receipt className="w-5 h-5" />, label: isAr ? 'الفواتير والوثائق' : 'Factures & Docs' },
+                { id: 'payments', icon: <CreditCard className="w-5 h-5" />, label: isAr ? 'الدفع والأداء' : 'Paiements' },
                 { id: 'support', icon: <Bell className="w-5 h-5" />, label: isAr ? 'الدعم الفني VIP' : 'Support VIP' },
               ].map((item) => (
                 <button
@@ -351,6 +358,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
               <h2 className="text-base md:text-2xl font-black text-slate-900 uppercase tracking-tighter truncate max-w-[150px] md:max-w-none">
                 {activeTab === 'overview' ? (isAr ? 'لوحة التحكم' : 'Tableau de Bord') :
                  activeTab === 'orders' ? (isAr ? 'الطلبيات' : 'Commandes') :
+                 activeTab === 'payments' ? (isAr ? 'الدفع والأداء' : 'Paiements') :
                  activeTab === 'docs' ? (isAr ? 'الوثائق' : 'Documents') :
                  activeTab === 'info' ? (isAr ? 'معلومات وأسعار' : 'Infos & Prix') :
                  (isAr ? 'الدعم' : 'Support')}
@@ -808,7 +816,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                          {/* Annulation button */}
                          {cmd.statut !== 'annulé' && cmd.statut !== 'annulation_demandee' && cmd.statut !== 'livré' && (
                            <button
-                             onClick={() => { setAnnulationModal({ cmdId: cmd.id, ref: cmd.reference }); setAnnulationRaison(''); }}
+                             onClick={() => { setAnnulationModal({ cmdId: cmd.id, cmdRef: cmd.reference }); setAnnulationRaison(''); }}
                              className="flex items-center gap-1.5 px-3 py-1.5 text-rose-400 border border-rose-200 bg-rose-50 hover:bg-rose-100 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all"
                            >
                              ✕ {isAr ? 'طلب الإلغاء' : 'Annuler'}
@@ -1136,6 +1144,150 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                    </>
                  );
                })()}
+            </div>
+          )}
+
+          {activeTab === 'payments' && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+               <div className="flex items-center justify-between">
+                 <h2 className="text-3xl font-black uppercase tracking-tighter text-slate-800">{isAr ? 'الدفع والأداء' : 'Paiements & Virements'}</h2>
+               </div>
+               
+               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Bank Info */}
+                  <div className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-[2rem] p-8 text-white relative overflow-hidden shadow-xl shadow-indigo-900/20">
+                     <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
+                     <Building className="w-12 h-12 text-indigo-400 mb-6 relative z-10" />
+                     <h3 className="text-xl font-black uppercase tracking-widest mb-6 text-indigo-100 relative z-10">{isAr ? 'المعلومات البنكية' : 'Coordonnées Bancaires'}</h3>
+                     
+                     <div className="space-y-4 relative z-10">
+                        <div className="bg-white/10 backdrop-blur-sm p-5 rounded-2xl border border-white/10 flex items-center justify-between">
+                           <div>
+                             <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest mb-1">{isAr ? 'البنك' : 'Banque'}</p>
+                             <p className="text-lg font-bold tracking-tight">CIH BANK</p>
+                           </div>
+                           <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
+                             <Building className="w-5 h-5 text-indigo-300" />
+                           </div>
+                        </div>
+                        <div className="bg-white/10 backdrop-blur-sm p-5 rounded-2xl border border-white/10">
+                           <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest mb-1">{isAr ? 'اسم المستفيد' : 'Bénéficiaire'}</p>
+                           <p className="text-lg font-bold tracking-tight">{company.name}</p>
+                        </div>
+                        <div className="bg-white/10 backdrop-blur-sm p-5 rounded-2xl border border-white/10 group cursor-pointer hover:bg-white/20 transition-all" onClick={() => {
+                          navigator.clipboard.writeText('230000000000000000000000');
+                          alert(isAr ? 'تم النسخ!' : 'RIB copié !');
+                        }}>
+                           <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest mb-1">{isAr ? 'رقم الحساب (RIB)' : 'RIB (24 chiffres)'}</p>
+                           <div className="flex items-center justify-between">
+                             <p className="text-xl font-black tracking-[0.1em] font-mono">230 000 00000000000000 00</p>
+                             <FileText className="w-4 h-4 text-indigo-300 group-hover:text-white transition-colors" />
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+
+                  {/* Upload Receipt */}
+                  <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/40 flex flex-col">
+                     <h3 className="text-xl font-black uppercase tracking-tighter mb-2 text-slate-800">{isAr ? 'تأكيد الدفع' : 'Confirmer un paiement'}</h3>
+                     <p className="text-xs text-slate-500 font-bold mb-6">{isAr ? 'أرسل لنا صورة من التوصيل البنكي أو السكرينشوت' : 'Envoyez-nous le reçu ou screenshot de votre virement'}</p>
+                     
+                     {virementSent ? (
+                        <div className="flex-1 flex flex-col items-center justify-center text-center py-8 animate-in zoom-in duration-500">
+                           <div className="w-20 h-20 bg-emerald-100 rounded-[2rem] flex items-center justify-center text-emerald-600 mb-4 shadow-lg shadow-emerald-100">
+                             <CircleCheck className="w-10 h-10" />
+                           </div>
+                           <h4 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-2">{isAr ? 'تم الإرسال بنجاح!' : 'Reçu envoyé !'}</h4>
+                           <p className="text-sm font-medium text-slate-500">{isAr ? 'سيتم مراجعة التوصيل وتأكيد الدفع في أقرب وقت.' : 'Votre paiement sera validé prochainement.'}</p>
+                           <button onClick={() => setVirementSent(false)} className="mt-6 px-6 py-3 bg-slate-50 text-slate-600 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-100 transition-colors">
+                              {isAr ? 'إرسال توصيل آخر' : 'Nouveau paiement'}
+                           </button>
+                        </div>
+                     ) : (
+                        <div className="space-y-6 flex-1 flex flex-col">
+                           <div>
+                              <label className={`block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ${isAr ? 'text-right' : ''}`}>{isAr ? 'المبلغ المحول (درهم)' : 'Montant viré (MAD)'}</label>
+                              <div className="relative">
+                                <input 
+                                  type="number" 
+                                  value={virementMontant}
+                                  onChange={e => setVirementMontant(e.target.value)}
+                                  placeholder="0.00"
+                                  className={`w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-lg font-black outline-none focus:border-indigo-500 transition-colors ${isAr ? 'text-right' : ''}`}
+                                />
+                                <span className={`absolute top-1/2 -translate-y-1/2 text-slate-400 font-black ${isAr ? 'left-5' : 'right-5'}`}>MAD</span>
+                              </div>
+                           </div>
+                           
+                           <div className="flex-1">
+                              <label className={`block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ${isAr ? 'text-right' : ''}`}>{isAr ? 'صورة التوصيل' : 'Photo du reçu'}</label>
+                              <div className="relative h-40 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center overflow-hidden hover:border-indigo-400 transition-colors cursor-pointer group">
+                                {virementPhoto ? (
+                                  <>
+                                    <img src={virementPhoto} className="w-full h-full object-cover" />
+                                    <button onClick={() => setVirementPhoto(null)} className="absolute top-2 right-2 p-1.5 bg-rose-500 text-white rounded-full shadow-lg"><X className="w-4 h-4" /></button>
+                                  </>
+                                ) : (
+                                  <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer">
+                                    <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                      <Upload className="w-5 h-5 text-indigo-400" />
+                                    </div>
+                                    <span className="text-xs font-black text-slate-500 uppercase tracking-widest">{isAr ? 'اضغط لرفع الصورة' : 'Cliquez pour uploader'}</span>
+                                    <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) {
+                                        try {
+                                          const compressed = await compressImage(file);
+                                          setVirementPhoto(compressed);
+                                        } catch (err) {}
+                                      }
+                                    }} />
+                                  </label>
+                                )}
+                              </div>
+                           </div>
+
+                           <button 
+                             disabled={sendingVirement || !virementPhoto || !virementMontant}
+                             onClick={async () => {
+                               if(!currentUser || !virementMontant || !virementPhoto) return;
+                               setSendingVirement(true);
+                               try {
+                                 const newFacture: Facture = {
+                                   id: Math.random().toString(36).substr(2, 9),
+                                   numero: `REC-${Date.now().toString().slice(-6)}`,
+                                   client: currentUser.nom,
+                                   date: new Date().toISOString().split('T')[0],
+                                   montant: parseFloat(virementMontant),
+                                   type: 'recu',
+                                   statut: 'en_attente',
+                                   methode: 'virement',
+                                   items: [],
+                                   scan: virementPhoto
+                                 };
+                                 await saveRecord('factures', newFacture);
+                                 try {
+                                   const { sendPushToAll } = await import('../utils/pushNotifications');
+                                   sendPushToAll(isAr ? '💰 توصيل دفع جديد' : '💰 Nouveau Reçu', `${currentUser.nom} - ${virementMontant} MAD`, '/recus');
+                                 } catch (_) {}
+                                 setVirementSent(true);
+                                 setVirementMontant('');
+                                 setVirementPhoto(null);
+                               } catch (err) {
+                                 console.error(err);
+                               } finally {
+                                 setSendingVirement(false);
+                               }
+                             }}
+                             className="w-full py-4 bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-indigo-600/30"
+                           >
+                             {sendingVirement ? <RotateCw className="w-5 h-5 animate-spin" /> : <Send className="w-4 h-4" />}
+                             {isAr ? 'إرسال التوصيل' : 'Envoyer le reçu'}
+                           </button>
+                        </div>
+                     )}
+                  </div>
+               </div>
             </div>
           )}
 
