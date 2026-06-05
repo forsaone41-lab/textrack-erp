@@ -590,27 +590,47 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                              
                              {/* Production Roadmap Icons */}
                              <div className="relative pt-4 px-2">
-                                <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-slate-100 -translate-y-1/2 z-0" />
-                                <div className="relative z-10 flex justify-between items-center">
-                                   {PHASE_ORDER.map((p, idx) => {
-                                     const isCompleted = getPhaseIndex(cmd.phase) >= idx;
-                                     const isCurrent = cmd.phase === p;
-                                     return (
-                                       <div key={p} className="flex flex-col items-center gap-1 md:gap-2 group/step">
-                                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-500 ${
-                                            isCompleted 
-                                              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 scale-110' 
-                                              : 'bg-white text-slate-300 border border-slate-100'
-                                          } ${isCurrent ? 'ring-4 ring-indigo-50' : ''}`}>
-                                             {phaseIcons[p]}
-                                          </div>
-                                          <span className={`text-[8px] font-black uppercase tracking-tighter ${isCompleted ? 'text-indigo-600' : 'text-slate-400'}`}>
-                                             {isAr ? phaseAr[p] : PHASE_LABELS[p]}
-                                          </span>
-                                       </div>
-                                     );
-                                   })}
-                                </div>
+                               {cmd.statut === 'echantillon_en_cours' || cmd.statut === 'echantillon_valide' ? (
+                                  <div className="relative z-10 flex justify-between items-center px-4">
+                                     <div className="absolute top-1/2 left-8 right-8 h-1 bg-amber-100 -translate-y-1/2 z-0" />
+                                     <div className="relative z-10 flex flex-col items-center gap-1 group/step">
+                                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${cmd.statut === 'echantillon_en_cours' && cmd.phase !== 'livré' ? 'bg-amber-500 text-white shadow-lg ring-4 ring-amber-50 scale-110' : 'bg-amber-500 text-white'}`}><Scissors className="w-4 h-4" /></div>
+                                        <span className="text-[8px] font-black uppercase tracking-tighter text-amber-600">{isAr ? 'الإنتاج' : 'Production'}</span>
+                                     </div>
+                                     <div className="relative z-10 flex flex-col items-center gap-1 group/step">
+                                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${(cmd.phase === 'livré' && cmd.statut === 'echantillon_en_cours') || cmd.statut === 'echantillon_valide' ? 'bg-amber-500 text-white shadow-lg ring-4 ring-amber-50 scale-110' : 'bg-white text-slate-300 border-2 border-slate-100'}`}><Truck className="w-4 h-4" /></div>
+                                        <span className="text-[8px] font-black uppercase tracking-tighter text-slate-400">{isAr ? 'التسليم' : 'Livraison'}</span>
+                                     </div>
+                                     <div className="relative z-10 flex flex-col items-center gap-1 group/step">
+                                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${cmd.statut === 'echantillon_valide' ? 'bg-emerald-500 text-white shadow-lg ring-4 ring-emerald-50 scale-110' : 'bg-white text-slate-300 border-2 border-slate-100'}`}><Check className="w-4 h-4" /></div>
+                                        <span className="text-[8px] font-black uppercase tracking-tighter text-slate-400">{isAr ? 'تأكيد' : 'Validation'}</span>
+                                     </div>
+                                  </div>
+                               ) : (
+                                  <>
+                                  <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-slate-100 -translate-y-1/2 z-0" />
+                                  <div className="relative z-10 flex justify-between items-center">
+                                     {PHASE_ORDER.map((p, idx) => {
+                                       const isCompleted = getPhaseIndex(cmd.phase) >= idx;
+                                       const isCurrent = cmd.phase === p;
+                                       return (
+                                         <div key={p} className="flex flex-col items-center gap-1 md:gap-2 group/step">
+                                            <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-500 ${
+                                              isCompleted 
+                                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 scale-110' 
+                                                : 'bg-white text-slate-300 border border-slate-100'
+                                            } ${isCurrent ? 'ring-4 ring-indigo-50' : ''}`}>
+                                               {phaseIcons[p]}
+                                            </div>
+                                            <span className={`text-[8px] font-black uppercase tracking-tighter ${isCompleted ? 'text-indigo-600' : 'text-slate-400'}`}>
+                                               {isAr ? phaseAr[p] : PHASE_LABELS[p]}
+                                            </span>
+                                         </div>
+                                       );
+                                     })}
+                                  </div>
+                                  </>
+                               )}
                              </div>
                           </div>
                         </div>
@@ -738,52 +758,125 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                       </div>
 
                       {/* Roadmap Section */}
-                      <div className="p-2 md:p-8 text-center md:text-left">
-                          <div className="flex flex-col md:flex-row justify-between items-center gap-3 md:gap-0 mb-4 md:mb-8">
-                             <div className="flex flex-col items-center md:items-start gap-1 w-full md:w-auto">
-                                <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500 rounded-full shadow-lg shadow-emerald-500/20">
-                                   <span className="relative flex h-2 w-2">
-                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                                     <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                                   </span>
-                                   <span className="text-[8px] md:text-[9px] font-black text-white uppercase tracking-[0.2em]">{isAr ? 'تتبع مباشر' : 'Live Tracking'}</span>
-                                </div>
-                                <h4 className="text-xs md:text-sm font-black text-slate-500 uppercase tracking-widest mt-1">{isAr ? 'مسار الإنتاج الدقيق' : 'Precision Production Flow'}</h4>
-                             </div>
-                             
-                             <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 w-full md:w-auto">
-                                <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl w-full md:w-auto justify-center">
-                                   <div className="w-2 h-2 bg-indigo-500 rounded-full shadow-sm" />
-                                   <span className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest">{isAr ? 'جودة مضمونة' : 'Crafted with Precision'}</span>
-                                </div>
-                                <div className="text-indigo-600 font-black text-xl bg-indigo-50 px-5 py-1.5 rounded-xl border border-indigo-100 shadow-sm w-full md:w-auto text-center">{Math.round((getPhaseIndex(cmd.phase) / (PHASE_ORDER.length - 1)) * 100)}%</div>
-                             </div>
-                          </div>
-                          
-                          <div className="relative pt-2 md:pt-4 pb-1 md:pb-2 overflow-x-auto no-scrollbar">
-                             <div className="absolute top-1/2 left-0 right-0 h-1 bg-slate-100 -translate-y-1/2 z-0 rounded-full min-w-[320px] md:min-w-0" />
-                             <div className="relative z-10 flex justify-between items-center min-w-[320px] md:min-w-0 px-2 md:px-0">
-                                {PHASE_ORDER.map((p, idx) => {
-                                  const isCompleted = getPhaseIndex(cmd.phase) >= idx;
-                                  const isCurrent = cmd.phase === p;
-                                  return (
-                                    <div key={p} className="flex flex-col items-center gap-1 md:gap-2 group/step">
-                                       <div className={`w-6 h-6 md:w-12 md:h-12 rounded-lg md:rounded-2xl flex items-center justify-center transition-all duration-500 ${
-                                         isCompleted 
-                                           ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' 
-                                           : 'bg-white text-slate-300 border-2 border-slate-100'
-                                       } ${isCurrent ? 'ring-4 md:ring-6 ring-indigo-50 scale-110 shadow-xl shadow-indigo-500/20 border-indigo-200' : ''}`}>
-                                          {phaseIcons[p]}
-                                       </div>
-                                       <span className={`text-[7px] md:text-[10px] font-black uppercase tracking-tighter text-center max-w-[50px] md:max-w-[70px] leading-tight ${isCompleted ? 'text-indigo-700' : 'text-slate-500'}`}>
-                                          {isAr ? phaseAr[p] : PHASE_LABELS[p]}
-                                       </span>
+                      {cmd.statut === 'echantillon_en_cours' || cmd.statut === 'echantillon_valide' ? (
+                        <div className="p-4 md:p-8 text-center md:text-left bg-gradient-to-r from-amber-50/50 to-orange-50/30 border-t border-b border-amber-100/50">
+                           <div className="flex flex-col md:flex-row justify-between items-center gap-3 md:gap-0 mb-6 md:mb-10">
+                              <div className="flex flex-col items-center md:items-start gap-1 w-full md:w-auto">
+                                 <div className="flex items-center gap-2 px-3 py-1 bg-amber-500 rounded-full shadow-lg shadow-amber-500/20">
+                                    <span className="relative flex h-2 w-2">
+                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                      <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                                    </span>
+                                    <span className="text-[8px] md:text-[9px] font-black text-white uppercase tracking-[0.2em]">{isAr ? 'مسار العينة' : 'Suivi Échantillon'}</span>
+                                 </div>
+                              </div>
+                           </div>
+                           
+                           <div className="relative pt-2 md:pt-4 pb-1 md:pb-2 overflow-x-auto no-scrollbar">
+                              <div className="absolute top-1/2 left-8 right-8 h-1 bg-amber-200/50 -translate-y-1/2 z-0 rounded-full min-w-[200px] md:min-w-0" />
+                              <div className="relative z-10 flex justify-between items-center min-w-[200px] md:min-w-0 px-8 md:px-12">
+                                  {/* Stage 1: Production */}
+                                  <div className="flex flex-col items-center gap-2 relative z-10">
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 ${cmd.statut === 'echantillon_en_cours' && cmd.phase !== 'livré' ? 'bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-xl shadow-amber-200 ring-4 ring-amber-100 scale-110' : 'bg-amber-500 text-white shadow-md'}`}>
+                                       <Scissors className="w-5 h-5" />
                                     </div>
-                                  );
-                                })}
-                             </div>
-                          </div>
-                      </div>
+                                    <span className="text-[10px] font-black uppercase text-amber-800 tracking-widest">{isAr ? 'الإنتاج' : 'Production'}</span>
+                                  </div>
+                        
+                                  {/* Stage 2: Delivery */}
+                                  <div className="flex flex-col items-center gap-2 relative z-10">
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 ${(cmd.phase === 'livré' && cmd.statut === 'echantillon_en_cours') || cmd.statut === 'echantillon_valide' ? 'bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-xl shadow-amber-200 ring-4 ring-amber-100 scale-110' : 'bg-white text-slate-300 border-2 border-slate-100'}`}>
+                                       <Truck className="w-5 h-5" />
+                                    </div>
+                                    <span className={`text-[10px] font-black uppercase tracking-widest ${cmd.phase === 'livré' || cmd.statut === 'echantillon_valide' ? 'text-amber-800' : 'text-slate-400'}`}>{isAr ? 'التسليم' : 'Livraison'}</span>
+                                  </div>
+                        
+                                  {/* Stage 3: Validation */}
+                                  <div className="flex flex-col items-center gap-2 relative z-10">
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 ${cmd.statut === 'echantillon_valide' ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-xl shadow-emerald-200 ring-4 ring-emerald-100 scale-110' : 'bg-white text-slate-300 border-2 border-slate-100'}`}>
+                                       <Check className="w-5 h-5" />
+                                    </div>
+                                    <span className={`text-[10px] font-black uppercase tracking-widest ${cmd.statut === 'echantillon_valide' ? 'text-emerald-700' : 'text-slate-400'}`}>{isAr ? 'تأكيد' : 'Validation'}</span>
+                                  </div>
+                              </div>
+                           </div>
+
+                           {/* Confirmation Box when Delivered but not validated */}
+                           {cmd.phase === 'livré' && cmd.statut === 'echantillon_en_cours' && (
+                              <div className="mt-8 bg-white border border-amber-200 rounded-[2rem] p-6 shadow-xl shadow-amber-100 animate-in fade-in slide-in-from-bottom-4 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+                                 <div>
+                                    <h5 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-1">{isAr ? 'هل توصلت بالعينة؟' : 'Avez-vous reçu l\'échantillon ?'}</h5>
+                                    <p className="text-xs font-bold text-slate-500">{isAr ? 'قم بتأكيد الموافقة لبدء الإنتاج الفعلي.' : 'Confirmez pour valider et lancer la production.'}</p>
+                                 </div>
+                                 <button 
+                                   onClick={async () => {
+                                      try {
+                                         const updated = { ...cmd, statut: 'echantillon_valide' as const };
+                                         await saveRecord('commandes', updated);
+                                         setFound(prev => prev.map(c => c.id === cmd.id ? updated : c));
+                                         const { sendPushToAll } = await import('../utils/pushNotifications');
+                                         sendPushToAll(
+                                           isAr ? '✅ عينة مقبولة' : '✅ Échantillon validé',
+                                           `${cmd.client} — ${cmd.modele}`,
+                                           '/commandes'
+                                         );
+                                      } catch(err) {}
+                                   }}
+                                   className="w-full md:w-auto px-8 py-4 bg-emerald-500 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-emerald-200 hover:bg-emerald-600 hover:scale-105 transition-all group/btn flex items-center justify-center gap-2"
+                                 >
+                                   <Check className="w-5 h-5 group-hover:scale-125 transition-transform" /> {isAr ? 'تأكيد وموافقة' : 'Confirmer & Valider'}
+                                 </button>
+                              </div>
+                           )}
+                        </div>
+                      ) : (
+                        <div className="p-2 md:p-8 text-center md:text-left">
+                           <div className="flex flex-col md:flex-row justify-between items-center gap-3 md:gap-0 mb-4 md:mb-8">
+                              <div className="flex flex-col items-center md:items-start gap-1 w-full md:w-auto">
+                                 <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500 rounded-full shadow-lg shadow-emerald-500/20">
+                                    <span className="relative flex h-2 w-2">
+                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                      <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                                    </span>
+                                    <span className="text-[8px] md:text-[9px] font-black text-white uppercase tracking-[0.2em]">{isAr ? 'تتبع مباشر' : 'Live Tracking'}</span>
+                                 </div>
+                                 <h4 className="text-xs md:text-sm font-black text-slate-500 uppercase tracking-widest mt-1">{isAr ? 'مسار الإنتاج الدقيق' : 'Precision Production Flow'}</h4>
+                              </div>
+                              
+                              <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 w-full md:w-auto">
+                                 <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl w-full md:w-auto justify-center">
+                                    <div className="w-2 h-2 bg-indigo-500 rounded-full shadow-sm" />
+                                    <span className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest">{isAr ? 'جودة مضمونة' : 'Crafted with Precision'}</span>
+                                 </div>
+                                 <div className="text-indigo-600 font-black text-xl bg-indigo-50 px-5 py-1.5 rounded-xl border border-indigo-100 shadow-sm w-full md:w-auto text-center">{Math.round((getPhaseIndex(cmd.phase) / (PHASE_ORDER.length - 1)) * 100)}%</div>
+                              </div>
+                           </div>
+                           
+                           <div className="relative pt-2 md:pt-4 pb-1 md:pb-2 overflow-x-auto no-scrollbar">
+                              <div className="absolute top-1/2 left-0 right-0 h-1 bg-slate-100 -translate-y-1/2 z-0 rounded-full min-w-[320px] md:min-w-0" />
+                              <div className="relative z-10 flex justify-between items-center min-w-[320px] md:min-w-0 px-2 md:px-0">
+                                 {PHASE_ORDER.map((p, idx) => {
+                                   const isCompleted = getPhaseIndex(cmd.phase) >= idx;
+                                   const isCurrent = cmd.phase === p;
+                                   return (
+                                     <div key={p} className="flex flex-col items-center gap-1 md:gap-2 group/step">
+                                        <div className={`w-6 h-6 md:w-12 md:h-12 rounded-lg md:rounded-2xl flex items-center justify-center transition-all duration-500 ${
+                                          isCompleted 
+                                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' 
+                                            : 'bg-white text-slate-300 border-2 border-slate-100'
+                                        } ${isCurrent ? 'ring-4 md:ring-6 ring-indigo-50 scale-110 shadow-xl shadow-indigo-500/20 border-indigo-200' : ''}`}>
+                                           {phaseIcons[p]}
+                                        </div>
+                                        <span className={`text-[7px] md:text-[10px] font-black uppercase tracking-tighter text-center max-w-[50px] md:max-w-[70px] leading-tight ${isCompleted ? 'text-indigo-700' : 'text-slate-500'}`}>
+                                           {isAr ? phaseAr[p] : PHASE_LABELS[p]}
+                                        </span>
+                                     </div>
+                                   );
+                                 })}
+                              </div>
+                           </div>
+                        </div>
+                      )}
                       
                       {/* Annulation status banner */}
                       {cmd.statut === 'annulation_demandee' && (
