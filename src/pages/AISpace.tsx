@@ -742,7 +742,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
 
         {/* Left: Visualization & Analysis */}
         <div className="lg:col-span-7 space-y-6">
-          <div className="bg-white rounded-[40px] border-2 border-slate-50 shadow-sm p-8 h-[500px] lg:h-[700px] flex flex-col relative overflow-hidden group">
+          <div className="bg-white rounded-[40px] border-2 border-slate-50 shadow-sm p-4 md:p-8 h-[400px] lg:h-[550px] flex flex-col relative overflow-hidden group">
             {!image ? (
               <div className="flex-1 flex flex-col items-center justify-center text-slate-300 border-4 border-dashed border-slate-50 rounded-[32px] hover:border-indigo-100 hover:text-indigo-200 transition-all cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                 <Camera className="w-16 h-16 mb-4" />
@@ -971,7 +971,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
         </div>
 
         {/* Right: Chatbot space */}
-        <div className="lg:col-span-5 flex flex-col h-[500px] lg:h-[700px] bg-white/95 backdrop-blur-xl rounded-[40px] shadow-2xl shadow-slate-200/40 relative overflow-hidden border border-slate-100/80">
+        <div className="lg:col-span-5 flex flex-col h-[400px] lg:h-[550px] bg-white/95 backdrop-blur-xl rounded-[40px] shadow-2xl shadow-slate-200/40 relative overflow-hidden border border-slate-100/80">
           {/* Glow effect */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-400/5 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-violet-400/5 rounded-full blur-3xl pointer-events-none" />
