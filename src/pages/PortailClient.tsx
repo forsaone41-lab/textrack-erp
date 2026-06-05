@@ -55,7 +55,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     };
     sync();
   }, []);
-  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'demandes' | 'docs' | 'support' | 'info'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'demandes' | 'docs' | 'payments' | 'support' | 'info'>('overview');
   const [showNotifs, setShowNotifs] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [viewMesuresFiche, setViewMesuresFiche] = useState<FicheTechnique | null>(null);
