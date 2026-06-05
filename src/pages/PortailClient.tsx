@@ -1266,17 +1266,18 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                if(!currentUser || !virementMontant || !virementPhoto) return;
                                setSendingVirement(true);
                                try {
-                                 const newFacture: Facture = {
+                                 const newFacture: Partial<Facture> = {
                                    id: Math.random().toString(36).substr(2, 9),
                                    numero: `REC-${Date.now().toString().slice(-6)}`,
                                    client: currentUser.nom,
                                    date: new Date().toISOString().split('T')[0],
+                                   echeance: new Date().toISOString().split('T')[0],
                                    montant: parseFloat(virementMontant),
-                                   type: 'recu',
-                                   statut: 'en_attente',
-                                   methode: 'virement',
-                                   items: [],
-                                   scan: virementPhoto
+                                   typeDoc: 'recu',
+                                   statut: 'en_verification',
+                                   banque: 'virement',
+                                   articles: [],
+                                   preuveClient: virementPhoto
                                  };
                                  await saveRecord('factures', newFacture);
                                  try {
