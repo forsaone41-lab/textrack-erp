@@ -555,13 +555,10 @@ export async function loadLeads(): Promise<Lead[]> {
       if (raw) deletedIds = JSON.parse(raw) || [];
     } catch (_) {}
 
-    // 1. Load from Supabase
+    // 1. Load from Supabase — simple query, filter client-side
     const { data: supaData, error } = await supabase
       .from('leads')
       .select('*')
-      .neq('name', '__WORKER_PHOTO__')
-      .neq('name', '__SYSTEM_CONFIG__')
-      .neq('name', '__DELETED__')
       .order('date', { ascending: false });
 
     // 2. Load from BOTH localStorage keys (old + new format)
@@ -578,19 +575,27 @@ export async function loadLeads(): Promise<Lead[]> {
     // 3. Merge: Supabase takes priority, add localStorage-only leads
     let finalData: Lead[] = [];
     if (!error && Array.isArray(supaData)) {
-      // If Supabase returns 0 but localStorage has data → RLS blocking anon reads
-      // Fall back to localStorage only in this case
-      if (supaData.length === 0 && localLeads.length > 0) {
-        console.warn('Supabase returned 0 leads but localStorage has data → possible RLS issue. Using local cache.');
+      // Filter system/deleted records client-side
+      const cleanSupaData = supaData.filter((l: any) =>
+        l && l.id && l.name &&
+        l.name !== '__WORKER_PHOTO__' &&
+        l.name !== '__SYSTEM_CONFIG__' &&
+        l.name !== '__DELETED__' &&
+        !deletedIds.includes(l.id)
+      );
+
+      // If Supabase returns 0 but localStorage has data → fallback
+      if (cleanSupaData.length === 0 && localLeads.length > 0) {
+        console.warn('Supabase returned 0 clean leads, using localStorage fallback.');
         finalData = localLeads.map((l: any) => { const c = {...l}; delete c.photo; return c; });
-        finalData = finalData.filter(l => !deletedIds.includes(l.id));
         finalData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         localStorage.setItem('textrack_data_leads', JSON.stringify(finalData));
         _cache['leads'] = { data: finalData, ts: Date.now() };
         return finalData;
       }
       // Strip photos from Supabase data
-      supaData.forEach((l: any) => { delete l.photo; });
+      cleanSupaData.forEach((l: any) => { delete l.photo; });
+      supaData.splice(0, supaData.length, ...cleanSupaData);
       const supaIds = new Set(supaData.map((l: any) => l.id));
       // Add leads from localStorage that are NOT in Supabase (missing leads!)
       const missingLocal = localLeads.filter(l => !supaIds.has(l.id) && !deletedIds.includes(l.id));
