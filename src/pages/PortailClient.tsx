@@ -1324,7 +1324,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                    statut: 'en_verification',
                                    banque: 'virement',
                                    articles: [],
-                                   preuveClient: virementPhoto
+                                   preuvePaiement: virementPhoto
                                  };
                                  await saveRecord('factures', newFacture);
                                  try {
