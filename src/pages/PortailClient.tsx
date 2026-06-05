@@ -1189,8 +1189,8 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                               <span className="text-[10px] font-black uppercase tracking-widest">{isAr ? 'تم النسخ بنجاح' : 'RIB Copié !'}</span>
                            </div>
                            <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest mb-1 relative z-10">{isAr ? 'رقم الحساب (RIB)' : 'RIB (24 chiffres)'}</p>
-                           <div className="flex items-center justify-between relative z-10">
-                             <p className="text-xl font-black tracking-[0.1em] font-mono">{company.rib || '230 000 00000000000000 00'}</p>
+                           <div className="flex items-center justify-between relative z-10 gap-4">
+                             <p className="text-sm sm:text-base md:text-lg font-black tracking-wider font-mono whitespace-nowrap overflow-x-auto no-scrollbar">{company.rib || '230 000 00000000000000 00'}</p>
                              {ribCopied ? (
                                <div className="flex items-center gap-1.5 bg-emerald-500/20 px-2.5 py-1 rounded-lg border border-emerald-500/20">
                                  <Check className="w-4 h-4 text-emerald-400" />
