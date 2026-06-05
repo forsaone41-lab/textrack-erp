@@ -59,6 +59,7 @@ export interface FicheTechnique {
   patronageFileName?: string;
   fit?: string;
   complexity?: string;
+  clientId?: string;
 }
 
 export interface OrdreDeCoupe {

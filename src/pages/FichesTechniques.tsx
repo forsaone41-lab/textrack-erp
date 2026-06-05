@@ -448,7 +448,7 @@ export default function FichesTechniques() {
 
   function openCreate() {
     setEditId(null);
-    setForm({ modele: '', description: '', client: '', tailles: [], type: '', tissuConsommation: 0, mesures: [], fit: '', complexity: '' });
+    setForm({ modele: '', description: '', client: '', clientId: undefined, tailles: [], type: '', tissuConsommation: 0, mesures: [], fit: '', complexity: '' });
     setShowModal(true);
   }
 
@@ -481,11 +481,18 @@ export default function FichesTechniques() {
     const isNew = !editId;
     const fId = editId || genId();
 
+    let finalClientId = form.clientId;
+    if (!finalClientId && form.client) {
+      const match = clients.find(c => (c.nom || '').toLowerCase().trim() === form.client?.toLowerCase().trim());
+      if (match) finalClientId = match.id;
+    }
+
     const fData: FicheTechnique = {
       id: fId,
       modele: form.modele || '', 
       description: form.description || '',
       client: form.client || '', 
+      clientId: finalClientId,
       tailles: form.tailles || [], 
       mesures: form.mesures || [],
       tissuConsommation: form.tissuConsommation || 0,
@@ -1071,8 +1078,20 @@ export default function FichesTechniques() {
                 </div>
                 <div className="mb-3">
                   <label className={`block text-xs font-semibold text-slate-600 mb-1.5 ${isAr ? 'text-right' : ''}`}>{t('client_label', lang)} *</label>
-                  <input value={form.client || ''} onChange={e => setForm({ ...form, client: e.target.value })}
-                    className={`w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors ${isAr ? 'text-right' : ''}`} />
+                  <select
+                    value={form.clientId || (clients.find(c => c.nom === form.client)?.id) || ''}
+                    onChange={e => {
+                      const selectedId = e.target.value;
+                      const selectedClient = clients.find(c => c.id === selectedId);
+                      setForm({ ...form, clientId: selectedId, client: selectedClient?.nom || '' });
+                    }}
+                    className={`w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors ${isAr ? 'text-right' : ''}`}
+                  >
+                    <option value="">{isAr ? '-- اختر الزبون --' : '-- Sélectionner un client --'}</option>
+                    {clients.map(c => (
+                      <option key={c.id} value={c.id}>{c.nom} {c.telephone ? `(${c.telephone})` : ''}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                   <div>
