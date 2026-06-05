@@ -78,6 +78,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   // Virement states
   const [virementPhoto, setVirementPhoto] = useState<string | null>(null);
   const [virementMontant, setVirementMontant] = useState('');
+  const [virementCommandeId, setVirementCommandeId] = useState('');
   const [sendingVirement, setSendingVirement] = useState(false);
   const [virementSent, setVirementSent] = useState(false);
   const [ribCopied, setRibCopied] = useState(false);
@@ -1247,18 +1248,34 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                         </div>
                      ) : (
                         <div className="space-y-6 flex-1 flex flex-col">
-                           <div>
-                              <label className={`block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ${isAr ? 'text-right' : ''}`}>{isAr ? 'المبلغ المحول (درهم)' : 'Montant viré (MAD)'}</label>
-                              <div className="relative">
-                                <input 
-                                  type="number" 
-                                  value={virementMontant}
-                                  onChange={e => setVirementMontant(e.target.value)}
-                                  placeholder="0.00"
-                                  className={`w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-lg font-black outline-none focus:border-indigo-500 transition-colors ${isAr ? 'text-right' : ''}`}
-                                />
-                                <span className={`absolute top-1/2 -translate-y-1/2 text-slate-400 font-black ${isAr ? 'left-5' : 'right-5'}`}>MAD</span>
-                              </div>
+                           <div className="grid grid-cols-1 gap-6">
+                             <div>
+                                <label className={`block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ${isAr ? 'text-right' : ''}`}>{isAr ? 'الطلبية المعنية (اختياري)' : 'Commande concernée (Optionnel)'}</label>
+                                <select
+                                  value={virementCommandeId}
+                                  onChange={e => setVirementCommandeId(e.target.value)}
+                                  className={`w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-black text-slate-700 outline-none focus:border-indigo-500 transition-colors cursor-pointer ${isAr ? 'text-right' : ''}`}
+                                >
+                                  <option value="">{isAr ? '— بدون تحديد طلبية —' : '— Sans commande spécifique —'}</option>
+                                  {found.map(c => (
+                                    <option key={c.id} value={c.id}>{c.reference} — {c.modele}</option>
+                                  ))}
+                                </select>
+                             </div>
+
+                             <div>
+                                <label className={`block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ${isAr ? 'text-right' : ''}`}>{isAr ? 'المبلغ المحول (درهم)' : 'Montant viré (MAD)'}</label>
+                                <div className="relative">
+                                  <input 
+                                    type="number" 
+                                    value={virementMontant}
+                                    onChange={e => setVirementMontant(e.target.value)}
+                                    placeholder="0.00"
+                                    className={`w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-lg font-black outline-none focus:border-indigo-500 transition-colors ${isAr ? 'text-right' : ''}`}
+                                  />
+                                  <span className={`absolute top-1/2 -translate-y-1/2 text-slate-400 font-black ${isAr ? 'left-5' : 'right-5'}`}>MAD</span>
+                                </div>
+                             </div>
                            </div>
                            
                            <div className="flex-1">
@@ -1299,6 +1316,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                    id: Math.random().toString(36).substr(2, 9),
                                    numero: `REC-${Date.now().toString().slice(-6)}`,
                                    client: currentUser.nom,
+                                   commandeId: virementCommandeId || undefined,
                                    date: new Date().toISOString(),
                                    echeance: new Date().toISOString().split('T')[0],
                                    montant: parseFloat(virementMontant),
@@ -1315,6 +1333,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                  } catch (_) {}
                                  setVirementSent(true);
                                  setVirementMontant('');
+                                 setVirementCommandeId('');
                                  setVirementPhoto(null);
                                } catch (err) {
                                  console.error(err);
