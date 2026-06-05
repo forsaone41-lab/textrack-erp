@@ -590,7 +590,7 @@ export async function loadLeads(): Promise<Lead[]> {
         console.warn('Supabase returned 0 clean leads, using localStorage fallback.');
         finalData = localLeads.map((l: any) => { const c = {...l}; delete c.photo; return c; });
         finalData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        localStorage.setItem('textrack_data_leads', JSON.stringify(finalData));
+        safeStorage.setItem('textrack_data_leads', JSON.stringify(finalData));
         _cache['leads'] = { data: finalData, ts: Date.now() };
         return finalData;
       }
@@ -617,7 +617,7 @@ export async function loadLeads(): Promise<Lead[]> {
     finalData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     // Update cache
-    localStorage.setItem('textrack_data_leads', JSON.stringify(finalData));
+    safeStorage.setItem('textrack_data_leads', JSON.stringify(finalData));
     _cache['leads'] = { data: finalData, ts: Date.now() };
     return finalData;
   } catch (err) {
