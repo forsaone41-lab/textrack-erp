@@ -6,7 +6,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { 
   loadData, saveRecord, deleteRecord, Commande, OrdreDeCoupe, Employe, Phase,
-  PHASE_LABELS, User
+  PHASE_LABELS, PHASE_ORDER, User
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { t, T, TKey } from '../i18n';
@@ -34,6 +34,17 @@ export default function Commandes() {
   const [deleteConfirm, setDeleteConfirm] = useState<Commande | null>(null);
   const [sendToCoupeConfirm, setSendToCoupeConfirm] = useState<Commande | null>(null);
   const [showSuccess, setShowSuccess] = useState<string | null>(null);
+
+  const phaseAr: Record<string, string> = { 
+    patronage: 'الباترون', 
+    coupe: 'الفصالة', 
+    montage: 'الخياطة', 
+    finition: 'التشطيب', 
+    repassage: 'الكي', 
+    controle: 'المراقبة', 
+    emballage: 'التغليف', 
+    livré: 'مسلّمة' 
+  };
 
   useEffect(() => {
     loadMetadata();
