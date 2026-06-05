@@ -47,7 +47,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [selectedFacture, setSelectedFacture] = useState<Facture | null>(null);
   const [company, setCompany] = useState<CompanyProfile>(loadCompanyProfile());
   const [feedbackCmdId, setFeedbackCmdId] = useState<string | null>(null);
-  const [feedbackData, setFeedbackData] = useState<{rating: number, fabricNotes: string, sizeNotes: string, generalNotes: string, useSizeTable: boolean, sizeTableNotes: Record<string, string>}>({ rating: 0, fabricNotes: '', sizeNotes: '', generalNotes: '', useSizeTable: false, sizeTableNotes: {} });
+  const [feedbackData, setFeedbackData] = useState<{rating: number, fabricNotes: string, sizeNotes: string, generalNotes: string, useSizeTable: boolean, sizeTableNotes: Record<string, string>, mesuresFeedback: { nom: string; valeurs: Record<string, string> }[]}>({ rating: 0, fabricNotes: '', sizeNotes: '', generalNotes: '', useSizeTable: false, sizeTableNotes: {}, mesuresFeedback: [] });
   const [hoverRating, setHoverRating] = useState<number>(0);
   const { isAr, toggle } = useLang();
 
@@ -875,19 +875,73 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                               </button>
                                             </div>
                                             {feedbackData.useSizeTable ? (
-                                              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-3 space-y-2 h-24 overflow-y-auto custom-scrollbar">
-                                                {(cmd.tailles && Object.keys(cmd.tailles).length > 0 ? Object.keys(cmd.tailles) : ['S', 'M', 'L', 'XL', 'XXL']).map(size => (
-                                                  <div key={size} className="flex items-center gap-2">
-                                                    <span className="w-8 h-8 rounded-xl bg-white shadow-sm flex items-center justify-center text-[10px] font-black text-indigo-900 shrink-0">{size}</span>
-                                                    <input 
-                                                      type="text"
-                                                      value={feedbackData.sizeTableNotes[size] || ''}
-                                                      onChange={(e) => setFeedbackData(prev => ({ ...prev, sizeTableNotes: { ...prev.sizeTableNotes, [size]: e.target.value } }))}
-                                                      className={`flex-1 bg-white border-none shadow-sm rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-amber-400 outline-none ${isAr ? 'text-right' : 'text-left'}`}
-                                                      placeholder={isAr ? `تعديلات المقاس ${size}...` : `Modifications pour ${size}...`}
-                                                    />
-                                                  </div>
-                                                ))}
+                                              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-3 h-40 overflow-auto custom-scrollbar relative">
+                                                <table className="w-full text-left border-collapse">
+                                                  <thead>
+                                                    <tr>
+                                                      <th className={`sticky top-0 bg-slate-50 z-10 text-[10px] font-black text-slate-400 uppercase p-2 border-b border-slate-200 ${isAr ? 'text-right' : 'text-left'}`}>
+                                                        {isAr ? 'نقطة القياس' : 'Point'}
+                                                      </th>
+                                                      {(cmd.tailles && Object.keys(cmd.tailles).length > 0 ? Object.keys(cmd.tailles) : ['S', 'M', 'L', 'XL', 'XXL']).map(size => (
+                                                        <th key={size} className="sticky top-0 bg-slate-50 z-10 text-center text-[10px] font-black text-indigo-900 uppercase p-2 border-b border-slate-200 min-w-[50px]">
+                                                          {size}
+                                                        </th>
+                                                      ))}
+                                                      <th className="sticky top-0 bg-slate-50 z-10 border-b border-slate-200 w-6"></th>
+                                                    </tr>
+                                                  </thead>
+                                                  <tbody>
+                                                    {feedbackData.mesuresFeedback.map((mesure, index) => (
+                                                      <tr key={index} className="border-b border-slate-100 last:border-0 hover:bg-slate-100/50">
+                                                        <td className={`p-1 ${isAr ? 'text-right' : 'text-left'}`}>
+                                                          <input 
+                                                            type="text" 
+                                                            value={mesure.nom}
+                                                            onChange={(e) => {
+                                                              const newMesures = [...feedbackData.mesuresFeedback];
+                                                              newMesures[index].nom = e.target.value;
+                                                              setFeedbackData(prev => ({ ...prev, mesuresFeedback: newMesures }));
+                                                            }}
+                                                            className={`w-full bg-transparent border-none px-1 py-1 text-[10px] md:text-xs font-bold text-slate-700 outline-none focus:bg-white focus:ring-1 focus:ring-amber-400 rounded ${isAr ? 'text-right' : 'text-left'}`}
+                                                            placeholder={isAr ? 'القياس...' : 'Mesure...'}
+                                                          />
+                                                        </td>
+                                                        {(cmd.tailles && Object.keys(cmd.tailles).length > 0 ? Object.keys(cmd.tailles) : ['S', 'M', 'L', 'XL', 'XXL']).map(size => (
+                                                          <td key={size} className="p-1">
+                                                            <input 
+                                                              type="text"
+                                                              value={mesure.valeurs[size] || ''}
+                                                              onChange={(e) => {
+                                                                const newMesures = [...feedbackData.mesuresFeedback];
+                                                                newMesures[index].valeurs = { ...newMesures[index].valeurs, [size]: e.target.value };
+                                                                setFeedbackData(prev => ({ ...prev, mesuresFeedback: newMesures }));
+                                                              }}
+                                                              className="w-full bg-white border border-slate-200 text-center rounded px-1 py-1 text-[10px] md:text-xs font-medium focus:ring-1 focus:ring-amber-400 outline-none"
+                                                              placeholder="-"
+                                                            />
+                                                          </td>
+                                                        ))}
+                                                        <td className="p-1 text-center">
+                                                           <button onClick={() => {
+                                                              const newMesures = [...feedbackData.mesuresFeedback];
+                                                              newMesures.splice(index, 1);
+                                                              setFeedbackData(prev => ({ ...prev, mesuresFeedback: newMesures }));
+                                                           }} className="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded">
+                                                             <X className="w-3 h-3" />
+                                                           </button>
+                                                        </td>
+                                                      </tr>
+                                                    ))}
+                                                  </tbody>
+                                                </table>
+                                                <button 
+                                                  onClick={() => {
+                                                    setFeedbackData(prev => ({ ...prev, mesuresFeedback: [...prev.mesuresFeedback, { nom: '', valeurs: {} }] }));
+                                                  }}
+                                                  className="mt-2 w-full py-1.5 border border-dashed border-slate-200 text-slate-400 hover:text-indigo-500 hover:border-indigo-300 hover:bg-indigo-50 rounded-xl text-[10px] md:text-xs font-bold flex items-center justify-center gap-1 transition-colors"
+                                                >
+                                                  <Plus className="w-3 h-3" /> {isAr ? 'إضافة قياس' : 'Ajouter'}
+                                                </button>
                                               </div>
                                             ) : (
                                               <textarea 
@@ -953,7 +1007,22 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                      <button 
                                        onClick={() => {
                                           setFeedbackCmdId(cmd.id);
-                                          setFeedbackData({ rating: 0, fabricNotes: '', sizeNotes: '', generalNotes: '', useSizeTable: false, sizeTableNotes: {} });
+                                          const fiche = fiches.find(f => f.modele.toLowerCase() === cmd.modele.toLowerCase() && (f.client || '').toLowerCase() === (cmd.client || '').toLowerCase()) 
+                                                        || fiches.find(f => f.modele.toLowerCase() === cmd.modele.toLowerCase());
+                                          let initialMesures = [];
+                                          if (fiche && fiche.mesures && fiche.mesures.length > 0) {
+                                            initialMesures = fiche.mesures.map((m: any) => ({ nom: m.nom, valeurs: {} }));
+                                          } else {
+                                            const mod = cmd.modele.toLowerCase();
+                                            if (mod.includes('pantalon') || mod.includes('سروال') || mod.includes('pant')) {
+                                              initialMesures = [{ nom: 'Tour de taille', valeurs: {} }, { nom: 'Bassin', valeurs: {} }, { nom: 'Longueur', valeurs: {} }];
+                                            } else if (mod.includes('robe') || mod.includes('فستان') || mod.includes('abaya') || mod.includes('عباية') || mod.includes('dress')) {
+                                              initialMesures = [{ nom: 'Épaules', valeurs: {} }, { nom: 'Poitrine', valeurs: {} }, { nom: 'Taille', valeurs: {} }, { nom: 'Bassin', valeurs: {} }, { nom: 'Longueur', valeurs: {} }];
+                                            } else {
+                                              initialMesures = [{ nom: 'Épaules', valeurs: {} }, { nom: 'Poitrine', valeurs: {} }, { nom: 'Longueur', valeurs: {} }];
+                                            }
+                                          }
+                                          setFeedbackData({ rating: 0, fabricNotes: '', sizeNotes: '', generalNotes: '', useSizeTable: false, sizeTableNotes: {}, mesuresFeedback: initialMesures });
                                        }}
                                        className="w-full md:w-auto px-8 py-4 bg-emerald-500 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-emerald-200 hover:bg-emerald-600 hover:scale-105 transition-all group/btn flex items-center justify-center gap-2"
                                      >
