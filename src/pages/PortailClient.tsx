@@ -875,7 +875,8 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                               </button>
                                             </div>
                                             {feedbackData.useSizeTable ? (
-                                              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-3 h-40 overflow-auto custom-scrollbar relative">
+                                              <div className="space-y-3">
+                                                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-3 h-40 overflow-auto custom-scrollbar relative">
                                                 <table className="w-full text-left border-collapse">
                                                   <thead>
                                                     <tr>
@@ -943,6 +944,13 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                                   <Plus className="w-3 h-3" /> {isAr ? 'إضافة قياس' : 'Ajouter'}
                                                 </button>
                                               </div>
+                                              <textarea 
+                                                value={feedbackData.sizeNotes}
+                                                onChange={(e) => setFeedbackData(prev => ({ ...prev, sizeNotes: e.target.value }))}
+                                                className={`w-full bg-slate-50 border border-slate-100 rounded-2xl p-3 text-xs font-medium focus:ring-2 focus:ring-amber-400 outline-none resize-none h-16 ${isAr ? 'text-right' : 'text-left'}`}
+                                                placeholder={isAr ? 'ملاحظات إضافية عن القياسات (اختياري)...' : 'Remarques supplémentaires (optionnel)...'}
+                                              />
+                                            </div>
                                             ) : (
                                               <textarea 
                                                 value={feedbackData.sizeNotes}
