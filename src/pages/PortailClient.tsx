@@ -47,7 +47,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [selectedFacture, setSelectedFacture] = useState<Facture | null>(null);
   const [company, setCompany] = useState<CompanyProfile>(loadCompanyProfile());
   const [feedbackCmdId, setFeedbackCmdId] = useState<string | null>(null);
-  const [feedbackData, setFeedbackData] = useState({ rating: 0, fabricNotes: '', sizeNotes: '', generalNotes: '' });
+  const [feedbackData, setFeedbackData] = useState<{rating: number, fabricNotes: string, sizeNotes: string, generalNotes: string, useSizeTable: boolean, sizeTableNotes: Record<string, string>}>({ rating: 0, fabricNotes: '', sizeNotes: '', generalNotes: '', useSizeTable: false, sizeTableNotes: {} });
   const { isAr, toggle } = useLang();
 
   useEffect(() => {
@@ -838,13 +838,41 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                             />
                                           </div>
                                           <div className="space-y-2">
-                                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest">{isAr ? 'ملاحظات حول القياسات' : 'Remarques sur les tailles'}</label>
-                                            <textarea 
-                                              value={feedbackData.sizeNotes}
-                                              onChange={(e) => setFeedbackData(prev => ({ ...prev, sizeNotes: e.target.value }))}
-                                              className={`w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-medium focus:ring-2 focus:ring-amber-400 outline-none resize-none h-24 ${isAr ? 'text-right' : 'text-left'}`}
-                                              placeholder={isAr ? 'هل القياسات مضبوطة؟...' : 'Les mensurations sont-elles correctes ?...'}
-                                            />
+                                            <div className="flex justify-between items-center">
+                                              <label className="text-xs font-black text-slate-400 uppercase tracking-widest">{isAr ? 'ملاحظات حول القياسات' : 'Remarques sur les tailles'}</label>
+                                              <label className="flex items-center gap-2 cursor-pointer group">
+                                                <input 
+                                                  type="checkbox" 
+                                                  checked={feedbackData.useSizeTable}
+                                                  onChange={(e) => setFeedbackData(prev => ({ ...prev, useSizeTable: e.target.checked }))}
+                                                  className="accent-amber-500 w-3.5 h-3.5 cursor-pointer"
+                                                />
+                                                <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest group-hover:text-amber-700 transition-colors">{isAr ? 'تعديل حسب كل مقاس' : 'Détailler par taille'}</span>
+                                              </label>
+                                            </div>
+                                            {feedbackData.useSizeTable ? (
+                                              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-3 space-y-2 h-24 overflow-y-auto custom-scrollbar">
+                                                {(cmd.tailles && Object.keys(cmd.tailles).length > 0 ? Object.keys(cmd.tailles) : ['S', 'M', 'L', 'XL', 'XXL']).map(size => (
+                                                  <div key={size} className="flex items-center gap-2">
+                                                    <span className="w-8 h-8 rounded-xl bg-white shadow-sm flex items-center justify-center text-[10px] font-black text-indigo-900 shrink-0">{size}</span>
+                                                    <input 
+                                                      type="text"
+                                                      value={feedbackData.sizeTableNotes[size] || ''}
+                                                      onChange={(e) => setFeedbackData(prev => ({ ...prev, sizeTableNotes: { ...prev.sizeTableNotes, [size]: e.target.value } }))}
+                                                      className={`flex-1 bg-white border-none shadow-sm rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-amber-400 outline-none ${isAr ? 'text-right' : 'text-left'}`}
+                                                      placeholder={isAr ? `تعديلات المقاس ${size}...` : `Modifications pour ${size}...`}
+                                                    />
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            ) : (
+                                              <textarea 
+                                                value={feedbackData.sizeNotes}
+                                                onChange={(e) => setFeedbackData(prev => ({ ...prev, sizeNotes: e.target.value }))}
+                                                className={`w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-medium focus:ring-2 focus:ring-amber-400 outline-none resize-none h-24 ${isAr ? 'text-right' : 'text-left'}`}
+                                                placeholder={isAr ? 'هل القياسات مضبوطة؟...' : 'Les mensurations sont-elles correctes ?...'}
+                                              />
+                                            )}
                                           </div>
                                         </div>
 
@@ -901,7 +929,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                      <button 
                                        onClick={() => {
                                           setFeedbackCmdId(cmd.id);
-                                          setFeedbackData({ rating: 0, fabricNotes: '', sizeNotes: '', generalNotes: '' });
+                                          setFeedbackData({ rating: 0, fabricNotes: '', sizeNotes: '', generalNotes: '', useSizeTable: false, sizeTableNotes: {} });
                                        }}
                                        className="w-full md:w-auto px-8 py-4 bg-emerald-500 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-emerald-200 hover:bg-emerald-600 hover:scale-105 transition-all group/btn flex items-center justify-center gap-2"
                                      >

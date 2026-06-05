@@ -131,6 +131,8 @@ export interface Commande {
     rating: number;
     fabricNotes?: string;
     sizeNotes?: string;
+    useSizeTable?: boolean;
+    sizeTableNotes?: Record<string, string>;
     generalNotes?: string;
     approved: boolean;
   };
