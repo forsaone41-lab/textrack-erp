@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Search, Plus, Package, ChevronRight, ChevronDown, 
-  Edit2, ShoppingCart, Scissors, Trash2, Layers, Binary, AlertTriangle, Check, CheckCircle2, MessageCircle
+  Edit2, ShoppingCart, Scissors, Trash2, Layers, Binary, AlertTriangle, Check, CheckCircle2, MessageCircle, FastForward, Truck
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -497,6 +497,31 @@ export default function Commandes() {
                                 >✕ Rejeter</button>
                               </div>
                             </div>
+                          )}
+                          {/* Advance Phase Button */}
+                          {c.statut !== 'annulé' && c.statut !== 'annulation_demandee' && c.phase !== 'livré' && (
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                const currentIndex = PHASE_ORDER.indexOf(c.phase);
+                                if (currentIndex < PHASE_ORDER.length - 1) {
+                                  // For Echantillons, jump directly to livré to trigger confirmation
+                                  const isEchantillon = c.statut === 'echantillon_en_cours';
+                                  const nextPhase = isEchantillon ? 'livré' : PHASE_ORDER[currentIndex + 1];
+                                  const updated = { ...c, phase: nextPhase as any };
+                                  await saveRecord('commandes', updated);
+                                  setCommandes(prev => prev.map(x => x.id === c.id ? updated : x));
+                                  // Auto-notification for Echantillons that reached delivery
+                                  if (isEchantillon && nextPhase === 'livré') {
+                                    notifyClientWhatsApp(c, `Bonjour ${c.client} 👋\n\nVotre échantillon *${c.reference}* est prêt et a été livré ! 🚚\n\nMerci de vous connecter sur le portail client pour confirmer sa réception et valider la qualité afin de lancer la production.\n\n— BEYA CREATIVE`);
+                                  }
+                                }
+                              }}
+                              title={c.statut === 'echantillon_en_cours' ? (isAr ? 'إرسال للتسليم' : 'Passer à la livraison') : (isAr ? 'تمرير للمرحلة التالية' : 'Passer à la phase suivante')}
+                              className="w-9 h-9 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all shadow-sm active:scale-90"
+                            >
+                              {c.statut === 'echantillon_en_cours' ? <Truck className="w-4 h-4" /> : <FastForward className="w-4 h-4" />}
+                            </button>
                           )}
                           {(c.statut === 'echantillon_en_cours' || c.statut === 'echantillon_valide') && (
                             <button 
