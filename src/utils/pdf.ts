@@ -2,17 +2,6 @@ import { jsPDF } from 'jspdf';
 import { toPng } from 'html-to-image';
 
 /**
- * Recursively strips all class attributes from an element and its children
- * to prevent Tailwind hiding classes from interfering.
- */
-function stripAllClasses(el: HTMLElement) {
-  el.removeAttribute('class');
-  Array.from(el.children).forEach(child => {
-    if (child instanceof HTMLElement) stripAllClasses(child);
-  });
-}
-
-/**
  * Super robust printing using a hidden iframe.
  */
 export function printElement(elementId: string) {
@@ -35,18 +24,27 @@ export function printElement(elementId: string) {
   const doc = iframe.contentWindow?.document;
   if (!doc) return;
 
-  // Clone and STRIP all classes
+  // Clone element, DO NOT strip classes so Tailwind styles remain
   const clone = original.cloneNode(true) as HTMLElement;
-  stripAllClasses(clone);
-  clone.style.cssText = 'opacity:1;visibility:visible;display:block;position:relative;width:100%;background:white;color:#0f172a;font-family:sans-serif;';
   
+  // Get all styles from the parent document to inject into iframe
+  let stylesHtml = '';
+  document.querySelectorAll('style, link[rel="stylesheet"]').forEach(el => {
+    stylesHtml += el.outerHTML;
+  });
+
   doc.open();
-  doc.write(`<!DOCTYPE html><html><head><title>BEYA CREATIVE</title>
+  doc.write(`<!DOCTYPE html><html dir="auto"><head><title>Document</title>
+    ${stylesHtml}
     <style>
-      body{margin:0;padding:20px;background:white!important;font-family:sans-serif;color:#0f172a!important}
-      img{max-width:100%!important;height:auto!important}
-      @page{margin:0.5cm;size:A4}
-      @media print{html,body{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
+      body { margin: 0; padding: 20px; background: white !important; font-family: sans-serif; color: #0f172a !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      img { max-width: 100% !important; height: auto !important; }
+      @page { margin: 0.5cm; size: auto; }
+      @media print { 
+        html, body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        /* Ensure background colors are printed */
+        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      }
     </style></head>
     <body>${clone.outerHTML}</body></html>`);
   doc.close();
@@ -54,10 +52,10 @@ export function printElement(elementId: string) {
   const printWhenReady = () => {
     const images = Array.from(doc.querySelectorAll('img'));
     Promise.all(images.map(img => img.complete ? Promise.resolve() : new Promise(r => { img.onload = r; img.onerror = r; }))).then(() => {
-      setTimeout(() => { iframe.contentWindow?.focus(); iframe.contentWindow?.print(); }, 500);
+      setTimeout(() => { iframe.contentWindow?.focus(); iframe.contentWindow?.print(); }, 800);
     });
   };
-  if (iframe.contentWindow) { iframe.onload = printWhenReady; setTimeout(printWhenReady, 1000); }
+  if (iframe.contentWindow) { iframe.onload = printWhenReady; setTimeout(printWhenReady, 1500); }
 }
 
 /**
