@@ -819,11 +819,18 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                               <button
                                                 key={star}
                                                 onClick={() => setFeedbackData(prev => ({ ...prev, rating: star }))}
-                                                className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${feedbackData.rating >= star ? 'bg-amber-400 text-white scale-110 shadow-lg shadow-amber-200' : 'bg-slate-50 text-slate-300 hover:bg-amber-50 hover:text-amber-300'}`}
+                                                className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${feedbackData.rating >= star ? 'bg-amber-400 text-white scale-110 shadow-lg shadow-amber-200' : 'bg-slate-50 text-slate-300 hover:bg-amber-100 hover:text-amber-400'}`}
                                               >
                                                 <Star className={`w-6 h-6 ${feedbackData.rating >= star ? 'fill-white' : ''}`} />
                                               </button>
                                             ))}
+                                          </div>
+                                          <div className="h-6 flex items-center justify-center mt-1">
+                                            {feedbackData.rating === 1 && <span className="text-xs font-black text-rose-500 uppercase tracking-widest animate-in fade-in zoom-in duration-300">{isAr ? 'سيئة جداً ولا تصلح 😞' : 'Très Mauvais 😞'}</span>}
+                                            {feedbackData.rating === 2 && <span className="text-xs font-black text-orange-500 uppercase tracking-widest animate-in fade-in zoom-in duration-300">{isAr ? 'غير مرضية تماماً 😕' : 'Insatisfaisant 😕'}</span>}
+                                            {feedbackData.rating === 3 && <span className="text-xs font-black text-amber-500 uppercase tracking-widest animate-in fade-in zoom-in duration-300">{isAr ? 'مقبولة وتحتاج تعديلات 😐' : 'Acceptable Mais 😐'}</span>}
+                                            {feedbackData.rating === 4 && <span className="text-xs font-black text-lime-500 uppercase tracking-widest animate-in fade-in zoom-in duration-300">{isAr ? 'جيدة جداً 😊' : 'Très Bien 😊'}</span>}
+                                            {feedbackData.rating === 5 && <span className="text-xs font-black text-emerald-500 uppercase tracking-widest animate-in fade-in zoom-in duration-300">{isAr ? 'ممتازة ومثالية! 😍' : 'Excellent et Parfait ! 😍'}</span>}
                                           </div>
                                         </div>
 
