@@ -880,11 +880,11 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                                 <table className="w-full text-left border-collapse">
                                                   <thead>
                                                     <tr>
-                                                      <th className={`sticky top-0 bg-slate-50 z-10 text-[10px] font-black text-slate-400 uppercase p-2 border-b border-slate-200 ${isAr ? 'text-right' : 'text-left'}`}>
+                                                      <th className={`sticky top-0 bg-slate-50 z-10 text-[10px] font-black text-slate-400 uppercase p-2 border-b border-slate-200 min-w-[90px] ${isAr ? 'text-right' : 'text-left'}`}>
                                                         {isAr ? 'نقطة القياس' : 'Point'}
                                                       </th>
                                                       {(cmd.tailles && Object.keys(cmd.tailles).length > 0 ? Object.keys(cmd.tailles) : ['S', 'M', 'L', 'XL', 'XXL']).map(size => (
-                                                        <th key={size} className="sticky top-0 bg-slate-50 z-10 text-center text-[10px] font-black text-indigo-900 uppercase p-2 border-b border-slate-200 min-w-[50px]">
+                                                        <th key={size} className="sticky top-0 bg-slate-50 z-10 text-center text-[10px] font-black text-indigo-900 uppercase p-2 border-b border-slate-200 min-w-[45px]">
                                                           {size}
                                                         </th>
                                                       ))}
