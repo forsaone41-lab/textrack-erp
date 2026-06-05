@@ -143,6 +143,12 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     });
   }, [currentUser]);
 
+  useEffect(() => {
+    if (found.length === 1 && !virementCommandeId) {
+      setVirementCommandeId(found[0].id);
+    }
+  }, [found]);
+
   function handleSearch() {
     const results = commandes.filter(c =>
       c.reference.toLowerCase() === reference.toLowerCase() ||
@@ -1250,7 +1256,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                         <div className="space-y-6 flex-1 flex flex-col">
                            <div className="grid grid-cols-1 gap-6">
                              <div>
-                                <label className={`block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ${isAr ? 'text-right' : ''}`}>{isAr ? 'الطلبية المعنية (اختياري)' : 'Commande concernée (Optionnel)'}</label>
+                                <label className={`block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ${isAr ? 'text-right' : ''}`}>{isAr ? 'الطلبية المعنية (ضروري)' : 'Commande concernée (Obligatoire)'}</label>
                                 <select
                                   value={virementCommandeId}
                                   onChange={e => setVirementCommandeId(e.target.value)}
@@ -1307,7 +1313,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                            </div>
 
                            <button 
-                             disabled={sendingVirement || !virementPhoto || !virementMontant}
+                             disabled={sendingVirement || !virementPhoto || !virementMontant || (found.length > 0 && !virementCommandeId)}
                              onClick={async () => {
                                if(!currentUser || !virementMontant || !virementPhoto) return;
                                setSendingVirement(true);
