@@ -102,13 +102,14 @@ export default function Demandes() {
     // If we have cache, hide loader immediately
     if (hasCached) setLoading(false);
 
-    // 2. Refresh from network
+    // 2. Refresh from network — independent calls so one failure doesn't block the other
     async function refresh() {
+      // Load leads independently
+      const leadsData = await loadLeads().catch(e => { console.warn('loadLeads failed:', e); return null; });
+      // Load users independently
+      const usersData = await loadData<User>('users').catch(e => { console.warn('loadUsers failed:', e); return null; });
+
       try {
-        const [leadsData, usersData] = await Promise.all([
-          loadLeads(),
-          loadData<User>('users')
-        ]);
         if (leadsData) {
           let validLeads = leadsData as Lead[];
           
