@@ -996,9 +996,23 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                              disabled={feedbackData.rating === 0}
                                              onClick={async () => {
                                                 try {
+                                                   let fbStr = `⭐ التقييم: ${feedbackData.rating}/5\n`;
+                                                   if (feedbackData.fabricNotes) fbStr += `👕 القماش: ${feedbackData.fabricNotes}\n`;
+                                                   if (feedbackData.generalNotes) fbStr += `📝 عام: ${feedbackData.generalNotes}\n`;
+                                                   if (feedbackData.sizeNotes) fbStr += `📏 القياسات: ${feedbackData.sizeNotes}\n`;
+                                                   if (feedbackData.useSizeTable && feedbackData.mesuresFeedback.length > 0) {
+                                                     fbStr += `📏 تم تعديل جدول القياسات من طرف الزبون.`;
+                                                   }
+                                                   const newSuivi = {
+                                                      phase: 'livré' as any,
+                                                      date: new Date().toISOString(),
+                                                      note: `✅ تقييم العينة من الزبون:\n${fbStr}`
+                                                   };
+                                                   
                                                    const updated: Commande = { 
                                                      ...cmd, 
                                                      statut: 'echantillon_valide',
+                                                     suivi: [...(cmd.suivi || []), newSuivi],
                                                      sampleFeedback: { ...feedbackData, approved: true } 
                                                    };
                                                    await saveRecord('commandes', updated);
