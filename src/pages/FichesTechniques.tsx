@@ -537,13 +537,54 @@ export default function FichesTechniques() {
 
   function addTaille() {
     if (newTaille && !(form.tailles || []).includes(newTaille)) {
-      setForm({ ...form, tailles: [...(form.tailles || []), newTaille] });
+      const updatedMesures = (form.mesures || []).map(m => ({
+        ...m,
+        valeurs: { ...m.valeurs, [newTaille]: 0 }
+      }));
+      setForm({ ...form, tailles: [...(form.tailles || []), newTaille], mesures: updatedMesures });
       setNewTaille('');
     }
   }
 
   function removeTaille(t: string) {
-    setForm({ ...form, tailles: (form.tailles || []).filter(x => x !== t) });
+    const updatedMesures = (form.mesures || []).map(m => {
+      const newValeurs = { ...m.valeurs };
+      delete newValeurs[t];
+      return { ...m, valeurs: newValeurs };
+    });
+    setForm({ ...form, tailles: (form.tailles || []).filter(x => x !== t), mesures: updatedMesures });
+  }
+
+  function addStandardMeasures() {
+    const standardMeasures = [
+      isAr ? 'الصدر (Poitrine)' : 'Poitrine',
+      isAr ? 'الكتف (Épaules)' : 'Épaules',
+      isAr ? 'الطول (Longueur)' : 'Longueur',
+      isAr ? 'الكم (Manche)' : 'Manche',
+      isAr ? 'الخصر (Taille)' : 'Taille',
+      isAr ? 'الورك (Hanches)' : 'Hanches',
+      isAr ? 'الفخذ (Cuisse)' : 'Cuisse',
+      isAr ? 'أسفل الرجل (Bas de jambe)' : 'Bas de jambe',
+    ];
+
+    const currentMeasures = form.mesures || [];
+    const currentNames = currentMeasures.map(m => m.nom);
+
+    const initialValeurs: Record<string, number> = {};
+    (form.tailles || []).forEach(t => {
+      initialValeurs[t] = 0;
+    });
+
+    const newMeasures = standardMeasures
+      .filter(m => !currentNames.includes(m))
+      .map(nom => ({ nom, valeurs: { ...initialValeurs } }));
+
+    if (newMeasures.length > 0) {
+      setForm({
+        ...form,
+        mesures: [...currentMeasures, ...newMeasures]
+      });
+    }
   }
 
   function addMesure(manualName?: string) {
@@ -1218,6 +1259,13 @@ export default function FichesTechniques() {
 
                 {/* Suggestions chips */}
                 <div className={`flex flex-wrap gap-1.5 mb-5 ${isAr ? 'flex-row-reverse' : ''}`}>
+                  <button
+                    type="button"
+                    onClick={addStandardMeasures}
+                    className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 border border-indigo-200 hover:bg-indigo-600 hover:text-white rounded-lg transition-all shadow-sm"
+                  >
+                    ✨ {isAr ? 'إضافة القياسات القياسية' : 'Ajouter Mesures Standards'}
+                  </button>
                   {['Longueur', 'Poitrine', 'Épaules', 'Manches', 'Taille', 'Hanches', 'Entrejambe', 'Bas'].map(s => (
                     <button
                       key={s}
