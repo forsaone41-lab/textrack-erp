@@ -242,10 +242,17 @@ export default function Commandes() {
           </div>
         </div>
         
-        <div className="flex items-center gap-3 w-full md:w-auto">
+        <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+          <button 
+            onClick={() => navigate('/commandes/manage?echantillon=true')}
+            className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-4 bg-fuchsia-50 text-fuchsia-600 border border-fuchsia-100 rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.2em] hover:bg-fuchsia-600 hover:text-white transition-all shadow-sm active:scale-95 group"
+          >
+            <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" />
+            {isAr ? 'عينة جديدة' : 'Nouvel Échantillon'}
+          </button>
           <button 
             onClick={() => navigate('/commandes/manage')}
-            className="flex-1 md:flex-none flex items-center justify-center gap-3 px-10 py-4 bg-slate-900 text-white rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.2em] hover:bg-indigo-600 transition-all shadow-2xl shadow-slate-200 active:scale-95 group"
+            className="w-full md:w-auto flex items-center justify-center gap-3 px-10 py-4 bg-slate-900 text-white rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.2em] hover:bg-indigo-600 transition-all shadow-2xl shadow-slate-200 active:scale-95 group"
           >
             <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" />
             {isAr ? 'طلبية جديدة +' : '+ Nouvelle Commande'}

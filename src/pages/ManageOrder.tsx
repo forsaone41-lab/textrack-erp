@@ -20,6 +20,7 @@ export default function ManageOrder() {
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit');
   const isST = searchParams.get('st') === 'true';
+  const isEchantillon = searchParams.get('echantillon') === 'true';
 
   const [fiches, setFiches] = useState<FicheTechnique[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -126,7 +127,9 @@ export default function ManageOrder() {
           setForm(prev => ({ 
             ...prev, 
             reference: ref,
-            externalTasks: isST ? [{ id: genId(), type: 'confection', partenaireId: '', details: '', status: 'en_attente', avance: 0, quantite: 0 }] : []
+            statut: isEchantillon ? 'echantillon_en_cours' : 'en_cours',
+            quantite: isEchantillon ? 1 : 0,
+            externalTasks: isST ? [{ id: genId(), type: 'confection', partenaireId: '', details: '', status: 'en_attente', avance: 0, quantite: isEchantillon ? 1 : 0 }] : []
           }));
         }
       } catch (e) {
