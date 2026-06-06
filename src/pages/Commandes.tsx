@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Search, Plus, Package, ChevronRight, ChevronDown, 
-  Edit2, ShoppingCart, Scissors, Trash2, Layers, Binary, AlertTriangle, Check, CheckCircle2, MessageCircle, FastForward, Truck, Settings
+  Edit2, ShoppingCart, Scissors, Trash2, Layers, Binary, AlertTriangle, Check, CheckCircle2, MessageCircle, FastForward, Truck, Settings, X, Calculator
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -34,6 +34,18 @@ export default function Commandes() {
   const [deleteConfirm, setDeleteConfirm] = useState<Commande | null>(null);
   const [sendToCoupeConfirm, setSendToCoupeConfirm] = useState<Commande | null>(null);
   const [showSuccess, setShowSuccess] = useState<string | null>(null);
+
+  // Quick Sample State
+  const [quickSampleModal, setQuickSampleModal] = useState(false);
+  const [quickSampleData, setQuickSampleData] = useState({
+    modele: '',
+    client: '',
+    tissu: '',
+    couleurs: '',
+    taille: 'M',
+    photo: ''
+  });
+  const [creatingSample, setCreatingSample] = useState(false);
 
   const phaseAr: Record<string, string> = { 
     patronage: 'الباترون', 
@@ -196,6 +208,51 @@ export default function Commandes() {
     }
   }
 
+  async function handleCreateQuickSample() {
+    if (!quickSampleData.modele || !quickSampleData.client) {
+      alert(isAr ? 'المرجو إدخال اسم الموديل واسم الزبون' : 'Veuillez saisir le modèle et le client');
+      return;
+    }
+    setCreatingSample(true);
+    try {
+      const generateRef = () => 'CMD-' + new Date().getFullYear().toString().substr(-2) + Math.random().toString(36).substr(2, 4).toUpperCase();
+      
+      const newCmd: Partial<Commande> = {
+        reference: generateRef(),
+        client: quickSampleData.client,
+        modele: quickSampleData.modele,
+        type: 'production_neuve',
+        statut: 'echantillon_en_cours',
+        phase: 'echantillon',
+        priorite: 'haute',
+        dateCommande: new Date().toISOString(),
+        tissu: quickSampleData.tissu,
+        quantiteTissuRequis: 0,
+        mesures: [{
+          taille: quickSampleData.taille,
+          quantite: 1,
+          terminee: 0,
+          couleurs: quickSampleData.couleurs ? quickSampleData.couleurs.split(',').map(c => c.trim()) : []
+        }],
+        suivi: [{ phase: 'echantillon', date: new Date().toISOString(), note: 'Création Échantillon Rapide' }]
+      };
+      
+      if (quickSampleData.photo) {
+        (newCmd as any).modelePhoto = quickSampleData.photo;
+      }
+      
+      const saved = await saveRecord('commandes', newCmd as any);
+      setCommandes(prev => [saved as Commande, ...prev]);
+      setQuickSampleModal(false);
+      setQuickSampleData({ modele: '', client: '', tissu: '', couleurs: '', taille: 'M', photo: '' });
+      setShowSuccess(isAr ? 'تم إنشاء العينة السريعة بنجاح!' : 'Échantillon rapide créé avec succès !');
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setCreatingSample(false);
+    }
+  }
+
   async function handleDelete() {
     if (!deleteConfirm) return;
     try {
@@ -244,7 +301,7 @@ export default function Commandes() {
         
         <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
           <button 
-            onClick={() => navigate('/commandes/manage?echantillon=true')}
+            onClick={() => setQuickSampleModal(true)}
             className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-4 bg-fuchsia-50 text-fuchsia-600 border border-fuchsia-100 rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.2em] hover:bg-fuchsia-600 hover:text-white transition-all shadow-sm active:scale-95 group"
           >
             <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" />
@@ -326,6 +383,145 @@ export default function Commandes() {
                 {isAr ? 'تأكيد الإرسال' : 'Confirmer'}
               </button>
             </div>
+        </div>
+      )}
+
+      {/* Quick Sample Modal */}
+      {quickSampleModal && (
+        <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300 overflow-y-auto" dir={isAr ? 'rtl' : 'ltr'}>
+          <div className="bg-white rounded-[2rem] p-6 max-w-2xl w-full shadow-2xl animate-in zoom-in duration-300 relative my-8">
+            <button 
+              onClick={() => setQuickSampleModal(false)}
+              className="absolute top-6 right-6 p-2 text-slate-400 hover:text-rose-500 bg-slate-50 hover:bg-rose-50 rounded-full transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-14 h-14 bg-fuchsia-50 rounded-2xl flex items-center justify-center shrink-0">
+                <Calculator className="w-7 h-7 text-fuchsia-600" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">
+                  {isAr ? 'إطلاق عينة سريعة' : 'Lancer un Échantillon Rapide'}
+                </h3>
+                <p className="text-slate-500 font-bold text-xs uppercase tracking-widest mt-1">
+                  {isAr ? 'بدون بطاقة تقنية (مباشرة إلى الإنتاج)' : 'Sans Fiche Technique (Direct vers la production)'}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex flex-col">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">{isAr ? 'الموديل' : 'Modèle'}</label>
+                <input
+                  type="text"
+                  placeholder={isAr ? 'مثال: قميص أبيض كلاسيكي' : 'ex: Chemise Blanche Classique'}
+                  value={quickSampleData.modele}
+                  onChange={e => setQuickSampleData({ ...quickSampleData, modele: e.target.value })}
+                  className="w-full bg-white border-2 border-slate-200 text-sm font-bold text-slate-800 outline-none focus:border-fuchsia-500 px-4 py-3 rounded-xl transition-all"
+                />
+              </div>
+              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex flex-col">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">{isAr ? 'الزبون' : 'Client'}</label>
+                <select
+                  value={quickSampleData.client}
+                  onChange={e => setQuickSampleData({ ...quickSampleData, client: e.target.value })}
+                  className="w-full bg-white border-2 border-slate-200 text-sm font-bold text-slate-800 outline-none focus:border-fuchsia-500 px-4 py-3 rounded-xl transition-all"
+                >
+                  <option value="" disabled>{isAr ? '-- اختر الزبون --' : '-- Client --'}</option>
+                  {users.filter(u => u.role === 'client' || !u.role).map(u => (
+                    <option key={u.id} value={u.nom || u.email}>{u.nom || u.email}</option>
+                  ))}
+                  {!users.some(u => (u.nom || u.email) === quickSampleData.client) && quickSampleData.client && (
+                    <option value={quickSampleData.client}>{quickSampleData.client}</option>
+                  )}
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-6 mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-2">{isAr ? 'نوع الثوب (Tissu)' : 'Type de Tissu'}</label>
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {['JERSEY', 'POPELINE', 'FLEECE', 'GABARDINE', 'DENIM', 'VISCOSE', 'COTON', 'SATIN', 'CRÊPE'].map(t => (
+                      <button
+                        key={t}
+                        onClick={() => setQuickSampleData({ ...quickSampleData, tissu: t })}
+                        className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${quickSampleData.tissu.toUpperCase().includes(t) ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    type="text"
+                    placeholder={isAr ? 'اكتب نوع الثوب...' : 'Taper type de tissu...'}
+                    value={quickSampleData.tissu}
+                    onChange={e => setQuickSampleData({ ...quickSampleData, tissu: e.target.value })}
+                    className="w-full py-3 px-4 bg-white border-2 border-slate-100 rounded-xl text-xs font-bold outline-none focus:border-fuchsia-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-2">{isAr ? 'الألوان (Couleurs)' : 'Couleurs'}</label>
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {['NOIR', 'BLANC', 'GRIS', 'BLEU MARINE', 'BEIGE', 'ROUGE'].map(c => (
+                      <button
+                        key={c}
+                        onClick={() => {
+                          const current = quickSampleData.couleurs ? quickSampleData.couleurs.split(',').map(x => x.trim()) : [];
+                          if (current.includes(c)) {
+                            setQuickSampleData({ ...quickSampleData, couleurs: current.filter(x => x !== c).join(', ') });
+                          } else {
+                            setQuickSampleData({ ...quickSampleData, couleurs: [...current, c].join(', ') });
+                          }
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${quickSampleData.couleurs.includes(c) ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    type="text"
+                    placeholder={isAr ? 'ألوان أخرى (مفصولة بفاصلة)...' : 'Autres couleurs (séparées par virgule)...'}
+                    value={quickSampleData.couleurs}
+                    onChange={e => setQuickSampleData({ ...quickSampleData, couleurs: e.target.value })}
+                    className="w-full py-3 px-4 bg-white border-2 border-slate-100 rounded-xl text-xs font-bold outline-none focus:border-fuchsia-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-3">{isAr ? 'تحديد قياس العينة' : 'Sélectionner la taille de l\'échantillon'}</label>
+                <div className="flex gap-2 sm:gap-4 overflow-x-auto pb-2 no-scrollbar">
+                  {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map(s => (
+                    <button
+                      key={s}
+                      onClick={() => setQuickSampleData({ ...quickSampleData, taille: s })}
+                      className={`flex-1 min-w-[70px] py-4 rounded-2xl border-2 flex flex-col items-center gap-1 transition-all ${quickSampleData.taille === s ? 'border-fuchsia-500 bg-fuchsia-50 shadow-md' : 'border-slate-100 hover:border-fuchsia-200 bg-white'}`}
+                    >
+                      <span className={`text-lg font-black ${quickSampleData.taille === s ? 'text-fuchsia-600' : 'text-slate-700'}`}>{s}</span>
+                      <span className={`text-[9px] font-bold uppercase tracking-widest ${quickSampleData.taille === s ? 'text-fuchsia-400' : 'text-slate-400'}`}>{isAr ? 'اختيار' : 'Choisir'}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={handleCreateQuickSample}
+              disabled={creatingSample || !quickSampleData.modele || !quickSampleData.client}
+              className="w-full py-5 bg-fuchsia-400 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-fuchsia-500 shadow-xl shadow-fuchsia-200 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+            >
+              {creatingSample ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Calculator className="w-5 h-5" />
+              )}
+              {isAr ? 'تأكيد وإطلاق العينة السريعة' : 'Confirmer et Lancer l\'Échantillon'}
+            </button>
           </div>
         </div>
       )}
