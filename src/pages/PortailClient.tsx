@@ -378,12 +378,9 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
            
            <div className="flex items-center gap-4">
               <button 
-                onClick={async () => {
-                  const remote = await syncCompanyProfile();
-                  setCompany(remote);
-                }}
+                onClick={() => window.location.reload()}
                 className="p-2 text-slate-400 hover:text-indigo-600 transition-colors"
-                title={isAr ? 'تحديث' : 'Actualiser'}
+                title={isAr ? 'تحديث الصفحة' : 'Actualiser la page'}
               >
                 <RotateCw className="w-5 h-5" />
               </button>
