@@ -352,8 +352,8 @@ export default function Echantillons() {
             commandes.map(c => {
               // Extract feedback data
               const feedbackSuivi = c.suivi?.find(s => s.note?.startsWith('[FEEDBACK_JSON]'));
-              let feedbackData: any = null;
-              if (feedbackSuivi) {
+              let feedbackData: any = c.sampleFeedback;
+              if (!feedbackData && feedbackSuivi) {
                 try {
                   feedbackData = JSON.parse(feedbackSuivi.note.replace('[FEEDBACK_JSON]', ''));
                 } catch(e) {}

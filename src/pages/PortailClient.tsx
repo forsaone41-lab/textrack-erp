@@ -1008,11 +1008,16 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                                       date: new Date().toISOString(),
                                                       note: `✅ تقييم العينة من الزبون:\n${fbStr}`
                                                    };
+                                                   const jsonSuivi = {
+                                                      phase: 'livré' as any,
+                                                      date: new Date().toISOString(),
+                                                      note: `[FEEDBACK_JSON]${JSON.stringify({ ...feedbackData, approved: true })}`
+                                                   };
                                                    
                                                    const updated: Commande = { 
                                                      ...cmd, 
                                                      statut: 'echantillon_valide',
-                                                     suivi: [...(cmd.suivi || []), newSuivi],
+                                                     suivi: [...(cmd.suivi || []), newSuivi, jsonSuivi],
                                                      sampleFeedback: { ...feedbackData, approved: true } 
                                                    };
                                                    await saveRecord('commandes', updated);
