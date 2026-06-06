@@ -135,9 +135,6 @@ export default function Clients() {
           if (!formCopy.ville && matchedLead.ville) {
             formCopy.ville = matchedLead.ville;
           }
-          if (!formCopy.adresse && matchedLead.details) {
-            formCopy.adresse = matchedLead.details;
-          }
         }
       }
     } catch (err) {

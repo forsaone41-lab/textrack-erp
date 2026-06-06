@@ -217,7 +217,7 @@ export default function Demandes() {
           password: 'Client' + lead.phone.slice(-4),
           pinCode: lead.phone.slice(-4),
           ville: lead.ville || '',
-          adresse: lead.details || '',
+          adresse: '',
         };
         await saveRecord('users', newClient);
       }
@@ -334,7 +334,7 @@ export default function Demandes() {
         pinCode: autoCode,
         actif: true,
         ville: lead.ville || '',
-        adresse: lead.details || ''
+        adresse: ''
       };
       await saveRecord('users', newClient);
       setUsers(prev => [...prev, newClient]);
