@@ -1032,7 +1032,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                                         || fiches.find(f => f.modele.toLowerCase() === cmd.modele.toLowerCase());
                                           let initialMesures = [];
                                           if (fiche && fiche.mesures && fiche.mesures.length > 0) {
-                                            initialMesures = fiche.mesures.map((m: any) => ({ nom: m.nom, valeurs: {} }));
+                                            initialMesures = fiche.mesures.map((m: any) => ({ nom: m.nom, valeurs: m.valeurs ? { ...m.valeurs } : {} }));
                                           } else {
                                             const mod = cmd.modele.toLowerCase();
                                             if (mod.includes('pantalon') || mod.includes('سروال') || mod.includes('pant')) {
