@@ -117,9 +117,33 @@ export default function Clients() {
     setShowModal(true);
   }
 
-  function openEdit(c: Client) {
+  async function openEdit(c: Client) {
     setEditId(c.id);
-    setForm(c);
+    const formCopy = { ...c };
+    try {
+      const leads = await loadData<any>('leads');
+      if (leads && leads.length > 0) {
+        const matchedLead = leads.find(l => 
+          (l.email && c.email && l.email.toLowerCase().trim() === c.email.toLowerCase().trim()) ||
+          (l.name && c.nom && l.name.toLowerCase().trim() === c.nom.toLowerCase().trim()) ||
+          (l.phone && c.telephone && l.phone.replace(/\D/g, '') === c.telephone.replace(/\D/g, ''))
+        );
+        if (matchedLead) {
+          if (!formCopy.telephone && matchedLead.phone) {
+            formCopy.telephone = matchedLead.phone;
+          }
+          if (!formCopy.ville && matchedLead.ville) {
+            formCopy.ville = matchedLead.ville;
+          }
+          if (!formCopy.adresse && matchedLead.details) {
+            formCopy.adresse = matchedLead.details;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to autofill from leads:", err);
+    }
+    setForm(formCopy);
     setShowModal(true);
   }
 
