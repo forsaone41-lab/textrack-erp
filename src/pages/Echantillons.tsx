@@ -296,8 +296,18 @@ export default function Echantillons() {
             </p>
           </div>
         ) : (
-          commandes.map(c => (
-            <div key={c.id} className="bg-white rounded-[2rem] border-2 border-indigo-50 p-6 shadow-sm hover:shadow-xl transition-all relative overflow-hidden group">
+            commandes.map(c => {
+              // Extract feedback data
+              const feedbackSuivi = c.suivi?.find(s => s.note?.startsWith('[FEEDBACK_JSON]'));
+              let feedbackData: any = null;
+              if (feedbackSuivi) {
+                try {
+                  feedbackData = JSON.parse(feedbackSuivi.note.replace('[FEEDBACK_JSON]', ''));
+                } catch(e) {}
+              }
+
+              return (
+                <div key={c.id} className="bg-white rounded-[2rem] border-2 border-indigo-50 p-6 shadow-sm hover:shadow-xl transition-all relative overflow-hidden group">
               {/* Status Badge */}
               <div className={`absolute top-0 ${isAr ? 'left-0 rounded-br-2xl' : 'right-0 rounded-bl-2xl'} flex items-center gap-2`}>
                 <button 
@@ -456,6 +466,59 @@ export default function Echantillons() {
                 </div>
               )}
 
+              {/* Client Feedback Display (PRO Version) */}
+              {feedbackData && (
+                <div className={`mb-6 p-5 rounded-2xl border-2 border-indigo-100 bg-gradient-to-br from-indigo-50/50 to-white shadow-inner ${isAr ? 'text-right' : 'text-left'}`}>
+                  <div className={`flex items-center gap-3 mb-4 ${isAr ? 'flex-row-reverse' : ''}`}>
+                    <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white shadow-md">
+                      <MessageSquare className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black text-indigo-900 uppercase tracking-widest">{isAr ? 'تعليقات الزبون' : 'Retour Client'}</h4>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        {[1, 2, 3, 4, 5].map(star => (
+                          <svg key={star} className={`w-3 h-3 ${star <= (feedbackData.rating || 0) ? 'text-amber-400' : 'text-slate-200'}`} fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    {feedbackData.fabricNotes && (
+                      <div className={`flex items-start gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                        <Palette className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                        <div>
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">{isAr ? 'الثوب واللون' : 'Tissu & Couleur'}</span>
+                          <p className="text-sm font-bold text-slate-700">{feedbackData.fabricNotes}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {feedbackData.sizeNotes && (
+                      <div className={`flex items-start gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                        <Ruler className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                        <div>
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">{isAr ? 'القياسات' : 'Mensurations'}</span>
+                          <p className="text-sm font-bold text-slate-700">{feedbackData.sizeNotes}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {feedbackData.generalNotes && (
+                      <div className={`flex items-start gap-2 pt-2 border-t border-indigo-100/50 ${isAr ? 'flex-row-reverse' : ''}`}>
+                        <FileText className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                        <div>
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">{isAr ? 'ملاحظات عامة' : 'Remarques générales'}</span>
+                          <p className="text-sm font-bold text-slate-700">{feedbackData.generalNotes}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 mt-auto">
                 {c.statut === 'echantillon_en_cours' && (
                   <button
@@ -475,7 +538,8 @@ export default function Echantillons() {
                 )}
               </div>
             </div>
-          ))
+            );
+          })
         )}
       </div>
       {/* Confirm Delete Modal */}
