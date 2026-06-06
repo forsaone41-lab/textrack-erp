@@ -383,6 +383,7 @@ export default function Commandes() {
                 {isAr ? 'تأكيد الإرسال' : 'Confirmer'}
               </button>
             </div>
+          </div>
         </div>
       )}
 
