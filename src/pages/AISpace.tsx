@@ -64,7 +64,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   }>(null);
   const [activePieceIdx, setActivePieceIdx] = useState(0);
   const [chat, setChat] = useState<{ role: 'ai' | 'user'; text: string }[]>([
-    { role: 'ai', text: isAr ? 'أنا مساعدك الذكي BEYA AI. ارفع صورة موديل لأقوم بتحليلها لك.' : 'Bonjour ! Je suis votre assistant BEYA AI. Téléchargez la photo d\'un modèle pour que je puisse l\'analyser.' }
+    { role: 'ai', text: isAr ? 'مرحباً بك في مساحة التحليل. ارفع صورة موديل للبدء في تحليلها.' : 'Bienvenue dans l\'espace d\'analyse. Uploadez une photo de modèle pour commencer.' }
   ]);
   const [msg, setMsg] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -557,8 +557,8 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
     // Greetings
     if (/^(salam|salaam|slm|hi|hello|bonjour|bonsoir|hey|مرحبا|السلام|سلام|صباح|مساء|ahlan)/.test(m)) {
       return speakAr
-        ? 'وعليكم السلام! 👋 مرحباً بك في BEYA AI. كيف يمكنني مساعدتك اليوم؟ يمكنك رفع صورة موديل لتحليله أو طرح أي سؤال تقني.'
-        : 'Salam ! 👋 Bienvenue sur BEYA AI. Comment puis-je vous aider aujourd\'hui ? Vous pouvez uploader une photo de modèle ou me poser une question technique.';
+        ? 'وعليكم السلام! 👋 مرحباً بك في مساحة التحليل. كيف يمكنني مساعدتك اليوم؟ يمكنك رفع صورة موديل للبدء أو طرح أي سؤال تقني.'
+        : 'Salam ! 👋 Bienvenue dans l\'espace d\'analyse. Comment puis-je vous aider aujourd\'hui ? Vous pouvez uploader une photo ou me poser une question technique.';
     }
     // How are you
     if (/^(kif|kifash|cv|ça va|labas|labess|comment|كيف|لاباس|واش)/.test(m)) {
@@ -618,7 +618,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
         }
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents, systemInstruction: { parts: [{ text: "أنت المساعد الذكي BEYA AI في مصنع نسيج مغربي. تكلم بالدارجة المغربية بأسلوب احترافي وودي. ساعد المستخدم في حساب كميات الثوب، تكاليف الإنتاج، مراحل الخياطة، وتحليل الموديلات. إذا سألك أسئلة تقنية، أجب بدقة. كن مفيداً جداً وتصرف كخبير نسيج وخياطة." }] } })
+          body: JSON.stringify({ contents, systemInstruction: { parts: [{ text: "أنت خبير تحليل وتصميم في مصنع نسيج مغربي. تكلم بالدارجة المغربية بأسلوب احترافي وودي. ساعد المستخدم في حساب كميات الثوب، تكاليف الإنتاج، مراحل الخياطة، وتحليل الموديلات. إذا سألك أسئلة تقنية، أجب بدقة. كن مفيداً جداً وتصرف كخبير نسيج وخياطة." }] } })
         });
         const data = await response.json();
         let aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || (data.error ? 'خطأ: ' + data.error.message : 'لم أستطع فهم الرد.');
@@ -669,7 +669,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
           body: JSON.stringify({
             contents,
             systemInstruction: {
-              parts: [{ text: "أنت المساعد الذكي BEYA AI في مصنع نسيج مغربي. تكلم بالدارجة المغربية بأسلوب احترافي وودي. ساعد المستخدم في حساب كميات الثوب، تكاليف الإنتاج، مراحل الخياطة، وتحليل الموديلات. إذا سألك أسئلة تقنية، أجب بدقة. كن مفيداً جداً وتصرف كخبير نسيج وخياطة." }]
+              parts: [{ text: "أنت خبير تحليل وتصميم في مصنع نسيج مغربي. تكلم بالدارجة المغربية بأسلوب احترافي وودي. ساعد المستخدم في حساب كميات الثوب، تكاليف الإنتاج، مراحل الخياطة، وتحليل الموديلات. إذا سألك أسئلة تقنية، أجب بدقة. كن مفيداً جداً وتصرف كخبير نسيج وخياطة." }]
             }
           })
         });
@@ -718,9 +718,9 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
               <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-600/20 flex-shrink-0">
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-3xl font-black text-slate-900 tracking-tight uppercase italic">BEYA <span className="text-indigo-600 not-italic">AI</span></h1>
+              <h1 className="text-3xl font-black text-slate-900 tracking-tight uppercase italic">BEYA <span className="text-indigo-600 not-italic">STUDIO</span></h1>
             </div>
-            <p className="text-slate-500 font-bold text-sm uppercase tracking-widest">{isAr ? 'مساعدك الذكي للتصميم والإنتاج' : 'Votre assistant intelligent de design & production'}</p>
+            <p className="text-slate-500 font-bold text-sm uppercase tracking-widest">{isAr ? 'مساحة التحليل والتصميم' : 'Espace d\'Analyse & Design'}</p>
           </div>
         </div>
 
@@ -983,7 +983,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
                 <MessageSquare className="w-4 h-4" />
               </div>
               <div className={isAr ? 'text-right' : ''}>
-                <h3 className="font-black text-sm text-slate-800 uppercase tracking-tight">{isAr ? 'مساعد الإنتاج والتصميم' : 'Assistant Design & Prod'}</h3>
+                <h3 className="font-black text-sm text-slate-800 uppercase tracking-tight">{isAr ? 'قسم تحليل الموديلات' : 'Analyse de Modèles'}</h3>
                 <div className={`flex items-center gap-1 mt-0.5 justify-start ${isAr ? 'flex-row-reverse' : ''}`}>
                   <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-sm shadow-emerald-500/50" />
                   <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider">{isAr ? 'متصل' : 'Actif'}</span>
@@ -999,7 +999,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
                 <Zap className="w-4 h-4" />
               </button>
               <button
-                onClick={() => setChat([{ role: 'ai', text: isAr ? 'أنا مساعدك الذكي BEYA AI. ارفع صورة موديل لأقوم بتحليلها لك.' : 'Bonjour ! Je suis votre assistant BEYA AI. Téléchargez la photo d\'un modèle pour que je puisse l\'analyser.' }])}
+                onClick={() => setChat([{ role: 'ai', text: isAr ? 'مرحباً بك في مساحة التحليل. ارفع صورة موديل للبدء في تحليلها.' : 'Bienvenue dans l\'espace d\'analyse. Uploadez une photo de modèle pour commencer.' }])}
                 className="p-2.5 bg-white text-slate-400 hover:text-rose-600 border border-slate-100 hover:border-rose-100 hover:bg-rose-50/50 rounded-xl transition-all shadow-sm"
               >
                 <Trash2 className="w-4 h-4" />
