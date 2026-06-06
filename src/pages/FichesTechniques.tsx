@@ -478,6 +478,11 @@ export default function FichesTechniques() {
       else alert('Veuillez remplir tous les champs obligatoires (Modèle, Client, et Consommation)');
       return;
     }
+    if (form.patronagePhoto === 'MANUAL_PATTERN' && (!form.patronageFileName || form.patronageFileName.trim() === '')) {
+      if (isAr) alert('المرجو إدخال مرجع الباترون اليدوي');
+      else alert('Veuillez saisir la référence du patron manuel');
+      return;
+    }
     const isNew = !editId;
     const fId = editId || genId();
 
@@ -1015,12 +1020,21 @@ export default function FichesTechniques() {
                       {form.patronagePhoto ? (
                         <>
                           {form.patronagePhoto === 'MANUAL_PATTERN' ? (
-                            <div className="flex flex-col items-center justify-center h-full bg-indigo-50/50">
-                              <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mb-2 shadow-sm">
-                                <Ruler className="w-6 h-6 text-indigo-600" />
+                            <div className="flex flex-col items-center justify-center h-full bg-indigo-50/50 p-4 w-full">
+                              <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center mb-2 shadow-sm shrink-0">
+                                <Ruler className="w-5 h-5 text-indigo-600" />
                               </div>
-                              <p className="text-[11px] font-black text-indigo-900 uppercase tracking-widest text-center px-4">{isAr ? 'باترون ورقي (سيرية)' : 'Patron Manuel (Série)'}</p>
-                              <p className="text-[9px] font-bold text-indigo-500 mt-1">{isAr ? 'القياسات متوفرة في المشغل' : 'Disponible physiquement à l\'atelier'}</p>
+                              <p className="text-[10px] font-black text-indigo-900 uppercase tracking-widest text-center mb-2 shrink-0">{isAr ? 'مرجع الباترون اليدوي' : 'Référence du Patron Manuel'}</p>
+                              <input 
+                                type="text"
+                                placeholder={isAr ? 'مثال: PTR-2023-A *' : 'ex: PTR-2023-A *'}
+                                value={form.patronageFileName || ''}
+                                onChange={e => setForm({ ...form, patronageFileName: e.target.value })}
+                                required
+                                autoFocus
+                                onClick={e => e.stopPropagation()}
+                                className="w-full max-w-[200px] text-center px-3 py-2 bg-white border border-indigo-200 rounded-lg text-xs font-bold text-indigo-900 focus:outline-none focus:border-indigo-500 shadow-inner"
+                              />
                             </div>
                           ) : form.patronagePhoto.startsWith('data:image/') ? (
                             <img src={form.patronagePhoto} alt="Preview" className="w-full h-full object-contain" />
@@ -1054,7 +1068,7 @@ export default function FichesTechniques() {
                             </label>
                             <button 
                               type="button"
-                              onClick={() => setForm({ ...form, patronagePhoto: 'MANUAL_PATTERN', patronageFileName: 'Patron Manuel (Série)' })}
+                              onClick={(e) => { e.stopPropagation(); setForm({ ...form, patronagePhoto: 'MANUAL_PATTERN', patronageFileName: '' }); }}
                               className="flex-1 flex flex-col items-center justify-center bg-white border border-slate-200 hover:border-fuchsia-400 rounded-xl cursor-pointer transition-all shadow-sm group/btn"
                             >
                               <Ruler className="w-5 h-5 text-fuchsia-400 mb-1.5 group-hover/btn:text-fuchsia-600 group-hover/btn:scale-110 transition-transform" />
