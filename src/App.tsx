@@ -5,7 +5,7 @@ import { Menu, Package } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import Calculator from './components/Tools/Calculator';
 import NotificationCenter from './components/Tools/NotificationCenter';
-import { CompanyProfile, loadCompanyProfile } from './types';
+import { CompanyProfile } from './types';
 
 // ✅ Lazy load all pages - each page loads only when visited
 const Dashboard        = lazy(() => import('./pages/Dashboard'));
