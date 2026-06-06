@@ -893,7 +893,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                                 <table className="w-full text-left border-collapse">
                                                   <thead>
                                                     <tr>
-                                                      <th className={`sticky top-0 bg-slate-50 z-10 text-[10px] font-black text-slate-400 uppercase p-2 border-b border-slate-200 min-w-[90px] ${isAr ? 'text-right' : 'text-left'}`}>
+                                                      <th className={`sticky top-0 bg-slate-50 z-10 text-[10px] font-black text-slate-400 uppercase p-2 border-b border-slate-200 min-w-[180px] ${isAr ? 'text-right' : 'text-left'}`}>
                                                         {isAr ? 'نقطة القياس' : 'Point'}
                                                       </th>
                                                       {(cmd.tailles && Object.keys(cmd.tailles).length > 0 ? Object.keys(cmd.tailles) : ['S', 'M', 'L', 'XL', 'XXL']).map(size => (
@@ -908,15 +908,15 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                                     {feedbackData.mesuresFeedback.map((mesure, index) => (
                                                       <tr key={index} className="border-b border-slate-100 last:border-0 hover:bg-slate-100/50">
                                                         <td className={`p-1 ${isAr ? 'text-right' : 'text-left'}`}>
-                                                          <input 
-                                                            type="text" 
+                                                          <textarea 
+                                                            rows={2}
                                                             value={mesure.nom}
                                                             onChange={(e) => {
                                                               const newMesures = [...feedbackData.mesuresFeedback];
                                                               newMesures[index].nom = e.target.value;
                                                               setFeedbackData(prev => ({ ...prev, mesuresFeedback: newMesures }));
                                                             }}
-                                                            className={`w-full bg-transparent border-none px-1 py-1 text-[10px] md:text-xs font-bold text-slate-700 outline-none focus:bg-white focus:ring-1 focus:ring-amber-400 rounded ${isAr ? 'text-right' : 'text-left'}`}
+                                                            className={`w-full bg-transparent border-none px-1 py-1 text-[10px] md:text-xs font-bold text-slate-700 outline-none focus:bg-white focus:ring-1 focus:ring-amber-400 rounded resize-none overflow-hidden ${isAr ? 'text-right' : 'text-left'}`}
                                                             placeholder={isAr ? 'القياس...' : 'Mesure...'}
                                                           />
                                                         </td>
