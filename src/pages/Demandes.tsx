@@ -212,9 +212,12 @@ export default function Demandes() {
           id: genId(),
           nom: lead.name,
           role: 'client',
-          email: lead.email || `${lead.name.toLowerCase().replace(/\s/g, '.')}@client.ma`,
+          email: (lead.email || `${lead.name.toLowerCase().replace(/\s/g, '.')}@client.ma`).toLowerCase().trim(),
+          telephone: lead.phone,
           password: 'Client' + lead.phone.slice(-4),
           pinCode: lead.phone.slice(-4),
+          ville: lead.ville || '',
+          adresse: lead.details || '',
         };
         await saveRecord('users', newClient);
       }
@@ -325,10 +328,13 @@ export default function Demandes() {
         nom: lead.name,
         role: 'client' as const,
         // Make email more unique if it was auto-generated to avoid future collisions
-        email: lead.email || `${lead.name.replace(/\s+/g, '').toLowerCase()}_${newId.slice(0, 4)}@beya.ma`,
+        email: (lead.email || `${lead.name.replace(/\s+/g, '').toLowerCase()}_${newId.slice(0, 4)}@beya.ma`).toLowerCase().trim(),
         telephone: lead.phone,
         password: autoCode,
-        actif: true
+        pinCode: autoCode,
+        actif: true,
+        ville: lead.ville || '',
+        adresse: lead.details || ''
       };
       await saveRecord('users', newClient);
       setUsers(prev => [...prev, newClient]);
@@ -367,7 +373,7 @@ export default function Demandes() {
         .replace(/{note}/g, matiereNote);
     }
 
-    const rawPhone = devisLead.phone.replace(/\D/g, '');
+    const rawPhone = String(devisLead.phone || '').replace(/\D/g, '');
     let formattedPhone = rawPhone;
     if (rawPhone.startsWith('2120')) {
       formattedPhone = '212' + rawPhone.substring(4);
@@ -398,7 +404,7 @@ export default function Demandes() {
   };
 
   const handleContact = async (lead: Lead, typeId: string, customMsg?: string) => {
-    const rawPhone = lead.phone.replace(/\D/g, '');
+    const rawPhone = String(lead.phone || '').replace(/\D/g, '');
     let formattedPhone = rawPhone;
     if (rawPhone.startsWith('2120')) {
       formattedPhone = '212' + rawPhone.substring(4);
@@ -2056,12 +2062,13 @@ export default function Demandes() {
                       )}
                       <button
                         onClick={() => {
-                          const rawPhone = newClientCode.phone.replace(/\D/g, '');
-                          const phone = rawPhone.startsWith('0') ? '212' + rawPhone.substring(1) : rawPhone.startsWith('212') ? rawPhone : '212' + rawPhone;
+                          const rawPhone = String(newClientCode.phone || '').replace(/\D/g, '');
+                          const phone = rawPhone ? (rawPhone.startsWith('0') ? '212' + rawPhone.substring(1) : rawPhone.startsWith('212') ? rawPhone : '212' + rawPhone) : '';
                           const msg = isAr
                             ? `🎉 مرحباً بك في *BEYA CREATIVE* !\n\nأهلاً *${newClientCode.name}*، حسابك جاهز :\n\n🌐 *https://beyacreative.com*\n📧 البريد : *${newClientCode.email}*\n🔑 الرمز : *${newClientCode.code}*\n\nسجل دخولك لمتابعة طلباتك. 🇲🇦`
                             : `🎉 Bienvenue chez *BEYA CREATIVE* !\n\nBonjour *${newClientCode.name}*, votre espace client est prêt :\n\n🌐 *https://beyacreative.com*\n📧 Email : *${newClientCode.email}*\n🔑 Code : *${newClientCode.code}*\n\nConnectez-vous pour suivre vos commandes. À bientôt ! 🇲🇦`;
-                          window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+                          const url = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+                          window.open(url, '_blank');
                           localStorage.setItem(storageKey, JSON.stringify({ date: new Date().toISOString(), method: 'whatsapp' }));
                         }}
                         className="w-full h-11 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-100">
@@ -2069,12 +2076,13 @@ export default function Demandes() {
                         {sentData ? (isAr ? 'إعادة الإرسال — WhatsApp' : 'Renvoyer — WhatsApp') : (isAr ? 'إرسال عبر WhatsApp' : 'Envoyer via WhatsApp')}
                       </button>
                       <button
-                        onClick={() => {
+                        onClick={async () => {
                           const clientName = newClientCode.name.replace(/\s+/g, '_');
-                          const prevTitle = document.title;
-                          document.title = `BeyaCreative_Bienvenue_${clientName}`;
-                          printElement('welcome-pdf-' + newClientCode.code);
-                          setTimeout(() => { document.title = prevTitle; }, 2000);
+                          const filename = `BeyaCreative_Bienvenue_${clientName}`;
+                          const el = document.getElementById('welcome-pdf-' + newClientCode.code);
+                          if (el) el.style.display = 'block';
+                          await generatePDF('welcome-pdf-' + newClientCode.code, filename);
+                          if (el) el.style.display = 'none';
                           localStorage.setItem(storageKey, JSON.stringify({ date: new Date().toISOString(), method: 'pdf' }));
                         }}
                         className="w-full h-11 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all">

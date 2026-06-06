@@ -433,7 +433,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
   ]
 }`;
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      let response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -446,11 +446,41 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
           }],
           generationConfig: {
             temperature: 0.3,
+            responseMimeType: "application/json"
           }
         })
       });
 
-      const data = await response.json();
+      let data = await response.json();
+      
+      if (data.error && (data.error.message.includes('high demand') || data.error.code === 503)) {
+        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              role: "user",
+              parts: [
+                { text: analysisPrompt },
+                { inlineData: { data: base64Data, mimeType } }
+              ]
+            }],
+            generationConfig: {
+              temperature: 0.3,
+              responseMimeType: "application/json"
+            }
+          })
+        });
+        data = await response.json();
+      }
+
+      if (data.error) {
+        if (data.error.message.includes('high demand')) {
+          throw new Error("الخوادم ديال الذكاء الاصطناعي عليها ضغط كبير دابا. ⏳ تسنى شوية وعاود جرب مرة خرى!");
+        }
+        throw new Error(data.error.message);
+      }
+      
       let rawText = '';
       if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
         rawText = data.candidates[0].content.parts[0].text;
@@ -616,12 +646,32 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
           const mimeType = image.split(';')[0].split(':')[1];
           contents[0].parts.push({ inlineData: { data: base64Data, mimeType } });
         }
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        let response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents, systemInstruction: { parts: [{ text: "أنت خبير تحليل وتصميم في مصنع نسيج مغربي. تكلم بالدارجة المغربية بأسلوب احترافي وودي. ساعد المستخدم في حساب كميات الثوب، تكاليف الإنتاج، مراحل الخياطة، وتحليل الموديلات. إذا سألك أسئلة تقنية، أجب بدقة. كن مفيداً جداً وتصرف كخبير نسيج وخياطة." }] } })
+          body: JSON.stringify({ contents, systemInstruction: { parts: [{ text: "أنت خبير تحليل وتصميم وتسعير في مصنع نسيج مغربي. تكلم بالدارجة المغربية بأسلوب احترافي وودي. مهمتك الأساسية: 1. حساب كميات الثوب بدقة. 2. إعطاء تقديرات دقيقة للأسعار في السوق المغربي (مثلا أثمنة الأثواب في درب عمر أو أسواق الجملة). 3. إذا سألك المستخدم عن التكلفة، أعطه تفصيلاً دقيقاً: ثمن الثوب (شحال للمتر والمجموع)، تكلفة الخياطة (اليد العاملة)، والتكلفة الإجمالية للقطعة (Prix de revient). 4. اقترح أماكن شراء الأثواب في المغرب. كن مفيداً، دقيقاً في الأرقام التقريبية، وتصرف كخبير نسيج حقيقي." }] } })
         });
-        const data = await response.json();
-        let aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || (data.error ? 'خطأ: ' + data.error.message : 'لم أستطع فهم الرد.');
+        let data = await response.json();
+        
+        if (data.error && (data.error.message.includes('high demand') || data.error.code === 503)) {
+          response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents, systemInstruction: { parts: [{ text: "أنت خبير تحليل وتصميم وتسعير في مصنع نسيج مغربي. تكلم بالدارجة المغربية بأسلوب احترافي وودي. مهمتك الأساسية: 1. حساب كميات الثوب بدقة. 2. إعطاء تقديرات دقيقة للأسعار في السوق المغربي (مثلا أثمنة الأثواب في درب عمر أو أسواق الجملة). 3. إذا سألك المستخدم عن التكلفة، أعطه تفصيلاً دقيقاً: ثمن الثوب (شحال للمتر والمجموع)، تكلفة الخياطة (اليد العاملة)، والتكلفة الإجمالية للقطعة (Prix de revient). 4. اقترح أماكن شراء الأثواب في المغرب. كن مفيداً، دقيقاً في الأرقام التقريبية، وتصرف كخبير نسيج حقيقي." }] } })
+          });
+          data = await response.json();
+        }
+
+        let aiText = "";
+        if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
+          aiText = data.candidates[0].content.parts[0].text;
+        } else if (data.error) {
+          if (data.error.message.includes('high demand')) {
+            aiText = "عذراً، الخوادم ديال الذكاء الاصطناعي عليها ضغط كبير دابا. ⏳ تسنى شوية وعاود جرب مرة خرى!";
+          } else {
+            aiText = "خطأ: " + data.error.message;
+          }
+        } else {
+          aiText = 'لم أستطع فهم الرد.';
+        }
         setChat(prev => { const n = [...prev]; n.pop(); return [...n, { role: 'ai', text: aiText }]; });
       } catch (e: any) {
         setChat(prev => { const n = [...prev]; n.pop(); return [...n, { role: 'ai', text: 'خطأ: ' + e.message }]; });
@@ -663,23 +713,43 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
           });
         }
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        let response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents,
             systemInstruction: {
-              parts: [{ text: "أنت خبير تحليل وتصميم في مصنع نسيج مغربي. تكلم بالدارجة المغربية بأسلوب احترافي وودي. ساعد المستخدم في حساب كميات الثوب، تكاليف الإنتاج، مراحل الخياطة، وتحليل الموديلات. إذا سألك أسئلة تقنية، أجب بدقة. كن مفيداً جداً وتصرف كخبير نسيج وخياطة." }]
+              parts: [{ text: "أنت خبير تحليل وتصميم وتسعير في مصنع نسيج مغربي. تكلم بالدارجة المغربية بأسلوب احترافي وودي. مهمتك الأساسية: 1. حساب كميات الثوب بدقة. 2. إعطاء تقديرات دقيقة للأسعار في السوق المغربي (مثلا أثمنة الأثواب في درب عمر أو أسواق الجملة). 3. إذا سألك المستخدم عن التكلفة، أعطه تفصيلاً دقيقاً: ثمن الثوب (شحال للمتر والمجموع)، تكلفة الخياطة (اليد العاملة)، والتكلفة الإجمالية للقطعة (Prix de revient). 4. اقترح أماكن شراء الأثواب في المغرب. كن مفيداً، دقيقاً في الأرقام التقريبية، وتصرف كخبير نسيج حقيقي." }]
             }
           })
         });
 
-        const data = await response.json();
+        let data = await response.json();
+        
+        // Fallback to gemini-1.5-pro if flash is overloaded
+        if (data.error && (data.error.message.includes('high demand') || data.error.code === 503)) {
+          response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents,
+              systemInstruction: {
+                parts: [{ text: "أنت خبير تحليل وتصميم وتسعير في مصنع نسيج مغربي. تكلم بالدارجة المغربية بأسلوب احترافي وودي. مهمتك الأساسية: 1. حساب كميات الثوب بدقة. 2. إعطاء تقديرات دقيقة للأسعار في السوق المغربي (مثلا أثمنة الأثواب في درب عمر أو أسواق الجملة). 3. إذا سألك المستخدم عن التكلفة، أعطه تفصيلاً دقيقاً: ثمن الثوب (شحال للمتر والمجموع)، تكلفة الخياطة (اليد العاملة)، والتكلفة الإجمالية للقطعة (Prix de revient). 4. اقترح أماكن شراء الأثواب في المغرب. كن مفيداً، دقيقاً في الأرقام التقريبية، وتصرف كخبير نسيج حقيقي." }]
+              }
+            })
+          });
+          data = await response.json();
+        }
+
         let aiResponseText = "";
         if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
           aiResponseText = data.candidates[0].content.parts[0].text;
         } else if (data.error) {
-          aiResponseText = "عذراً، وقع خطأ في واجهة برمجة التطبيقات (API Error): " + data.error.message;
+          if (data.error.message.includes('high demand')) {
+            aiResponseText = "عذراً، الخوادم ديال الذكاء الاصطناعي (Google API) عليها ضغط كبير دابا. ⏳ تسنى شوية وعاود جرب مرة خرى!";
+          } else {
+            aiResponseText = "عذراً، وقع خطأ في واجهة برمجة التطبيقات (API Error): " + data.error.message;
+          }
         } else {
           aiResponseText = "لم أستطع فهم الرد. حاول مرة أخرى.";
         }
@@ -968,76 +1038,90 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
         </div>
 
         {/* Right: Chatbot space */}
-        <div className="lg:col-span-5 flex flex-col h-[400px] lg:h-[550px] bg-white/95 backdrop-blur-xl rounded-[40px] shadow-2xl shadow-slate-200/40 relative overflow-hidden border border-slate-100/80">
-          {/* Glow effect */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-400/5 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-violet-400/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="lg:col-span-5 flex flex-col h-[400px] lg:h-[550px] bg-white rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden border border-slate-100/80">
+          
+          {/* Subtle top gradient */}
+          <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-indigo-50/40 to-transparent pointer-events-none" />
 
           {/* Chat Header */}
-          <div className={`p-6 border-b border-slate-100 flex items-center justify-between relative z-10 ${isAr ? 'flex-row-reverse' : ''}`}>
-            <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
-              <div className="w-8 h-8 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center border border-indigo-100 shadow-sm">
-                <MessageSquare className="w-4 h-4" />
+          <div className={`p-5 px-6 border-b border-slate-50 flex items-center justify-between relative z-10 bg-white/90 backdrop-blur-md ${isAr ? 'flex-row-reverse' : ''}`}>
+            <div className={`flex items-center gap-3.5 ${isAr ? 'flex-row-reverse' : ''}`}>
+              <div className="relative">
+                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-violet-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <span className={`absolute -bottom-0.5 ${isAr ? '-left-0.5' : '-right-0.5'} w-3 h-3 bg-emerald-400 border-[2.5px] border-white rounded-full`} />
               </div>
               <div className={isAr ? 'text-right' : ''}>
-                <h3 className="font-black text-sm text-slate-800 uppercase tracking-tight">{isAr ? 'قسم تحليل الموديلات' : 'Analyse de Modèles'}</h3>
-                <div className={`flex items-center gap-1 mt-0.5 justify-start ${isAr ? 'flex-row-reverse' : ''}`}>
-                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-sm shadow-emerald-500/50" />
-                  <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider">{isAr ? 'متصل' : 'Actif'}</span>
-                </div>
+                <h3 className="font-bold text-slate-800 text-sm tracking-wide">{isAr ? 'المساعد الذكي BEYA' : 'Assistant BEYA'}</h3>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{isAr ? 'متصل دائماً' : 'Toujours Actif'}</p>
               </div>
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowApiKeyModal(true)}
-                className="p-2.5 bg-white text-slate-400 hover:text-indigo-600 border border-slate-100 hover:border-indigo-100 hover:bg-indigo-50/50 rounded-xl transition-all shadow-sm"
-                title="إعدادات الذكاء الاصطناعي (API Key)"
-              >
+            <div className="flex gap-1.5">
+              <button onClick={() => setShowApiKeyModal(true)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all" title="API Key">
                 <Zap className="w-4 h-4" />
               </button>
-              <button
-                onClick={() => setChat([{ role: 'ai', text: isAr ? 'مرحباً بك في مساحة التحليل. ارفع صورة موديل للبدء في تحليلها.' : 'Bienvenue dans l\'espace d\'analyse. Uploadez une photo de modèle pour commencer.' }])}
-                className="p-2.5 bg-white text-slate-400 hover:text-rose-600 border border-slate-100 hover:border-rose-100 hover:bg-rose-50/50 rounded-xl transition-all shadow-sm"
-              >
-                <Trash2 className="w-4 h-4" />
+              <button onClick={() => setChat([{ role: 'ai', text: isAr ? 'مرحباً بك في مساحة التحليل. ارفع صورة موديل للبدء في تحليلها.' : 'Bienvenue dans l\'espace d\'analyse. Uploadez une photo de modèle pour commencer.' }])} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-full transition-all" title={isAr ? 'مسح المحادثة' : 'Effacer la discussion'}>
+                <RefreshCw className="w-4 h-4" />
               </button>
             </div>
           </div>
 
           {/* Chat Messages */}
-          <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-4 relative z-10 flex flex-col scroll-smooth">
+          <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-6 relative z-10 flex flex-col scroll-smooth bg-slate-50/30">
             <div className="flex-grow" />
-            <div className="space-y-4 animate-in fade-in duration-300">
+            <div className="space-y-6">
               {chat.map((c, i) => (
-                <div key={i} className={`flex ${c.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] p-4 sm:p-5 rounded-3xl text-sm font-semibold leading-loose whitespace-pre-line ${c.role === 'user'
-                      ? 'bg-indigo-600 text-white rounded-br-none shadow-md shadow-indigo-600/20'
-                      : 'bg-slate-50 text-slate-800 border border-slate-100 rounded-bl-none shadow-sm'
-                    }`}>
+                <div key={i} className={`flex w-full ${c.role === 'user' ? (isAr ? 'justify-start' : 'justify-end') : (isAr ? 'justify-end' : 'justify-start')} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+                  
+                  {/* AI Avatar */}
+                  {c.role === 'ai' && (
+                    <div className={`flex-shrink-0 w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center border border-white shadow-sm mt-auto ${isAr ? 'ml-3' : 'mr-3'}`}>
+                      <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                    </div>
+                  )}
+
+                  <div className={`max-w-[75%] p-4 text-[13px] font-medium leading-relaxed whitespace-pre-line shadow-sm ${
+                    c.role === 'user'
+                      ? 'bg-slate-800 text-white rounded-3xl ' + (isAr ? 'rounded-bl-md' : 'rounded-br-md')
+                      : 'bg-white text-slate-700 border border-slate-100 rounded-3xl ' + (isAr ? 'rounded-br-md' : 'rounded-bl-md')
+                  } ${isAr ? 'text-right' : 'text-left'}`}>
                     {c.text}
                   </div>
+                  
+                  {/* User Avatar */}
+                  {c.role === 'user' && (
+                    <div className={`flex-shrink-0 w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center border border-white shadow-sm mt-auto ${isAr ? 'mr-3' : 'ml-3'}`}>
+                      <span className="text-[10px] font-black text-slate-500">{isAr ? 'أنت' : 'Moi'}</span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           </div>
 
           {/* Chat Input */}
-          <div className="p-4 border-t border-slate-100 bg-white/80 backdrop-blur-md relative z-10">
-            <div className="relative flex items-center">
+          <div className="p-5 bg-white relative z-10 border-t border-slate-50/80">
+            <div className="relative flex items-center bg-slate-50/80 border border-slate-200/60 rounded-full p-1.5 focus-within:ring-4 focus-within:ring-indigo-500/10 focus-within:border-indigo-400 focus-within:bg-white transition-all shadow-sm">
               <input
                 type="text"
                 value={msg}
                 onChange={e => setMsg(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && sendMsg()}
-                placeholder={isAr ? 'اسأل المساعد...' : 'Demandez à l\'assistant...'}
-                className={`w-full bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 rounded-2xl py-3.5 ${isAr ? 'pr-4 pl-12 text-right' : 'pl-4 pr-12'} text-xs font-bold focus:bg-white focus:ring-4 focus:ring-indigo-600/10 focus:border-indigo-500 outline-none transition-all shadow-inner`}
+                placeholder={isAr ? 'اكتب رسالتك هنا...' : 'Écrivez votre message...'}
+                className={`flex-1 bg-transparent border-none py-2.5 ${isAr ? 'pr-4 pl-12 text-right' : 'pl-4 pr-12'} text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-0`}
               />
               <button
                 onClick={sendMsg}
-                className={`absolute ${isAr ? 'left-2.5' : 'right-2.5'} p-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all shadow-md shadow-indigo-600/20`}
+                className={`absolute ${isAr ? 'left-1.5' : 'right-1.5'} w-10 h-10 flex items-center justify-center bg-indigo-600 text-white rounded-full hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all shadow-md shadow-indigo-600/20`}
               >
-                <Send className="w-3.5 h-3.5" />
+                <Send className={`w-4 h-4 ${isAr ? 'rotate-180 -ml-0.5' : 'ml-0.5'}`} />
               </button>
+            </div>
+            <div className="text-center mt-3">
+              <p className="text-[10px] font-medium text-slate-400">
+                {isAr ? 'الذكاء الاصطناعي قد يخطئ أحياناً، يرجى التحقق من المعلومات المهمة.' : 'L\'IA peut parfois se tromper. Veuillez vérifier les informations importantes.'}
+              </p>
             </div>
           </div>
         </div>

@@ -132,14 +132,19 @@ export default function Clients() {
       id: cId, 
       nom: form.nom, 
       telephone: form.telephone || '',
-      email: form.email || '',
+      email: (form.email || '').toLowerCase().trim(),
       adresse: form.adresse || '',
       ville: form.ville || '',
       notes: form.notes || '',
       role: 'client',
-      password: 'client_default_pass',
-      pinCode: isNew ? Math.floor(1000 + Math.random() * 9000).toString() : (form as any).pinCode
+      pinCode: isNew ? Math.floor(100000 + Math.random() * 900000).toString() : ((form as any).pinCode || (form as any).password),
+      password: isNew ? '' : ((form as any).password !== 'client_default_pass' ? (form as any).password : (form as any).pinCode)
     };
+    if (isNew) {
+      clientData.password = clientData.pinCode;
+    } else if (clientData.password === 'client_default_pass') {
+      clientData.password = clientData.pinCode;
+    }
 
     // Save to local for UI responsiveness
     const updated = isNew
@@ -824,13 +829,14 @@ export default function Clients() {
                       )}
                       <button
                         onClick={() => {
-                          const rawPhone = showClientCode.telephone.replace(/\D/g, '');
-                          const phone = rawPhone.startsWith('0') ? '212' + rawPhone.substring(1) : rawPhone.startsWith('212') ? rawPhone : '212' + rawPhone;
+                          const rawPhone = String(showClientCode.telephone || '').replace(/\D/g, '');
+                          const phone = rawPhone ? (rawPhone.startsWith('0') ? '212' + rawPhone.substring(1) : rawPhone.startsWith('212') ? rawPhone : '212' + rawPhone) : '';
                           const code = showClientCode.pinCode || showClientCode.password || '------';
                           const msg = isAr
                             ? `🎉 مرحباً بك في *BEYA CREATIVE* !\n\nأهلاً *${showClientCode.nom}*، حسابك جاهز :\n\n🌐 *https://beyacreative.com*\n📧 البريد : *${showClientCode.email}*\n🔑 الرمز : *${code}*\n\nسجل دخولك لمتابعة طلباتك. 🇲🇦`
                             : `🎉 Bienvenue chez *BEYA CREATIVE* !\n\nBonjour *${showClientCode.nom}*, votre espace client est prêt :\n\n🌐 *https://beyacreative.com*\n📧 Email : *${showClientCode.email}*\n🔑 Code : *${code}*\n\nConnectez-vous pour suivre vos commandes. À bientôt ! 🇲🇦`;
-                          window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+                          const url = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+                          window.open(url, '_blank');
                           localStorage.setItem(storageKey, JSON.stringify({ date: new Date().toISOString(), method: 'whatsapp' }));
                         }}
                         className="w-full h-11 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-100">
@@ -842,9 +848,15 @@ export default function Clients() {
                           const clientName = showClientCode.nom.replace(/\s+/g, '_');
                           const filename = `BeyaCreative_Bienvenue_${clientName}`;
                           const el = document.getElementById('welcome-pdf-' + showClientCode.id);
-                          if (el) el.style.display = 'block';
+                          if (el) {
+                            el.classList.remove('opacity-0');
+                            el.style.display = 'block';
+                          }
                           await generatePDF('welcome-pdf-' + showClientCode.id, filename);
-                          if (el) el.style.display = 'none';
+                          if (el) {
+                            el.classList.add('opacity-0');
+                            el.style.display = 'none';
+                          }
                           localStorage.setItem(storageKey, JSON.stringify({ date: new Date().toISOString(), method: 'pdf' }));
                         }}
                         className="w-full h-11 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all">

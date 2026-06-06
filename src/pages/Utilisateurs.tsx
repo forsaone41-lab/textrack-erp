@@ -207,7 +207,7 @@ export default function Utilisateurs() {
     if (!form.nom || !form.email) return;
     const isNew = !editId;
     const uId = editId || genId();
-    const uData = { id: uId, ...form } as User;
+    const uData = { id: uId, ...form, email: (form.email || '').toLowerCase().trim() } as User;
     const updated = isNew ? [...users, uData] : users.map(u => (u.id === editId ? uData : u));
     setUsers(updated);
     setShowModal(false);

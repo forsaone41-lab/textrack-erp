@@ -286,6 +286,9 @@ export interface User {
   lastActive?: string;
   employeId?: string;
   photo?: string;
+  ville?: string;
+  adresse?: string;
+  notes?: string;
 }
 
 export interface Appointment {
@@ -787,7 +790,7 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
           'dateEntree', 'contrat', 'cnss', 'mutuelle', 'enfants', 'situation_familiale',
           'clientId', 'rebut', 'planningReady', 'ville', 'employeId', 'telephone', 'tailles', 'rejectionNote', 'tissus',
           'partenaireId', 'externalTasks', 'typeDossier',
-          'photo', 'adresse',
+          'photo', 'adresse', 'notes',
           'crmStage', 'crmContactMethod', 'crmRdvDate', 'crmNotes', 'crmPrice', 'crmPriceConfirmed', 'crmPriority',
           'preuveClient', 'annulationRaison', 'cv', 'sampleFeedback'
         ];
