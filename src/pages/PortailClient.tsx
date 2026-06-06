@@ -824,7 +824,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                   <div className="animate-in fade-in slide-in-from-bottom-4 text-left">
                                      <h5 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-6 text-center">{isAr ? 'تقييم العينة والملاحظات' : 'Évaluation et Remarques'}</h5>
                                      
-                                     <div className="space-y-6 max-w-2xl mx-auto">
+                                     <div className="space-y-6 max-w-5xl mx-auto">
                                         {/* Rating */}
                                         <div className="flex flex-col items-center gap-3">
                                           <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">{isAr ? 'تقييمك العام للعينة' : 'Votre note globale'}</p>
