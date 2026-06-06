@@ -396,7 +396,7 @@ export default function Commandes() {
       {/* Quick Sample Modal */}
       {quickSampleModal && (
         <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300 overflow-y-auto" dir={isAr ? 'rtl' : 'ltr'}>
-          <div className="bg-white rounded-[2rem] p-6 max-w-2xl w-full shadow-2xl animate-in zoom-in duration-300 relative my-8">
+          <div className="bg-white rounded-[2rem] p-6 max-w-2xl w-full shadow-2xl animate-in zoom-in duration-300 relative my-8 max-h-[90vh] overflow-y-auto no-scrollbar">
             <button 
               onClick={() => setQuickSampleModal(false)}
               className="absolute top-6 right-6 p-2 text-slate-400 hover:text-rose-500 bg-slate-50 hover:bg-rose-50 rounded-full transition-all"
