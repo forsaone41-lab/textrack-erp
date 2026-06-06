@@ -1011,10 +1011,18 @@ export default function FichesTechniques() {
                   </div>
                   <div className="space-y-1.5">
                     <label className={`block text-xs font-semibold text-slate-600 ${isAr ? 'text-right' : ''}`}>{t('patronage_label', lang)}</label>
-                    <div className="relative aspect-video rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 overflow-hidden group hover:border-indigo-400 transition-colors cursor-pointer">
+                    <div className="relative aspect-video rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 overflow-hidden group hover:border-indigo-400 transition-colors">
                       {form.patronagePhoto ? (
                         <>
-                          {form.patronagePhoto.startsWith('data:image/') ? (
+                          {form.patronagePhoto === 'MANUAL_PATTERN' ? (
+                            <div className="flex flex-col items-center justify-center h-full bg-indigo-50/50">
+                              <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mb-2 shadow-sm">
+                                <Ruler className="w-6 h-6 text-indigo-600" />
+                              </div>
+                              <p className="text-[11px] font-black text-indigo-900 uppercase tracking-widest text-center px-4">{isAr ? 'باترون ورقي (سيرية)' : 'Patron Manuel (Série)'}</p>
+                              <p className="text-[9px] font-bold text-indigo-500 mt-1">{isAr ? 'القياسات متوفرة في المشغل' : 'Disponible physiquement à l\'atelier'}</p>
+                            </div>
+                          ) : form.patronagePhoto.startsWith('data:image/') ? (
                             <img src={form.patronagePhoto} alt="Preview" className="w-full h-full object-contain" />
                           ) : (
                             <div className="flex flex-col items-center justify-center h-full">
@@ -1025,20 +1033,35 @@ export default function FichesTechniques() {
                           <button onClick={() => setForm({ ...form, patronagePhoto: undefined, patronageFileName: undefined })} className={`absolute top-2 ${isAr ? 'left-2' : 'right-2'} p-1.5 bg-red-500 text-white rounded-full shadow-md z-20 hover:bg-red-600 transition-colors`}>
                             <span className="text-xs leading-none">×</span>
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => downloadFile(form.patronagePhoto!, form.patronageFileName || 'patronage')}
-                            className={`absolute bottom-2 ${isAr ? 'left-2' : 'right-2'} flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg shadow-lg z-20 hover:bg-emerald-700 transition-all font-bold text-[10px]`}
-                          >
-                            <Download className="w-3 h-3" /> {t('download_label', lang)}
-                          </button>
+                          {form.patronagePhoto !== 'MANUAL_PATTERN' && (
+                            <button
+                              type="button"
+                              onClick={() => downloadFile(form.patronagePhoto!, form.patronageFileName || 'patronage')}
+                              className={`absolute bottom-2 ${isAr ? 'left-2' : 'right-2'} flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg shadow-lg z-20 hover:bg-emerald-700 transition-all font-bold text-[10px]`}
+                            >
+                              <Download className="w-3 h-3" /> {t('download_label', lang)}
+                            </button>
+                          )}
                         </>
                       ) : (
-                        <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer">
-                          <FileText className="w-7 h-7 text-slate-300 mb-1" />
-                          <span className="text-[10px] font-semibold text-slate-400 uppercase">{t('add_patron', lang)}</span>
-                          <input type="file" accept=".pdf,.dxf,image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'patronagePhoto')} />
-                        </label>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center p-3">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'اختر طريقة الباترون' : 'Méthode du Patronage'}</p>
+                          <div className="flex w-full gap-2 h-[80%]">
+                            <label className="flex-1 flex flex-col items-center justify-center bg-white border border-slate-200 hover:border-indigo-400 rounded-xl cursor-pointer transition-all shadow-sm group/btn">
+                              <FileText className="w-5 h-5 text-indigo-400 mb-1.5 group-hover/btn:text-indigo-600 group-hover/btn:scale-110 transition-transform" />
+                              <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest text-center px-1">{isAr ? 'ملف رقمي' : 'Fichier PDF/DXF'}</span>
+                              <input type="file" accept=".pdf,.dxf,image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'patronagePhoto')} />
+                            </label>
+                            <button 
+                              type="button"
+                              onClick={() => setForm({ ...form, patronagePhoto: 'MANUAL_PATTERN', patronageFileName: 'Patron Manuel (Série)' })}
+                              className="flex-1 flex flex-col items-center justify-center bg-white border border-slate-200 hover:border-fuchsia-400 rounded-xl cursor-pointer transition-all shadow-sm group/btn"
+                            >
+                              <Ruler className="w-5 h-5 text-fuchsia-400 mb-1.5 group-hover/btn:text-fuchsia-600 group-hover/btn:scale-110 transition-transform" />
+                              <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest text-center px-1">{isAr ? 'يدوي (سيرية)' : 'Manuel (Série)'}</span>
+                            </button>
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>
