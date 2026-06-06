@@ -542,7 +542,23 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                       const progress = (getPhaseIndex(cmd.phase) / (PHASE_ORDER.length - 1)) * 100;
                       const isActive = cmd.statut !== 'livré';
                       return (
-                        <div key={cmd.id} className="bg-white/70 backdrop-blur-xl p-4 md:p-10 rounded-2xl md:rounded-[3rem] border border-white shadow-2xl shadow-slate-200/50 group hover:border-indigo-400 transition-all duration-500 relative overflow-hidden">
+                        <div 
+                          key={cmd.id} 
+                          onClick={() => {
+                            setActiveTab('orders');
+                            setTimeout(() => {
+                              const el = document.getElementById(`order-card-${cmd.id}`);
+                              if (el) {
+                                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                el.classList.add('ring-4', 'ring-indigo-500', 'ring-offset-4', 'transition-all', 'duration-500');
+                                setTimeout(() => {
+                                  el.classList.remove('ring-4', 'ring-indigo-500', 'ring-offset-4');
+                                }, 3000);
+                              }
+                            }, 150);
+                          }}
+                          className="bg-white/70 backdrop-blur-xl p-4 md:p-10 rounded-2xl md:rounded-[3rem] border border-white shadow-2xl shadow-slate-200/50 group hover:border-indigo-400 transition-all duration-500 relative overflow-hidden cursor-pointer active:scale-[0.99]"
+                        >
                           {/* Live Indicator */}
                           {isActive && (
                             <div className="absolute top-6 left-6 flex items-center gap-2">
