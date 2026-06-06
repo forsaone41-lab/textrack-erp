@@ -216,36 +216,38 @@ export default function Echantillons() {
               </div>
 
               {validateMethod === 'portal' ? (
-                <div className="space-y-4 bg-blue-50/50 p-5 rounded-2xl border border-blue-100">
-                  <div>
-                    <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-2">
-                      {isAr ? 'تقييم العينة' : 'Évaluation'}
-                    </label>
-                    <div className="flex gap-2">
-                      {[1, 2, 3, 4, 5].map(star => (
-                        <button
-                          key={star}
-                          onClick={() => setPortalFeedback(prev => ({ ...prev, rating: star }))}
-                          className={`p-2 rounded-xl transition-all ${star <= portalFeedback.rating ? 'text-amber-400 bg-amber-50 shadow-sm' : 'text-slate-300 bg-white hover:bg-slate-50'}`}
-                        >
-                          <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        </button>
-                      ))}
+                <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="col-span-2 sm:col-span-1">
+                      <label className="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1.5">
+                        {isAr ? 'تقييم العينة' : 'Évaluation'}
+                      </label>
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map(star => (
+                          <button
+                            key={star}
+                            onClick={() => setPortalFeedback(prev => ({ ...prev, rating: star }))}
+                            className={`p-1.5 rounded-lg transition-all ${star <= portalFeedback.rating ? 'text-amber-400 bg-amber-50 shadow-sm' : 'text-slate-300 bg-white hover:bg-slate-50'}`}
+                          >
+                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-1.5">{isAr ? 'ملاحظات حول الثوب واللون' : 'Notes Tissu & Couleur'}</label>
-                    <input type="text" value={portalFeedback.fabricNotes} onChange={e => setPortalFeedback(prev => ({ ...prev, fabricNotes: e.target.value }))} className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm focus:border-blue-400 outline-none" placeholder={isAr ? 'جيد جداً...' : 'Très bien...'} />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-1.5">{isAr ? 'ملاحظات حول القياسات' : 'Notes Mensurations'}</label>
-                    <input type="text" value={portalFeedback.sizeNotes} onChange={e => setPortalFeedback(prev => ({ ...prev, sizeNotes: e.target.value }))} className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm focus:border-blue-400 outline-none" placeholder={isAr ? 'هل القياسات مضبوطة؟...' : 'Les tailles sont-elles correctes ?'} />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-1.5">{isAr ? 'ملاحظات عامة وتعديلات' : 'Remarques générales'}</label>
-                    <textarea value={portalFeedback.generalNotes} onChange={e => setPortalFeedback(prev => ({ ...prev, generalNotes: e.target.value }))} className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm focus:border-blue-400 outline-none h-20 resize-none" placeholder={isAr ? 'أي تعديلات قبل الإنتاج...' : 'Modifications avant production...'} />
+                    <div className="col-span-2 sm:col-span-1">
+                      <label className="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">{isAr ? 'ملاحظات الثوب واللون' : 'Notes Tissu & Couleur'}</label>
+                      <input type="text" value={portalFeedback.fabricNotes} onChange={e => setPortalFeedback(prev => ({ ...prev, fabricNotes: e.target.value }))} className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs focus:border-blue-400 outline-none" placeholder={isAr ? 'جيد جداً...' : 'Très bien...'} />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">{isAr ? 'ملاحظات حول القياسات' : 'Notes Mensurations'}</label>
+                      <input type="text" value={portalFeedback.sizeNotes} onChange={e => setPortalFeedback(prev => ({ ...prev, sizeNotes: e.target.value }))} className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs focus:border-blue-400 outline-none" placeholder={isAr ? 'هل القياسات مضبوطة؟...' : 'Les tailles sont-elles correctes ?'} />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">{isAr ? 'ملاحظات عامة وتعديلات' : 'Remarques générales'}</label>
+                      <textarea value={portalFeedback.generalNotes} onChange={e => setPortalFeedback(prev => ({ ...prev, generalNotes: e.target.value }))} className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs focus:border-blue-400 outline-none h-16 resize-none" placeholder={isAr ? 'أي تعديلات قبل الإنتاج...' : 'Modifications avant production...'} />
+                    </div>
                   </div>
                 </div>
               ) : (
