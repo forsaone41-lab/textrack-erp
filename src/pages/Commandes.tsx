@@ -6,7 +6,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { 
   loadData, saveRecord, deleteRecord, Commande, OrdreDeCoupe, Employe, Phase,
-  PHASE_LABELS, PHASE_ORDER, User
+  PHASE_LABELS, PHASE_ORDER, User, FicheTechnique, Lead, loadLeads
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { t, T, TKey } from '../i18n';
@@ -20,6 +20,8 @@ export default function Commandes() {
   const [ordres, setOrdres] = useState<OrdreDeCoupe[]>([]);
   const [employes, setEmployes] = useState<Employe[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [fiches, setFiches] = useState<FicheTechnique[]>([]);
+  const [leads, setLeads] = useState<Lead[]>([]);
 
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
@@ -72,14 +74,18 @@ export default function Commandes() {
   }, [search, filterStatut]);
 
   async function loadMetadata() {
-    const [ord, emp, usr] = await Promise.all([
+    const [ord, emp, usr, f, l] = await Promise.all([
       loadData<OrdreDeCoupe>('ordres'),
       loadData<Employe>('employes'),
-      loadData<User>('users')
+      loadData<User>('users'),
+      loadData<FicheTechnique>('fiches'),
+      loadLeads()
     ]);
     setOrdres(ord || []);
     setEmployes(emp || []);
     setUsers(usr || []);
+    setFiches(f || []);
+    setLeads(l || []);
   }
 
   const downloadFile = (dataUrl: string, fileName: string) => {
@@ -414,16 +420,6 @@ export default function Commandes() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
               <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex flex-col">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">{isAr ? 'الموديل' : 'Modèle'}</label>
-                <input
-                  type="text"
-                  placeholder={isAr ? 'مثال: قميص أبيض كلاسيكي' : 'ex: Chemise Blanche Classique'}
-                  value={quickSampleData.modele}
-                  onChange={e => setQuickSampleData({ ...quickSampleData, modele: e.target.value })}
-                  className="w-full bg-white border-2 border-slate-200 text-sm font-bold text-slate-800 outline-none focus:border-fuchsia-500 px-4 py-3 rounded-xl transition-all"
-                />
-              </div>
-              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex flex-col">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">{isAr ? 'الزبون' : 'Client'}</label>
                 <select
                   value={quickSampleData.client}
@@ -439,6 +435,83 @@ export default function Commandes() {
                   )}
                 </select>
               </div>
+              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex flex-col">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">{isAr ? 'الموديل' : 'Modèle'}</label>
+                <input
+                  type="text"
+                  list="modele-suggestions"
+                  placeholder={isAr ? 'مثال: قميص أبيض كلاسيكي' : 'ex: Chemise Blanche Classique'}
+                  value={quickSampleData.modele}
+                  onChange={e => {
+                    const val = e.target.value;
+                    let photo = quickSampleData.photo;
+                    
+                    // Auto-fill photo if it matches a FicheTechnique or Lead
+                    const matchFiche = fiches.find(f => f.client === quickSampleData.client && f.modele === val);
+                    const matchLead = leads.find(l => l.name === quickSampleData.client && l.type === val);
+                    
+                    if (matchFiche?.photo) photo = matchFiche.photo;
+                    else if (matchLead?.photo) photo = matchLead.photo;
+                    
+                    setQuickSampleData({ ...quickSampleData, modele: val, photo });
+                  }}
+                  className="w-full bg-white border-2 border-slate-200 text-sm font-bold text-slate-800 outline-none focus:border-fuchsia-500 px-4 py-3 rounded-xl transition-all"
+                />
+                {quickSampleData.client && (
+                  <datalist id="modele-suggestions">
+                    {fiches.filter(f => f.client === quickSampleData.client).map(f => (
+                      <option key={f.id} value={f.modele}>{isAr ? 'بطاقة تقنية' : 'Fiche Technique'}</option>
+                    ))}
+                    {leads.filter(l => l.name === quickSampleData.client).map(l => (
+                      <option key={l.id} value={l.type}>{isAr ? 'طلب إنزال' : 'Demande'}</option>
+                    ))}
+                  </datalist>
+                )}
+              </div>
+            </div>
+
+            {/* Photo Uploader */}
+            <div className="mb-6 bg-slate-50 border border-slate-100 rounded-2xl p-4">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">
+                {isAr ? 'صورة الموديل (اختياري)' : 'Photo du Modèle (Optionnel)'}
+              </label>
+              {quickSampleData.photo ? (
+                <div className="relative w-full h-40 rounded-xl overflow-hidden border border-slate-200 group">
+                  <img src={quickSampleData.photo} alt="Modele" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-slate-900/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+                    <button 
+                      onClick={() => setQuickSampleData({ ...quickSampleData, photo: '' })}
+                      className="p-3 bg-rose-500 text-white rounded-full hover:bg-rose-600 transition-all shadow-lg"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <label className="w-full h-24 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center hover:bg-slate-100 hover:border-fuchsia-400 transition-all relative cursor-pointer group">
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setQuickSampleData(prev => ({ ...prev, photo: reader.result as string }));
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="absolute inset-0 opacity-0 cursor-pointer hidden" 
+                  />
+                  <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm mb-1 text-slate-400 group-hover:text-fuchsia-500 transition-colors">
+                    <Plus className="w-4 h-4" />
+                  </div>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest group-hover:text-fuchsia-500 transition-colors">
+                    {isAr ? 'إضافة صورة من الحاسوب' : 'Ajouter une photo'}
+                  </span>
+                </label>
+              )}
             </div>
 
             <div className="space-y-6 mb-8">
