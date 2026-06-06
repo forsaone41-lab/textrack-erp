@@ -858,7 +858,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                           </div>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 gap-4">
                                           <div className="space-y-2">
                                             <label className="text-xs font-black text-slate-400 uppercase tracking-widest">{isAr ? 'ملاحظات حول القماش / الثوب' : 'Remarques sur le tissu'}</label>
                                             <textarea 
