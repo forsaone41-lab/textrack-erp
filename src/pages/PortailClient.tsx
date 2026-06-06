@@ -896,7 +896,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                                       <th className={`sticky top-0 bg-slate-50 z-10 text-[10px] font-black text-slate-400 uppercase p-2 border-b border-slate-200 min-w-[180px] ${isAr ? 'text-right' : 'text-left'}`}>
                                                         {isAr ? 'نقطة القياس' : 'Point'}
                                                       </th>
-                                                      {(cmd.tailles && Object.keys(cmd.tailles).length > 0 ? Object.keys(cmd.tailles) : ['S', 'M', 'L', 'XL', 'XXL']).map(size => (
+                                                      {(feedbackData.mesuresFeedback.length > 0 && feedbackData.mesuresFeedback[0].valeurs && Object.keys(feedbackData.mesuresFeedback[0].valeurs).length > 0 ? Object.keys(feedbackData.mesuresFeedback[0].valeurs) : (cmd.tailles && Object.keys(cmd.tailles).length > 0 ? Object.keys(cmd.tailles) : ['S', 'M', 'L', 'XL', 'XXL'])).map(size => (
                                                         <th key={size} className="sticky top-0 bg-slate-50 z-10 text-center text-[10px] font-black text-indigo-900 uppercase p-2 border-b border-slate-200 min-w-[45px]">
                                                           {size}
                                                         </th>
@@ -920,7 +920,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                                             placeholder={isAr ? 'القياس...' : 'Mesure...'}
                                                           />
                                                         </td>
-                                                        {(cmd.tailles && Object.keys(cmd.tailles).length > 0 ? Object.keys(cmd.tailles) : ['S', 'M', 'L', 'XL', 'XXL']).map(size => (
+                                                        {(feedbackData.mesuresFeedback.length > 0 && feedbackData.mesuresFeedback[0].valeurs && Object.keys(feedbackData.mesuresFeedback[0].valeurs).length > 0 ? Object.keys(feedbackData.mesuresFeedback[0].valeurs) : (cmd.tailles && Object.keys(cmd.tailles).length > 0 ? Object.keys(cmd.tailles) : ['S', 'M', 'L', 'XL', 'XXL'])).map(size => (
                                                           <td key={size} className="p-1">
                                                             <input 
                                                               type="text"
@@ -1028,8 +1028,8 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                      <button 
                                        onClick={() => {
                                           setFeedbackCmdId(cmd.id);
-                                          const fiche = fiches.find(f => f.modele.toLowerCase() === cmd.modele.toLowerCase() && (f.client || '').toLowerCase() === (cmd.client || '').toLowerCase()) 
-                                                        || fiches.find(f => f.modele.toLowerCase() === cmd.modele.toLowerCase());
+                                          const matchingFiches = fiches.filter(f => f.modele.toLowerCase() === cmd.modele.toLowerCase() && (f.client || '').toLowerCase() === (cmd.client || '').toLowerCase()).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                                          const fiche = matchingFiches.find(f => f.mesures && f.mesures.some((m: any) => m.valeurs && Object.keys(m.valeurs).length > 0)) || matchingFiches[0] || fiches.find(f => f.modele.toLowerCase() === cmd.modele.toLowerCase());
                                           let initialMesures = [];
                                           if (fiche && fiche.mesures && fiche.mesures.length > 0) {
                                             initialMesures = fiche.mesures.map((m: any) => ({ nom: m.nom, valeurs: m.valeurs ? { ...m.valeurs } : {} }));
