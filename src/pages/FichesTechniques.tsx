@@ -556,35 +556,63 @@ export default function FichesTechniques() {
   }
 
   function addStandardMeasures() {
-    const standardMeasures = [
-      isAr ? 'الصدر (Poitrine)' : 'Poitrine',
-      isAr ? 'الكتف (Épaules)' : 'Épaules',
-      isAr ? 'الطول (Longueur)' : 'Longueur',
-      isAr ? 'الكم (Manche)' : 'Manche',
-      isAr ? 'الخصر (Taille)' : 'Taille',
-      isAr ? 'الورك (Hanches)' : 'Hanches',
-      isAr ? 'الفخذ (Cuisse)' : 'Cuisse',
-      isAr ? 'أسفل الرجل (Bas de jambe)' : 'Bas de jambe',
-    ];
+    const standardKeys = ['Poitrine', 'Épaules', 'Longueur', 'Manche', 'Taille', 'Hanches', 'Cuisse', 'Bas de jambe'];
+    
+    const localizedNames: Record<string, string> = {
+      'Poitrine': isAr ? 'الصدر (Poitrine)' : 'Poitrine',
+      'Épaules': isAr ? 'الكتف (Épaules)' : 'Épaules',
+      'Longueur': isAr ? 'الطول (Longueur)' : 'Longueur',
+      'Manche': isAr ? 'الكم (Manche)' : 'Manche',
+      'Taille': isAr ? 'الخصر (Taille)' : 'Taille',
+      'Hanches': isAr ? 'الورك (Hanches)' : 'Hanches',
+      'Cuisse': isAr ? 'الفخذ (Cuisse)' : 'Cuisse',
+      'Bas de jambe': isAr ? 'أسفل الرجل (Bas de jambe)' : 'Bas de jambe',
+    };
+
+    const defaultGrading: Record<string, Record<string, number>> = {
+      'Poitrine': { 'XS': 84, 'S': 90, 'M': 96, 'L': 102, 'XL': 108, 'XXL': 114 },
+      'Épaules': { 'XS': 36, 'S': 38, 'M': 40, 'L': 42, 'XL': 44, 'XXL': 46 },
+      'Longueur': { 'XS': 68, 'S': 70, 'M': 72, 'L': 74, 'XL': 76, 'XXL': 78 },
+      'Manche': { 'XS': 57, 'S': 58, 'M': 59, 'L': 60, 'XL': 61, 'XXL': 62 },
+      'Taille': { 'XS': 68, 'S': 72, 'M': 76, 'L': 80, 'XL': 84, 'XXL': 88 },
+      'Hanches': { 'XS': 90, 'S': 94, 'M': 98, 'L': 102, 'XL': 106, 'XXL': 110 },
+      'Cuisse': { 'XS': 54, 'S': 56, 'M': 58, 'L': 60, 'XL': 62, 'XXL': 64 },
+      'Bas de jambe': { 'XS': 28, 'S': 30, 'M': 32, 'L': 34, 'XL': 36, 'XXL': 38 },
+    };
+
+    let newTailles = form.tailles || [];
+    if (newTailles.length === 0) {
+      newTailles = ['S', 'M', 'L', 'XL', 'XXL'];
+    }
 
     const currentMeasures = form.mesures || [];
     const currentNames = currentMeasures.map(m => m.nom);
 
-    const initialValeurs: Record<string, number> = {};
-    (form.tailles || []).forEach(t => {
-      initialValeurs[t] = 0;
+    const newMeasures = standardKeys
+      .filter(k => !currentNames.includes(localizedNames[k]))
+      .map(k => {
+        const nom = localizedNames[k];
+        const valeurs: Record<string, number> = {};
+        newTailles.forEach(t => {
+          valeurs[t] = defaultGrading[k][t] || 0;
+        });
+        return { nom, valeurs };
+      });
+
+    // Also update existing measures with 0 for new sizes if we added default sizes
+    const updatedCurrentMeasures = currentMeasures.map(m => {
+      const newValeurs = { ...m.valeurs };
+      newTailles.forEach(t => {
+        if (newValeurs[t] === undefined) newValeurs[t] = 0;
+      });
+      return { ...m, valeurs: newValeurs };
     });
 
-    const newMeasures = standardMeasures
-      .filter(m => !currentNames.includes(m))
-      .map(nom => ({ nom, valeurs: { ...initialValeurs } }));
-
-    if (newMeasures.length > 0) {
-      setForm({
-        ...form,
-        mesures: [...currentMeasures, ...newMeasures]
-      });
-    }
+    setForm({
+      ...form,
+      tailles: newTailles,
+      mesures: [...updatedCurrentMeasures, ...newMeasures]
+    });
   }
 
   function addMesure(manualName?: string) {
