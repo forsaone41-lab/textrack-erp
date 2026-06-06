@@ -104,15 +104,15 @@ export default function Echantillons() {
     setConfirmLaunch(c);
   };
 
-  const confirmLaunchProduction = async () => {
+  const confirmLaunchProduction = async (targetPhase: 'coupe' | 'patronage') => {
     if (!confirmLaunch) return;
     const c = confirmLaunch;
     
     const updated = {
       ...c,
       statut: 'en_cours',
-      phase: 'coupe',
-      suivi: [...(c.suivi || []), { phase: 'coupe', date: new Date().toISOString(), note: 'Production globale lancée' }]
+      phase: targetPhase,
+      suivi: [...(c.suivi || []), { phase: targetPhase, date: new Date().toISOString(), note: `Production lancée vers: ${targetPhase}` }]
     };
     
     await saveRecord('commandes', updated as any);
@@ -120,8 +120,10 @@ export default function Echantillons() {
     setConfirmLaunch(null);
 
     setShowSuccess({
-      message: isAr ? 'تم إطلاق الإنتاج!' : 'Production Lancée !',
-      sub: isAr ? 'الطلبية الآن في مرحلة الفصالة.' : 'La commande est maintenant en phase de coupe.'
+      message: isAr ? 'تم الإرسال بنجاح!' : 'Envoyé avec succès !',
+      sub: isAr 
+        ? (targetPhase === 'coupe' ? 'الطلبية الآن في الفصالة.' : 'الطلبية الآن في الباترون/السيرية.') 
+        : (targetPhase === 'coupe' ? 'La commande est à la coupe.' : 'La commande est au patronage.')
     });
     setTimeout(() => setShowSuccess(null), 3000);
   };
@@ -619,21 +621,27 @@ export default function Echantillons() {
       {/* Confirm Launch Modal */}
       {confirmLaunch && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[300] p-4">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl p-10 text-center animate-in zoom-in duration-300 border border-emerald-100">
-            <div className="w-24 h-24 bg-emerald-50 rounded-[2rem] flex items-center justify-center mx-auto mb-8 border border-emerald-100 shadow-xl shadow-emerald-100/50">
-              <Package className="w-12 h-12 text-emerald-600 animate-bounce" />
+          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl p-8 text-center animate-in zoom-in duration-300 border border-emerald-100">
+            <div className="w-20 h-20 bg-emerald-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-emerald-100 shadow-xl shadow-emerald-100/50">
+              <Package className="w-10 h-10 text-emerald-600 animate-bounce" />
             </div>
-            <h3 className="text-2xl font-black text-slate-900 mb-2">{isAr ? 'إطلاق الإنتاج الشامل' : 'Lancer la Production'}</h3>
-            <p className="text-sm text-slate-500 font-bold mb-8 leading-relaxed uppercase tracking-tight">
-              {isAr ? 'سيتم تحويل هذه العينة إلى طلبية إنتاج فعلية وإرسالها إلى مرحلة الفصالة.' : 'Voulez-vous transformer cet échantillon en commande de production et l\'envoyer à la coupe ?'}
+            <h3 className="text-xl font-black text-slate-900 mb-2">{isAr ? 'أين تريد توجيه الطلبية؟' : 'Où envoyer la commande ?'}</h3>
+            <p className="text-xs text-slate-500 font-bold mb-6 leading-relaxed uppercase tracking-tight">
+              {isAr ? 'حدد الخطوة التالية بعد موافقة الكليان:' : 'Sélectionnez la prochaine étape après validation :'}
             </p>
             <div className="flex flex-col gap-3">
-              <button onClick={confirmLaunchProduction} className="w-full py-5 bg-emerald-600 text-white rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] hover:bg-emerald-700 shadow-2xl shadow-emerald-200 transition-all flex items-center justify-center gap-3">
-                <CheckCircle className="w-5 h-5" />
-                {isAr ? 'تأكيد إطلاق الإنتاج' : 'Confirmer le Lancement'}
+              <button onClick={() => confirmLaunchProduction('coupe')} className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-emerald-700 shadow-xl shadow-emerald-200 transition-all flex items-center justify-center gap-3">
+                <Scissors className="w-5 h-5" />
+                {isAr ? 'إرسال للفصالة مباشرة (مستعجل)' : 'Envoyer à la Coupe (Direct)'}
               </button>
-              <button onClick={() => setConfirmLaunch(null)} className="w-full py-4 bg-slate-100 text-slate-400 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest hover:text-slate-600 transition-colors">
-                {isAr ? 'رجوع' : 'Retour / Annuler'}
+              
+              <button onClick={() => confirmLaunchProduction('patronage')} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all flex items-center justify-center gap-3">
+                <Ruler className="w-5 h-5" />
+                {isAr ? 'عمل السيرية / باترون (Patronage)' : 'Créer Série / Patronage'}
+              </button>
+
+              <button onClick={() => setConfirmLaunch(null)} className="w-full py-3 mt-2 bg-slate-50 text-slate-400 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-100 hover:text-slate-600 transition-colors">
+                {isAr ? 'إلغاء الرجوع' : 'Annuler'}
               </button>
             </div>
           </div>
