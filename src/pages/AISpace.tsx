@@ -715,9 +715,6 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
           )}
           <div>
             <div className={`flex items-center gap-3 mb-2 justify-start md:justify-start ${isAr ? 'flex-row-reverse' : ''}`}>
-              <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-600/20 flex-shrink-0">
-                <Sparkles className="w-6 h-6 text-white" />
-              </div>
               <h1 className="text-3xl font-black text-slate-900 tracking-tight uppercase italic">BEYA <span className="text-indigo-600 not-italic">STUDIO</span></h1>
             </div>
             <p className="text-slate-500 font-bold text-sm uppercase tracking-widest">{isAr ? 'مساحة التحليل والتصميم' : 'Espace d\'Analyse & Design'}</p>
