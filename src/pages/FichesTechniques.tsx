@@ -1655,7 +1655,21 @@ export default function FichesTechniques() {
               </div>
               <div className={isAr ? 'text-left' : 'text-right'}>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الزبون' : 'Client'}</p>
-                <p className="text-sm font-black text-indigo-600">{confirmFiche.client}</p>
+                <select
+                  value={confirmFiche.client || ''}
+                  onChange={e => setConfirmFiche({ ...confirmFiche, client: e.target.value })}
+                  className={`w-full max-w-[150px] bg-transparent text-sm font-black text-indigo-600 outline-none cursor-pointer hover:bg-indigo-50 px-2 py-1 rounded-lg transition-colors border-none ${isAr ? 'text-left' : 'text-right'}`}
+                  style={{ textAlignLast: isAr ? 'left' : 'right' }}
+                >
+                  <option value="" disabled className="text-slate-400">{isAr ? '-- اختر الزبون --' : '-- Client --'}</option>
+                  {clients.map(c => (
+                    <option key={c.id} value={c.nom} className="text-slate-700">{c.nom}</option>
+                  ))}
+                  {/* Keep the original client if not in list */}
+                  {!clients.find(c => c.nom === confirmFiche.client) && confirmFiche.client && (
+                    <option value={confirmFiche.client} className="text-slate-700">{confirmFiche.client}</option>
+                  )}
+                </select>
               </div>
             </div>
 
@@ -1664,7 +1678,7 @@ export default function FichesTechniques() {
                 <div>
                   <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-2">{isAr ? 'نوع الثوب (Tissu)' : 'Type de Tissu'}</label>
                   <div className="flex flex-wrap gap-1.5 mb-2">
-                    {['Jersey', 'Popeline', 'Fleece', 'Gabardine', 'Denim', 'Viscose'].map(type => (
+                    {['Jersey', 'Popeline', 'Fleece', 'Gabardine', 'Denim', 'Viscose', 'Coton', 'Satin', 'Crêpe', 'Lin', 'Velours', 'Polyester'].map(type => (
                       <button
                         key={type}
                         type="button"
