@@ -1621,6 +1621,9 @@ export default function Demandes() {
                               {lead.type.startsWith('RECRUTEMENT:') ? (
                                 <span className="flex items-center gap-1 text-indigo-600 font-black text-sm uppercase tracking-tight">
                                   <Package className="w-3.5 h-3.5" /> {lead.type.replace('RECRUTEMENT:', '').trim()}
+                                  {lead.details && (
+                                    <span className="text-slate-500 text-[10px] font-semibold normal-case tracking-normal ml-1 max-w-[220px] truncate">{lead.details}</span>
+                                  )}
                                 </span>
                               ) : (
                                 <span className="flex items-center gap-1 text-emerald-600 font-black text-sm uppercase tracking-tight"><Package className="w-3.5 h-3.5" /> {lead.type} <span className="text-slate-400 text-xs font-bold">({lead.quantity} pcs)</span></span>
