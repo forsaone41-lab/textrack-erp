@@ -55,7 +55,6 @@ export default function Demandes() {
   const [devisMode, setDevisMode] = useState<'echantillon' | 'commande'>('commande');
   const [contactingLead, setContactingLead] = useState<Lead | null>(null);
   const [contactingLeadRequests, setContactingLeadRequests] = useState<Lead[]>([]);
-  const [calcOpenKey, setCalcOpenKey] = useState<string | null>(null);
   const [matierePrice, setMatierePrice] = useState<string>('');
   const [laborPrice, setLaborPrice] = useState<string>('');
   const [factureCreated, setFactureCreated] = useState<{numero: string; client: string; montant: number} | null>(null);
@@ -658,7 +657,7 @@ export default function Demandes() {
                 </div>
                 <div>
                   <p className="text-xs font-black text-slate-800 uppercase tracking-tight">{isAr ? 'حساب الديفيز' : 'Calculer le Devis'}</p>
-                  <p className="text-[10px] text-slate-500 font-bold truncate max-w-[180px]">{devisLead.name} — {devisLead.type}</p>
+                  <p className="text-[10px] text-slate-500 font-bold max-w-[180px] line-clamp-2">{devisLead.name} — {devisLead.type}</p>
                 </div>
               </div>
               <button
@@ -1486,32 +1485,17 @@ export default function Demandes() {
                       </button>
                       
                       {category !== 'recrutement' && (() => {
-                        const calcKey = client.phone + client.name;
                         const totalQty = requests.reduce((s, r) => s + (r.quantity || 0), 0);
+                        const combinedType = requests.map(r => `${r.type} (${r.quantity} pcs)`).join(' + ');
+                        const combinedLead: typeof client = { ...client, type: combinedType, quantity: totalQty };
                         return (
-                          <div className="relative">
-                            <button onClick={() => setCalcOpenKey(calcOpenKey === calcKey ? null : calcKey)}
-                              className="h-9 w-9 rounded-xl flex items-center justify-center border border-slate-200 bg-slate-50 text-slate-500 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200 transition-all shadow-sm">
-                              <Calculator className="w-4 h-4" />
-                            </button>
-                            {calcOpenKey === calcKey && (
-                              <div className="absolute top-11 left-0 z-50 bg-white rounded-2xl shadow-xl border border-slate-100 p-4 min-w-[200px] animate-in zoom-in-95 duration-150">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">{isAr ? 'ملخص الكمية' : 'Total Quantité'}</p>
-                                <div className="space-y-1">
-                                  {requests.map((r, i) => (
-                                    <div key={r.id} className="flex items-center justify-between text-xs">
-                                      <span className="text-slate-600 font-bold truncate max-w-[130px]">{r.type}</span>
-                                      <span className="font-black text-indigo-600 ml-2">{r.quantity} PCS</span>
-                                    </div>
-                                  ))}
-                                </div>
-                                <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between">
-                                  <span className="text-[10px] font-black uppercase text-slate-500">{isAr ? 'المجموع' : 'Total'}</span>
-                                  <span className="text-base font-black text-emerald-600">{totalQty} PCS</span>
-                                </div>
-                              </div>
-                            )}
-                          </div>
+                          <button
+                            onClick={() => { setDevisLead(combinedLead); setMatierePrice(''); setLaborPrice(''); setDevisMode('commande'); }}
+                            className="h-9 w-9 rounded-xl flex items-center justify-center border border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all shadow-sm"
+                            title={isAr ? 'إنشاء ديفيز لكل الموديلات' : 'Devis tous modèles'}
+                          >
+                            <Calculator className="w-4 h-4" />
+                          </button>
                         );
                       })()}
 
