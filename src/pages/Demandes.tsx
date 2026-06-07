@@ -11,16 +11,16 @@ import AISpace from './AISpace';
 
 const DEFAULT_TEMPLATES = {
   ar: {
-    firstContact: "Ø§Ù„Ø³Ù„Ø§Ù… Ø¹Ù„ÙŠÙƒÙ… *{name}*ØŒ Ù…Ø¹ÙƒÙ… *BEYA CREATIVE*. ðŸ˜Š\n\nØ´ÙƒØ±Ø§Ù‹ Ø¹Ù„Ù‰ Ø·Ù„Ø¨ÙƒÙ… Ø§Ù„Ø®Ø§Øµ Ø¨Ù€ *{type}*. Ø¨Ø§Ø´ Ù†Ù‚Ø¯Ø±ÙˆØ§ Ù†Ø¹Ø§ÙˆÙ†ÙˆÙƒÙ… Ø£Ø­Ø³Ù†ØŒ ÙˆØ§Ø´ Ù…Ù…ÙƒÙ† ØªØ¬Ø§ÙˆØ¨ÙˆÙ†Ø§ Ø¹Ù„Ù‰ Ù‡Ø§Ø¯ Ø§Ù„Ø£Ø³Ø¦Ù„Ø©:\n1. ÙÙˆÙ‚Ø§Ø´ Ù…Ø­ØªØ§Ø¬ÙŠÙ† Ø§Ù„Ø·Ù„Ø¨ÙŠØ© (Ø£Ù‚ØµÙ‰ Ø£Ø¬Ù„)ØŸ\n2. ÙˆØ§Ø´ Ù†ØªÙˆÙ…Ø§ Ø¹Ù„Ø§Ù…Ø© ØªØ¬Ø§Ø±ÙŠØ© ÙˆØ§Ø¬Ø¯Ø© (Brand) ÙˆÙ„Ø§ ÙƒØªØ¨ÙŠØ¹ÙˆØ§ ÙÙŠ Ø§Ù„Ø£Ù†ØªØ±Ù†ÙŠØª (E-com) ÙˆØ¨Ø§ØºÙŠÙ† ØªØµØ§ÙˆØ¨ÙˆØ§ Ø§Ù„Ù…Ø§Ø±ÙƒØ© Ø¯ÙŠØ§Ù„ÙƒÙ…ØŸ\n3. ÙˆØ§Ø´ Ø¹Ù†Ø¯ÙƒÙ… Ø§Ù„ØªØµÙ…ÙŠÙ… (Logo/Design) ÙˆØ§Ø¬Ø¯ØŸ\n4. ÙˆØ§Ø´ Ù…Ø­ØªØ§Ø¬ÙŠÙ† Ø§Ù„Ø«ÙˆØ¨ Ù…Ù† Ø¹Ù†Ø¯Ù†Ø§ ÙˆÙ„Ø§ Ø¹Ù†Ø¯ÙƒÙ… Ø§Ù„Ø«ÙˆØ¨ Ø¯ÙŠØ§Ù„ÙƒÙ…ØŸ\n\nØ­Ù†Ø§ ÙÙŠ Ø§Ù„Ø®Ø¯Ù…Ø©! ðŸ‡²ðŸ‡¦",
-    firstContactRecrutement: "Ø§Ù„Ø³Ù„Ø§Ù… Ø¹Ù„ÙŠÙƒÙ… *{name}*ØŒ Ù…Ø¹Ø§ÙƒÙ… Ù…ØµÙ†Ø¹ *BEYA CREATIVE* Ø¨Ù…ÙƒÙ†Ø§Ø³. ðŸ˜Š\n\nØ´ÙÙ†Ø§ Ø§Ù„Ø·Ù„Ø¨ Ø¯ÙŠØ§Ù„Ùƒ Ø¨Ø®ØµÙˆØµ Ø®Ø¯Ù…Ø© *{type}*. Ø¨ØºÙŠÙ†Ø§ ØºÙŠØ± Ù†ØªØ£ÙƒØ¯Ùˆ Ù…Ù† Ø¨Ø¹Ø¶ Ø§Ù„Ù…Ø¹Ù„ÙˆÙ…Ø§Øª:\n1. Ø´Ø­Ø§Ù„ Ù…Ù† Ø¹Ø§Ù… Ø¯ÙŠØ§Ù„ Ø§Ù„Ø®Ø¨Ø±Ø© Ø¹Ù†Ø¯Ùƒ ÙÙ‡Ø§Ø¯ Ø§Ù„ØªØ®ØµØµØŸ\n2. ÙˆØ§Ø´ ÙØ§ÙŠØª Ù„ÙŠÙƒ Ø®Ø¯Ù…ØªÙŠ ÙØ´ÙŠ Ù…Ø¹Ù…Ù„ Ø¯ÙŠØ§Ù„ Ø§Ù„Ø®ÙŠØ§Ø·Ø© Ù…Ù† Ù‚Ø¨Ù„ØŸ\n3. ÙˆØ§Ø´ Ø³Ø§ÙƒÙ†(Ø©) ÙÙŠ Ù…ÙƒÙ†Ø§Ø³ Ø£Ùˆ Ø§Ù„Ù†ÙˆØ§Ø­ÙŠØŸ\n4. ÙÙˆÙ‚Ø§Ø´ ØªÙ‚Ø¯Ø± ØªØ¨Ø¯Ø§ Ø§Ù„Ø®Ø¯Ù…Ø© Ù…Ø¹Ù†Ø§ ÙŠÙ„Ø§ ØªÙØ§Ù‡Ù…Ù†Ø§ØŸ\n\nØ­Ù†Ø§ ÙƒÙ†ØªØ³Ù†Ø§Ùˆ Ø§Ù„Ø¬ÙˆØ§Ø¨ Ø¯ÙŠØ§Ù„Ùƒ Ø¨Ø§Ø´ Ù†Ø­Ø¯Ø¯Ùˆ Ù…Ø¹Ø§Ùƒ Ù…ÙˆØ¹Ø¯ Ø¯ÙŠØ§Ù„ Ù„Ø§Ù†ØªØ±ÙŠØªÙŠØ§Ù†. ðŸ‡²ðŸ‡¦",
-    devisTxt: "Ø§Ù„Ø³Ù„Ø§Ù… Ø¹Ù„ÙŠÙƒÙ… *{name}*ØŒ Ù…Ø¹ÙƒÙ… *BEYA CREATIVE*. ðŸ˜Š\n\nØ¥Ù„ÙŠÙƒÙ… Ø¹Ø±Ø¶ Ø§Ù„Ø³Ø¹Ø± Ù„Ø·Ù„Ø¨ÙƒÙ… Ø§Ù„Ø®Ø§Øµ Ø¨Ù€ *{type}*:\n- Ø§Ù„ÙƒÙ…ÙŠØ©: *{quantity} Ù‚Ø·Ø¹Ø©*\n- Ø§Ù„Ø«Ù…Ù† Ù„Ù„Ù‚Ø·Ø¹Ø©: *{unitPrice} Ø¯Ø±Ù‡Ù…*\n- Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹ Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ: *{total} Ø¯Ø±Ù‡Ù…* {note}\n\n*(Ù…Ù„Ø§Ø­Ø¸Ø©: ÙƒÙ„Ù…Ø§ Ø²Ø§Ø¯Øª Ø§Ù„ÙƒÙ…ÙŠØ©ØŒ ÙŠÙ†Ø®ÙØ¶ Ø«Ù…Ù† Ø§Ù„Ù‚Ø·Ø¹Ø©)*\n\nØ¨Ø§Ø´ Ù†Ø¶Ù…Ù†ÙˆØ§ Ø§Ù„Ø¬ÙˆØ¯Ø©ØŒ ÙƒÙ†Ù‚ØªØ±Ø­ÙˆØ§ Ù†ØµØ§ÙˆØ¨ÙˆØ§ **Ø¹ÙŠÙ†Ø© (Ã‰chantillon)** Ù‡ÙŠ Ø§Ù„Ø£ÙˆÙ„Ù‰ Ø¨Ø§Ø´ Ù†ØµØ§ÙˆØ¨ÙˆØ§ Ø§Ù„ÙˆØ±Ù‚Ø© Ø§Ù„ØªÙ‚Ù†ÙŠØ©. ÙˆØ§Ø´ Ù†Ø¨Ø¯Ø§Ùˆ Ø§Ù„Ø¹ÙŠÙ†Ø©ØŸ ðŸ§µðŸ‡²ðŸ‡¦",
-    devisPdf: "Ø§Ù„Ø³Ù„Ø§Ù… Ø¹Ù„ÙŠÙƒÙ… *{name}*ØŒ Ù…Ø¹ÙƒÙ… *BEYA CREATIVE*. ðŸ˜Š\n\nÙŠØ³Ø¹Ø¯Ù†Ø§ Ø£Ù† Ù†Ù‚Ø¯Ù… Ù„ÙƒÙ… ØªÙ‚Ø¯ÙŠØ± Ø§Ù„Ø«Ù…Ù† Ø§Ù„Ø®Ø§Øµ Ø¨Ø·Ù„Ø¨ÙƒÙ…. Ù„Ù‚Ø¯ Ø­Ø±ØµÙ†Ø§ Ø¹Ù„Ù‰ Ø¯Ø±Ø§Ø³Ø© Ø·Ù„Ø¨ÙƒÙ… Ø¨Ø¹Ù†Ø§ÙŠØ© Ù„Ù†Ø¶Ù…Ù† Ù„ÙƒÙ… Ø£ÙØ¶Ù„ Ø¬ÙˆØ¯Ø© Ù„Ù…Ù†ØªØ¬Ø§Øª *{type}*.\n\nÙ†Ø­Ù† ÙÙŠ Ø§Ù†ØªØ¸Ø§Ø± ØªØ£ÙƒÙŠØ¯ÙƒÙ… Ù„Ù„Ø¨Ø¯Ø¡ ÙÙŠ Ø§Ù„Ø¹Ù…Ù„. Ø´ÙƒØ±Ø§Ù‹ Ù„Ø«Ù‚ØªÙƒÙ…!"
+    firstContact: "السلام عليكم *{name}*، معكم *BEYA CREATIVE*. 😊\n\nشكراً على طلبكم الخاص بـ *{type}*. باش نقدروا نعاونوكم أحسن، واش ممكن تجاوبونا على هاد الأسئلة:\n1. فوقاش محتاجين الطلبية (أقصى أجل)؟\n2. واش نتوما علامة تجارية واجدة (Brand) ولا كتبيعوا في الأنترنيت (E-com) وباغين تصاوبوا الماركة ديالكم؟\n3. واش عندكم التصميم (Logo/Design) واجد؟\n4. واش محتاجين الثوب من عندنا ولا عندكم الثوب ديالكم؟\n\nحنا في الخدمة! 🇲🇦",
+    firstContactRecrutement: "السلام عليكم *{name}*، معاكم مصنع *BEYA CREATIVE* بمكناس. 😊\n\nشفنا الطلب ديالك بخصوص خدمة *{type}*. بغينا غير نتأكدو من بعض المعلومات:\n1. شحال من عام ديال الخبرة عندك فهاد التخصص؟\n2. واش فايت ليك خدمتي فشي معمل ديال الخياطة من قبل؟\n3. واش ساكن(ة) في مكناس أو النواحي؟\n4. فوقاش تقدر تبدا الخدمة معنا يلا تفاهمنا؟\n\nحنا كنتسناو الجواب ديالك باش نحددو معاك موعد ديال لانتريتيان. 🇲🇦",
+    devisTxt: "السلام عليكم *{name}*، معكم *BEYA CREATIVE*. 😊\n\nإليكم عرض السعر لطلبكم الخاص بـ *{type}*:\n- الكمية: *{quantity} قطعة*\n- الثمن للقطعة: *{unitPrice} درهم*\n- المجموع الإجمالي: *{total} درهم* {note}\n\n*(ملاحظة: كلما زادت الكمية، ينخفض ثمن القطعة)*\n\nباش نضمنوا الجودة، كنقترحوا نصاوبوا **عينة (Échantillon)** هي الأولى باش نصاوبوا الورقة التقنية. واش نبداو العينة؟ 🧵🇲🇦",
+    devisPdf: "السلام عليكم *{name}*، معكم *BEYA CREATIVE*. 😊\n\nيسعدنا أن نقدم لكم تقدير الثمن الخاص بطلبكم. لقد حرصنا على دراسة طلبكم بعناية لنضمن لكم أفضل جودة لمنتجات *{type}*.\n\nنحن في انتظار تأكيدكم للبدء في العمل. شكراً لثقتكم!"
   },
   fr: {
-    firstContact: "Bonjour *{name}*, ici *BEYA CREATIVE*. ðŸ˜Š\n\nMerci pour votre demande de *{type}*. Pour mieux vous accompagner, pourriez-vous nous prÃ©ciser :\n1. Quel est votre dÃ©lai souhaitÃ© ?\n2. ÃŠtes-vous une marque Ã©tablie ou vendez-vous en ligne (E-com) et souhaitez-vous crÃ©er votre propre branding ?\n3. Avez-vous dÃ©jÃ  le design ou logo prÃªt ?\n4. Souhaitez-vous que nous fournissions le tissu ou avez-vous dÃ©jÃ  le vÃ´tre ?\n\nNous sommes Ã  disposition ! ðŸ‡²ðŸ‡¦",
-    firstContactRecrutement: "Bonjour *{name}*, ici l'usine *BEYA CREATIVE* Ã  MeknÃ¨s. ðŸ˜Š\n\nNous avons bien reÃ§u votre candidature pour le poste de *{type}*. Pour complÃ©ter votre dossier, pourriez-vous rÃ©pondre Ã  ces questions :\n1. Combien d'annÃ©es d'expÃ©rience avez-vous dans ce domaine ?\n2. Avez-vous dÃ©jÃ  travaillÃ© dans une usine de confection ?\n3. Habitez-vous Ã  MeknÃ¨s ou aux alentours ?\n4. Quelle est votre disponibilitÃ© pour commencer ?\n\nNous attendons votre retour pour programmer un entretien. ðŸ‡²ðŸ‡¦",
-    devisTxt: "Bonjour *{name}*, ici *BEYA CREATIVE*. ðŸ˜Š\n\nVoici notre proposition pour votre commande de *{type}* :\n- QuantitÃ© : *{quantity} pcs*\n- Prix Unitaire : *{unitPrice} MAD*\n- TOTAL : *{total} MAD* {note}\n\n*(Note : Tarif dÃ©gressif selon la quantitÃ©)*\n\nPour garantir la qualitÃ©, nous suggÃ©rons de commencer par un **Ã‰chantillon** pour crÃ©er la Fiche Technique. On lance l'Ã©chantillon ? ðŸ§µðŸ‡²ðŸ‡¦",
-    devisPdf: "Bonjour *{name}*, ici *BEYA CREATIVE*. ðŸ˜Š\n\nNous avons le plaisir de vous transmettre votre devis. Nous avons Ã©tudiÃ© votre demande avec soin pour vous garantir la meilleure qualitÃ© pour vos *{type}*.\n\nNous attendons votre confirmation pour lancer la production. Merci de votre confiance !"
+    firstContact: "Bonjour *{name}*, ici *BEYA CREATIVE*. 😊\n\nMerci pour votre demande de *{type}*. Pour mieux vous accompagner, pourriez-vous nous préciser :\n1. Quel est votre délai souhaité ?\n2. Êtes-vous une marque établie ou vendez-vous en ligne (E-com) et souhaitez-vous créer votre propre branding ?\n3. Avez-vous déjà le design ou logo prêt ?\n4. Souhaitez-vous que nous fournissions le tissu ou avez-vous déjà le vôtre ?\n\nNous sommes à disposition ! 🇲🇦",
+    firstContactRecrutement: "Bonjour *{name}*, ici l'usine *BEYA CREATIVE* à Meknès. 😊\n\nNous avons bien reçu votre candidature pour le poste de *{type}*. Pour compléter votre dossier, pourriez-vous répondre à ces questions :\n1. Combien d'années d'expérience avez-vous dans ce domaine ?\n2. Avez-vous déjà travaillé dans une usine de confection ?\n3. Habitez-vous à Meknès ou aux alentours ?\n4. Quelle est votre disponibilité pour commencer ?\n\nNous attendons votre retour pour programmer un entretien. 🇲🇦",
+    devisTxt: "Bonjour *{name}*, ici *BEYA CREATIVE*. 😊\n\nVoici notre proposition pour votre commande de *{type}* :\n- Quantité : *{quantity} pcs*\n- Prix Unitaire : *{unitPrice} MAD*\n- TOTAL : *{total} MAD* {note}\n\n*(Note : Tarif dégressif selon la quantité)*\n\nPour garantir la qualité, nous suggérons de commencer par un **Échantillon** pour créer la Fiche Technique. On lance l'échantillon ? 🧵🇲🇦",
+    devisPdf: "Bonjour *{name}*, ici *BEYA CREATIVE*. 😊\n\nNous avons le plaisir de vous transmettre votre devis. Nous avons étudié votre demande avec soin pour vous garantir la meilleure qualité pour vos *{type}*.\n\nNous attendons votre confirmation pour lancer la production. Merci de votre confiance !"
   }
 };
 
@@ -57,8 +57,8 @@ export default function Demandes() {
   const [modelPrices, setModelPrices] = useState<Record<string, { matiere: string; labor: string }>>({});
   const [contactingLead, setContactingLead] = useState<Lead | null>(null);
   const [contactingLeadRequests, setContactingLeadRequests] = useState<Lead[]>([]);
-  const [matierePrice, setMatierePrice] = useState<string>(() => loadCompanyProfile().defaultMatiere || '');
-  const [laborPrice, setLaborPrice] = useState<string>(() => loadCompanyProfile().defaultLabor || '');
+  const [matierePrice, setMatierePrice] = useState<string>('');
+  const [laborPrice, setLaborPrice] = useState<string>('');
   const [factureCreated, setFactureCreated] = useState<{numero: string; client: string; montant: number} | null>(null);
   const [pdfProgress, setPdfProgress] = useState<'idle' | 'generating' | 'sharing' | 'done' | 'error'>('idle');
   const [detailsLead, setDetailsLead] = useState<Lead | null>(null);
@@ -88,7 +88,7 @@ export default function Demandes() {
   });
 
   useEffect(() => {
-    // 1. Show cached data INSTANTLY â€” no blank screen
+    // 1. Show cached data INSTANTLY — no blank screen
     let hasCached = false;
     try {
       const cachedLeads = localStorage.getItem('textrack_data_leads');
@@ -186,7 +186,7 @@ export default function Demandes() {
   };
 
   const resetTemplates = () => {
-    if (window.confirm(isAr ? 'Ù‡Ù„ ØªØ±ÙŠØ¯ Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ø§Ù„Ù‚ÙˆØ§Ù„Ø¨ Ø§Ù„Ø£ØµÙ„ÙŠØ©ØŸ' : 'Voulez-vous restaurer les templates originaux ?')) {
+    if (window.confirm(isAr ? 'هل تريد استعادة القوالب الأصلية؟' : 'Voulez-vous restaurer les templates originaux ?')) {
       setTemplates(DEFAULT_TEMPLATES);
       localStorage.setItem('textrack_msg_templates', JSON.stringify(DEFAULT_TEMPLATES));
     }
@@ -233,7 +233,7 @@ export default function Demandes() {
         reference: `CMD-${Date.now().toString().slice(-6)}`,
         client: lead.name,
         modele: lead.type,
-        tissu: confirmDetails.tissu || 'Ã€ dÃ©finir',
+        tissu: confirmDetails.tissu || 'À définir',
         tissuPhoto: confirmDetails.tissuPhoto || undefined,
         modelePhoto: confirmDetails.modelePhoto || lead.photo || undefined,
         couleurs: confirmDetails.couleurs.split(',').map(c => c.trim()).filter(c => c),
@@ -249,7 +249,7 @@ export default function Demandes() {
         avance: Number(confirmDetails.avance) || 0,
         rebut: 0,
         statut: 'echantillon_en_cours',
-        suivi: [{ phase: 'patronage', date: new Date().toISOString(), note: 'Prix/dÃ©lai validÃ©s et Ã©chantillon lancÃ© (Avance payÃ©e)' }]
+        suivi: [{ phase: 'patronage', date: new Date().toISOString(), note: 'Prix/délai validés et échantillon lancé (Avance payée)' }]
       };
 
       await saveRecord('commandes', newOrder);
@@ -302,7 +302,7 @@ export default function Demandes() {
         dateLivraisonPrevue: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       });
     } catch (e: any) {
-      alert(isAr ? 'Ù…Ø´ÙƒÙ„: ' + e.message : 'Erreur: ' + e.message);
+      alert(isAr ? 'مشكل: ' + e.message : 'Erreur: ' + e.message);
     }
   };
 
@@ -342,7 +342,7 @@ export default function Demandes() {
       await saveRecord('leads', updatedLead, true);
       setEditingLead(null);
     } catch (err: any) {
-      alert(isAr ? 'Ù…Ø´ÙƒÙ„ ÙÙŠ Ø§Ù„Ø­ÙØ¸: ' + err.message : 'Erreur de sauvegarde : ' + err.message);
+      alert(isAr ? 'مشكل في الحفظ: ' + err.message : 'Erreur de sauvegarde : ' + err.message);
     }
   };
 
@@ -354,7 +354,7 @@ export default function Demandes() {
 
       const existing = allUsers.find(u => u.email.toLowerCase() === emailToUse);
       if (existing) {
-        alert(isAr ? 'Ù‡Ø°Ø§ Ø§Ù„Ø²Ø¨ÙˆÙ† Ù…Ø³Ø¬Ù„ Ù…Ø³Ø¨Ù‚Ø§Ù‹ ÙÙŠ Ø§Ù„Ù†Ø¸Ø§Ù… Ø¨Ù†ÙØ³ Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ.' : 'Ce client est dÃ©jÃ  enregistrÃ© avec cet email.');
+        alert(isAr ? 'هذا الزبون مسجل مسبقاً في النظام بنفس البريد الإلكتروني.' : 'Ce client est déjà enregistré avec cet email.');
         return;
       }
 
@@ -377,7 +377,7 @@ export default function Demandes() {
       setUsers(prev => [...prev, newClient]);
       setNewClientCode({ name: lead.name, code: autoCode, email: newClient.email, phone: lead.phone });
     } catch (e: any) {
-      alert(isAr ? 'Ù…Ø´ÙƒÙ„: ' + e.message : 'Erreur: ' + e.message);
+      alert(isAr ? 'مشكل: ' + e.message : 'Erreur: ' + e.message);
     }
   };
 
@@ -399,8 +399,8 @@ export default function Demandes() {
         .replace(/{type}/g, devisLead.type);
     } else {
       const matiereNote = isAr
-        ? (hasMatiere ? ' (ÙŠØ´Ù…Ù„ Ø§Ù„Ø³Ù„Ø¹Ø© ÙˆØ§Ù„ÙŠØ¯ Ø§Ù„Ø¹Ø§Ù…Ù„Ø©)' : ' (ÙŠØ´Ù…Ù„ Ø§Ù„ÙŠØ¯ Ø§Ù„Ø¹Ø§Ù…Ù„Ø© ÙˆØ§Ù„ØªØ±ÙƒÙŠØ¨)')
-        : (hasMatiere ? ' (Inclut matiÃ¨re et confection)' : ' (Inclut confection et main dâ€™Å“uvre)');
+        ? (hasMatiere ? ' (يشمل السلعة واليد العاملة)' : ' (يشمل اليد العاملة والتركيب)')
+        : (hasMatiere ? ' (Inclut matière et confection)' : ' (Inclut confection et main d’œuvre)');
 
       message = t.devisTxt
         .replace(/{name}/g, devisLead.name)
@@ -430,8 +430,8 @@ export default function Demandes() {
 
     if (!isPDF) {
       setDevisLead(null);
-      setMatierePrice(loadCompanyProfile().defaultMatiere || '');
-      setLaborPrice(loadCompanyProfile().defaultLabor || '');
+      setMatierePrice('');
+      setLaborPrice('');
     }
   };
 
@@ -515,8 +515,8 @@ export default function Demandes() {
     // Push notification to client
     sendPushToClient(
       devisLead.name,
-      isAr ? 'ðŸ“„ Ù„Ø¯ÙŠÙƒ Ø¹Ø±Ø¶ Ø³Ø¹Ø± Ø¬Ø¯ÙŠØ¯' : 'ðŸ“„ Nouveau Devis BEYA CREATIVE',
-      isAr ? `Ø¹Ø±Ø¶ Ø³Ø¹Ø± ${devis.numero} - ${total.toLocaleString()} Ø¯Ø±Ù‡Ù…` : `Devis ${devis.numero} â€” ${total.toLocaleString()} MAD`,
+      isAr ? '📄 لديك عرض سعر جديد' : '📄 Nouveau Devis BEYA CREATIVE',
+      isAr ? `عرض سعر ${devis.numero} - ${total.toLocaleString()} درهم` : `Devis ${devis.numero} — ${total.toLocaleString()} MAD`,
       '/portail'
     ).catch(() => {});
   };
@@ -557,8 +557,8 @@ export default function Demandes() {
     setTimeout(async () => {
       await generatePDF('devis-pdf-template', filename);
       setDevisLead(null);
-      setMatierePrice(loadCompanyProfile().defaultMatiere || '');
-      setLaborPrice(loadCompanyProfile().defaultLabor || '');
+      setMatierePrice('');
+      setLaborPrice('');
     }, 500);
   };
 
@@ -576,7 +576,7 @@ export default function Demandes() {
         let shared = false;
         try {
           if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file], title: `Devis BEYA CREATIVE â€” ${devisLead.name}` });
+            await navigator.share({ files: [file], title: `Devis BEYA CREATIVE — ${devisLead.name}` });
             shared = true;
           }
         } catch (shareErr: any) {
@@ -617,7 +617,7 @@ export default function Demandes() {
       const typeStr = l.type.replace('RECRUTEMENT:', '').trim();
       matchType = filterType === 'all' || typeStr === filterType;
       
-      const m = l.details?.match(/ExpÃ©rience:\s*(\d+)/);
+      const m = l.details?.match(/Expérience:\s*(\d+)/);
       const expStr = m ? m[1] : '0';
       matchExperience = filterExperience === 'all' || expStr === filterExperience;
     } else {
@@ -658,12 +658,12 @@ export default function Demandes() {
                   <Calculator className="w-4 h-4 text-amber-600" />
                 </div>
                 <div>
-                  <p className="text-xs font-black text-slate-800 uppercase tracking-tight">{isAr ? 'Ø­Ø³Ø§Ø¨ Ø§Ù„Ø¯ÙŠÙÙŠØ²' : 'Calculer le Devis'}</p>
-                  <p className="text-[10px] text-slate-500 font-bold max-w-[180px] line-clamp-2">{devisLead.name} â€” {devisLead.type}</p>
+                  <p className="text-xs font-black text-slate-800 uppercase tracking-tight">{isAr ? 'حساب الديفيز' : 'Calculer le Devis'}</p>
+                  <p className="text-[10px] text-slate-500 font-bold max-w-[180px] line-clamp-2">{devisLead.name} — {devisLead.type}</p>
                 </div>
               </div>
               <button
-                onClick={() => { setDevisLead(null); setDevisLeadRequests([]); setModelPrices({}); setMatierePrice(loadCompanyProfile().defaultMatiere || ''); setLaborPrice(loadCompanyProfile().defaultLabor || ''); }}
+                onClick={() => { setDevisLead(null); setDevisLeadRequests([]); setModelPrices({}); setMatierePrice(''); setLaborPrice(''); }}
                 className="w-8 h-8 bg-white rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all border border-slate-200 shadow-sm"
               >
                 <X className="w-4 h-4" />
@@ -692,17 +692,17 @@ export default function Demandes() {
                           <div key={r.id} className="bg-slate-50 rounded-xl p-3 border border-slate-100">
                             <div className="flex items-center justify-between mb-2">
                               <span className="text-[10px] font-black text-indigo-600 uppercase tracking-wide">{r.type}</span>
-                              <span className="text-[10px] font-black text-slate-400">{r.quantity} pcs Ã— {unitPrice} = <span className="text-slate-700">{subtotal.toLocaleString()} MAD</span></span>
+                              <span className="text-[10px] font-black text-slate-400">{r.quantity} pcs × {unitPrice} = <span className="text-slate-700">{subtotal.toLocaleString()} MAD</span></span>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                               <div>
-                                <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'Ø§Ù„Ø«ÙˆØ¨/Ø§Ù„Ù‚Ø·Ø¹Ø©' : 'MatiÃ¨re/pcs'}</label>
+                                <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الثوب/القطعة' : 'Matière/pcs'}</label>
                                 <input type="number" value={p.matiere} placeholder="0"
                                   onChange={e => setModelPrices(prev => ({ ...prev, [r.id]: { ...prev[r.id], matiere: e.target.value } }))}
                                   className="w-full bg-white border-2 border-slate-200 rounded-lg py-2 px-2.5 text-sm font-black text-slate-900 outline-none focus:border-indigo-400" />
                               </div>
                               <div>
-                                <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'ÙŠØ¯ Ø¹Ø§Ù…Ù„Ø©/Ù‚Ø·Ø¹Ø©' : "MO/pcs"}</label>
+                                <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'يد عاملة/قطعة' : "MO/pcs"}</label>
                                 <input type="number" value={p.labor} placeholder="0"
                                   onChange={e => setModelPrices(prev => ({ ...prev, [r.id]: { ...prev[r.id], labor: e.target.value } }))}
                                   className="w-full bg-white border-2 border-slate-200 rounded-lg py-2 px-2.5 text-sm font-black text-slate-900 outline-none focus:border-indigo-400" />
@@ -713,7 +713,7 @@ export default function Demandes() {
                       })}
                     </div>
                     <div className="bg-slate-900 rounded-xl px-4 py-3 text-white flex items-center justify-between">
-                      <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">{isAr ? 'Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹ Ø§Ù„ÙƒÙ„ÙŠ' : 'Total gÃ©nÃ©ral'}</p>
+                      <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">{isAr ? 'المجموع الكلي' : 'Total général'}</p>
                       <p className="text-xl font-black">{multiTotal.toLocaleString()} <span className="text-xs">MAD</span></p>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -721,14 +721,14 @@ export default function Demandes() {
                         const lines = devisLeadRequests.map(r => {
                           const p = modelPrices[r.id] || { matiere: '', labor: '' };
                           const u = Number(p.matiere || 0) + Number(p.labor || 0);
-                          return `â€¢ ${r.type}: ${r.quantity} pcs Ã— ${u} MAD = *${(u * r.quantity).toLocaleString()} MAD*`;
+                          return `• ${r.type}: ${r.quantity} pcs × ${u} MAD = *${(u * r.quantity).toLocaleString()} MAD*`;
                         }).join('\n');
                         const multiTotal2 = devisLeadRequests.reduce((s, r) => { const p = modelPrices[r.id] || { matiere: '', labor: '' }; return s + (Number(p.matiere || 0) + Number(p.labor || 0)) * r.quantity; }, 0);
                         const rawPhone = String(devisLead!.phone || '').replace(/\D/g, '');
                         const phone = rawPhone.startsWith('2120') ? '212' + rawPhone.slice(3) : rawPhone.startsWith('0') ? '212' + rawPhone.slice(1) : rawPhone;
                         const msg = isAr
-                          ? `Ø§Ù„Ø³Ù„Ø§Ù… Ø¹Ù„ÙŠÙƒÙ… *${devisLead!.name}*ØŒ Ù…Ø¹ÙƒÙ… *BEYA CREATIVE*. ðŸ˜Š\n\nØªÙØ¶Ù„ÙˆØ§ Ø§Ù„Ø¯ÙŠÙÙŠØ² Ø§Ù„Ø®Ø§Øµ Ø¨Ø·Ù„Ø¨ÙŠØªÙƒÙ…:\n${lines}\n\n*Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹ Ø§Ù„ÙƒÙ„ÙŠ: ${multiTotal2.toLocaleString()} MAD*\n\nØ­Ù†Ø§ ÙÙŠ Ø§Ù„Ø®Ø¯Ù…Ø©! ðŸ‡²ðŸ‡¦`
-                          : `Bonjour *${devisLead!.name}*, ici *BEYA CREATIVE*. ðŸ˜Š\n\nVoici le devis de votre commande:\n${lines}\n\n*Total gÃ©nÃ©ral: ${multiTotal2.toLocaleString()} MAD*\n\nÃ€ votre service! ðŸ‡²ðŸ‡¦`;
+                          ? `السلام عليكم *${devisLead!.name}*، معكم *BEYA CREATIVE*. 😊\n\nتفضلوا الديفيز الخاص بطلبيتكم:\n${lines}\n\n*المجموع الكلي: ${multiTotal2.toLocaleString()} MAD*\n\nحنا في الخدمة! 🇲🇦`
+                          : `Bonjour *${devisLead!.name}*, ici *BEYA CREATIVE*. 😊\n\nVoici le devis de votre commande:\n${lines}\n\n*Total général: ${multiTotal2.toLocaleString()} MAD*\n\nÀ votre service! 🇲🇦`;
                         window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
                       }} disabled={!hasAnyPrice}
                         className="h-10 bg-slate-100 text-slate-600 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center gap-1.5 disabled:opacity-40">
@@ -753,7 +753,7 @@ export default function Demandes() {
                       }`}
                     >
                       <Package className="w-3.5 h-3.5" />
-                      {isAr ? 'Ø·Ù„Ø¨ÙŠØ© ÙƒØ§Ù…Ù„Ø©' : 'Commande'} ({devisLead.quantity} pcs)
+                      {isAr ? 'طلبية كاملة' : 'Commande'} ({devisLead.quantity} pcs)
                     </button>
                     <button
                       onClick={() => setDevisMode('echantillon')}
@@ -764,20 +764,20 @@ export default function Demandes() {
                       }`}
                     >
                       <FileText className="w-3.5 h-3.5" />
-                      {isAr ? 'Ø¹ÙŠÙ†Ø©' : 'Ã‰chantillon'} (1 pc)
+                      {isAr ? 'عينة' : 'Échantillon'} (1 pc)
                     </button>
                   </div>
 
                   {/* Qty + Unit price row */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-slate-50 rounded-xl px-3 py-2.5 border border-slate-100">
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{isAr ? 'Ø§Ù„ÙƒÙ…ÙŠØ©' : 'QuantitÃ©'}</p>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{isAr ? 'الكمية' : 'Quantité'}</p>
                       <p className="text-base font-black text-slate-700">
                         {devisMode === 'echantillon' ? 1 : devisLead.quantity} <span className="text-[10px] text-slate-400">pcs</span>
                       </p>
                     </div>
                     <div className="bg-indigo-50 rounded-xl px-3 py-2.5 border border-indigo-100">
-                      <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">{isAr ? 'Ø«Ù…Ù† Ø§Ù„Ù‚Ø·Ø¹Ø©' : 'Prix/unitÃ©'}</p>
+                      <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">{isAr ? 'ثمن القطعة' : 'Prix/unité'}</p>
                       <p className="text-base font-black text-indigo-600">{Number(matierePrice || 0) + Number(laborPrice || 0)} <span className="text-[10px]">MAD</span></p>
                     </div>
                   </div>
@@ -785,12 +785,12 @@ export default function Demandes() {
                   {/* Inputs row */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'Ø§Ù„Ø«ÙˆØ¨ ÙˆØ§Ù„Ø³Ù„Ø¹Ø©' : 'MatiÃ¨re (MAD)'}</label>
+                      <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الثوب والسلعة' : 'Matière (MAD)'}</label>
                       <input type="number" value={matierePrice} onChange={e => setMatierePrice(e.target.value)} placeholder="0"
                         className="w-full bg-white border-2 border-slate-100 rounded-xl py-2.5 px-3 text-base font-black text-slate-900 outline-none focus:border-indigo-400" />
                     </div>
                     <div>
-                      <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'Ø§Ù„ÙŠØ¯ Ø§Ù„Ø¹Ø§Ù…Ù„Ø©' : "Main d'Å“uvre"}</label>
+                      <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'اليد العاملة' : "Main d'œuvre"}</label>
                       <input type="number" value={laborPrice} onChange={e => setLaborPrice(e.target.value)} placeholder="0"
                         className="w-full bg-white border-2 border-slate-100 rounded-xl py-2.5 px-3 text-base font-black text-slate-900 outline-none focus:border-indigo-400" />
                     </div>
@@ -798,7 +798,7 @@ export default function Demandes() {
 
                   {/* Total */}
                   <div className="bg-slate-900 rounded-xl px-4 py-3 text-white flex items-center justify-between">
-                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">{isAr ? 'Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹ Ø§Ù„ØªÙ‚Ø¯ÙŠØ±ÙŠ' : 'Total estimÃ©'}</p>
+                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">{isAr ? 'المجموع التقديري' : 'Total estimé'}</p>
                     <p className="text-xl font-black">{((Number(matierePrice || 0) + Number(laborPrice || 0)) * (devisMode === 'echantillon' ? 1 : devisLead.quantity)).toLocaleString()} <span className="text-xs">MAD</span></p>
                   </div>
 
@@ -817,19 +817,19 @@ export default function Demandes() {
                   <button onClick={handleSharePDF} disabled={!matierePrice && !laborPrice}
                     className="w-full h-11 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-40 shadow-lg shadow-emerald-200">
                     <MessageSquare className="w-4 h-4" /><FileText className="w-4 h-4" />
-                    {isAr ? 'Ù…Ø´Ø§Ø±ÙƒØ© PDF Ù…Ø¨Ø§Ø´Ø±Ø©' : 'Partager PDF direct'}
+                    {isAr ? 'مشاركة PDF مباشرة' : 'Partager PDF direct'}
                   </button>
 
                   <button onClick={handleSendToPortail} disabled={!matierePrice && !laborPrice}
                     className="w-full h-11 bg-gradient-to-r from-slate-700 to-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-40 shadow-lg">
                     <Globe className="w-4 h-4" />
-                    {isAr ? 'Ø¥Ø±Ø³Ø§Ù„ Ù„Ù„Ø¨ÙˆØ±ØªØ§Ù„ (Devis)' : 'Envoyer au Portail Client'}
+                    {isAr ? 'إرسال للبورتال (Devis)' : 'Envoyer au Portail Client'}
                   </button>
 
                   <button onClick={handleCreateFacture} disabled={!matierePrice && !laborPrice}
                     className="w-full h-11 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-40 shadow-lg shadow-indigo-200">
                     <CheckCircle className="w-4 h-4" />
-                    {isAr ? 'âœ“ Ù‚Ø¨Ù„ Ø§Ù„Ø¹Ù…ÙŠÙ„ â† Ø¥Ù†Ø´Ø§Ø¡ ÙØ§ØªÙˆØ±Ø©' : 'âœ“ Client acceptÃ© â†’ CrÃ©er Facture'}
+                    {isAr ? '✓ قبل العميل ← إنشاء فاتورة' : '✓ Client accepté → Créer Facture'}
                   </button>
                 </>
               )}
@@ -849,7 +849,7 @@ export default function Demandes() {
                 </div>
                 <div>
                   <p className="text-xs font-black text-slate-800 uppercase tracking-tight">{detailsLead.name}</p>
-                  <p className="text-[10px] text-slate-400 font-bold">{detailsLead.type} â€” {detailsLead.quantity} pcs</p>
+                  <p className="text-[10px] text-slate-400 font-bold">{detailsLead.type} — {detailsLead.quantity} pcs</p>
                 </div>
               </div>
               <button onClick={() => setDetailsLead(null)} className="w-8 h-8 bg-white rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all border border-slate-200 shadow-sm">
@@ -860,7 +860,7 @@ export default function Demandes() {
               {detailsLead.details && (
                 <div>
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                    <MessageSquare className="w-3 h-3" /> {isAr ? 'ØªÙØ§ØµÙŠÙ„ Ø§Ù„Ù…Ø´Ø±ÙˆØ¹' : 'DÃ©tails du projet'}
+                    <MessageSquare className="w-3 h-3" /> {isAr ? 'تفاصيل المشروع' : 'Détails du projet'}
                   </p>
                   <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                     <p className="text-sm text-slate-700 font-medium leading-relaxed">
@@ -904,9 +904,9 @@ export default function Demandes() {
                   <FileText className="w-6 h-6 text-indigo-600 absolute inset-0 m-auto" />
                 </div>
                 <p className="font-black text-slate-800 text-sm uppercase tracking-widest mb-1">
-                  {isAr ? 'Ø¬Ø§Ø±ÙŠ Ø¥Ù†Ø´Ø§Ø¡ PDF...' : 'GÃ©nÃ©ration PDF...'}
+                  {isAr ? 'جاري إنشاء PDF...' : 'Génération PDF...'}
                 </p>
-                <p className="text-xs text-slate-400">{isAr ? 'Ø«Ø§Ù†ÙŠØ© Ù…Ù† ÙØ¶Ù„Ùƒ' : 'Patientez quelques secondes'}</p>
+                <p className="text-xs text-slate-400">{isAr ? 'ثانية من فضلك' : 'Patientez quelques secondes'}</p>
                 <div className="mt-4 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                   <div className="h-full bg-indigo-500 rounded-full animate-pulse w-2/3" />
                 </div>
@@ -918,9 +918,9 @@ export default function Demandes() {
                   <Download className="w-7 h-7 text-emerald-500 animate-bounce" />
                 </div>
                 <p className="font-black text-slate-800 text-sm uppercase tracking-widest mb-1">
-                  {isAr ? 'Ø¬Ø§Ø±ÙŠ Ø§Ù„Ù…Ø´Ø§Ø±ÙƒØ©...' : 'Partage en cours...'}
+                  {isAr ? 'جاري المشاركة...' : 'Partage en cours...'}
                 </p>
-                <p className="text-xs text-slate-400">{isAr ? 'Ø§Ø®ØªØ± Ø§Ù„ØªØ·Ø¨ÙŠÙ‚' : 'Choisissez l\'application'}</p>
+                <p className="text-xs text-slate-400">{isAr ? 'اختر التطبيق' : 'Choisissez l\'application'}</p>
               </>
             )}
             {pdfProgress === 'done' && (
@@ -929,7 +929,7 @@ export default function Demandes() {
                   <CheckCircle className="w-8 h-8 text-emerald-500" />
                 </div>
                 <p className="font-black text-emerald-700 text-sm uppercase tracking-widest">
-                  {isAr ? 'ØªÙ… Ø¨Ù†Ø¬Ø§Ø­ âœ“' : 'PDF EnvoyÃ© âœ“'}
+                  {isAr ? 'تم بنجاح ✓' : 'PDF Envoyé ✓'}
                 </p>
               </>
             )}
@@ -939,9 +939,9 @@ export default function Demandes() {
                   <X className="w-8 h-8 text-red-400" />
                 </div>
                 <p className="font-black text-red-600 text-sm uppercase tracking-widest mb-1">
-                  {isAr ? 'Ø­Ø¯Ø« Ø®Ø·Ø£' : 'Erreur'}
+                  {isAr ? 'حدث خطأ' : 'Erreur'}
                 </p>
-                <p className="text-xs text-slate-400">{isAr ? 'Ø­Ø§ÙˆÙ„ Ù…Ø¬Ø¯Ø¯Ø§Ù‹' : 'RÃ©essayez'}</p>
+                <p className="text-xs text-slate-400">{isAr ? 'حاول مجدداً' : 'Réessayez'}</p>
               </>
             )}
           </div>
@@ -957,14 +957,14 @@ export default function Demandes() {
               <CheckCircle className="w-10 h-10 text-emerald-500" />
             </div>
             <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter mb-1">
-              {isAr ? 'ØªÙ… Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„ÙØ§ØªÙˆØ±Ø©!' : 'Facture CrÃ©Ã©e !'}
+              {isAr ? 'تم إنشاء الفاتورة!' : 'Facture Créée !'}
             </h3>
             <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-8">
-              {isAr ? 'ØªÙ…Øª Ø§Ù„Ø¹Ù…Ù„ÙŠØ© Ø¨Ù†Ø¬Ø§Ø­' : 'AjoutÃ©e dans Factures & Docs'}
+              {isAr ? 'تمت العملية بنجاح' : 'Ajoutée dans Factures & Docs'}
             </p>
             <div className="bg-slate-50 rounded-2xl p-5 mb-8 text-left space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">NÂ° Facture</span>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">N° Facture</span>
                 <span className="text-sm font-black text-indigo-600">{factureCreated.numero}</span>
               </div>
               <div className="flex justify-between items-center">
@@ -977,10 +977,10 @@ export default function Demandes() {
               </div>
             </div>
             <button
-              onClick={() => { setFactureCreated(null); setDevisLead(null); setMatierePrice(loadCompanyProfile().defaultMatiere || ''); setLaborPrice(loadCompanyProfile().defaultLabor || ''); }}
+              onClick={() => { setFactureCreated(null); setDevisLead(null); setMatierePrice(''); setLaborPrice(''); }}
               className="w-full h-14 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-all"
             >
-              {isAr ? 'Ø­Ø³Ù†Ø§Ù‹' : 'OK'}
+              {isAr ? 'حسناً' : 'OK'}
             </button>
           </div>
         </div>
@@ -1003,21 +1003,21 @@ export default function Demandes() {
               </div>
               <div>
                 <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">
-                  {isAr ? 'ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ø³Ø¹Ø± ÙˆØ§Ù„ÙˆÙ‚Øª' : 'Validation Prix & DÃ©lai'}
+                  {isAr ? 'تأكيد السعر والوقت' : 'Validation Prix & Délai'}
                 </h3>
                 <p className="text-slate-500 font-bold text-xs uppercase tracking-widest mt-1">
-                  {isAr ? 'Ù…Ø±Ø­Ù„Ø© ØªØ£ÙƒÙŠØ¯ Ø§Ù„ØªÙƒÙ„ÙØ© ÙˆØ§Ù„ÙˆÙ‚Øª Ù„Ø¥Ø·Ù„Ø§Ù‚ Ø§Ù„Ø¹ÙŠÙ†Ø©' : 'Validation du coÃ»t et dÃ©lai pour lancer l\'Ã©chantillon'}
+                  {isAr ? 'مرحلة تأكيد التكلفة والوقت لإطلاق العينة' : 'Validation du coût et délai pour lancer l\'échantillon'}
                 </p>
               </div>
             </div>
 
             <div className="bg-slate-50 rounded-2xl p-4 mb-6 border border-slate-100 flex items-center justify-between">
               <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'Ø§Ù„Ø²Ø¨ÙˆÙ†' : 'Client'}</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الزبون' : 'Client'}</p>
                 <p className="text-sm font-black text-slate-900">{confirmLead.name}</p>
               </div>
               <div className="text-right">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'Ø§Ù„ÙƒÙ…ÙŠØ© Ø§Ù„Ø£ÙˆÙ„ÙŠØ©' : 'QtÃ© Initiale'}</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الكمية الأولية' : 'Qté Initiale'}</p>
                 <p className="text-sm font-black text-indigo-600">{confirmLead.quantity} pcs</p>
               </div>
             </div>
@@ -1025,11 +1025,11 @@ export default function Demandes() {
             <div className="space-y-4 sm:space-y-6 mb-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div>
-                  <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-2">{isAr ? 'Ù†ÙˆØ¹ Ø§Ù„Ø«ÙˆØ¨ (Tissu)' : 'Type de Tissu'}</label>
+                  <label className="block text-[11px] font-black text-slate-600 uppercase tracking-widest mb-2">{isAr ? 'نوع الثوب (Tissu)' : 'Type de Tissu'}</label>
                   <input
                     type="text"
                     list="tissus-list"
-                    placeholder={isAr ? "Ø§Ø®ØªØ± Ø£Ùˆ Ø§ÙƒØªØ¨..." : "Choisir ou taper..."}
+                    placeholder={isAr ? "اختر أو اكتب..." : "Choisir ou taper..."}
                     value={confirmDetails.tissu}
                     onChange={e => setConfirmDetails({ ...confirmDetails, tissu: e.target.value })}
                     className="w-full bg-white border-2 border-slate-100 rounded-xl py-2.5 px-3 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
@@ -1054,13 +1054,13 @@ export default function Demandes() {
                     <Calculator className="w-4 h-4" />
                   </div>
                   <h4 className="text-sm font-black text-emerald-900 uppercase tracking-widest">
-                    {isAr ? 'Ø§Ù„Ù…Ø§Ù„ÙŠØ© ÙˆØ§Ù„ØªØ®Ø·ÙŠØ·' : 'Finance & Planning'}
+                    {isAr ? 'المالية والتخطيط' : 'Finance & Planning'}
                   </h4>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-1">{isAr ? 'Ø«Ù…Ù† Ø§Ù„Ø¹ÙŠÙ†Ø©' : 'Prix Ã‰chantillon'}</label>
+                    <label className="block text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-1">{isAr ? 'ثمن العينة' : 'Prix Échantillon'}</label>
                     <div className="relative">
                       <input
                         type="number"
@@ -1073,7 +1073,7 @@ export default function Demandes() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-1">{isAr ? 'Ø«Ù…Ù† Ù‚Ø·Ø¹Ø© Ø§Ù„Ø·Ù„Ø¨ÙŠØ©' : 'Prix Unitaire'}</label>
+                    <label className="block text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-1">{isAr ? 'ثمن قطعة الطلبية' : 'Prix Unitaire'}</label>
                     <div className="relative">
                       <input
                         type="number"
@@ -1086,7 +1086,7 @@ export default function Demandes() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-1">{isAr ? 'Ø§Ù„ØªØ³Ø¨ÙŠÙ‚ (Ø§Ù„Ø¹Ø±Ø¨ÙˆÙ†)' : 'Avance payÃ©e'}</label>
+                    <label className="block text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-1">{isAr ? 'التسبيق (العربون)' : 'Avance payée'}</label>
                     <div className="relative">
                       <input
                         type="number"
@@ -1103,7 +1103,7 @@ export default function Demandes() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-emerald-100/50">
                   <div>
                     <label className="block text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-1">
-                      {isAr ? 'Ø§Ù„Ù…Ø¯Ø© Ø¨Ø§Ù„Ø£ÙŠØ§Ù… (DÃ©lai en jours)' : 'DÃ©lai en jours'}
+                      {isAr ? 'المدة بالأيام (Délai en jours)' : 'Délai en jours'}
                     </label>
                     <select
                       value={(() => {
@@ -1121,16 +1121,16 @@ export default function Demandes() {
                       }}
                       className="w-full bg-white border border-emerald-200 rounded-xl py-2.5 px-3 text-sm font-black text-emerald-900 outline-none focus:border-emerald-500 transition-colors cursor-pointer"
                     >
-                      <option value="">{isAr ? '-- Ø§Ø®ØªØ± Ø¹Ø¯Ø¯ Ø§Ù„Ø£ÙŠØ§Ù… --' : '-- Choisir le nombre de jours --'}</option>
+                      <option value="">{isAr ? '-- اختر عدد الأيام --' : '-- Choisir le nombre de jours --'}</option>
                       {Array.from({ length: 30 }, (_, i) => i + 1).map(day => (
                         <option key={day} value={day}>
-                          {day} {isAr ? (day === 1 ? 'ÙŠÙˆÙ…' : day === 2 ? 'ÙŠÙˆÙ…ÙŠÙ†' : day <= 10 ? 'Ø£ÙŠØ§Ù…' : 'ÙŠÙˆÙ…') : 'jours'}
+                          {day} {isAr ? (day === 1 ? 'يوم' : day === 2 ? 'يومين' : day <= 10 ? 'أيام' : 'يوم') : 'jours'}
                         </option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-1">{isAr ? 'ØªØ§Ø±ÙŠØ® Ø§Ù„ØªØ³Ù„ÙŠÙ…' : 'Date de Livraison'}</label>
+                    <label className="block text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-1">{isAr ? 'تاريخ التسليم' : 'Date de Livraison'}</label>
                     <input
                       type="date"
                       value={confirmDetails.dateLivraisonPrevue}
@@ -1147,14 +1147,14 @@ export default function Demandes() {
                 onClick={() => setConfirmLead(null)}
                 className="w-full py-4 bg-slate-50 text-slate-600 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-100 transition-all border border-slate-200"
               >
-                {isAr ? 'Ø¥Ù„ØºØ§Ø¡' : 'Annuler'}
+                {isAr ? 'إلغاء' : 'Annuler'}
               </button>
               <button
                 onClick={handleConvert}
                 className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-200 flex items-center justify-center gap-2"
               >
                 <CheckCircle className="w-4 h-4" />
-                {isAr ? 'ØªØ£ÙƒÙŠØ¯ ÙˆØ¥Ø·Ù„Ø§Ù‚ Ø§Ù„Ø¹ÙŠÙ†Ø©' : 'Valider & Lancer l\'Ã‰chantillon'}
+                {isAr ? 'تأكيد وإطلاق العينة' : 'Valider & Lancer l\'Échantillon'}
               </button>
             </div>
           </div>
@@ -1171,16 +1171,16 @@ export default function Demandes() {
             </div>
 
             <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-4">
-              {isAr ? 'ØªÙ…Øª Ø§Ù„Ø¹Ù…Ù„ÙŠØ© Ø¨Ù†Ø¬Ø§Ø­!' : 'FÃ©licitations !'}
+              {isAr ? 'تمت العملية بنجاح!' : 'Félicitations !'}
             </h3>
             <p className="text-slate-500 font-medium leading-relaxed mb-8">
               {isAr
-                ? `ØªÙ… ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ø³Ø¹Ø± ÙˆØ§Ù„ÙˆÙ‚Øª Ù„Ù€ "${successLead.name}" Ø¨Ù†Ø¬Ø§Ø­. Ø³ÙŠØªÙ… Ø¥Ø·Ù„Ø§Ù‚ Ø§Ù„Ø¹ÙŠÙ†Ø© Ø¨Ù…Ø§ Ø£Ù†Ù‡ ØªÙ… Ø¯ÙØ¹ Ø§Ù„ØªØ³Ø¨ÙŠÙ‚ (Ø«Ù…Ù† Ø§Ù„Ø¹ÙŠÙ†Ø© Ø£Ùˆ 50% Ù…Ù† Ø§Ù„Ø·Ù„Ø¨ÙŠØ©).`
-                : `Prix et dÃ©lai validÃ©s pour "${successLead.name}". L'Ã©chantillon est lancÃ© suite au paiement de l'avance (prix Ã©chantillon ou 50%).` }
+                ? `تم تأكيد السعر والوقت لـ "${successLead.name}" بنجاح. سيتم إطلاق العينة بما أنه تم دفع التسبيق (ثمن العينة أو 50% من الطلبية).`
+                : `Prix et délai validés pour "${successLead.name}". L'échantillon est lancé suite au paiement de l'avance (prix échantillon ou 50%).` }
             </p>
 
             <div className="bg-amber-50 rounded-2xl p-4 mb-10 border border-amber-100">
-              <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1">{isAr ? 'Ø±Ù…Ø² PIN Ø§Ù„Ø®Ø§Øµ Ø¨Ø§Ù„Ø²Ø¨ÙˆÙ†' : 'Code PIN du Client'}</p>
+              <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1">{isAr ? 'رمز PIN الخاص بالزبون' : 'Code PIN du Client'}</p>
               <p className="text-2xl font-black text-slate-900 tracking-[0.2em]">{successLead.phone.slice(-4)}</p>
             </div>
 
@@ -1188,7 +1188,7 @@ export default function Demandes() {
               onClick={() => setSuccessLead(null)}
               className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10"
             >
-              {isAr ? 'Ø­Ø³Ù†Ø§Ù‹ØŒ Ù…ÙÙ‡ÙˆÙ…' : 'C\'est compris'}
+              {isAr ? 'حسناً، مفهوم' : 'C\'est compris'}
             </button>
           </div>
         </div>
@@ -1204,25 +1204,25 @@ export default function Demandes() {
             </div>
 
             <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter mb-2">
-              {isAr ? 'Ø­Ø°Ù Ø§Ù„Ø·Ù„Ø¨ØŸ' : 'Supprimer le lead ?'}
+              {isAr ? 'حذف الطلب؟' : 'Supprimer le lead ?'}
             </h3>
             <p className="text-slate-400 font-medium text-sm leading-relaxed mb-8">
               {isAr
-                ? 'Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ØŸ Ù‡Ø§Ø¯ Ø§Ù„Ø¹Ù…Ù„ÙŠØ© Ù…Ø§ ÙŠÙ…ÙƒÙ†Ø´ ØªØ±Ø¬Ø¹ ÙÙŠÙ‡Ø§ ÙˆØºØ§Ø¯ÙŠ ØªÙ…Ø³Ø­ Ø§Ù„Ø·Ù„Ø¨ Ø¨Ù…Ø±Ø©.'
-                : 'Attention ! Cette action est irrÃ©versible. Voulez-vous vraiment supprimer ce prospect ?'}
+                ? 'هل أنت متأكد؟ هاد العملية ما يمكنش ترجع فيها وغادي تمسح الطلب بمرة.'
+                : 'Attention ! Cette action est irréversible. Voulez-vous vraiment supprimer ce prospect ?'}
             </p>
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setDeleteId(null)}
                 className="py-4 bg-slate-50 text-slate-500 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-100 transition-all"
               >
-                {isAr ? 'Ø¥Ù„ØºØ§Ø¡' : 'Annuler'}
+                {isAr ? 'إلغاء' : 'Annuler'}
               </button>
               <button
                 onClick={handleConfirmDelete}
                 className="py-4 bg-rose-500 text-white rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-rose-600 transition-all shadow-xl shadow-rose-100"
               >
-                {isAr ? 'ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ø­Ø°Ù' : 'Supprimer'}
+                {isAr ? 'تأكيد الحذف' : 'Supprimer'}
               </button>
             </div>
           </div>
@@ -1245,7 +1245,7 @@ export default function Demandes() {
 {/* Zoom controls */}
           <div className="absolute bottom-6 md:top-8 md:bottom-auto left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl px-4 py-2 z-[160]" onClick={e => e.stopPropagation()}>
             <button onClick={() => setZoomLevel(z => Math.max(0.5, z - 0.25))}
-              className="w-9 h-9 bg-white/10 hover:bg-white/30 rounded-xl text-white font-black text-xl flex items-center justify-center transition-all">âˆ’</button>
+              className="w-9 h-9 bg-white/10 hover:bg-white/30 rounded-xl text-white font-black text-xl flex items-center justify-center transition-all">−</button>
             <span className="text-white text-xs font-black w-12 text-center">{Math.round(zoomLevel * 100)}%</span>
             <button onClick={() => setZoomLevel(z => Math.min(4, z + 0.25))}
               className="w-9 h-9 bg-white/10 hover:bg-white/30 rounded-xl text-white font-black text-xl flex items-center justify-center transition-all">+</button>
@@ -1284,7 +1284,7 @@ export default function Demandes() {
           </div>
 
           <p className="hidden md:block absolute bottom-4 text-white/40 text-[10px] font-bold uppercase tracking-widest">
-            Cliquer sur l'image pour zoomer â€” cliquer ailleurs pour fermer
+            Cliquer sur l'image pour zoomer — cliquer ailleurs pour fermer
           </p>
         </div>
       )}
@@ -1298,7 +1298,7 @@ export default function Demandes() {
                 className={`flex-1 sm:flex-none px-4 sm:px-8 py-3 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 relative ${category === 'clients' ? 'bg-white text-indigo-600 shadow-md ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-800'}`}
               >
                 <Package className="w-4 h-4" />
-                {isAr ? 'Ø²Ø¨Ù†Ø§Ø¡ Ù…Ø­ØªÙ…Ù„ÙˆÙ†' : 'Prospects'}
+                {isAr ? 'زبناء محتملون' : 'Prospects'}
                 {prospectsCount > 0 && (
                   <span className="absolute -top-2 -right-2 bg-indigo-600 text-white text-[10px] min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full shadow-lg animate-in zoom-in border-2 border-white">
                     {prospectsCount}
@@ -1310,7 +1310,7 @@ export default function Demandes() {
                 className={`flex-1 sm:flex-none px-4 sm:px-8 py-3 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 relative ${category === 'recrutement' ? 'bg-white text-rose-600 shadow-md ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-800'}`}
               >
                 <UserPlus className="w-4 h-4" />
-                {isAr ? 'ØªÙˆØ¸ÙŠÙ' : 'Recrutement'}
+                {isAr ? 'توظيف' : 'Recrutement'}
                 {recruitmentCount > 0 && (
                   <span className="absolute -top-2 -right-2 bg-rose-600 text-white text-[10px] min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full shadow-lg animate-in zoom-in border-2 border-white">
                     {recruitmentCount}
@@ -1325,17 +1325,17 @@ export default function Demandes() {
                 <Users className="w-4 h-4" />
               </div>
               <div>
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-tight">{isAr ? 'Ù…Ø¬Ù…ÙˆØ¹ Ø§Ù„Ø®Ø¯Ø§Ù…Ø©' : 'Total Personnel'}</p>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-tight">{isAr ? 'مجموع الخدامة' : 'Total Personnel'}</p>
                 <p className="text-sm font-black text-slate-900 leading-tight">{activeWorkersCount}</p>
               </div>
             </div>
           </div>
           <div>
             <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tight leading-none">
-              {category === 'recrutement' ? (isAr ? 'Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„ØªÙˆØ¸ÙŠÙ' : 'Gestion Recrutement') : (isAr ? 'Ø·Ù„Ø¨Ø§Øª Ø§Ù„Ø²Ø¨Ø§Ø¦Ù†' : 'Demandes Prospects')}
+              {category === 'recrutement' ? (isAr ? 'إدارة التوظيف' : 'Gestion Recrutement') : (isAr ? 'طلبات الزبائن' : 'Demandes Prospects')}
             </h1>
             <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-2">
-              {category === 'recrutement' ? (isAr ? 'Ù…Ø±Ø§Ø¬Ø¹Ø© Ø§Ù„Ù…ØªØ±Ø´Ø­ÙŠÙ† Ø§Ù„Ø¬Ø¯Ø¯' : 'Suivi des candidatures et profils') : (isAr ? 'ØªÙˆØ§ØµÙ„ Ù…Ø¹ Ø§Ù„Ù…Ù‡ØªÙ…ÙŠÙ† Ø¨Ø®Ø¯Ù…Ø§Øª Ø§Ù„Ù…ØµÙ†Ø¹' : 'GÃ©rez les prospects intÃ©ressÃ©s par vos services')}
+              {category === 'recrutement' ? (isAr ? 'مراجعة المترشحين الجدد' : 'Suivi des candidatures et profils') : (isAr ? 'تواصل مع المهتمين بخدمات المصنع' : 'Gérez les prospects intéressés par vos services')}
             </p>
           </div>
         </div>
@@ -1355,7 +1355,7 @@ export default function Demandes() {
                 className={`px-3 sm:px-6 py-2.5 sm:py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filter === f ? 'bg-slate-900 text-white shadow-xl' : 'text-slate-500 hover:bg-slate-50'
                   }`}
               >
-                {isAr ? (f === 'all' ? 'Ø§Ù„ÙƒÙ„' : f === 'new' ? 'Ø¬Ø¯ÙŠØ¯' : 'Ù…ÙƒØªÙ…Ù„') : f}
+                {isAr ? (f === 'all' ? 'الكل' : f === 'new' ? 'جديد' : 'مكتمل') : f}
               </button>
             ))}
           </div>
@@ -1366,12 +1366,12 @@ export default function Demandes() {
       {category === 'clients' && (() => {
         const clientLeads = leads.filter(l => !l.type.startsWith('RECRUTEMENT:'));
         const stats = [
-          { label: isAr ? 'Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹' : 'Total', value: clientLeads.length, color: 'bg-slate-800 text-white', onClick: () => setFilter('all') },
-          { label: isAr ? 'Ø¬Ø¯Ø¯' : 'Nouveaux', value: clientLeads.filter(l => !l.contactedAt).length, color: 'bg-indigo-500 text-white', onClick: () => setFilter('new') },
-          { label: isAr ? 'ØªÙ… Ø§Ù„ØªÙˆØ§ØµÙ„' : 'ContactÃ©s', value: clientLeads.filter(l => !!l.contactedAt).length, color: 'bg-emerald-500 text-white', onClick: () => setFilter('all') },
-          { label: isAr ? 'Ø¯ÙŠÙÙŠØ² Ø£ÙØ±Ø³Ù„' : 'Devis envoyÃ©', value: clientLeads.filter(l => (l.crmPrice || 0) > 0).length, color: 'bg-amber-500 text-white', onClick: () => setFilter('all') },
-          { label: isAr ? 'Ù…Ø¤ÙƒØ¯ÙˆÙ†' : 'ConfirmÃ©s', value: clientLeads.filter(l => l.crmStage === 'confirme').length, color: 'bg-teal-500 text-white', onClick: () => setFilter('completed') },
-          { label: isAr ? 'Ù‚ÙŠØ¯ Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±' : 'En attente', value: clientLeads.filter(l => l.crmStage === 'attente_confirmation').length, color: 'bg-orange-400 text-white', onClick: () => setFilter('all') },
+          { label: isAr ? 'المجموع' : 'Total', value: clientLeads.length, color: 'bg-slate-800 text-white', onClick: () => setFilter('all') },
+          { label: isAr ? 'جدد' : 'Nouveaux', value: clientLeads.filter(l => !l.contactedAt).length, color: 'bg-indigo-500 text-white', onClick: () => setFilter('new') },
+          { label: isAr ? 'تم التواصل' : 'Contactés', value: clientLeads.filter(l => !!l.contactedAt).length, color: 'bg-emerald-500 text-white', onClick: () => setFilter('all') },
+          { label: isAr ? 'ديفيز أُرسل' : 'Devis envoyé', value: clientLeads.filter(l => (l.crmPrice || 0) > 0).length, color: 'bg-amber-500 text-white', onClick: () => setFilter('all') },
+          { label: isAr ? 'مؤكدون' : 'Confirmés', value: clientLeads.filter(l => l.crmStage === 'confirme').length, color: 'bg-teal-500 text-white', onClick: () => setFilter('completed') },
+          { label: isAr ? 'قيد الانتظار' : 'En attente', value: clientLeads.filter(l => l.crmStage === 'attente_confirmation').length, color: 'bg-orange-400 text-white', onClick: () => setFilter('all') },
         ];
         return (
           <div className="space-y-3">
@@ -1389,7 +1389,7 @@ export default function Demandes() {
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder={isAr ? 'Ø¨Ø­Ø« Ø¨Ø§Ù„Ø§Ø³Ù…ØŒ Ø§Ù„Ù‡Ø§ØªÙØŒ Ø§Ù„Ù†ÙˆØ¹ØŒ Ø§Ù„Ù…Ø¯ÙŠÙ†Ø©...' : 'Rechercher par nom, tÃ©lÃ©phone, type, ville...'}
+                placeholder={isAr ? 'بحث بالاسم، الهاتف، النوع، المدينة...' : 'Rechercher par nom, téléphone, type, ville...'}
                 className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all shadow-sm"
               />
               {searchQuery && (
@@ -1404,10 +1404,10 @@ export default function Demandes() {
               {/* Sort */}
               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Trier:</span>
               {[
-                { id: 'date_desc', label: 'ðŸ• Nouveaux' },
-                { id: 'date_asc', label: 'ðŸ• Anciens' },
-                { id: 'qty_desc', label: 'ðŸ“¦ QtÃ© â†“' },
-                { id: 'qty_asc', label: 'ðŸ“¦ QtÃ© â†‘' },
+                { id: 'date_desc', label: '🕐 Nouveaux' },
+                { id: 'date_asc', label: '🕐 Anciens' },
+                { id: 'qty_desc', label: '📦 Qté ↓' },
+                { id: 'qty_asc', label: '📦 Qté ↑' },
               ].map(s => (
                 <button key={s.id} onClick={() => setSortBy(s.id as any)}
                   className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${sortBy === s.id ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}>
@@ -1442,7 +1442,7 @@ export default function Demandes() {
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder={isAr ? 'Ø¨Ø­Ø« Ø¨Ø§Ù„Ø§Ø³Ù…ØŒ Ø§Ù„Ù‡Ø§ØªÙØŒ Ø§Ù„Ù…Ø¯ÙŠÙ†Ø©...' : 'Rechercher par nom, tÃ©lÃ©phone, ville...'}
+                placeholder={isAr ? 'بحث بالاسم، الهاتف، المدينة...' : 'Rechercher par nom, téléphone, ville...'}
                 className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all shadow-sm"
               />
               {searchQuery && (
@@ -1453,30 +1453,30 @@ export default function Demandes() {
             </div>
 
             <div className="flex flex-wrap gap-2 items-center">
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">{isAr ? 'Ø§Ù„ØªØ®ØµØµ:' : 'Poste:'}</span>
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">{isAr ? 'التخصص:' : 'Poste:'}</span>
               <select
                 value={filterType}
                 onChange={e => setFilterType(e.target.value)}
                 className="px-3 py-1.5 rounded-xl text-[10px] font-black border border-slate-200 bg-white text-slate-600 outline-none focus:border-indigo-400"
               >
-                <option value="all">{isAr ? 'Ø¬Ù…ÙŠØ¹ Ø§Ù„ØªØ®ØµØµØ§Øª' : 'Tous les postes'}</option>
+                <option value="all">{isAr ? 'جميع التخصصات' : 'Tous les postes'}</option>
                 {Array.from(new Set(recrutementLeads.map(l => l.type.replace('RECRUTEMENT:', '').trim()))).sort().map(t => (
                   <option key={t} value={t}>{t}</option>
                 ))}
               </select>
 
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">{isAr ? 'Ø§Ù„Ø®Ø¨Ø±Ø©:' : 'ExpÃ©rience:'}</span>
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">{isAr ? 'الخبرة:' : 'Expérience:'}</span>
               <select
                 value={filterExperience}
                 onChange={e => setFilterExperience(e.target.value)}
                 className="px-3 py-1.5 rounded-xl text-[10px] font-black border border-slate-200 bg-white text-slate-600 outline-none focus:border-indigo-400"
               >
-                <option value="all">{isAr ? 'Ø§Ù„ÙƒÙ„' : 'Toutes'}</option>
+                <option value="all">{isAr ? 'الكل' : 'Toutes'}</option>
                 {Array.from(new Set(recrutementLeads.map(l => {
-                  const m = l.details?.match(/ExpÃ©rience:\s*(\d+)/);
+                  const m = l.details?.match(/Expérience:\s*(\d+)/);
                   return m ? m[1] : '0';
                 }))).sort((a, b) => parseInt(a) - parseInt(b)).map(exp => (
-                  <option key={exp} value={exp}>{exp === '0' ? (isAr ? 'Ø¨Ø¯ÙˆÙ† Ø®Ø¨Ø±Ø©' : 'Sans expÃ©rience') : `${exp} ${isAr ? 'Ø³Ù†ÙˆØ§Øª' : 'ans'}`}</option>
+                  <option key={exp} value={exp}>{exp === '0' ? (isAr ? 'بدون خبرة' : 'Sans expérience') : `${exp} ${isAr ? 'سنوات' : 'ans'}`}</option>
                 ))}
               </select>
             </div>
@@ -1491,7 +1491,7 @@ export default function Demandes() {
               <Mail className="w-8 h-8" />
             </div>
             <p className="text-slate-400 font-bold uppercase tracking-widest text-sm">
-              {isAr ? 'Ù„Ø§ ØªÙˆØ¬Ø¯ Ø·Ù„Ø¨Ø§Øª Ø­Ø§Ù„ÙŠØ§Ù‹' : 'Aucune demande trouvÃ©e'}
+              {isAr ? 'لا توجد طلبات حالياً' : 'Aucune demande trouvée'}
             </p>
           </div>
         ) : (
@@ -1532,10 +1532,10 @@ export default function Demandes() {
                       <div>
                         <h3 className="text-base font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
                           {client.name}
-                          {hasPriority && <span className="text-xs">â­</span>}
+                          {hasPriority && <span className="text-xs">⭐</span>}
                           {hasNew && (
                             <span className="px-2 py-0.5 bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest rounded-full">
-                              {isAr ? 'Ø¬Ø¯ÙŠØ¯' : 'New'}
+                              {isAr ? 'جديد' : 'New'}
                             </span>
                           )}
                         </h3>
@@ -1551,12 +1551,12 @@ export default function Demandes() {
                     <div className="flex items-center gap-2">
                       <a href={`tel:${client.phone.replace(/\D/g, '').startsWith('0') ? '212' + client.phone.replace(/\D/g, '').substring(1) : client.phone.replace(/\D/g, '')}`}
                         className="h-9 px-3 bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl flex items-center gap-2 text-xs font-black transition-all border border-slate-200 shadow-sm">
-                        <PhoneCall className="w-4 h-4" /> {isAr ? 'Ø§ØªØµØ§Ù„' : 'Appel'}
+                        <PhoneCall className="w-4 h-4" /> {isAr ? 'اتصال' : 'Appel'}
                       </a>
                       <button onClick={() => { setContactingLead(client); setContactingLeadRequests(requests); }}
                         className={`h-9 px-3 rounded-xl text-xs font-black uppercase flex items-center gap-2 border transition-all shadow-sm ${client.contactedAt ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-600'}`}>
                         <MessageSquare className="w-4 h-4" />
-                        {client.contactedAt ? (isAr ? 'ØªÙˆØ§ØµÙ„ âœ“' : 'ContactÃ© âœ“') : 'WhatsApp'}
+                        {client.contactedAt ? (isAr ? 'تواصل ✓' : 'Contacté ✓') : 'WhatsApp'}
                       </button>
                       
                       {category !== 'recrutement' && (() => {
@@ -1571,10 +1571,10 @@ export default function Demandes() {
                               const initPrices: Record<string, { matiere: string; labor: string }> = {};
                               requests.forEach(r => { initPrices[r.id] = { matiere: '', labor: '' }; });
                               setModelPrices(initPrices);
-                              setMatierePrice(loadCompanyProfile().defaultMatiere || ''); setLaborPrice(loadCompanyProfile().defaultLabor || ''); setDevisMode('commande');
+                              setMatierePrice(''); setLaborPrice(''); setDevisMode('commande');
                             }}
                             className="h-9 w-9 rounded-xl flex items-center justify-center border border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all shadow-sm"
-                            title={isAr ? 'Ø¥Ù†Ø´Ø§Ø¡ Ø¯ÙŠÙÙŠØ² Ù„ÙƒÙ„ Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„Ø§Øª' : 'Devis tous modÃ¨les'}
+                            title={isAr ? 'إنشاء ديفيز لكل الموديلات' : 'Devis tous modèles'}
                           >
                             <Calculator className="w-4 h-4" />
                           </button>
@@ -1583,14 +1583,14 @@ export default function Demandes() {
 
                       {category !== 'recrutement' && (
                         !users.some(u => u.nom.toLowerCase() === client.name.toLowerCase() && u.role === 'client') ? (
-                          <button onClick={() => convertToClient(client)} title={isAr ? 'ØªØ³Ø¬ÙŠÙ„ ÙƒØ²Ø¨ÙˆÙ†' : 'CrÃ©er client'}
+                          <button onClick={() => convertToClient(client)} title={isAr ? 'تسجيل كزبون' : 'Créer client'}
                             className="h-9 px-3 bg-white text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-xl border border-emerald-200 flex items-center gap-2 text-xs font-black transition-all shadow-sm">
-                            <UserPlus className="w-4 h-4" /> {isAr ? 'Ø¥Ø¶Ø§ÙØ© Ø²Ø¨ÙˆÙ†' : 'CrÃ©er Client'}
+                            <UserPlus className="w-4 h-4" /> {isAr ? 'إضافة زبون' : 'Créer Client'}
                           </button>
                         ) : (
-                          <button disabled title={isAr ? "ØªÙ… Ø¥Ø¶Ø§ÙØªÙ‡ ÙƒØ²Ø¨ÙˆÙ†" : "AjoutÃ© comme Client"}
+                          <button disabled title={isAr ? "تم إضافته كزبون" : "Ajouté comme Client"}
                             className="h-9 px-3 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-200 text-[10px] font-black flex items-center gap-1 opacity-80 cursor-default shadow-sm">
-                            <CheckCircle className="w-4 h-4" /> {isAr ? 'ØªÙ…Øª Ø§Ù„Ø¥Ø¶Ø§ÙØ© ÙƒØ²Ø¨ÙˆÙ†' : 'Client AjoutÃ©'}
+                            <CheckCircle className="w-4 h-4" /> {isAr ? 'تمت الإضافة كزبون' : 'Client Ajouté'}
                           </button>
                         )
                       )}
@@ -1602,7 +1602,7 @@ export default function Demandes() {
                     {requests.map(lead => (
                       <div key={lead.id} className={`flex flex-col md:flex-row items-start md:items-center justify-between p-3 rounded-xl border gap-4 transition-colors ${lead.crmStage === 'confirme' ? 'bg-emerald-50/30 border-emerald-100' : 'bg-slate-50/50 hover:bg-slate-50 border-slate-100'}`}>
                         <div className="flex items-center gap-3 w-full md:w-auto">
-                          {/* Photo — hidden for recrutement */}
+                          {/* Photo */}
                           {category !== 'recrutement' && (
                           <div className="relative shrink-0 cursor-pointer" onClick={async () => {
                             if (lead.photo) { setPreviewPhoto(lead.photo); return; }
@@ -1632,7 +1632,7 @@ export default function Demandes() {
                               )}
                               {lead.crmStage === 'confirme' && (
                                 <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-600 border border-emerald-200 text-[9px] font-black uppercase tracking-widest rounded flex items-center gap-1">
-                                  <CheckCircle className="w-3 h-3" /> {isAr ? 'Ù…Ø¤ÙƒØ¯' : 'ValidÃ©'}
+                                  <CheckCircle className="w-3 h-3" /> {isAr ? 'مؤكد' : 'Validé'}
                                 </span>
                               )}
                             </div>
@@ -1651,9 +1651,9 @@ export default function Demandes() {
 
                         {/* REQUEST ACTIONS */}
                         <div className="flex items-center gap-1.5 flex-wrap w-full md:w-auto justify-end">
-                          <button onClick={() => togglePriority(lead)} title={lead.crmPriority ? 'Retirer prioritÃ©' : 'Marquer important'}
+                          <button onClick={() => togglePriority(lead)} title={lead.crmPriority ? 'Retirer priorité' : 'Marquer important'}
                             className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all border ${lead.crmPriority ? 'bg-amber-50 border-amber-200 shadow-sm' : 'bg-white border-slate-200 opacity-50 hover:opacity-100'}`}>
-                            â­
+                            ⭐
                           </button>
                           
                           <div className="w-px h-5 bg-slate-200 mx-1" />
@@ -1676,7 +1676,7 @@ export default function Demandes() {
                                 }} />
                                 <span className={`h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border flex items-center gap-1 transition-all ${(lead as any).cv ? 'bg-blue-50 text-blue-600 border-blue-200 shadow-sm' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>
                                   <FileText className="w-3.5 h-3.5" />
-                                  {(lead as any).cv ? 'CV âœ“' : 'CV +'}
+                                  {(lead as any).cv ? 'CV ✓' : 'CV +'}
                                 </span>
                               </label>
                               {(lead as any).cv && (
@@ -1705,14 +1705,14 @@ export default function Demandes() {
                               )}
                               <button onClick={() => navigate('/liste-attente', { state: { fromRecruitment: lead } })}
                                 className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase flex items-center gap-1 border bg-indigo-500 text-white border-indigo-500 hover:bg-indigo-600 shadow-sm">
-                                <UserPlus className="w-3.5 h-3.5" /> {isAr ? 'Ù„Ø§Ø¦Ø­Ø© Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±' : 'Attente'}
+                                <UserPlus className="w-3.5 h-3.5" /> {isAr ? 'لائحة الانتظار' : 'Attente'}
                               </button>
                               <button onClick={async () => {
-                                const updated = { ...lead, status: 'completed' as Lead['status'], crmStage: 'rejetÃ©' };
+                                const updated = { ...lead, status: 'completed' as Lead['status'], crmStage: 'rejeté' };
                                 setLeads(prev => prev.map(l => l.id === lead.id ? updated : l));
                                 await saveRecord('leads', updated, true);
                               }}
-                                className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-rose-50 text-rose-500 border-rose-200 hover:bg-rose-500 hover:text-white transition-all shadow-sm">âœ• Rejeter</button>
+                                className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-rose-50 text-rose-500 border-rose-200 hover:bg-rose-500 hover:text-white transition-all shadow-sm">✕ Rejeter</button>
                             </>
                           )}
 
@@ -1720,30 +1720,30 @@ export default function Demandes() {
                             <>
                               {lead.crmStage !== 'annule' && lead.crmStage !== 'confirme' && (
                                 <button onClick={async () => {
-                                  if (window.confirm(isAr ? 'Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø±ÙØ¶ Ù‡Ø°Ø§ Ø§Ù„Ø·Ù„Ø¨ØŸ' : 'Voulez-vous vraiment refuser cette demande ?')) {
+                                  if (window.confirm(isAr ? 'هل أنت متأكد من رفض هذا الطلب؟' : 'Voulez-vous vraiment refuser cette demande ?')) {
                                     const updated = { ...lead, crmStage: 'annule' as const, rejectedAt: new Date().toISOString() };
                                     setLeads(prev => prev.map(l => l.id === lead.id ? updated : l));
                                     await saveRecord('leads', updated, true);
                                   }
                                 }}
-                                  className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-rose-50 text-rose-500 border-rose-200 hover:bg-rose-500 hover:text-white transition-all shadow-sm">âœ• {isAr ? 'Ø±ÙØ¶' : 'Refuser'}</button>
+                                  className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-rose-50 text-rose-500 border-rose-200 hover:bg-rose-500 hover:text-white transition-all shadow-sm">✕ {isAr ? 'رفض' : 'Refuser'}</button>
                               )}
                               {lead.crmStage !== 'confirme' && lead.crmStage !== 'annule' && (
                                 <button onClick={() => setConfirmLead(lead)}
-                                  className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-500 hover:text-white transition-all shadow-sm">âœ“ {isAr ? 'ØªØ£ÙƒÙŠØ¯' : 'Valider'}</button>
+                                  className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-500 hover:text-white transition-all shadow-sm">✓ {isAr ? 'تأكيد' : 'Valider'}</button>
                               )}
                               {lead.photo && !lead.type.startsWith('RECRUTEMENT:') && (
                                 <button onClick={() => setAiAnalysisLead(lead)}
                                   className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-fuchsia-50 text-fuchsia-600 border-fuchsia-200 hover:bg-fuchsia-500 hover:text-white transition-all shadow-sm flex items-center gap-1"
-                                  title={isAr ? 'ØªØ­Ù„ÙŠÙ„ Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„ ÙˆØ§Ø³ØªØ®Ø±Ø§Ø¬ Ø§Ù„Ù‚ÙŠØ§Ø³Ø§Øª' : 'Analyser le modÃ¨le et extraire les mesures'}>
-                                  <Scissors className="w-3.5 h-3.5" /> {isAr ? 'ØªØ­Ù„ÙŠÙ„ Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„' : 'Analyser ModÃ¨le'}
+                                  title={isAr ? 'تحليل الموديل واستخراج القياسات' : 'Analyser le modèle et extraire les mesures'}>
+                                  <Scissors className="w-3.5 h-3.5" /> {isAr ? 'تحليل الموديل' : 'Analyser Modèle'}
                                 </button>
                               )}
                             </>
                           )}
                           
                           {(lead.details || (lead.tailles && Object.values(lead.tailles).some(v => v > 0))) && !lead.type.startsWith('RECRUTEMENT:') && (
-                            <button onClick={() => setDetailsLead(lead)} title="DÃ©tails"
+                            <button onClick={() => setDetailsLead(lead)} title="Détails"
                               className="w-8 h-8 bg-white text-slate-500 hover:bg-slate-100 rounded-lg border border-slate-200 flex items-center justify-center transition-all shadow-sm">
                               <MessageSquare className="w-3.5 h-3.5" />
                             </button>
@@ -1782,7 +1782,7 @@ export default function Demandes() {
               className="px-10 py-4 bg-white border-2 border-slate-100 text-indigo-600 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:border-indigo-200 hover:bg-indigo-50 transition-all shadow-sm flex items-center gap-3 group"
             >
               <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
-              {isAr ? 'Ù…Ø´Ø§Ù‡Ø¯Ø© Ø§Ù„Ù…Ø²ÙŠØ¯ Ù…Ù† Ø§Ù„Ø·Ù„Ø¨Ø§Øª' : 'Afficher plus de demandes'}
+              {isAr ? 'مشاهدة المزيد من الطلبات' : 'Afficher plus de demandes'}
             </button>
           </div>
         )}
@@ -1822,17 +1822,17 @@ export default function Demandes() {
               </div>
               <div style={{ textAlign: 'right' }}>
                 <h2 style={{ fontSize: '24px', fontWeight: 900, margin: 0, color: '#1e1b4b', textTransform: 'uppercase' }}>DEVIS</h2>
-                <p style={{ fontSize: '9px', fontWeight: 700, color: '#94a3b8', margin: '2px 0 0' }}>NÂ° {devisNum} â€” {new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                <p style={{ fontSize: '9px', fontWeight: 700, color: '#94a3b8', margin: '2px 0 0' }}>N° {devisNum} — {new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
               </div>
             </div>
 
             {/* ===== EMETTEUR / CLIENT ===== */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', margin: '12px 32px', fontSize: '11px' }}>
               <div style={{ background: '#f8fafc', padding: '12px 14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                <h3 style={{ fontSize: '8px', fontWeight: 900, color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 6px' }}>Ã‰metteur</h3>
+                <h3 style={{ fontSize: '8px', fontWeight: 900, color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 6px' }}>Émetteur</h3>
                 <p style={{ fontWeight: 900, fontSize: '11px', margin: '0 0 2px', textTransform: 'uppercase' }}>{company.name}</p>
                 <p style={{ fontWeight: 600, color: '#64748b', margin: '0 0 1px', fontSize: '10px' }}>{company.address}</p>
-                <p style={{ fontWeight: 600, color: '#64748b', margin: '0 0 1px', fontSize: '10px' }}>TÃ©l: {company.phone}</p>
+                <p style={{ fontWeight: 600, color: '#64748b', margin: '0 0 1px', fontSize: '10px' }}>Tél: {company.phone}</p>
                 {company.email && <p style={{ fontWeight: 600, color: '#64748b', margin: '0', fontSize: '10px' }}>{company.email}</p>}
                 {company.ice && company.ice !== '000000000000000' && <p style={{ fontWeight: 600, color: '#94a3b8', margin: '3px 0 0', fontSize: '9px' }}>ICE: {company.ice} {company.rc && company.rc !== '123456' ? `| RC: ${company.rc}` : ''}</p>}
               </div>
@@ -1848,7 +1848,7 @@ export default function Demandes() {
             {/* ===== OBJET ===== */}
             <div style={{ margin: '0 32px 10px', background: '#eef2ff', padding: '8px 14px', borderRadius: '8px', border: '1px solid #c7d2fe' }}>
               <p style={{ margin: 0, fontSize: '10px', fontWeight: 800, color: '#4338ca' }}>
-                Objet : Devis de confection â€” <span style={{ fontWeight: 900 }}>{devisLead.type}</span> Ã— {currentQuantity} piÃ¨ces
+                Objet : Devis de confection — <span style={{ fontWeight: 900 }}>{devisLead.type}</span> × {currentQuantity} pièces
               </p>
             </div>
 
@@ -1858,7 +1858,7 @@ export default function Demandes() {
                 <thead>
                   <tr style={{ background: '#0f172a', color: 'white' }}>
                     <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '9px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', borderRadius: '8px 0 0 0' }}>Description</th>
-                    <th style={{ padding: '10px 12px', textAlign: 'center', fontSize: '9px', fontWeight: 900, textTransform: 'uppercase' }}>QtÃ©</th>
+                    <th style={{ padding: '10px 12px', textAlign: 'center', fontSize: '9px', fontWeight: 900, textTransform: 'uppercase' }}>Qté</th>
                     <th style={{ padding: '10px 12px', textAlign: 'center', fontSize: '9px', fontWeight: 900, textTransform: 'uppercase' }}>PU (MAD)</th>
                     <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '9px', fontWeight: 900, textTransform: 'uppercase', borderRadius: '0 8px 0 0' }}>Total (MAD)</th>
                   </tr>
@@ -1873,7 +1873,7 @@ export default function Demandes() {
                     </tr>
                   )}
                   <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '10px 12px', fontWeight: 800 }}>Confection & Main d'Å“uvre</td>
+                    <td style={{ padding: '10px 12px', fontWeight: 800 }}>Confection & Main d'œuvre</td>
                     <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600 }}>{currentQuantity}</td>
                     <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600, color: '#64748b' }}>{Number(laborPrice || 0).toFixed(2)}</td>
                     <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 800 }}>{totalLabor.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
@@ -1891,7 +1891,7 @@ export default function Demandes() {
                 </div>
                 {Number(matierePrice) > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 12px', fontSize: '10px', fontWeight: 700, color: '#64748b', borderBottom: '1px solid #f1f5f9' }}>
-                    <span>Sous-total MatiÃ¨re</span>
+                    <span>Sous-total Matière</span>
                     <span style={{ fontWeight: 800 }}>{totalMatiere.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
                   </div>
                 )}
@@ -1905,7 +1905,7 @@ export default function Demandes() {
                   color: 'white', padding: '16px', borderRadius: '12px', marginTop: '8px'
                 }}>
                   <div>
-                    <span style={{ fontSize: '8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px', opacity: 0.7, display: 'block' }}>Total GÃ©nÃ©ral</span>
+                    <span style={{ fontSize: '8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px', opacity: 0.7, display: 'block' }}>Total Général</span>
                     <span style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase' }}>TTC</span>
                   </div>
                   <span style={{ fontSize: '26px', fontWeight: 900, letterSpacing: '-1px' }}>{totalGeneral.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} <span style={{ fontSize: '13px', fontWeight: 800 }}>MAD</span></span>
@@ -1913,21 +1913,21 @@ export default function Demandes() {
               </div>
             </div>
 
-            {/* ===== CONDITIONS â€” CLEAR & READABLE ===== */}
+            {/* ===== CONDITIONS — CLEAR & READABLE ===== */}
             <div style={{ margin: '0 32px 12px', padding: '14px 18px', borderRadius: '10px', border: '2px solid #312e81', borderLeft: '6px solid #4f46e5', background: '#fafaff' }}>
-              <p style={{ fontWeight: 900, color: '#1e1b4b', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 8px', borderBottom: '1px solid #e0e7ff', paddingBottom: '6px' }}>ðŸ“‹ Conditions GÃ©nÃ©rales</p>
+              <p style={{ fontWeight: 900, color: '#1e1b4b', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 8px', borderBottom: '1px solid #e0e7ff', paddingBottom: '6px' }}>📋 Conditions Générales</p>
               <div style={{ fontSize: '11px', color: '#334155', fontWeight: 600, lineHeight: '2' }}>
-                <p style={{ margin: '0 0 2px' }}><strong style={{ color: '#4f46e5' }}>1.</strong> Ce devis est <strong>valable 15 jours</strong> Ã  compter de la date d'Ã©mission.</p>
-                <p style={{ margin: '0 0 2px' }}><strong style={{ color: '#4f46e5' }}>2.</strong> Un <strong>acompte de 50%</strong> est requis Ã  la confirmation de la commande.</p>
-                <p style={{ margin: '0 0 2px' }}><strong style={{ color: '#4f46e5' }}>3.</strong> Le <strong>dÃ©lai de production</strong> sera confirmÃ© aprÃ¨s validation de l'Ã©chantillon.</p>
-                <p style={{ margin: 0 }}><strong style={{ color: '#4f46e5' }}>4.</strong> Toute <strong>modification du modÃ¨le</strong> aprÃ¨s lancement peut entraÃ®ner une rÃ©vision tarifaire.</p>
+                <p style={{ margin: '0 0 2px' }}><strong style={{ color: '#4f46e5' }}>1.</strong> Ce devis est <strong>valable 15 jours</strong> à compter de la date d'émission.</p>
+                <p style={{ margin: '0 0 2px' }}><strong style={{ color: '#4f46e5' }}>2.</strong> Un <strong>acompte de 50%</strong> est requis à la confirmation de la commande.</p>
+                <p style={{ margin: '0 0 2px' }}><strong style={{ color: '#4f46e5' }}>3.</strong> Le <strong>délai de production</strong> sera confirmé après validation de l'échantillon.</p>
+                <p style={{ margin: 0 }}><strong style={{ color: '#4f46e5' }}>4.</strong> Toute <strong>modification du modèle</strong> après lancement peut entraîner une révision tarifaire.</p>
               </div>
             </div>
 
             {/* ===== FOOTER ===== */}
             <div style={{ margin: '0 32px', borderTop: '2px solid #e2e8f0', paddingTop: '10px', textAlign: 'center' }}>
               <p style={{ fontSize: '9px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 2px' }}>
-                Merci de votre confiance â€” {company.name}
+                Merci de votre confiance — {company.name}
               </p>
               <p style={{ fontSize: '8px', fontWeight: 700, color: '#cbd5e1', margin: 0 }}>
                 {company.address} | {company.phone} | {company.email}
@@ -1947,10 +1947,10 @@ export default function Demandes() {
                 </div>
                 <div>
                   <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">
-                    {isAr ? 'Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ù‚ÙˆØ§Ù„Ø¨ Ø§Ù„Ø±Ø³Ø§Ø¦Ù„' : 'ParamÃ¨tres des Templates'}
+                    {isAr ? 'إعدادات قوالب الرسائل' : 'Paramètres des Templates'}
                   </h2>
                   <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">
-                    {isAr ? 'ØªØ®ØµÙŠØµ Ø§Ù„Ù‡ÙˆÙŠØ© Ø§Ù„Ø¨ØµØ±ÙŠØ© Ù„Ù„Ù†ØµÙˆØµ' : 'Personnalisez vos messages clients'}
+                    {isAr ? 'تخصيص الهوية البصرية للنصوص' : 'Personnalisez vos messages clients'}
                   </p>
                 </div>
               </div>
@@ -1964,13 +1964,13 @@ export default function Demandes() {
                 {/* Arabic Column */}
                 <div className="space-y-6">
                   <div className="flex items-center gap-3 mb-2">
-                    <span className="text-2xl">ðŸ‡²ðŸ‡¦</span>
-                    <h3 className="font-black text-slate-800 uppercase tracking-tight">Ø§Ù„Ø¹Ø±Ø¨ÙŠØ© (AR)</h3>
+                    <span className="text-2xl">🇲🇦</span>
+                    <h3 className="font-black text-slate-800 uppercase tracking-tight">العربية (AR)</h3>
                   </div>
 
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Ø±Ø³Ø§Ù„Ø© Ø§Ù„Ø§ØªØµØ§Ù„ Ø§Ù„Ø£ÙˆÙ„</label>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">رسالة الاتصال الأول</label>
                       <textarea
                         className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-medium h-32 focus:border-indigo-500 outline-none transition-all"
                         value={templates.ar.firstContact}
@@ -1978,7 +1978,7 @@ export default function Demandes() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Ø±Ø³Ø§Ù„Ø© ØªÙ‚Ø¯ÙŠØ± Ø§Ù„Ø«Ù…Ù† (Ù†ØµÙŠØ©)</label>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">رسالة تقدير الثمن (نصية)</label>
                       <textarea
                         className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-medium h-32 focus:border-indigo-500 outline-none transition-all"
                         value={templates.ar.devisTxt}
@@ -1986,7 +1986,7 @@ export default function Demandes() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Ø±Ø³Ø§Ù„Ø© ØªÙ‚Ø¯ÙŠØ± Ø§Ù„Ø«Ù…Ù† (Ù…Ø¹ PDF)</label>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">رسالة تقدير الثمن (مع PDF)</label>
                       <textarea
                         className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-medium h-32 focus:border-indigo-500 outline-none transition-all"
                         value={templates.ar.devisPdf}
@@ -1999,8 +1999,8 @@ export default function Demandes() {
                 {/* French Column */}
                 <div className="space-y-6">
                   <div className="flex items-center gap-3 mb-2">
-                    <span className="text-2xl">ðŸ‡«ðŸ‡·</span>
-                    <h3 className="font-black text-slate-800 uppercase tracking-tight">FranÃ§ais (FR)</h3>
+                    <span className="text-2xl">🇫🇷</span>
+                    <h3 className="font-black text-slate-800 uppercase tracking-tight">Français (FR)</h3>
                   </div>
 
                   <div className="space-y-4">
@@ -2039,7 +2039,7 @@ export default function Demandes() {
                   </div>
                   <div className="text-xs font-bold text-amber-800 space-y-1">
                     <p className="uppercase tracking-widest mb-1">Guide des variables :</p>
-                    <p>Ø§Ø³ØªØ¹Ù…Ù„ <code className="bg-amber-200/50 px-1.5 py-0.5 rounded">{"{name}"}</code> Ù„Ù„Ø¥Ø³Ù…ØŒ <code className="bg-amber-200/50 px-1.5 py-0.5 rounded">{"{type}"}</code> Ù„Ù„Ù†ÙˆØ¹ØŒ Ùˆ <code className="bg-amber-200/50 px-1.5 py-0.5 rounded">{"{total}"}</code> Ù„Ù„Ù…Ø¬Ù…ÙˆØ¹.</p>
+                    <p>استعمل <code className="bg-amber-200/50 px-1.5 py-0.5 rounded">{"{name}"}</code> للإسم، <code className="bg-amber-200/50 px-1.5 py-0.5 rounded">{"{type}"}</code> للنوع، و <code className="bg-amber-200/50 px-1.5 py-0.5 rounded">{"{total}"}</code> للمجموع.</p>
                     <p>Utilisez <code className="bg-amber-200/50 px-1.5 py-0.5 rounded">{"{name}"}</code> pour le nom, <code className="bg-amber-200/50 px-1.5 py-0.5 rounded">{"{type}"}</code> pour le type, etc.</p>
                   </div>
                 </div>
@@ -2052,7 +2052,7 @@ export default function Demandes() {
                 className="flex items-center gap-2 text-xs font-black text-rose-500 uppercase tracking-widest hover:text-rose-600 transition-colors"
               >
                 <RefreshCw className="w-4 h-4" />
-                {isAr ? 'Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ø§Ù„Ù‚ÙˆØ§Ù„Ø¨ Ø§Ù„Ø£ØµÙ„ÙŠØ©' : 'Restaurer par dÃ©faut'}
+                {isAr ? 'استعادة القوالب الأصلية' : 'Restaurer par défaut'}
               </button>
 
               <div className="flex gap-4">
@@ -2060,14 +2060,14 @@ export default function Demandes() {
                   onClick={() => setShowSettings(false)}
                   className="px-8 py-4 text-sm font-black text-slate-500 uppercase tracking-widest hover:text-slate-800 transition-colors"
                 >
-                  {isAr ? 'Ø¥Ù„ØºØ§Ø¡' : 'Annuler'}
+                  {isAr ? 'إلغاء' : 'Annuler'}
                 </button>
                 <button
                   onClick={() => saveTemplates(templates)}
                   className="px-10 py-4 bg-indigo-600 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center gap-3 shadow-xl shadow-indigo-100"
                 >
                   <Save className="w-5 h-5" />
-                  {isAr ? 'Ø­ÙØ¸ Ø§Ù„ØªØºÙŠÙŠØ±Ø§Øª' : 'Sauvegarder'}
+                  {isAr ? 'حفظ التغييرات' : 'Sauvegarder'}
                 </button>
               </div>
             </div>
@@ -2085,7 +2085,7 @@ export default function Demandes() {
                 </div>
                 <div>
                   <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">
-                    {isAr ? 'Ø§Ø®ØªÙŠØ§Ø± Ù†ÙˆØ¹ Ø§Ù„Ø±Ø³Ø§Ù„Ø©' : 'Type de Message'}
+                    {isAr ? 'اختيار نوع الرسالة' : 'Type de Message'}
                   </h3>
                   <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest italic">{contactingLead.name}</p>
                 </div>
@@ -2107,56 +2107,56 @@ export default function Demandes() {
                 const clientOptions = [
                   {
                     id: 'standard',
-                    title: isAr ? 'Ø±Ø³Ø§Ù„Ø© ØªÙˆØ§ØµÙ„ Ù‚ÙŠØ§Ø³ÙŠØ©' : 'Contact Standard',
+                    title: isAr ? 'رسالة تواصل قياسية' : 'Contact Standard',
                     icon: <FileText className="w-5 h-5" />,
-                    desc: isAr ? 'Ø§Ù„Ø±Ø³Ø§Ù„Ø© Ø§Ù„ØªÙŠ Ù‚Ù…Øª Ø¨Ø¥Ø¹Ø¯Ø§Ø¯Ù‡Ø§ ÙÙŠ Ø§Ù„Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª (ØªØ­ÙŠØ© + Ø£Ø³Ø¦Ù„Ø©)' : 'Le message par dÃ©faut configurÃ© dans les paramÃ¨tres.',
+                    desc: isAr ? 'الرسالة التي قمت بإعدادها في الإعدادات (تحية + أسئلة)' : 'Le message par défaut configuré dans les paramètres.',
                     msg: (templates[lang]?.firstContact || DEFAULT_TEMPLATES[lang].firstContact).replace(/{name}/g, contactingLead.name).replace(/{type}/g, cleanType)
                   },
                   {
                     id: 'strategic',
-                    title: isAr ? 'ØªØ±ÙƒÙŠØ² Ø¹Ù„Ù‰ Ø§Ù„Ø¹Ù„Ø§Ù…Ø© Ø§Ù„ØªØ¬Ø§Ø±ÙŠØ© (Brand)' : 'Focus Branding/E-com',
+                    title: isAr ? 'تركيز على العلامة التجارية (Brand)' : 'Focus Branding/E-com',
                     icon: <Settings className="w-5 h-5" />,
-                    desc: isAr ? 'Ø³Ø¤Ø§Ù„ Ù…Ø¨Ø§Ø´Ø± Ø¹Ù† Ù†ÙˆØ¹ Ø§Ù„Ø¹Ù…Ù„ (Brand Ø£Ùˆ E-com)' : 'Question directe sur le profil (Marque ou E-commerce).',
+                    desc: isAr ? 'سؤال مباشر عن نوع العمل (Brand أو E-com)' : 'Question directe sur le profil (Marque ou E-commerce).',
                     msg: isAr
-                      ? `Ø§Ù„Ø³Ù„Ø§Ù… Ø¹Ù„ÙŠÙƒÙ… *${contactingLead.name}*ØŒ Ù…Ø¹ÙƒÙ… *BEYA CREATIVE*. ðŸ˜Š\n\nØ´ÙƒØ±Ø§Ù‹ Ø¹Ù„Ù‰ Ø§Ù‡ØªÙ…Ø§Ù…ÙƒÙ… Ø¨Ù€ *${cleanType}*. ÙˆØ§Ø´ Ù†ØªÙˆÙ…Ø§ Ø¹Ù„Ø§Ù…Ø© ØªØ¬Ø§Ø±ÙŠØ© ÙˆØ§Ø¬Ø¯Ø© (Brand) ÙˆÙ„Ø§ ÙƒØªØ¨ÙŠØ¹ÙˆØ§ ÙÙŠ Ø§Ù„Ø£Ù†ØªØ±Ù†ÙŠØª (E-com) ÙˆØ¨ØºÙŠØªÙˆ ØªØµØ§ÙˆØ¨ÙˆØ§ Ø§Ù„Ù…Ø§Ø±ÙƒØ© Ø§Ù„Ø®Ø§ØµØ© Ø¯ÙŠØ§Ù„ÙƒÙ…ØŸ`
-                      : `Bonjour *${contactingLead.name}*, ici *BEYA CREATIVE*. ðŸ˜Š\n\nMerci pour votre intÃ©rÃªt pour les *${cleanType}*. ÃŠtes-vous une marque Ã©tablie ou vendez-vous en ligne (E-com) et souhaitez-vous crÃ©er votre propre branding ?`
+                      ? `السلام عليكم *${contactingLead.name}*، معكم *BEYA CREATIVE*. 😊\n\nشكراً على اهتمامكم بـ *${cleanType}*. واش نتوما علامة تجارية واجدة (Brand) ولا كتبيعوا في الأنترنيت (E-com) وبغيتو تصاوبوا الماركة الخاصة ديالكم؟`
+                      : `Bonjour *${contactingLead.name}*, ici *BEYA CREATIVE*. 😊\n\nMerci pour votre intérêt pour les *${cleanType}*. Êtes-vous une marque établie ou vendez-vous en ligne (E-com) et souhaitez-vous créer votre propre branding ?`
                   },
                   {
                     id: 'short',
-                    title: isAr ? 'ØªØ­ÙŠØ© Ø³Ø±ÙŠØ¹Ø©' : 'Salut Rapide',
+                    title: isAr ? 'تحية سريعة' : 'Salut Rapide',
                     icon: <MessageSquare className="w-5 h-5" />,
-                    desc: isAr ? 'ØªØ­ÙŠØ© Ø¨Ø³ÙŠØ·Ø© Ù„ÙØªØ­ Ø¨Ø§Ø¨ Ø§Ù„Ù†Ù‚Ø§Ø´' : 'Un message court pour engager la discussion.',
+                    desc: isAr ? 'تحية بسيطة لفتح باب النقاش' : 'Un message court pour engager la discussion.',
                     msg: isAr
-                      ? `Ø§Ù„Ø³Ù„Ø§Ù… Ø¹Ù„ÙŠÙƒÙ… *${contactingLead.name}*ØŒ Ù…Ø¹ÙƒÙ… *BEYA CREATIVE*. ðŸ˜Š Ø´ÙƒØ±Ø§Ù‹ Ø¹Ù„Ù‰ Ø·Ù„Ø¨ÙƒÙ… Ø§Ù„Ø®Ø§Øµ Ø¨Ù€ *${cleanType}*. ÙˆØ§Ø´ Ù…Ù…ÙƒÙ† ØªØ¹Ø·ÙŠÙ†Ø§ ØªÙØ§ØµÙŠÙ„ Ø£ÙƒØ«Ø±ØŸ`
-                      : `Bonjour *${contactingLead.name}*, ici *BEYA CREATIVE*. ðŸ˜Š Merci pour votre demande de *${cleanType}*. Pourriez-vous nous donner plus de dÃ©tails ?`
+                      ? `السلام عليكم *${contactingLead.name}*، معكم *BEYA CREATIVE*. 😊 شكراً على طلبكم الخاص بـ *${cleanType}*. واش ممكن تعطينا تفاصيل أكثر؟`
+                      : `Bonjour *${contactingLead.name}*, ici *BEYA CREATIVE*. 😊 Merci pour votre demande de *${cleanType}*. Pourriez-vous nous donner plus de détails ?`
                   }
                 ];
 
                 const recruitmentOptions = [
                   {
                     id: 'recrutement_standard',
-                    title: isAr ? 'Ø±Ø³Ø§Ù„Ø© Ù…Ù‚Ø§Ø¨Ù„Ø© Ø§Ù„Ø¹Ù…Ù„ (Ù‚ÙŠØ§Ø³ÙŠØ©)' : 'Message Entretien (Standard)',
+                    title: isAr ? 'رسالة مقابلة العمل (قياسية)' : 'Message Entretien (Standard)',
                     icon: <FileText className="w-5 h-5" />,
-                    desc: isAr ? 'Ø£Ø³Ø¦Ù„Ø© Ø­ÙˆÙ„ Ø§Ù„Ø®Ø¨Ø±Ø© ÙˆØ§Ù„Ø³ÙƒÙ† Ù„Ø¨Ø¯Ø¡ Ø§Ù„ØªÙˆØ¸ÙŠÙ' : 'Questions sur l\'expÃ©rience et logement.',
+                    desc: isAr ? 'أسئلة حول الخبرة والسكن لبدء التوظيف' : 'Questions sur l\'expérience et logement.',
                     msg: (templates[lang]?.firstContactRecrutement || DEFAULT_TEMPLATES[lang].firstContactRecrutement).replace(/{name}/g, contactingLead.name).replace(/{type}/g, cleanType)
                   },
                   {
                     id: 'recrutement_test',
-                    title: isAr ? 'Ø§Ø³ØªØ¯Ø¹Ø§Ø¡ Ù„Ø§Ø®ØªØ¨Ø§Ø± Ø¹Ù…Ù„ÙŠ (Test)' : 'Convocation Test Pratique',
+                    title: isAr ? 'استدعاء لاختبار عملي (Test)' : 'Convocation Test Pratique',
                     icon: <Scissors className="w-5 h-5" />,
-                    desc: isAr ? 'Ø¯Ø¹ÙˆØ© Ø§Ù„Ù…ØªØ±Ø´Ø­ Ù„Ø¥Ø¬Ø±Ø§Ø¡ Ø§Ø®ØªØ¨Ø§Ø± Ù…Ø¨Ø§Ø´Ø±Ø© ÙÙŠ Ø§Ù„Ù…ØµÙ†Ø¹' : 'Inviter le candidat pour un test Ã  l\'usine.',
+                    desc: isAr ? 'دعوة المترشح لإجراء اختبار مباشرة في المصنع' : 'Inviter le candidat pour un test à l\'usine.',
                     msg: isAr
-                      ? `Ø§Ù„Ø³Ù„Ø§Ù… Ø¹Ù„ÙŠÙƒÙ… *${contactingLead.name}*ØŒ Ù…Ø¹Ø§ÙƒÙ… Ù…ØµÙ†Ø¹ *BEYA CREATIVE* Ø¨Ù…ÙƒÙ†Ø§Ø³. ðŸ˜Š\n\nØ¨Ø®ØµÙˆØµ Ø·Ù„Ø¨ Ø§Ù„Ø¹Ù…Ù„ Ø¯ÙŠØ§Ù„Ùƒ (${cleanType})ØŒ Ø¨ØºÙŠÙ†Ø§ Ù†Ø¹Ø±Ø¶ÙˆÙƒ Ø¯ÙˆØ² Ø§Ø®ØªØ¨Ø§Ø± Ø¹Ù…Ù„ÙŠ Ø¹Ù†Ø¯Ù†Ø§ ÙØ§Ù„Ù…ØµÙ†Ø¹ Ø¨Ø§Ø´ Ù†Ø´ÙˆÙÙˆ Ø§Ù„Ø®Ø¯Ù…Ø© Ø¯ÙŠØ§Ù„Ùƒ. ÙÙˆÙ‚Ø§Ø´ ØªÙ‚Ø¯Ø± ØªØ¬ÙŠØŸ`
-                      : `Bonjour *${contactingLead.name}*, ici l'usine *BEYA CREATIVE*. ðŸ˜Š\n\nSuite Ã  votre candidature (${cleanType}), nous vous invitons Ã  passer un test pratique Ã  notre usine. Quand seriez-vous disponible ?`
+                      ? `السلام عليكم *${contactingLead.name}*، معاكم مصنع *BEYA CREATIVE* بمكناس. 😊\n\nبخصوص طلب العمل ديالك (${cleanType})، بغينا نعرضوك دوز اختبار عملي عندنا فالمصنع باش نشوفو الخدمة ديالك. فوقاش تقدر تجي؟`
+                      : `Bonjour *${contactingLead.name}*, ici l'usine *BEYA CREATIVE*. 😊\n\nSuite à votre candidature (${cleanType}), nous vous invitons à passer un test pratique à notre usine. Quand seriez-vous disponible ?`
                   },
                   {
                     id: 'recrutement_waitlist',
-                    title: isAr ? 'ÙˆØ¶Ø¹ ÙÙŠ Ù„Ø§Ø¦Ø­Ø© Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±' : 'Mise en Liste d\'attente',
+                    title: isAr ? 'وضع في لائحة الانتظار' : 'Mise en Liste d\'attente',
                     icon: <Calendar className="w-5 h-5" />,
-                    desc: isAr ? 'Ø¥Ø®Ø¨Ø§Ø± Ø§Ù„Ù…ØªØ±Ø´Ø­ Ø¨Ø§Ù„Ø§Ø­ØªÙØ§Ø¸ Ø¨Ù…Ù„ÙÙ‡ Ù„Ù„Ù…Ø³ØªÙ‚Ø¨Ù„' : 'Informer le candidat que son CV est conservÃ©.',
+                    desc: isAr ? 'إخبار المترشح بالاحتفاظ بملفه للمستقبل' : 'Informer le candidat que son CV est conservé.',
                     msg: isAr
-                      ? `Ø§Ù„Ø³Ù„Ø§Ù… Ø¹Ù„ÙŠÙƒÙ… *${contactingLead.name}*. ðŸ˜Š\n\nØ´ÙƒØ±Ø§Ù‹ Ø¹Ù„Ù‰ Ø§Ù‡ØªÙ…Ø§Ù…Ùƒ Ø¨Ø§Ù„Ø¹Ù…Ù„ Ù…Ø¹Ù†Ø§ ÙƒÙ€ (${cleanType}). Ø­Ø§Ù„ÙŠØ§Ù‹ Ø§Ù„ÙØ±ÙŠÙ‚ Ù…ÙƒØªÙ…Ù„ØŒ ÙˆÙ„ÙƒÙ† Ø§Ø­ØªÙØ¸Ù†Ø§ Ø¨Ø§Ù„Ù…Ù„Ù Ø¯ÙŠØ§Ù„Ùƒ ÙÙŠ Ù„Ø§Ø¦Ø­Ø© Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø± ÙˆØºØ§Ø¯ÙŠ Ù†ØªÙˆØ§ØµÙ„Ùˆ Ù…Ø¹Ø§Ùƒ Ù…Ù„ÙŠ ØªÙƒÙˆÙ† Ø¨Ù„Ø§ØµØ© Ø®Ø§ÙˆÙŠØ©. Ø¨Ø§Ù„ØªÙˆÙÙŠÙ‚! ðŸ‡²ðŸ‡¦`
-                      : `Bonjour *${contactingLead.name}*. ðŸ˜Š\n\nMerci pour votre candidature (${cleanType}). Notre Ã©quipe est complÃ¨te actuellement, mais nous conservons votre profil en liste d'attente. Nous vous contacterons dÃ¨s qu'une place se libÃ¨re ! ðŸ‡²ðŸ‡¦`
+                      ? `السلام عليكم *${contactingLead.name}*. 😊\n\nشكراً على اهتمامك بالعمل معنا كـ (${cleanType}). حالياً الفريق مكتمل، ولكن احتفظنا بالملف ديالك في لائحة الانتظار وغادي نتواصلو معاك ملي تكون بلاصة خاوية. بالتوفيق! 🇲🇦`
+                      : `Bonjour *${contactingLead.name}*. 😊\n\nMerci pour votre candidature (${cleanType}). Notre équipe est complète actuellement, mais nous conservons votre profil en liste d'attente. Nous vous contacterons dès qu'une place se libère ! 🇲🇦`
                   }
                 ];
 
@@ -2182,7 +2182,7 @@ export default function Demandes() {
                         </h4>
                         {isSent && (
                           <span className="bg-emerald-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest animate-pulse">
-                            {isAr ? 'ØªÙ… Ø§Ù„Ø¥Ø±Ø³Ø§Ù„' : 'EnvoyÃ©'}
+                            {isAr ? 'تم الإرسال' : 'Envoyé'}
                           </span>
                         )}
                       </div>
@@ -2204,7 +2204,7 @@ export default function Demandes() {
 
             <div className="p-8 bg-slate-50 border-t border-slate-100 flex items-center gap-3 text-emerald-600">
               <AlertTriangle className="w-4 h-4" />
-              <p className="text-[10px] font-black uppercase tracking-widest">Ø³ÙŠØªÙ… ÙØªØ­ WhatsApp ØªÙ„Ù‚Ø§Ø¦ÙŠØ§Ù‹ ÙˆØªØ­Ø¯ÙŠØ« Ø­Ø§Ù„Ø© Ø§Ù„Ø·Ù„Ø¨</p>
+              <p className="text-[10px] font-black uppercase tracking-widest">سيتم فتح WhatsApp تلقائياً وتحديث حالة الطلب</p>
             </div>
           </div>
         </div>
@@ -2222,7 +2222,7 @@ export default function Demandes() {
                     <CheckCircle className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-xs font-black text-slate-800 uppercase tracking-tight">{isAr ? 'ØªÙ… Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø­Ø³Ø§Ø¨' : 'Client EnregistrÃ© âœ“'}</p>
+                    <p className="text-xs font-black text-slate-800 uppercase tracking-tight">{isAr ? 'تم إنشاء الحساب' : 'Client Enregistré ✓'}</p>
                     <p className="text-[10px] text-slate-400 font-bold">{newClientCode.name}</p>
                   </div>
                 </div>
@@ -2265,8 +2265,8 @@ export default function Demandes() {
                       {sentData && (
                         <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 flex items-center gap-2 text-emerald-700 text-[10px] font-black uppercase tracking-widest">
                           <CheckCircle className="w-3.5 h-3.5 shrink-0" />
-                          {isAr ? `Ø£ÙØ±Ø³Ù„ ÙÙŠ ${new Date(sentData.date).toLocaleDateString('ar-MA')}` : `EnvoyÃ© le ${new Date(sentData.date).toLocaleDateString('fr-FR')}`}
-                          {sentData.method === 'whatsapp' ? ' â€¢ WhatsApp' : ' â€¢ PDF'}
+                          {isAr ? `أُرسل في ${new Date(sentData.date).toLocaleDateString('ar-MA')}` : `Envoyé le ${new Date(sentData.date).toLocaleDateString('fr-FR')}`}
+                          {sentData.method === 'whatsapp' ? ' • WhatsApp' : ' • PDF'}
                         </div>
                       )}
                       <button
@@ -2274,15 +2274,15 @@ export default function Demandes() {
                           const rawPhone = String(newClientCode.phone || '').replace(/\D/g, '');
                           const phone = rawPhone ? (rawPhone.startsWith('0') ? '212' + rawPhone.substring(1) : rawPhone.startsWith('212') ? rawPhone : '212' + rawPhone) : '';
                           const msg = isAr
-                            ? `ðŸŽ‰ Ù…Ø±Ø­Ø¨Ø§Ù‹ Ø¨Ùƒ ÙÙŠ *BEYA CREATIVE* !\n\nØ£Ù‡Ù„Ø§Ù‹ *${newClientCode.name}*ØŒ Ø­Ø³Ø§Ø¨Ùƒ Ø¬Ø§Ù‡Ø² :\n\nðŸŒ *https://beyacreative.com*\nðŸ“§ Ø§Ù„Ø¨Ø±ÙŠØ¯ : *${newClientCode.email}*\nðŸ”‘ Ø§Ù„Ø±Ù…Ø² : *${newClientCode.code}*\n\nØ³Ø¬Ù„ Ø¯Ø®ÙˆÙ„Ùƒ Ù„Ù…ØªØ§Ø¨Ø¹Ø© Ø·Ù„Ø¨Ø§ØªÙƒ. ðŸ‡²ðŸ‡¦`
-                            : `ðŸŽ‰ Bienvenue chez *BEYA CREATIVE* !\n\nBonjour *${newClientCode.name}*, votre espace client est prÃªt :\n\nðŸŒ *https://beyacreative.com*\nðŸ“§ Email : *${newClientCode.email}*\nðŸ”‘ Code : *${newClientCode.code}*\n\nConnectez-vous pour suivre vos commandes. Ã€ bientÃ´t ! ðŸ‡²ðŸ‡¦`;
+                            ? `🎉 مرحباً بك في *BEYA CREATIVE* !\n\nأهلاً *${newClientCode.name}*، حسابك جاهز :\n\n🌐 *https://beyacreative.com*\n📧 البريد : *${newClientCode.email}*\n🔑 الرمز : *${newClientCode.code}*\n\nسجل دخولك لمتابعة طلباتك. 🇲🇦`
+                            : `🎉 Bienvenue chez *BEYA CREATIVE* !\n\nBonjour *${newClientCode.name}*, votre espace client est prêt :\n\n🌐 *https://beyacreative.com*\n📧 Email : *${newClientCode.email}*\n🔑 Code : *${newClientCode.code}*\n\nConnectez-vous pour suivre vos commandes. À bientôt ! 🇲🇦`;
                           const url = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
                           window.open(url, '_blank');
                           localStorage.setItem(storageKey, JSON.stringify({ date: new Date().toISOString(), method: 'whatsapp' }));
                         }}
                         className="w-full h-11 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-100">
                         <MessageSquare className="w-4 h-4" />
-                        {sentData ? (isAr ? 'Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„Ø¥Ø±Ø³Ø§Ù„ â€” WhatsApp' : 'Renvoyer â€” WhatsApp') : (isAr ? 'Ø¥Ø±Ø³Ø§Ù„ Ø¹Ø¨Ø± WhatsApp' : 'Envoyer via WhatsApp')}
+                        {sentData ? (isAr ? 'إعادة الإرسال — WhatsApp' : 'Renvoyer — WhatsApp') : (isAr ? 'إرسال عبر WhatsApp' : 'Envoyer via WhatsApp')}
                       </button>
                       <button
                         onClick={async () => {
@@ -2296,7 +2296,7 @@ export default function Demandes() {
                         }}
                         className="w-full h-11 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all">
                         <Download className="w-4 h-4" />
-                        {sentData ? (isAr ? 'Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„ØªØ­Ù…ÙŠÙ„ â€” PDF' : 'Re-tÃ©lÃ©charger PDF') : (isAr ? 'ØªØ­Ù…ÙŠÙ„ Welcome PDF' : 'TÃ©lÃ©charger Welcome PDF')}
+                        {sentData ? (isAr ? 'إعادة التحميل — PDF' : 'Re-télécharger PDF') : (isAr ? 'تحميل Welcome PDF' : 'Télécharger Welcome PDF')}
                       </button>
                     </>
                   );
@@ -2309,44 +2309,44 @@ export default function Demandes() {
             </div>
           </div>
 
-          {/* Hidden Welcome PDF Template â€” bilingual */}
+          {/* Hidden Welcome PDF Template — bilingual */}
           {(() => {
             const t = isAr ? {
-              welcomeLabel: 'Ù…Ø±Ø­Ø¨Ø§Ù‹ Ø¨Ùƒ ÙÙŠ ÙØ¶Ø§Ø¦Ùƒ Ø§Ù„Ø®Ø§Øµ',
-              hi: `Ù…Ø±Ø­Ø¨Ø§Ù‹ØŒ ${newClientCode.name} ðŸ‘‹`,
-              welcomeDesc: 'ØªÙ… ØªÙØ¹ÙŠÙ„ Ø­Ø³Ø§Ø¨Ùƒ ÙÙŠ BEYA CREATIVE. ÙŠÙ…ÙƒÙ†Ùƒ Ø§Ù„Ø¢Ù† Ù…ØªØ§Ø¨Ø¹Ø© Ø·Ù„Ø¨Ø§ØªÙƒ ÙˆØªØ­Ù…ÙŠÙ„ ÙˆØ«Ø§Ø¦Ù‚Ùƒ ÙˆØ§Ù„ØªÙˆØ§ØµÙ„ Ù…Ø¹ ÙØ±ÙŠÙ‚Ù†Ø§ Ù…Ø¨Ø§Ø´Ø±Ø© Ù…Ù† Ø¨ÙˆØ§Ø¨ØªÙƒ.',
-              emailLabel: 'Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ',
-              codeLabel: 'Ø§Ù„Ø±Ù…Ø² Ø§Ù„Ø³Ø±ÙŠ',
-              whoTitle: 'Ù…Ù† Ù†Ø­Ù†ØŸ',
-              whoDesc: 'BEYA CREATIVE Ù…ØµÙ†Ø¹ Ù†Ø³ÙŠØ¬ Ù…ØºØ±Ø¨ÙŠ Ù…ØªØ®ØµØµ ÙÙŠ Ø§Ù„Ø®ÙŠØ§Ø·Ø© Ø§Ù„Ù…Ø®ØµØµØ©. ÙØ±ÙŠÙ‚Ù†Ø§ Ù…Ù† Ø§Ù„Ø®ÙŠØ§Ø·Ø§Øª Ø§Ù„Ø®Ø¨ÙŠØ±Ø§Øª ÙŠØ¹Ù…Ù„Ù† Ø¨Ø£Ù†Ù…Ø§Ø· Ø¯Ù‚ÙŠÙ‚Ø© ÙˆØ¹ÙŠÙ†Ø§Øª Ù…ØµØ§Ø¯Ù‚ Ø¹Ù„ÙŠÙ‡Ø§ Ù„Ø¶Ù…Ø§Ù† Ø£Ù† ÙƒÙ„ Ù‚Ø·Ø¹Ø© ØªØªÙˆØ§ÙÙ‚ ØªÙ…Ø§Ù…Ù‹Ø§ Ù…Ø¹ Ø±Ø¤ÙŠØªÙƒ.',
-              processTitle: 'Ø·Ø±ÙŠÙ‚Ø© Ø¹Ù…Ù„Ù†Ø§',
+              welcomeLabel: 'مرحباً بك في فضائك الخاص',
+              hi: `مرحباً، ${newClientCode.name} 👋`,
+              welcomeDesc: 'تم تفعيل حسابك في BEYA CREATIVE. يمكنك الآن متابعة طلباتك وتحميل وثائقك والتواصل مع فريقنا مباشرة من بوابتك.',
+              emailLabel: 'البريد الإلكتروني',
+              codeLabel: 'الرمز السري',
+              whoTitle: 'من نحن؟',
+              whoDesc: 'BEYA CREATIVE مصنع نسيج مغربي متخصص في الخياطة المخصصة. فريقنا من الخياطات الخبيرات يعملن بأنماط دقيقة وعينات مصادق عليها لضمان أن كل قطعة تتوافق تمامًا مع رؤيتك.',
+              processTitle: 'طريقة عملنا',
               steps: [
-                ['01', 'Ø§Ù„Ø·Ù„Ø¨ ÙˆØ§Ù„ØªØ³Ø¹ÙŠØ±', 'ØªÙ‚Ø¯Ù… Ù…Ø´Ø±ÙˆØ¹Ùƒ Ø¨ØµÙˆØ±Ø© Ø§Ù„Ù†Ù…ÙˆØ°Ø¬ ÙˆØ§Ù„ÙƒÙ…ÙŠØ§Øª. Ù†Ù‚ÙˆÙ… Ø¨Ø¥Ø¹Ø¯Ø§Ø¯ Ø¹Ø±Ø¶ Ø³Ø¹Ø± Ù…Ø®ØµØµ.'],
-                ['02', 'Ø§Ù„Ø¨Ø§ØªØ±ÙˆÙ† ÙˆØ§Ù„Ø¹ÙŠÙ†Ø©', 'Ø®Ø¨ÙŠØ±Ø§ØªÙ†Ø§ ÙŠØµÙ†Ø¹Ù† Ø§Ù„Ø¨Ø§ØªØ±ÙˆÙ† Ø§Ù„ØªÙ‚Ù†ÙŠ ÙˆÙŠØ®Ø·Ù† Ø¹ÙŠÙ†Ø© Ù„Ù„ØªØ­Ù‚Ù‚.'],
-                ['03', 'Ù…Ø±Ø§Ù‚Ø¨Ø© Ø§Ù„Ø¬ÙˆØ¯Ø©', 'ØªØµØ§Ø¯Ù‚ Ø¹Ù„Ù‰ Ø§Ù„Ø¹ÙŠÙ†Ø©. ÙØ±Ù‚Ù†Ø§ ØªØªØ­Ù‚Ù‚ Ù…Ù† ÙƒÙ„ ØªÙØµÙŠÙ„ Ù‚Ø¨Ù„ Ø§Ù„Ø¥Ø·Ù„Ø§Ù‚.'],
-                ['04', 'Ø§Ù„Ø¥Ù†ØªØ§Ø¬ ÙˆØ§Ù„ØªØ³Ù„ÙŠÙ…', 'Ø¥Ø·Ù„Ø§Ù‚ Ø§Ù„Ø¥Ù†ØªØ§Ø¬ Ø§Ù„ØªØ³Ù„Ø³Ù„ÙŠ Ù…Ø¹ Ù…Ø±Ø§Ù‚Ø¨Ø© Ø§Ù„Ø¬ÙˆØ¯Ø© ÙÙŠ ÙƒÙ„ Ù…Ø±Ø­Ù„Ø©.'],
+                ['01', 'الطلب والتسعير', 'تقدم مشروعك بصورة النموذج والكميات. نقوم بإعداد عرض سعر مخصص.'],
+                ['02', 'الباترون والعينة', 'خبيراتنا يصنعن الباترون التقني ويخطن عينة للتحقق.'],
+                ['03', 'مراقبة الجودة', 'تصادق على العينة. فرقنا تتحقق من كل تفصيل قبل الإطلاق.'],
+                ['04', 'الإنتاج والتسليم', 'إطلاق الإنتاج التسلسلي مع مراقبة الجودة في كل مرحلة.'],
               ],
-              guaranteesTitle: 'Ø§Ù„ØªØ²Ø§Ù…Ø§ØªÙ†Ø§ Ù„Ù„Ø¬ÙˆØ¯Ø©',
-              guarantees: ['âœ“ Ø®ÙŠØ§Ø·Ø§Øª Ø®Ø¨ÙŠØ±Ø§Øª ÙˆÙ…Ø¹ØªÙ…Ø¯Ø§Øª', 'âœ“ Ø£Ù‚Ù…Ø´Ø© Ù…Ø®ØªØ§Ø±Ø© Ù…Ù† Ù…ÙˆØ±Ø¯ÙŠÙ† Ù…ÙˆØ«ÙˆÙ‚ÙŠÙ†', 'âœ“ ÙƒÙ„ Ù‚Ø·Ø¹Ø© ØªÙÙØ­Øµ Ù‚Ø¨Ù„ Ø§Ù„ØªØ³Ù„ÙŠÙ…', 'âœ“ Ø§Ø­ØªØ±Ø§Ù… ØµØ§Ø±Ù… Ù„Ù„Ù…ÙˆØ§Ø¹ÙŠØ¯ Ø§Ù„Ù…ØªÙÙ‚ Ø¹Ù„ÙŠÙ‡Ø§'],
-              thanks: 'Ø´ÙƒØ±Ø§Ù‹ Ù„Ø«Ù‚ØªÙƒÙ… ðŸ‡²ðŸ‡¦',
+              guaranteesTitle: 'التزاماتنا للجودة',
+              guarantees: ['✓ خياطات خبيرات ومعتمدات', '✓ أقمشة مختارة من موردين موثوقين', '✓ كل قطعة تُفحص قبل التسليم', '✓ احترام صارم للمواعيد المتفق عليها'],
+              thanks: 'شكراً لثقتكم 🇲🇦',
             } : {
               welcomeLabel: 'Bienvenue dans votre espace client',
-              hi: `Bonjour, ${newClientCode.name} ðŸ‘‹`,
-              welcomeDesc: 'Votre compte BEYA CREATIVE est activÃ©. Vous pouvez dÃ©sormais suivre vos commandes, tÃ©lÃ©charger vos documents et communiquer avec notre Ã©quipe directement depuis votre portail.',
+              hi: `Bonjour, ${newClientCode.name} 👋`,
+              welcomeDesc: 'Votre compte BEYA CREATIVE est activé. Vous pouvez désormais suivre vos commandes, télécharger vos documents et communiquer avec notre équipe directement depuis votre portail.',
               emailLabel: 'Email de connexion',
               codeLabel: 'Code secret',
               whoTitle: 'Qui sommes-nous ?',
-              whoDesc: 'BEYA CREATIVE est une manufacture textile marocaine spÃ©cialisÃ©e dans la confection sur-mesure. Notre Ã©quipe de couturiÃ¨res expertes travaille avec des patrons de prÃ©cision et des Ã©chantillons validÃ©s pour garantir que chaque piÃ¨ce correspond exactement Ã  votre vision.',
+              whoDesc: 'BEYA CREATIVE est une manufacture textile marocaine spécialisée dans la confection sur-mesure. Notre équipe de couturières expertes travaille avec des patrons de précision et des échantillons validés pour garantir que chaque pièce correspond exactement à votre vision.',
               processTitle: 'Notre processus de travail',
               steps: [
-                ['01', 'Demande & Devis', 'Vous soumettez votre projet avec photo du modÃ¨le. Nous Ã©tablissons un devis personnalisÃ©.'],
-                ['02', 'Patron & Ã‰chantillon', 'Nos expertes crÃ©ent le patron technique et confectionnent un Ã©chantillon pour validation.'],
-                ['03', 'Validation qualitÃ©', 'Vous validez l\'Ã©chantillon. Nos Ã©quipes vÃ©rifient chaque dÃ©tail avant le lancement.'],
-                ['04', 'Production & Livraison', 'Lancement de la production en sÃ©rie avec contrÃ´le qualitÃ© Ã  chaque Ã©tape.'],
+                ['01', 'Demande & Devis', 'Vous soumettez votre projet avec photo du modèle. Nous établissons un devis personnalisé.'],
+                ['02', 'Patron & Échantillon', 'Nos expertes créent le patron technique et confectionnent un échantillon pour validation.'],
+                ['03', 'Validation qualité', 'Vous validez l\'échantillon. Nos équipes vérifient chaque détail avant le lancement.'],
+                ['04', 'Production & Livraison', 'Lancement de la production en série avec contrôle qualité à chaque étape.'],
               ],
-              guaranteesTitle: 'Nos engagements qualitÃ©',
-              guarantees: ['âœ“ CouturiÃ¨res expertes et certifiÃ©es', 'âœ“ MatiÃ¨res sÃ©lectionnÃ©es chez des fournisseurs fiables', 'âœ“ Chaque piÃ¨ce inspectÃ©e avant livraison', 'âœ“ Respect strict des dÃ©lais convenus'],
-              thanks: 'Merci de votre confiance ðŸ‡²ðŸ‡¦',
+              guaranteesTitle: 'Nos engagements qualité',
+              guarantees: ['✓ Couturières expertes et certifiées', '✓ Matières sélectionnées chez des fournisseurs fiables', '✓ Chaque pièce inspectée avant livraison', '✓ Respect strict des délais convenus'],
+              thanks: 'Merci de votre confiance 🇲🇦',
             };
             return (
               <div id={`welcome-pdf-${newClientCode.code}`} style={{ display: 'none' }}>
@@ -2405,7 +2405,7 @@ export default function Demandes() {
                   </div>
 
                   <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '16px', display: 'flex', justifyContent: 'space-between' }}>
-                    <p style={{ fontSize: '10px', color: '#94a3b8', margin: 0 }}>BEYA CREATIVE â€” {company.address || 'Zone Industrielle, MeknÃ¨s'}</p>
+                    <p style={{ fontSize: '10px', color: '#94a3b8', margin: 0 }}>BEYA CREATIVE — {company.address || 'Zone Industrielle, Meknès'}</p>
                     <p style={{ fontSize: '10px', color: '#94a3b8', margin: 0 }}>{t.thanks}</p>
                   </div>
                 </div>
@@ -2421,7 +2421,7 @@ export default function Demandes() {
             <div className="absolute top-0 inset-x-0 h-1.5 bg-indigo-600" />
             <div className="flex items-center justify-between mb-8">
               <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">
-                {isAr ? 'ØªØ¹Ø¯ÙŠÙ„ Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø·Ù„Ø¨' : 'Modifier le Lead'}
+                {isAr ? 'تعديل بيانات الطلب' : 'Modifier le Lead'}
               </h3>
               <button
                 onClick={() => setEditingLead(null)}
@@ -2434,7 +2434,7 @@ export default function Demandes() {
             <div className="flex-1 overflow-y-auto space-y-6 pr-2 scrollbar-hide">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'Ø§Ù„Ø§Ø³Ù…' : 'Nom'}</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'الاسم' : 'Nom'}</label>
                   <input
                     type="text"
                     value={editForm.name || ''}
@@ -2443,7 +2443,7 @@ export default function Demandes() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'Ø§Ù„Ù‡Ø§ØªÙ' : 'TÃ©lÃ©phone'}</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'الهاتف' : 'Téléphone'}</label>
                   <input
                     type="text"
                     value={editForm.phone || ''}
@@ -2455,7 +2455,7 @@ export default function Demandes() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'Ø§Ù„Ù…Ø¯ÙŠÙ†Ø©' : 'Ville'}</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'المدينة' : 'Ville'}</label>
                   <input
                     type="text"
                     value={editForm.ville || ''}
@@ -2464,7 +2464,7 @@ export default function Demandes() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ' : 'Email'}</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'البريد الإلكتروني' : 'Email'}</label>
                   <input
                     type="email"
                     value={editForm.email || ''}
@@ -2476,7 +2476,7 @@ export default function Demandes() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„' : 'ModÃ¨le / Type'}</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'الموديل' : 'Modèle / Type'}</label>
                   <input
                     type="text"
                     value={editForm.type || ''}
@@ -2486,7 +2486,7 @@ export default function Demandes() {
                 </div>
                 {!editForm.type?.startsWith('RECRUTEMENT:') && (
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'Ø§Ù„ÙƒÙ…ÙŠØ©' : 'QuantitÃ©'}</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'الكمية' : 'Quantité'}</label>
                     <input
                       type="number"
                       value={editForm.quantity || 0}
@@ -2498,7 +2498,7 @@ export default function Demandes() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'ØªÙØ§ØµÙŠÙ„ Ø¥Ø¶Ø§ÙÙŠØ©' : 'DÃ©tails'}</label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'تفاصيل إضافية' : 'Détails'}</label>
                 <textarea
                   value={editForm.details || ''}
                   onChange={e => setEditForm({ ...editForm, details: e.target.value })}
@@ -2513,13 +2513,13 @@ export default function Demandes() {
                 onClick={() => setEditingLead(null)}
                 className="flex-1 py-4 bg-slate-50 text-slate-500 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-100 transition-all"
               >
-                {isAr ? 'Ø¥Ù„ØºØ§Ø¡' : 'Annuler'}
+                {isAr ? 'إلغاء' : 'Annuler'}
               </button>
               <button
                 onClick={handleSaveEdit}
                 className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100"
               >
-                {isAr ? 'Ø­ÙØ¸ Ø§Ù„ØªØ¹Ø¯ÙŠÙ„Ø§Øª' : 'Enregistrer'}
+                {isAr ? 'حفظ التعديلات' : 'Enregistrer'}
               </button>
             </div>
           </div>
@@ -2538,5 +2538,3 @@ export default function Demandes() {
     </div>
   );
 }
-
-
