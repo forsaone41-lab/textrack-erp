@@ -39,7 +39,8 @@ export default function Pipeline() {
   const fetchLeads = async () => {
     setLoading(true);
     const data = await loadLeads();
-    setLeads(data.filter(l => l.status !== 'completed' || l.crmStage)); // Show active leads or those already in CRM
+    // Show active client leads or those already in CRM, excluding recruitment (workers)
+    setLeads(data.filter(l => (l.status !== 'completed' || l.crmStage) && !l.type.startsWith('RECRUTEMENT:')));
     setLoading(false);
   };
 
