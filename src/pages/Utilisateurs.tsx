@@ -126,7 +126,7 @@ const PAGE_GROUPS_AR: Record<string, string> = {
 };
 
 // Pages locked per role (cannot be removed)
-const LOCKED: Partial<Record<'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'partenaire', AppPage[]>> = {
+const LOCKED: Partial<Record<'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire', AppPage[]>> = {
   admin: ['utilisateurs'],
   client: ['portail_client'],
 };
@@ -221,7 +221,7 @@ export default function Utilisateurs() {
   }
 
   // ── Permissions helpers ───────────────────────────────────
-  function togglePerm(role: 'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'partenaire', page: AppPage) {
+  function togglePerm(role: 'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire', page: AppPage) {
     const locked = LOCKED[role] || [];
     if (locked.includes(page)) return;
     const current = perms[role];
@@ -237,7 +237,7 @@ export default function Utilisateurs() {
     setTimeout(() => setPermsSaved(false), 2000);
   }
 
-  function resetRole(role: 'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'partenaire') {
+  function resetRole(role: 'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire') {
     const updated: RolePermMap = { ...perms, [role]: [...DEFAULT_PERMISSIONS[role]] };
     setPerms(updated);
     savePermissions(updated);
@@ -383,7 +383,7 @@ export default function Utilisateurs() {
               <thead>
                 <tr className="bg-slate-50/50">
                   <th className={`p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 ${isAr ? 'text-right' : 'text-left'}`}>{isAr ? 'الصفحة / الوحدة' : 'Module / Page'}</th>
-                  {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'partenaire'] as const).map(role => (
+                  {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'controleur', 'agent_pointage', 'partenaire'] as const).map(role => (
                     <th key={role} className="p-6 border-b border-slate-100 border-l border-slate-50 min-w-[120px]">
                       <div className="flex flex-col items-center gap-2">
                         <span className={`text-[10px] font-black uppercase tracking-widest ${ROLE_CFG[role].text}`}>
@@ -399,7 +399,7 @@ export default function Utilisateurs() {
                 {PAGE_GROUPS.map(group => (
                   <Fragment key={group}>
                     <tr className="bg-slate-50/30">
-                      <td colSpan={7} className={`px-6 py-2 text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] ${isAr ? 'text-right' : 'text-left'}`}>
+                      <td colSpan={10} className={`px-6 py-2 text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] ${isAr ? 'text-right' : 'text-left'}`}>
                         {isAr ? PAGE_GROUPS_AR[group] : group}
                       </td>
                     </tr>
@@ -411,7 +411,7 @@ export default function Utilisateurs() {
                             <span className="text-xs font-bold text-slate-700">{isAr ? page.labelAr : page.label}</span>
                           </div>
                         </td>
-                        {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'partenaire'] as const).map(role => {
+                        {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'controleur', 'agent_pointage', 'partenaire'] as const).map(role => {
                           const locked = (LOCKED[role] || []).includes(page.key);
                           const active = perms[role].includes(page.key);
                           return (

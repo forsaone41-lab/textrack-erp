@@ -387,7 +387,16 @@ export default function ManageOrder() {
                  </p>
                </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="flex flex-col"><label className="text-[9px] font-black text-slate-400 uppercase mb-1 ml-1">{t('ref_factory', lang)}</label><input value={form.reference} readOnly className="px-6 py-4 bg-slate-100 border-2 border-slate-100 rounded-2xl text-sm font-black outline-none opacity-60" /></div>
+              <div className="flex flex-col">
+                <label className="text-[9px] font-black text-slate-400 uppercase mb-1 ml-1">
+                  {t('ref_factory', lang)}
+                </label>
+                <input 
+                  value={form.reference} 
+                  onChange={e => setForm({ ...form, reference: e.target.value })}
+                  className="px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-black outline-none focus:border-indigo-500 transition-colors" 
+                />
+              </div>
               <div className="flex flex-col"><label className="text-[9px] font-black text-indigo-400 uppercase mb-1 ml-1">{t('date_livraison_prevue_label', lang)}</label><div className="relative"><input type="date" value={form.dateLivraisonPrevue} onChange={e => setForm({ ...form, dateLivraisonPrevue: e.target.value })} className="w-full px-6 py-4 bg-indigo-50/30 border-2 border-indigo-50 rounded-2xl text-sm font-black outline-none text-indigo-700" /><Calendar className="absolute right-6 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-300 pointer-events-none" /></div></div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
