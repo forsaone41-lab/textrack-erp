@@ -663,7 +663,7 @@ export default function Demandes() {
                 </div>
               </div>
               <button
-                onClick={() => { setDevisLead(null); setMatierePrice(''); setLaborPrice(''); }}
+                onClick={() => { setDevisLead(null); setDevisLeadRequests([]); setModelPrices({}); setMatierePrice(''); setLaborPrice(''); }}
                 className="w-8 h-8 bg-white rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all border border-slate-200 shadow-sm"
               >
                 <X className="w-4 h-4" />
@@ -671,95 +671,168 @@ export default function Demandes() {
             </div>
 
             <div className="p-5 space-y-3">
-              {/* Toggle Mode */}
-              <div className="flex bg-slate-100/85 p-1 rounded-xl gap-1 border border-slate-200/50">
-                <button
-                  onClick={() => setDevisMode('commande')}
-                  className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-1.5 ${
-                    devisMode === 'commande'
-                      ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-slate-100'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  <Package className="w-3.5 h-3.5" />
-                  {isAr ? 'طلبية كاملة' : 'Commande'} ({devisLead.quantity} pcs)
-                </button>
-                <button
-                  onClick={() => setDevisMode('echantillon')}
-                  className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-1.5 ${
-                    devisMode === 'echantillon'
-                      ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-slate-100'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  <FileText className="w-3.5 h-3.5" />
-                  {isAr ? 'عينة' : 'Échantillon'} (1 pc)
-                </button>
-              </div>
+              {devisLeadRequests.length > 0 ? (() => {
+                // Multi-model mode: per-model price inputs
+                const multiTotal = devisLeadRequests.reduce((sum, r) => {
+                  const p = modelPrices[r.id] || { matiere: '', labor: '' };
+                  return sum + (Number(p.matiere || 0) + Number(p.labor || 0)) * (r.quantity || 0);
+                }, 0);
+                const hasAnyPrice = devisLeadRequests.some(r => {
+                  const p = modelPrices[r.id] || { matiere: '', labor: '' };
+                  return Number(p.matiere || 0) > 0 || Number(p.labor || 0) > 0;
+                });
+                return (
+                  <>
+                    <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                      {devisLeadRequests.map((r, idx) => {
+                        const p = modelPrices[r.id] || { matiere: '', labor: '' };
+                        const unitPrice = Number(p.matiere || 0) + Number(p.labor || 0);
+                        const subtotal = unitPrice * (r.quantity || 0);
+                        return (
+                          <div key={r.id} className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-[10px] font-black text-indigo-600 uppercase tracking-wide">{r.type}</span>
+                              <span className="text-[10px] font-black text-slate-400">{r.quantity} pcs × {unitPrice} = <span className="text-slate-700">{subtotal.toLocaleString()} MAD</span></span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الثوب/القطعة' : 'Matière/pcs'}</label>
+                                <input type="number" value={p.matiere} placeholder="0"
+                                  onChange={e => setModelPrices(prev => ({ ...prev, [r.id]: { ...prev[r.id], matiere: e.target.value } }))}
+                                  className="w-full bg-white border-2 border-slate-200 rounded-lg py-2 px-2.5 text-sm font-black text-slate-900 outline-none focus:border-indigo-400" />
+                              </div>
+                              <div>
+                                <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'يد عاملة/قطعة' : "MO/pcs"}</label>
+                                <input type="number" value={p.labor} placeholder="0"
+                                  onChange={e => setModelPrices(prev => ({ ...prev, [r.id]: { ...prev[r.id], labor: e.target.value } }))}
+                                  className="w-full bg-white border-2 border-slate-200 rounded-lg py-2 px-2.5 text-sm font-black text-slate-900 outline-none focus:border-indigo-400" />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="bg-slate-900 rounded-xl px-4 py-3 text-white flex items-center justify-between">
+                      <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">{isAr ? 'المجموع الكلي' : 'Total général'}</p>
+                      <p className="text-xl font-black">{multiTotal.toLocaleString()} <span className="text-xs">MAD</span></p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button onClick={() => {
+                        const lines = devisLeadRequests.map(r => {
+                          const p = modelPrices[r.id] || { matiere: '', labor: '' };
+                          const u = Number(p.matiere || 0) + Number(p.labor || 0);
+                          return `• ${r.type}: ${r.quantity} pcs × ${u} MAD = *${(u * r.quantity).toLocaleString()} MAD*`;
+                        }).join('\n');
+                        const multiTotal2 = devisLeadRequests.reduce((s, r) => { const p = modelPrices[r.id] || { matiere: '', labor: '' }; return s + (Number(p.matiere || 0) + Number(p.labor || 0)) * r.quantity; }, 0);
+                        const rawPhone = String(devisLead!.phone || '').replace(/\D/g, '');
+                        const phone = rawPhone.startsWith('2120') ? '212' + rawPhone.slice(3) : rawPhone.startsWith('0') ? '212' + rawPhone.slice(1) : rawPhone;
+                        const msg = isAr
+                          ? `السلام عليكم *${devisLead!.name}*، معكم *BEYA CREATIVE*. 😊\n\nتفضلوا الديفيز الخاص بطلبيتكم:\n${lines}\n\n*المجموع الكلي: ${multiTotal2.toLocaleString()} MAD*\n\nحنا في الخدمة! 🇲🇦`
+                          : `Bonjour *${devisLead!.name}*, ici *BEYA CREATIVE*. 😊\n\nVoici le devis de votre commande:\n${lines}\n\n*Total général: ${multiTotal2.toLocaleString()} MAD*\n\nÀ votre service! 🇲🇦`;
+                        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+                      }} disabled={!hasAnyPrice}
+                        className="h-10 bg-slate-100 text-slate-600 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center gap-1.5 disabled:opacity-40">
+                        <MessageSquare className="w-3.5 h-3.5" /> WhatsApp
+                      </button>
+                      <button disabled className="h-10 bg-slate-50 text-slate-300 rounded-xl font-black text-[9px] uppercase tracking-widest flex items-center justify-center gap-1.5 cursor-not-allowed">
+                        <Download className="w-3.5 h-3.5" /> PDF
+                      </button>
+                    </div>
+                  </>
+                );
+              })() : (
+                <>
+                  {/* Toggle Mode */}
+                  <div className="flex bg-slate-100/85 p-1 rounded-xl gap-1 border border-slate-200/50">
+                    <button
+                      onClick={() => setDevisMode('commande')}
+                      className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                        devisMode === 'commande'
+                          ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-slate-100'
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      <Package className="w-3.5 h-3.5" />
+                      {isAr ? 'طلبية كاملة' : 'Commande'} ({devisLead.quantity} pcs)
+                    </button>
+                    <button
+                      onClick={() => setDevisMode('echantillon')}
+                      className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                        devisMode === 'echantillon'
+                          ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-slate-100'
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      {isAr ? 'عينة' : 'Échantillon'} (1 pc)
+                    </button>
+                  </div>
 
-              {/* Qty + Unit price row */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-slate-50 rounded-xl px-3 py-2.5 border border-slate-100">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{isAr ? 'الكمية' : 'Quantité'}</p>
-                  <p className="text-base font-black text-slate-700">
-                    {devisMode === 'echantillon' ? 1 : devisLead.quantity} <span className="text-[10px] text-slate-400">pcs</span>
-                  </p>
-                </div>
-                <div className="bg-indigo-50 rounded-xl px-3 py-2.5 border border-indigo-100">
-                  <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">{isAr ? 'ثمن القطعة' : 'Prix/unité'}</p>
-                  <p className="text-base font-black text-indigo-600">{Number(matierePrice || 0) + Number(laborPrice || 0)} <span className="text-[10px]">MAD</span></p>
-                </div>
-              </div>
+                  {/* Qty + Unit price row */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-slate-50 rounded-xl px-3 py-2.5 border border-slate-100">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{isAr ? 'الكمية' : 'Quantité'}</p>
+                      <p className="text-base font-black text-slate-700">
+                        {devisMode === 'echantillon' ? 1 : devisLead.quantity} <span className="text-[10px] text-slate-400">pcs</span>
+                      </p>
+                    </div>
+                    <div className="bg-indigo-50 rounded-xl px-3 py-2.5 border border-indigo-100">
+                      <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">{isAr ? 'ثمن القطعة' : 'Prix/unité'}</p>
+                      <p className="text-base font-black text-indigo-600">{Number(matierePrice || 0) + Number(laborPrice || 0)} <span className="text-[10px]">MAD</span></p>
+                    </div>
+                  </div>
 
-              {/* Inputs row */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الثوب والسلعة' : 'Matière (MAD)'}</label>
-                  <input type="number" value={matierePrice} onChange={e => setMatierePrice(e.target.value)} placeholder="0"
-                    className="w-full bg-white border-2 border-slate-100 rounded-xl py-2.5 px-3 text-base font-black text-slate-900 outline-none focus:border-indigo-400" />
-                </div>
-                <div>
-                  <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'اليد العاملة' : "Main d'œuvre"}</label>
-                  <input type="number" value={laborPrice} onChange={e => setLaborPrice(e.target.value)} placeholder="0"
-                    className="w-full bg-white border-2 border-slate-100 rounded-xl py-2.5 px-3 text-base font-black text-slate-900 outline-none focus:border-indigo-400" />
-                </div>
-              </div>
+                  {/* Inputs row */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الثوب والسلعة' : 'Matière (MAD)'}</label>
+                      <input type="number" value={matierePrice} onChange={e => setMatierePrice(e.target.value)} placeholder="0"
+                        className="w-full bg-white border-2 border-slate-100 rounded-xl py-2.5 px-3 text-base font-black text-slate-900 outline-none focus:border-indigo-400" />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'اليد العاملة' : "Main d'œuvre"}</label>
+                      <input type="number" value={laborPrice} onChange={e => setLaborPrice(e.target.value)} placeholder="0"
+                        className="w-full bg-white border-2 border-slate-100 rounded-xl py-2.5 px-3 text-base font-black text-slate-900 outline-none focus:border-indigo-400" />
+                    </div>
+                  </div>
 
-              {/* Total */}
-              <div className="bg-slate-900 rounded-xl px-4 py-3 text-white flex items-center justify-between">
-                <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">{isAr ? 'المجموع التقديري' : 'Total estimé'}</p>
-                <p className="text-xl font-black">{((Number(matierePrice || 0) + Number(laborPrice || 0)) * (devisMode === 'echantillon' ? 1 : devisLead.quantity)).toLocaleString()} <span className="text-xs">MAD</span></p>
-              </div>
+                  {/* Total */}
+                  <div className="bg-slate-900 rounded-xl px-4 py-3 text-white flex items-center justify-between">
+                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">{isAr ? 'المجموع التقديري' : 'Total estimé'}</p>
+                    <p className="text-xl font-black">{((Number(matierePrice || 0) + Number(laborPrice || 0)) * (devisMode === 'echantillon' ? 1 : devisLead.quantity)).toLocaleString()} <span className="text-xs">MAD</span></p>
+                  </div>
 
-              {/* Action buttons */}
-              <div className="grid grid-cols-2 gap-2">
-                <button onClick={() => sendDevis(false)} disabled={!matierePrice && !laborPrice}
-                  className="h-10 bg-slate-100 text-slate-600 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center gap-1.5 disabled:opacity-40">
-                  <MessageSquare className="w-3.5 h-3.5" /> WhatsApp
-                </button>
-                <button onClick={handleDownloadPDF} disabled={!matierePrice && !laborPrice}
-                  className="h-10 bg-slate-100 text-slate-600 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center gap-1.5 disabled:opacity-40">
-                  <Download className="w-3.5 h-3.5" /> PDF
-                </button>
-              </div>
+                  {/* Action buttons */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <button onClick={() => sendDevis(false)} disabled={!matierePrice && !laborPrice}
+                      className="h-10 bg-slate-100 text-slate-600 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center gap-1.5 disabled:opacity-40">
+                      <MessageSquare className="w-3.5 h-3.5" /> WhatsApp
+                    </button>
+                    <button onClick={handleDownloadPDF} disabled={!matierePrice && !laborPrice}
+                      className="h-10 bg-slate-100 text-slate-600 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center gap-1.5 disabled:opacity-40">
+                      <Download className="w-3.5 h-3.5" /> PDF
+                    </button>
+                  </div>
 
-              <button onClick={handleSharePDF} disabled={!matierePrice && !laborPrice}
-                className="w-full h-11 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-40 shadow-lg shadow-emerald-200">
-                <MessageSquare className="w-4 h-4" /><FileText className="w-4 h-4" />
-                {isAr ? 'مشاركة PDF مباشرة' : 'Partager PDF direct'}
-              </button>
+                  <button onClick={handleSharePDF} disabled={!matierePrice && !laborPrice}
+                    className="w-full h-11 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-40 shadow-lg shadow-emerald-200">
+                    <MessageSquare className="w-4 h-4" /><FileText className="w-4 h-4" />
+                    {isAr ? 'مشاركة PDF مباشرة' : 'Partager PDF direct'}
+                  </button>
 
-              <button onClick={handleSendToPortail} disabled={!matierePrice && !laborPrice}
-                className="w-full h-11 bg-gradient-to-r from-slate-700 to-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-40 shadow-lg">
-                <Globe className="w-4 h-4" />
-                {isAr ? 'إرسال للبورتال (Devis)' : 'Envoyer au Portail Client'}
-              </button>
+                  <button onClick={handleSendToPortail} disabled={!matierePrice && !laborPrice}
+                    className="w-full h-11 bg-gradient-to-r from-slate-700 to-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-40 shadow-lg">
+                    <Globe className="w-4 h-4" />
+                    {isAr ? 'إرسال للبورتال (Devis)' : 'Envoyer au Portail Client'}
+                  </button>
 
-              <button onClick={handleCreateFacture} disabled={!matierePrice && !laborPrice}
-                className="w-full h-11 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-40 shadow-lg shadow-indigo-200">
-                <CheckCircle className="w-4 h-4" />
-                {isAr ? '✓ قبل العميل ← إنشاء فاتورة' : '✓ Client accepté → Créer Facture'}
-              </button>
+                  <button onClick={handleCreateFacture} disabled={!matierePrice && !laborPrice}
+                    className="w-full h-11 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-40 shadow-lg shadow-indigo-200">
+                    <CheckCircle className="w-4 h-4" />
+                    {isAr ? '✓ قبل العميل ← إنشاء فاتورة' : '✓ Client accepté → Créer Facture'}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
