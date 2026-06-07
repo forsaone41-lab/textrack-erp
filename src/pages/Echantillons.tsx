@@ -21,6 +21,7 @@ export default function Echantillons() {
   const [confirmLaunch, setConfirmLaunch] = useState<Commande | null>(null);
   const [showSuccess, setShowSuccess] = useState<{ message: string, sub?: string } | null>(null);
   const [editingPrixId, setEditingPrixId] = useState<string | null>(null);
+  const [editingField, setEditingField] = useState<'echantillon' | 'commande' | null>(null);
   const [editingPrixVal, setEditingPrixVal] = useState<string>('');
   
   // PRO Feedback State
@@ -429,59 +430,121 @@ export default function Echantillons() {
                   </div>
                 </div>
 
-                <div className={`p-3 rounded-xl border flex items-start gap-3 ${(c as any).prixValide ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
-                  <FileText className={`w-4 h-4 mt-0.5 ${(c as any).prixValide ? 'text-emerald-500' : 'text-amber-400'}`} />
+                <div className={`p-3 rounded-xl border flex items-start gap-3 bg-indigo-50/30 border-indigo-100`}>
+                  <FileText className="w-4 h-4 mt-0.5 text-indigo-500" />
                   <div className="flex-1">
-                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">
-                      {isAr ? 'السعر' : 'Prix'} {(c as any).prixValide ? '✅' : <span className="text-amber-500">(non validé)</span>}
+                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                      {isAr ? 'المالية والتكلفة' : 'Finance & Coûts'}
                     </span>
-                    {editingPrixId === c.id ? (
-                      <div className="flex items-center gap-1 mt-1">
-                        <input
-                          type="number"
-                          value={editingPrixVal}
-                          onChange={e => setEditingPrixVal(e.target.value)}
-                          className="w-24 px-2 py-1 border border-indigo-300 rounded-lg text-xs font-bold outline-none"
-                          autoFocus
-                        />
-                        <span className="text-[10px] font-bold text-slate-500">MAD</span>
-                        <button
-                          onClick={async () => {
-                            const newPrix = Number(editingPrixVal) || 0;
-                            const updated = { ...c, prix: newPrix, prixUnitaire: newPrix, prixValide: false } as any;
-                            setCommandes(prev => prev.map(x => x.id === c.id ? updated : x));
-                            await saveRecord('commandes', updated);
-                            setEditingPrixId(null);
-                          }}
-                          className="px-2 py-1 bg-indigo-600 text-white rounded-lg text-[9px] font-black"
-                        >✓</button>
-                        <button onClick={() => setEditingPrixId(null)} className="px-2 py-1 bg-slate-200 rounded-lg text-[9px] font-black">✕</button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <span className={`text-sm font-black ${(c as any).prixValide ? 'text-emerald-700' : 'text-amber-600'}`}>
-                          {c.prix || 0} MAD
-                        </span>
-                        <button
-                          onClick={() => { setEditingPrixId(c.id); setEditingPrixVal(String(c.prix || 0)); }}
-                          className="text-[9px] px-1.5 py-0.5 bg-white border border-slate-200 rounded text-slate-500 hover:border-indigo-300 hover:text-indigo-600 transition-all"
-                        >✏️</button>
-                        {!((c as any).prixValide) && (c.prix || 0) > 0 && (
-                          <button
-                            onClick={async () => {
-                              const updated = { ...c, prixValide: true } as any;
-                              setCommandes(prev => prev.map(x => x.id === c.id ? updated : x));
-                              await saveRecord('commandes', updated);
-                            }}
-                            className="text-[9px] px-2 py-0.5 bg-emerald-500 text-white rounded font-black hover:bg-emerald-600 transition-all"
-                          >✅ Valider</button>
+                    
+                    <div className="space-y-3">
+                      {/* Prix Echantillon */}
+                      <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+                        <span>{isAr ? 'ثمن العينة:' : 'Prix Échantillon:'}</span>
+                        {editingPrixId === c.id && editingField === 'echantillon' ? (
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="number"
+                              value={editingPrixVal}
+                              onChange={e => setEditingPrixVal(e.target.value)}
+                              className="w-20 px-2 py-0.5 border border-indigo-300 rounded text-xs font-bold outline-none"
+                              autoFocus
+                            />
+                            <button
+                              onClick={async () => {
+                                const newPrix = Number(editingPrixVal) || 0;
+                                const updated = { ...c, prixEchantillon: newPrix } as any;
+                                setCommandes(prev => prev.map(x => x.id === c.id ? updated : x));
+                                await saveRecord('commandes', updated);
+                                setEditingPrixId(null);
+                                setEditingField(null);
+                              }}
+                              className="px-1.5 py-0.5 bg-indigo-600 text-white rounded text-[9px] font-black"
+                            >✓</button>
+                            <button onClick={() => { setEditingPrixId(null); setEditingField(null); }} className="px-1.5 py-0.5 bg-slate-200 rounded text-[9px] font-black">✕</button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-indigo-600 font-black">{c.prixEchantillon || 0} MAD</span>
+                            <button
+                              onClick={() => { setEditingPrixId(c.id); setEditingField('echantillon'); setEditingPrixVal(String(c.prixEchantillon || 0)); }}
+                              className="text-[9px] px-1 bg-white border border-slate-200 rounded text-slate-400 hover:border-indigo-300 hover:text-indigo-600 transition-all"
+                            >✏️</button>
+                          </div>
                         )}
                       </div>
-                    )}
-                    {c.avance ? <div className="text-[10px] font-bold text-emerald-600 mt-0.5">Avance: {c.avance} MAD</div> : null}
-                    {!(c as any).prixValide && (c.prix || 0) > 0 && (
-                      <p className="text-[9px] text-amber-500 font-bold mt-1">⚠️ {isAr ? 'غير محسوب في المالية حتى التأكيد' : 'Non compté en finance avant validation'}</p>
-                    )}
+
+                      {/* Prix Commande (Prix Unitaire) */}
+                      <div className="flex flex-col gap-1 pt-1.5 border-t border-slate-100">
+                        <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+                          <span className="flex items-center gap-1">
+                            {isAr ? 'ثمن قطعة الطلبية:' : 'Prix P.U. Commande:'}
+                            {(c as any).prixValide ? (
+                              <span className="text-emerald-500 text-[10px]" title="Validé">✅</span>
+                            ) : (
+                              <span className="text-amber-500 text-[10px]" title="Non validé">⚠️</span>
+                            )}
+                          </span>
+                          {editingPrixId === c.id && editingField === 'commande' ? (
+                            <div className="flex items-center gap-1">
+                              <input
+                                type="number"
+                                value={editingPrixVal}
+                                onChange={e => setEditingPrixVal(e.target.value)}
+                                className="w-20 px-2 py-0.5 border border-indigo-300 rounded text-xs font-bold outline-none"
+                                autoFocus
+                              />
+                              <button
+                                onClick={async () => {
+                                  const newPrix = Number(editingPrixVal) || 0;
+                                  const updated = { ...c, prix: newPrix, prixUnitaire: newPrix, prixValide: false } as any;
+                                  setCommandes(prev => prev.map(x => x.id === c.id ? updated : x));
+                                  await saveRecord('commandes', updated);
+                                  setEditingPrixId(null);
+                                  setEditingField(null);
+                                }}
+                                className="px-1.5 py-0.5 bg-indigo-600 text-white rounded text-[9px] font-black"
+                              >✓</button>
+                              <button onClick={() => { setEditingPrixId(null); setEditingField(null); }} className="px-1.5 py-0.5 bg-slate-200 rounded text-[9px] font-black">✕</button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5">
+                              <span className={`font-black ${(c as any).prixValide ? 'text-emerald-600' : 'text-amber-600'}`}>
+                                {c.prix || 0} MAD
+                              </span>
+                              <button
+                                onClick={() => { setEditingPrixId(c.id); setEditingField('commande'); setEditingPrixVal(String(c.prix || 0)); }}
+                                className="text-[9px] px-1 bg-white border border-slate-200 rounded text-slate-400 hover:border-indigo-300 hover:text-indigo-600 transition-all"
+                              >✏️</button>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Valider button for bulk price */}
+                        {!((c as any).prixValide) && (c.prix || 0) > 0 && (
+                          <div className="flex justify-end mt-1">
+                            <button
+                              onClick={async () => {
+                                const updated = { ...c, prixValide: true } as any;
+                                setCommandes(prev => prev.map(x => x.id === c.id ? updated : x));
+                                await saveRecord('commandes', updated);
+                              }}
+                              className="text-[9px] px-2 py-0.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded font-black transition-all flex items-center gap-1 shadow-sm"
+                            >
+                              ✓ {isAr ? 'تأكيد السعر' : 'Valider Prix'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Avance (Acompte) */}
+                      {c.avance ? (
+                        <div className="flex justify-between text-xs font-bold text-slate-700 pt-1.5 border-t border-slate-100">
+                          <span>{isAr ? 'التسبيق (العربون):' : 'Avance payée:'}</span>
+                          <span className="text-emerald-600 font-black">{c.avance} MAD</span>
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
 

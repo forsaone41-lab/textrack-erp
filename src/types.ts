@@ -92,6 +92,7 @@ export interface Commande {
   phase: Phase;
   prix: number;
   prixUnitaire?: number;
+  prixEchantillon?: number;
   avance?: number;
   rebut: number;
   statut: 'echantillon_en_cours' | 'echantillon_valide' | 'en_cours' | 'terminé' | 'livré' | 'annulation_demandee' | 'annulé';
@@ -792,7 +793,7 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
           'partenaireId', 'externalTasks', 'typeDossier',
           'photo', 'adresse', 'notes',
           'crmStage', 'crmContactMethod', 'crmRdvDate', 'crmNotes', 'crmPrice', 'crmPriceConfirmed', 'crmPriority',
-          'preuveClient', 'annulationRaison', 'cv', 'sampleFeedback'
+          'preuveClient', 'annulationRaison', 'cv', 'sampleFeedback', 'prixEchantillon'
         ];
         newCols.forEach(col => delete fallbackRecord[col]);
         

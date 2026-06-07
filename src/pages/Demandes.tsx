@@ -44,6 +44,7 @@ export default function Demandes() {
     tailles: { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0 } as Record<string, number>,
     tissuPhoto: '',
     modelePhoto: '',
+    prixEchantillon: '',
     prixUnitaire: '',
     avance: '',
     dateLivraisonPrevue: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
@@ -240,6 +241,7 @@ export default function Demandes() {
         phase: 'patronage',
         prix: Number(confirmDetails.prixUnitaire) || 0,
         prixUnitaire: Number(confirmDetails.prixUnitaire) || 0,
+        prixEchantillon: Number(confirmDetails.prixEchantillon) || 0,
         avance: Number(confirmDetails.avance) || 0,
         rebut: 0,
         statut: 'echantillon_en_cours',
@@ -247,6 +249,36 @@ export default function Demandes() {
       };
 
       await saveRecord('commandes', newOrder);
+
+      // 4. Auto-generate Devis in the finance section
+      const unitPrice = Number(confirmDetails.prixUnitaire) || 0;
+      if (unitPrice > 0) {
+        const total = unitPrice * lead.quantity;
+        const existingFactures = await loadData<Facture>('factures');
+        const year = new Date().getFullYear();
+        const prefix = `DEV-${year}-`;
+        const existingNums = existingFactures
+          .filter(f => f.numero?.startsWith(prefix))
+          .map(f => parseInt(f.numero.replace(prefix, '')))
+          .filter(n => !isNaN(n));
+        const nextNum = existingNums.length > 0 ? Math.max(...existingNums) + 1 : 1;
+        const due = new Date();
+        due.setDate(due.getDate() + 15);
+        
+        const autoDevis: Facture = {
+          id: genId(),
+          numero: `${prefix}${String(nextNum).padStart(3, '0')}`,
+          commandeId: newOrder.id,
+          client: lead.name,
+          montant: total,
+          avance: Number(confirmDetails.avance) || 0,
+          date: new Date().toISOString().split('T')[0],
+          echeance: due.toISOString().split('T')[0],
+          statut: 'en_attente',
+          typeDoc: 'devis',
+        };
+        await saveRecord('factures', autoDevis);
+      }
 
       const updatedLead = { ...lead, status: 'completed' as const, crmStage: 'confirme' as const };
       setLeads(prev => prev.map(l => l.id === lead.id ? updatedLead : l));
@@ -260,6 +292,7 @@ export default function Demandes() {
         tailles: { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0 },
         tissuPhoto: '',
         modelePhoto: '',
+        prixEchantillon: '',
         prixUnitaire: '',
         avance: '',
         dateLivraisonPrevue: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
@@ -847,7 +880,6 @@ export default function Demandes() {
       {confirmLead && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300 overflow-y-auto">
           <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 max-w-2xl w-full shadow-[0_50px_100px_rgba(0,0,0,0.3)] border border-slate-100 relative my-4 sm:my-8">
-            <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-indigo-500 to-purple-600" />
             <button
               onClick={() => setConfirmLead(null)}
               className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 text-slate-400 hover:text-rose-500 bg-slate-50 hover:bg-rose-50 rounded-full transition-all"
@@ -916,9 +948,22 @@ export default function Demandes() {
                   </h4>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
-                    <label className="block text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-1">{isAr ? 'الثمن للقطعة' : 'Prix Unitaire'}</label>
+                    <label className="block text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-1">{isAr ? 'ثمن العينة' : 'Prix Échantillon'}</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        placeholder="0.00"
+                        value={confirmDetails.prixEchantillon}
+                        onChange={e => setConfirmDetails({ ...confirmDetails, prixEchantillon: e.target.value })}
+                        className="w-full bg-white border border-emerald-200 rounded-xl py-2 px-3 pl-8 text-sm font-black text-emerald-900 outline-none focus:border-emerald-500 transition-colors"
+                      />
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500 text-xs font-black">MAD</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-1">{isAr ? 'ثمن قطعة الطلبية' : 'Prix Unitaire'}</label>
                     <div className="relative">
                       <input
                         type="number"
