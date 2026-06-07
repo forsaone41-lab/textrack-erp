@@ -4,6 +4,7 @@ import {
   Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile, saveRecord, Lead, loadLeads, loadLeadPhoto
 } from '../types';
 import { useLang } from '../contexts/LangContext';
+import { trackPixelEvent } from '../utils/pixel';
 import { printElement } from '../utils/pdf';
 import { subscribeToPush } from '../utils/pushNotifications';
 import { compressImage } from '../utils/image';
@@ -253,6 +254,14 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       };
       
       await saveLead(leadPayload);
+
+      // Track Facebook Pixel Lead event
+      trackPixelEvent('Lead', {
+        content_name: newOrderForm.modele,
+        content_category: 'Client Portal Lead',
+        value: parseInt(newOrderForm.quantite) || 1,
+        currency: 'MAD'
+      });
       
       setOrderSent(true);
       setTimeout(() => {

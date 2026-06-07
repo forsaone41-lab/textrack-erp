@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, Image as ImageIcon, Building2, FileText, Phone, Play, Zap, Globe, Settings as SettingsIcon, ShieldCheck, X, Star, MapPin, RefreshCw, CloudUpload, Database, AlertTriangle, HelpCircle, Plus, Trash2, CheckCircle2, XCircle, ChevronDown, ChevronUp, ExternalLink, CreditCard } from 'lucide-react';
+import { Save, Image as ImageIcon, Building2, FileText, Phone, Play, Zap, Globe, Settings as SettingsIcon, ShieldCheck, X, Star, MapPin, RefreshCw, CloudUpload, Database, AlertTriangle, HelpCircle, Plus, Trash2, CheckCircle2, XCircle, ChevronDown, ChevronUp, ExternalLink, CreditCard, Target } from 'lucide-react';
 import { CompanyProfile, FaqItem, ServiceItem, loadCompanyProfile, saveCompanyProfile, saveRecord } from '../types';
 import { genId } from '../types';
 import { supabase } from '../supabase';
@@ -495,6 +495,35 @@ export default function Settings() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tracking & Marketing (Facebook Pixel) */}
+        <div className="p-6 border-b border-slate-100">
+          <h2 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+            <Target className="w-5 h-5 text-indigo-500" />
+            {isAr ? 'التسويق وتتبع الزوار (Facebook Pixel)' : 'Marketing & Tracking (Meta Pixel)'}
+          </h2>
+          
+          <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-6">
+            <div>
+              <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                <Target className="w-4 h-4 text-indigo-500" />
+                {isAr ? 'معرف بكسل فيسبوك (Meta Pixel ID)' : 'Meta Pixel ID (Facebook)'}
+              </label>
+              <input 
+                type="text" 
+                value={profile.metaPixelId || ''} 
+                onChange={e => handleChange('metaPixelId', e.target.value)} 
+                placeholder="Ex: 123456789012345" 
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-xs text-left" 
+                dir="ltr" 
+              />
+              <p className="text-[10px] text-slate-400 font-medium mt-2 leading-relaxed">
+                {isAr ? 'أدخل معرف بكسل فيسبوك لتتبع الزوار والطلبات القادمة من إعلانات فيسبوك.' 
+                      : 'Saisissez votre ID Meta Pixel pour suivre automatiquement les visites (PageView) et les demandes envoyées (Lead) depuis vos publicités Facebook.'}
+              </p>
             </div>
           </div>
         </div>

@@ -52,6 +52,7 @@ import { PageLoader } from './components/PageLoader';
 
 import { initMockData, User, loadPermissions, AppPage, loadCompanyProfile, syncCompanyProfile, loadData, saveRecord } from './types';
 import { LangProvider, useLang } from './contexts/LangContext';
+import { initFacebookPixel, trackPixelEvent } from './utils/pixel';
 
 initMockData();
 
@@ -193,6 +194,15 @@ function AppContent() {
   const [showClientPortal, setShowClientPortal] = useState(false);
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [company, setCompany] = useState<CompanyProfile>(loadCompanyProfile());
+  const location = useLocation();
+
+  // Facebook Pixel tracking on route changes
+  useEffect(() => {
+    if (company && company.metaPixelId) {
+      initFacebookPixel(company.metaPixelId);
+      trackPixelEvent('PageView');
+    }
+  }, [location.pathname, company?.metaPixelId]);
 
   // Heartbeat for presence & Sync settings
   useEffect(() => {

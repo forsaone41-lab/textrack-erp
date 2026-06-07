@@ -444,6 +444,7 @@ export interface CompanyProfile {
   experienceTextAr?: string;
   faq?: FaqItem[];
   services?: ServiceItem[];
+  metaPixelId?: string;
 }
 
 export interface FaqItem {
@@ -508,7 +509,8 @@ export const DEFAULT_COMPANY: CompanyProfile = {
   email: 'contact@beyacreative.ma',
   bankName: 'CIH BANK',
   rib: '230 000 0000000000000000 00',
-  bankBeneficiary: 'BEYA CREATIVE'
+  bankBeneficiary: 'BEYA CREATIVE',
+  metaPixelId: ''
 };
 
 export function loadCompanyProfile(): CompanyProfile {

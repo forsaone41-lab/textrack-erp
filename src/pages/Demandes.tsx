@@ -53,6 +53,8 @@ export default function Demandes() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [devisLead, setDevisLead] = useState<Lead | null>(null);
   const [devisMode, setDevisMode] = useState<'echantillon' | 'commande'>('commande');
+  const [devisLeadRequests, setDevisLeadRequests] = useState<Lead[]>([]);
+  const [modelPrices, setModelPrices] = useState<Record<string, { matiere: string; labor: string }>>({});
   const [contactingLead, setContactingLead] = useState<Lead | null>(null);
   const [contactingLeadRequests, setContactingLeadRequests] = useState<Lead[]>([]);
   const [matierePrice, setMatierePrice] = useState<string>('');
@@ -1490,7 +1492,14 @@ export default function Demandes() {
                         const combinedLead: typeof client = { ...client, type: combinedType, quantity: totalQty };
                         return (
                           <button
-                            onClick={() => { setDevisLead(combinedLead); setMatierePrice(''); setLaborPrice(''); setDevisMode('commande'); }}
+                            onClick={() => {
+                              setDevisLead(combinedLead);
+                              setDevisLeadRequests(requests);
+                              const initPrices: Record<string, { matiere: string; labor: string }> = {};
+                              requests.forEach(r => { initPrices[r.id] = { matiere: '', labor: '' }; });
+                              setModelPrices(initPrices);
+                              setMatierePrice(''); setLaborPrice(''); setDevisMode('commande');
+                            }}
                             className="h-9 w-9 rounded-xl flex items-center justify-center border border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all shadow-sm"
                             title={isAr ? 'إنشاء ديفيز لكل الموديلات' : 'Devis tous modèles'}
                           >

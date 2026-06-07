@@ -3,6 +3,7 @@ import { Play, ShieldCheck, Zap, Users, ArrowRight, MessageCircle, Star, Package
 import { useLang } from '../contexts/LangContext';
 import { Link } from 'react-router-dom';
 import { loadCompanyProfile, saveLead, syncCompanyProfile, CompanyProfile } from '../types';
+import { trackPixelEvent } from '../utils/pixel';
 import { sendPushToAll } from '../utils/pushNotifications';
 
 const LogoWithFallback = ({ src, alt }: { src: string; alt: string }) => {
@@ -453,6 +454,15 @@ export default function LandingPage() {
                           photo: m.photo!,
                         });
                       }
+                      
+                      // Track Facebook Pixel Lead event
+                      trackPixelEvent('Lead', {
+                        content_name: models.map(m => m.type).join(', '),
+                        content_category: 'Confection Lead',
+                        value: models.reduce((acc, m) => acc + (Number(m.quantity) || 1), 0),
+                        currency: 'MAD'
+                      });
+
                       setIsSending(false);
                       setShowSuccess(true);
                       setModels([emptyModel()]);
