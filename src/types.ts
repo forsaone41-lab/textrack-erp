@@ -819,8 +819,9 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
         return;
       }
 
-      // Only alert if it's NOT a missing column error
-      if (!silent) alert(`Erreur de sauvegarde dans ${table} : ${error.message}`);
+      // Only alert if it's NOT a missing column error and NOT a network error
+      const isNetworkError = error.message.toLowerCase().includes('failed to fetch') || error.message.toLowerCase().includes('networkerror');
+      if (!silent && !isNetworkError) alert(`Erreur de sauvegarde dans ${table} : ${error.message}`);
     }
   } catch (e: any) {
     console.error(`Fatal save error for ${table}:`, e);

@@ -35,33 +35,6 @@ const STANDARD_MESURES: Record<string, { nom: string; valeurs: Record<string, nu
     { nom: 'الطول (Longueur)', valeurs: { S: 100, M: 102, L: 104, XL: 106, XXL: 108 } }
   ]
 };
-function formatGeminiError(errorObj: any, isAr: boolean): string {
-  const msg = (errorObj?.message || '').toLowerCase();
-  const code = errorObj?.code;
-
-  if (msg.includes('api key not valid') || msg.includes('key_invalid') || (msg.includes('api key') && msg.includes('invalid')) || (code === 400 && msg.includes('key'))) {
-    return isAr 
-      ? '❌ مفتاح API (API Key) اللي دخلتي غير صالح. تأكد من المفتاح ديالك أو عاود دخلو من الإعدادات الفوق ⚡'
-      : "❌ La clé API que vous avez saisie est invalide. Veuillez la vérifier dans les paramètres en haut ⚡";
-  }
-
-  if (msg.includes('exhausted') || msg.includes('quota') || msg.includes('limit') || msg.includes('resource_exhausted') || code === 429) {
-    return isAr
-      ? '⏳ وصلتي للحد الأقصى المسموح به في النسخة المجانية ديال Gemini API (Limit reached). تسنى شوية (دقيقة أو جوج) وعاود جرب، ولا استعمل مفتاح API مدفوع.'
-      : "⏳ Limite de requêtes atteinte pour la version gratuite de Gemini API (Quota Exceeded). Veuillez patienter une minute ou deux, ou utiliser une clé payante.";
-  }
-
-  if (msg.includes('high demand') || msg.includes('overloaded') || msg.includes('service unavailable') || code === 503) {
-    return isAr
-      ? '⏳ الخوادم ديال قوقل عليها ضغط كبير دابا. تسنى شوية وعاود جرب مرة خرى!'
-      : "⏳ Les serveurs Google sont actuellement surchargés. Veuillez réessayer dans quelques instants.";
-  }
-
-  return isAr
-    ? `عذراً، وقع خطأ في واجهة برمجة التطبيقات (API Error): ${errorObj?.message || 'خطأ غير معروف'}`
-    : `Désolé, une erreur API est survenue : ${errorObj?.message || 'Erreur inconnue'}`;
-}
-
 export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, onClose?: () => void }) {
   const { isAr } = useLang();
   const [aiLangOverride, setAiLangOverride] = useState<'ar' | 'fr' | null>(null);
@@ -502,7 +475,10 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
       }
 
       if (data.error) {
-        throw data.error;
+        if (data.error.message.includes('high demand')) {
+          throw new Error("الخوادم ديال الذكاء الاصطناعي عليها ضغط كبير دابا. ⏳ تسنى شوية وعاود جرب مرة خرى!");
+        }
+        throw new Error(data.error.message);
       }
       
       let rawText = '';
@@ -589,8 +565,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
       }
     } catch (err: any) {
       setAnalyzing(false);
-      const userFriendlyMsg = formatGeminiError(err, isAr);
-      setChat(prev => [...prev, { role: 'ai', text: userFriendlyMsg }]);
+      setChat(prev => [...prev, { role: 'ai', text: 'خطأ في التحليل: ' + err.message }]);
     }
   };
 
@@ -689,14 +664,17 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
         if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
           aiText = data.candidates[0].content.parts[0].text;
         } else if (data.error) {
-          aiText = formatGeminiError(data.error, isAr);
+          if (data.error.message.includes('high demand')) {
+            aiText = "عذراً، الخوادم ديال الذكاء الاصطناعي عليها ضغط كبير دابا. ⏳ تسنى شوية وعاود جرب مرة خرى!";
+          } else {
+            aiText = "خطأ: " + data.error.message;
+          }
         } else {
-          aiText = isAr ? 'لم أستطع فهم الرد.' : 'Je n\'ai pas pu comprendre la réponse.';
+          aiText = 'لم أستطع فهم الرد.';
         }
         setChat(prev => { const n = [...prev]; n.pop(); return [...n, { role: 'ai', text: aiText }]; });
       } catch (e: any) {
-        const errorText = formatGeminiError(e, isAr);
-        setChat(prev => { const n = [...prev]; n.pop(); return [...n, { role: 'ai', text: errorText }]; });
+        setChat(prev => { const n = [...prev]; n.pop(); return [...n, { role: 'ai', text: 'خطأ: ' + e.message }]; });
       }
     } else {
       setChat(prev => [...prev, { role: 'ai', text: getSmartReply(userMessage) }]);
@@ -767,9 +745,13 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
         if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
           aiResponseText = data.candidates[0].content.parts[0].text;
         } else if (data.error) {
-          aiResponseText = formatGeminiError(data.error, isAr);
+          if (data.error.message.includes('high demand')) {
+            aiResponseText = "عذراً، الخوادم ديال الذكاء الاصطناعي (Google API) عليها ضغط كبير دابا. ⏳ تسنى شوية وعاود جرب مرة خرى!";
+          } else {
+            aiResponseText = "عذراً، وقع خطأ في واجهة برمجة التطبيقات (API Error): " + data.error.message;
+          }
         } else {
-          aiResponseText = isAr ? 'لم أستطع فهم الرد. حاول مرة أخرى.' : 'Je n\'ai pas pu comprendre la réponse. Veuillez réessayer.';
+          aiResponseText = "لم أستطع فهم الرد. حاول مرة أخرى.";
         }
 
         setChat(prev => {
@@ -778,11 +760,10 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
           return [...newChat, { role: 'ai', text: aiResponseText }];
         });
       } catch (e: any) {
-        const errorText = formatGeminiError(e, isAr);
         setChat(prev => {
           const newChat = [...prev];
           newChat.pop();
-          return [...newChat, { role: 'ai', text: errorText }];
+          return [...newChat, { role: 'ai', text: "وقع خطأ في الاتصال: " + e.message }];
         });
       }
     } else {
