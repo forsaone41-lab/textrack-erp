@@ -1048,19 +1048,19 @@ export default function Demandes() {
 
       {/* Photo Preview Modal */}
       {previewPhoto && (
-        <div className="fixed inset-0 z-[150] flex flex-col items-center justify-center bg-black/95 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-300"
+        <div className="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-black/95 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-300"
           onClick={() => { setPreviewPhoto(null); setZoomLevel(1); setLensEnabled(false); }}>
           
           {/* Top Bar with Close Button */}
-          <div className="absolute top-0 left-0 w-full p-4 md:p-8 flex items-center justify-between z-[160] bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
+          <div className="absolute top-0 left-0 w-full p-4 md:p-8 flex items-center justify-between z-[1000] bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
              <div className="pointer-events-auto">
                 <span className="text-white/50 text-[10px] font-black uppercase tracking-widest hidden md:block">BEYA CREATIVE GALLERY</span>
              </div>
              
              <button onClick={() => { setPreviewPhoto(null); setZoomLevel(1); setLensEnabled(false); }}
-               className="pointer-events-auto px-5 py-3 md:w-14 md:h-14 md:p-0 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 shadow-2xl rounded-2xl md:rounded-full flex items-center justify-center gap-2 text-white transition-all hover:scale-105 active:scale-95">
-               <X className="w-5 h-5 md:w-6 md:h-6" />
-               <span className="text-[10px] font-black uppercase tracking-widest md:hidden">Fermer</span>
+               className="pointer-events-auto w-12 h-12 md:w-14 md:h-14 bg-white/10 hover:bg-white/25 border border-white/20 shadow-2xl rounded-full flex items-center justify-center text-white transition-all hover:scale-105 active:scale-95">
+               <X className="w-6 h-6 md:w-7 md:h-7" />
+               
              </button>
           </div>
 

@@ -152,7 +152,7 @@ function AdminLayout({
         <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-indigo-500/5 blur-[120px] pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-purple-500/5 blur-[120px] pointer-events-none" />
         
-        <div className="p-4 md:p-8 lg:p-12 max-w-[1600px] mx-auto relative z-10">
+        <div className="p-4 md:p-8 lg:p-12 max-w-[1600px] mx-auto relative">
           <Suspense fallback={<PageLoader />}>
             <Outlet />
           </Suspense>
