@@ -161,7 +161,7 @@ export default function Login({ onLogin }: LoginProps) {
                   value={identifier}
                   onChange={e => setIdentifier(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                  placeholder={isAr ? 'مثال: admin@beya.ma' : 'Ex: admin@beya.ma'}
+                  placeholder={isAr ? 'مثال: example@beyacreative.com' : 'Ex: example@beyacreative.com'}
                   className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 focus:border-slate-800 outline-none transition-all"
                 />
               </div>
