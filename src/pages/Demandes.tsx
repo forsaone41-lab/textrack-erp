@@ -52,7 +52,9 @@ export default function Demandes() {
   const [successLead, setSuccessLead] = useState<Lead | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [devisLead, setDevisLead] = useState<Lead | null>(null);
+  const [devisMode, setDevisMode] = useState<'echantillon' | 'commande'>('commande');
   const [contactingLead, setContactingLead] = useState<Lead | null>(null);
+  const [contactingLeadRequests, setContactingLeadRequests] = useState<Lead[]>([]);
   const [matierePrice, setMatierePrice] = useState<string>('');
   const [laborPrice, setLaborPrice] = useState<string>('');
   const [factureCreated, setFactureCreated] = useState<{numero: string; client: string; montant: number} | null>(null);
@@ -380,7 +382,8 @@ export default function Demandes() {
   const sendDevis = (isPDF: boolean = false) => {
     if (!devisLead || (!matierePrice && !laborPrice)) return;
     const unitPrice = Number(matierePrice || 0) + Number(laborPrice || 0);
-    const total = unitPrice * devisLead.quantity;
+    const currentQuantity = devisMode === 'echantillon' ? 1 : devisLead.quantity;
+    const total = unitPrice * currentQuantity;
 
     const hasMatiere = Number(matierePrice) > 0;
     let message = '';
@@ -400,7 +403,7 @@ export default function Demandes() {
       message = t.devisTxt
         .replace(/{name}/g, devisLead.name)
         .replace(/{type}/g, devisLead.type)
-        .replace(/{quantity}/g, devisLead.quantity.toString())
+        .replace(/{quantity}/g, currentQuantity.toString())
         .replace(/{unitPrice}/g, unitPrice.toLocaleString())
         .replace(/{total}/g, total.toLocaleString())
         .replace(/{note}/g, matiereNote);
@@ -474,6 +477,7 @@ export default function Demandes() {
     // Slight delay before closing to show feedback
     setTimeout(() => {
       setContactingLead(null);
+      setContactingLeadRequests([]);
     }, 800);
   };
 
@@ -481,7 +485,8 @@ export default function Demandes() {
   const handleSendToPortail = async () => {
     if (!devisLead || (!matierePrice && !laborPrice)) return;
     const unitPrice = Number(matierePrice || 0) + Number(laborPrice || 0);
-    const total = unitPrice * devisLead.quantity;
+    const currentQuantity = devisMode === 'echantillon' ? 1 : devisLead.quantity;
+    const total = unitPrice * currentQuantity;
     const existingFactures = await loadData<Facture>('factures');
     const year = new Date().getFullYear();
     const prefix = `DEV-${year}-`;
@@ -517,7 +522,8 @@ export default function Demandes() {
   const handleCreateFacture = async () => {
     if (!devisLead || (!matierePrice && !laborPrice)) return;
     const unitPrice = Number(matierePrice || 0) + Number(laborPrice || 0);
-    const total = unitPrice * devisLead.quantity;
+    const currentQuantity = devisMode === 'echantillon' ? 1 : devisLead.quantity;
+    const total = unitPrice * currentQuantity;
     const existingFactures = await loadData<Facture>('factures');
     const year = new Date().getFullYear();
     const prefix = `FAC-${year}-`;
@@ -663,14 +669,42 @@ export default function Demandes() {
             </div>
 
             <div className="p-5 space-y-3">
+              {/* Toggle Mode */}
+              <div className="flex bg-slate-100/85 p-1 rounded-xl gap-1 border border-slate-200/50">
+                <button
+                  onClick={() => setDevisMode('commande')}
+                  className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                    devisMode === 'commande'
+                      ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-slate-100'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <Package className="w-3.5 h-3.5" />
+                  {isAr ? 'طلبية كاملة' : 'Commande'} ({devisLead.quantity} pcs)
+                </button>
+                <button
+                  onClick={() => setDevisMode('echantillon')}
+                  className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                    devisMode === 'echantillon'
+                      ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-slate-100'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  {isAr ? 'عينة' : 'Échantillon'} (1 pc)
+                </button>
+              </div>
+
               {/* Qty + Unit price row */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-slate-50 rounded-xl px-3 py-2.5 border border-slate-100">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Quantité</p>
-                  <p className="text-base font-black text-slate-500">{devisLead.quantity} <span className="text-[10px]">pcs</span></p>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{isAr ? 'الكمية' : 'Quantité'}</p>
+                  <p className="text-base font-black text-slate-700">
+                    {devisMode === 'echantillon' ? 1 : devisLead.quantity} <span className="text-[10px] text-slate-400">pcs</span>
+                  </p>
                 </div>
                 <div className="bg-indigo-50 rounded-xl px-3 py-2.5 border border-indigo-100">
-                  <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">Prix/unité</p>
+                  <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">{isAr ? 'ثمن القطعة' : 'Prix/unité'}</p>
                   <p className="text-base font-black text-indigo-600">{Number(matierePrice || 0) + Number(laborPrice || 0)} <span className="text-[10px]">MAD</span></p>
                 </div>
               </div>
@@ -678,12 +712,12 @@ export default function Demandes() {
               {/* Inputs row */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Matière (MAD)</label>
+                  <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الثوب والسلعة' : 'Matière (MAD)'}</label>
                   <input type="number" value={matierePrice} onChange={e => setMatierePrice(e.target.value)} placeholder="0"
                     className="w-full bg-white border-2 border-slate-100 rounded-xl py-2.5 px-3 text-base font-black text-slate-900 outline-none focus:border-indigo-400" />
                 </div>
                 <div>
-                  <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Main d'œuvre</label>
+                  <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'اليد العاملة' : "Main d'œuvre"}</label>
                   <input type="number" value={laborPrice} onChange={e => setLaborPrice(e.target.value)} placeholder="0"
                     className="w-full bg-white border-2 border-slate-100 rounded-xl py-2.5 px-3 text-base font-black text-slate-900 outline-none focus:border-indigo-400" />
                 </div>
@@ -691,8 +725,8 @@ export default function Demandes() {
 
               {/* Total */}
               <div className="bg-slate-900 rounded-xl px-4 py-3 text-white flex items-center justify-between">
-                <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Total estimé</p>
-                <p className="text-xl font-black">{((Number(matierePrice || 0) + Number(laborPrice || 0)) * devisLead.quantity).toLocaleString()} <span className="text-xs">MAD</span></p>
+                <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">{isAr ? 'المجموع التقديري' : 'Total estimé'}</p>
+                <p className="text-xl font-black">{((Number(matierePrice || 0) + Number(laborPrice || 0)) * (devisMode === 'echantillon' ? 1 : devisLead.quantity)).toLocaleString()} <span className="text-xs">MAD</span></p>
               </div>
 
               {/* Action buttons */}
@@ -760,6 +794,7 @@ export default function Demandes() {
                   </div>
                 </div>
               )}
+
               {detailsLead.tailles && Object.values(detailsLead.tailles).some(v => v > 0) && (
                 <div>
                   <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
@@ -922,7 +957,7 @@ export default function Demandes() {
                     placeholder={isAr ? "اختر أو اكتب..." : "Choisir ou taper..."}
                     value={confirmDetails.tissu}
                     onChange={e => setConfirmDetails({ ...confirmDetails, tissu: e.target.value })}
-                    className="w-full bg-white border-2 border-slate-100 rounded-xl py-2 px-3 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
+                    className="w-full bg-white border-2 border-slate-100 rounded-xl py-2.5 px-3 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
                   />
                   <datalist id="tissus-list">
                     <option value="Coton 100%" />
@@ -948,7 +983,7 @@ export default function Demandes() {
                   </h4>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-1">{isAr ? 'ثمن العينة' : 'Prix Échantillon'}</label>
                     <div className="relative">
@@ -988,6 +1023,37 @@ export default function Demandes() {
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500 text-xs font-black">MAD</span>
                     </div>
                   </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-emerald-100/50">
+                  <div>
+                    <label className="block text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-1">
+                      {isAr ? 'المدة بالأيام (Délai en jours)' : 'Délai en jours'}
+                    </label>
+                    <select
+                      value={(() => {
+                        if (!confirmDetails.dateLivraisonPrevue) return "";
+                        const diffTime = new Date(confirmDetails.dateLivraisonPrevue).getTime() - new Date().setHours(0,0,0,0);
+                        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+                        return diffDays >= 1 && diffDays <= 30 ? String(diffDays) : "";
+                      })()}
+                      onChange={e => {
+                        if (e.target.value) {
+                          const days = Number(e.target.value);
+                          const targetDate = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                          setConfirmDetails({ ...confirmDetails, dateLivraisonPrevue: targetDate });
+                        }
+                      }}
+                      className="w-full bg-white border border-emerald-200 rounded-xl py-2.5 px-3 text-sm font-black text-emerald-900 outline-none focus:border-emerald-500 transition-colors cursor-pointer"
+                    >
+                      <option value="">{isAr ? '-- اختر عدد الأيام --' : '-- Choisir le nombre de jours --'}</option>
+                      {Array.from({ length: 30 }, (_, i) => i + 1).map(day => (
+                        <option key={day} value={day}>
+                          {day} {isAr ? (day === 1 ? 'يوم' : day === 2 ? 'يومين' : day <= 10 ? 'أيام' : 'يوم') : 'jours'}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                   <div>
                     <label className="block text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-1">{isAr ? 'تاريخ التسليم' : 'Date de Livraison'}</label>
                     <input
@@ -1020,7 +1086,6 @@ export default function Demandes() {
         </div>
       )}
 
-      {/* Success Animation Modal */}
       {successLead && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-300">
           <div className="bg-white rounded-[3rem] p-12 max-w-md w-full text-center shadow-[0_50px_100px_rgba(0,0,0,0.4)] border border-white/20 relative overflow-hidden">
@@ -1036,7 +1101,7 @@ export default function Demandes() {
             <p className="text-slate-500 font-medium leading-relaxed mb-8">
               {isAr
                 ? `تم تأكيد السعر والوقت لـ "${successLead.name}" بنجاح. سيتم إطلاق العينة بما أنه تم دفع التسبيق (ثمن العينة أو 50% من الطلبية).`
-                : `Prix et délai validés pour "${successLead.name}". L'échantillon est lancé suite au paiement de l'avance (prix échantillon ou 50%).`}
+                : `Prix et délai validés pour "${successLead.name}". L'échantillon est lancé suite au paiement de l'avance (prix échantillon ou 50%).` }
             </p>
 
             <div className="bg-amber-50 rounded-2xl p-4 mb-10 border border-amber-100">
@@ -1054,7 +1119,6 @@ export default function Demandes() {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
       {deleteId && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-white rounded-[2.5rem] p-10 max-w-sm w-full shadow-[0_50px_100px_rgba(0,0,0,0.3)] border border-rose-100 relative overflow-hidden">
@@ -1072,7 +1136,6 @@ export default function Demandes() {
                 ? 'هل أنت متأكد؟ هاد العملية ما يمكنش ترجع فيها وغادي تمسح الطلب بمرة.'
                 : 'Attention ! Cette action est irréversible. Voulez-vous vraiment supprimer ce prospect ?'}
             </p>
-
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setDeleteId(null)}
@@ -1095,21 +1158,16 @@ export default function Demandes() {
       {previewPhoto && (
         <div className="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-black/95 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-300"
           onClick={() => { setPreviewPhoto(null); setZoomLevel(1); setLensEnabled(false); }}>
-          
-          {/* Top Bar with Close Button */}
           <div className="absolute top-0 left-0 w-full p-4 md:p-8 flex items-center justify-between z-[1000] bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
-             <div className="pointer-events-auto">
-                <span className="text-white/50 text-[10px] font-black uppercase tracking-widest hidden md:block">BEYA CREATIVE GALLERY</span>
-             </div>
-             
-             <button onClick={() => { setPreviewPhoto(null); setZoomLevel(1); setLensEnabled(false); }}
-               className="pointer-events-auto w-12 h-12 md:w-14 md:h-14 bg-white/10 hover:bg-white/25 border border-white/20 shadow-2xl rounded-full flex items-center justify-center text-white transition-all hover:scale-105 active:scale-95">
-               <X className="w-6 h-6 md:w-7 md:h-7" />
-               
-             </button>
+            <div className="pointer-events-auto">
+              <span className="text-white/50 text-[10px] font-black uppercase tracking-widest hidden md:block">BEYA CREATIVE GALLERY</span>
+            </div>
+            <button onClick={() => { setPreviewPhoto(null); setZoomLevel(1); setLensEnabled(false); }}
+              className="pointer-events-auto w-12 h-12 md:w-14 md:h-14 bg-white/10 hover:bg-white/25 border border-white/20 shadow-2xl rounded-full flex items-center justify-center text-white transition-all hover:scale-105 active:scale-95">
+              <X className="w-6 h-6 md:w-7 md:h-7" />
+            </button>
           </div>
-
-          {/* Zoom controls */}
+{/* Zoom controls */}
           <div className="absolute bottom-6 md:top-8 md:bottom-auto left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl px-4 py-2 z-[160]" onClick={e => e.stopPropagation()}>
             <button onClick={() => setZoomLevel(z => Math.max(0.5, z - 0.25))}
               className="w-9 h-9 bg-white/10 hover:bg-white/30 rounded-xl text-white font-black text-xl flex items-center justify-center transition-all">−</button>
@@ -1420,7 +1478,7 @@ export default function Demandes() {
                         className="h-9 px-3 bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl flex items-center gap-2 text-xs font-black transition-all border border-slate-200 shadow-sm">
                         <PhoneCall className="w-4 h-4" /> {isAr ? 'اتصال' : 'Appel'}
                       </a>
-                      <button onClick={() => setContactingLead(client)}
+                      <button onClick={() => { setContactingLead(client); setContactingLeadRequests(requests); }}
                         className={`h-9 px-3 rounded-xl text-xs font-black uppercase flex items-center gap-2 border transition-all shadow-sm ${client.contactedAt ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-600'}`}>
                         <MessageSquare className="w-4 h-4" />
                         {client.contactedAt ? (isAr ? 'تواصل ✓' : 'Contacté ✓') : 'WhatsApp'}
@@ -1590,7 +1648,7 @@ export default function Demandes() {
                           )}
                           
                           {!lead.type.startsWith('RECRUTEMENT:') && (
-                            <button onClick={() => setDevisLead(lead)} title="Devis"
+                            <button onClick={() => { setDevisLead(lead); setDevisMode('commande'); }} title="Devis"
                               className="w-8 h-8 bg-amber-50 text-amber-500 hover:bg-amber-500 hover:text-white rounded-lg border border-amber-200 flex items-center justify-center transition-all shadow-sm">
                               <Calculator className="w-3.5 h-3.5" />
                             </button>
@@ -1630,10 +1688,11 @@ export default function Demandes() {
       {/* Hidden PDF Template for Export - Only rendered when needed */}
       {devisLead && (() => {
         const company = loadCompanyProfile();
+        const currentQuantity = devisMode === 'echantillon' ? 1 : devisLead.quantity;
         const unitPrice = Number(matierePrice || 0) + Number(laborPrice || 0);
-        const totalMatiere = Number(matierePrice || 0) * (devisLead.quantity || 0);
-        const totalLabor = Number(laborPrice || 0) * (devisLead.quantity || 0);
-        const totalGeneral = unitPrice * (devisLead.quantity || 0);
+        const totalMatiere = Number(matierePrice || 0) * (currentQuantity || 0);
+        const totalLabor = Number(laborPrice || 0) * (currentQuantity || 0);
+        const totalGeneral = unitPrice * (currentQuantity || 0);
         const devisNum = `DV-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
 
         return (
@@ -1687,7 +1746,7 @@ export default function Demandes() {
             {/* ===== OBJET ===== */}
             <div style={{ margin: '0 32px 10px', background: '#eef2ff', padding: '8px 14px', borderRadius: '8px', border: '1px solid #c7d2fe' }}>
               <p style={{ margin: 0, fontSize: '10px', fontWeight: 800, color: '#4338ca' }}>
-                Objet : Devis de confection — <span style={{ fontWeight: 900 }}>{devisLead.type}</span> × {devisLead.quantity} pièces
+                Objet : Devis de confection — <span style={{ fontWeight: 900 }}>{devisLead.type}</span> × {currentQuantity} pièces
               </p>
             </div>
 
@@ -1706,14 +1765,14 @@ export default function Demandes() {
                   {Number(matierePrice) > 0 && (
                     <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
                       <td style={{ padding: '10px 12px', fontWeight: 800 }}>Tissu & Fournitures</td>
-                      <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600 }}>{devisLead.quantity}</td>
+                      <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600 }}>{currentQuantity}</td>
                       <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600, color: '#64748b' }}>{Number(matierePrice).toFixed(2)}</td>
                       <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 800 }}>{totalMatiere.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
                     </tr>
                   )}
                   <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
                     <td style={{ padding: '10px 12px', fontWeight: 800 }}>Confection & Main d'œuvre</td>
-                    <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600 }}>{devisLead.quantity}</td>
+                    <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600 }}>{currentQuantity}</td>
                     <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600, color: '#64748b' }}>{Number(laborPrice || 0).toFixed(2)}</td>
                     <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 800 }}>{totalLabor.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
                   </tr>
@@ -1929,7 +1988,7 @@ export default function Demandes() {
                   <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest italic">{contactingLead.name}</p>
                 </div>
               </div>
-              <button onClick={() => setContactingLead(null)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+              <button onClick={() => { setContactingLead(null); setContactingLeadRequests([]); }} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
                 <X className="w-6 h-6 text-slate-300" />
               </button>
             </div>
@@ -1938,7 +1997,10 @@ export default function Demandes() {
               {(() => {
                 const lang = isAr ? 'ar' : 'fr';
                 const isRecrutement = contactingLead.type.startsWith('RECRUTEMENT:');
-                const cleanType = isRecrutement ? contactingLead.type.replace('RECRUTEMENT:', '').trim() : contactingLead.type;
+                const allModelsTypes = contactingLeadRequests.length > 0
+                  ? contactingLeadRequests.map(r => isRecrutement ? r.type.replace('RECRUTEMENT:', '').trim() : r.type).join(' / ')
+                  : contactingLead.type;
+                const cleanType = isRecrutement ? contactingLead.type.replace('RECRUTEMENT:', '').trim() : allModelsTypes;
 
                 const clientOptions = [
                   {
