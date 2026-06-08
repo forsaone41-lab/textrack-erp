@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -433,7 +433,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
   ]
 }`;
 
-      let response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+      let response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -454,7 +454,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
       let data = await response.json();
       
       if (data.error && (data.error.message.includes('high demand') || data.error.code === 503)) {
-        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+        response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -475,10 +475,17 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
       }
 
       if (data.error) {
-        if (data.error.message.includes('high demand')) {
+        const errMsg = data.error.message || '';
+        if (errMsg.includes('high demand')) {
           throw new Error("الخوادم ديال الذكاء الاصطناعي عليها ضغط كبير دابا. ⏳ تسنى شوية وعاود جرب مرة خرى!");
+        } else if (errMsg.includes('limit: 0') || errMsg.includes('Quota exceeded')) {
+          throw new Error("⚠️ مفتاحك ماعندو حتى رصيد (Limit: 0). Google كتفرض تفعيل الدفع (Billing) في حساب Google Cloud ديالك باش تقدر تخدم الـ API في المغرب.");
+        } else if (errMsg.includes('not found') || errMsg.includes('not supported')) {
+          throw new Error("⚠️ هاد الموديل غير متاح للمفتاح ديالك. تأكد باللي فعلتي الـ API الصحيح في Google Cloud Console.");
+        } else if (errMsg.includes('API key not valid')) {
+          throw new Error("⚠️ المفتاح (API Key) اللي دخلتي غير صحيح.");
         }
-        throw new Error(data.error.message);
+        throw new Error(errMsg);
       }
       
       let rawText = '';
@@ -646,14 +653,14 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
           const mimeType = image.split(';')[0].split(':')[1];
           contents[0].parts.push({ inlineData: { data: base64Data, mimeType } });
         }
-        let response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+        let response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ contents, systemInstruction: { parts: [{ text: "أنت خبير تحليل وتصميم وتسعير في مصنع نسيج مغربي. تكلم بالدارجة المغربية بأسلوب احترافي وودي. مهمتك الأساسية: 1. حساب كميات الثوب بدقة. 2. إعطاء تقديرات دقيقة للأسعار في السوق المغربي (مثلا أثمنة الأثواب في درب عمر أو أسواق الجملة). 3. إذا سألك المستخدم عن التكلفة، أعطه تفصيلاً دقيقاً: ثمن الثوب (شحال للمتر والمجموع)، تكلفة الخياطة (اليد العاملة)، والتكلفة الإجمالية للقطعة (Prix de revient). 4. اقترح أماكن شراء الأثواب في المغرب. كن مفيداً، دقيقاً في الأرقام التقريبية، وتصرف كخبير نسيج حقيقي." }] } })
         });
         let data = await response.json();
         
         if (data.error && (data.error.message.includes('high demand') || data.error.code === 503)) {
-          response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+          response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ contents, systemInstruction: { parts: [{ text: "أنت خبير تحليل وتصميم وتسعير في مصنع نسيج مغربي. تكلم بالدارجة المغربية بأسلوب احترافي وودي. مهمتك الأساسية: 1. حساب كميات الثوب بدقة. 2. إعطاء تقديرات دقيقة للأسعار في السوق المغربي (مثلا أثمنة الأثواب في درب عمر أو أسواق الجملة). 3. إذا سألك المستخدم عن التكلفة، أعطه تفصيلاً دقيقاً: ثمن الثوب (شحال للمتر والمجموع)، تكلفة الخياطة (اليد العاملة)، والتكلفة الإجمالية للقطعة (Prix de revient). 4. اقترح أماكن شراء الأثواب في المغرب. كن مفيداً، دقيقاً في الأرقام التقريبية، وتصرف كخبير نسيج حقيقي." }] } })
           });
@@ -664,10 +671,17 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
         if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
           aiText = data.candidates[0].content.parts[0].text;
         } else if (data.error) {
-          if (data.error.message.includes('high demand')) {
+          const errMsg = data.error.message || '';
+          if (errMsg.includes('high demand')) {
             aiText = "عذراً، الخوادم ديال الذكاء الاصطناعي عليها ضغط كبير دابا. ⏳ تسنى شوية وعاود جرب مرة خرى!";
+          } else if (errMsg.includes('limit: 0') || errMsg.includes('Quota exceeded')) {
+            aiText = "⚠️ خطأ في المفتاح (API Key): مفتاحك ماعندو حتى رصيد (Limit: 0). هادشي كيوقع حيت Google كتفرض تفعيل الدفع (Billing) في حساب Google Cloud ديالك باش تقدر تخدم الـ API في المغرب.";
+          } else if (errMsg.includes('not found') || errMsg.includes('not supported')) {
+            aiText = "⚠️ خطأ في المفتاح: هاد الموديل غير متاح للمفتاح ديالك. تأكد باللي فعلتي الـ API الصحيح.";
+          } else if (errMsg.includes('API key not valid')) {
+            aiText = "⚠️ خطأ: المفتاح (API Key) اللي دخلتي غير صحيح.";
           } else {
-            aiText = "خطأ: " + data.error.message;
+            aiText = "خطأ: " + errMsg;
           }
         } else {
           aiText = 'لم أستطع فهم الرد.';
@@ -713,7 +727,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
           });
         }
 
-        let response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+        let response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -726,9 +740,9 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
 
         let data = await response.json();
         
-        // Fallback to gemini-2.0-flash if flash is overloaded
+        // Fallback to gemini-1.5-flash if flash is overloaded
         if (data.error && (data.error.message.includes('high demand') || data.error.code === 503)) {
-          response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+          response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -745,10 +759,17 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
         if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
           aiResponseText = data.candidates[0].content.parts[0].text;
         } else if (data.error) {
-          if (data.error.message.includes('high demand')) {
+          const errMsg = data.error.message || '';
+          if (errMsg.includes('high demand')) {
             aiResponseText = "عذراً، الخوادم ديال الذكاء الاصطناعي (Google API) عليها ضغط كبير دابا. ⏳ تسنى شوية وعاود جرب مرة خرى!";
+          } else if (errMsg.includes('limit: 0') || errMsg.includes('Quota exceeded')) {
+            aiResponseText = "⚠️ خطأ في المفتاح (API Key): مفتاحك ماعندو حتى رصيد (Limit: 0). هادشي كيوقع حيت Google كتفرض تفعيل الدفع (Billing) وإضافة بطاقة بنكية في حساب Google Cloud ديالك باش تقدر تخدم الـ API في المغرب، واخا هو مجاني.";
+          } else if (errMsg.includes('not found') || errMsg.includes('not supported')) {
+            aiResponseText = "⚠️ خطأ في المفتاح: هاد الموديل (Gemini 1.5) غير متاح للمفتاح ديالك. تأكد باللي فعلتي الـ API الصحيح في Google Cloud Console.";
+          } else if (errMsg.includes('API key not valid')) {
+            aiResponseText = "⚠️ خطأ: المفتاح (API Key) اللي دخلتي غير صحيح. المرجو التأكد من نسخه بشكل صحيح من Google AI Studio.";
           } else {
-            aiResponseText = "عذراً، وقع خطأ في واجهة برمجة التطبيقات (API Error): " + data.error.message;
+            aiResponseText = "عذراً، وقع خطأ في واجهة برمجة التطبيقات (API Error): " + errMsg;
           }
         } else {
           aiResponseText = "لم أستطع فهم الرد. حاول مرة أخرى.";
