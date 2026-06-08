@@ -1904,21 +1904,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 
           {activeTab === 'support' && (
             <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
-               {/* Info page quick link */}
-               <a href="/#/info" target="_blank" rel="noreferrer"
-                 className="flex items-center gap-4 p-5 rounded-[2rem] border border-indigo-100 hover:border-indigo-300 transition-all group"
-                 style={{ background: 'linear-gradient(135deg, #f5f3ff, #ede9fe)' }}>
-                 <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shrink-0" style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}>📋</div>
-                 <div className="flex-1">
-                   <p className="text-sm font-black text-indigo-900 uppercase tracking-tight">
-                     {isAr ? 'الأسعار، المواعيد والخدمات' : 'Prix, Délais & Services'}
-                   </p>
-                   <p className="text-[11px] text-indigo-500 font-medium mt-0.5">
-                     {isAr ? 'اطلع على الأسئلة الشائعة قبل تواصلك معنا' : 'Consultez la FAQ avant de nous contacter'}
-                   </p>
-                 </div>
-                 <ArrowRight className="w-5 h-5 text-indigo-400 group-hover:translate-x-1 transition-transform shrink-0" />
-               </a>
+
 
                <div className="text-center max-w-2xl mx-auto mb-16">
                  <div className="w-20 h-20 bg-indigo-50 rounded-[2rem] flex items-center justify-center text-indigo-600 mx-auto mb-8 shadow-xl shadow-indigo-100">
