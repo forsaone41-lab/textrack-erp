@@ -321,6 +321,8 @@ function AppContent() {
         <Route path="/portal" element={<PortailClient />} />
         <Route path="/info" element={<ClientInfoRoute />} />
         <Route path="/recrutement" element={<Recrutement />} />
+        <Route path="/recrutemen" element={<Navigate to="/recrutement" replace />} />
+        <Route path="/recrut" element={<Navigate to="/recrutement" replace />} />
         <Route path="/" element={<LandingPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -372,6 +374,8 @@ function AppContent() {
         
         {/* Recruitment & Other */}
         <Route path="recrutement" element={<Recrutement />} />
+        <Route path="recrutemen" element={<Navigate to="/recrutement" replace />} />
+        <Route path="recrut" element={<Navigate to="/recrutement" replace />} />
         
         {/* Protected Production Routes */}
         <Route path="demandes" element={can('demandes') ? <Demandes /> : <Navigate to="/" replace />} />
