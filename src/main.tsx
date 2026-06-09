@@ -7,7 +7,7 @@ import App from "./App";
 (window as any).React = React;
 
 // Auto-redirect missing hash for WhatsApp links
-if (window.location.pathname === '/recrutement' || window.location.pathname === '/recrutemen' || window.location.pathname === '/recrut') {
+if (window.location.pathname === '/recrutement' || window.location.pathname === '/recrutemen' || window.location.pathname === '/recrutemben' || window.location.pathname === '/recrut') {
   window.location.replace('/#/recrutement');
 }
 
