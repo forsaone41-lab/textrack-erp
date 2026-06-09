@@ -425,7 +425,7 @@ export default function Demandes() {
     window.open(`https://wa.me/${formattedPhone}?text=${encoded}`, '_blank');
 
     // Save price to lead automatically
-    const updatedLead = { ...devisLead, crmPrice: total, crmStage: devisLead.crmStage || 'contact_en_cours' };
+    const updatedLead = { ...devisLead, crmPrice: total, crmDevisMode: devisMode, crmStage: devisLead.crmStage || 'contact_en_cours' };
     saveRecord('leads', updatedLead);
 
     if (!isPDF) {
@@ -1628,7 +1628,7 @@ export default function Demandes() {
                                     <Package className="w-3.5 h-3.5" /> {lead.type.replace('RECRUTEMENT:', '').trim()}
                                   </span>
                                   {lead.details && (
-                                    <span className="text-slate-600 text-[11px] font-medium normal-case tracking-normal mt-1 leading-relaxed whitespace-pre-wrap max-w-2xl">{lead.details}</span>
+                                    <span className="text-slate-600 text-[11px] font-medium normal-case tracking-normal mt-1 leading-relaxed whitespace-pre-wrap break-words break-all max-w-full overflow-hidden">{lead.details}</span>
                                   )}
                                 </div>
                               ) : (
@@ -1646,7 +1646,7 @@ export default function Demandes() {
                               </span>
                               {(lead.crmPrice || 0) > 0 && (
                                 <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[9px] font-black rounded-full shadow-sm">
-                                  Devis: {(lead.crmPrice || 0).toLocaleString()} MAD
+                                  {(lead as any).crmDevisMode === 'echantillon' ? 'Éch' : 'Cmd'}: {(lead.crmPrice || 0).toLocaleString()} MAD
                                 </span>
                               )}
                             </div>
