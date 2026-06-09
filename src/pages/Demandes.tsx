@@ -1621,12 +1621,14 @@ export default function Demandes() {
                           <div>
                             <div className="flex flex-wrap items-center gap-2 mb-1">
                               {lead.type.startsWith('RECRUTEMENT:') ? (
-                                <span className="flex items-center gap-1 text-indigo-600 font-black text-sm uppercase tracking-tight">
-                                  <Package className="w-3.5 h-3.5" /> {lead.type.replace('RECRUTEMENT:', '').trim()}
+                                <div className="flex flex-col w-full">
+                                  <span className="flex items-center gap-1 text-indigo-600 font-black text-sm uppercase tracking-tight">
+                                    <Package className="w-3.5 h-3.5" /> {lead.type.replace('RECRUTEMENT:', '').trim()}
+                                  </span>
                                   {lead.details && (
-                                    <span className="text-slate-500 text-[10px] font-semibold normal-case tracking-normal ml-1 max-w-[220px] truncate">{lead.details}</span>
+                                    <span className="text-slate-600 text-[11px] font-medium normal-case tracking-normal mt-1 leading-relaxed whitespace-pre-wrap max-w-2xl">{lead.details}</span>
                                   )}
-                                </span>
+                                </div>
                               ) : (
                                 <span className="flex items-center gap-1 text-emerald-600 font-black text-sm uppercase tracking-tight"><Package className="w-3.5 h-3.5" /> {lead.type} <span className="text-slate-400 text-xs font-bold">({lead.quantity} pcs)</span></span>
                               )}
