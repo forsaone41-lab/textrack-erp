@@ -1504,6 +1504,7 @@ export default function Demandes() {
               } else {
                 // Merge info (if one is missing phone/email, take from the other)
                 if (!acc[key].client.phone && lead.phone) acc[key].client.phone = lead.phone;
+                if (!(acc[key].client as any).phone2 && (lead as any).phone2) (acc[key].client as any).phone2 = (lead as any).phone2;
                 if (!acc[key].client.email && lead.email) acc[key].client.email = lead.email;
                 if (!acc[key].client.ville && lead.ville) acc[key].client.ville = lead.ville;
               }
@@ -1541,6 +1542,7 @@ export default function Demandes() {
                         </h3>
                         <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] font-bold text-slate-500 mt-1">
                           <span className="flex items-center gap-1"><Phone className="w-3 h-3 text-indigo-400" /> {client.phone}</span>
+                          {(client as any).phone2 && <span className="flex items-center gap-1"><MessageSquare className="w-3 h-3 text-emerald-400" /> {(client as any).phone2}</span>}
                           {client.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3 text-indigo-400" /> {client.email}</span>}
                           <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-rose-400" /> {client.ville || '-'}</span>
                           {client.contactedAt && <span className="flex items-center gap-1 text-emerald-600"><MessageSquare className="w-3 h-3" /> {new Date(client.contactedAt).toLocaleDateString()}</span>}
@@ -2434,7 +2436,7 @@ export default function Demandes() {
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-6 pr-2 scrollbar-hide">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'الاسم' : 'Nom'}</label>
                   <input
@@ -2445,11 +2447,20 @@ export default function Demandes() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'الهاتف' : 'Téléphone'}</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'الهاتف 1' : 'Téléphone 1'}</label>
                   <input
                     type="text"
                     value={editForm.phone || ''}
                     onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'واتساب / هاتف 2' : 'WhatsApp / Tél 2'}</label>
+                  <input
+                    type="text"
+                    value={editForm.phone2 || ''}
+                    onChange={e => setEditForm({ ...editForm, phone2: e.target.value })}
                     className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
                   />
                 </div>

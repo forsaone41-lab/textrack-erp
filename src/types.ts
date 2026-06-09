@@ -468,6 +468,7 @@ export interface Lead {
   id: string;
   name: string;
   phone: string;
+  phone2?: string;
   ville: string;
   type: string;
   quantity: number;
@@ -485,6 +486,7 @@ export interface Lead {
   crmRdvDate?: string;
   crmNotes?: string;
   crmPrice?: number;
+  crmDevisMode?: 'echantillon' | 'commande';
   crmPriceConfirmed?: boolean;
   crmPriority?: boolean;
   rejectedAt?: string;
@@ -795,7 +797,7 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
           'partenaireId', 'externalTasks', 'typeDossier',
           'photo', 'adresse', 'notes',
           'crmStage', 'crmContactMethod', 'crmRdvDate', 'crmNotes', 'crmPrice', 'crmPriceConfirmed', 'crmPriority',
-          'preuveClient', 'annulationRaison', 'cv', 'sampleFeedback', 'prixEchantillon'
+          'preuveClient', 'annulationRaison', 'cv', 'sampleFeedback', 'prixEchantillon', 'phone2'
         ];
         newCols.forEach(col => delete fallbackRecord[col]);
         
