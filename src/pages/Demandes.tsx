@@ -38,6 +38,7 @@ export default function Demandes() {
   const [loading, setLoading] = useState(true);
 
   const [confirmLead, setConfirmLead] = useState<Lead | null>(null);
+  const [confirmMode, setConfirmMode] = useState<'echantillon' | 'commande'>('echantillon');
   const [confirmDetails, setConfirmDetails] = useState({
     tissu: '',
     couleurs: '',
@@ -73,6 +74,7 @@ export default function Demandes() {
   const company = loadCompanyProfile();
   const [showSettings, setShowSettings] = useState(false);
   const [visibleCount, setVisibleCount] = useState(10);
+  const [expandedDetails, setExpandedDetails] = useState<string[]>([]);
   const [templates, setTemplates] = useState(() => {
     try {
       const saved = localStorage.getItem('textrack_msg_templates');
@@ -248,8 +250,8 @@ export default function Demandes() {
         prixEchantillon: Number(confirmDetails.prixEchantillon) || 0,
         avance: Number(confirmDetails.avance) || 0,
         rebut: 0,
-        statut: 'echantillon_en_cours',
-        suivi: [{ phase: 'patronage', date: new Date().toISOString(), note: 'Prix/délai validés et échantillon lancé (Avance payée)' }]
+        statut: confirmMode === 'commande' ? 'en_cours' : 'echantillon_en_cours',
+        suivi: [{ phase: 'patronage', date: new Date().toISOString(), note: confirmMode === 'commande' ? 'Commande directe lancée (sans échantillon)' : 'Prix/délai validés et échantillon lancé (Avance payée)' }]
       };
 
       await saveRecord('commandes', newOrder);
@@ -1048,6 +1050,20 @@ export default function Demandes() {
                 </div>
               </div>
 
+              {/* Toggle: Échantillon ou Commande directe */}
+              <div className="flex gap-2 p-1 bg-slate-100 rounded-xl mb-2">
+                <button
+                  onClick={() => setConfirmMode('echantillon')}
+                  className={`flex-1 py-2 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all ${confirmMode === 'echantillon' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}>
+                  {isAr ? '🧪 عينة فقط' : '🧪 Échantillon'}
+                </button>
+                <button
+                  onClick={() => setConfirmMode('commande')}
+                  className={`flex-1 py-2 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all ${confirmMode === 'commande' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}>
+                  {isAr ? '📦 طلبية مباشرة' : '📦 Commande Directe'}
+                </button>
+              </div>
+
               <div className="bg-emerald-50/50 rounded-2xl p-6 border border-emerald-100">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600">
@@ -1628,7 +1644,19 @@ export default function Demandes() {
                                     <Package className="w-3.5 h-3.5" /> {lead.type.replace('RECRUTEMENT:', '').trim()}
                                   </span>
                                   {lead.details && (
-                                    <span className="text-slate-600 text-[11px] font-medium normal-case tracking-normal mt-1 leading-relaxed whitespace-pre-wrap break-words break-all max-w-full overflow-hidden">{lead.details}</span>
+                                    <>
+                                      <span className={`text-slate-600 text-[11px] font-medium normal-case tracking-normal mt-1 leading-relaxed whitespace-pre-wrap break-words break-all max-w-full overflow-hidden ${expandedDetails.includes(lead.id) ? '' : 'line-clamp-3'}`}>
+                                        {lead.details}
+                                      </span>
+                                      {lead.details.length > 150 && (
+                                        <button
+                                          onClick={() => setExpandedDetails(prev => prev.includes(lead.id) ? prev.filter(id => id !== lead.id) : [...prev, lead.id])}
+                                          className="text-[9px] font-black uppercase tracking-widest text-indigo-500 hover:text-indigo-700 text-left mt-1 w-fit"
+                                        >
+                                          {expandedDetails.includes(lead.id) ? (isAr ? 'عرض أقل' : 'Voir moins') : (isAr ? 'قراءة المزيد' : 'Lire la suite')}
+                                        </button>
+                                      )}
+                                    </>
                                   )}
                                 </div>
                               ) : (
