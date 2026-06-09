@@ -1619,7 +1619,7 @@ export default function Demandes() {
                   <div className="space-y-2">
                     {requests.map(lead => (
                       <div key={lead.id} className={`flex flex-col md:flex-row items-start md:items-center justify-between p-3 rounded-xl border gap-4 transition-colors ${lead.crmStage === 'confirme' ? 'bg-emerald-50/30 border-emerald-100' : 'bg-slate-50/50 hover:bg-slate-50 border-slate-100'}`}>
-                        <div className="flex items-center gap-3 w-full md:w-auto">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
                           {/* Photo */}
                           {category !== 'recrutement' && (
                           <div className="relative shrink-0 cursor-pointer" onClick={async () => {
@@ -1636,7 +1636,7 @@ export default function Demandes() {
                           </div>
                           )}
                           
-                          <div>
+                          <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2 mb-1">
                               {lead.type.startsWith('RECRUTEMENT:') ? (
                                 <div className="flex flex-col w-full">
@@ -1682,7 +1682,7 @@ export default function Demandes() {
                         </div>
 
                         {/* REQUEST ACTIONS */}
-                        <div className="flex items-center gap-1.5 flex-wrap w-full md:w-auto justify-end">
+                        <div className="flex items-center gap-1.5 flex-wrap w-full md:w-auto justify-end shrink-0">
                           <button onClick={() => togglePriority(lead)} title={lead.crmPriority ? 'Retirer priorité' : 'Marquer important'}
                             className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all border ${lead.crmPriority ? 'bg-amber-50 border-amber-200 shadow-sm' : 'bg-white border-slate-200 opacity-50 hover:opacity-100'}`}>
                             ⭐
