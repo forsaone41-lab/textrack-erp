@@ -417,7 +417,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                            <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md uppercase tracking-widest">New</span>
                         </div>
                         <div className="max-h-80 overflow-y-auto">
-                           {found.flatMap(cmd => cmd.suivi.map(s => ({ ...s, cmdRef: cmd.reference }))).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5).map((notif, idx) => (
+                           {found.flatMap(cmd => (cmd.suivi || []).map(s => ({ ...s, cmdRef: cmd.reference }))).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5).map((notif, idx) => (
                              <div key={idx} className="p-5 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer group">
                                 <div className="flex gap-4">
                                    <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${PHASE_COLORS[notif.phase]}`} />

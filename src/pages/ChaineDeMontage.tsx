@@ -66,7 +66,7 @@ export default function ChaineDeMontage() {
     let updatedCmd: Commande | null = null;
     const updated = commandes.map(c => {
       if (c.id === cmdId) {
-        const newSuivi = [...c.suivi, { phase: newPhase, date: new Date().toISOString().split('T')[0], note: `Passé en ${PHASE_LABELS[newPhase]}` }];
+        const newSuivi = [...(c.suivi || []), { phase: newPhase, date: new Date().toISOString().split('T')[0], note: `Passé en ${PHASE_LABELS[newPhase]}` }];
         const c2 = { ...c, phase: newPhase, suivi: newSuivi, statut: newPhase === 'livré' ? 'livré' as const : 'en_cours' as const, quantiteLivre: newPhase === 'livré' ? c.quantite : c.quantiteLivre };
         updatedCmd = c2;
         return c2;
@@ -83,7 +83,7 @@ export default function ChaineDeMontage() {
   }
 
   function joursEnPhase(cmd: Commande): number {
-    const dernierSuivi = [...cmd.suivi].reverse().find(s => s.phase === cmd.phase);
+    const dernierSuivi = [...(cmd.suivi || [])].reverse().find(s => s.phase === cmd.phase);
     return dernierSuivi ? joursDepuis(dernierSuivi.date) : joursDepuis(cmd.dateCommande);
   }
 
@@ -549,10 +549,10 @@ export default function ChaineDeMontage() {
                   </div>
 
                   {/* History Preview */}
-                  {cmd.suivi.length > 0 && (
+                  {(cmd.suivi || []).length > 0 && (
                     <div className="pt-4 border-t border-slate-50">
                       <div className={`flex flex-wrap gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
-                        {cmd.suivi.slice(-2).map((s, i) => (
+                        {(cmd.suivi || []).slice(-2).map((s, i) => (
                            <div key={i} className="flex items-center gap-2 bg-slate-50/50 rounded-lg px-2 py-1 text-[8px] border border-slate-100">
                             <div className={`w-1 h-1 rounded-full ${PHASE_COLORS[s.phase]}`} />
                             <span className="font-bold text-slate-400">{isAr ? PHASE_LABELS_AR[s.phase] : PHASE_LABELS[s.phase]}</span>
