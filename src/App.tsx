@@ -344,7 +344,9 @@ function AppContent() {
   }
 
   const permissions = loadPermissions();
-  const userRole = (currentUser.role || '').toLowerCase() as keyof typeof permissions;
+  let userRoleRaw = (currentUser.role || '').toLowerCase();
+  if (userRoleRaw === 'agent' || userRoleRaw.includes('pointage')) userRoleRaw = 'agent_pointage';
+  const userRole = userRoleRaw as keyof typeof permissions;
   const allowed = permissions[userRole] || [];
   const can = (page: AppPage) => allowed.includes(page);
 
