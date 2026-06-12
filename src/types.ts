@@ -279,7 +279,7 @@ export interface Presence {
 export interface User {
   id: string;
   nom: string;
-  role: 'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire';
+  role: 'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire' | 'chef_chaine';
   email: string;
   telephone?: string;
   password?: string;
@@ -363,9 +363,9 @@ export type AppPage =
   | 'dashboard' | 'fiches' | 'ordres' | 'chaine' | 'stocks' | 'pilotage' | 'scan_production'
   | 'rh' | 'commandes' | 'clients' | 'factures' | 'charges' | 'bilan' | 'fast_scanner'
   | 'pointage' | 'portail_client' | 'performance' | 'utilisateurs' | 'parametres' | 'demandes'
-  | 'worker_portal' | 'controle_qualite' | 'partenaire_portal' | 'agenda' | 'notifications' | 'ai_space' | 'crm';
+  | 'worker_portal' | 'controle_qualite' | 'partenaire_portal' | 'agenda' | 'notifications' | 'ai_space' | 'crm' | 'chef_chaine_portal';
 
-export type RolePermMap = Record<'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire', AppPage[]>;
+export type RolePermMap = Record<'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire' | 'chef_chaine', AppPage[]>;
 
 export const DEFAULT_PERMISSIONS: RolePermMap = {
   admin: ['dashboard', 'demandes', 'crm', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'stocks', 'rh', 'commandes', 'clients', 'factures', 'charges', 'bilan', 'fast_scanner', 'pointage', 'portail_client', 'performance', 'utilisateurs', 'parametres', 'worker_portal', 'controle_qualite', 'partenaire_portal', 'agenda', 'notifications', 'ai_space'],
@@ -377,30 +377,53 @@ export const DEFAULT_PERMISSIONS: RolePermMap = {
   controleur: ['scan_production', 'controle_qualite', 'worker_portal'],
   agent_pointage: ['pointage', 'rh'],
   partenaire: ['partenaire_portal'],
+  chef_chaine: ['chef_chaine_portal'],
 };
 
 const PERMISSIONS_VERSION = 13;
 
 export function loadPermissions(): RolePermMap {
   try {
-    const d = localStorage.getItem('textrack_permissions');
-    if (!d) return DEFAULT_PERMISSIONS;
-    const parsed = JSON.parse(d) as RolePermMap & { _v?: number };
-    if ((parsed._v ?? 1) < PERMISSIONS_VERSION) {
-      localStorage.removeItem('textrack_permissions');
-      return DEFAULT_PERMISSIONS;
+    let result = { ...DEFAULT_PERMISSIONS };
+
+    // 1. Try to load from Company Profile (Cloud Synced)
+    const profileRaw = localStorage.getItem('textrack_profile');
+    if (profileRaw) {
+      const profile = JSON.parse(profileRaw) as CompanyProfile;
+      if (profile.permissions) {
+        result = { ...result, ...profile.permissions };
+      }
     }
-    const keys: (keyof RolePermMap)[] = ['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'controleur', 'agent_pointage', 'partenaire'];
-    const result = { ...DEFAULT_PERMISSIONS };
-    keys.forEach(k => {
-      if (parsed[k]) (result as any)[k] = parsed[k];
-    });
+
+    // 2. Load from local (legacy)
+    const d = localStorage.getItem('textrack_permissions');
+    if (d) {
+      const parsed = JSON.parse(d) as RolePermMap & { _v?: number };
+      if ((parsed._v ?? 1) >= PERMISSIONS_VERSION) {
+        const keys: (keyof RolePermMap)[] = ['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'controleur', 'agent_pointage', 'partenaire', 'chef_chaine'];
+        keys.forEach(k => {
+          if (parsed[k]) (result as any)[k] = parsed[k];
+        });
+      }
+    }
+    
     return result;
   } catch { return DEFAULT_PERMISSIONS; }
 }
 
 export function savePermissions(perms: RolePermMap): void {
   localStorage.setItem('textrack_permissions', JSON.stringify({ ...perms, _v: PERMISSIONS_VERSION }));
+  
+  // Sync to Company Profile
+  try {
+    const profileRaw = localStorage.getItem('textrack_profile');
+    if (profileRaw) {
+      const profile = JSON.parse(profileRaw) as CompanyProfile;
+      profile.permissions = perms;
+      localStorage.setItem('textrack_profile', JSON.stringify(profile));
+      saveCompanyProfile(profile).catch(() => {});
+    }
+  } catch(e) {}
 }
 
 // ─── Company Profile (Local Settings) ──────────────────────────
@@ -445,6 +468,7 @@ export interface CompanyProfile {
   faq?: FaqItem[];
   services?: ServiceItem[];
   metaPixelId?: string;
+  permissions?: RolePermMap;
 }
 
 export interface FaqItem {

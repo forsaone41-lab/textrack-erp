@@ -17,6 +17,7 @@ const ChaineDeMontage  = lazy(() => import('./pages/ChaineDeMontage'));
 const ChaineDetaillee  = lazy(() => import('./pages/ChaineDetaillee'));
 const ProductionScanner= lazy(() => import('./pages/ProductionScanner'));
 const WorkerPortal     = lazy(() => import('./pages/WorkerPortal'));
+const ChefChainePortal = lazy(() => import('./pages/ChefChainePortal'));
 const StockMateriaux   = lazy(() => import('./pages/StockMateriaux'));
 const SuiviRH          = lazy(() => import('./pages/SuiviRH'));
 const Echantillons     = lazy(() => import('./pages/Echantillons'));
@@ -336,6 +337,10 @@ function AppContent() {
 
   if (currentUser.role === 'partenaire') {
     return <PartenairePortal currentUser={currentUser} onLogout={handleLogout} />;
+  }
+
+  if (currentUser.role === 'chef_chaine') {
+    return <Suspense fallback={<PageLoader />}><ChefChainePortal currentUser={currentUser} onLogout={handleLogout} /></Suspense>;
   }
 
   const permissions = loadPermissions();
