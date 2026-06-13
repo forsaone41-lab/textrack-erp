@@ -601,6 +601,60 @@ export async function syncCompanyProfile(): Promise<CompanyProfile> {
   }
 }
 
+export async function syncListeAttente(): Promise<any[]> {
+  try {
+    const { data } = await supabase
+      .from('leads')
+      .select('*')
+      .eq('name', '__SYSTEM_LISTE_ATTENTE__')
+      .order('date', { ascending: false })
+      .limit(1);
+      
+    const localRaw = localStorage.getItem('textrack_liste_attente');
+    const localData = localRaw ? JSON.parse(localRaw) : [];
+    
+    if (data && data.length > 0) {
+      const remoteData = JSON.parse(data[0].details || '[]');
+      // Merge remote into local, prioritizing remote
+      const mergedMap = new Map();
+      localData.forEach((c: any) => mergedMap.set(c.id, c));
+      remoteData.forEach((c: any) => mergedMap.set(c.id, c));
+      
+      const mergedList = Array.from(mergedMap.values());
+      localStorage.setItem('textrack_liste_attente', JSON.stringify(mergedList));
+      return mergedList;
+    }
+    
+    if (localData.length > 0) {
+      await pushListeAttenteToCloud(localData);
+    }
+    return localData;
+  } catch (e) {
+    console.error("Failed to sync liste attente", e);
+    const localRaw = localStorage.getItem('textrack_liste_attente');
+    return localRaw ? JSON.parse(localRaw) : [];
+  }
+}
+
+export async function pushListeAttenteToCloud(data: any[]): Promise<void> {
+  try {
+    localStorage.setItem('textrack_liste_attente', JSON.stringify(data));
+    const record = {
+      id: genId(),
+      name: '__SYSTEM_LISTE_ATTENTE__',
+      phone: '0000',
+      ville: 'SYSTEM',
+      type: 'CONFIG',
+      status: 'completed',
+      date: new Date().toISOString(),
+      details: JSON.stringify(data)
+    };
+    await supabase.from('leads').insert(record);
+  } catch (e) {
+    console.error("Failed to push liste attente", e);
+  }
+}
+
 export async function loadLeads(): Promise<Lead[]> {
   try {
     // Get deleted IDs to exclude

@@ -17,7 +17,9 @@ import {
   SuiviHoraire, 
   OperationModele,
   Commande,
-  loadData 
+  loadData,
+  syncListeAttente,
+  pushListeAttenteToCloud
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 
@@ -50,9 +52,9 @@ export default function ChefChainePortal({ currentUser, onLogout }: ChefChainePo
       loadData<Employe>('employes'),
       loadData<SuiviHoraire>('suivi_horaire'),
       loadData<OperationModele>('operations_modele'),
-      loadData<Commande>('commandes')
-    ]).then(([emps, suiv, ops, cmds]) => {
-      const storedCandidats = JSON.parse(localStorage.getItem('textrack_liste_attente') || '[]');
+      loadData<Commande>('commandes'),
+      syncListeAttente()
+    ]).then(([emps, suiv, ops, cmds, storedCandidats]) => {
       const managementKeywords = ['chef', 'responsable', 'admin', 'directeur', 'rh', 'manager'];
       const isWorker = (poste: string) => {
         const p = (poste || '').toLowerCase();
@@ -177,10 +179,10 @@ export default function ChefChainePortal({ currentUser, onLogout }: ChefChainePo
         ].map(tab => (
           <button
             key={tab.id}
-            onClick={() => {
+            onClick={async () => {
               setActiveTab(tab.id as any);
               if (tab.id === 'candidats') {
-                const storedCandidats = JSON.parse(localStorage.getItem('textrack_liste_attente') || '[]');
+                const storedCandidats = await syncListeAttente();
                 setData(prev => ({ ...prev, candidats: storedCandidats }));
               }
             }}
@@ -338,9 +340,9 @@ export default function ChefChainePortal({ currentUser, onLogout }: ChefChainePo
                   ) : (
                     <div className="flex gap-2">
                       <button 
-                        onClick={() => {
+                        onClick={async () => {
                           const newList = data.candidats.map(c => c.id === candidat.id ? { ...c, chefFeedback: 'approved' } : c);
-                          localStorage.setItem('textrack_liste_attente', JSON.stringify(newList));
+                          await pushListeAttenteToCloud(newList);
                           setData(prev => ({ ...prev, candidats: newList }));
                         }}
                         className="flex-1 py-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all border border-emerald-500/20"
@@ -348,9 +350,9 @@ export default function ChefChainePortal({ currentUser, onLogout }: ChefChainePo
                         {isAr ? 'قبول العامل' : 'Approuver'}
                       </button>
                       <button 
-                        onClick={() => {
+                        onClick={async () => {
                           const newList = data.candidats.map(c => c.id === candidat.id ? { ...c, chefFeedback: 'rejected' } : c);
-                          localStorage.setItem('textrack_liste_attente', JSON.stringify(newList));
+                          await pushListeAttenteToCloud(newList);
                           setData(prev => ({ ...prev, candidats: newList }));
                         }}
                         className="flex-1 py-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all border border-rose-500/20"

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useLang } from '../contexts/LangContext';
 import { Users, Search, Trash2, CheckCircle, UserPlus, Clock, Phone, FileText, ArrowLeft, X } from 'lucide-react';
-import { saveRecord, deleteRecord, genId, Employe } from '../types';
+import { saveRecord, deleteRecord, genId, Employe, syncListeAttente, pushListeAttenteToCloud } from '../types';
 
 interface WaitlistedCandidate {
   id: string;
@@ -26,6 +26,9 @@ function getLocalList<T>(key: string): T[] {
 
 function saveLocalList<T>(key: string, data: T[]) {
   localStorage.setItem(`textrack_${key}`, JSON.stringify(data));
+  if (key === 'liste_attente') {
+    pushListeAttenteToCloud(data);
+  }
 }
 
 export default function ListeAttente() {
@@ -35,6 +38,10 @@ export default function ListeAttente() {
   const [candidates, setCandidates] = useState<WaitlistedCandidate[]>(getLocalList('liste_attente'));
   const [search, setSearch] = useState('');
   const [showConfirmModal, setShowConfirmModal] = useState<WaitlistedCandidate | null>(null);
+
+  useEffect(() => {
+    syncListeAttente().then(data => setCandidates(data));
+  }, []);
 
   useEffect(() => {
     // Catch data from Recruitment
