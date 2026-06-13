@@ -167,7 +167,12 @@ export default function ListeAttente() {
                   <Clock className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">{c.prenom} {c.nom}</h3>
+                  {c.confirmedBy && (
+                    <div className="inline-block bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest mb-1 shadow-sm">
+                      {isAr ? 'من طرف:' : 'Par:'} {c.confirmedBy}
+                    </div>
+                  )}
+                  <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight leading-none mb-1">{c.prenom} {c.nom}</h3>
                   <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">{c.poste}</p>
                 </div>
               </div>
@@ -181,11 +186,6 @@ export default function ListeAttente() {
                 <div className="flex items-center gap-3 text-slate-500 text-xs font-bold">
                   <Phone className="w-4 h-4 text-slate-300" /> {c.telephone}
                 </div>
-                {c.confirmedBy && (
-                  <div className="bg-indigo-50 px-2 py-1 rounded-md text-[9px] font-black uppercase text-indigo-500">
-                    {isAr ? 'تم التأكيد من:' : 'Confirmé par:'} {c.confirmedBy}
-                  </div>
-                )}
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 text-slate-400 text-[10px] font-black uppercase tracking-widest">
