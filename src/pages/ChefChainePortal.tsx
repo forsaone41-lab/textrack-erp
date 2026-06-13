@@ -178,12 +178,15 @@ export default function ChefChainePortal({ currentUser, onLogout }: ChefChainePo
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
+            className={`relative flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
               activeTab === tab.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:bg-white/5'
             }`}
           >
             {tab.icon}
             <span>{tab.label}</span>
+            {tab.id === 'candidats' && data.candidats.filter(c => ['piqueuse', 'machiniste', 'surjeteuse', 'finition', 'coupeur', 'repasseur'].some(p => (c.poste || '').toLowerCase().includes(p)) && !c.chefFeedback).length > 0 && (
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full animate-pulse border-2 border-slate-900" />
+            )}
           </button>
         ))}
       </div>
