@@ -331,11 +331,24 @@ export default function ChefChainePortal({ currentUser, onLogout }: ChefChainePo
                   </div>
 
                   {candidat.chefFeedback === 'approved' || candidat.chefFeedback === 'rejected' ? (
-                    <div className={`p-3 rounded-2xl flex items-center justify-center gap-2 ${candidat.chefFeedback === 'approved' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
-                      {candidat.chefFeedback === 'approved' ? <CheckCircle2 className="w-4 h-4" /> : <LogOut className="w-4 h-4" />}
-                      <span className="text-[10px] font-bold uppercase tracking-widest">
-                        {candidat.chefFeedback === 'approved' ? (isAr ? 'مقبول (RH ستكمل الإجراءات)' : 'Approuvé (RH finalise)') : (isAr ? 'مرفوض' : 'Rejeté')}
-                      </span>
+                    <div className="flex gap-2">
+                      <div className={`flex-1 p-3 rounded-2xl flex items-center justify-center gap-2 ${candidat.chefFeedback === 'approved' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
+                        {candidat.chefFeedback === 'approved' ? <CheckCircle2 className="w-4 h-4" /> : <LogOut className="w-4 h-4" />}
+                        <span className="text-[10px] font-bold uppercase tracking-widest">
+                          {candidat.chefFeedback === 'approved' ? (isAr ? 'مقبول (RH ستكمل الإجراءات)' : 'Approuvé (RH finalise)') : (isAr ? 'مرفوض' : 'Rejeté')}
+                        </span>
+                      </div>
+                      <button 
+                        onClick={async () => {
+                          const newList = data.candidats.map(c => c.id === candidat.id ? { ...c, chefFeedback: 'pending' } : c);
+                          await pushListeAttenteToCloud(newList);
+                          setData(prev => ({ ...prev, candidats: newList }));
+                        }}
+                        className="p-3 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all border border-white/5"
+                        title={isAr ? 'تراجع' : 'Annuler'}
+                      >
+                        {isAr ? 'تراجع' : 'Annuler'}
+                      </button>
                     </div>
                   ) : (
                     <div className="flex gap-2">
