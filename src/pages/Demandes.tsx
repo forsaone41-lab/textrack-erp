@@ -468,13 +468,14 @@ export default function Demandes() {
     const encoded = encodeURIComponent(message);
     window.open(`https://wa.me/${formattedPhone}?text=${encoded}`, '_blank');
 
-    // Mark as contacted with specific type
+    // Mark as contacted with specific type and who contacted
     const currentUser = JSON.parse(localStorage.getItem('textrack_auth') || '{}');
+    const userName = currentUser.nom || 'Admin';
     const updated = leads.map(l => l.id === lead.id ? {
       ...l,
       contactedAt: new Date().toISOString(),
-      contactedType: typeId,
-      contactedBy: currentUser.nom || 'Admin'
+      contactedType: `${typeId}|||${userName}`,
+      contactedBy: userName
     } : l);
 
     setLeads(updated);
@@ -1579,7 +1580,11 @@ export default function Demandes() {
                         {client.contactedAt ? (
                           <span className="flex items-center gap-1">
                             {isAr ? 'تواصل ✓' : 'Contacté ✓'}
-                            {client.contactedBy && <span className="text-[8px] opacity-80 lowercase">({client.contactedBy})</span>}
+                            {(client.contactedBy || (client.contactedType?.includes('|||') ? client.contactedType.split('|||')[1] : null)) && (
+                              <span className="text-[8px] opacity-80 lowercase">
+                                ({client.contactedBy || client.contactedType?.split('|||')[1]})
+                              </span>
+                            )}
                           </span>
                         ) : 'WhatsApp'}
                       </button>
@@ -2200,7 +2205,7 @@ export default function Demandes() {
                 ];
 
                 return (isRecrutement ? recruitmentOptions : clientOptions).map(opt => {
-                const isSent = contactingLead.contactedType === opt.id;
+                const isSent = contactingLead.contactedType?.split('|||')[0] === opt.id;
                 return (
                   <button
                     key={opt.id}
