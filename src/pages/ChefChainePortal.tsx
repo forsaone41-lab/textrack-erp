@@ -10,7 +10,9 @@ import {
   CheckCircle2,
   TrendingUp,
   User as UserIcon,
-  ChevronRight
+  ChevronRight,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { 
   Employe, 
@@ -29,9 +31,10 @@ interface ChefChainePortalProps {
 }
 
 export default function ChefChainePortal({ currentUser, onLogout }: ChefChainePortalProps) {
-  const { isAr } = useLang();
+  const { isAr, toggle } = useLang();
+  const [activeTab, setActiveTab] = useState<'equipe' | 'production' | 'candidats'>('equipe');
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'equipe' | 'production'>('equipe');
+  const [isLight, setIsLight] = useState(() => localStorage.getItem('chef_light') === 'true');
   
   const [data, setData] = useState<{
     employes: Employe[];
@@ -105,7 +108,17 @@ export default function ChefChainePortal({ currentUser, onLogout }: ChefChainePo
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white pb-24" dir={isAr ? 'rtl' : 'ltr'}>
+    <div className={`${isLight ? 'chef-light-mode bg-slate-50 text-slate-900' : 'bg-slate-950 text-white'} min-h-screen pb-24 transition-colors duration-300`} dir={isAr ? 'rtl' : 'ltr'}>
+      <style>{`
+        .chef-light-mode .bg-slate-900 { background-color: #ffffff !important; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important; }
+        .chef-light-mode .border-white\\/5 { border-color: #e2e8f0 !important; }
+        .chef-light-mode .text-slate-400 { color: #64748b !important; }
+        .chef-light-mode .bg-slate-950\\/80 { background-color: rgba(255, 255, 255, 0.9) !important; border-bottom-color: #e2e8f0 !important; }
+        .chef-light-mode h1, .chef-light-mode h2, .chef-light-mode h3 { color: #0f172a !important; }
+        .chef-light-mode .border-slate-900, .chef-light-mode .border-slate-950 { border-color: #ffffff !important; }
+        .chef-light-mode .bg-slate-800 { background-color: #f1f5f9 !important; color: #475569 !important; border-color: #e2e8f0 !important; }
+        .chef-light-mode .hover\\:bg-white\\/5:hover { background-color: #f8fafc !important; }
+      `}</style>
       {/* Premium Sticky Header */}
       <div className="bg-slate-950/80 backdrop-blur-2xl border-b border-white/5 px-6 py-5 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-4">
@@ -126,12 +139,30 @@ export default function ChefChainePortal({ currentUser, onLogout }: ChefChainePo
             </p>
           </div>
         </div>
-        <button 
-          onClick={onLogout}
-          className="w-10 h-10 flex items-center justify-center rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all border border-rose-500/20"
-        >
-          <LogOut className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={toggle}
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500 hover:text-white transition-all border border-indigo-500/20 font-bold text-xs"
+          >
+            {isAr ? 'FR' : 'AR'}
+          </button>
+          <button 
+            onClick={() => {
+              const next = !isLight;
+              setIsLight(next);
+              localStorage.setItem('chef_light', String(next));
+            }}
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-white transition-all border border-amber-500/20"
+          >
+            {isLight ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+          </button>
+          <button 
+            onClick={onLogout}
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all border border-rose-500/20"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Hero Stats */}
