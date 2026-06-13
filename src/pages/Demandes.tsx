@@ -469,10 +469,12 @@ export default function Demandes() {
     window.open(`https://wa.me/${formattedPhone}?text=${encoded}`, '_blank');
 
     // Mark as contacted with specific type
+    const currentUser = JSON.parse(localStorage.getItem('textrack_auth') || '{}');
     const updated = leads.map(l => l.id === lead.id ? {
       ...l,
       contactedAt: new Date().toISOString(),
-      contactedType: typeId
+      contactedType: typeId,
+      contactedBy: currentUser.nom || 'Admin'
     } : l);
 
     setLeads(updated);
@@ -1574,7 +1576,12 @@ export default function Demandes() {
                       <button onClick={() => { setContactingLead(client); setContactingLeadRequests(requests); }}
                         className={`h-9 px-3 rounded-xl text-xs font-black uppercase flex items-center gap-2 border transition-all shadow-sm ${client.contactedAt ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-600'}`}>
                         <MessageSquare className="w-4 h-4" />
-                        {client.contactedAt ? (isAr ? 'تواصل ✓' : 'Contacté ✓') : 'WhatsApp'}
+                        {client.contactedAt ? (
+                          <span className="flex items-center gap-1">
+                            {isAr ? 'تواصل ✓' : 'Contacté ✓'}
+                            {client.contactedBy && <span className="text-[8px] opacity-80 lowercase">({client.contactedBy})</span>}
+                          </span>
+                        ) : 'WhatsApp'}
                       </button>
                       
                       {category !== 'recrutement' && (() => {

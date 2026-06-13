@@ -36,11 +36,13 @@ export default function ChefChainePortal({ currentUser, onLogout }: ChefChainePo
     suivi: SuiviHoraire[];
     operations: OperationModele[];
     commandes: Commande[];
+    candidats: any[];
   }>({
     employes: [],
     suivi: [],
     operations: [],
-    commandes: []
+    commandes: [],
+    candidats: []
   });
 
   useEffect(() => {
@@ -50,12 +52,19 @@ export default function ChefChainePortal({ currentUser, onLogout }: ChefChainePo
       loadData<OperationModele>('operations_modele'),
       loadData<Commande>('commandes')
     ]).then(([emps, suiv, ops, cmds]) => {
+      const storedCandidats = JSON.parse(localStorage.getItem('textrack_liste_attente') || '[]');
+      const managementKeywords = ['chef', 'responsable', 'admin', 'directeur', 'rh', 'manager'];
+      const isWorker = (poste: string) => {
+        const p = (poste || '').toLowerCase();
+        return !managementKeywords.some(kw => p.includes(kw));
+      };
+
       setData({
-        // Only show active atelier workers
-        employes: emps.filter(e => e.actif && e.type === 'atelier'),
+        employes: emps.filter(e => e.actif && e.type === 'atelier' && isWorker(e.poste)),
         suivi: suiv,
         operations: ops,
-        commandes: cmds
+        commandes: cmds,
+        candidats: storedCandidats
       });
       setLoading(false);
     });
@@ -163,7 +172,8 @@ export default function ChefChainePortal({ currentUser, onLogout }: ChefChainePo
       <div className="flex p-2 gap-2 bg-slate-900 mx-6 mt-4 rounded-2xl border border-white/5">
         {[
           { id: 'equipe', icon: <Users className="w-4 h-4" />, label: isAr ? 'فريقي' : 'Mon Équipe' },
-          { id: 'production', icon: <Activity className="w-4 h-4" />, label: isAr ? 'الإنتاج' : 'Production' }
+          { id: 'production', icon: <Activity className="w-4 h-4" />, label: isAr ? 'الإنتاج' : 'Production' },
+          { id: 'candidats', icon: <UserIcon className="w-4 h-4" />, label: isAr ? 'مترشحين للتجربة' : 'En Test' }
         ].map(tab => (
           <button
             key={tab.id}
@@ -280,6 +290,69 @@ export default function ChefChainePortal({ currentUser, onLogout }: ChefChainePo
                   : "Cet écran vous donne un aperçu rapide de votre équipe. Pour plus de détails ou gérer les ordres, connectez-vous sur PC."}
               </p>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'candidats' && (
+          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {data.candidats.filter(c => ['Piqueuse', 'Machiniste', 'Surjeteuse', 'Finition', 'Coupeur', 'Repasseur'].some(p => c.poste.includes(p))).length === 0 ? (
+              <div className="bg-slate-900 rounded-[2.5rem] p-12 text-center border border-dashed border-slate-800">
+                <p className="text-slate-500 font-bold uppercase text-xs">{isAr ? 'لا يوجد مترشحين في طور التجربة' : 'Aucun candidat en test'}</p>
+              </div>
+            ) : (
+              data.candidats.filter(c => ['Piqueuse', 'Machiniste', 'Surjeteuse', 'Finition', 'Coupeur', 'Repasseur'].some(p => c.poste.includes(p))).map(candidat => (
+                <div key={candidat.id} className="bg-slate-900 p-5 rounded-3xl border border-white/5 hover:border-indigo-500/30 transition-all">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-400 font-bold border border-indigo-500/20">
+                        <UserIcon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold uppercase tracking-tight text-white">{candidat.prenom} {candidat.nom}</h3>
+                        <p className="text-[10px] text-emerald-400 font-bold uppercase mt-0.5">{candidat.poste}</p>
+                        {candidat.confirmedBy && (
+                          <p className="text-[9px] text-slate-500 font-bold uppercase mt-1">
+                            {isAr ? 'من طرف:' : 'Par:'} {candidat.confirmedBy}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {candidat.chefFeedback ? (
+                    <div className={`p-3 rounded-2xl flex items-center justify-center gap-2 ${candidat.chefFeedback === 'approved' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
+                      {candidat.chefFeedback === 'approved' ? <CheckCircle2 className="w-4 h-4" /> : <LogOut className="w-4 h-4" />}
+                      <span className="text-[10px] font-bold uppercase tracking-widest">
+                        {candidat.chefFeedback === 'approved' ? (isAr ? 'مقبول (RH ستكمل الإجراءات)' : 'Approuvé (RH finalise)') : (isAr ? 'مرفوض' : 'Rejeté')}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => {
+                          const newList = data.candidats.map(c => c.id === candidat.id ? { ...c, chefFeedback: 'approved' } : c);
+                          localStorage.setItem('textrack_liste_attente', JSON.stringify(newList));
+                          setData(prev => ({ ...prev, candidats: newList }));
+                        }}
+                        className="flex-1 py-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all border border-emerald-500/20"
+                      >
+                        {isAr ? 'قبول العامل' : 'Approuver'}
+                      </button>
+                      <button 
+                        onClick={() => {
+                          const newList = data.candidats.map(c => c.id === candidat.id ? { ...c, chefFeedback: 'rejected' } : c);
+                          localStorage.setItem('textrack_liste_attente', JSON.stringify(newList));
+                          setData(prev => ({ ...prev, candidats: newList }));
+                        }}
+                        className="flex-1 py-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all border border-rose-500/20"
+                      >
+                        {isAr ? 'رفض العامل' : 'Rejeter'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         )}
       </div>

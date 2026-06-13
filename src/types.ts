@@ -505,6 +505,7 @@ export interface Lead {
   email?: string;
   contactedAt?: string;
   contactedType?: string;
+  contactedBy?: string;
   crmStage?: 'nouveau' | 'contact_en_cours' | 'rdv_fixe' | 'attente_confirmation' | 'confirme' | 'annule';
   crmContactMethod?: 'appel' | 'live' | 'visite' | 'whatsapp';
   crmRdvDate?: string;
@@ -782,11 +783,11 @@ export async function loadData<T>(table: string): Promise<T[]> {
 }
 
 export async function saveRecord<T>(table: string, record: T, silent: boolean = false): Promise<void> {
-  // Guard against non-UUID IDs for the 'users' table (e.g. master-admin)
+  // Guard against deleting or modifying master-admin
   if (table === 'users') {
     const r = record as any;
-    if (r.id && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(r.id)) {
-      console.warn(`Skipping save for non-UUID user: ${r.id}`);
+    if (r.id === 'master-admin' || r.id === 'yassine-admin' || r.email === '00.belbachir@gmail.com') {
+      console.warn(`Skipping save for protected admin: ${r.id}`);
       return;
     }
   }
@@ -821,7 +822,7 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
           'partenaireId', 'externalTasks', 'typeDossier',
           'photo', 'adresse', 'notes',
           'crmStage', 'crmContactMethod', 'crmRdvDate', 'crmNotes', 'crmPrice', 'crmPriceConfirmed', 'crmPriority',
-          'preuveClient', 'annulationRaison', 'cv', 'sampleFeedback', 'prixEchantillon', 'phone2'
+          'preuveClient', 'annulationRaison', 'cv', 'sampleFeedback', 'prixEchantillon', 'phone2', 'contactedBy'
         ];
         newCols.forEach(col => delete fallbackRecord[col]);
         
@@ -879,7 +880,7 @@ export async function deleteRecord(table: string, id: string, email?: string): P
       console.warn("Delete by ID failed, trying by email...", error.message);
       
       // Fallback to Email if provided and not a generic email
-      if (email && table === 'leads' && email !== 'recrutement@beya.ma') {
+      if (email && email !== 'recrutement@beya.ma') {
         await supabase.from(table).delete().eq('email', email);
       }
     }

@@ -188,21 +188,25 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
           <div className="space-y-1">
             {can('dashboard') && <NavItem to="/" icon={LayoutDashboard} label={t('dashboard', lang)} end />}
             {can('worker_portal') && <NavItem to="/worker-portal" icon={UserIcon} label={isAr ? 'فضاء العامل' : 'Espace Ouvrier'} />}
+            {can('chef_chaine_portal') && <NavItem to="/chef-portal" icon={ShieldCheck} label={isAr ? 'بوابة رئيس السلسلة' : 'Portail Chef Chaîne'} />}
             {can('partenaire_portal') && <NavItem to="/partenaire-portal" icon={Globe} label={isAr ? 'بوابة الشركاء' : 'Portail Partenaire'} />}
           </div>
 
           {/* Group 2: Commercial */}
-          <div className="space-y-1">
-            {!collapsed && <SectionTitle title={isAr ? 'التجاري' : 'Commercial'} isAr={isAr} />}
+          {(can('demandes') || can('crm') || can('clients')) && (
+            <div className="space-y-1">
+              {!collapsed && <SectionTitle title={isAr ? 'التجاري' : 'Commercial'} isAr={isAr} />}
             {can('demandes') && <NavItem to="/demandes" icon={Users} label={isAr ? 'الزبناء المحتملون' : 'Prospects'} />}
             {can('crm') && <NavItem to="/pipeline" icon={PhoneCall} label={isAr ? 'تتبع الزبناء (CRM)' : 'Suivi Prospects'} />}
             {can('demandes') && <NavItem to="/echantillons" icon={Scissors} label={isAr ? 'العينات' : 'Échantillons'} />}
             {can('clients') && <NavItem to="/clients" icon={UserCheck} label={isAr ? 'قاعدة الزبناء' : 'Clients'} />}
-          </div>
+            </div>
+          )}
 
           {/* Group 3: Production */}
-          <div className="space-y-1">
-            {!collapsed && <SectionTitle title={isAr ? 'الإنتاج' : 'Production'} isAr={isAr} />}
+          {(can('commandes') || can('stocks') || can('fiches') || can('ai_space') || can('ordres') || can('chaine')) && (
+            <div className="space-y-1">
+              {!collapsed && <SectionTitle title={isAr ? 'الإنتاج' : 'Production'} isAr={isAr} />}
             {can('commandes') && (
               <>
                 <NavItem to="/commandes" icon={ShoppingCart} label={isAr ? 'الطلبيات' : 'Commandes'} />
@@ -229,22 +233,26 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
                 <NavItem to="/pilotage-chaine" icon={TrendingUp} label={isAr ? 'لوحة القيادة' : 'Pilotage'} />
               </>
             )}
-          </div>
+            </div>
+          )}
 
           {/* Group 4: Finance */}
-          <div className="space-y-1">
-            {!collapsed && <SectionTitle title={isAr ? 'المالية' : 'Finance'} isAr={isAr} />}
+          {(can('bilan') || can('factures') || can('charges')) && (
+            <div className="space-y-1">
+              {!collapsed && <SectionTitle title={isAr ? 'المالية' : 'Finance'} isAr={isAr} />}
             {can('bilan') && <NavItem to="/bilan" icon={PieChart} label={isAr ? 'جدول البيانات' : 'Tableau de Bord'} />}
             {can('factures') && <NavItem to="/devis" icon={FileText} label={isAr ? 'عروض الأسعار' : 'Devis'} />}
             {can('factures') && <NavItem to="/factures" icon={Receipt} label={isAr ? 'الفواتير' : 'Factures'} />}
             {can('factures') && <NavItem to="/recus" icon={CheckCircle} label={isAr ? 'إيصالات الدفع' : 'Reçus'} />}
-            <NavItem to="/prix-marche" icon={TrendingUp} label={isAr ? 'أسعار السوق' : 'Prix Marché'} />
+            {can('factures') && <NavItem to="/prix-marche" icon={TrendingUp} label={isAr ? 'أسعار السوق' : 'Prix Marché'} />}
             {can('charges') && <NavItem to="/charges" icon={TrendingUp} label={isAr ? 'المصاريف' : 'Charges'} />}
-          </div>
+            </div>
+          )}
 
           {/* Group 5: System Admin */}
-          <div className="space-y-1">
-            {!collapsed && <SectionTitle title={isAr ? 'النظام' : 'Système'} isAr={isAr} />}
+          {(can('rh') || can('pointage') || can('fast_scanner') || can('performance') || can('utilisateurs') || can('parametres')) && (
+            <div className="space-y-1">
+              {!collapsed && <SectionTitle title={isAr ? 'النظام' : 'Système'} isAr={isAr} />}
             {can('rh') && <NavItem to="/rh" icon={Users} label={isAr ? 'الموارد البشرية' : 'RH'} />}
             {can('rh') && <NavItem to="/liste-attente" icon={Clock} label={isAr ? 'لائحة الانتظار' : "Liste d'Attente"} />}
             {can('pointage') && <NavItem to="/pointage" icon={ClipboardCheck} label={isAr ? 'تسجيل الحضور' : 'Pointage'} />}
@@ -252,7 +260,8 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
             {can('performance') && <NavItem to="/performance" icon={Trophy} label={isAr ? 'الأداء والإنتاجية' : 'Performance'} />}
             {can('utilisateurs') && <NavItem to="/utilisateurs" icon={ShieldCheck} label={isAr ? 'المستخدمين' : 'Utilisateurs'} />}
             {can('parametres') && <NavItem to="/parametres" icon={Settings} label={isAr ? 'الإعدادات' : 'Paramètres'} />}
-          </div>
+            </div>
+          )}
         </nav>
 
         {/* Footer */}

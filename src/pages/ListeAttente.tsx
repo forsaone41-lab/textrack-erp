@@ -12,6 +12,8 @@ interface WaitlistedCandidate {
   poste: string;
   dateAjout: string;
   notes?: string;
+  confirmedBy?: string;
+  chefFeedback?: 'pending' | 'approved' | 'rejected';
 }
 
 // Local storage helpers for Waiting List
@@ -41,6 +43,7 @@ export default function ListeAttente() {
       const [firstName, ...lastNameParts] = lead.name.split(' ');
       const lastName = lastNameParts.join(' ');
 
+      const currentUser = JSON.parse(localStorage.getItem('textrack_auth') || '{}');
       const newCandidate: WaitlistedCandidate = {
         id: genId(),
         nom: lastName || firstName,
@@ -48,7 +51,9 @@ export default function ListeAttente() {
         telephone: lead.phone,
         poste: lead.type.replace('RECRUTEMENT: ', ''),
         dateAjout: new Date().toISOString(),
-        notes: lead.details
+        notes: lead.details,
+        confirmedBy: currentUser.nom || 'Admin',
+        chefFeedback: 'pending'
       };
 
       handleAddNew(newCandidate);
@@ -172,11 +177,31 @@ export default function ListeAttente() {
             </div>
 
             <div className="space-y-3 mb-8">
-              <div className="flex items-center gap-3 text-slate-500 text-xs font-bold">
-                <Phone className="w-4 h-4 text-slate-300" /> {c.telephone}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 text-slate-500 text-xs font-bold">
+                  <Phone className="w-4 h-4 text-slate-300" /> {c.telephone}
+                </div>
+                {c.confirmedBy && (
+                  <div className="bg-indigo-50 px-2 py-1 rounded-md text-[9px] font-black uppercase text-indigo-500">
+                    {isAr ? 'تم التأكيد من:' : 'Confirmé par:'} {c.confirmedBy}
+                  </div>
+                )}
               </div>
-              <div className="flex items-center gap-3 text-slate-400 text-[10px] font-black uppercase tracking-widest">
-                <Clock className="w-4 h-4" /> {isAr ? 'أضيف في:' : 'Ajouté le :'} {new Date(c.dateAjout).toLocaleDateString()}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                  <Clock className="w-4 h-4" /> {isAr ? 'أضيف في:' : 'Ajouté le :'} {new Date(c.dateAjout).toLocaleDateString()}
+                </div>
+                {['Piqueuse', 'Machiniste', 'Surjeteuse', 'Finition', 'Coupeur', 'Repasseur'].some(p => c.poste.includes(p)) && (
+                  <div className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest ${
+                    c.chefFeedback === 'approved' ? 'bg-emerald-100 text-emerald-600' :
+                    c.chefFeedback === 'rejected' ? 'bg-rose-100 text-rose-600' :
+                    'bg-amber-100 text-amber-600'
+                  }`}>
+                    {c.chefFeedback === 'approved' ? (isAr ? 'مقبول من الشاف' : 'Accepté (Chef)') :
+                     c.chefFeedback === 'rejected' ? (isAr ? 'مرفوض من الشاف' : 'Refusé (Chef)') :
+                     (isAr ? 'قيد تجربة الشاف' : 'En test (Chef)')}
+                  </div>
+                )}
               </div>
             </div>
 

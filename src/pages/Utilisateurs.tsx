@@ -79,6 +79,13 @@ const ROLE_CFG = {
     desc: 'Accès au portail partenaires',
     access: ['Portail Partenaire'],
   },
+  chef_chaine: {
+    label: 'Chef de Chaîne', labelAr: 'شاف دو شين', icon: Users,
+    bg: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200',
+    ring: 'ring-teal-400', avatar: 'from-teal-500 to-emerald-600', dot: 'bg-teal-500',
+    desc: 'Gestion de la chaîne et de la production',
+    access: ['Portail Chef de Chaîne'],
+  },
 } as const;
 
 
@@ -111,24 +118,27 @@ const ALL_PAGES: PageDef[] = [
   { key: 'portail_client', label: 'Portail Client', labelAr: 'بوابة الزبون', icon: ShoppingBag, group: 'Portails' },
   { key: 'worker_portal', label: 'Espace Ouvrier', labelAr: 'فضاء العامل', icon: UserCircle, group: 'Portails' },
   { key: 'partenaire_portal', label: 'Portail Partenaire', labelAr: 'بوابة الشركاء', icon: Globe, group: 'Portails' },
+  { key: 'chef_chaine_portal', label: 'Portail Chef de Chaîne', labelAr: 'بوابة رئيس السلسلة', icon: Users, group: 'Portails' },
   { key: 'performance', label: 'Performance', labelAr: 'أداء العمال', icon: Trophy, group: 'Outils' },
   { key: 'utilisateurs', label: 'Gestion Utilisateurs', labelAr: 'إدارة المستخدمين', icon: UserCircle, group: 'Outils' },
   { key: 'parametres', label: 'Paramètres', labelAr: 'الإعدادات', icon: Settings, group: 'Outils' },
 ];
 
-const PAGE_GROUPS = ['Général', 'Production', 'Stocks', 'RH & Finance', 'Outils'];
+const PAGE_GROUPS = ['Général', 'Production', 'Stocks', 'RH & Finance', 'Portails', 'Outils'];
 const PAGE_GROUPS_AR: Record<string, string> = {
   'Général': 'عام',
   'Production': 'الإنتاج',
   'Stocks': 'المخزن',
   'RH & Finance': 'الموارد والمالية',
+  'Portails': 'البوابات الخارجية',
   'Outils': 'أدوات ونظام'
 };
 
 // Pages locked per role (cannot be removed)
-const LOCKED: Partial<Record<'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire', AppPage[]>> = {
+const LOCKED: Partial<Record<'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire' | 'chef_chaine', AppPage[]>> = {
   admin: ['utilisateurs'],
   client: ['portail_client'],
+  chef_chaine: ['chef_chaine_portal'],
 };
 
 // ─── Helpers ───────────────────────────────────────────────
@@ -214,17 +224,18 @@ export default function Utilisateurs() {
     await saveRecord('users', uData);
   }
   async function doDelete(id: string) {
+    const u = users.find(u => u.id === id);
     const updated = users.filter(u => u.id !== id);
     setUsers(updated);
     setDeleteConfirm(null);
-    await deleteRecord('users', id);
+    await deleteRecord('users', id, u?.email);
   }
 
   // ── Permissions helpers ───────────────────────────────────
-  function togglePerm(role: 'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire', page: AppPage) {
+  function togglePerm(role: 'admin' | 'pointeur' | 'chef_chaine' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire', page: AppPage) {
     const locked = LOCKED[role] || [];
     if (locked.includes(page)) return;
-    const current = perms[role];
+    const current = perms[role] || [];
     const updated: RolePermMap = {
       ...perms,
       [role]: current.includes(page)
@@ -237,8 +248,8 @@ export default function Utilisateurs() {
     setTimeout(() => setPermsSaved(false), 2000);
   }
 
-  function resetRole(role: 'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire') {
-    const updated: RolePermMap = { ...perms, [role]: [...DEFAULT_PERMISSIONS[role]] };
+  function resetRole(role: 'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire' | 'chef_chaine') {
+    const updated: RolePermMap = { ...perms, [role]: [...(DEFAULT_PERMISSIONS[role] || [])] };
     setPerms(updated);
     savePermissions(updated);
     setPermsSaved(true);
@@ -282,8 +293,8 @@ export default function Utilisateurs() {
       {/* ══ TAB: USERS ══════════════════════════════════════════ */}
       {tab === 'users' && (
         <div className="space-y-6">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'controleur', 'agent_pointage', 'partenaire'] as const).map(role => {
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {(['admin', 'pointeur', 'chef_chaine', 'client', 'worker', 'coupeur', 'modeliste', 'controleur', 'agent_pointage', 'partenaire'] as const).map(role => {
               const cfg = ROLE_CFG[role];
               const Icon = cfg.icon;
               const active = filterRole === role;
@@ -383,7 +394,7 @@ export default function Utilisateurs() {
               <thead>
                 <tr className="bg-slate-50/50">
                   <th className={`p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 ${isAr ? 'text-right' : 'text-left'}`}>{isAr ? 'الصفحة / الوحدة' : 'Module / Page'}</th>
-                  {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'controleur', 'agent_pointage', 'partenaire'] as const).map(role => (
+                  {(['admin', 'pointeur', 'chef_chaine', 'client', 'worker', 'coupeur', 'modeliste', 'controleur', 'agent_pointage', 'partenaire'] as const).map(role => (
                     <th key={role} className="p-6 border-b border-slate-100 border-l border-slate-50 min-w-[120px]">
                       <div className="flex flex-col items-center gap-2">
                         <span className={`text-[10px] font-black uppercase tracking-widest ${ROLE_CFG[role].text}`}>
@@ -399,7 +410,7 @@ export default function Utilisateurs() {
                 {PAGE_GROUPS.map(group => (
                   <Fragment key={group}>
                     <tr className="bg-slate-50/30">
-                      <td colSpan={10} className={`px-6 py-2 text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] ${isAr ? 'text-right' : 'text-left'}`}>
+                      <td colSpan={11} className={`px-6 py-2 text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] ${isAr ? 'text-right' : 'text-left'}`}>
                         {isAr ? PAGE_GROUPS_AR[group] : group}
                       </td>
                     </tr>
@@ -411,9 +422,9 @@ export default function Utilisateurs() {
                             <span className="text-xs font-bold text-slate-700">{isAr ? page.labelAr : page.label}</span>
                           </div>
                         </td>
-                        {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'controleur', 'agent_pointage', 'partenaire'] as const).map(role => {
+                        {(['admin', 'pointeur', 'chef_chaine', 'client', 'worker', 'coupeur', 'modeliste', 'controleur', 'agent_pointage', 'partenaire'] as const).map(role => {
                           const locked = (LOCKED[role] || []).includes(page.key);
-                          const active = perms[role].includes(page.key);
+                          const active = (perms[role] || []).includes(page.key);
                           return (
                             <td key={role} className="p-4 border-b border-slate-50 border-l border-slate-50">
                               <div className="flex items-center justify-center gap-2">
@@ -468,7 +479,7 @@ export default function Utilisateurs() {
               <div className={isAr ? 'text-right' : ''}>
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">{isAr ? 'الدور الوظيفي' : 'Rôle'}</label>
                 <div className="grid grid-cols-2 gap-3">
-                  {(['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'controleur', 'agent_pointage', 'partenaire'] as const).map(r => (
+                  {(['admin', 'pointeur', 'chef_chaine', 'client', 'worker', 'coupeur', 'modeliste', 'controleur', 'agent_pointage', 'partenaire'] as const).map(r => (
                     <button key={r} onClick={() => setForm({ ...form, role: r })} 
                       className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${form.role === r ? 'border-indigo-600 bg-indigo-50' : 'border-slate-50 bg-slate-50/50 hover:bg-slate-50'}`}>
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${form.role === r ? 'bg-indigo-600 text-white' : 'bg-white text-slate-400'}`}>
