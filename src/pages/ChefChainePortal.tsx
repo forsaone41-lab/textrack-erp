@@ -19,7 +19,7 @@ import {
   Commande,
   loadData,
   syncListeAttente,
-  pushListeAttenteToCloud
+  pushCandidatToCloud
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 
@@ -340,9 +340,10 @@ export default function ChefChainePortal({ currentUser, onLogout }: ChefChainePo
                       </div>
                       <button 
                         onClick={async () => {
-                          const newList = data.candidats.map(c => c.id === candidat.id ? { ...c, chefFeedback: 'pending' } : c);
-                          await pushListeAttenteToCloud(newList);
+                          const updatedCandidate = { ...candidat, chefFeedback: 'pending' };
+                          const newList = data.candidats.map(c => c.id === candidat.id ? updatedCandidate : c);
                           setData(prev => ({ ...prev, candidats: newList }));
+                          await pushCandidatToCloud(updatedCandidate);
                         }}
                         className="p-3 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all border border-white/5"
                         title={isAr ? 'تراجع' : 'Annuler'}
@@ -354,9 +355,10 @@ export default function ChefChainePortal({ currentUser, onLogout }: ChefChainePo
                     <div className="flex gap-2">
                       <button 
                         onClick={async () => {
-                          const newList = data.candidats.map(c => c.id === candidat.id ? { ...c, chefFeedback: 'approved' } : c);
-                          await pushListeAttenteToCloud(newList);
+                          const updatedCandidate = { ...candidat, chefFeedback: 'approved' };
+                          const newList = data.candidats.map(c => c.id === candidat.id ? updatedCandidate : c);
                           setData(prev => ({ ...prev, candidats: newList }));
+                          await pushCandidatToCloud(updatedCandidate);
                         }}
                         className="flex-1 py-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all border border-emerald-500/20"
                       >
@@ -364,9 +366,10 @@ export default function ChefChainePortal({ currentUser, onLogout }: ChefChainePo
                       </button>
                       <button 
                         onClick={async () => {
-                          const newList = data.candidats.map(c => c.id === candidat.id ? { ...c, chefFeedback: 'rejected' } : c);
-                          await pushListeAttenteToCloud(newList);
+                          const updatedCandidate = { ...candidat, chefFeedback: 'rejected' };
+                          const newList = data.candidats.map(c => c.id === candidat.id ? updatedCandidate : c);
                           setData(prev => ({ ...prev, candidats: newList }));
+                          await pushCandidatToCloud(updatedCandidate);
                         }}
                         className="flex-1 py-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all border border-rose-500/20"
                       >

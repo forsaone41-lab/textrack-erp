@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useLang } from '../contexts/LangContext';
 import { Users, Search, Trash2, CheckCircle, UserPlus, Clock, Phone, FileText, ArrowLeft, X } from 'lucide-react';
-import { saveRecord, deleteRecord, genId, Employe, syncListeAttente, pushListeAttenteToCloud } from '../types';
+import { saveRecord, deleteRecord, genId, Employe, syncListeAttente, pushCandidatToCloud, deleteCandidatFromCloud } from '../types';
 
 interface WaitlistedCandidate {
   id: string;
@@ -26,9 +26,6 @@ function getLocalList<T>(key: string): T[] {
 
 function saveLocalList<T>(key: string, data: T[]) {
   localStorage.setItem(`textrack_${key}`, JSON.stringify(data));
-  if (key === 'liste_attente') {
-    pushListeAttenteToCloud(data);
-  }
 }
 
 export default function ListeAttente() {
@@ -77,20 +74,22 @@ export default function ListeAttente() {
     }
   }, [location.state]);
 
-  const handleAddNew = (candidate: WaitlistedCandidate) => {
+  const handleAddNew = async (candidate: WaitlistedCandidate) => {
     setCandidates(prev => {
       const updated = [candidate, ...prev];
       saveLocalList('liste_attente', updated);
       return updated;
     });
+    await pushCandidatToCloud(candidate);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     setCandidates(prev => {
       const updated = prev.filter(c => c.id !== id);
       saveLocalList('liste_attente', updated);
       return updated;
     });
+    await deleteCandidatFromCloud(id);
   };
 
   const handleEmbaucher = async (candidate: WaitlistedCandidate) => {

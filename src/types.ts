@@ -603,55 +603,86 @@ export async function syncCompanyProfile(): Promise<CompanyProfile> {
 
 export async function syncListeAttente(): Promise<any[]> {
   try {
-    const { data } = await supabase
-      .from('leads')
-      .select('*')
-      .eq('name', '__SYSTEM_LISTE_ATTENTE__')
-      .order('date', { ascending: false })
-      .limit(1);
-      
-    const localRaw = localStorage.getItem('textrack_liste_attente');
-    const localData = localRaw ? JSON.parse(localRaw) : [];
+    // 1. Fetch individual test candidates
+    const { data: leads } = await supabase.from('leads').select('*').eq('type', '__EN_TEST__');
     
-    if (data && data.length > 0) {
-      const remoteData = JSON.parse(data[0].details || '[]');
-      // Merge remote into local, prioritizing remote
-      const mergedMap = new Map();
-      localData.forEach((c: any) => mergedMap.set(c.id, c));
-      remoteData.forEach((c: any) => mergedMap.set(c.id, c));
-      
-      const mergedList = Array.from(mergedMap.values());
-      localStorage.setItem('textrack_liste_attente', JSON.stringify(mergedList));
-      return mergedList;
+    // 2. Fetch the old array system if it exists (for migration)
+    const { data: oldSystem } = await supabase.from('leads').select('*').eq('name', '__SYSTEM_LISTE_ATTENTE__');
+    if (oldSystem && oldSystem.length > 0) {
+      for (const sys of oldSystem) {
+        try {
+          const oldData = JSON.parse(sys.details || '[]');
+          for (const c of oldData) {
+            await pushCandidatToCloud(c);
+          }
+        } catch(e) {}
+        // Delete the old system row
+        await supabase.from('leads').delete().eq('id', sys.id);
+      }
+      return syncListeAttente();
     }
     
-    if (localData.length > 0) {
-      await pushListeAttenteToCloud(localData);
-    }
-    return localData;
-  } catch (e) {
+    // 3. Map leads back to WaitlistedCandidate format
+    const candidates = (leads || []).map(lead => {
+      let extra: any = {};
+      try { extra = JSON.parse(lead.details || '{}'); } catch(e){}
+      return {
+        id: lead.id,
+        nom: lead.name.split(' ').slice(1).join(' ') || lead.name,
+        prenom: lead.name.split(' ')[0],
+        telephone: lead.phone,
+        poste: lead.ville,
+        dateAjout: lead.date,
+        notes: extra.notes,
+        confirmedBy: extra.confirmedBy,
+        chefFeedback: extra.chefFeedback || 'pending'
+      };
+    });
+    
+    localStorage.setItem('textrack_liste_attente', JSON.stringify(candidates));
+    return candidates;
+  } catch(e) {
     console.error("Failed to sync liste attente", e);
-    const localRaw = localStorage.getItem('textrack_liste_attente');
-    return localRaw ? JSON.parse(localRaw) : [];
+    return JSON.parse(localStorage.getItem('textrack_liste_attente') || '[]');
   }
 }
 
-export async function pushListeAttenteToCloud(data: any[]): Promise<void> {
+export async function pushCandidatToCloud(c: any): Promise<void> {
   try {
-    localStorage.setItem('textrack_liste_attente', JSON.stringify(data));
-    const record = {
-      id: genId(),
-      name: '__SYSTEM_LISTE_ATTENTE__',
-      phone: '0000',
-      ville: 'SYSTEM',
-      type: 'CONFIG',
-      status: 'completed',
-      date: new Date().toISOString(),
-      details: JSON.stringify(data)
+    const lead = {
+      id: c.id,
+      name: `${c.prenom} ${c.nom}`.trim(),
+      phone: c.telephone,
+      ville: c.poste,
+      type: '__EN_TEST__',
+      status: '__EN_TEST__',
+      date: c.dateAjout,
+      details: JSON.stringify({
+        notes: c.notes,
+        confirmedBy: c.confirmedBy,
+        chefFeedback: c.chefFeedback
+      })
     };
-    await supabase.from('leads').insert(record);
+    await saveRecord('leads', lead, true);
+    
+    // Update local cache
+    const current = JSON.parse(localStorage.getItem('textrack_liste_attente') || '[]');
+    const updated = current.filter((x: any) => x.id !== c.id);
+    updated.push(c);
+    localStorage.setItem('textrack_liste_attente', JSON.stringify(updated));
   } catch (e) {
-    console.error("Failed to push liste attente", e);
+    console.error("Failed to push candidat", e);
+  }
+}
+
+export async function deleteCandidatFromCloud(id: string): Promise<void> {
+  try {
+    await supabase.from('leads').delete().eq('id', id);
+    const current = JSON.parse(localStorage.getItem('textrack_liste_attente') || '[]');
+    const updated = current.filter((x: any) => x.id !== id);
+    localStorage.setItem('textrack_liste_attente', JSON.stringify(updated));
+  } catch (e) {
+    console.error("Failed to delete candidat", e);
   }
 }
 
