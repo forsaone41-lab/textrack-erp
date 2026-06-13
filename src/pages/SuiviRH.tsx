@@ -1179,8 +1179,8 @@ export default function SuiviRH() {
             <p className="font-black border-b border-slate-900 pb-0.5 mb-2">3. {isAr ? 'طبيعة العمل وساعات العمل' : 'POSTE ET DURÉE DU TRAVAIL'}:</p>
             <p>
               {isAr 
-                ? `يشتغل الأجير كـ "${selectedContractEmp?.poste || 'عامل'}" لمدة 44 ساعة في الأسبوع، مع احترام أوقات الدخول والخروج المعمول بها داخل الورشة.` 
-                : `L'employé(e) occupera le poste de "${selectedContractEmp?.poste || 'Ouvrier'}" pour une durée hebdomadaire de 44 heures, conformément à la législation en vigueur.`}
+                ? `يشتغل الأجير كـ "${selectedContractEmp?.poste || 'عامل'}" لمدة 44 ساعة في الأسبوع. وتحدد أوقات العمل من الساعة 08:00 صباحاً إلى الساعة 18:00 مساءً، مع احترام القوانين الداخلية للورشة.` 
+                : `L'employé(e) occupera le poste de "${selectedContractEmp?.poste || 'Ouvrier'}" pour une durée hebdomadaire de 44 heures. Les horaires de travail sont fixés de 08h00 à 18h00, conformément à la législation en vigueur et au règlement intérieur.`}
             </p>
           </section>
 
