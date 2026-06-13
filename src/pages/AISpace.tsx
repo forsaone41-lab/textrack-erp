@@ -453,8 +453,8 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
 
       let data = await response.json();
       
-      if (data.error && (data.error.message.includes('high demand') || data.error.code === 503)) {
-        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
+      if (data.error && (data.error.message.includes('high demand') || data.error.code === 503 || data.error.code === 404 || data.error.message.includes('not found'))) {
+        response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -741,7 +741,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
         let data = await response.json();
         
         // Fallback to gemini-3.5-flash if flash is overloaded
-        if (data.error && (data.error.message.includes('high demand') || data.error.code === 503)) {
+        if (data.error && (data.error.message.includes('high demand') || data.error.code === 503 || data.error.code === 404 || data.error.message.includes('not found'))) {
           response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
