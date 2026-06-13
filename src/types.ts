@@ -710,7 +710,7 @@ export async function loadLeads(): Promise<Lead[]> {
       const old = oldRaw ? JSON.parse(oldRaw) : [];
       const newCache = newRaw ? JSON.parse(newRaw) : [];
       const combined = [...(Array.isArray(old) ? old : []), ...(Array.isArray(newCache) ? newCache : [])];
-      localLeads = combined.filter((l: any) => l && l.id && l.name && l.name !== '__SYSTEM_CONFIG__' && l.name !== '__SYSTEM_LISTE_ATTENTE__' && l.name !== '__WORKER_PHOTO__' && !deletedIds.includes(l.id));
+      localLeads = combined.filter((l: any) => l && l.id && l.name && l.name !== '__SYSTEM_CONFIG__' && l.name !== '__SYSTEM_LISTE_ATTENTE__' && l.name !== '__WORKER_PHOTO__' && l.type !== '__EN_TEST__' && !deletedIds.includes(l.id));
     } catch (_) {}
 
     // 3. Merge: Supabase takes priority, add localStorage-only leads
@@ -723,6 +723,7 @@ export async function loadLeads(): Promise<Lead[]> {
         l.name !== '__SYSTEM_CONFIG__' &&
         l.name !== '__SYSTEM_LISTE_ATTENTE__' &&
         l.name !== '__DELETED__' &&
+        l.type !== '__EN_TEST__' &&
         !deletedIds.includes(l.id)
       );
 
