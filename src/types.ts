@@ -406,6 +406,11 @@ export function loadPermissions(): RolePermMap {
         });
       }
     }
+
+    // 3. Ensure admin always has access to core new portals if they were missing in saved profiles
+    if (result.admin && !result.admin.includes('chef_chaine_portal')) {
+      result.admin.push('chef_chaine_portal');
+    }
     
     return result;
   } catch { return DEFAULT_PERMISSIONS; }
