@@ -177,7 +177,13 @@ export default function ChefChainePortal({ currentUser, onLogout }: ChefChainePo
         ].map(tab => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
+            onClick={() => {
+              setActiveTab(tab.id as any);
+              if (tab.id === 'candidats') {
+                const storedCandidats = JSON.parse(localStorage.getItem('textrack_liste_attente') || '[]');
+                setData(prev => ({ ...prev, candidats: storedCandidats }));
+              }
+            }}
             className={`relative flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
               activeTab === tab.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:bg-white/5'
             }`}
