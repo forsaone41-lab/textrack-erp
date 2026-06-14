@@ -698,6 +698,59 @@ export async function pushCandidatToCloud(c: any): Promise<void> {
   }
 }
 
+// ─── Reclamations (Complaints) ───────────────────────────────
+export async function loadReclamations(): Promise<Reclamation[]> {
+  try {
+    const { data } = await supabase.from('leads').select('*').eq('type', '__RECLAMATION__');
+    if (!data) return [];
+    
+    return data.map(l => {
+      let details: any = {};
+      try { details = JSON.parse(l.details || '{}'); } catch(e){}
+      return {
+        id: l.id,
+        employeId: details.employeId || '',
+        employeNom: l.name,
+        sujet: details.sujet || '',
+        description: details.description || '',
+        dateReclamation: l.date,
+        statut: l.status as 'en_attente' | 'traite',
+        reponse: details.reponse,
+        dateReponse: details.dateReponse
+      };
+    }).sort((a, b) => new Date(b.dateReclamation).getTime() - new Date(a.dateReclamation).getTime());
+  } catch (e) {
+    console.error("Failed to load reclamations", e);
+    return [];
+  }
+}
+
+export async function saveReclamation(rec: Reclamation): Promise<void> {
+  try {
+    const lead = {
+      id: rec.id,
+      name: rec.employeNom,
+      phone: '0000',
+      ville: 'SYSTEM',
+      type: '__RECLAMATION__',
+      status: rec.statut,
+      date: rec.dateReclamation,
+      quantity: 0,
+      details: JSON.stringify({
+        employeId: rec.employeId,
+        sujet: rec.sujet,
+        description: rec.description,
+        reponse: rec.reponse,
+        dateReponse: rec.dateReponse
+      })
+    };
+    await saveRecord('leads', lead, true);
+  } catch (e) {
+    console.error("Failed to save reclamation", e);
+  }
+}
+
+
 export async function deleteCandidatFromCloud(id: string): Promise<void> {
   try {
     await supabase.from('leads').delete().eq('id', id);

@@ -27,6 +27,8 @@ import {
   Reclamation,
   loadData,
   saveRecord,
+  loadReclamations,
+  saveReclamation,
   genId
 } from '../types';
 import { QRCodeSVG } from 'qrcode.react';
@@ -70,7 +72,7 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
       loadData<OperationModele>('operations_modele'),
       loadData<SuiviHoraire>('suivi_horaire'),
       loadData<PaiementSalaire>('paiements_salaires'),
-      loadData<Reclamation>('reclamations')
+      loadReclamations()
     ]).then(([emps, cmds, ops, suiv, pays, recs]) => {
       setData({
         employes: emps.filter(e => e.actif),
@@ -300,7 +302,7 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
       ...prev,
       reclamations: [...prev.reclamations, rec]
     }));
-    await saveRecord('reclamations', rec);
+    await saveReclamation(rec);
     setNewReclamation({ sujet: '', description: '' });
     setIsSubmittingRec(false);
   };

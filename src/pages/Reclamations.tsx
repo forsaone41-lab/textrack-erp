@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, Info, MessageCircle, CheckCircle2, AlertTriangle, User, Calendar, Reply } from 'lucide-react';
-import { Reclamation, loadData, saveRecord } from '../types';
+import { Reclamation, loadReclamations, saveReclamation } from '../types';
 import { useLang } from '../contexts/LangContext';
 
 export default function Reclamations() {
@@ -11,7 +11,7 @@ export default function Reclamations() {
   const [reponse, setReponse] = useState('');
 
   useEffect(() => {
-    loadData<Reclamation>('reclamations').then(data => {
+    loadReclamations().then(data => {
       setReclamations(data || []);
     });
   }, []);
@@ -32,7 +32,7 @@ export default function Reclamations() {
 
     const updatedList = reclamations.map(r => r.id === updatedRec.id ? updatedRec : r);
     setReclamations(updatedList);
-    await saveRecord('reclamations', updatedRec);
+    await saveReclamation(updatedRec);
 
     setReplyingTo(null);
     setReponse('');
@@ -45,7 +45,7 @@ export default function Reclamations() {
     };
     const updatedList = reclamations.map(r => r.id === updatedRec.id ? updatedRec : r);
     setReclamations(updatedList);
-    await saveRecord('reclamations', updatedRec);
+    await saveReclamation(updatedRec);
   };
 
   return (
