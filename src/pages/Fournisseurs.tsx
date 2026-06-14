@@ -52,8 +52,8 @@ export default function Fournisseurs() {
 
     const updated = isNew ? [...fournisseurs, fData] : fournisseurs.map(f => f.id === editId ? fData : f);
     setFournisseurs(updated);
-    await saveFournisseur(fData);
     setShowModal(false);
+    await saveFournisseur(fData);
   }
 
   async function handleDelete(f: Fournisseur) {
