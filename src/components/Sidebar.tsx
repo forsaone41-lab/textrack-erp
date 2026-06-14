@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
-  LayoutDashboard, Users, FileText, Settings, LogOut, ShoppingCart, 
+  LayoutDashboard, Users, FileText, Settings, LogOut, ShoppingCart,
   Package, Scissors, Activity, Receipt, PieChart, TrendingUp, UserCheck, Globe, X, ClipboardCheck, Trophy, ShieldCheck, QrCode, User as UserIcon, CheckCircle,
   Sparkles,
   RefreshCw,
@@ -11,7 +11,8 @@ import {
   PanelLeftOpen,
   PhoneCall,
   Info,
-  Video
+  Video,
+  Inbox
 } from 'lucide-react';
 
 import { User, CompanyProfile, loadPermissions, AppPage, syncCompanyProfile } from '../types';
@@ -199,6 +200,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
           {(can('demandes') || can('crm') || can('clients')) && (
             <div className="space-y-1">
               {!collapsed && <SectionTitle title={isAr ? 'التجاري' : 'Commercial'} isAr={isAr} />}
+            {can('demandes') && <NavItem to="/inbox" icon={Inbox} label={isAr ? 'صندوق الرسائل' : 'Boîte de Réception'} />}
             {can('demandes') && <NavItem to="/demandes" icon={Users} label={isAr ? 'الزبناء المحتملون' : 'Prospects'} />}
             {can('crm') && <NavItem to="/pipeline" icon={PhoneCall} label={isAr ? 'تتبع الزبناء (CRM)' : 'Suivi Prospects'} />}
             {can('demandes') && <NavItem to="/echantillons" icon={Scissors} label={isAr ? 'العينات' : 'Échantillons'} />}

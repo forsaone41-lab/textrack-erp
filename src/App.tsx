@@ -52,6 +52,7 @@ const Fournisseurs    = lazy(() => import('./pages/Fournisseurs'));
 const Reclamations    = lazy(() => import('./pages/Reclamations'));
 const VisioRoom       = lazy(() => import('./pages/VisioRoom'));
 const PublicMeet      = lazy(() => import('./pages/PublicMeet'));
+const Inbox           = lazy(() => import('./pages/Inbox'));
 
 import { PageLoader } from './components/PageLoader';
 
@@ -393,6 +394,7 @@ function AppContent() {
         
         {/* Protected Production Routes */}
         <Route path="demandes" element={can('demandes') ? <Demandes /> : <Navigate to="/" replace />} />
+        <Route path="inbox" element={can('demandes') ? <Inbox /> : <Navigate to="/" replace />} />
         <Route path="pipeline" element={can('crm') ? <Pipeline /> : <Navigate to="/" replace />} />
         <Route path="echantillons" element={can('demandes') ? <Echantillons /> : <Navigate to="/" replace />} />
         <Route path="fiches-techniques" element={can('fiches') ? <FichesTechniques /> : <Navigate to="/" replace />} />

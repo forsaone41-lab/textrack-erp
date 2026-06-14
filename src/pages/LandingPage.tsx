@@ -5,6 +5,26 @@ import { Link } from 'react-router-dom';
 import { loadCompanyProfile, saveLead, syncCompanyProfile, CompanyProfile } from '../types';
 import { trackPixelEvent } from '../utils/pixel';
 import { sendPushToAll } from '../utils/pushNotifications';
+import emailjs from '@emailjs/browser';
+
+const EMAILJS_SERVICE = 'service_itjhz3n';
+const EMAILJS_TEMPLATE = 'template_tnjq79k';
+const EMAILJS_PUBLIC_KEY = '8KXb_0ilZfpaovLCk';
+
+const sendEmailNotification = (name: string, phone: string, email: string, ville: string, models: { type: string; quantity: number }[]) => {
+  const modelsList = models.map(m => `• ${m.type} (${m.quantity} pcs)`).join('\n');
+  const totalQty = models.reduce((s, m) => s + m.quantity, 0);
+  emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+    to_email: 'beyacreative@gmail.com',
+    from_name: name,
+    from_phone: phone,
+    from_email: email || 'Non fourni',
+    from_ville: ville || 'Non fourni',
+    models_list: modelsList,
+    total_qty: totalQty,
+    message: `Nouvelle demande de ${name}\nTél: ${phone}\nVille: ${ville}\n\nModèles:\n${modelsList}\n\nTotal: ${totalQty} pcs`,
+  }, EMAILJS_PUBLIC_KEY).catch(() => {});
+};
 
 const LogoWithFallback = ({ src, alt }: { src: string; alt: string }) => {
   const [error, setError] = useState(false);
@@ -466,6 +486,11 @@ export default function LandingPage() {
                       setIsSending(false);
                       setShowSuccess(true);
                       setModels([emptyModel()]);
+                      // Email notification to admin
+                      sendEmailNotification(
+                        clientName, fullPhone, clientEmail, clientVille,
+                        models.map(m => ({ type: (m.type === 'Autre' || m.type === 'آخر') ? m.customType : m.type, quantity: Number(m.quantity) || 1 }))
+                      );
                       // Notify all admins of new demande
                       sendPushToAll(
                         '🧵 Nouvelle Demande!',
