@@ -43,7 +43,7 @@ export default function VisioRoom() {
 
       <div className="w-full bg-slate-900 rounded-[2rem] overflow-hidden shadow-2xl border border-slate-800" style={{ height: '70vh', minHeight: '600px' }}>
         <iframe
-          src={`${meetUrl}?userInfo.displayName=${encodeURIComponent(company.name || 'Admin')}`}
+          src={`${meetUrl}?userInfo.displayName=${encodeURIComponent(company.name || 'Admin')}#config.disableDeepLinking=true&interfaceConfig.SHOW_JITSI_WATERMARK=false&interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false&interfaceConfig.SHOW_BRAND_WATERMARK=false`}
           allow="camera; microphone; display-capture; fullscreen"
           className="w-full h-full border-0"
         />
