@@ -8,6 +8,7 @@ export default function Fournisseurs() {
   const [fournisseurs, setFournisseurs] = useState<Fournisseur[]>([]);
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<Fournisseur | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<Fournisseur>>({});
 
@@ -56,11 +57,15 @@ export default function Fournisseurs() {
     await saveFournisseur(fData);
   }
 
-  async function handleDelete(f: Fournisseur) {
-    if (window.confirm(isAr ? `هل أنت متأكد من حذف المورد ${f.nom}؟` : `Voulez-vous supprimer le fournisseur ${f.nom} ?`)) {
-      await deleteFournisseur(f.id);
-      setFournisseurs(fournisseurs.filter(item => item.id !== f.id));
-    }
+  function handleDelete(f: Fournisseur) {
+    setDeleteConfirm(f);
+  }
+
+  async function confirmDelete() {
+    if (!deleteConfirm) return;
+    await deleteFournisseur(deleteConfirm.id);
+    setFournisseurs(fournisseurs.filter(item => item.id !== deleteConfirm.id));
+    setDeleteConfirm(null);
   }
 
   return (
@@ -200,6 +205,34 @@ export default function Fournisseurs() {
                 className="flex-1 h-12 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all shadow-lg"
               >
                 {isAr ? 'حفظ' : 'Enregistrer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-[160] p-4">
+          <div className="bg-white rounded-[32px] w-full max-w-sm shadow-2xl animate-in zoom-in duration-300 p-8 text-center">
+            <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Trash2 className="w-8 h-8 text-rose-500" />
+            </div>
+            <h3 className="text-xl font-black text-slate-900 mb-2">{isAr ? 'تأكيد الحذف' : 'Confirmer la suppression'}</h3>
+            <p className="text-slate-500 text-sm font-medium mb-8 leading-relaxed">
+              {isAr ? `هل أنت متأكد من حذف المورد "${deleteConfirm.nom}"؟ لا يمكن التراجع عن هذا الإجراء.` : `Voulez-vous vraiment supprimer le fournisseur "${deleteConfirm.nom}" ? Cette action est irréversible.`}
+            </p>
+            <div className={`flex gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
+              <button 
+                onClick={() => setDeleteConfirm(null)} 
+                className="flex-1 h-12 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all hover:bg-slate-200"
+              >
+                {isAr ? 'إلغاء' : 'Annuler'}
+              </button>
+              <button 
+                onClick={confirmDelete}
+                className="flex-1 h-12 bg-rose-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-rose-500/20 hover:bg-rose-600"
+              >
+                {isAr ? 'نعم، احذف' : 'Oui, Supprimer'}
               </button>
             </div>
           </div>
