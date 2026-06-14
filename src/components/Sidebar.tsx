@@ -198,11 +198,11 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
           </div>
 
           {/* Group 2: Commercial */}
-          {(can('demandes') || can('crm') || can('clients')) && (
+          {(can('demandes') || can('crm') || can('clients') || can('inbox') || can('gmail')) && (
             <div className="space-y-1">
               {!collapsed && <SectionTitle title={isAr ? 'التجاري' : 'Commercial'} isAr={isAr} />}
-            {can('demandes') && <NavItem to="/gmail-inbox" icon={Mail} label={isAr ? 'البريد الوارد (Gmail)' : 'Boîte Gmail'} />}
-            {can('demandes') && <NavItem to="/inbox" icon={Inbox} label={isAr ? 'صندوق الرسائل' : 'Boîte de Réception'} />}
+            {can('gmail') && <NavItem to="/gmail-inbox" icon={Mail} label={isAr ? 'البريد الوارد (Gmail)' : 'Boîte Gmail'} />}
+            {can('inbox') && <NavItem to="/inbox" icon={Inbox} label={isAr ? 'صندوق الرسائل' : 'Boîte de Réception'} />}
             {can('demandes') && <NavItem to="/demandes" icon={Users} label={isAr ? 'الزبناء المحتملون' : 'Prospects'} />}
             {can('crm') && <NavItem to="/pipeline" icon={PhoneCall} label={isAr ? 'تتبع الزبناء (CRM)' : 'Suivi Prospects'} />}
             {can('demandes') && <NavItem to="/echantillons" icon={Scissors} label={isAr ? 'العينات' : 'Échantillons'} />}
@@ -258,11 +258,11 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
           )}
 
           {/* Group 5: System Admin */}
-          {(can('rh') || can('pointage') || can('fast_scanner') || can('performance') || can('utilisateurs') || can('parametres')) && (
+          {(can('rh') || can('pointage') || can('fast_scanner') || can('performance') || can('utilisateurs') || can('parametres') || can('plaintes')) && (
             <div className="space-y-1">
               {!collapsed && <SectionTitle title={isAr ? 'النظام' : 'Système'} isAr={isAr} />}
             {can('rh') && <NavItem to="/rh" icon={Users} label={isAr ? 'الموارد البشرية' : 'RH'} />}
-            {can('rh') && <NavItem to="/reclamations" icon={Info} label={isAr ? 'شكايات العمال' : "Plaintes"} />}
+            {can('plaintes') && <NavItem to="/reclamations" icon={Info} label={isAr ? 'شكايات العمال' : "Plaintes"} />}
             {can('rh') && <NavItem to="/liste-attente" icon={Clock} label={isAr ? 'لائحة الانتظار' : "Liste d'Attente"} />}
             {can('pointage') && <NavItem to="/pointage" icon={ClipboardCheck} label={isAr ? 'تسجيل الحضور' : 'Pointage'} />}
             {can('fast_scanner') && <NavItem to="/fast-scanner" icon={QrCode} label={isAr ? 'الماسح الضوئي' : 'Scanner PRO'} />}

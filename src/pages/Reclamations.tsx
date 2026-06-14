@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Search, Info, MessageCircle, CheckCircle2, AlertTriangle, User, Calendar, Reply, Sparkles } from 'lucide-react';
-import { Reclamation, loadReclamations, saveReclamation } from '../types';
+import { Search, Info, MessageCircle, CheckCircle2, AlertTriangle, User, Calendar, Reply, Sparkles, Trash2 } from 'lucide-react';
+import { Reclamation, loadReclamations, saveReclamation, deleteRecord } from '../types';
 import { useLang } from '../contexts/LangContext';
 
 export default function Reclamations() {
@@ -46,6 +46,13 @@ export default function Reclamations() {
     const updatedList = reclamations.map(r => r.id === updatedRec.id ? updatedRec : r);
     setReclamations(updatedList);
     await saveReclamation(updatedRec);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm(isAr ? 'هل أنت متأكد أنك تريد حذف هذه الشكاية؟' : 'Voulez-vous vraiment supprimer cette plainte ?')) return;
+    
+    setReclamations(prev => prev.filter(r => r.id !== id));
+    await deleteRecord('reclamations', id);
   };
 
   return (
@@ -103,11 +110,20 @@ export default function Reclamations() {
                     </p>
                   </div>
                 </div>
-                <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${
-                  rec.statut === 'traite' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-                }`}>
-                  {rec.statut === 'traite' ? (isAr ? 'تمت المعالجة' : 'Traitée') : (isAr ? 'في الانتظار' : 'En attente')}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${
+                    rec.statut === 'traite' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                  }`}>
+                    {rec.statut === 'traite' ? (isAr ? 'تمت المعالجة' : 'Traitée') : (isAr ? 'في الانتظار' : 'En attente')}
+                  </span>
+                  <button 
+                    onClick={() => handleDelete(rec.id)} 
+                    className="p-1.5 bg-rose-50 text-rose-500 rounded-lg hover:bg-rose-500 hover:text-white transition-colors" 
+                    title={isAr ? 'حذف الشكاية' : 'Supprimer'}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               <div className="bg-slate-50 rounded-xl p-4 mb-4 relative z-10 border border-slate-100">

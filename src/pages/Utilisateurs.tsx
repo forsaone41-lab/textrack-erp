@@ -5,7 +5,7 @@ import {
   Eye, Copy, RefreshCw, KeyRound, UserX,
   LayoutDashboard, FileText, Scissors, Factory, Package,
   Users, ShoppingCart, Receipt, TrendingDown, ClipboardCheck, Clock,
-  Globe, Trophy, UserCircle, RotateCcw, Lock, Zap, MousePointer2, UserCheck, BarChart3, Settings, X, Sparkles
+  Globe, Trophy, UserCircle, RotateCcw, Lock, Zap, MousePointer2, UserCheck, BarChart3, Settings, X, Sparkles, Inbox as InboxIcon, Mail
 } from 'lucide-react';
 import {
   User, AppPage, RolePermMap,
@@ -95,6 +95,8 @@ interface PageDef { key: AppPage; label: string; icon: ElementType; group: strin
 const ALL_PAGES: PageDef[] = [
   { key: 'dashboard', label: 'Dashboard', labelAr: 'لوحة القيادة العامة', icon: LayoutDashboard, group: 'Général' },
   { key: 'demandes', label: 'Prospects (Leads)', labelAr: 'الزبناء المحتملون', icon: Users, group: 'Général' },
+  { key: 'inbox', label: 'Boîte de Réception', labelAr: 'صندوق الرسائل', icon: InboxIcon, group: 'Général' },
+  { key: 'gmail', label: 'Boîte Gmail', labelAr: 'البريد الوارد (Gmail)', icon: Mail, group: 'Général' },
   
   { key: 'fiches', label: 'Fiches Techniques', labelAr: 'البطاقات التقنية', icon: FileText, group: 'Production' },
   { key: 'ai_space', label: 'Assistant IA', labelAr: 'المساعد الذكي (AI Space)', icon: Sparkles, group: 'Production' },
@@ -107,6 +109,7 @@ const ALL_PAGES: PageDef[] = [
   { key: 'stocks', label: 'Stock Matériaux', labelAr: 'مخزن السلع', icon: Package, group: 'Stocks' },
   
   { key: 'rh', label: 'Suivi RH & العمال', labelAr: 'الموارد البشرية والعمال', icon: Users, group: 'RH & Finance' },
+  { key: 'plaintes', label: 'Plaintes', labelAr: 'الشكايات', icon: FileText, group: 'RH & Finance' },
   { key: 'clients', label: 'Base Clients', labelAr: 'قاعدة الزبناء', icon: UserCheck, group: 'RH & Finance' },
   { key: 'commandes', label: 'Commandes', labelAr: 'الطلبيات', icon: ShoppingCart, group: 'RH & Finance' },
   { key: 'factures', label: 'Factures', labelAr: 'الفواتير', icon: Receipt, group: 'RH & Finance' },

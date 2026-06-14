@@ -395,8 +395,8 @@ function AppContent() {
         
         {/* Protected Production Routes */}
         <Route path="demandes" element={can('demandes') ? <Demandes /> : <Navigate to="/" replace />} />
-        <Route path="inbox" element={can('demandes') ? <Inbox /> : <Navigate to="/" replace />} />
-        <Route path="gmail-inbox" element={can('demandes') ? <GmailInbox /> : <Navigate to="/" replace />} />
+        <Route path="inbox" element={can('inbox') ? <Inbox /> : <Navigate to="/" replace />} />
+        <Route path="gmail-inbox" element={can('gmail') ? <GmailInbox /> : <Navigate to="/" replace />} />
         <Route path="pipeline" element={can('crm') ? <Pipeline /> : <Navigate to="/" replace />} />
         <Route path="echantillons" element={can('demandes') ? <Echantillons /> : <Navigate to="/" replace />} />
         <Route path="fiches-techniques" element={can('fiches') ? <FichesTechniques /> : <Navigate to="/" replace />} />
@@ -419,7 +419,7 @@ function AppContent() {
         {/* Protected Admin & Other Routes */}
         <Route path="utilisateurs" element={can('utilisateurs') ? <Utilisateurs /> : <Navigate to="/" replace />} />
         <Route path="rh" element={can('rh') ? <SuiviRH /> : <Navigate to="/" replace />} />
-        <Route path="reclamations" element={can('rh') ? <Reclamations /> : <Navigate to="/" replace />} />
+        <Route path="reclamations" element={can('plaintes') ? <Reclamations /> : <Navigate to="/" replace />} />
         <Route path="clients" element={can('clients') ? <Clients /> : <Navigate to="/" replace />} />
         <Route path="fournisseurs" element={can('stocks') ? <Fournisseurs /> : <Navigate to="/" replace />} />
         <Route path="performance" element={can('performance') ? <Performance /> : <Navigate to="/" replace />} />
