@@ -1920,8 +1920,40 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
           )}
 
           {activeTab === 'support' && (
-            <div className="flex flex-col h-[70vh] bg-white rounded-[3rem] shadow-xl shadow-slate-200/50 overflow-hidden border border-slate-100">
-               {/* Chat Header */}
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+               {/* Quick Actions Grid */}
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <a href={`https://wa.me/${company.phone.replace(/\D/g, '')}`} target="_blank" className="p-6 bg-white border border-emerald-100 rounded-3xl shadow-lg shadow-emerald-100/50 flex items-center gap-6 group hover:border-emerald-300 transition-all">
+                     <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 shrink-0 group-hover:scale-110 transition-transform">
+                        <MessageCircle className="w-7 h-7" />
+                     </div>
+                     <div className="flex-1">
+                       <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight mb-1">WhatsApp Business</h3>
+                       <p className="text-slate-400 text-[11px] font-bold">{isAr ? 'تواصل معنا مباشرة عبر الواتساب' : 'Discutez avec nous sur WhatsApp'}</p>
+                     </div>
+                  </a>
+
+                  <a 
+                    href={`https://wa.me/${company.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                      isAr 
+                        ? `مرحباً فريق ${company.name}، أنا ${currentUser?.nom}. بغيت نطلب موعد لمناقشة تقنية بخصوص الموديلات ديالي.`
+                        : `Bonjour l'équipe ${company.name}, je suis ${currentUser?.nom}. J'aimerais demander un rendez-vous pour une discussion technique concernant mes modèles.`
+                    )}`}
+                    target="_blank"
+                    className="p-6 bg-white border border-indigo-100 rounded-3xl shadow-lg shadow-indigo-100/50 flex items-center gap-6 group hover:border-indigo-300 transition-all"
+                  >
+                     <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 shrink-0 group-hover:scale-110 transition-transform">
+                        <ArrowRight className="rotate-[-45deg] w-7 h-7" />
+                     </div>
+                     <div className="flex-1">
+                       <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight mb-1">{isAr ? 'طلب موعد' : 'Rendez-vous'}</h3>
+                       <p className="text-slate-400 text-[11px] font-bold">{isAr ? 'حدد موعداً لمناقشة مشروعك' : 'Planifier une rencontre technique'}</p>
+                     </div>
+                  </a>
+               </div>
+
+               <div className="flex flex-col h-[60vh] bg-white rounded-[3rem] shadow-xl shadow-slate-200/50 overflow-hidden border border-slate-100">
+                 {/* Chat Header */}
                <div className="p-6 md:p-8 border-b border-slate-100 bg-slate-50/50 flex items-center gap-4">
                  <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200">
                    <MessageCircle className="w-6 h-6 text-white" />
@@ -2019,6 +2051,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                    {isAr ? 'اضغط Enter لإرسال الرسالة' : 'Appuyez sur Entrée pour envoyer'}
                  </p>
                </div>
+             </div>
             </div>
           )}
         </div>
