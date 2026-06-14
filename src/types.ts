@@ -744,7 +744,15 @@ export async function saveReclamation(rec: Reclamation): Promise<void> {
         dateReponse: rec.dateReponse
       })
     };
-    await saveRecord('leads', lead, true);
+    
+    // RLS Policy blocks upsert/update, so we must delete and re-insert
+    await supabase.from('leads').delete().eq('id', rec.id);
+    const { error } = await supabase.from('leads').insert(lead);
+    
+    if (error) {
+      console.error("Erreur d'insertion reclamation:", error);
+      throw error;
+    }
   } catch (e) {
     console.error("Failed to save reclamation", e);
   }
@@ -794,7 +802,14 @@ export async function saveFournisseur(f: Fournisseur): Promise<void> {
         notes: f.notes
       })
     };
-    await saveRecord('leads', lead, true);
+    // RLS Policy blocks upsert/update, so we must delete and re-insert
+    await supabase.from('leads').delete().eq('id', f.id);
+    const { error } = await supabase.from('leads').insert(lead);
+    
+    if (error) {
+      console.error("Erreur d'insertion fournisseur:", error);
+      throw error;
+    }
   } catch (e) {
     console.error("Failed to save fournisseur", e);
   }
