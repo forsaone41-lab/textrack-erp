@@ -18,6 +18,7 @@ interface EmailMessage {
 
 export default function GmailInbox() {
   const { isAr } = useLang();
+  const isAdmin = (() => { try { return JSON.parse(localStorage.getItem('textrack_auth') || '{}')?.role === 'admin'; } catch { return false; } })();
   const [emails, setEmails] = useState<EmailMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -69,6 +70,7 @@ export default function GmailInbox() {
   };
 
   const filtered = emails.filter(e => {
+    if (e.is_hidden && !isAdmin) return false;
     if (!showHidden && e.is_hidden) return false;
     if (showHidden && !e.is_hidden) return false;
     const matchSearch = !search ||
@@ -104,11 +106,13 @@ export default function GmailInbox() {
               </div>
             </div>
             <div className="flex gap-1">
-              <button onClick={() => setShowHidden(!showHidden)}
-                title={showHidden ? 'Voir les emails normaux' : 'Voir les emails masqués'}
-                className={`w-8 h-8 flex items-center justify-center rounded-xl transition-all ${showHidden ? 'bg-amber-100 text-amber-600' : 'hover:bg-slate-100 text-slate-400'}`}>
-                <EyeOff className="w-4 h-4" />
-              </button>
+              {isAdmin && (
+                <button onClick={() => setShowHidden(!showHidden)}
+                  title={showHidden ? 'Voir les emails normaux' : 'Voir les emails masqués'}
+                  className={`w-8 h-8 flex items-center justify-center rounded-xl transition-all ${showHidden ? 'bg-amber-100 text-amber-600' : 'hover:bg-slate-100 text-slate-400'}`}>
+                  <EyeOff className="w-4 h-4" />
+                </button>
+              )}
               <button onClick={fetchEmails} disabled={refreshing}
                 className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-100 transition-all">
                 <RefreshCw className={`w-4 h-4 text-slate-400 ${refreshing ? 'animate-spin' : ''}`} />
@@ -168,11 +172,13 @@ export default function GmailInbox() {
                 </div>
               </div>
             </button>
-            <button onClick={() => showHidden ? unhideEmail(email) : hideEmail(email)}
-              className="absolute top-3 right-2 opacity-0 group-hover:opacity-100 transition-all w-6 h-6 flex items-center justify-center rounded-lg bg-slate-200 hover:bg-red-100 hover:text-red-500 text-slate-400"
-              title={showHidden ? 'Afficher' : 'Masquer'}>
-              {showHidden ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-            </button>
+            {isAdmin && (
+              <button onClick={() => showHidden ? unhideEmail(email) : hideEmail(email)}
+                className="absolute top-3 right-2 opacity-0 group-hover:opacity-100 transition-all w-6 h-6 flex items-center justify-center rounded-lg bg-slate-200 hover:bg-red-100 hover:text-red-500 text-slate-400"
+                title={showHidden ? 'Afficher' : 'Masquer'}>
+                {showHidden ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+              </button>
+            )}
             </div>
           ))}
         </div>
@@ -195,10 +201,12 @@ export default function GmailInbox() {
                 </p>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => hideEmail(selected)}
-                  className="h-9 px-3 bg-slate-100 text-slate-500 rounded-xl text-xs font-black flex items-center gap-1.5 hover:bg-red-50 hover:text-red-500 transition-all">
-                  <EyeOff className="w-3.5 h-3.5" /> {isAr ? 'إخفاء' : 'Masquer'}
-                </button>
+                {isAdmin && (
+                  <button onClick={() => hideEmail(selected)}
+                    className="h-9 px-3 bg-slate-100 text-slate-500 rounded-xl text-xs font-black flex items-center gap-1.5 hover:bg-red-50 hover:text-red-500 transition-all">
+                    <EyeOff className="w-3.5 h-3.5" /> {isAr ? 'إخفاء' : 'Masquer'}
+                  </button>
+                )}
                 <button onClick={() => replyWhatsApp(selected)}
                   className="h-9 px-3 bg-emerald-500 text-white rounded-xl text-xs font-black flex items-center gap-1.5 hover:bg-emerald-600 transition-all">
                   <MessageSquare className="w-3.5 h-3.5" /> WhatsApp
