@@ -241,6 +241,18 @@ export interface OperationModele {
   ordre_sequence: number;
 }
 
+export interface Reclamation {
+  id: string;
+  employeId: string;
+  employeNom: string;
+  sujet: string;
+  description: string;
+  dateReclamation: string;
+  statut: 'en_attente' | 'traite';
+  reponse?: string;
+  dateReponse?: string;
+}
+
 export interface SuiviHoraire {
   id: string;
   commande_id: string;

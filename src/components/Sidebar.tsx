@@ -51,7 +51,7 @@ const LogoIconOnly = ({ src, alt }: { src: string; alt: string }) => {
       </div>
     );
   }
-  return <img src={src} className="w-10 h-10 object-contain rounded-xl" alt={alt} onError={() => setError(true)} />;
+  return <img src={src} className="w-10 h-10 object-cover object-left rounded-xl" alt={alt} onError={() => setError(true)} />;
 };
 
 export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOpen, company }: SidebarProps) {
@@ -144,7 +144,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 overflow-hidden">
               {collapsed
-                ? <LogoIconOnly src={company.logoAdmin || company.logoUrl} alt={company.name} />
+                ? <LogoIconOnly src={company.logoAppIcon || company.logoAdmin || company.logoUrl} alt={company.name} />
                 : <LogoWithFallback src={company.logoAdmin || company.logoUrl} alt={company.name} />
               }
             </div>
@@ -255,6 +255,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
             <div className="space-y-1">
               {!collapsed && <SectionTitle title={isAr ? 'النظام' : 'Système'} isAr={isAr} />}
             {can('rh') && <NavItem to="/rh" icon={Users} label={isAr ? 'الموارد البشرية' : 'RH'} />}
+            {can('rh') && <NavItem to="/reclamations" icon={Info} label={isAr ? 'شكايات العمال' : "Plaintes"} />}
             {can('rh') && <NavItem to="/liste-attente" icon={Clock} label={isAr ? 'لائحة الانتظار' : "Liste d'Attente"} />}
             {can('pointage') && <NavItem to="/pointage" icon={ClipboardCheck} label={isAr ? 'تسجيل الحضور' : 'Pointage'} />}
             {can('fast_scanner') && <NavItem to="/fast-scanner" icon={QrCode} label={isAr ? 'الماسح الضوئي' : 'Scanner PRO'} />}

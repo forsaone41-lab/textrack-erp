@@ -24,7 +24,10 @@ import {
   OperationModele, 
   SuiviHoraire, 
   PaiementSalaire,
-  loadData 
+  Reclamation,
+  loadData,
+  saveRecord,
+  genId
 } from '../types';
 import { QRCodeSVG } from 'qrcode.react';
 import { useLang } from '../contexts/LangContext';
@@ -38,7 +41,7 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
   const [loading, setLoading] = useState(true);
   // Auto-detect worker from logged-in user account, but allow admin to switch
   const [selectedWorkerId, setSelectedWorkerId] = useState(currentUser?.employeId || '');
-  const [activeTab, setActiveTab] = useState<'mission' | 'paiements' | 'profil'>('mission');
+  const [activeTab, setActiveTab] = useState<'mission' | 'paiements' | 'profil' | 'reclamations'>('mission');
   const [expandedMissionId, setExpandedMissionId] = useState<string | null>(null);
   const [data, setData] = useState<{
     employes: Employe[];
@@ -51,8 +54,12 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
     commandes: [],
     operations: [],
     suivi: [],
-    paiements: []
+    paiements: [],
+    reclamations: []
   });
+
+  const [newReclamation, setNewReclamation] = useState({ sujet: '', description: '' });
+  const [isSubmittingRec, setIsSubmittingRec] = useState(false);
 
   const [isUploading, setIsUploading] = useState(false);
 
@@ -62,14 +69,16 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
       loadData<Commande>('commandes'),
       loadData<OperationModele>('operations_modele'),
       loadData<SuiviHoraire>('suivi_horaire'),
-      loadData<PaiementSalaire>('paiements_salaires')
-    ]).then(([emps, cmds, ops, suiv, pays]) => {
+      loadData<PaiementSalaire>('paiements_salaires'),
+      loadData<Reclamation>('reclamations')
+    ]).then(([emps, cmds, ops, suiv, pays, recs]) => {
       setData({
         employes: emps.filter(e => e.actif),
         commandes: cmds,
         operations: ops,
         suivi: suiv,
-        paiements: pays
+        paiements: pays,
+        reclamations: recs || []
       });
       setLoading(false);
     });
@@ -270,6 +279,32 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
     .filter(p => p.employeId === selectedWorkerId)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+  const workerReclamations = data.reclamations
+    .filter(r => r.employeId === selectedWorkerId)
+    .sort((a, b) => new Date(b.dateReclamation).getTime() - new Date(a.dateReclamation).getTime());
+
+  const handleSubmitReclamation = async () => {
+    if (!currentWorker || !newReclamation.sujet || !newReclamation.description) return;
+    setIsSubmittingRec(true);
+    const rec: Reclamation = {
+      id: genId(),
+      employeId: currentWorker.id,
+      employeNom: `${currentWorker.prenom} ${currentWorker.nom}`,
+      sujet: newReclamation.sujet,
+      description: newReclamation.description,
+      dateReclamation: new Date().toISOString(),
+      statut: 'en_attente'
+    };
+    
+    setData(prev => ({
+      ...prev,
+      reclamations: [...prev.reclamations, rec]
+    }));
+    await saveRecord('reclamations', rec);
+    setNewReclamation({ sujet: '', description: '' });
+    setIsSubmittingRec(false);
+  };
+
   const today = new Date().toLocaleDateString('en-CA');
 
   const workerSuiviToday = useMemo(() => 
@@ -363,7 +398,8 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
         {[
           { id: 'mission', icon: <Target className="w-4 h-4" />, label: isAr ? 'المهام' : 'Missions' },
           { id: 'paiements', icon: <Wallet className="w-4 h-4" />, label: isAr ? 'الأداء' : 'Paiements' },
-          { id: 'profil', icon: <UserIcon className="w-4 h-4" />, label: isAr ? 'حسابي' : 'Profil' }
+          { id: 'profil', icon: <UserIcon className="w-4 h-4" />, label: isAr ? 'حسابي' : 'Profil' },
+          { id: 'reclamations', icon: <Info className="w-4 h-4" />, label: isAr ? 'شكايات' : 'Plaintes' }
         ].map(tab => (
           <button
             key={tab.id}
@@ -723,6 +759,69 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
                    </div>
                    <ArrowRight className="w-5 h-5 text-white/50 group-hover:translate-x-1 transition-transform" />
                 </div>
+             </div>
+          </div>
+        )}
+
+        {activeTab === 'reclamations' && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+             <div className="flex items-center justify-between px-2">
+                <h1 className="text-2xl font-bold tracking-tight">{isAr ? 'الشكايات والملاحظات' : 'Plaintes et Remarques'}</h1>
+             </div>
+
+             <div className="bg-slate-900 rounded-[2rem] p-6 border border-white/5 space-y-4">
+               <h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">{isAr ? 'إرسال شكاية جديدة' : 'Nouvelle plainte'}</h3>
+               <div>
+                 <input 
+                   type="text" 
+                   value={newReclamation.sujet}
+                   onChange={e => setNewReclamation({...newReclamation, sujet: e.target.value})}
+                   placeholder={isAr ? "الموضوع (مثال: مشكل مع رئيس السلسلة)..." : "Sujet..."}
+                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-indigo-500 mb-3"
+                 />
+                 <textarea 
+                   value={newReclamation.description}
+                   onChange={e => setNewReclamation({...newReclamation, description: e.target.value})}
+                   placeholder={isAr ? "اكتب تفاصيل المشكل هنا..." : "Détails..."}
+                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-indigo-500 min-h-[100px]"
+                 />
+               </div>
+               <button 
+                 onClick={handleSubmitReclamation}
+                 disabled={!newReclamation.sujet || !newReclamation.description || isSubmittingRec}
+                 className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-indigo-500 transition-all disabled:opacity-50"
+               >
+                 {isSubmittingRec ? (isAr ? 'جاري الإرسال...' : 'Envoi...') : (isAr ? 'إرسال الشكاية' : 'Envoyer la plainte')}
+               </button>
+             </div>
+
+             <div className="space-y-4">
+                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 px-2">{isAr ? 'سجل الشكايات' : 'Historique'}</h3>
+                {workerReclamations.length === 0 ? (
+                  <div className="bg-slate-900 rounded-[2rem] p-8 text-center border border-dashed border-slate-800">
+                    <p className="text-slate-500 font-bold uppercase text-xs">{isAr ? 'لا توجد شكايات سابقة' : 'Aucune plainte.'}</p>
+                  </div>
+                ) : (
+                  workerReclamations.map((rec) => (
+                    <div key={rec.id} className="bg-slate-900 border border-white/5 p-5 rounded-2xl">
+                       <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-bold text-white">{rec.sujet}</h4>
+                          <span className={`text-[9px] px-2 py-1 rounded font-bold uppercase ${rec.statut === 'traite' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
+                            {rec.statut === 'traite' ? (isAr ? 'تمت المعالجة' : 'Traitée') : (isAr ? 'في الانتظار' : 'En attente')}
+                          </span>
+                       </div>
+                       <p className="text-xs text-slate-400 mb-3">{rec.description}</p>
+                       <p className="text-[10px] text-slate-500 font-bold">{new Date(rec.dateReclamation).toLocaleString()}</p>
+                       
+                       {rec.reponse && (
+                         <div className="mt-4 p-4 bg-slate-950 rounded-xl border border-slate-800">
+                           <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">{isAr ? 'رد الإدارة:' : 'Réponse:'}</p>
+                           <p className="text-xs text-slate-300">{rec.reponse}</p>
+                         </div>
+                       )}
+                    </div>
+                  ))
+                )}
              </div>
           </div>
         )}
