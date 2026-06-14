@@ -8,12 +8,9 @@ export default function VisioRoom() {
   const [copied, setCopied] = useState(false);
   const company = loadCompanyProfile();
   
-  // Unique room name based on company name to avoid clashes on public Jitsi
-  const roomName = `BEYA_${(company.name || 'COMPANY').replace(/[^a-zA-Z0-9]/g, '_')}_Room`;
-  
-  // Link to BEYA's own public meeting page instead of Jitsi's link
+  // Link to BEYA's own public meeting page instead of Daily's link
   const beyaMeetUrl = `${window.location.origin}${window.location.pathname}#/meet`;
-  const meetUrl = `https://meet.jit.si/${roomName}`;
+  const meetUrl = `https://beyacreative.daily.co/BEYACREATIVE`;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(beyaMeetUrl);
@@ -45,7 +42,7 @@ export default function VisioRoom() {
 
       <div className="w-full bg-slate-900 rounded-[2rem] overflow-hidden shadow-2xl border border-slate-800" style={{ height: '70vh', minHeight: '600px' }}>
         <iframe
-          src={`${meetUrl}?userInfo.displayName=${encodeURIComponent(company.name || 'Admin')}#config.prejoinPageEnabled=false&config.disableDeepLinking=true&interfaceConfig.SHOW_JITSI_WATERMARK=false&interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false&interfaceConfig.SHOW_BRAND_WATERMARK=false`}
+          src={meetUrl}
           allow="camera; microphone; display-capture; fullscreen"
           className="w-full h-full border-0"
         />

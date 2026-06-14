@@ -4,10 +4,7 @@ import { loadCompanyProfile } from '../types';
 export default function PublicMeet() {
   const company = loadCompanyProfile();
   
-  // Unique room name based on company name
-  const roomName = `BEYA_${(company.name || 'COMPANY').replace(/[^a-zA-Z0-9]/g, '_')}_Room`;
-  
-  const meetUrl = `https://meet.jit.si/${roomName}`;
+  const meetUrl = `https://beyacreative.daily.co/BEYACREATIVE`;
 
   return (
     <div className="w-full h-screen bg-slate-950 flex flex-col">
@@ -20,7 +17,7 @@ export default function PublicMeet() {
       {/* Full screen iframe */}
       <div className="flex-1 w-full relative bg-black">
         <iframe
-          src={`${meetUrl}#config.prejoinPageEnabled=false&config.disableDeepLinking=true&interfaceConfig.SHOW_JITSI_WATERMARK=false&interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false&interfaceConfig.SHOW_BRAND_WATERMARK=false`}
+          src={meetUrl}
           allow="camera; microphone; display-capture; fullscreen"
           className="w-full h-full border-0 absolute inset-0"
         />
