@@ -20,7 +20,7 @@ export default function PublicMeet() {
       {/* Full screen iframe */}
       <div className="flex-1 w-full relative bg-black">
         <iframe
-          src={`${meetUrl}#config.disableDeepLinking=true&interfaceConfig.SHOW_JITSI_WATERMARK=false&interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false&interfaceConfig.SHOW_BRAND_WATERMARK=false`}
+          src={`${meetUrl}#config.prejoinPageEnabled=false&config.disableDeepLinking=true&interfaceConfig.SHOW_JITSI_WATERMARK=false&interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false&interfaceConfig.SHOW_BRAND_WATERMARK=false`}
           allow="camera; microphone; display-capture; fullscreen"
           className="w-full h-full border-0 absolute inset-0"
         />
