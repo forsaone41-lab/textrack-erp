@@ -680,7 +680,9 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                </div>
             </div>
           )}
-          {activeTab === 'demandes' && (
+          {activeTab === 'demandes' && (() => {
+             const trueDemandes = mesDemandes.filter(d => d.type !== '__MESSAGE__' && d.type !== '__MESSAGE_REPLY__');
+             return (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 text-center md:text-left">
                   <div>
@@ -689,7 +691,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                   </div>
                </div>
 
-               {mesDemandes.length === 0 ? (
+               {trueDemandes.length === 0 ? (
                  <div className="text-center py-20 bg-white rounded-3xl border border-slate-100 shadow-sm">
                    <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6">
                      <MessageCircle className="w-10 h-10 text-indigo-300" />
@@ -699,7 +701,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                  </div>
                ) : (
                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                   {mesDemandes.map(d => {
+                   {trueDemandes.map(d => {
                      const isAccepted = d.crmStage === 'confirme';
                      const isRejected = d.crmStage === 'annule';
                      const isPending = !isAccepted && !isRejected;
@@ -734,7 +736,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                  </div>
                )}
             </div>
-          )}
+          );})()}
 
           {activeTab === 'orders' && (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
