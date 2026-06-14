@@ -25,7 +25,7 @@ export default function Fournisseurs() {
 
   function openCreate() {
     setEditId(null);
-    setForm({ nom: '', type: 'tissu', telephone: '', email: '', adresse: '', notes: '' });
+    setForm({ nom: '', type: 'tissu', telephone: '', email: '', adresse: '', notes: '', hasBoutique: false });
     setShowModal(true);
   }
 
@@ -48,7 +48,8 @@ export default function Fournisseurs() {
       email: form.email || '',
       adresse: form.adresse || '',
       notes: form.notes || '',
-      dateCreation: form.dateCreation || new Date().toISOString()
+      dateCreation: form.dateCreation || new Date().toISOString(),
+      hasBoutique: form.hasBoutique || false
     };
 
     const updated = isNew ? [...fournisseurs, fData] : fournisseurs.map(f => f.id === editId ? fData : f);
@@ -127,15 +128,17 @@ export default function Fournisseurs() {
                     <span className="text-xs font-bold tabular-nums" dir="ltr">{f.telephone}</span>
                   </a>
                   <div className="flex gap-2">
-                    <a 
-                      href={`https://wa.me/c/${f.telephone.replace(/\s/g, '').replace(/^0/, '212')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center shadow-sm"
-                      title={isAr ? 'كتالوج واتساب (البوتيك)' : 'Catalogue WhatsApp (Boutique)'}
-                    >
-                      <Package className="w-4 h-4" />
-                    </a>
+                    {f.hasBoutique && (
+                      <a 
+                        href={`https://wa.me/c/${f.telephone.replace(/\s/g, '').replace(/^0/, '212')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center shadow-sm"
+                        title={isAr ? 'كتالوج واتساب (البوتيك)' : 'Catalogue WhatsApp (Boutique)'}
+                      >
+                        <Package className="w-4 h-4" />
+                      </a>
+                    )}
                     <a 
                       href={`https://wa.me/${f.telephone.replace(/\s/g, '').replace(/^0/, '212')}`}
                       target="_blank"
@@ -179,10 +182,21 @@ export default function Fournisseurs() {
             <div className={`p-8 space-y-4 max-h-[70vh] overflow-y-auto ${isAr ? 'text-right' : ''}`}>
               <div>
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'اسم المورد / الشركة *' : 'Nom du Fournisseur / Société *'}</label>
-                <input 
-                  value={form.nom || ''} onChange={e => setForm({...form, nom: e.target.value})}
-                  className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-500 ${isAr ? 'text-right' : ''}`}
-                />
+                <div className={`flex items-center gap-4 ${isAr ? 'flex-row-reverse' : ''}`}>
+                  <input 
+                    value={form.nom || ''} onChange={e => setForm({...form, nom: e.target.value})}
+                    className={`flex-1 bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-500 ${isAr ? 'text-right' : ''}`}
+                  />
+                  <label className={`flex items-center gap-2 cursor-pointer p-3 bg-slate-50 border-2 border-slate-100 rounded-2xl ${isAr ? 'flex-row-reverse' : ''}`}>
+                    <input 
+                      type="checkbox"
+                      checked={form.hasBoutique || false}
+                      onChange={e => setForm({...form, hasBoutique: e.target.checked})}
+                      className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                    />
+                    <span className="text-xs font-bold text-slate-700 whitespace-nowrap">{isAr ? 'عندو بوتيك فواتساب؟' : 'A une boutique WhatsApp ?'}</span>
+                  </label>
+                </div>
               </div>
               <div className={`grid grid-cols-2 gap-4 ${isAr ? 'flex-row-reverse' : ''}`}>
                 <div>

@@ -210,6 +210,7 @@ export interface Fournisseur {
   adresse?: string;
   notes?: string;
   dateCreation: string;
+  hasBoutique?: boolean;
 }
 
 export interface PaiementSalaire {
