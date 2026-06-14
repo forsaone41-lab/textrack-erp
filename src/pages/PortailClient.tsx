@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star } from 'lucide-react';
+import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2 } from 'lucide-react';
 import {
-  Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile, saveRecord, Lead, loadLeads, loadLeadPhoto
+  Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile, saveRecord, Lead, loadLeads, loadLeadPhoto, deleteRecord, genId
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { trackPixelEvent } from '../utils/pixel';
@@ -200,6 +200,21 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     );
     setFound(results);
   }
+
+  const handleDeleteClientMsg = async (msgId: string) => {
+    if (!confirm(isAr ? 'هل أنت متأكد من حذف هذه الرسالة؟' : 'Voulez-vous supprimer ce message ?')) return;
+    await deleteRecord('leads', msgId);
+    setMesDemandes(prev => prev.filter(m => m.id !== msgId));
+  };
+
+  const handleClearClientChat = async () => {
+    if (!confirm(isAr ? 'هل أنت متأكد من حذف هذه المحادثة بالكامل؟' : 'Voulez-vous supprimer toute la conversation ?')) return;
+    const chatMsgs = mesDemandes.filter(m => m.type === '__MESSAGE__' || m.type === '__MESSAGE_REPLY__');
+    for (const m of chatMsgs) {
+      await deleteRecord('leads', m.id);
+    }
+    setMesDemandes(prev => prev.filter(m => m.type !== '__MESSAGE__' && m.type !== '__MESSAGE_REPLY__'));
+  };
 
   const handleDemandeAnnulation = async () => {
     if (!annulationModal) return;
@@ -1978,16 +1993,23 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
 
                <div className="flex flex-col h-[60vh] bg-white rounded-[3rem] shadow-xl shadow-slate-200/50 overflow-hidden border border-slate-100">
                  {/* Chat Header */}
-               <div className="p-6 md:p-8 border-b border-slate-100 bg-slate-50/50 flex items-center gap-4">
+                 <div className="p-6 md:p-8 border-b border-slate-100 bg-slate-50/50 flex items-center gap-4">
                  <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200">
                    <MessageCircle className="w-6 h-6 text-white" />
                  </div>
-                 <div>
+                 <div className="flex-1">
                    <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">{isAr ? 'رسائل الدعم الفني' : 'Messages Support VIP'}</h2>
                    <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-1">
                      <ShieldCheck className="w-3 h-3" /> {isAr ? 'محادثة آمنة ومباشرة' : 'Discussion Sécurisée et Directe'}
                    </p>
                  </div>
+                 <button 
+                   onClick={handleClearClientChat}
+                   className="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all group shrink-0"
+                   title={isAr ? 'حذف المحادثة' : 'Supprimer la conversation'}
+                 >
+                   <Trash2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                 </button>
                </div>
 
                {/* Chat Messages */}
@@ -1995,13 +2017,23 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                   {mesDemandes.filter(m => m.type === '__MESSAGE__' || m.type === '__MESSAGE_REPLY__').sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(msg => {
                     const isClient = msg.type === '__MESSAGE__';
                     return (
-                      <div key={msg.id} className={`flex ${isClient ? (isAr ? 'justify-end' : 'justify-end') : (isAr ? 'justify-start' : 'justify-start')}`}>
+                      <div key={msg.id} className={`flex ${isClient ? (isAr ? 'justify-end' : 'justify-end') : (isAr ? 'justify-start' : 'justify-start')} group`}>
+                        {isClient && (
+                          <button onClick={() => handleDeleteClientMsg(msg.id)} className="opacity-0 group-hover:opacity-100 p-2 text-red-400 hover:text-red-600 transition-all mr-2">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                         <div className={`max-w-[85%] md:max-w-[70%] p-5 rounded-3xl shadow-sm ${isClient ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-white border border-slate-100 text-slate-700 rounded-tl-none'}`}>
                           <p className="text-sm font-medium whitespace-pre-wrap leading-relaxed">{msg.details}</p>
                           <span className={`block text-[10px] mt-2 font-bold ${isClient ? 'text-indigo-200' : 'text-slate-400'}`}>
                             {new Date(msg.date).toLocaleString(isAr ? 'ar-MA' : 'fr-MA', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
                           </span>
                         </div>
+                        {!isClient && (
+                          <button onClick={() => handleDeleteClientMsg(msg.id)} className="opacity-0 group-hover:opacity-100 p-2 text-red-400 hover:text-red-600 transition-all ml-2">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     )
                   })}

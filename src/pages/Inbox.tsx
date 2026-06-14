@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Mail, Phone, MapPin, Send, MessageSquare, CheckCircle, Clock, Search, Inbox as InboxIcon, RefreshCw, User, ShieldCheck } from 'lucide-react';
-import { Lead, loadLeads, saveRecord, genId } from '../types';
+import { Mail, Phone, MapPin, Send, MessageSquare, CheckCircle, Clock, Search, Inbox as InboxIcon, RefreshCw, User, ShieldCheck, Trash2 } from 'lucide-react';
+import { Lead, loadLeads, saveRecord, deleteRecord, genId } from '../types';
 import { useLang } from '../contexts/LangContext';
 
 export default function Inbox() {
@@ -78,6 +78,23 @@ export default function Inbox() {
            clientName.toLowerCase().includes(search.toLowerCase()) || 
            phone.includes(search);
   });
+
+  const handleDeleteMsg = async (msgId: string) => {
+    if (!confirm(isAr ? 'هل أنت متأكد من حذف هذه الرسالة؟' : 'Voulez-vous supprimer ce message ?')) return;
+    await deleteRecord('leads', msgId);
+    setMessages(prev => prev.filter(m => m.id !== msgId));
+  };
+
+  const handleDeleteConv = async () => {
+    if (!selectedPhone) return;
+    if (!confirm(isAr ? 'هل أنت متأكد من حذف هذه المحادثة بالكامل؟' : 'Voulez-vous supprimer toute la conversation ?')) return;
+    const msgs = conversations[selectedPhone];
+    for (const m of msgs) {
+      await deleteRecord('leads', m.id);
+    }
+    setMessages(prev => prev.filter(m => m.phone !== selectedPhone && m.email !== selectedPhone));
+    setSelectedPhone(null);
+  };
 
   const handleSend = async () => {
     if (!replyText.trim() || !selectedPhone) return;
@@ -213,12 +230,19 @@ export default function Inbox() {
             <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center mr-3 shrink-0">
               <User className="w-4 h-4 text-indigo-600" />
             </div>
-            <div>
+            <div className="flex-1">
               <h2 className="text-sm font-black text-slate-900 uppercase">
                 {conversations[selectedPhone].find(m => m.type === '__MESSAGE__')?.name || selectedPhone}
               </h2>
               <p className="text-[10px] text-slate-500 font-bold">{selectedPhone}</p>
             </div>
+            <button 
+              onClick={handleDeleteConv}
+              className="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all group"
+              title={isAr ? 'حذف المحادثة' : 'Supprimer la conversation'}
+            >
+              <Trash2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            </button>
           </div>
 
           {/* Messages */}
@@ -226,7 +250,12 @@ export default function Inbox() {
             {conversations[selectedPhone].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map((msg, idx) => {
               const isAdmin = msg.type === '__MESSAGE_REPLY__';
               return (
-                <div key={idx} className={`flex ${isAdmin ? 'justify-end' : 'justify-start'}`}>
+                <div key={idx} className={`flex ${isAdmin ? 'justify-end' : 'justify-start'} group`}>
+                  {isAdmin && (
+                    <button onClick={() => handleDeleteMsg(msg.id)} className="opacity-0 group-hover:opacity-100 p-2 text-red-400 hover:text-red-600 transition-all mr-2">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                   <div className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-sm ${
                     isAdmin 
                       ? 'bg-indigo-600 text-white rounded-tr-none' 
@@ -237,6 +266,11 @@ export default function Inbox() {
                       {new Date(msg.date).toLocaleTimeString(isAr ? 'ar-MA' : 'fr-MA', { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
+                  {!isAdmin && (
+                    <button onClick={() => handleDeleteMsg(msg.id)} className="opacity-0 group-hover:opacity-100 p-2 text-red-400 hover:text-red-600 transition-all ml-2">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               );
             })}
