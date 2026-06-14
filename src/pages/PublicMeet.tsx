@@ -4,7 +4,15 @@ import { loadCompanyProfile } from '../types';
 export default function PublicMeet() {
   const company = loadCompanyProfile();
   
-  const meetUrl = `https://beyacreative.daily.co/BEYACREATIVE`;
+  // Read the 'server' query param from the URL to determine which server to load
+  const serverMode = new URLSearchParams(window.location.hash.split('?')[1]).get('server') || 'jitsi';
+  
+  const roomName = `BEYA_${(company.name || 'COMPANY').replace(/[^a-zA-Z0-9]/g, '_')}_Room`;
+  
+  const jitsiUrl = `https://meet.jit.si/${roomName}#config.prejoinPageEnabled=false&config.disableDeepLinking=true&interfaceConfig.SHOW_JITSI_WATERMARK=false&interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false&interfaceConfig.SHOW_BRAND_WATERMARK=false`;
+  const dailyUrl = `https://beyacreative.daily.co/BEYACREATIVE`;
+
+  const finalUrl = serverMode === 'daily' ? dailyUrl : jitsiUrl;
 
   return (
     <div className="w-full h-screen bg-slate-950 flex flex-col">
@@ -17,7 +25,7 @@ export default function PublicMeet() {
       {/* Full screen iframe */}
       <div className="flex-1 w-full relative bg-black">
         <iframe
-          src={meetUrl}
+          src={finalUrl}
           allow="camera; microphone; display-capture; fullscreen"
           className="w-full h-full border-0 absolute inset-0"
         />
