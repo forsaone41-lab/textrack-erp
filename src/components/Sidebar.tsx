@@ -9,7 +9,8 @@ import {
   Clock,
   PanelLeftClose,
   PanelLeftOpen,
-  PhoneCall
+  PhoneCall,
+  Info
 } from 'lucide-react';
 
 import { User, CompanyProfile, loadPermissions, AppPage, syncCompanyProfile } from '../types';
