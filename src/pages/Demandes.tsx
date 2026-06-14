@@ -1564,7 +1564,7 @@ export default function Demandes() {
                           {(client as any).phone2 && <span className="flex items-center gap-1"><MessageSquare className="w-3 h-3 text-emerald-400" /> {(client as any).phone2}</span>}
                           {client.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3 text-indigo-400" /> {client.email}</span>}
                           <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-rose-400" /> {client.ville || '-'}</span>
-                          {client.contactedAt && <span className="flex items-center gap-1 text-emerald-600"><MessageSquare className="w-3 h-3" /> {new Date(client.contactedAt).toLocaleDateString()}</span>}
+                          {client.contactedAt && <span className="flex items-center gap-1 text-emerald-600"><MessageSquare className="w-3 h-3" /> {new Date(client.contactedAt).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>}
                         </div>
                       </div>
                     </div>
