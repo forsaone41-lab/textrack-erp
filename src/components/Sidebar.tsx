@@ -196,7 +196,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
             {can('worker_portal') && <NavItem to="/worker-portal" icon={UserIcon} label={isAr ? 'فضاء العامل' : 'Espace Ouvrier'} />}
             {can('chef_chaine_portal') && <NavItem to="/chef-portal" icon={ShieldCheck} label={isAr ? 'بوابة رئيس السلسلة' : 'Portail Chef Chaîne'} />}
             {can('partenaire_portal') && <NavItem to="/partenaire-portal" icon={Globe} label={isAr ? 'بوابة الشركاء' : 'Portail Partenaire'} />}
-            {can('dashboard') && <NavItem to="/visio" icon={Video} label={isAr ? 'قاعة الاجتماعات' : 'Salle Visio'} />}
+            {can('visio') && <NavItem to="/visio" icon={Video} label={isAr ? 'قاعة الاجتماعات' : 'Salle Visio'} />}
           </div>
 
           {/* Group 2: Commercial */}

@@ -5,7 +5,7 @@ import {
   Eye, Copy, RefreshCw, KeyRound, UserX,
   LayoutDashboard, FileText, Scissors, Factory, Package,
   Users, ShoppingCart, Receipt, TrendingDown, ClipboardCheck, Clock,
-  Globe, Trophy, UserCircle, RotateCcw, Lock, Zap, MousePointer2, UserCheck, BarChart3, Settings, X, Sparkles, Inbox as InboxIcon, Mail
+  Globe, Trophy, UserCircle, RotateCcw, Lock, Zap, MousePointer2, UserCheck, BarChart3, Settings, X, Sparkles, Inbox as InboxIcon, Mail, Video
 } from 'lucide-react';
 import {
   User, AppPage, RolePermMap,
@@ -127,6 +127,7 @@ const ALL_PAGES: PageDef[] = [
   { key: 'performance', label: 'Performance', labelAr: 'أداء العمال', icon: Trophy, group: 'Outils' },
   { key: 'utilisateurs', label: 'Gestion Utilisateurs', labelAr: 'إدارة المستخدمين', icon: UserCircle, group: 'Outils' },
   { key: 'parametres', label: 'Paramètres', labelAr: 'الإعدادات', icon: Settings, group: 'Outils' },
+  { key: 'visio', label: 'Salle de Réunion (Visio)', labelAr: 'قاعة الاجتماعات', icon: Video, group: 'Outils' },
 ];
 
 const PAGE_GROUPS = ['Général', 'Production', 'Stocks', 'RH & Finance', 'Portails', 'Outils'];

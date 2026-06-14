@@ -434,7 +434,7 @@ function AppContent() {
         <Route path="liste-attente" element={can('rh') ? <ListeAttente /> : <Navigate to="/" replace />} />
         <Route path="notifications" element={can('notifications') ? <Notifications /> : <Navigate to="/" replace />} />
         <Route path="ai-space" element={can('ai_space') ? <AISpace /> : <Navigate to="/" replace />} />
-        <Route path="visio" element={<VisioRoom />} />
+        <Route path="visio" element={can('visio') ? <VisioRoom /> : <Navigate to="/" replace />} />
         <Route path="meet" element={<PublicMeet />} />
         <Route path="planning-view/:id" element={<PlanningView />} />
 
