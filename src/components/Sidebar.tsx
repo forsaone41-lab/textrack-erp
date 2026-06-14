@@ -218,6 +218,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
               <>
                 <NavItem to="/achats" icon={ShoppingCart} label={isAr ? 'المشتريات' : 'Achats'} />
                 <NavItem to="/stocks" icon={Package} label={isAr ? 'المخزون' : 'Stocks'} />
+                <NavItem to="/fournisseurs" icon={UserCheck} label={isAr ? 'الموردين' : 'Fournisseurs'} />
               </>
             )}
             {can('fiches') && (

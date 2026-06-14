@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, TriangleAlert, Package, Layers, MapPin, User, Tag, Coins, Calendar, Mail, Phone, MessageCircle, Camera, X } from 'lucide-react';
-import { StockTissu, StockFourniture, loadData, saveRecord, deleteRecord, genId } from '../types';
+import { StockTissu, StockFourniture, Fournisseur, loadData, saveRecord, deleteRecord, genId } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
 
@@ -57,6 +57,7 @@ export default function StockMateriaux() {
   const [fiches, setFiches] = useState<any[]>([]);
   const [ordres, setOrdres] = useState<any[]>([]);
   const [filterFourni, setFilterFourni] = useState('tous');
+  const [fournisseurList, setFournisseurList] = useState<Fournisseur[]>([]);
 
   const [showTModal, setShowTModal] = useState(false);
   const [editTId, setEditTId] = useState<string | null>(null);
@@ -69,16 +70,18 @@ export default function StockMateriaux() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [tiss, four, cmds, fch] = await Promise.all([
+        const [tiss, four, cmds, fch, fours] = await Promise.all([
           loadData<StockTissu>('tissus'),
           loadData<StockFourniture>('fournitures'),
           loadData<any>('commandes'),
-          loadData<any>('fiches_techniques')
+          loadData<any>('fiches_techniques'),
+          loadData<Fournisseur>('fournisseurs')
         ]);
         setTissus(tiss || []);
         setFournitures(four || []);
         setCommandes(cmds || []);
         setFiches(fch || []);
+        setFournisseurList(fours || []);
         
         // Load ordres separately to not break the page if table is missing
         try {
@@ -804,8 +807,13 @@ export default function StockMateriaux() {
               ].map(({ label, key, type }) => (
                 <div key={key}>
                   <label className="block text-xs font-medium text-slate-600 mb-1">{label}</label>
-                  <input type={type} value={(tForm as any)[key] ?? ''} onChange={e => setTForm({ ...tForm, [key]: type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value })}
+                  <input type={type} list={key === 'fournisseur' ? 'fournisseurs-list' : undefined} value={(tForm as any)[key] ?? ''} onChange={e => setTForm({ ...tForm, [key]: type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value })}
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                  {key === 'fournisseur' && (
+                    <datalist id="fournisseurs-list">
+                      {fournisseurList.map(f => <option key={f.id} value={f.nom} />)}
+                    </datalist>
+                  )}
                 </div>
               ))}
               <div className="col-span-2">
@@ -932,8 +940,11 @@ export default function StockMateriaux() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Fournisseur</label>
-                <input value={fForm.fournisseur ?? ''} onChange={e => setFForm({ ...fForm, fournisseur: e.target.value })}
+                <input list="fournisseurs-list-f" value={fForm.fournisseur ?? ''} onChange={e => setFForm({ ...fForm, fournisseur: e.target.value })}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                <datalist id="fournisseurs-list-f">
+                  {fournisseurList.map(f => <option key={f.id} value={f.nom} />)}
+                </datalist>
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Description</label>

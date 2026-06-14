@@ -48,6 +48,7 @@ const ListeAttente    = lazy(() => import('./pages/ListeAttente'));
 const Notifications   = lazy(() => import('./pages/Notifications'));
 const AISpace         = lazy(() => import('./pages/AISpace'));
 const Achats          = lazy(() => import('./pages/Achats'));
+const Fournisseurs    = lazy(() => import('./pages/Fournisseurs'));
 
 import { PageLoader } from './components/PageLoader';
 
@@ -411,6 +412,7 @@ function AppContent() {
         <Route path="utilisateurs" element={can('utilisateurs') ? <Utilisateurs /> : <Navigate to="/" replace />} />
         <Route path="rh" element={can('rh') ? <SuiviRH /> : <Navigate to="/" replace />} />
         <Route path="clients" element={can('clients') ? <Clients /> : <Navigate to="/" replace />} />
+        <Route path="fournisseurs" element={can('stocks') ? <Fournisseurs /> : <Navigate to="/" replace />} />
         <Route path="performance" element={can('performance') ? <Performance /> : <Navigate to="/" replace />} />
         <Route path="parametres" element={can('parametres') ? <Settings /> : <Navigate to="/" replace />} />
         

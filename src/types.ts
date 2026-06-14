@@ -201,6 +201,17 @@ export interface Employe {
   photo?: string;
 }
 
+export interface Fournisseur {
+  id: string;
+  nom: string;
+  type: 'tissu' | 'fourniture' | 'machine' | 'autre';
+  telephone?: string;
+  email?: string;
+  adresse?: string;
+  notes?: string;
+  dateCreation: string;
+}
+
 export interface PaiementSalaire {
   id: string;
   employeId: string;
