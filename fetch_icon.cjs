@@ -13,7 +13,8 @@ async function run() {
       if (profile.logoAppIcon) {
          const base64Data = profile.logoAppIcon.replace(/^data:image\/\w+;base64,/, '');
          fs.writeFileSync('public/favicon.ico', base64Data, 'base64');
-         console.log('Saved custom logo to public/favicon.ico');
+         fs.writeFileSync('public/logo.png', base64Data, 'base64');
+         console.log('Saved custom logo to public/favicon.ico and public/logo.png');
       } else {
          console.log('No logoAppIcon found in settings');
       }
