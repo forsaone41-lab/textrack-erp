@@ -107,6 +107,8 @@ const ALL_PAGES: PageDef[] = [
   { key: 'controle_qualite', label: 'Contrôle Qualité', labelAr: 'مراقبة الجودة', icon: ShieldCheck, group: 'Production' },
   
   { key: 'stocks', label: 'Stock Matériaux', labelAr: 'مخزن السلع', icon: Package, group: 'Stocks' },
+  { key: 'fournisseurs', label: 'Fournisseurs', labelAr: 'الموردين', icon: UserCheck, group: 'Stocks' },
+  { key: 'achats', label: 'Achats', labelAr: 'المشتريات', icon: ShoppingCart, group: 'Stocks' },
   
   { key: 'rh', label: 'Suivi RH & العمال', labelAr: 'الموارد البشرية والعمال', icon: Users, group: 'RH & Finance' },
   { key: 'plaintes', label: 'Plaintes', labelAr: 'الشكايات', icon: FileText, group: 'RH & Finance' },

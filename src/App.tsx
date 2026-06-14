@@ -421,13 +421,13 @@ function AppContent() {
         <Route path="rh" element={can('rh') ? <SuiviRH /> : <Navigate to="/" replace />} />
         <Route path="reclamations" element={can('plaintes') ? <Reclamations /> : <Navigate to="/" replace />} />
         <Route path="clients" element={can('clients') ? <Clients /> : <Navigate to="/" replace />} />
-        <Route path="fournisseurs" element={can('stocks') ? <Fournisseurs /> : <Navigate to="/" replace />} />
+        <Route path="fournisseurs" element={can('fournisseurs') ? <Fournisseurs /> : <Navigate to="/" replace />} />
         <Route path="performance" element={can('performance') ? <Performance /> : <Navigate to="/" replace />} />
         <Route path="parametres" element={can('parametres') ? <Settings /> : <Navigate to="/" replace />} />
         
         {/* Shared / Public ERP Routes */}
         <Route path="stocks" element={can('stocks') ? <StockMateriaux /> : <Navigate to="/" replace />} />
-        <Route path="achats" element={can('stocks') ? <Achats /> : <Navigate to="/" replace />} />
+        <Route path="achats" element={can('achats') ? <Achats /> : <Navigate to="/" replace />} />
         <Route path="commandes" element={can('commandes') ? <Commandes /> : <Navigate to="/" replace />} />
         <Route path="agenda" element={can('agenda') ? <Agenda /> : <Navigate to="/" replace />} />
         <Route path="commandes/manage" element={can('commandes') ? <ManageOrder /> : <Navigate to="/" replace />} />
