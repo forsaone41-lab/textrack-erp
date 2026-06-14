@@ -52,7 +52,7 @@ export default function Reclamations() {
     if (!window.confirm(isAr ? 'هل أنت متأكد أنك تريد حذف هذه الشكاية؟' : 'Voulez-vous vraiment supprimer cette plainte ?')) return;
     
     setReclamations(prev => prev.filter(r => r.id !== id));
-    await deleteRecord('reclamations', id);
+    await deleteRecord('leads', id);
   };
 
   return (

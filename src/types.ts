@@ -710,7 +710,12 @@ export async function loadReclamations(): Promise<Reclamation[]> {
     const { data } = await supabase.from('leads').select('*').eq('type', '__RECLAMATION__');
     if (!data) return [];
     
-    return data.map(l => {
+    const deletedIdsRaw = localStorage.getItem('textrack_deleted_ids');
+    const deletedIds = deletedIdsRaw ? JSON.parse(deletedIdsRaw) : [];
+    
+    return data
+      .filter(l => l.name !== '__DELETED__' && !deletedIds.includes(l.id))
+      .map(l => {
       let details: any = {};
       try { details = JSON.parse(l.details || '{}'); } catch(e){}
       return {
