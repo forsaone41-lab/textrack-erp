@@ -1069,7 +1069,8 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
 
       // Only alert if it's NOT a missing column error and NOT a network error
       const isNetworkError = error.message.toLowerCase().includes('failed to fetch') || error.message.toLowerCase().includes('networkerror');
-      if (!silent && !isNetworkError) alert(`Erreur de sauvegarde dans ${table} : ${error.message}`);
+      const isLockError = error.message.toLowerCase().includes('lock') && error.message.toLowerCase().includes('stole');
+      if (!silent && !isNetworkError && !isLockError) alert(`Erreur de sauvegarde dans ${table} : ${error.message}`);
     }
   } catch (e: any) {
     console.error(`Fatal save error for ${table}:`, e);

@@ -27,6 +27,7 @@ export default defineConfig({
           'vendor-charts': ['recharts'],
           'vendor-db': ['@supabase/supabase-js'],
           'vendor-utils': ['react-router-dom'],
+          'pdf': ['jspdf', 'html2canvas'],
         }
       }
     },
