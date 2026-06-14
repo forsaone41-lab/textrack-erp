@@ -97,7 +97,7 @@ export default function Demandes() {
       if (cachedLeads) {
         const parsed = JSON.parse(cachedLeads);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setLeads(parsed.filter((l: any) => l && l.name !== '__SYSTEM_CONFIG__'));
+          setLeads(parsed.filter((l: any) => l && !l.type?.startsWith('__') && !l.name?.startsWith('__')));
           hasCached = true;
         }
       }
@@ -119,7 +119,7 @@ export default function Demandes() {
           loadData<User>('users')
         ]);
         if (leadsData) {
-          let validLeads = leadsData as Lead[];
+          let validLeads = (leadsData as Lead[]).filter(l => l && !l.type?.startsWith('__') && !l.name?.startsWith('__'));
           
           // Auto-delete logic: remove if crmStage === 'annule' and rejectedAt is > 48 hours ago
           const now = Date.now();

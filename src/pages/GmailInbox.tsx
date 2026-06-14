@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Mail, Search, RefreshCw, CheckCircle, Clock, MessageSquare, Inbox as InboxIcon, Eye } from 'lucide-react';
-import { supabase } from '../types';
+import { supabase } from '../supabase';
 import { useLang } from '../contexts/LangContext';
 
 interface EmailMessage {
