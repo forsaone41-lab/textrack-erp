@@ -153,6 +153,21 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     }
   }, [found]);
 
+  // Auto-refresh messages every 3 seconds if chat is active
+  useEffect(() => {
+    if (activeTab !== 'support' || !currentUser) return;
+    const interval = setInterval(async () => {
+      const allLeads = await loadLeads();
+      const myLeads = allLeads.filter(l =>
+        (l.name || '').trim().toLowerCase() === (currentUser?.nom || '').trim().toLowerCase() ||
+        ((l.email || '').trim().toLowerCase() === (currentUser?.email || '').trim().toLowerCase() && currentUser?.email) ||
+        ((l.phone || '').trim() === (currentUser?.telephone || '').trim() && currentUser?.telephone)
+      );
+      setMesDemandes(myLeads);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [activeTab, currentUser]);
+
   function handleSearch() {
     const results = commandes.filter(c =>
       c.reference.toLowerCase() === reference.toLowerCase() ||

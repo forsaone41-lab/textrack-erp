@@ -22,7 +22,7 @@ export default function Inbox() {
 
   useEffect(() => {
     fetchMessages();
-    const interval = setInterval(fetchMessages, 10000); // Auto refresh every 10s
+    const interval = setInterval(fetchMessages, 3000); // Auto refresh every 3s
     return () => clearInterval(interval);
   }, []);
 
