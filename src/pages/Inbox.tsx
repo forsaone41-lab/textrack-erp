@@ -12,8 +12,12 @@ export default function Inbox() {
 
   useEffect(() => {
     loadLeads().then(data => {
-      // Only client leads (not recrutement)
-      setLeads(data.filter(l => !l.type.startsWith('RECRUTEMENT:')));
+      // Only real client leads — exclude fournisseurs and recrutement
+      setLeads(data.filter(l =>
+        !l.type.startsWith('RECRUTEMENT:') &&
+        l.type !== '__FOURNISSEUR__' &&
+        l.quantity > 0
+      ));
       setLoading(false);
     });
   }, []);
@@ -157,8 +161,8 @@ export default function Inbox() {
                         </span>
                       ))}
                     </div>
-                    {/* Details */}
-                    {client.details && (
+                    {/* Details — skip raw JSON */}
+                    {client.details && !client.details.trim().startsWith('{') && (
                       <p className="mt-2 text-[11px] text-slate-500 italic bg-slate-50 rounded-lg px-2 py-1 max-w-md">
                         "{client.details}"
                       </p>
