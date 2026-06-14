@@ -1903,47 +1903,104 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
           )}
 
           {activeTab === 'support' && (
-            <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
-
-
-               <div className="text-center max-w-2xl mx-auto mb-16">
-                 <div className="w-20 h-20 bg-indigo-50 rounded-[2rem] flex items-center justify-center text-indigo-600 mx-auto mb-8 shadow-xl shadow-indigo-100">
-                    <MessageCircle className="w-10 h-10" />
+            <div className="flex flex-col h-[70vh] bg-white rounded-[3rem] shadow-xl shadow-slate-200/50 overflow-hidden border border-slate-100">
+               {/* Chat Header */}
+               <div className="p-6 md:p-8 border-b border-slate-100 bg-slate-50/50 flex items-center gap-4">
+                 <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200">
+                   <MessageCircle className="w-6 h-6 text-white" />
                  </div>
-                 <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-4">{isAr ? 'الدعم الفني المباشر' : 'Support VIP Direct'}</h1>
-                 <p className="text-slate-500 font-medium text-lg italic">
-                   {isAr ? 'فريق بيا كرياتيف رهن إشارتكم لأي استفسار أو مناقشة' : 'Notre équipe est à votre disposition pour toute question أو discussion stratégique.'}
-                 </p>
+                 <div>
+                   <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">{isAr ? 'رسائل الدعم الفني' : 'Messages Support VIP'}</h2>
+                   <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-1">
+                     <ShieldCheck className="w-3 h-3" /> {isAr ? 'محادثة آمنة ومباشرة' : 'Discussion Sécurisée et Directe'}
+                   </p>
+                 </div>
                </div>
 
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <a href={`https://wa.me/${company.phone.replace(/\D/g, '')}`} target="_blank" className="p-10 bg-white border border-slate-100 rounded-[3rem] shadow-xl shadow-slate-200/50 flex flex-col items-center text-center group hover:border-emerald-200 transition-all">
-                     <div className="w-16 h-16 bg-emerald-50 rounded-[1.5rem] flex items-center justify-center text-emerald-600 mb-6 group-hover:scale-110 transition-transform">
-                        <MessageCircle className="w-8 h-8" />
-                     </div>
-                     <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight mb-2">WhatsApp Business</h3>
-                     <p className="text-slate-400 text-sm font-medium mb-8 italic">{isAr ? 'تواصل مباشر وسريع' : 'Réponse instantanée'}</p>
-                     <div className="px-8 py-4 bg-emerald-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-emerald-100">{isAr ? 'ابدأ المحادثة' : 'Démarrer Discussion'}</div>
-                  </a>
+               {/* Chat Messages */}
+               <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 bg-slate-50/30">
+                  {mesDemandes.filter(m => m.type === '__MESSAGE__' || m.type === '__MESSAGE_REPLY__').sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(msg => {
+                    const isClient = msg.type === '__MESSAGE__';
+                    return (
+                      <div key={msg.id} className={`flex ${isClient ? (isAr ? 'justify-end' : 'justify-end') : (isAr ? 'justify-start' : 'justify-start')}`}>
+                        <div className={`max-w-[85%] md:max-w-[70%] p-5 rounded-3xl shadow-sm ${isClient ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-white border border-slate-100 text-slate-700 rounded-tl-none'}`}>
+                          <p className="text-sm font-medium whitespace-pre-wrap leading-relaxed">{msg.details}</p>
+                          <span className={`block text-[10px] mt-2 font-bold ${isClient ? 'text-indigo-200' : 'text-slate-400'}`}>
+                            {new Date(msg.date).toLocaleString(isAr ? 'ar-MA' : 'fr-MA', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
+                          </span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                  {mesDemandes.filter(m => m.type === '__MESSAGE__' || m.type === '__MESSAGE_REPLY__').length === 0 && (
+                    <div className="h-full flex flex-col items-center justify-center text-slate-400 opacity-50">
+                      <MessageCircle className="w-16 h-16 mb-4" />
+                      <p className="text-sm font-bold uppercase tracking-widest">{isAr ? 'لا توجد رسائل بعد' : 'Aucun message pour le moment'}</p>
+                    </div>
+                  )}
+               </div>
 
-                  <a 
-                    href={`https://wa.me/${company.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
-                      isAr 
-                        ? `مرحباً فريق ${company.name}، أنا ${currentUser?.nom}. بغيت نطلب موعد لمناقشة تقنية بخصوص الموديلات ديالي.`
-                        : `Bonjour l'équipe ${company.name}, je suis ${currentUser?.nom}. J'aimerais demander un rendez-vous pour une discussion technique concernant mes modèles.`
-                    )}`}
-                    target="_blank"
-                    className="p-10 bg-white border border-slate-100 rounded-[3rem] shadow-xl shadow-slate-200/50 flex flex-col items-center text-center group hover:border-indigo-200 transition-all"
-                  >
-                     <div className="w-16 h-16 bg-indigo-50 rounded-[1.5rem] flex items-center justify-center text-indigo-600 mb-6 group-hover:scale-110 transition-transform">
-                        <ArrowRight className="rotate-[-45deg] w-8 h-8" />
-                     </div>
-                     <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight mb-2">{isAr ? 'المناقشة التقنية' : 'Discussion Technique'}</h3>
-                     <p className="text-slate-400 text-sm font-medium mb-8 italic">{isAr ? 'اطلب موعد لمناقشة التصميم' : 'Prendre rendez-vous technique'}</p>
-                     <div className="px-8 py-4 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-slate-900/10 transition-all group-hover:bg-indigo-600">
-                        {isAr ? 'طلب موعد' : 'Prendre Rendez-vous'}
-                     </div>
-                  </a>
+               {/* Chat Input */}
+               <div className="p-6 md:p-8 border-t border-slate-100 bg-white">
+                 <div className="flex gap-3 relative">
+                   <textarea 
+                     id="chat-input"
+                     placeholder={isAr ? 'اكتب رسالتك هنا...' : 'Écrivez votre message ici...'}
+                     className="flex-1 bg-slate-50 border border-slate-200 rounded-3xl px-6 py-4 text-sm font-medium resize-none outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition-all max-h-32 min-h-[60px]"
+                     rows={1}
+                     onKeyDown={(e) => {
+                       if (e.key === 'Enter' && !e.shiftKey) {
+                         e.preventDefault();
+                         const val = (e.target as HTMLTextAreaElement).value;
+                         if (val.trim()) {
+                           const newMsg = {
+                             id: Date.now().toString(),
+                             name: currentUser?.nom || 'Client',
+                             phone: currentUser?.telephone || '',
+                             email: currentUser?.email || '',
+                             type: '__MESSAGE__',
+                             details: val.trim(),
+                             date: new Date().toISOString(),
+                             status: 'completed',
+                             quantity: 0
+                           };
+                           saveRecord('leads', newMsg, true).then(() => {
+                             setMesDemandes(prev => [...prev, newMsg as any]);
+                             (document.getElementById('chat-input') as HTMLTextAreaElement).value = '';
+                           });
+                         }
+                       }
+                     }}
+                   />
+                   <button 
+                     onClick={() => {
+                       const el = document.getElementById('chat-input') as HTMLTextAreaElement;
+                       if (el.value.trim()) {
+                         const newMsg = {
+                             id: Date.now().toString(),
+                             name: currentUser?.nom || 'Client',
+                             phone: currentUser?.telephone || '',
+                             email: currentUser?.email || '',
+                             type: '__MESSAGE__',
+                             details: el.value.trim(),
+                             date: new Date().toISOString(),
+                             status: 'completed',
+                             quantity: 0
+                           };
+                           saveRecord('leads', newMsg, true).then(() => {
+                             setMesDemandes(prev => [...prev, newMsg as any]);
+                             el.value = '';
+                           });
+                       }
+                     }}
+                     className="w-14 h-14 bg-indigo-600 text-white rounded-2xl flex items-center justify-center hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 shrink-0 group"
+                   >
+                     <Send className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                   </button>
+                 </div>
+                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-4 text-center">
+                   {isAr ? 'اضغط Enter لإرسال الرسالة' : 'Appuyez sur Entrée pour envoyer'}
+                 </p>
                </div>
             </div>
           )}
