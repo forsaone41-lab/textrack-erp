@@ -215,7 +215,7 @@ export default function Login({ onLogin }: LoginProps) {
         </div>
 
 
-        <p className="text-center text-slate-600 text-xs mt-6">© {new Date().getFullYear()} {company.name} ERP</p>
+        <p className="text-center text-slate-600 text-xs mt-6">© {new Date().getFullYear()} {company.name}</p>
       </div>
     </div>
   );
