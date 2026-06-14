@@ -60,7 +60,7 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
     reclamations: []
   });
 
-  const [newReclamation, setNewReclamation] = useState({ sujet: '', description: '' });
+  const [newReclamation, setNewReclamation] = useState<{target: 'chef'|'worker'; sujet: string; description: string}>({ target: 'chef', sujet: '', description: '' });
   const [isSubmittingRec, setIsSubmittingRec] = useState(false);
 
   const [isUploading, setIsUploading] = useState(false);
@@ -288,23 +288,20 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
   const handleSubmitReclamation = async () => {
     if (!currentWorker || !newReclamation.sujet || !newReclamation.description) return;
     setIsSubmittingRec(true);
-    const rec: Reclamation = {
-      id: genId(),
-      employeId: currentWorker.id,
-      employeNom: `${currentWorker.prenom} ${currentWorker.nom}`,
-      sujet: newReclamation.sujet,
-      description: newReclamation.description,
-      dateReclamation: new Date().toISOString(),
-      statut: 'en_attente'
-    };
-    
-    setData(prev => ({
-      ...prev,
-      reclamations: [...prev.reclamations, rec]
-    }));
-    await saveReclamation(rec);
-    setNewReclamation({ sujet: '', description: '' });
-    setIsSubmittingRec(false);
+        const rec: Reclamation = {
+          id: genId(),
+          employeId: currentWorker.id,
+          employeNom: `${currentWorker.prenom} ${currentWorker.nom}`,
+          target: newReclamation.target,
+          sujet: newReclamation.sujet,
+          description: newReclamation.description,
+          dateReclamation: new Date().toISOString(),
+          statut: 'en_attente'
+        };
+        setData(prev => ({ ...prev, reclamations: [rec, ...(prev.reclamations || [])] }));
+        await saveReclamation(rec);
+        setNewReclamation({ target: 'chef', sujet: '', description: '' });
+        setIsSubmittingRec(false);
   };
 
   const today = new Date().toLocaleDateString('en-CA');
@@ -773,12 +770,19 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
 
              <div className="bg-slate-900 rounded-[2rem] p-6 border border-white/5 space-y-4">
                <h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">{isAr ? 'إرسال شكاية جديدة' : 'Nouvelle plainte'}</h3>
-               <div>
+                 <select
+                   value={newReclamation.target}
+                   onChange={e => setNewReclamation({...newReclamation, target: e.target.value as 'chef' | 'worker'})}
+                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-indigo-500 mb-3"
+                 >
+                   <option value="chef">{isAr ? 'مشكل مع الإدارة / الرؤساء' : 'Problème avec la direction / Chefs'}</option>
+                   <option value="worker">{isAr ? 'مشكل مع الزملاء / العمال' : 'Problème avec les collègues'}</option>
+                 </select>
                  <input 
                    type="text" 
                    value={newReclamation.sujet}
                    onChange={e => setNewReclamation({...newReclamation, sujet: e.target.value})}
-                   placeholder={isAr ? "الموضوع (مثال: مشكل مع رئيس السلسلة)..." : "Sujet..."}
+                   placeholder={isAr ? "الموضوع (مثال: تأخير الراتب، مشكل في الماكينة)..." : "Sujet..."}
                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-indigo-500 mb-3"
                  />
                  <textarea 

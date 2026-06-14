@@ -245,6 +245,7 @@ export interface Reclamation {
   id: string;
   employeId: string;
   employeNom: string;
+  target?: 'chef' | 'worker';
   sujet: string;
   description: string;
   dateReclamation: string;
@@ -709,9 +710,10 @@ export async function loadReclamations(): Promise<Reclamation[]> {
       try { details = JSON.parse(l.details || '{}'); } catch(e){}
       return {
         id: l.id,
-        employeId: details.employeId || '',
+        employeId: details.employeId || l.phone,
         employeNom: l.name,
-        sujet: details.sujet || '',
+        target: details.target,
+        sujet: details.sujet || 'Sans sujet',
         description: details.description || '',
         dateReclamation: l.date,
         statut: l.status as 'en_attente' | 'traite',
@@ -738,6 +740,7 @@ export async function saveReclamation(rec: Reclamation): Promise<void> {
       quantity: 0,
       details: JSON.stringify({
         employeId: rec.employeId,
+        target: rec.target,
         sujet: rec.sujet,
         description: rec.description,
         reponse: rec.reponse,

@@ -111,7 +111,14 @@ export default function Reclamations() {
               </div>
 
               <div className="bg-slate-50 rounded-xl p-4 mb-4 relative z-10 border border-slate-100">
-                <h5 className="font-bold text-slate-800 mb-2">{rec.sujet}</h5>
+                <div className="flex items-center gap-2 mb-2">
+                  {rec.target && (
+                    <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest ${rec.target === 'worker' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}`}>
+                      {rec.target === 'worker' ? (isAr ? 'العمال' : 'Ouvriers') : (isAr ? 'الإدارة' : 'Direction')}
+                    </span>
+                  )}
+                  <h5 className="font-bold text-slate-800">{rec.sujet}</h5>
+                </div>
                 <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">{rec.description}</p>
               </div>
 
@@ -153,6 +160,14 @@ export default function Reclamations() {
                 <User className="w-4 h-4 text-slate-400" />
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{replyingTo.employeNom}</span>
                 <span className="text-slate-300">•</span>
+                {replyingTo.target && (
+                  <>
+                    <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest ${replyingTo.target === 'worker' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}`}>
+                      {replyingTo.target === 'worker' ? (isAr ? 'العمال' : 'Ouvriers') : (isAr ? 'الإدارة' : 'Direction')}
+                    </span>
+                    <span className="text-slate-300">•</span>
+                  </>
+                )}
                 <span className="text-xs font-bold text-indigo-500">{replyingTo.sujet}</span>
               </div>
               <p className="text-sm font-medium text-slate-700 leading-relaxed">"{replyingTo.description}"</p>
