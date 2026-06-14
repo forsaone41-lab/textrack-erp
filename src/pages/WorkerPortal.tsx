@@ -770,6 +770,7 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
 
              <div className="bg-slate-900 rounded-[2rem] p-6 border border-white/5 space-y-4">
                <h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">{isAr ? 'إرسال شكاية جديدة' : 'Nouvelle plainte'}</h3>
+               <div>
                  <select
                    value={newReclamation.target}
                    onChange={e => setNewReclamation({...newReclamation, target: e.target.value as 'chef' | 'worker'})}
