@@ -751,6 +751,59 @@ export async function saveReclamation(rec: Reclamation): Promise<void> {
 }
 
 
+// ─── Fournisseurs ──────────────────────────────────────────
+export async function loadFournisseurs(): Promise<Fournisseur[]> {
+  try {
+    const { data } = await supabase.from('leads').select('*').eq('type', '__FOURNISSEUR__');
+    if (!data) return [];
+    
+    return data.map(l => {
+      let details: any = {};
+      try { details = JSON.parse(l.details || '{}'); } catch(e){}
+      return {
+        id: l.id,
+        nom: l.name,
+        type: details.type || 'tissu',
+        telephone: l.phone,
+        email: details.email || '',
+        adresse: l.ville,
+        notes: details.notes || '',
+        dateCreation: l.date
+      };
+    }).sort((a, b) => new Date(b.dateCreation).getTime() - new Date(a.dateCreation).getTime());
+  } catch (e) {
+    console.error("Failed to load fournisseurs", e);
+    return [];
+  }
+}
+
+export async function saveFournisseur(f: Fournisseur): Promise<void> {
+  try {
+    const lead = {
+      id: f.id,
+      name: f.nom,
+      phone: f.telephone || '',
+      ville: f.adresse || '',
+      type: '__FOURNISSEUR__',
+      status: 'completed',
+      date: f.dateCreation,
+      quantity: 0,
+      details: JSON.stringify({
+        type: f.type,
+        email: f.email,
+        notes: f.notes
+      })
+    };
+    await saveRecord('leads', lead, true);
+  } catch (e) {
+    console.error("Failed to save fournisseur", e);
+  }
+}
+
+export async function deleteFournisseur(id: string): Promise<void> {
+  await deleteRecord('leads', id);
+}
+
 export async function deleteCandidatFromCloud(id: string): Promise<void> {
   try {
     await supabase.from('leads').delete().eq('id', id);

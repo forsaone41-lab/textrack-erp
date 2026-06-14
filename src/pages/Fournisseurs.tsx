@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, User, Phone, Mail, MapPin, X, Edit2, Trash2, Package } from 'lucide-react';
-import { Fournisseur, loadData, genId, deleteRecord, saveRecord } from '../types';
+import { Fournisseur, genId, loadFournisseurs, saveFournisseur, deleteFournisseur } from '../types';
 import { useLang } from '../contexts/LangContext';
 
 export default function Fournisseurs() {
@@ -12,7 +12,7 @@ export default function Fournisseurs() {
   const [form, setForm] = useState<Partial<Fournisseur>>({});
 
   useEffect(() => {
-    loadData<Fournisseur>('fournisseurs').then(data => {
+    loadFournisseurs().then(data => {
       setFournisseurs(data || []);
     });
   }, []);
@@ -52,13 +52,13 @@ export default function Fournisseurs() {
 
     const updated = isNew ? [...fournisseurs, fData] : fournisseurs.map(f => f.id === editId ? fData : f);
     setFournisseurs(updated);
-    await saveRecord('fournisseurs', fData);
+    await saveFournisseur(fData);
     setShowModal(false);
   }
 
   async function handleDelete(f: Fournisseur) {
     if (window.confirm(isAr ? `هل أنت متأكد من حذف المورد ${f.nom}؟` : `Voulez-vous supprimer le fournisseur ${f.nom} ?`)) {
-      await deleteRecord('fournisseurs', f.id);
+      await deleteFournisseur(f.id);
       setFournisseurs(fournisseurs.filter(item => item.id !== f.id));
     }
   }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, TriangleAlert, Package, Layers, MapPin, User, Tag, Coins, Calendar, Mail, Phone, MessageCircle, Camera, X } from 'lucide-react';
-import { StockTissu, StockFourniture, Fournisseur, loadData, saveRecord, deleteRecord, genId } from '../types';
+import { StockTissu, StockFourniture, Fournisseur, loadData, saveRecord, deleteRecord, genId, loadFournisseurs } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
 
@@ -75,7 +75,7 @@ export default function StockMateriaux() {
           loadData<StockFourniture>('fournitures'),
           loadData<any>('commandes'),
           loadData<any>('fiches_techniques'),
-          loadData<Fournisseur>('fournisseurs')
+          loadFournisseurs()
         ]);
         setTissus(tiss || []);
         setFournitures(four || []);
