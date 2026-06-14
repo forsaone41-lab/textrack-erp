@@ -11,10 +11,12 @@ export default function VisioRoom() {
   // Unique room name based on company name to avoid clashes on public Jitsi
   const roomName = `BEYA_${(company.name || 'COMPANY').replace(/[^a-zA-Z0-9]/g, '_')}_Room`;
   
+  // Link to BEYA's own public meeting page instead of Jitsi's link
+  const beyaMeetUrl = `${window.location.origin}${window.location.pathname}#/meet`;
   const meetUrl = `https://meet.jit.si/${roomName}`;
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(meetUrl);
+    navigator.clipboard.writeText(beyaMeetUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

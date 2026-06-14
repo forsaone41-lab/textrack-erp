@@ -51,6 +51,7 @@ const Achats          = lazy(() => import('./pages/Achats'));
 const Fournisseurs    = lazy(() => import('./pages/Fournisseurs'));
 const Reclamations    = lazy(() => import('./pages/Reclamations'));
 const VisioRoom       = lazy(() => import('./pages/VisioRoom'));
+const PublicMeet      = lazy(() => import('./pages/PublicMeet'));
 
 import { PageLoader } from './components/PageLoader';
 
@@ -324,6 +325,7 @@ function AppContent() {
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
         <Route path="/portal" element={<PortailClient />} />
         <Route path="/info" element={<ClientInfoRoute />} />
+        <Route path="/meet" element={<PublicMeet />} />
         <Route path="/recrutement" element={<Recrutement />} />
         <Route path="/recrutemen" element={<Navigate to="/recrutement" replace />} />
         <Route path="/recrutemben" element={<Navigate to="/recrutement" replace />} />
@@ -429,6 +431,7 @@ function AppContent() {
         <Route path="notifications" element={can('notifications') ? <Notifications /> : <Navigate to="/" replace />} />
         <Route path="ai-space" element={can('ai_space') ? <AISpace /> : <Navigate to="/" replace />} />
         <Route path="visio" element={<VisioRoom />} />
+        <Route path="meet" element={<PublicMeet />} />
         <Route path="planning-view/:id" element={<PlanningView />} />
 
       </Route>
