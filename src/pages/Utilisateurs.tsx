@@ -108,7 +108,7 @@ const ALL_PAGES: PageDef[] = [
   
   { key: 'stocks', label: 'Stock Matériaux', labelAr: 'مخزن السلع', icon: Package, group: 'Stocks' },
   { key: 'fournisseurs', label: 'Fournisseurs', labelAr: 'الموردين', icon: UserCheck, group: 'Stocks' },
-  { key: 'achats', label: 'Achats', labelAr: 'المشتريات', icon: ShoppingCart, group: 'Stocks' },
+  { key: 'achats', label: 'Achats & Approvisionnement', labelAr: 'المشتريات والتموين', icon: ShoppingCart, group: 'Stocks' },
   
   { key: 'rh', label: 'Suivi RH & العمال', labelAr: 'الموارد البشرية والعمال', icon: Users, group: 'RH & Finance' },
   { key: 'plaintes', label: 'Plaintes', labelAr: 'الشكايات', icon: FileText, group: 'RH & Finance' },
