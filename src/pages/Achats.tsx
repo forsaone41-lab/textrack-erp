@@ -27,6 +27,7 @@ export default function Achats() {
   
   // Modals
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<BesoinAchat>>({
     categorie: 'tissus',
     unite: 'm',
@@ -76,25 +77,38 @@ export default function Achats() {
   const handleAdd = async () => {
     if (!form.article || !form.client || !form.quantiteRequise) return;
     
-    const newItem: BesoinAchat = {
-      id: genId(),
-      client: form.client,
-      commandeRef: form.commandeRef || '',
-      article: form.article,
-      couleur: form.couleur || '',
-      quantiteRequise: Number(form.quantiteRequise),
-      quantiteKg: form.quantiteKg ? Number(form.quantiteKg) : undefined,
-      unite: form.unite || 'm',
-      statut: 'a_acheter',
-      dateDemande: form.dateDemande || new Date().toISOString().split('T')[0],
-      categorie: form.categorie || 'tissus'
-    };
+    if (editingId) {
+      const updatedItem = { ...form, id: editingId } as BesoinAchat;
+      const updated = besoins.map(b => b.id === editingId ? updatedItem : b);
+      await saveBesoins(updated, updatedItem);
+    } else {
+      const newItem: BesoinAchat = {
+        id: genId(),
+        client: form.client,
+        commandeRef: form.commandeRef || '',
+        article: form.article,
+        couleur: form.couleur || '',
+        quantiteRequise: Number(form.quantiteRequise),
+        quantiteKg: form.quantiteKg ? Number(form.quantiteKg) : undefined,
+        unite: form.unite || 'm',
+        statut: 'a_acheter',
+        dateDemande: form.dateDemande || new Date().toISOString().split('T')[0],
+        categorie: form.categorie || 'tissus'
+      };
 
-    const updated = [...besoins, newItem];
-    await saveBesoins(updated, newItem);
+      const updated = [...besoins, newItem];
+      await saveBesoins(updated, newItem);
+    }
     
     setShowAddModal(false);
+    setEditingId(null);
     setForm({ categorie: 'tissus', unite: 'm', statut: 'a_acheter', quantiteRequise: 0, quantiteKg: undefined, dateDemande: new Date().toISOString().split('T')[0], commandeRef: '' });
+  };
+
+  const openEditModal = (item: BesoinAchat) => {
+    setForm(item);
+    setEditingId(item.id);
+    setShowAddModal(true);
   };
 
   const moveStatus = async (item: BesoinAchat, newStatus: 'a_acheter' | 'commande') => {
@@ -218,7 +232,11 @@ export default function Achats() {
             />
           </div>
           <button 
-            onClick={() => setShowAddModal(true)}
+            onClick={() => {
+              setEditingId(null);
+              setForm({ categorie: 'tissus', unite: 'm', statut: 'a_acheter', quantiteRequise: 0, quantiteKg: undefined, dateDemande: new Date().toISOString().split('T')[0], commandeRef: '' });
+              setShowAddModal(true);
+            }}
             className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl hover:bg-indigo-700 transition shadow-lg shadow-indigo-200 font-black text-sm"
           >
             <Plus className="w-5 h-5" /> {isAr ? 'إضافة احتياج' : 'Nouveau Besoin'}
@@ -247,10 +265,17 @@ export default function Achats() {
                 ) : (
                   items.map(item => (
                     <div key={item.id} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md transition-shadow group relative">
-                      {/* Delete button (top right corner) */}
-                      <button onClick={() => handleDelete(item.id)} className="absolute top-4 right-4 p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {/* Actions buttons (top corners) */}
+                      <div className="absolute top-4 right-4 flex items-center gap-1">
+                        <button onClick={() => handleDelete(item.id)} className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="absolute top-4 left-4 flex items-center gap-1">
+                        <button onClick={() => openEditModal(item)} className="p-1.5 text-slate-300 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors">
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      </div>
 
                       <div className="flex items-start gap-3 mb-4 pr-6">
                         <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center flex-shrink-0 border border-slate-100">
@@ -320,7 +345,7 @@ export default function Achats() {
             <div className="absolute top-0 inset-x-0 h-1.5 bg-indigo-500" />
             <button onClick={() => setShowAddModal(false)} className="absolute top-6 right-6 p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-colors"><X className="w-5 h-5"/></button>
             
-            <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter mb-6">{isAr ? 'إضافة احتياج جديد' : 'Nouveau Besoin'}</h3>
+            <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter mb-6">{editingId ? (isAr ? 'تعديل الاحتياج' : 'Modifier Besoin') : (isAr ? 'إضافة احتياج جديد' : 'Nouveau Besoin')}</h3>
             
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -449,7 +474,7 @@ export default function Achats() {
               </div>
               
               <button onClick={handleAdd} className="w-full py-4 mt-2 bg-indigo-600 text-white rounded-xl font-black uppercase tracking-widest text-xs hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200">
-                {isAr ? 'حفظ الطلب' : 'Enregistrer le besoin'}
+                {editingId ? (isAr ? 'حفظ التعديلات' : 'Enregistrer') : (isAr ? 'حفظ الطلب' : 'Ajouter le besoin')}
               </button>
             </div>
           </div>
