@@ -152,9 +152,11 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
                 : <LogoWithFallback src={company.logoAdmin || company.logoUrl} alt={company.name} />
               }
             </div>
-            <button onClick={closeMobile} className="lg:hidden w-8 h-8 flex items-center justify-center bg-white/5 rounded-lg text-slate-400 hover:text-white transition-colors">
-              <X className="w-5 h-5" />
-            </button>
+            {!collapsed && (
+              <button onClick={closeMobile} className="lg:hidden shrink-0 w-8 h-8 flex items-center justify-center bg-white/5 rounded-lg text-slate-400 hover:text-white transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            )}
           </div>
           {!collapsed && (
             <div className="flex items-center gap-2 mt-2">
