@@ -12,7 +12,8 @@ import {
   PhoneCall,
   Info,
   Video,
-  Inbox
+  Inbox,
+  Mail
 } from 'lucide-react';
 
 import { User, CompanyProfile, loadPermissions, AppPage, syncCompanyProfile } from '../types';
@@ -200,6 +201,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
           {(can('demandes') || can('crm') || can('clients')) && (
             <div className="space-y-1">
               {!collapsed && <SectionTitle title={isAr ? 'التجاري' : 'Commercial'} isAr={isAr} />}
+            {can('demandes') && <NavItem to="/gmail-inbox" icon={Mail} label={isAr ? 'البريد الوارد (Gmail)' : 'Boîte Gmail'} />}
             {can('demandes') && <NavItem to="/inbox" icon={Inbox} label={isAr ? 'صندوق الرسائل' : 'Boîte de Réception'} />}
             {can('demandes') && <NavItem to="/demandes" icon={Users} label={isAr ? 'الزبناء المحتملون' : 'Prospects'} />}
             {can('crm') && <NavItem to="/pipeline" icon={PhoneCall} label={isAr ? 'تتبع الزبناء (CRM)' : 'Suivi Prospects'} />}
