@@ -62,6 +62,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'demandes' | 'docs' | 'payments' | 'support' | 'info'>('overview');
   const [showNotifs, setShowNotifs] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const lastClientMessageCountRef = React.useRef(0);
   const [viewMesuresFiche, setViewMesuresFiche] = useState<FicheTechnique | null>(null);
   const [showNewOrderModal, setShowNewOrderModal] = useState(false);
   const [newOrderForm, setNewOrderForm] = useState({
@@ -131,6 +132,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
         );
         setFound(myCommandes);
         setMesDemandes(myLeads);
+        lastClientMessageCountRef.current = myLeads.length;
         
         // Load photos for these leads asynchronously
         myLeads.forEach(async (lead) => {
@@ -156,6 +158,11 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   // Auto-refresh messages every 3 seconds if chat is active
   useEffect(() => {
     if (activeTab !== 'support' || !currentUser) return;
+
+    if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+      Notification.requestPermission();
+    }
+
     const interval = setInterval(async () => {
       const allLeads = await loadLeads();
       const myLeads = allLeads.filter(l =>
@@ -163,6 +170,23 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
         ((l.email || '').trim().toLowerCase() === (currentUser?.email || '').trim().toLowerCase() && currentUser?.email) ||
         ((l.phone || '').trim() === (currentUser?.telephone || '').trim() && currentUser?.telephone)
       );
+
+      if (lastClientMessageCountRef.current > 0 && myLeads.length > lastClientMessageCountRef.current) {
+        const newOnes = myLeads.slice(lastClientMessageCountRef.current);
+        const adminMsgs = newOnes.filter(m => m.type === '__MESSAGE_REPLY__');
+        if (adminMsgs.length > 0) {
+          if ('Notification' in window && Notification.permission === 'granted') {
+            const latest = adminMsgs[adminMsgs.length - 1];
+            new Notification('BEYA CREATIVE (Support VIP)', {
+              body: latest.details,
+              icon: '/vite.svg'
+            });
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+            audio.play().catch(() => {});
+          }
+        }
+      }
+      lastClientMessageCountRef.current = myLeads.length;
       setMesDemandes(myLeads);
     }, 3000);
     return () => clearInterval(interval);

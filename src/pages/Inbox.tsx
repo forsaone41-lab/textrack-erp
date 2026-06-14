@@ -13,14 +13,40 @@ export default function Inbox() {
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const lastMessageCountRef = useRef(0);
+
   const fetchMessages = () => {
     loadLeads().then(data => {
-      setMessages(data.filter(l => l.type === '__MESSAGE__' || l.type === '__MESSAGE_REPLY__'));
+      const newMsgs = data.filter(l => l.type === '__MESSAGE__' || l.type === '__MESSAGE_REPLY__');
+      
+      if (lastMessageCountRef.current > 0 && newMsgs.length > lastMessageCountRef.current) {
+        // Find the new messages
+        const newOnes = newMsgs.slice(lastMessageCountRef.current);
+        // Only notify if there's a message from a client
+        const clientMsgs = newOnes.filter(m => m.type === '__MESSAGE__');
+        if (clientMsgs.length > 0) {
+          if ('Notification' in window && Notification.permission === 'granted') {
+            const latest = clientMsgs[clientMsgs.length - 1];
+            new Notification(latest.name || 'Client', {
+              body: latest.details,
+              icon: '/vite.svg'
+            });
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+            audio.play().catch(() => {});
+          }
+        }
+      }
+      
+      lastMessageCountRef.current = newMsgs.length;
+      setMessages(newMsgs);
       setLoading(false);
     });
   };
 
   useEffect(() => {
+    if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+      Notification.requestPermission();
+    }
     fetchMessages();
     const interval = setInterval(fetchMessages, 3000); // Auto refresh every 3s
     return () => clearInterval(interval);
