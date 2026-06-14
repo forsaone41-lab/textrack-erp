@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Info, MessageCircle, CheckCircle2, AlertTriangle, User, Calendar, Reply } from 'lucide-react';
+import { Search, Info, MessageCircle, CheckCircle2, AlertTriangle, User, Calendar, Reply, Sparkles } from 'lucide-react';
 import { Reclamation, loadReclamations, saveReclamation } from '../types';
 import { useLang } from '../contexts/LangContext';
 
@@ -145,25 +145,60 @@ export default function Reclamations() {
 
       {replyingTo && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[200] p-4 animate-in fade-in">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-lg p-8 shadow-2xl relative">
-            <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter mb-2">{isAr ? 'الرد على الشكاية' : 'Répondre à la plainte'}</h3>
-            <p className="text-sm font-bold text-slate-500 mb-6">{replyingTo.employeNom} - {replyingTo.sujet}</p>
+          <div className="bg-white rounded-[2.5rem] w-full max-w-xl p-8 shadow-2xl relative">
+            <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter mb-4">{isAr ? 'الرد على الشكاية' : 'Répondre à la plainte'}</h3>
+            
+            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 mb-6">
+              <div className="flex items-center gap-2 mb-2">
+                <User className="w-4 h-4 text-slate-400" />
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{replyingTo.employeNom}</span>
+                <span className="text-slate-300">•</span>
+                <span className="text-xs font-bold text-indigo-500">{replyingTo.sujet}</span>
+              </div>
+              <p className="text-sm font-medium text-slate-700 leading-relaxed">"{replyingTo.description}"</p>
+            </div>
+
+            <div className={`flex flex-wrap gap-2 mb-4 ${isAr ? 'flex-row-reverse' : ''}`}>
+              <button 
+                onClick={() => setReponse(isAr ? 'تمت معالجة الشكاية بنجاح.' : 'Plainte traitée avec succès.')}
+                className="px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-colors"
+              >
+                {isAr ? 'تم المعالجة' : 'Traitée'}
+              </button>
+              <button 
+                onClick={() => setReponse(isAr ? 'المرجو التوجه للإدارة للمزيد من التوضيح.' : 'Veuillez vous adresser à l\'administration.')}
+                className="px-3 py-1.5 bg-amber-50 text-amber-600 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-amber-100 transition-colors"
+              >
+                {isAr ? 'التوجه للإدارة' : 'Voir Admin'}
+              </button>
+              <button 
+                onClick={() => {
+                  setReponse(isAr 
+                    ? `مرحباً ${replyingTo.employeNom.split(' ')[0]}، لقد توصلنا بشكايتك بخصوص "${replyingTo.sujet}". الإدارة ستتخذ الإجراءات اللازمة قريباً.`
+                    : `Bonjour ${replyingTo.employeNom.split(' ')[0]}, nous avons bien reçu votre plainte concernant "${replyingTo.sujet}". L'administration prendra les mesures nécessaires.`);
+                }}
+                className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-colors flex items-center gap-1"
+              >
+                <Sparkles className="w-3 h-3" /> {isAr ? 'رد ذكي' : 'Réponse Smart'}
+              </button>
+            </div>
             
             <textarea 
               value={reponse}
               onChange={e => setReponse(e.target.value)}
               placeholder={isAr ? "اكتب الحل أو الرد هنا..." : "Votre réponse..."}
-              className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-500 min-h-[150px] mb-6"
+              className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-500 min-h-[120px] mb-6 ${isAr ? 'text-right' : ''}`}
+              dir={isAr ? 'rtl' : 'ltr'}
             />
             
-            <div className="flex gap-3">
-              <button onClick={() => {setReplyingTo(null); setReponse('');}} className="flex-1 py-4 bg-white border-2 border-slate-200 text-slate-600 rounded-xl font-black uppercase tracking-widest text-xs hover:bg-slate-50 transition-all">
+            <div className={`flex gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
+              <button onClick={() => {setReplyingTo(null); setReponse('');}} className="w-1/3 py-4 bg-white border-2 border-slate-100 text-slate-500 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-50 hover:text-slate-700 transition-all">
                 {isAr ? 'إلغاء' : 'Annuler'}
               </button>
               <button 
                 onClick={handleReply}
                 disabled={!reponse}
-                className="flex-1 py-4 bg-indigo-600 text-white rounded-xl font-black uppercase tracking-widest text-xs hover:bg-indigo-700 transition-all disabled:opacity-50"
+                className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-indigo-700 transition-all disabled:opacity-40 disabled:bg-slate-300 shadow-xl shadow-indigo-600/20"
               >
                 {isAr ? 'إرسال الرد' : 'Envoyer la réponse'}
               </button>
