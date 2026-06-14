@@ -50,6 +50,7 @@ const AISpace         = lazy(() => import('./pages/AISpace'));
 const Achats          = lazy(() => import('./pages/Achats'));
 const Fournisseurs    = lazy(() => import('./pages/Fournisseurs'));
 const Reclamations    = lazy(() => import('./pages/Reclamations'));
+const VisioRoom       = lazy(() => import('./pages/VisioRoom'));
 
 import { PageLoader } from './components/PageLoader';
 
@@ -427,6 +428,7 @@ function AppContent() {
         <Route path="liste-attente" element={can('rh') ? <ListeAttente /> : <Navigate to="/" replace />} />
         <Route path="notifications" element={can('notifications') ? <Notifications /> : <Navigate to="/" replace />} />
         <Route path="ai-space" element={can('ai_space') ? <AISpace /> : <Navigate to="/" replace />} />
+        <Route path="visio" element={<VisioRoom />} />
         <Route path="planning-view/:id" element={<PlanningView />} />
 
       </Route>
