@@ -337,12 +337,14 @@ export default function ChefChainePortal({ currentUser, onLogout }: ChefChainePo
 
         {activeTab === 'candidats' && (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {data.candidats.length === 0 ? (
+            {data.candidats.filter(c => ['piqueuse', 'machiniste', 'surjeteuse', 'finition', 'coupeur', 'repasseur'].some(p => (c.poste || '').toLowerCase().includes(p))).length === 0 ? (
               <div className="bg-slate-900 rounded-[2.5rem] p-12 text-center border border-dashed border-slate-800">
                 <p className="text-slate-500 font-bold uppercase text-xs">{isAr ? 'لا يوجد مترشحين في طور التجربة' : 'Aucun candidat en test'}</p>
               </div>
             ) : (
-              data.candidats.map(candidat => (
+              data.candidats
+                .filter(c => ['piqueuse', 'machiniste', 'surjeteuse', 'finition', 'coupeur', 'repasseur'].some(p => (c.poste || '').toLowerCase().includes(p)))
+                .map(candidat => (
                 <div key={candidat.id} className="bg-slate-900 p-5 rounded-3xl border border-white/5 hover:border-indigo-500/30 transition-all">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">

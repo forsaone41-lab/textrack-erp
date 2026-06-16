@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check } from 'lucide-react';
+import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check, Languages } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { saveRecord, genId, FicheTechnique, loadLeads, Lead } from '../types';
@@ -639,6 +639,55 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
       : `J'ai noté votre question sur "${userMsg}". 🤔 Pour une réponse précise, je vous conseille :\n\n1. D'uploader la photo du modèle concerné\n2. Ou de préciser votre question (ex: "Combien de mètres pour ce modèle ?")\n\nJe peux vous aider avec : consommation tissu, coûts, étapes de production, et patronage.`;
   };
 
+  const [translatingFabrics, setTranslatingFabrics] = useState(false);
+
+  const translateFabricsBox = async () => {
+    if (!analysisResult) return;
+    const apiKey = localStorage.getItem('beya_gemini_api_key');
+    if (!apiKey) {
+      setCustomAlert({ title: isAr ? "مفتاح API مفقود" : "Clé API manquante", message: isAr ? "المرجو إضافة مفتاح Gemini الخاص بك لترجمة النص." : "Veuillez ajouter votre clé API Gemini pour traduire le texte.", isError: true });
+      return;
+    }
+
+    setTranslatingFabrics(true);
+    try {
+      const piece = analysisResult.pieces?.[activePieceIdx];
+      const dataToTranslate = {
+        suggested: piece?.fabricSuggested || analysisResult.fabricSuggested || '',
+        alternatives: piece?.fabricAlternatives || analysisResult.fabricAlternatives || []
+      };
+      
+      const targetLang = isAr ? 'Arabic (Moroccan Darija)' : 'French';
+      const prompt = `Translate the following JSON object containing fabric suggestions and alternatives into ${targetLang}. Keep the exact same JSON structure and keys (suggested, alternatives, name, pros, cons). Return ONLY valid JSON:\n${JSON.stringify(dataToTranslate)}`;
+      
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }] })
+      });
+      const data = await response.json();
+      let translatedText = data.candidates[0].content.parts[0].text;
+      translatedText = translatedText.replace(/```json/g, '').replace(/```/g, '').trim();
+      const translatedJson = JSON.parse(translatedText);
+      
+      const newResult = { ...analysisResult };
+      if (piece) {
+        if (!newResult.pieces) newResult.pieces = [];
+        newResult.pieces[activePieceIdx] = { ...piece };
+        newResult.pieces[activePieceIdx].fabricSuggested = translatedJson.suggested;
+        newResult.pieces[activePieceIdx].fabricAlternatives = translatedJson.alternatives;
+      } else {
+        newResult.fabricSuggested = translatedJson.suggested;
+        newResult.fabricAlternatives = translatedJson.alternatives;
+      }
+      setAnalysisResult(newResult);
+    } catch (err) {
+      console.error(err);
+      setCustomAlert({ title: isAr ? "خطأ في الترجمة" : "Erreur de traduction", message: isAr ? "فشل في ترجمة النص، حاول مرة أخرى." : "Échec de la traduction, veuillez réessayer.", isError: true });
+    } finally {
+      setTranslatingFabrics(false);
+    }
+  };
+
   const sendDirect = async (directMsg: string) => {
     const userMessage = directMsg;
     setChat(prev => [...prev, { role: 'user', text: userMessage }]);
@@ -954,14 +1003,25 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
                     {((piece && (piece.fabricSuggested || (piece.fabricAlternatives && piece.fabricAlternatives.length > 0))) || 
                       (analysisResult.fabricSuggested || (analysisResult.fabricAlternatives && analysisResult.fabricAlternatives.length > 0))) && (
                       <div className="bg-gradient-to-br from-indigo-950/5 to-slate-50 rounded-3xl p-6 border border-indigo-100/40 space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
-                          <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-2xl">
-                            <Package className="w-5 h-5" />
+                        <div className={`flex items-center justify-between ${isAr ? 'flex-row-reverse' : ''} mb-4`}>
+                          <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                            <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-2xl">
+                              <Package className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h4 className="font-black text-sm text-slate-800">{isAr ? 'تحليل واقتراحات الثوب المناسب' : 'Analyse & Suggestions de Tissus'}</h4>
+                              <p className="text-[10px] text-slate-400 font-bold">{isAr ? 'توصيات من خبير النسيج بالعيوب والمميزات لكل ثوب' : 'Recommandations d\'expert avec avantages et inconvénients'}</p>
+                            </div>
                           </div>
-                          <div>
-                            <h4 className="font-black text-sm text-slate-800">{isAr ? 'تحليل واقتراحات الثوب المناسب' : 'Analyse & Suggestions de Tissus'}</h4>
-                            <p className="text-[10px] text-slate-400 font-bold">{isAr ? 'توصيات من خبير النسيج بالعيوب والمميزات لكل ثوب' : 'Recommandations d\'expert avec avantages et inconvénients'}</p>
-                          </div>
+                          <button
+                            onClick={translateFabricsBox}
+                            disabled={translatingFabrics}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-white hover:bg-slate-50 text-indigo-600 border border-indigo-100 rounded-full font-bold text-[10px] transition-all shadow-sm disabled:opacity-50"
+                            title={isAr ? 'ترجمة النص' : 'Traduire en Français'}
+                          >
+                            {translatingFabrics ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3" />}
+                            <span className="hidden sm:inline">{isAr ? 'ترجمة' : 'Traduire'}</span>
+                          </button>
                         </div>
 
                          {/* Primary suggested fabric */}
@@ -1013,25 +1073,27 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
                         <div className="pt-5 border-t border-indigo-100/50 flex justify-end mt-4">
                           <button
                             onClick={() => {
-                              const suggested = piece?.fabricSuggested || analysisResult.fabricSuggested || 'غير محدد';
-                              const conso = piece?.consumption || analysisResult.consumption || 'غير محدد';
+                              const suggested = piece?.fabricSuggested || analysisResult.fabricSuggested || (isAr ? 'غير محدد' : 'Non spécifié');
+                              const conso = piece?.consumption || analysisResult.consumption || (isAr ? 'غير محدد' : 'Non spécifié');
                               const alternatives = ((piece?.fabricAlternatives || analysisResult.fabricAlternatives) as any[]) || [];
                               
-                              let msgText = `مرحباً! 👋\nبناءً على طلبكم الخاص بموديل *${piece?.name || analysisResult.category}*، قمنا بتحليل الموديل بدقة وهذه هي اقتراحاتنا للثوب:\n\n`;
+                              let msgText = isAr 
+                                ? `مرحباً! 👋\nبناءً على طلبكم الخاص بموديل *${piece?.name || analysisResult.category}*، قمنا بتحليل الموديل بدقة وهذه هي اقتراحاتنا للثوب:\n\n`
+                                : `Bonjour! 👋\nSuite à votre demande concernant le modèle *${piece?.name || analysisResult.category}*, nous avons analysé le modèle et voici nos suggestions de tissus :\n\n`;
                               
-                              msgText += `✅ *الثوب المقترح:* ${suggested}\n`;
-                              msgText += `📏 *كمية الثوب المطلوبة:* ${conso}\n\n`;
+                              msgText += isAr ? `✅ *الثوب المقترح:* ${suggested}\n` : `✅ *Tissu recommandé:* ${suggested}\n`;
+                              msgText += isAr ? `📏 *كمية الثوب المطلوبة:* ${conso}\n\n` : `📏 *Quantité nécessaire:* ${conso}\n\n`;
                               
                               if (alternatives.length > 0) {
-                                msgText += `🔄 *خيارات بديلة للثوب:*\n`;
+                                msgText += isAr ? `🔄 *خيارات بديلة للثوب:*\n` : `🔄 *Options alternatives:*\n`;
                                 alternatives.forEach((alt: any) => {
                                   msgText += `\n🔹 *${alt.name}*\n`;
-                                  msgText += `   ➕ المزايا: ${alt.pros}\n`;
-                                  msgText += `   ➖ العيوب: ${alt.cons}\n`;
+                                  msgText += isAr ? `   ➕ المزايا: ${alt.pros}\n` : `   ➕ Avantages: ${alt.pros}\n`;
+                                  msgText += isAr ? `   ➖ العيوب: ${alt.cons}\n` : `   ➖ Inconvénients: ${alt.cons}\n`;
                                 });
                               }
                               
-                              msgText += `\nنحن رهن إشارتكم لأي استفسار أو لتأكيد الطلب! ✨\n*BEYA CREATIVE*`;
+                              msgText += isAr ? `\nنحن رهن إشارتكم لأي استفسار أو لتأكيد الطلب! ✨\n*BEYA CREATIVE*` : `\nNous restons à votre disposition pour toute question ou confirmation! ✨\n*BEYA CREATIVE*`;
                               
                               const encoded = encodeURIComponent(msgText);
                               let phone = selectedLead?.phone || '';
