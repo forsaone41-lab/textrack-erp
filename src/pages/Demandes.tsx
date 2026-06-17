@@ -75,6 +75,7 @@ export default function Demandes() {
   const [showSettings, setShowSettings] = useState(false);
   const [visibleCount, setVisibleCount] = useState(10);
   const [expandedDetails, setExpandedDetails] = useState<string[]>([]);
+  const [filterStarred, setFilterStarred] = useState(false);
   const [templates, setTemplates] = useState(() => {
     try {
       const saved = localStorage.getItem('textrack_msg_templates');
@@ -629,14 +630,16 @@ export default function Demandes() {
       matchType = filterType === 'all' || l.type === filterType;
     }
 
-    return matchCategory && matchFilter && matchSearch && matchType && matchExperience;
+    const matchStarred = filterStarred ? !!l.crmPriority : true;
+
+    return matchCategory && matchFilter && matchSearch && matchType && matchExperience && matchStarred;
   }).sort((a, b) => {
     if (sortBy === 'date_desc') return new Date(b.date).getTime() - new Date(a.date).getTime();
     if (sortBy === 'date_asc') return new Date(a.date).getTime() - new Date(b.date).getTime();
     if (sortBy === 'qty_desc') return b.quantity - a.quantity;
     if (sortBy === 'qty_asc') return a.quantity - b.quantity;
     return 0;
-  }), [leads, category, filter, searchQuery, sortBy, filterType, filterExperience]);
+  }), [leads, category, filter, searchQuery, sortBy, filterType, filterExperience, filterStarred]);
 
   // Reset visible count + filterType when category changes
   useEffect(() => { setVisibleCount(10); setFilterType('all'); setFilterExperience('all'); setSearchQuery(''); }, [category]);
@@ -1445,6 +1448,14 @@ export default function Demandes() {
                   <option key={t} value={t}>{t}</option>
                 ))}
               </select>
+              
+              <button
+                onClick={() => setFilterStarred(!filterStarred)}
+                className={`ml-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase flex items-center gap-1 border transition-all ${filterStarred ? 'bg-amber-50 text-amber-600 border-amber-200 shadow-sm' : 'bg-white text-slate-400 border-slate-200 hover:text-slate-600'}`}
+                title={isAr ? 'إظهار المفضلين فقط' : 'Afficher les favoris'}
+              >
+                ⭐ {isAr ? 'المفضلين' : 'Favoris'}
+              </button>
             </div>
           </div>
         );
@@ -1498,6 +1509,14 @@ export default function Demandes() {
                   <option key={exp} value={exp}>{exp === '0' ? (isAr ? 'بدون خبرة' : 'Sans expérience') : `${exp} ${isAr ? 'سنوات' : 'ans'}`}</option>
                 ))}
               </select>
+              
+              <button
+                onClick={() => setFilterStarred(!filterStarred)}
+                className={`ml-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase flex items-center gap-1 border transition-all ${filterStarred ? 'bg-amber-50 text-amber-600 border-amber-200 shadow-sm' : 'bg-white text-slate-400 border-slate-200 hover:text-slate-600'}`}
+                title={isAr ? 'إظهار المفضلين فقط' : 'Afficher les favoris'}
+              >
+                ⭐ {isAr ? 'المفضلين' : 'Favoris'}
+              </button>
             </div>
           </div>
         );
