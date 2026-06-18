@@ -188,7 +188,7 @@ export default function Login({ onLogin }: LoginProps) {
                   {isAr ? 'تسجيل الدخول' : 'Connexion'}
                 </h2>
                 <p className="text-slate-400 text-xs">
-                  {isAr ? 'بريد إلكتروني أو رقم البطاقة (CIN)' : 'Email ou N° CIN'}
+                  {isAr ? 'بريد إلكتروني وكلمة السر' : 'Email et mot de passe'}
                 </p>
               </div>
             </div>
@@ -198,14 +198,14 @@ export default function Login({ onLogin }: LoginProps) {
               {/* Identifier field */}
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-                  {isAr ? 'البريد الإلكتروني أو رقم البطاقة (CIN)' : 'Email ou N° CIN'}
+                  {isAr ? 'البريد الإلكتروني' : 'Email'}
                 </label>
                 <input
                   type="text"
                   value={identifier}
                   onChange={e => setIdentifier(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                  placeholder={isAr ? 'مثال: example@beyacreative.com أو D595743' : 'Ex: example@beyacreative.com ou D595743'}
+                  placeholder={isAr ? 'مثال: example@beyacreative.com' : 'Ex: example@beyacreative.com'}
                   className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 focus:border-slate-800 outline-none transition-all"
                 />
               </div>
@@ -213,7 +213,7 @@ export default function Login({ onLogin }: LoginProps) {
               {/* Password field */}
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-                  {isAr ? 'كلمة السر أو رمز PIN' : 'Mot de passe ou Code PIN'}
+                  {isAr ? 'كلمة السر' : 'Mot de passe'}
                 </label>
                 <div className="relative">
                   <input
@@ -221,7 +221,7 @@ export default function Login({ onLogin }: LoginProps) {
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                    placeholder={isAr ? 'كلمة السر أو رمز PIN' : 'Mot de passe ou Code PIN'}
+                    placeholder={isAr ? 'كلمة السر' : 'Mot de passe'}
                     className="w-full px-4 py-3 pr-11 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 focus:border-slate-800 outline-none transition-all"
                   />
                   <button
