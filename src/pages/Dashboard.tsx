@@ -33,6 +33,7 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
   const [workerPhotos, setWorkerPhotos] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [kpiDetail, setKpiDetail] = useState<number | null>(null);
+  const [listModal, setListModal] = useState<{ title: string, employees: Employe[] } | null>(null);
 
   function loadAll() {
     setLoading(true);
@@ -386,27 +387,36 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
           </h3>
 
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <button 
+              onClick={() => setListModal({ title: isAr ? 'حاضر' : 'Présents', employees: presents })}
+              className="w-full flex items-center justify-between group hover:bg-slate-50/50 p-2 -mx-2 rounded-2xl transition-colors cursor-pointer"
+            >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center"><UserCheck className="w-5 h-5" /></div>
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform"><UserCheck className="w-5 h-5" /></div>
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-tight">{isAr ? 'حاضر' : 'Présents'}</span>
               </div>
               <span className="text-lg font-black text-emerald-600">{presents.length}</span>
-            </div>
-            <div className="flex items-center justify-between">
+            </button>
+            <button 
+              onClick={() => setListModal({ title: isAr ? 'غائب' : 'Absents', employees: absents })}
+              className="w-full flex items-center justify-between group hover:bg-slate-50/50 p-2 -mx-2 rounded-2xl transition-colors cursor-pointer"
+            >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center"><UserX className="w-5 h-5" /></div>
+                <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center group-hover:scale-110 transition-transform"><UserX className="w-5 h-5" /></div>
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-tight">{isAr ? 'غائب' : 'Absents'}</span>
               </div>
               <span className="text-lg font-black text-rose-600">{absents.length}</span>
-            </div>
-            <div className="flex items-center justify-between">
+            </button>
+            <button 
+              onClick={() => setListModal({ title: isAr ? 'متأخر' : 'Retards', employees: retards })}
+              className="w-full flex items-center justify-between group hover:bg-slate-50/50 p-2 -mx-2 rounded-2xl transition-colors cursor-pointer"
+            >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center"><Clock className="w-5 h-5" /></div>
+                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform"><Clock className="w-5 h-5" /></div>
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-tight">{isAr ? 'متأخر' : 'Retards'}</span>
               </div>
               <span className="text-lg font-black text-amber-600">{retards.length}</span>
-            </div>
+            </button>
           </div>
 
           <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between">
@@ -739,6 +749,64 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
           </div>
         </div>
       )}
+      {/* Live List Modal */}
+      {listModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200">
+            <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <h3 className="text-lg font-black text-slate-800 uppercase tracking-widest">{listModal.title} ({listModal.employees.length})</h3>
+              <button onClick={() => setListModal(null)} className="p-3 bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-2xl shadow-sm transition-colors border border-slate-100">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1 space-y-3">
+              {listModal.employees.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-slate-300">
+                  <UserX className="w-12 h-12 mb-4 opacity-50" />
+                  <p className="text-center text-xs font-bold uppercase tracking-widest">{isAr ? 'لا يوجد عمال' : 'Aucun ouvrier dans cette liste'}</p>
+                </div>
+              ) : (
+                listModal.employees.map(e => {
+                  const p = presencesAujourdhui.find(pr => pr.employeId === e.id);
+                  const photo = e.photo 
+                    || (typeof workerPhotos !== 'undefined' ? workerPhotos[e.id] : null)
+                    || localStorage.getItem(`beya_worker_photo_${e.id}`);
+                  
+                  return (
+                    <div key={e.id} className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="w-12 h-12 rounded-[1rem] overflow-hidden flex items-center justify-center text-xs font-black shrink-0 relative bg-slate-100 border-2 border-white shadow-sm">
+                        {photo ? (
+                          <img src={photo} className="w-full h-full object-cover" alt="" />
+                        ) : (
+                          <span className="text-slate-400">{e.nom?.[0] || '?'}{e.prenom?.[0] || ''}</span>
+                        )}
+                        {/* Status indicator dot */}
+                        <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white" style={{
+                           backgroundColor: p?.statut === 'present' ? '#10b981' : p?.statut === 'retard' ? '#f59e0b' : '#ef4444'
+                        }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-black text-slate-800 uppercase tracking-tight truncate">{e.nom} {e.prenom}</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">{e.poste}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        {p?.heureEntree ? (
+                          <span className="text-xs font-bold px-3 py-1.5 rounded-xl bg-slate-50 text-slate-600 border border-slate-100 tabular-nums">
+                            {p.heureEntree}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-slate-300 uppercase">--:--</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
