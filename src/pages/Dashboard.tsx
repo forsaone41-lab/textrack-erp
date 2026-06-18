@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import {
   loadData, Commande, StockTissu, Employe, Facture, Presence,
-  PHASE_LABELS, PHASE_ORDER, User, Lead, loadLeads
+  PHASE_LABELS, PHASE_ORDER, User, Lead, loadLeads, loadCompanyProfile
 } from '../types';
 import { supabase } from '../supabase';
 import { useLang } from '../contexts/LangContext';
@@ -98,7 +98,15 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
   const presencesAujourdhui = presences.filter(p => p.date === todayStr);
   const presents = actifs.filter(e => presencesAujourdhui.some(p => p.employeId === e.id && p.statut !== 'absent'));
   const absents = actifs.filter(e => !presencesAujourdhui.some(p => p.employeId === e.id && p.statut !== 'absent'));
-  const retards = actifs.filter(e => presencesAujourdhui.some(p => p.employeId === e.id && p.statut === 'retard'));
+  const company = loadCompanyProfile();
+  const heureLimite = company?.heureLimiteRetard || '09:15';
+  const retards = actifs.filter(e => presencesAujourdhui.some(p => {
+    if (p.employeId !== e.id || p.statut === 'absent') return false;
+    // Check if the actual entrance time is later than the limit
+    if (p.heureEntree && p.heureEntree > heureLimite) return true;
+    // Fallback if no entry time but marked as retard
+    return p.statut === 'retard' && (!p.heureEntree || p.heureEntree > heureLimite);
+  }));
   const enCoursPresence = actifs.filter(e => presencesAujourdhui.some(p => p.employeId === e.id && p.heureEntree && !p.heureSortie));
 
   const phaseData = PHASE_ORDER.filter(p => p !== 'livré').map(phase => ({
