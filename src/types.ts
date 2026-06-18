@@ -454,6 +454,7 @@ export function loadPermissions(): RolePermMap {
       if (!result.admin.includes('fournisseurs')) result.admin.push('fournisseurs');
       if (!result.admin.includes('achats')) result.admin.push('achats');
       if (!result.admin.includes('visio')) result.admin.push('visio');
+      if (!result.admin.includes('tarifs')) result.admin.push('tarifs');
     }
     
     return result;
