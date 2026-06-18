@@ -11,7 +11,8 @@ import {
   saveRecord, 
   genId, 
   heureNow, 
-  dateNow 
+  dateNow,
+  loadCompanyProfile
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 
@@ -24,6 +25,7 @@ export default function FastScanner() {
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<{ msg: string, type: 'success' | 'error' | 'none', name?: string } | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const company = loadCompanyProfile();
 
   // Data State
   const [data, setData] = useState<{
@@ -87,7 +89,7 @@ export default function FastScanner() {
 
     const now = heureNow();
     const today = dateNow();
-    const HEURE_LIMITE = '08:30';
+    const HEURE_LIMITE = company?.heureLimiteRetard || '09:15';
 
     // Get current presences to check if already entered
     const allPres = await loadData<Presence>('presences');

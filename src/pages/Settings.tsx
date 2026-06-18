@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, Image as ImageIcon, Building2, FileText, Phone, Play, Zap, Globe, Settings as SettingsIcon, ShieldCheck, X, Star, MapPin, RefreshCw, CloudUpload, Database, AlertTriangle, HelpCircle, Plus, Trash2, CheckCircle2, XCircle, ChevronDown, ChevronUp, ExternalLink, CreditCard, Target } from 'lucide-react';
+import { Save, Image as ImageIcon, Building2, FileText, Phone, Play, Zap, Globe, Settings as SettingsIcon, ShieldCheck, X, Star, MapPin, RefreshCw, CloudUpload, Database, AlertTriangle, HelpCircle, Plus, Trash2, CheckCircle2, XCircle, ChevronDown, ChevronUp, ExternalLink, CreditCard, Target, Clock } from 'lucide-react';
 import { CompanyProfile, FaqItem, ServiceItem, loadCompanyProfile, saveCompanyProfile, saveRecord } from '../types';
 import { genId } from '../types';
 import { supabase } from '../supabase';
@@ -759,6 +759,21 @@ export default function Settings() {
                 )}
                 <p className="text-xs text-slate-500 mt-2">{isAr ? 'سيظهر الكود في بوابة الكليان ليسهل عليه تحويل المبلغ مباشرة.' : 'Ce QR sera affiché dans le portail client.'}</p>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Horaires et Pointage */}
+        <div className="p-6 border-t border-slate-100">
+          <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <Clock className="w-5 h-5 text-indigo-500" />
+            {isAr ? 'إعدادات الحضور والانصراف' : 'Paramètres de Pointage'}
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">{isAr ? 'وقت التأخر (مثل 09:15)' : 'Heure Limite Retard (ex: 09:15)'}</label>
+              <input type="time" value={profile.heureLimiteRetard || '09:15'} onChange={e => handleChange('heureLimiteRetard', e.target.value)} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-mono" />
+              <p className="text-[10px] text-slate-400 mt-1">{isAr ? 'أي شخص يسجل حضوره بعد هذا الوقت يعتبر متأخراً.' : 'Toute personne pointant après cette heure sera considérée en retard.'}</p>
             </div>
           </div>
         </div>

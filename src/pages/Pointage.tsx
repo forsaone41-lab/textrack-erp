@@ -6,7 +6,6 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Employe, Presence, loadData, saveRecord, genId, loadCompanyProfile, safeStorage, heureNow, dateNow } from '../types';
 import { useLang } from '../contexts/LangContext';
 
-const HEURE_LIMITE_RETARD = '08:30';
 
 export default function Pointage({ onLogout }: { onLogout?: () => void }) {
   const { isAr } = useLang();
@@ -106,7 +105,8 @@ export default function Pointage({ onLogout }: { onLogout?: () => void }) {
 
   async function marquerEntree(empId: string) {
     const now = heureNow();
-    const statut = now > HEURE_LIMITE_RETARD ? 'retard' : 'present';
+    const heureLimite = company?.heureLimiteRetard || '09:15';
+    const statut = now > heureLimite ? 'retard' : 'present';
 
     setPresences(prev => {
       const existing = prev.find(p => p.employeId === empId && p.date === selectedDate);
@@ -189,7 +189,8 @@ export default function Pointage({ onLogout }: { onLogout?: () => void }) {
     }
 
     const now = heureNow();
-    const statut = now > HEURE_LIMITE_RETARD ? 'retard' : 'present';
+    const heureLimite = company?.heureLimiteRetard || '09:15';
+    const statut = now > heureLimite ? 'retard' : 'present';
 
     setPresences(prev => {
       const p = prev.find(x => x.employeId === emp.id && x.date === selectedDate);

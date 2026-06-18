@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { QrCode, X, Clock, CheckCircle, AlertTriangle, ArrowLeft, Maximize2, Package } from 'lucide-react';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import { Link } from 'react-router-dom';
-import { Employe, Presence, loadData, saveRecord, genId, heureNow, dateNow } from '../types';
+import { Employe, Presence, loadData, saveRecord, genId, heureNow, dateNow, loadCompanyProfile } from '../types';
 import { useLang } from '../contexts/LangContext';
 
 export default function KioskScanner() {
@@ -11,6 +11,7 @@ export default function KioskScanner() {
   const [presences, setPresences] = useState<Presence[]>([]);
   const [scanStatus, setScanStatus] = useState<{ msg: string, type: 'success' | 'error', name?: string } | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const company = loadCompanyProfile();
   
   const empsRef = useRef<Employe[]>([]);
   const presRef = useRef<Presence[]>([]);
@@ -53,7 +54,7 @@ export default function KioskScanner() {
 
     const now = heureNow();
     const today = dateNow();
-    const HEURE_LIMITE = '08:30';
+    const HEURE_LIMITE = company?.heureLimiteRetard || '09:15';
 
     const existingP = presRef.current.find(p => p.employeId === emp.id && p.date === today);
     let updated: Presence;

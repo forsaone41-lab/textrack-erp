@@ -506,6 +506,7 @@ export interface CompanyProfile {
   services?: ServiceItem[];
   metaPixelId?: string;
   permissions?: RolePermMap;
+  heureLimiteRetard?: string;
 }
 
 export interface FaqItem {
@@ -574,7 +575,8 @@ export const DEFAULT_COMPANY: CompanyProfile = {
   bankName: 'CIH BANK',
   rib: '230 000 0000000000000000 00',
   bankBeneficiary: 'BEYA CREATIVE',
-  metaPixelId: ''
+  metaPixelId: '',
+  heureLimiteRetard: '09:15'
 };
 
 export function loadCompanyProfile(): CompanyProfile {
