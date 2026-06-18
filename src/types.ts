@@ -905,10 +905,17 @@ export async function loadLeads(): Promise<Lead[]> {
       // Add leads from localStorage that are NOT in Supabase (missing leads!)
       const missingLocal = localLeads.filter(l => !supaIds.has(l.id) && !deletedIds.includes(l.id));
       finalData = [...supaData, ...missingLocal.map((l: any) => { const c = {...l}; delete c.photo; return c; })];
-      // Sync missing leads back to Supabase in background
+      // Sync missing leads back to Supabase safely in background
       if (missingLocal.length > 0) {
         console.log(`Recovering ${missingLocal.length} leads missing from Supabase...`);
-        missingLocal.forEach(lead => saveRecord('leads', lead, true).catch(() => {}));
+        // Do not block the UI or flood the network. Just take top 50 to sync per session.
+        const toSync = missingLocal.slice(0, 50);
+        setTimeout(async () => {
+          for (const lead of toSync) {
+            await saveRecord('leads', lead, true).catch(() => {});
+            await new Promise(r => setTimeout(r, 200)); // sleep 200ms
+          }
+        }, 3000);
       }
     } else {
       // Supabase failed — use localStorage only

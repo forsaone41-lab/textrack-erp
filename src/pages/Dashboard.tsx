@@ -36,7 +36,33 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
   const [listModal, setListModal] = useState<{ title: string, employees: Employe[] } | null>(null);
 
   function loadAll() {
-    setLoading(true);
+    // Instant cache render
+    try {
+      const cmds = JSON.parse(localStorage.getItem('textrack_data_commandes') || '[]');
+      const tiss = JSON.parse(localStorage.getItem('textrack_data_tissus') || '[]');
+      const emps = JSON.parse(localStorage.getItem('textrack_data_employes') || '[]');
+      const facs = JSON.parse(localStorage.getItem('textrack_data_factures') || '[]');
+      const pres = JSON.parse(localStorage.getItem('textrack_data_presences') || '[]');
+      
+      // Fallback for leads: check both keys
+      let lds = [];
+      const oldRaw = localStorage.getItem('textrack_leads');
+      const newRaw = localStorage.getItem('textrack_data_leads');
+      if (newRaw) lds = JSON.parse(newRaw);
+      else if (oldRaw) lds = JSON.parse(oldRaw);
+      
+      if (cmds.length || tiss.length || emps.length || pres.length) {
+        setCommandes(cmds);
+        setTissus(tiss);
+        setEmployes(emps);
+        setFactures(facs);
+        setPresences(pres);
+        setLeads(lds);
+        setLoading(false);
+      }
+    } catch { /* ignore */ }
+
+    // Fetch fresh data in background
     Promise.all([
       loadData<Commande>('commandes'),
       loadData<StockTissu>('tissus'),
