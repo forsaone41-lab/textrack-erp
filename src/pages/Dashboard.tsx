@@ -76,6 +76,39 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
     })();
   }, []);
 
+  // DATA RECOVERY: Fix corrupted retards from today
+  useEffect(() => {
+    if (presences.length === 0) return;
+    const fixCorruptedData = async () => {
+      const company = loadCompanyProfile();
+      const heureLimite = company?.heureLimiteRetard || '09:15';
+      const todayStr = new Date().toISOString().split('T')[0];
+      
+      let fixedCount = 0;
+      const newPresences = [...presences];
+      
+      for (let i = 0; i < newPresences.length; i++) {
+        const p = newPresences[i];
+        if (p.date === todayStr && p.statut === 'retard' && p.heureEntree) {
+          const normH = p.heureEntree.length === 4 ? `0${p.heureEntree}` : p.heureEntree;
+          if (normH <= heureLimite) {
+            newPresences[i] = { ...p, statut: 'present' };
+            fixedCount++;
+            // Save to DB and local storage
+            saveRecord('presences', newPresences[i], true).catch(() => {});
+          }
+        }
+      }
+      
+      if (fixedCount > 0) {
+        setPresences(newPresences);
+        console.log(`[FIX] Automatically corrected ${fixedCount} corrupted 'retard' statuses.`);
+      }
+    };
+    
+    fixCorruptedData();
+  }, [presences]);
+
   const commandesEnCours = commandes.filter(c => c.statut === 'en_cours');
   const totalPiecesEnCours = commandesEnCours.reduce((a, c) => a + c.quantite, 0);
   const totalRebut = commandes.reduce((a, c) => a + c.rebut, 0);
