@@ -448,6 +448,9 @@ export function loadPermissions(): RolePermMap {
     // 3. Ensure admin always has access to core new portals if they were missing in saved profiles
     if (result.admin) {
       if (!result.admin.includes('chef_chaine_portal')) result.admin.push('chef_chaine_portal');
+      if (!result.admin.includes('tarifs')) result.admin.push('tarifs');
+      if (!result.admin.includes('devis')) result.admin.push('devis');
+      if (!result.admin.includes('recus')) result.admin.push('recus');
       if (!result.admin.includes('inbox')) result.admin.push('inbox');
       if (!result.admin.includes('gmail')) result.admin.push('gmail');
       if (!result.admin.includes('plaintes')) result.admin.push('plaintes');
