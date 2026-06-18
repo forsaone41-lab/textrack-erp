@@ -106,10 +106,11 @@ function AdminLayout({
   return (
     <div className="flex min-h-screen bg-slate-50/50" dir={isAr ? 'rtl' : 'ltr'}>
       {/* Mobile Header - Premium Glassy "Zaji" Design */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white/70 backdrop-blur-xl border-b border-slate-200/50 z-[140] flex items-center justify-between px-5 shadow-sm">
-        <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : 'flex-row'}`}>
-          <MobileLogoWithFallback src={company.logoMobileHeader || company.logoUrl} alt={company.name} />
-        </div>
+      {currentUser.role !== 'worker' && (
+        <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white/70 backdrop-blur-xl border-b border-slate-200/50 z-[140] flex items-center justify-between px-5 shadow-sm">
+          <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : 'flex-row'}`}>
+            <MobileLogoWithFallback src={company.logoMobileHeader || company.logoUrl} alt={company.name} />
+          </div>
 
         <div className="flex items-center gap-2">
           {currentUser.role === 'admin' && location.pathname === '/' && (
@@ -125,6 +126,7 @@ function AdminLayout({
           </button>
         </div>
       </div>
+      )}
       
       {/* Mobile Calculator - Bottom Right - Admin Only */}
       {currentUser.role === 'admin' && location.pathname !== '/partenaire-portal' && (
@@ -133,16 +135,18 @@ function AdminLayout({
         </div>
       )}
 
-      <Sidebar
-        onOpenClientPortal={onOpenClientPortal}
-        currentUser={currentUser}
-        onLogout={onLogout}
-        mobileOpen={mobileOpen}
-        setMobileOpen={setMobileOpen}
-        company={company}
-      />
+      <div className={currentUser.role === 'worker' ? 'hidden md:block' : ''}>
+        <Sidebar
+          onOpenClientPortal={onOpenClientPortal}
+          currentUser={currentUser}
+          onLogout={onLogout}
+          mobileOpen={mobileOpen}
+          setMobileOpen={setMobileOpen}
+          company={company}
+        />
+      </div>
       
-      <main className="flex-1 overflow-y-auto mt-16 md:mt-0 w-full relative">
+      <main className={`flex-1 overflow-y-auto w-full relative ${currentUser.role === 'worker' ? 'mt-0' : 'mt-16 md:mt-0'}`}>
         {/* Global Tools Bar - Notification only on Dashboard Page for Admin */}
         {currentUser.role === 'admin' && (
           <div className={`fixed top-8 ${isAr ? 'right-12' : 'right-12'} z-[130] hidden md:flex items-center gap-4`}>
@@ -406,7 +410,7 @@ function AppContent() {
         <Route path="chaine-montage" element={can('chaine') ? <ChaineDeMontage /> : <Navigate to="/" replace />} />
         <Route path="pilotage-chaine" element={can('pilotage') ? <ChaineDetaillee /> : <Navigate to="/" replace />} />
         <Route path="scan-production" element={can('scan_production') ? <ProductionScanner /> : <Navigate to="/" replace />} />
-        <Route path="worker-portal" element={<WorkerPortal currentUser={currentUser} />} />
+        <Route path="worker-portal" element={<WorkerPortal currentUser={currentUser} onLogout={handleLogout} />} />
         <Route path="chef-portal" element={<ChefChainePortal currentUser={currentUser} onLogout={handleLogout} />} />
         <Route path="partenaire-portal" element={<PartenairePortal currentUser={currentUser} onLogout={handleLogout} />} />
         

@@ -34,11 +34,14 @@ import {
 import { QRCodeSVG } from 'qrcode.react';
 import { useLang } from '../contexts/LangContext';
 
+import { LogOut } from 'lucide-react';
+
 interface WorkerPortalProps {
   currentUser?: any;
+  onLogout?: () => void;
 }
 
-export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
+export default function WorkerPortal({ currentUser, onLogout }: WorkerPortalProps) {
   const { isAr } = useLang();
   const [loading, setLoading] = useState(true);
   // Auto-detect worker from logged-in user account, but allow admin to switch
@@ -390,6 +393,15 @@ export default function WorkerPortal({ currentUser }: WorkerPortalProps) {
           </div>
         </div>
 
+        {onLogout && (
+          <button 
+            onClick={onLogout}
+            className="w-10 h-10 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center hover:bg-rose-500/20 hover:text-rose-400 transition-colors shrink-0 border border-rose-500/20 active:scale-95"
+            title={isAr ? 'تسجيل الخروج' : 'Quitter la session'}
+          >
+            <LogOut className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       {/* Tabs Navigation */}
