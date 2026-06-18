@@ -93,6 +93,7 @@ export default function ListeAttente() {
   };
 
   const handleEmbaucher = async (candidate: WaitlistedCandidate) => {
+    setShowConfirmModal(null);
     // 1. Prepare Employee Data for SuiviRH
     const newEmployee: Employe = {
       id: genId(),

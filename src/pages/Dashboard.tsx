@@ -128,7 +128,20 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
   const lowStockTissus = tissus.filter(t => t.metrage <= t.seuilAlerte);
 
   const todayStr = now.toISOString().split('T')[0];
-  const actifs = employes.filter(e => e.actif);
+  
+  // Exclude prestataires/sous-traitants and deduplicate by normalized name
+  const seenNames = new Set();
+  const actifs = employes.filter(e => {
+    if (!e.actif) return false;
+    if (e.type === 'sous_traitance') return false;
+    if (e.poste && e.poste.toUpperCase().includes('PRESTATAIRE')) return false;
+    
+    const normName = `${e.prenom || ''} ${e.nom || ''}`.replace(/\s+/g, ' ').trim().toLowerCase();
+    if (seenNames.has(normName)) return false;
+    seenNames.add(normName);
+    return true;
+  });
+
   const presencesAujourdhui = presences.filter(p => p.date === todayStr);
   const presents = actifs.filter(e => presencesAujourdhui.some(p => p.employeId === e.id && p.statut !== 'absent'));
   const absents = actifs.filter(e => !presencesAujourdhui.some(p => p.employeId === e.id && p.statut !== 'absent'));

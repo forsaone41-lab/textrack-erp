@@ -93,7 +93,17 @@ export default function Pointage({ onLogout }: { onLogout?: () => void }) {
     }
   }, [presences]);
 
-  const actifs = employes.filter(e => e.actif);
+  const seenNames = new Set();
+  const actifs = employes.filter(e => {
+    if (!e.actif) return false;
+    if (e.type === 'sous_traitance') return false;
+    if (e.poste && e.poste.toUpperCase().includes('PRESTATAIRE')) return false;
+    
+    const normName = `${e.prenom || ''} ${e.nom || ''}`.replace(/\s+/g, ' ').trim().toLowerCase();
+    if (seenNames.has(normName)) return false;
+    seenNames.add(normName);
+    return true;
+  });
   const filtered = actifs.filter(e => 
     `${e.nom} ${e.prenom}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
     e.cin?.toLowerCase().includes(searchTerm.toLowerCase())
