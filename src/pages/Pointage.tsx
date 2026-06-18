@@ -147,6 +147,20 @@ export default function Pointage({ onLogout }: { onLogout?: () => void }) {
     });
   }
 
+  async function annulerSortie(empId: string) {
+    setPresences(prev => {
+      const existing = prev.find(p => p.employeId === empId && p.date === selectedDate);
+      if (!existing || !existing.heureSortie) return prev;
+
+      const updatedRecord = { ...existing, heureSortie: null };
+      
+      // Async save (background)
+      saveRecord('presences', updatedRecord, true).catch(() => {});
+
+      return prev.map(p => p.id === existing.id ? updatedRecord : p);
+    });
+  }
+
   const empName = (e: Employe) => e.prenom ? `${e.prenom} ${e.nom}` : e.nom;
   const empInitials = (e: Employe) => {
     if (!e) return '??';
@@ -366,9 +380,18 @@ export default function Pointage({ onLogout }: { onLogout?: () => void }) {
                         <LogOut className="w-5 h-5" />
                       </button>
                     ) : (
-                      <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center border border-indigo-100">
-                        <CheckCircle className="w-5 h-5" />
-                      </div>
+                      <button 
+                        onClick={() => {
+                          if (window.confirm(isAr ? 'هل تريد إلغاء الخروج؟' : 'Voulez-vous annuler la sortie ?')) {
+                            annulerSortie(emp.id);
+                          }
+                        }}
+                        className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center border border-indigo-100 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all group"
+                        title={isAr ? 'إلغاء الخروج' : 'Annuler Sortie'}
+                      >
+                        <CheckCircle className="w-5 h-5 group-hover:hidden" />
+                        <X className="w-5 h-5 hidden group-hover:block" />
+                      </button>
                     ))}
                   </div>
                 </div>
