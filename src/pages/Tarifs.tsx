@@ -1,12 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useLang } from '../contexts/LangContext';
-import { useAuth } from '../contexts/AuthContext';
 import { Plus, Search, Tag, DollarSign, Layers, Edit, Trash2, X, Check, FileText } from 'lucide-react';
-import { TarifService, loadData, saveRecord, deleteRecord, genId } from '../types';
+import { TarifService, User, loadPermissions, loadData, saveRecord, deleteRecord, genId } from '../types';
 
 export default function Tarifs() {
   const { isAr } = useLang();
-  const { can } = useAuth();
+  
+  const [currentUser] = useState<User | null>(() => {
+    try { return JSON.parse(localStorage.getItem('textrack_user') || 'null'); } catch { return null; }
+  });
+
+  const can = (page: string) => {
+    if (!currentUser) return false;
+    const perms = loadPermissions();
+    let role = (currentUser.role || '').toLowerCase();
+    if (role === 'agent' || role.includes('pointage')) role = 'agent_pointage';
+    return (perms[role as keyof typeof perms] || []).includes(page as any);
+  };
+
   const [tarifs, setTarifs] = useState<TarifService[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
