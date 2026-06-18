@@ -51,7 +51,9 @@ export default function Devis() {
   const isOverdue = (f: Facture) =>
     !!f.echeance && f.echeance < today && f.statut !== 'payée';
 
-  const filtered = factures.filter(f => f.typeDoc === 'devis').filter(f => {
+  const typeDocs = factures.filter(f => f.typeDoc === 'devis');
+
+  const filtered = typeDocs.filter(f => {
     const q = search.toLowerCase();
     const matchSearch = f.numero.toLowerCase().includes(q) || f.client.toLowerCase().includes(q);
     const matchStatut =
@@ -61,13 +63,13 @@ export default function Devis() {
   });
 
   const stats = {
-    total: factures.reduce((a, f) => a + f.montant, 0),
-    payee: factures.filter(f => f.statut === 'payée').reduce((a, f) => a + f.montant, 0),
-    attente: factures.filter(f => f.statut === 'en_attente' && !isOverdue(f)).reduce((a, f) => a + f.montant, 0),
-    retard: factures.filter(f => isOverdue(f)).reduce((a, f) => a + f.montant, 0),
-    countPayee: factures.filter(f => f.statut === 'payée').length,
-    countAttente: factures.filter(f => f.statut === 'en_attente' && !isOverdue(f)).length,
-    countRetard: factures.filter(f => isOverdue(f)).length,
+    total: typeDocs.reduce((a, f) => a + f.montant, 0),
+    payee: typeDocs.filter(f => f.statut === 'payée').reduce((a, f) => a + f.montant, 0),
+    attente: typeDocs.filter(f => f.statut === 'en_attente' && !isOverdue(f)).reduce((a, f) => a + f.montant, 0),
+    retard: typeDocs.filter(f => isOverdue(f)).reduce((a, f) => a + f.montant, 0),
+    countPayee: typeDocs.filter(f => f.statut === 'payée').length,
+    countAttente: typeDocs.filter(f => f.statut === 'en_attente' && !isOverdue(f)).length,
+    countRetard: typeDocs.filter(f => isOverdue(f)).length,
   };
 
   function openCreate(typeDoc: 'facture' | 'devis' | 'recu' = 'devis') {

@@ -1653,17 +1653,36 @@ export default function Demandes() {
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           {/* Photo */}
                           {category !== 'recrutement' && (
-                          <div className="relative shrink-0 cursor-pointer" onClick={async () => {
-                            if (lead.photo) { setPreviewPhoto(lead.photo); return; }
-                            const photo = await loadLeadPhoto(lead.id);
-                            if (photo) { setPreviewPhoto(photo); setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, photo } : l)); }
-                          }}>
-                            <div className="w-12 h-12 bg-white border border-slate-200 rounded-lg overflow-hidden flex items-center justify-center text-slate-300 shadow-sm">
-                              {lead.photo
-                                ? <img src={lead.photo} className="w-full h-full object-cover" alt="" loading="lazy" />
-                                : <ImageIcon className="w-5 h-5" />
-                              }
+                          <div className="flex flex-col items-center gap-1.5 shrink-0">
+                            <div className="relative cursor-pointer group" onClick={async () => {
+                              if (lead.photo) { setPreviewPhoto(lead.photo); return; }
+                              const photo = await loadLeadPhoto(lead.id);
+                              if (photo) { setPreviewPhoto(photo); setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, photo } : l)); }
+                            }}>
+                              <div className="w-14 h-14 bg-slate-50 border border-slate-200 rounded-xl overflow-hidden flex items-center justify-center text-slate-300 shadow-sm relative transition-all group-hover:border-indigo-300 group-hover:shadow-md">
+                                {lead.photo
+                                  ? <>
+                                      <img src={lead.photo} className="w-full h-full object-cover transition-transform group-hover:scale-110" alt="" loading="lazy" />
+                                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <Eye className="w-5 h-5 text-white" />
+                                      </div>
+                                    </>
+                                  : <ImageIcon className="w-6 h-6 opacity-50 group-hover:opacity-100 group-hover:text-indigo-400 transition-all" />
+                                }
+                              </div>
                             </div>
+                            <button 
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                if (lead.photo) { setPreviewPhoto(lead.photo); return; }
+                                const photo = await loadLeadPhoto(lead.id);
+                                if (photo) { setPreviewPhoto(photo); setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, photo } : l)); }
+                              }}
+                              className="text-[9px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md hover:bg-indigo-100 transition-colors flex items-center gap-1"
+                            >
+                              <Eye className="w-3 h-3" />
+                              {isAr ? 'عرض' : 'Voir'}
+                            </button>
                           </div>
                           )}
                           

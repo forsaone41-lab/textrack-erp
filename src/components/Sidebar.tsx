@@ -245,13 +245,13 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
           )}
 
           {/* Group 4: Finance */}
-          {(can('bilan') || can('factures') || can('charges')) && (
+          {(can('bilan') || can('factures') || can('devis') || can('recus') || can('charges')) && (
             <div className="space-y-1">
               {!collapsed && <SectionTitle title={isAr ? 'المالية' : 'Finance'} isAr={isAr} />}
             {can('bilan') && <NavItem to="/bilan" icon={PieChart} label={isAr ? 'جدول البيانات' : 'Tableau de Bord'} />}
-            {can('factures') && <NavItem to="/devis" icon={FileText} label={isAr ? 'عروض الأسعار' : 'Devis'} />}
+            {can('devis') && <NavItem to="/devis" icon={FileText} label={isAr ? 'عروض الأسعار' : 'Devis'} />}
             {can('factures') && <NavItem to="/factures" icon={Receipt} label={isAr ? 'الفواتير' : 'Factures'} />}
-            {can('factures') && <NavItem to="/recus" icon={CheckCircle} label={isAr ? 'إيصالات الدفع' : 'Reçus'} />}
+            {can('recus') && <NavItem to="/recus" icon={CheckCircle} label={isAr ? 'إيصالات الدفع' : 'Reçus'} />}
             {can('factures') && <NavItem to="/prix-marche" icon={TrendingUp} label={isAr ? 'أسعار السوق' : 'Prix Marché'} />}
             {can('charges') && <NavItem to="/charges" icon={TrendingUp} label={isAr ? 'المصاريف' : 'Charges'} />}
             </div>
