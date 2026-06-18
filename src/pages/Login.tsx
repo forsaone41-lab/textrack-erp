@@ -58,6 +58,40 @@ async function verifyLogin(identifier: string, password: string): Promise<User |
   }
 }
 
+async function verifyWorkerLogin(cin: string, pin: string): Promise<User | null> {
+  try {
+    const { data, error } = await supabase
+      .from('employes')
+      .select('*')
+      .eq('cin', cin.trim().toUpperCase())
+      .eq('pin_code', pin.trim())
+      .single();
+
+    if (error || !data) {
+      console.warn("Worker login failed:", error?.message || "Invalid CIN or PIN");
+      return null;
+    }
+
+    const employe = data as Employe;
+
+    // Optional: unlock RLS anonymously or using a shared worker account if necessary.
+    // For now, we assume RLS allows worker operations or we proceed as anon.
+    localStorage.setItem('textrack_auth', 'true');
+
+    return {
+      id: `worker-${employe.id}`,
+      nom: `${employe.prenom} ${employe.nom}`,
+      email: `${employe.cin?.toLowerCase() || 'worker'}@beya.local`,
+      role: 'worker',
+      employeId: employe.id,
+      photo: employe.photo
+    } as User;
+  } catch (err) {
+    console.error("Worker login exception:", err);
+    return null;
+  }
+}
+
 
 interface LoginProps {
   onLogin: (user: User) => void;
@@ -72,24 +106,41 @@ export default function Login({ onLogin }: LoginProps) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [logoError, setLogoError] = useState(false);
+  const [loginMode, setLoginMode] = useState<'admin' | 'worker'>('admin');
+  
+  // Worker states
+  const [cin, setCin] = useState('');
+  const [pin, setPin] = useState('');
 
   async function handleLogin() {
-    if (!identifier || !password) {
-
-      setError(isAr ? 'المرجو إدخال البريد الإلكتروني وكلمة المرور.' : 'Veuillez remplir tous les champs.');
-      return;
-    }
     setError('');
     setLoading(true);
     try {
-      const user = await verifyLogin(identifier, password);
+      let user: User | null = null;
+      
+      if (loginMode === 'admin') {
+        if (!identifier || !password) {
+          setError(isAr ? 'المرجو إدخال البريد الإلكتروني وكلمة المرور.' : 'Veuillez remplir tous les champs.');
+          setLoading(false);
+          return;
+        }
+        user = await verifyLogin(identifier, password);
+      } else {
+        if (!cin || !pin) {
+          setError(isAr ? 'المرجو إدخال رقم البطاقة ورمز PIN.' : 'Veuillez entrer le CIN et le code PIN.');
+          setLoading(false);
+          return;
+        }
+        user = await verifyWorkerLogin(cin, pin);
+      }
+
       if (user) {
         onLogin(user);
       } else {
-        setError(isAr ? '❌ البريد الإلكتروني أو كلمة المرور غير صحيحة.' : '❌ Email ou mot de passe incorrect.');
+        setError(isAr ? '❌ المعلومات غير صحيحة.' : '❌ Informations incorrectes.');
       }
     } catch {
-      setError('Erreur de connexion. Réessayez.');
+      setError(isAr ? 'خطأ في الاتصال. حاول مرة أخرى.' : 'Erreur de connexion. Réessayez.');
     } finally {
       setLoading(false);
     }
@@ -136,59 +187,121 @@ export default function Login({ onLogin }: LoginProps) {
           <div className="px-8 pt-8 pb-6">
             {/* Mode header */}
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
-                <ShieldCheck className="w-5 h-5 text-slate-600" />
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${loginMode === 'worker' ? 'bg-indigo-100' : 'bg-slate-100'}`}>
+                {loginMode === 'worker' ? <UserCircle className="w-5 h-5 text-indigo-600" /> : <ShieldCheck className="w-5 h-5 text-slate-600" />}
               </div>
               <div>
                 <h2 className="text-xl font-bold text-slate-800">
-                  {isAr ? 'تسجيل الدخول' : 'Connexion'}
+                  {loginMode === 'worker' ? (isAr ? 'فضاء العمال' : 'Espace Ouvrier') : (isAr ? 'الإدارة والطاقم' : 'Administration')}
                 </h2>
                 <p className="text-slate-400 text-xs">
-                  {isAr ? 'بريد إلكتروني + كلمة السر' : 'Email + Mot de passe'}
+                  {loginMode === 'worker' ? (isAr ? 'رقم البطاقة (CIN) + رمز PIN' : 'CIN + Code PIN') : (isAr ? 'بريد إلكتروني + كلمة السر' : 'Email + Mot de passe')}
                 </p>
               </div>
             </div>
 
+            {/* Login Mode Toggle */}
+            <div className="flex gap-2 p-1 bg-slate-100 rounded-xl mb-6">
+              <button
+                onClick={() => setLoginMode('admin')}
+                className={`flex-1 py-2 text-xs font-bold uppercase tracking-widest rounded-lg transition-all ${loginMode === 'admin' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                {isAr ? 'إدارة' : 'Staff'}
+              </button>
+              <button
+                onClick={() => setLoginMode('worker')}
+                className={`flex-1 py-2 text-xs font-bold uppercase tracking-widest rounded-lg transition-all ${loginMode === 'worker' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                {isAr ? 'عمال' : 'Ouvriers'}
+              </button>
+            </div>
+
             {/* Form */}
             <div className="space-y-4">
-              {/* Identifier field */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-                  {isAr ? 'البريد الإلكتروني' : 'Email'}
-                </label>
-                <input
-                  type="text"
-                  value={identifier}
-                  onChange={e => setIdentifier(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                  placeholder={isAr ? 'مثال: example@beyacreative.com' : 'Ex: example@beyacreative.com'}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 focus:border-slate-800 outline-none transition-all"
-                />
-              </div>
+              {loginMode === 'admin' ? (
+                <>
+                  {/* Identifier field */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                      {isAr ? 'البريد الإلكتروني' : 'Email'}
+                    </label>
+                    <input
+                      type="text"
+                      value={identifier}
+                      onChange={e => setIdentifier(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                      placeholder={isAr ? 'مثال: example@beyacreative.com' : 'Ex: example@beyacreative.com'}
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 focus:border-slate-800 outline-none transition-all"
+                    />
+                  </div>
 
-              {/* Password / PIN field */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-                  {isAr ? 'كلمة السر' : 'Mot de passe'}
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                    placeholder={isAr ? 'كلمة السر' : 'Mot de passe'}
-                    className="w-full px-4 py-3 pr-11 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 focus:border-slate-800 outline-none transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
+                  {/* Password field */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                      {isAr ? 'كلمة السر' : 'Mot de passe'}
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                        placeholder={isAr ? 'كلمة السر' : 'Mot de passe'}
+                        className="w-full px-4 py-3 pr-11 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 focus:border-slate-800 outline-none transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* CIN field */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                      {isAr ? 'رقم البطاقة الوطنية (CIN)' : 'N° CIN'}
+                    </label>
+                    <input
+                      type="text"
+                      value={cin}
+                      onChange={e => setCin(e.target.value.toUpperCase())}
+                      onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                      placeholder="Ex: D595743"
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 outline-none transition-all uppercase font-bold tracking-widest"
+                    />
+                  </div>
+
+                  {/* PIN field */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                      {isAr ? 'رمز PIN' : 'Code PIN'}
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={pin}
+                        onChange={e => setPin(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                        placeholder="Ex: 8617"
+                        maxLength={8}
+                        className="w-full px-4 py-3 pr-11 border border-slate-200 rounded-xl text-lg font-black tracking-[0.3em] focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 outline-none transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
 
               {error && (
                 <div className="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm border border-red-100">
@@ -200,7 +313,7 @@ export default function Login({ onLogin }: LoginProps) {
               <button
                 onClick={handleLogin}
                 disabled={loading}
-                className="w-full text-white py-3 rounded-xl font-bold active:scale-95 transition shadow-lg disabled:opacity-60 mt-2 bg-slate-900 hover:bg-black shadow-slate-500/20"
+                className={`w-full text-white py-3 rounded-xl font-bold active:scale-95 transition shadow-lg disabled:opacity-60 mt-2 ${loginMode === 'worker' ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20' : 'bg-slate-900 hover:bg-black shadow-slate-500/20'}`}
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
