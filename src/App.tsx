@@ -54,6 +54,7 @@ const VisioRoom       = lazy(() => import('./pages/VisioRoom'));
 const PublicMeet      = lazy(() => import('./pages/PublicMeet'));
 const Inbox           = lazy(() => import('./pages/Inbox'));
 const GmailInbox      = lazy(() => import('./pages/GmailInbox'));
+const Tarifs          = lazy(() => import('./pages/Tarifs'));
 
 import { PageLoader } from './components/PageLoader';
 
@@ -398,6 +399,7 @@ function AppContent() {
         <Route path="inbox" element={can('inbox') ? <Inbox /> : <Navigate to="/" replace />} />
         <Route path="gmail-inbox" element={can('gmail') ? <GmailInbox /> : <Navigate to="/" replace />} />
         <Route path="pipeline" element={can('crm') ? <Pipeline /> : <Navigate to="/" replace />} />
+        <Route path="tarifs" element={can('tarifs') ? <Tarifs /> : <Navigate to="/" replace />} />
         <Route path="echantillons" element={can('demandes') ? <Echantillons /> : <Navigate to="/" replace />} />
         <Route path="fiches-techniques" element={can('fiches') ? <FichesTechniques /> : <Navigate to="/" replace />} />
         <Route path="ordres-de-coupe" element={can('ordres') ? <OrdresDeCoupe /> : <Navigate to="/" replace />} />

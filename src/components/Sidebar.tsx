@@ -13,7 +13,8 @@ import {
   Info,
   Video,
   Inbox,
-  Mail
+  Mail,
+  Tag
 } from 'lucide-react';
 
 import { User, CompanyProfile, loadPermissions, AppPage, syncCompanyProfile } from '../types';
@@ -200,7 +201,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
           </div>
 
           {/* Group 2: Commercial */}
-          {(can('demandes') || can('crm') || can('clients') || can('inbox') || can('gmail')) && (
+          {(can('demandes') || can('crm') || can('clients') || can('inbox') || can('gmail') || can('tarifs')) && (
             <div className="space-y-1">
               {!collapsed && <SectionTitle title={isAr ? 'التجاري' : 'Commercial'} isAr={isAr} />}
             {can('gmail') && <NavItem to="/gmail-inbox" icon={Mail} label={isAr ? 'البريد الوارد (Gmail)' : 'Boîte Gmail'} />}
@@ -209,6 +210,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
             {can('crm') && <NavItem to="/pipeline" icon={PhoneCall} label={isAr ? 'تتبع الزبناء (CRM)' : 'Suivi Prospects'} />}
             {can('demandes') && <NavItem to="/echantillons" icon={Scissors} label={isAr ? 'العينات' : 'Échantillons'} />}
             {can('clients') && <NavItem to="/clients" icon={UserCheck} label={isAr ? 'قاعدة الزبناء' : 'Clients'} />}
+            {can('tarifs') && <NavItem to="/tarifs" icon={Tag} label={isAr ? 'كتالوج الأسعار' : 'Tarifs & Catalogue'} />}
             </div>
           )}
 

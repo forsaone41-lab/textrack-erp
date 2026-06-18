@@ -383,18 +383,30 @@ export interface Charge {
   notes?: string;
 }
 
+// ─── Tarifs ───────────────────────────────────────────────────
+export interface TarifService {
+  id: string;
+  titre: string;
+  categorie: 'Confection' | 'Impression' | 'Broderie' | 'Finition' | 'Matière Première' | 'Autre';
+  prixMin: number;
+  prixMax?: number;
+  unite: 'Pièce' | 'Mètre' | 'Logo' | 'Heure' | 'Forfait';
+  description?: string;
+  actif: boolean;
+}
+
 // ─── Permissions ────────────────────────────────────────────
 export type AppPage =
   | 'dashboard' | 'fiches' | 'ordres' | 'chaine' | 'stocks' | 'pilotage' | 'scan_production'
   | 'rh' | 'commandes' | 'clients' | 'factures' | 'charges' | 'bilan' | 'fast_scanner'
   | 'pointage' | 'portail_client' | 'performance' | 'utilisateurs' | 'parametres' | 'demandes'
   | 'worker_portal' | 'controle_qualite' | 'partenaire_portal' | 'agenda' | 'notifications' | 'ai_space' | 'crm' | 'chef_chaine_portal'
-  | 'inbox' | 'gmail' | 'plaintes' | 'fournisseurs' | 'achats' | 'visio';
+  | 'inbox' | 'gmail' | 'plaintes' | 'fournisseurs' | 'achats' | 'visio' | 'tarifs';
 
 export type RolePermMap = Record<'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire' | 'chef_chaine', AppPage[]>;
 
 export const DEFAULT_PERMISSIONS: RolePermMap = {
-  admin: ['dashboard', 'demandes', 'crm', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'stocks', 'rh', 'commandes', 'clients', 'factures', 'charges', 'bilan', 'fast_scanner', 'pointage', 'portail_client', 'performance', 'utilisateurs', 'parametres', 'worker_portal', 'controle_qualite', 'partenaire_portal', 'agenda', 'notifications', 'ai_space', 'chef_chaine_portal', 'inbox', 'gmail', 'plaintes', 'fournisseurs', 'achats', 'visio'],
+  admin: ['dashboard', 'demandes', 'crm', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'stocks', 'rh', 'commandes', 'clients', 'factures', 'charges', 'bilan', 'fast_scanner', 'pointage', 'portail_client', 'performance', 'utilisateurs', 'parametres', 'worker_portal', 'controle_qualite', 'partenaire_portal', 'agenda', 'notifications', 'ai_space', 'chef_chaine_portal', 'inbox', 'gmail', 'plaintes', 'fournisseurs', 'achats', 'visio', 'tarifs'],
   pointeur: ['dashboard', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'pointage', 'performance', 'worker_portal', 'controle_qualite'],
   client: ['portail_client'],
   worker: ['worker_portal'],
