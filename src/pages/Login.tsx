@@ -92,7 +92,7 @@ async function verifyWorkerLogin(cin: string, pin: string): Promise<User | null>
       return null;
     }
 
-    const employe = data as Employe;
+
 
     // Optional: unlock RLS anonymously or using a shared worker account if necessary.
     // For now, we assume RLS allows worker operations or we proceed as anon.
