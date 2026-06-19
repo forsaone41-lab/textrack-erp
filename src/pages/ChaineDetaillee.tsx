@@ -20,6 +20,8 @@ import {
   RefreshCw,
   Zap,
   ArrowRight,
+  ArrowUp,
+  ArrowDown,
   PackageCheck,
   X,
   Sparkles,
@@ -394,6 +396,38 @@ export default function ChaineDetaillee() {
     if (!confirm('Supprimer cette opération ?')) return;
     setOperations(operations.filter(o => o.id !== id));
     await deleteRecord('operations_modele', id);
+  }
+
+  async function handleMoveOp(opId: string, direction: 'up' | 'down') {
+    const currentIndex = modelOps.findIndex(o => o.id === opId);
+    if (currentIndex === -1) return;
+    
+    if (direction === 'up' && currentIndex === 0) return;
+    if (direction === 'down' && currentIndex === modelOps.length - 1) return;
+    
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    const currentOp = modelOps[currentIndex];
+    const targetOp = modelOps[targetIndex];
+    
+    // Swap sequence values. If they are the same (happens with auto-generated), adjust manually to ensure they swap cleanly.
+    let currentOrdre = currentOp.ordre_sequence;
+    let targetOrdre = targetOp.ordre_sequence;
+    if (currentOrdre === targetOrdre) {
+      if (direction === 'up') currentOrdre += 1;
+      else targetOrdre += 1;
+    }
+    
+    const updatedCurrent = { ...currentOp, ordre_sequence: targetOrdre };
+    const updatedTarget = { ...targetOp, ordre_sequence: currentOrdre };
+    
+    setOperations(ops => ops.map(o => {
+      if (o.id === updatedCurrent.id) return updatedCurrent;
+      if (o.id === updatedTarget.id) return updatedTarget;
+      return o;
+    }));
+    
+    await saveRecord('operations_modele', updatedCurrent);
+    await saveRecord('operations_modele', updatedTarget);
   }
 
   async function suggestOperationsByAI() {
@@ -1052,8 +1086,16 @@ export default function ChaineDetaillee() {
                 ) : (
                   modelOps.map((op, idx) => (
                     <div key={op.id} className="flex items-center justify-between p-5 bg-slate-50 hover:bg-slate-100/50 rounded-2xl transition-all border border-transparent hover:border-slate-200 group">
-                      <div className="flex items-center gap-5">
-                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-sm font-black text-indigo-600 shadow-sm border border-slate-100">
+                      <div className="flex items-center gap-3 md:gap-5">
+                        <div className="flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => handleMoveOp(op.id, 'up')} disabled={idx === 0} className="p-1 text-slate-300 hover:text-indigo-600 disabled:opacity-20 disabled:hover:text-slate-300 transition-colors">
+                            <ArrowUp className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => handleMoveOp(op.id, 'down')} disabled={idx === modelOps.length - 1} className="p-1 text-slate-300 hover:text-indigo-600 disabled:opacity-20 disabled:hover:text-slate-300 transition-colors">
+                            <ArrowDown className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <div className="w-10 h-10 shrink-0 bg-white rounded-xl flex items-center justify-center text-sm font-black text-indigo-600 shadow-sm border border-slate-100">
                           {idx + 1}
                         </div>
                         <div>
