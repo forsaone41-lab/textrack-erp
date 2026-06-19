@@ -316,12 +316,12 @@ export default function ChaineDetaillee() {
     if (activeShift === 'jour') {
       return HEURES_TRAVAIL.filter(h => {
         const hour = parseInt(h.split(':')[0]);
-        return hour >= 8 && hour < 20;
+        return hour >= 9 && hour < 18;
       });
     } else {
       return HEURES_TRAVAIL.filter(h => {
         const hour = parseInt(h.split(':')[0]);
-        return hour >= 20 || hour < 8;
+        return hour >= 18 || hour < 9;
       });
     }
   }, [activeShift]);
