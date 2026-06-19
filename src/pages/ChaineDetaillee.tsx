@@ -10,6 +10,7 @@ import {
   ChevronRight, 
   TrendingUp, 
   AlertCircle,
+  AlertTriangle,
   LayoutDashboard,
   CheckCircle2,
   Timer,
@@ -213,6 +214,7 @@ export default function ChaineDetaillee() {
   const [assignments, setAssignments] = useState<Record<string, AssignmentDetail>>({});
   const [syncing, setSyncing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   // Form states
   const [showOpModal, setShowOpModal] = useState(false);
@@ -528,15 +530,12 @@ export default function ChaineDetaillee() {
     await saveRecord('suivi_horaire', newEntry);
   }
 
-  async function handleResetSuivi() {
+  function handleResetSuivi() {
     if (todaySuivi.length === 0) return;
-    
-    const confirmMsg = isAr 
-      ? "هل أنت متأكد أنك تريد مسح جميع البيانات لهذا اليوم؟ سيتم إزالة جميع الكميات وتوزيع العمال." 
-      : "Êtes-vous sûr de vouloir tout effacer pour cette journée ? Les quantités et les affectations seront supprimées.";
-      
-    if (!confirm(confirmMsg)) return;
+    setShowResetConfirm(true);
+  }
 
+  async function performReset() {
     setSyncing(true);
     try {
       const promises = todaySuivi.map(s => deleteRecord('suivi_horaire', s.id));
@@ -546,6 +545,7 @@ export default function ChaineDetaillee() {
       setSuivi(suivi.filter(s => !idsToRemove.has(s.id)));
       
       setSyncing(false);
+      setShowResetConfirm(false);
       setShowSuccess(true);
     } catch (err) {
       console.error("Erreur reset:", err);
@@ -1431,6 +1431,42 @@ export default function ChaineDetaillee() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Reset Confirm Modal */}
+      {showResetConfirm && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+           <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-md animate-in fade-in duration-500" onClick={() => setShowResetConfirm(false)} />
+           <div className="bg-white rounded-[3rem] p-10 max-w-md w-full text-center relative z-10 shadow-2xl animate-in zoom-in-95 duration-300 border border-slate-100">
+              <div className="w-24 h-24 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl shadow-rose-50 ring-8 ring-rose-50">
+                 <AlertTriangle className="w-10 h-10 text-rose-500" />
+              </div>
+              <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4">
+                 {isAr ? 'تأكيد مسح البيانات' : 'Confirmer la suppression'}
+              </h2>
+              <p className="text-sm font-bold text-slate-500 mb-8 leading-relaxed">
+                 {isAr 
+                    ? 'هل أنت متأكد أنك تريد مسح جميع البيانات لهذا اليوم؟ سيتم إزالة جميع الكميات وتوزيع العمال. لا يمكن التراجع عن هذه العملية.' 
+                    : 'Êtes-vous sûr de vouloir tout effacer pour cette journée ? Les quantités et les affectations seront supprimées. Cette action est irréversible.'}
+              </p>
+              <div className="flex gap-4">
+                 <button 
+                    onClick={() => setShowResetConfirm(false)}
+                    className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all"
+                 >
+                    {isAr ? 'إلغاء' : 'Annuler'}
+                 </button>
+                 <button 
+                    onClick={performReset}
+                    disabled={syncing}
+                    className="flex-1 py-4 bg-rose-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-rose-200 hover:bg-rose-600 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                 >
+                    {syncing ? <RotateCcw className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                    {isAr ? 'نعم، امسح الكل' : 'Oui, tout effacer'}
+                 </button>
+              </div>
+           </div>
         </div>
       )}
 
