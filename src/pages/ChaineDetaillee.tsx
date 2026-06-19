@@ -920,8 +920,10 @@ export default function ChaineDetaillee() {
 
       {activeTab === 'planning' && (
         <div className="space-y-6">
-          <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm relative overflow-hidden">
-             <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl -mr-32 -mt-32" />
+          <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm relative">
+             <div className="absolute inset-0 rounded-[2.5rem] overflow-hidden pointer-events-none">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl -mr-32 -mt-32" />
+             </div>
              
              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10 mb-10">
                 <div>
