@@ -296,12 +296,12 @@ export default function Tarifs() {
                     onChange={e => setFormData({...formData, categorie: e.target.value as any})}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:border-indigo-500 outline-none"
                   >
-                    <option value="Confection">Confection</option>
-                    <option value="Impression">Impression</option>
-                    <option value="Broderie">Broderie</option>
-                    <option value="Finition">Finition</option>
-                    <option value="Matière Première">Matière Première</option>
-                    <option value="Autre">Autre</option>
+                    <option value="Confection">{isAr ? 'خياطة' : 'Confection'}</option>
+                    <option value="Impression">{isAr ? 'طباعة' : 'Impression'}</option>
+                    <option value="Broderie">{isAr ? 'تطريز' : 'Broderie'}</option>
+                    <option value="Finition">{isAr ? 'تشطيب' : 'Finition'}</option>
+                    <option value="Matière Première">{isAr ? 'مواد أولية' : 'Matière Première'}</option>
+                    <option value="Autre">{isAr ? 'أخرى' : 'Autre'}</option>
                   </select>
                 </div>
                 <div>
@@ -311,11 +311,11 @@ export default function Tarifs() {
                     onChange={e => setFormData({...formData, unite: e.target.value as any})}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:border-indigo-500 outline-none"
                   >
-                    <option value="Pièce">Pièce</option>
-                    <option value="Mètre">Mètre</option>
-                    <option value="Logo">Logo</option>
-                    <option value="Heure">Heure</option>
-                    <option value="Forfait">Forfait</option>
+                    <option value="Pièce">{isAr ? 'قطعة' : 'Pièce'}</option>
+                    <option value="Mètre">{isAr ? 'متر' : 'Mètre'}</option>
+                    <option value="Logo">{isAr ? 'شعار (لوجو)' : 'Logo'}</option>
+                    <option value="Heure">{isAr ? 'ساعة' : 'Heure'}</option>
+                    <option value="Forfait">{isAr ? 'خدمة كاملة (Forfait)' : 'Forfait'}</option>
                   </select>
                 </div>
               </div>

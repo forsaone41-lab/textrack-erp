@@ -259,3 +259,15 @@ CREATE TABLE IF NOT EXISTS achats (
   "fournisseur" text,
   "quantiteLivre" numeric
 );
+
+CREATE TABLE IF NOT EXISTS tarifs (
+  "id" text PRIMARY KEY,
+  "titre" text,
+  "categorie" text,
+  "prixMin" numeric,
+  "prixMax" numeric,
+  "unite" text,
+  "description" text,
+  "actif" boolean
+);
+
