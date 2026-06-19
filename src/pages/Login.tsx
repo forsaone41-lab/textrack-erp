@@ -60,15 +60,35 @@ async function verifyLogin(identifier: string, password: string): Promise<User |
 
 async function verifyWorkerLogin(cin: string, pin: string): Promise<User | null> {
   try {
+    let employe: Employe | null = null;
     const { data, error } = await supabase
       .from('employes')
       .select('*')
       .eq('cin', cin.trim().toUpperCase())
       .eq('pin_code', pin.trim())
-      .single();
+      .limit(1);
 
-    if (error || !data) {
-      console.warn("Worker login failed:", error?.message || "Invalid CIN or PIN");
+    if (!error && data && data.length > 0) {
+      employe = data[0] as Employe;
+    } else {
+      // Fallback to local storage if offline or not synced yet
+      try {
+        const localData = localStorage.getItem('textrack_data_employes');
+        if (localData) {
+          const employes: Employe[] = JSON.parse(localData);
+          const localEmp = employes.find(e => 
+            e.cin?.trim().toUpperCase() === cin.trim().toUpperCase() && 
+            e.pin_code?.trim() === pin.trim()
+          );
+          if (localEmp) {
+            employe = localEmp;
+          }
+        }
+      } catch {}
+    }
+
+    if (!employe) {
+      console.warn("Worker login failed: Invalid CIN or PIN");
       return null;
     }
 
