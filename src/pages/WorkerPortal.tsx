@@ -16,7 +16,9 @@ import {
   ShieldCheck,
   Camera,
   RotateCw,
-  Trash2
+  Trash2,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { 
   Employe, 
@@ -318,6 +320,18 @@ export default function WorkerPortal({ currentUser, onLogout }: WorkerPortalProp
         setNewReclamation({ target: 'chef', sujet: '', description: '' });
         setIsSubmittingRec(false);
   };
+
+  const handlePrevDate = () => {
+    const d = new Date(selectedDate);
+    d.setDate(d.getDate() - 1);
+    setSelectedDate(d.toISOString().split('T')[0]);
+  };
+
+  const handleNextDate = () => {
+    const d = new Date(selectedDate);
+    d.setDate(d.getDate() + 1);
+    setSelectedDate(d.toISOString().split('T')[0]);
+  };
   const workerSuiviToday = useMemo(() => 
     data.suivi.filter(s => s.employe_id === selectedWorkerId && s.date_production === selectedDate),
   [data.suivi, selectedWorkerId, selectedDate]);
@@ -444,12 +458,31 @@ export default function WorkerPortal({ currentUser, onLogout }: WorkerPortalProp
                 <h1 className="text-2xl font-bold tracking-tight italic">{isAr ? 'مرحباً' : 'Bonjour'} {currentWorker?.prenom} !</h1>
                 <div className="flex flex-wrap items-center gap-2">
                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">{isAr ? 'تتبع مسار عملك' : 'Suivi de votre roadmap'}</p>
-                   <input 
-                     type="date"
-                     value={selectedDate}
-                     onChange={e => setSelectedDate(e.target.value)}
-                     className="bg-slate-900 border border-slate-700 text-slate-300 text-[10px] font-bold rounded-lg px-2 py-1 outline-none focus:border-indigo-500 shadow-sm w-full sm:w-auto mt-1 sm:mt-0"
-                   />
+                   
+                   <div className={`flex items-center bg-slate-900 rounded-lg border shadow-sm overflow-hidden mt-1 sm:mt-0 ${
+                     selectedDate === dateNow() ? 'border-emerald-500/50' : 'border-slate-700'
+                   }`}>
+                     <button 
+                       onClick={handlePrevDate}
+                       className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white transition-colors border-r border-slate-800"
+                     >
+                       <ChevronLeft className="w-3.5 h-3.5" />
+                     </button>
+                     <input 
+                       type="date"
+                       value={selectedDate}
+                       onChange={e => setSelectedDate(e.target.value)}
+                       className={`bg-transparent border-none text-[10px] font-bold px-2 py-1 outline-none w-[100px] text-center ${
+                         selectedDate === dateNow() ? 'text-emerald-400' : 'text-slate-300'
+                       }`}
+                     />
+                     <button 
+                       onClick={handleNextDate}
+                       className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white transition-colors border-l border-slate-800"
+                     >
+                       <ChevronRight className="w-3.5 h-3.5" />
+                     </button>
+                   </div>
                 </div>
               </div>
               <button 
