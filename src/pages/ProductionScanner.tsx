@@ -18,8 +18,10 @@ import {
   SuiviHoraire, 
   loadData, 
   saveRecord, 
-  genId 
+  genId,
+  dateNow
 } from '../types';
+import { supabase } from '../supabase';
 import { useNavigate } from 'react-router-dom';
 
 export default function ProductionScanner() {
@@ -77,6 +79,9 @@ export default function ProductionScanner() {
           cmdId: parts[0],
           opId: parts[1]
         });
+        if (parts[2]) {
+          setForm(prev => ({ ...prev, employeId: parts[2] }));
+        }
         setStatus({ type: 'none', message: '' });
       } else {
         setStatus({ type: 'error', message: 'Format QR invalide' });
@@ -95,19 +100,41 @@ export default function ProductionScanner() {
     const hDebut = `${String(currentHour).padStart(2, '0')}:00`;
     const hFin = `${String((currentHour + 1) % 24).padStart(2, '0')}:00`;
 
-    const newEntry: any = {
-      id: genId(),
-      commande_id: scanResult.cmdId,
-      employe_id: form.employeId,
-      operation_id: scanResult.opId,
-      heure_debut: hDebut,
-      heure_fin: hFin,
-      quantite_realisee: form.quantite,
-      date_production: now.toLocaleDateString('en-CA') // Local date YYYY-MM-DD
-    };
-
+    const prodDate = dateNow();
+    
     try {
-      await saveRecord('suivi_horaire', newEntry);
+      // Find existing entry for this hour
+      const { data: existing } = await supabase
+        .from('suivi_horaire')
+        .select('*')
+        .eq('commande_id', scanResult.cmdId)
+        .eq('employe_id', form.employeId)
+        .eq('operation_id', scanResult.opId)
+        .eq('heure_debut', hDebut)
+        .eq('date_production', prodDate)
+        .limit(1);
+
+      let entryToSave: any;
+
+      if (existing && existing.length > 0) {
+        entryToSave = {
+          ...existing[0],
+          quantite_realisee: existing[0].quantite_realisee + form.quantite
+        };
+      } else {
+        entryToSave = {
+          id: genId(),
+          commande_id: scanResult.cmdId,
+          employe_id: form.employeId,
+          operation_id: scanResult.opId,
+          heure_debut: hDebut,
+          heure_fin: hFin,
+          quantite_realisee: form.quantite,
+          date_production: prodDate
+        };
+      }
+
+      await saveRecord('suivi_horaire', entryToSave);
       setStatus({ type: 'success', message: 'Production enregistrée !' });
       
       // Reset for next scan after 2 seconds

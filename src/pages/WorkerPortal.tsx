@@ -69,6 +69,8 @@ export default function WorkerPortal({ currentUser, onLogout }: WorkerPortalProp
 
   const [isUploading, setIsUploading] = useState(false);
 
+  const [refreshKey, setRefreshKey] = useState(0);
+
   useEffect(() => {
     Promise.all([
       loadData<Employe>('employes'),
@@ -88,6 +90,14 @@ export default function WorkerPortal({ currentUser, onLogout }: WorkerPortalProp
       });
       setLoading(false);
     });
+  }, [refreshKey]);
+
+  // Auto-refresh every 15 seconds for live progress tracking
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRefreshKey(prev => prev + 1);
+    }, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   // Smart Match: If no ID is linked, try to find by name
@@ -430,9 +440,18 @@ export default function WorkerPortal({ currentUser, onLogout }: WorkerPortalProp
         {activeTab === 'mission' && (
           <>
             {/* Greeting */}
-            <div className="space-y-1">
-              <h1 className="text-2xl font-bold tracking-tight italic">{isAr ? 'مرحباً' : 'Bonjour'} {currentWorker?.prenom} !</h1>
-              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">{isAr ? 'تتبع مسار عملك اليومي' : 'Suivi de votre roadmap aujourd\'hui'}</p>
+            <div className="flex justify-between items-start">
+              <div className="space-y-1">
+                <h1 className="text-2xl font-bold tracking-tight italic">{isAr ? 'مرحباً' : 'Bonjour'} {currentWorker?.prenom} !</h1>
+                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">{isAr ? 'تتبع مسار عملك اليومي' : 'Suivi de votre roadmap aujourd\'hui'}</p>
+              </div>
+              <button 
+                onClick={() => setRefreshKey(prev => prev + 1)}
+                className="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center hover:bg-indigo-500/20 transition-all border border-indigo-500/20 shadow-lg active:rotate-180"
+                title="Actualiser"
+              >
+                <RotateCw className="w-5 h-5" />
+              </button>
             </div>
 
             {/* Roadmap Stepper */}
@@ -592,7 +611,7 @@ export default function WorkerPortal({ currentUser, onLogout }: WorkerPortalProp
                         {!isDone && expandedMissionId === opId && (
                           <div className="bg-white rounded-[2rem] p-6 text-slate-900 flex flex-col items-center shadow-lg border border-slate-100 animate-in zoom-in-95 duration-200">
                             <h4 className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-4">{isAr ? 'رمز التحقق النشط' : 'QR Validation Actif'}</h4>
-                            <QRCodeSVG value={`beya-prod://${cmd?.id}/${op.id}`} size={160} level="H" includeMargin />
+                            <QRCodeSVG value={`beya-prod://${cmd?.id}/${op.id}/${selectedWorkerId}`} size={160} level="H" includeMargin />
                             <p className="mt-4 text-[9px] font-black text-slate-400 uppercase tracking-tighter">{op.nom_operation}</p>
                             <button 
                               onClick={() => setExpandedMissionId(null)}
