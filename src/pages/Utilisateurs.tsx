@@ -98,6 +98,7 @@ const ALL_PAGES: PageDef[] = [
   { key: 'inbox', label: 'Boîte de Réception', labelAr: 'صندوق الرسائل', icon: InboxIcon, group: 'Général' },
   { key: 'gmail', label: 'Boîte Gmail', labelAr: 'البريد الوارد (Gmail)', icon: Mail, group: 'Général' },
   { key: 'tarifs', label: 'Tarifs & Catalogue', labelAr: 'كتالوج الأسعار', icon: ShoppingBag, group: 'Général' },
+  { key: 'tarifs_edit', label: 'Édition Tarifs', labelAr: 'تعديل الأسعار', icon: ShoppingBag, group: 'Général' },
   
   { key: 'fiches', label: 'Fiches Techniques', labelAr: 'البطاقات التقنية', icon: FileText, group: 'Production' },
   { key: 'ai_space', label: 'Assistant IA', labelAr: 'المساعد الذكي (AI Space)', icon: Sparkles, group: 'Production' },
