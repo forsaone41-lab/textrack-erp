@@ -9,7 +9,9 @@ import {
   Package, 
   ArrowLeft,
   Factory,
-  Save
+  Save,
+  Calendar,
+  Clock
 } from 'lucide-react';
 import { 
   Commande, 
@@ -45,6 +47,8 @@ export default function ProductionScanner() {
   const [form, setForm] = useState({
     employeId: '',
     quantite: 0,
+    dateProduction: dateNow(),
+    heureDebut: `${String(new Date().getHours()).padStart(2, '0')}:00`
   });
 
   const [status, setStatus] = useState<{
@@ -95,12 +99,11 @@ export default function ProductionScanner() {
       return;
     }
 
-    const now = new Date();
-    const currentHour = now.getHours();
-    const hDebut = `${String(currentHour).padStart(2, '0')}:00`;
-    const hFin = `${String((currentHour + 1) % 24).padStart(2, '0')}:00`;
+    const hDebut = form.heureDebut;
+    const hNumber = parseInt(hDebut.split(':')[0]);
+    const hFin = `${String((hNumber + 1) % 24).padStart(2, '0')}:00`;
 
-    const prodDate = dateNow();
+    const prodDate = form.dateProduction;
     
     try {
       // Find existing entry for this hour
@@ -237,6 +240,34 @@ export default function ProductionScanner() {
                       <option key={e.id} value={e.id}>{e.prenom} {e.nom}</option>
                     ))}
                   </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Date & Heure de Production</label>
+                <div className="flex gap-4">
+                  <div className="relative flex-1">
+                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                    <input 
+                      type="date"
+                      value={form.dateProduction}
+                      onChange={e => setForm({ ...form, dateProduction: e.target.value })}
+                      className="w-full bg-slate-800 border-2 border-slate-700 rounded-2xl py-4 pl-12 pr-5 text-sm font-bold outline-none focus:border-indigo-500 transition-all"
+                    />
+                  </div>
+                  <div className="relative flex-1">
+                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                    <select 
+                      value={form.heureDebut}
+                      onChange={e => setForm({ ...form, heureDebut: e.target.value })}
+                      className="w-full bg-slate-800 border-2 border-slate-700 rounded-2xl py-4 pl-12 pr-5 text-sm font-bold outline-none focus:border-indigo-500 transition-all appearance-none"
+                    >
+                      {Array.from({ length: 24 }).map((_, i) => {
+                         const h = String(i).padStart(2, '0') + ':00';
+                         return <option key={h} value={h}>{h}</option>;
+                      })}
+                    </select>
+                  </div>
                 </div>
               </div>
 
