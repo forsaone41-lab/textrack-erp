@@ -371,15 +371,19 @@ export default function ChaineDetaillee() {
   async function handleAddOperation() {
     if (!selectedCmd || !opForm.nom_operation) return;
     
+    const isEdit = !!opForm.id;
     const newOp: OperationModele = {
-      id: genId(),
+      id: opForm.id || genId(),
       modele: selectedCmd.modele,
       nom_operation: opForm.nom_operation,
       target_heure: opForm.target_heure || 40,
-      ordre_sequence: modelOps.length + 1
+      ordre_sequence: opForm.ordre_sequence || (modelOps.length + 1)
     };
 
-    const updated = [...operations, newOp];
+    const updated = isEdit 
+      ? operations.map(o => o.id === newOp.id ? newOp : o) 
+      : [...operations, newOp];
+      
     setOperations(updated);
     setShowOpModal(false);
     setOpForm({});
@@ -1056,6 +1060,16 @@ export default function ChaineDetaillee() {
                       <div className="flex items-center gap-2">
                         <button 
                           onClick={() => {
+                            setOpForm(op);
+                            setShowOpModal(true);
+                          }}
+                          className="p-3 text-slate-400 hover:text-indigo-600 transition-colors opacity-0 group-hover:opacity-100"
+                          title={isAr ? 'تعديل المركز' : 'Modifier'}
+                        >
+                          <Settings className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => {
                             setQrPost(op);
                             setShowQrModal(true);
                           }}
@@ -1456,8 +1470,12 @@ export default function ChaineDetaillee() {
             <div className="md:w-7/12 flex flex-col">
               <div className="p-8 border-b border-slate-100 flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter italic">{isAr ? 'مركز جديد' : 'Nouveau Poste'}</h2>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{isAr ? 'إضافة عملية للإنتاج' : 'Ajouter une opération'}</p>
+                  <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter italic">
+                    {opForm.id ? (isAr ? 'تعديل المركز' : 'Modifier Poste') : (isAr ? 'مركز جديد' : 'Nouveau Poste')}
+                  </h2>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                    {opForm.id ? (isAr ? 'تحديث تفاصيل العملية' : 'Mettre à jour l\'opération') : (isAr ? 'إضافة عملية للإنتاج' : 'Ajouter une opération')}
+                  </p>
                 </div>
                 <button onClick={() => setShowOpModal(false)} className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
                   <XIcon className="w-5 h-5" />
@@ -1569,7 +1587,7 @@ export default function ChaineDetaillee() {
                   disabled={!opForm.nom_operation}
                   className="w-full h-16 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-slate-200 active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100"
                 >
-                  {isAr ? 'تأكيد المركز' : 'Confirmer le poste'}
+                  {opForm.id ? (isAr ? 'حفظ التعديلات' : 'Enregistrer') : (isAr ? 'تأكيد المركز' : 'Confirmer le poste')}
                 </button>
               </div>
             </div>
