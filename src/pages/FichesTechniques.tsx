@@ -47,18 +47,18 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
           )}
 
           {/* Badges & Quick Actions on Image */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover/image:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 flex flex-col justify-end">
             {f.photo && (
               <div className="flex gap-2 w-full">
                 <button
-                  onClick={(e) => { e.stopPropagation(); onImageClick?.(f.photo!); }}
-                  className="flex-1 py-2 bg-indigo-600/90 backdrop-blur-md text-white border border-indigo-400/30 rounded-xl text-[10px] font-bold flex items-center justify-center gap-2 hover:bg-indigo-500 transition-all"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); onImageClick?.(f.photo!); }}
+                  className="flex-1 py-2 bg-white/20 backdrop-blur-md text-white border border-white/30 rounded-xl text-[10px] font-bold flex items-center justify-center gap-2 hover:bg-white hover:text-indigo-600 transition-all shadow-sm"
                 >
-                  <Eye className="w-3 h-3" /> {isAr ? 'عرض' : 'Voir'}
+                  <Eye className="w-3.5 h-3.5" /> {isAr ? 'عرض' : 'Voir'}
                 </button>
                 <button
-                  onClick={(e) => { e.stopPropagation(); downloadFile(f.photo!, `Photo_${f.modele}.png`); }}
-                  className="flex-1 py-2 bg-white/20 backdrop-blur-md text-white border border-white/30 rounded-xl text-[10px] font-bold flex items-center justify-center gap-2 hover:bg-white hover:text-indigo-600 transition-all"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); downloadFile(f.photo!, `Photo_${f.modele}.png`); }}
+                  className="flex-1 py-2 bg-white/10 backdrop-blur-md text-white/90 border border-white/20 rounded-xl text-[10px] font-bold flex items-center justify-center gap-2 hover:bg-white/20 transition-all"
                 >
                   <Download className="w-3 h-3" /> {t('download_label', lang)}
                 </button>
@@ -2056,7 +2056,7 @@ export default function FichesTechniques() {
       {/* Full-screen Image Modal */}
       {expandedImage && (
         <div 
-          className="fixed inset-0 z-[300] bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300"
+          className="fixed inset-0 z-[9999] bg-slate-900/95 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300"
           onClick={() => setExpandedImage(null)}
         >
           <button 
