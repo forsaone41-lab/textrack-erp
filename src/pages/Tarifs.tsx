@@ -107,7 +107,7 @@ export default function Tarifs() {
             {isAr ? 'مرجع أسعار الخدمات والمنتجات للفريق التجاري' : 'Référentiel des prix des services pour l\'équipe commerciale'}
           </p>
         </div>
-        {(can('tarifs') || can('parametres') || currentUser?.role === 'admin') && (
+        {(can('tarifs') || can('parametres') || (currentUser?.role || '').toLowerCase().includes('admin')) && (
           <button 
             onClick={() => { setIsEditing(null); setFormData({ categorie: 'Confection', unite: 'Pièce', actif: true }); setShowForm(true); }}
             className="px-6 py-3 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-xl shadow-slate-200 hover:-translate-y-1"
@@ -220,7 +220,7 @@ export default function Tarifs() {
                   <span className="text-xs font-black text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md mt-1 inline-block">/ {t.unite}</span>
                 </div>
                 
-                {(can('tarifs') || can('parametres') || currentUser?.role === 'admin') && (
+                {(can('tarifs') || can('parametres') || (currentUser?.role || '').toLowerCase().includes('admin')) && (
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button 
                       onClick={() => { setIsEditing(t); setFormData(t); setShowForm(true); }}
