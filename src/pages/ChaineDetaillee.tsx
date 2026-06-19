@@ -928,6 +928,12 @@ export default function ChaineDetaillee() {
                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">Assignez un ouvrier et une plage horaire à chaque poste</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-4">
+                   <input 
+                     type="date"
+                     value={selectedDate}
+                     onChange={e => setSelectedDate(e.target.value)}
+                     className="bg-white border-2 border-indigo-100 text-indigo-700 text-sm font-black rounded-xl px-4 py-2 outline-none focus:border-indigo-500 shadow-sm"
+                   />
                    <div className="flex bg-slate-100 p-1 rounded-xl">
                       <button onClick={() => setActiveShift('jour')} className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase transition-all ${activeShift === 'jour' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400'}`}>Jour</button>
                       <button onClick={() => setActiveShift('nuit')} className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase transition-all ${activeShift === 'nuit' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400'}`}>Nuit</button>
