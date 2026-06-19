@@ -45,7 +45,8 @@ import {
   loadData, 
   saveRecord, 
   genId,
-  deleteRecord
+  deleteRecord,
+  dateNow
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 
@@ -205,6 +206,7 @@ export default function ChaineDetaillee() {
   const [selectedCmdId, setSelectedCmdId] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'config' | 'suivi' | 'stats' | 'planning'>('planning');
   const [activeShift, setActiveShift] = useState<'jour' | 'nuit'>('jour');
+  const [selectedDate, setSelectedDate] = useState(dateNow());
   const [loading, setLoading] = useState(true);
 
   // Planning state
@@ -309,10 +311,9 @@ export default function ChaineDetaillee() {
     operations.filter(o => o.modele === selectedCmd?.modele)
     .sort((a, b) => a.ordre_sequence - b.ordre_sequence), [operations, selectedCmd]);
 
-  const today = new Date().toISOString().split('T')[0];
   const todaySuivi = useMemo(() => 
-    suivi.filter(s => s.commande_id === selectedCmdId && s.date_production === today), 
-    [suivi, selectedCmdId, today]);
+    suivi.filter(s => s.commande_id === selectedCmdId && s.date_production === selectedDate), 
+    [suivi, selectedCmdId, selectedDate]);
 
   const filteredHours = useMemo(() => {
     if (activeShift === 'jour') {
@@ -508,7 +509,7 @@ export default function ChaineDetaillee() {
       heure_debut: hDebut,
       heure_fin: hFin,
       quantite_realisee: qte,
-      date_production: today
+      date_production: selectedDate
     };
 
     if (!empId && (!qte || qte === 0)) {
@@ -559,7 +560,7 @@ export default function ChaineDetaillee() {
           heure_debut: hDebut,
           heure_fin: hFin,
           quantite_realisee: existing?.quantite_realisee || 0,
-          date_production: today
+          date_production: selectedDate
         };
 
         promises.push(saveRecord('suivi_horaire', entry));
@@ -1162,10 +1163,18 @@ export default function ChaineDetaillee() {
       {activeTab === 'suivi' && (
         <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
           <div className="px-6 md:px-8 py-6 border-b border-slate-50 bg-slate-50/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <h2 className="text-sm md:text-lg font-black text-slate-800 uppercase tracking-tight flex items-center gap-3">
-              <Clock className="w-5 h-5 md:w-6 md:h-6 text-indigo-600" />
-              Saisie par Heure ({today})
-            </h2>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <h2 className="text-sm md:text-lg font-black text-slate-800 uppercase tracking-tight flex items-center gap-3">
+                <Clock className="w-5 h-5 md:w-6 md:h-6 text-indigo-600" />
+                Saisie par Heure
+              </h2>
+              <input 
+                type="date"
+                value={selectedDate}
+                onChange={e => setSelectedDate(e.target.value)}
+                className="bg-white border-2 border-indigo-100 text-indigo-700 text-sm font-black rounded-xl px-4 py-2 outline-none focus:border-indigo-500 shadow-sm w-full sm:w-auto"
+              />
+            </div>
             <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
               <div className="flex bg-white border border-slate-200 p-1 rounded-xl shadow-sm">
                 <button
