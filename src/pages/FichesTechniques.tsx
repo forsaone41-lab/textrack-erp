@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, Ruler, Calculator, Camera, FileText, Download, MessageCircle, X, ChevronRight, Upload, ImageIcon, Copy, CheckCircle, Clock } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Ruler, Calculator, Camera, FileText, Download, MessageCircle, X, ChevronRight, Upload, ImageIcon, Copy, CheckCircle, Clock, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
   FicheTechnique, StockTissu, loadData, saveRecord, deleteRecord, genId, Commande, User
@@ -49,12 +49,20 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
           {/* Badges & Quick Actions on Image */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover/image:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
             {f.photo && (
-              <button
-                onClick={() => downloadFile(f.photo!, `Photo_${f.modele}.png`)}
-                className="w-full py-2 bg-white/20 backdrop-blur-md text-white border border-white/30 rounded-xl text-[10px] font-bold flex items-center justify-center gap-2 hover:bg-white hover:text-indigo-600 transition-all"
-              >
-                <Download className="w-3 h-3" /> {t('download_label', lang)}
-              </button>
+              <div className="flex gap-2 w-full">
+                <button
+                  onClick={(e) => { e.stopPropagation(); onImageClick?.(f.photo!); }}
+                  className="flex-1 py-2 bg-indigo-600/90 backdrop-blur-md text-white border border-indigo-400/30 rounded-xl text-[10px] font-bold flex items-center justify-center gap-2 hover:bg-indigo-500 transition-all"
+                >
+                  <Eye className="w-3 h-3" /> {isAr ? 'عرض' : 'Voir'}
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); downloadFile(f.photo!, `Photo_${f.modele}.png`); }}
+                  className="flex-1 py-2 bg-white/20 backdrop-blur-md text-white border border-white/30 rounded-xl text-[10px] font-bold flex items-center justify-center gap-2 hover:bg-white hover:text-indigo-600 transition-all"
+                >
+                  <Download className="w-3 h-3" /> {t('download_label', lang)}
+                </button>
+              </div>
             )}
           </div>
 
