@@ -1445,11 +1445,32 @@ export default function ChaineDetaillee() {
                   <label className="block text-xs font-black text-slate-600 uppercase tracking-widest mb-3">{isAr ? 'اسم العملية (المركز)' : 'Nom de l\'opération (Poste)'}</label>
                   <input 
                     autoFocus
+                    list="operations-list"
                     value={opForm.nom_operation || ''} 
                     onChange={e => setOpForm({...opForm, nom_operation: e.target.value})} 
                     placeholder={isAr ? "مثال: جيب، خياطة..." : "Ex: Jib, Ourlet, Montage..."}
                     className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-4 px-5 text-sm font-black text-slate-900 outline-none focus:border-indigo-500 transition-all shadow-sm" 
                   />
+                  <datalist id="operations-list">
+                    <option value="Coupe (القص)" />
+                    <option value="Surjet (سرفلة / سورجي)" />
+                    <option value="Piqueuse (خياطة مستقيمة / بيكوز)" />
+                    <option value="Montage (تجميع)" />
+                    <option value="Ourlet (كفة / غولي)" />
+                    <option value="Pose Col (تركيب الياقة)" />
+                    <option value="Pose Manches (تركيب الأكمام)" />
+                    <option value="Pose Fermeture (تركيب السحاب)" />
+                    <option value="Pose Boutons (تركيب الأزرار)" />
+                    <option value="Pose Élastique (تركيب المطاط)" />
+                    <option value="Pose Étiquette (تركيب التيكيت)" />
+                    <option value="Recouvreuse (ماكينة التغطية)" />
+                    <option value="Boutonnière (عراوي)" />
+                    <option value="Jib (جيب)" />
+                    <option value="Repassage (كي / بلانشا)" />
+                    <option value="Contrôle Qualité (مراقبة الجودة)" />
+                    <option value="Emballage (تغليف)" />
+                    <option value="Finition (تشطيب)" />
+                  </datalist>
                   {/* Smart Suggestions */}
                   <div className="mt-4">
                     <div className="flex items-center gap-2 mb-3">
