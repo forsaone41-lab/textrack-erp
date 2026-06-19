@@ -619,9 +619,10 @@ export default function ChaineDetaillee() {
   }
 
   const runAIBalancing = () => {
-    const availableWorkers = [...employes];
+    // Only use atelier workers
+    const availableWorkers = employes.filter(e => e.type === 'atelier');
     if (availableWorkers.length === 0) {
-      alert(isAr ? "المرجو إضافة عمال أولاً في قسم الموارد البشرية." : "Veuillez ajouter des employés d'abord.");
+      alert(isAr ? "المرجو إضافة عمال الورشة (Atelier) أولاً في قسم الموارد البشرية." : "Veuillez ajouter des employés d'atelier d'abord.");
       return;
     }
 
@@ -649,12 +650,32 @@ export default function ChaineDetaillee() {
         }
       });
 
-      // Match by role keywords
+      // Smart match by role keywords
       if (!bestWorker) {
         const matchedRoleWorker = availableWorkers.find(emp => {
-          const posteName = (emp.poste || '').toLowerCase();
-          const opName = op.nom_operation.toLowerCase();
-          return posteName.includes(opName) || opName.includes(posteName);
+          const posteStr = (emp.poste || '').toLowerCase();
+          const opStr = op.nom_operation.toLowerCase();
+          if (!posteStr) return false;
+
+          // Direct includes check
+          if (posteStr.includes(opStr) || opStr.includes(posteStr)) return true;
+
+          // Sewing industry fuzzy matching
+          const getBaseWord = (s) => {
+            if (s.includes('piq')) return 'piq';
+            if (s.includes('surj') || s.includes('serge')) return 'surj';
+            if (s.includes('repas') || s.includes('iron')) return 'repas';
+            if (s.includes('coup') || s.includes('cut')) return 'coup';
+            if (s.includes('embal') || s.includes('pack')) return 'embal';
+            return null;
+          };
+
+          const posteBase = getBaseWord(posteStr);
+          const opBase = getBaseWord(opStr);
+          
+          if (posteBase && opBase && posteBase === opBase) return true;
+
+          return false;
         });
 
         if (matchedRoleWorker) {
@@ -671,8 +692,8 @@ export default function ChaineDetaillee() {
         if (fallbackWorker) {
           bestWorker = fallbackWorker.id;
           reason = isAr
-            ? `تم التعيين بناءً على جاهزية العامل وتوافق وقت العمل`
-            : `Assigné automatiquement selon la disponibilité`;
+            ? `تم التعيين بشكل عشوائي للضرورة لعدم تطابق المناصب`
+            : `Assigné par défaut (Aucune spécialité correspondante trouvée)`;
         }
       }
 
