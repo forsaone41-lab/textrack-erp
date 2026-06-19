@@ -31,9 +31,9 @@ import {
   Layers,
   Wind,
   Package,
-  Wand2,
   Gauge,
   Camera,
+  RotateCcw,
   Image as ImageIcon
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -526,6 +526,32 @@ export default function ChaineDetaillee() {
     
     setSuivi(updatedSuivi);
     await saveRecord('suivi_horaire', newEntry);
+  }
+
+  async function handleResetSuivi() {
+    if (todaySuivi.length === 0) return;
+    
+    const confirmMsg = isAr 
+      ? "هل أنت متأكد أنك تريد مسح جميع البيانات لهذا اليوم؟ سيتم إزالة جميع الكميات وتوزيع العمال." 
+      : "Êtes-vous sûr de vouloir tout effacer pour cette journée ? Les quantités et les affectations seront supprimées.";
+      
+    if (!confirm(confirmMsg)) return;
+
+    setSyncing(true);
+    try {
+      const promises = todaySuivi.map(s => deleteRecord('suivi_horaire', s.id));
+      await Promise.all(promises);
+      
+      const idsToRemove = new Set(todaySuivi.map(s => s.id));
+      setSuivi(suivi.filter(s => !idsToRemove.has(s.id)));
+      
+      setSyncing(false);
+      setShowSuccess(true);
+    } catch (err) {
+      console.error("Erreur reset:", err);
+      setSyncing(false);
+      alert("Erreur lors de la réinitialisation.");
+    }
   }
 
   async function applyPlanning() {
@@ -1176,6 +1202,16 @@ export default function ChaineDetaillee() {
               />
             </div>
             <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
+              {todaySuivi.length > 0 && (
+                <button
+                  onClick={handleResetSuivi}
+                  className="px-3 md:px-4 py-2 bg-rose-50 text-rose-600 rounded-xl text-[8px] md:text-[9px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all border border-rose-100 flex items-center gap-2"
+                  title={isAr ? 'مسح الكل لهذا اليوم' : 'Tout effacer pour cette journée'}
+                >
+                  <RotateCcw className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="hidden sm:inline">{isAr ? 'إعادة ضبط' : 'Réinitialiser'}</span>
+                </button>
+              )}
               <div className="flex bg-white border border-slate-200 p-1 rounded-xl shadow-sm">
                 <button
                   onClick={() => setActiveShift('jour')}
