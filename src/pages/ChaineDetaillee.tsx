@@ -285,6 +285,24 @@ export default function ChaineDetaillee() {
     await saveRecord('commandes', updated);
   }
 
+  async function handleUploadPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!selectedCmd) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const base64 = event.target?.result as string;
+      const updated = {
+        ...selectedCmd,
+        modelePhoto: base64
+      };
+      setCommandes(commandes.map(c => c.id === selectedCmd.id ? updated : c));
+      await saveRecord('commandes', updated);
+    };
+    reader.readAsDataURL(file);
+  }
+
   const modelOps = useMemo(() => 
     operations.filter(o => o.modele === selectedCmd?.modele)
     .sort((a, b) => a.ordre_sequence - b.ordre_sequence), [operations, selectedCmd]);
@@ -1370,17 +1388,23 @@ export default function ChaineDetaillee() {
                 </div>
               )}
 
-              <div className="w-full aspect-[4/5] bg-white rounded-2xl shadow-sm border border-indigo-100 overflow-hidden relative mb-6">
+              <div className="w-full aspect-[4/5] bg-white rounded-2xl shadow-sm border border-indigo-100 overflow-hidden relative mb-6 group">
                 {imageMode === 'photo' ? (
-                  <img 
-                    src={selectedCmd?.photo || selectedCmd?.modelePhoto || "/images/sewing_placeholder.png"}
-                    alt="Modèle" 
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                       const target = e.target as HTMLImageElement;
-                       target.src = "/images/sewing_placeholder.png";
-                    }}
-                  />
+                  <>
+                    <img 
+                      src={selectedCmd?.modelePhoto || selectedCmd?.photo || "/images/sewing_placeholder.png"}
+                      alt="Modèle" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                         const target = e.target as HTMLImageElement;
+                         target.src = "/images/sewing_placeholder.png";
+                      }}
+                    />
+                    <label className="absolute top-4 right-4 bg-indigo-600/80 backdrop-blur-md text-white p-2.5 rounded-xl shadow-lg cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity z-20 hover:bg-indigo-600 hover:-translate-y-1" title={isAr ? 'تغيير الصورة' : 'Modifier la photo'}>
+                      <Camera className="w-5 h-5" />
+                      <input type="file" accept="image/*" className="hidden" onChange={handleUploadPhoto} />
+                    </label>
+                  </>
                 ) : (
                   <img 
                     src={getTechnicalSketch()}
