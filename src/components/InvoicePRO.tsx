@@ -92,11 +92,16 @@ export const InvoicePRO: React.FC<InvoicePROProps> = ({ facture, commande, compa
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {[
               ['Nom du destinataire :', company.name],
-              ['Signature :', ''],
+              ['Signature / Cachet :', ''],
             ].map(([label, value]) => (
               <div key={label} style={{ display: 'flex', gap: '8px' }}>
                 <span style={{ width: '160px', flexShrink: 0 }}>{label}</span>
-                <span style={{ flex: 1, borderBottom: '1px solid #94a3b8', paddingBottom: '2px', minHeight: '24px' }}>{value}</span>
+                <span style={{ flex: 1, borderBottom: '1px solid #94a3b8', paddingBottom: '2px', minHeight: '24px', position: 'relative' }}>
+                  {value}
+                  {label === 'Signature / Cachet :' && company.cachetUrl && (
+                    <img src={company.cachetUrl} style={{ position: 'absolute', right: '10px', bottom: '-10px', height: '80px', objectFit: 'contain', opacity: 0.9, zIndex: 10 }} alt="Cachet" />
+                  )}
+                </span>
               </div>
             ))}
           </div>
@@ -253,17 +258,28 @@ export const InvoicePRO: React.FC<InvoicePROProps> = ({ facture, commande, compa
         </div>
       </div>
 
-      {/* Conditions */}
-      <div className="border-2 border-[#4F46E5] rounded-xl p-6 mb-12">
-        <h3 className="flex items-center gap-2 text-sm font-black text-[#1E1B4B] uppercase tracking-wider mb-4 border-b border-[#E2E8F0] pb-3">
-          <ClipboardList className="w-5 h-5 text-[#4F46E5]" /> Conditions Générales
-        </h3>
-        <ul className="space-y-3 text-[11px] font-semibold text-slate-600">
-          <li><span className="text-[#4F46E5] font-black">1.</span> Ce {docTitle.toLowerCase()} est <strong className="text-slate-900">valable 15 jours</strong> à compter de la date d'émission.</li>
-          <li><span className="text-[#4F46E5] font-black">2.</span> Un <strong className="text-slate-900">acompte de 50%</strong> est requis à la confirmation de la commande.</li>
-          <li><span className="text-[#4F46E5] font-black">3.</span> Le <strong className="text-slate-900">délai de production</strong> sera confirmé après validation de l'échantillon.</li>
-          <li><span className="text-[#4F46E5] font-black">4.</span> Toute <strong className="text-slate-900">modification du modèle</strong> après lancement peut entraîner une révision tarifaire.</li>
-        </ul>
+      {/* Footer Area: Conditions + Signature */}
+      <div className="flex gap-6 mb-12">
+        {/* Conditions */}
+        <div className="flex-1 border-2 border-[#4F46E5] rounded-xl p-6">
+          <h3 className="flex items-center gap-2 text-sm font-black text-[#1E1B4B] uppercase tracking-wider mb-4 border-b border-[#E2E8F0] pb-3">
+            <ClipboardList className="w-5 h-5 text-[#4F46E5]" /> Conditions Générales
+          </h3>
+          <ul className="space-y-3 text-[11px] font-semibold text-slate-600">
+            <li><span className="text-[#4F46E5] font-black">1.</span> Ce {docTitle.toLowerCase()} est <strong className="text-slate-900">valable 15 jours</strong> à compter de la date d'émission.</li>
+            <li><span className="text-[#4F46E5] font-black">2.</span> Un <strong className="text-slate-900">acompte de 50%</strong> est requis à la confirmation de la commande.</li>
+            <li><span className="text-[#4F46E5] font-black">3.</span> Le <strong className="text-slate-900">délai de production</strong> sera confirmé après validation de l'échantillon.</li>
+            <li><span className="text-[#4F46E5] font-black">4.</span> Toute <strong className="text-slate-900">modification du modèle</strong> après lancement peut entraîner une révision tarifaire.</li>
+          </ul>
+        </div>
+        
+        {/* Signature / Cachet */}
+        {company.cachetUrl && (
+          <div className="w-1/3 flex flex-col items-center justify-center border border-slate-200 bg-slate-50/50 rounded-xl p-4 relative overflow-visible">
+             <span className="absolute top-3 left-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Cachet / Signature</span>
+             <img src={company.cachetUrl} className="max-h-24 w-auto object-contain opacity-95 mix-blend-multiply mt-4" alt="Cachet" />
+          </div>
+        )}
       </div>
 
       {/* Footer */}
