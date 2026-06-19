@@ -260,11 +260,32 @@ export default function Tarifs() {
                 <input 
                   type="text" 
                   required
+                  list="vetements-list"
                   value={formData.titre || ''}
                   onChange={e => setFormData({...formData, titre: e.target.value})}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:border-indigo-500 outline-none"
                   placeholder="Ex: Confection T-shirt Col Rond"
                 />
+                <datalist id="vetements-list">
+                  <option value="Confection T-shirt Oversize" />
+                  <option value="Confection T-shirt Col Rond" />
+                  <option value="Confection Polo Classique" />
+                  <option value="Confection Sweat à Capuche (Hoodie)" />
+                  <option value="Confection Sweat sans Capuche (Crewneck)" />
+                  <option value="Confection Pantalon Jogging" />
+                  <option value="Confection Pantalon Cargo" />
+                  <option value="Confection Ensemble Sportwear" />
+                  <option value="Confection Veste Zippée" />
+                  <option value="Confection Chemise" />
+                  <option value="Confection Short" />
+                  <option value="Impression DTF (Format A3)" />
+                  <option value="Impression DTF (Format A4)" />
+                  <option value="Impression Sérigraphie (1 Couleur)" />
+                  <option value="Broderie Logo Cœur (Petite)" />
+                  <option value="Broderie Dos (Grande)" />
+                  <option value="Finition : Pose d'étiquette" />
+                  <option value="Finition : Repassage + Emballage" />
+                </datalist>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
