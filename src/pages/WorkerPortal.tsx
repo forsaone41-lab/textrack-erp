@@ -29,7 +29,8 @@ import {
   saveRecord,
   loadReclamations,
   saveReclamation,
-  genId
+  genId,
+  dateNow
 } from '../types';
 import { QRCodeSVG } from 'qrcode.react';
 import { useLang } from '../contexts/LangContext';
@@ -306,8 +307,7 @@ export default function WorkerPortal({ currentUser, onLogout }: WorkerPortalProp
         setNewReclamation({ target: 'chef', sujet: '', description: '' });
         setIsSubmittingRec(false);
   };
-
-  const today = new Date().toLocaleDateString('en-CA');
+  const today = dateNow();
 
   const workerSuiviToday = useMemo(() => 
     data.suivi.filter(s => s.employe_id === selectedWorkerId && s.date_production === today),

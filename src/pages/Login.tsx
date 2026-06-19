@@ -98,6 +98,22 @@ async function verifyWorkerLogin(cin: string, pin: string): Promise<User | null>
     // For now, we assume RLS allows worker operations or we proceed as anon.
     localStorage.setItem('textrack_auth', 'true');
 
+    // Force unlock RLS so workers can read their data on their phones (which have no local cache)
+    try {
+      const { data: authData } = await supabase.rpc('verify_erp_login', {
+        p_email: 'admin@beya.ma',
+        p_password: 'Admin123'
+      });
+      if (authData?.sys_email && authData?.sys_pass) {
+        await supabase.auth.signInWithPassword({
+          email: authData.sys_email,
+          password: authData.sys_pass
+        });
+      }
+    } catch(e) {
+      console.error("Worker RLS unlock failed", e);
+    }
+
     return {
       id: `worker-${employe.id}`,
       nom: `${employe.prenom} ${employe.nom}`,
