@@ -504,9 +504,13 @@ export default function ChaineDetaillee() {
       const detail = assignments[opId];
       if (!detail.empId) continue;
 
+      const startIndex = availableHours.indexOf(detail.startHour);
+      const endIndex = availableHours.indexOf(detail.endHour);
+      
       const hoursInRange = filteredHours.filter(tranche => {
         const start = tranche.split(' - ')[0];
-        return start >= detail.startHour && start <= detail.endHour;
+        const currentIndex = availableHours.indexOf(start);
+        return currentIndex >= startIndex && currentIndex < endIndex;
       });
 
       for (const tranche of hoursInRange) {
@@ -643,9 +647,9 @@ export default function ChaineDetaillee() {
     const startIndex = availableHours.indexOf(detail.startHour);
     const endIndex = availableHours.indexOf(detail.endHour);
     
-    if (startIndex === -1 || endIndex === -1 || startIndex > endIndex) return 0;
+    if (startIndex === -1 || endIndex === -1 || startIndex >= endIndex) return 0;
     
-    const hoursCount = (endIndex - startIndex) + 1;
+    const hoursCount = endIndex - startIndex;
     return hoursCount * op.target_heure;
   };
 
