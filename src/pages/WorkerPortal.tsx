@@ -70,6 +70,7 @@ export default function WorkerPortal({ currentUser, onLogout }: WorkerPortalProp
   const [isUploading, setIsUploading] = useState(false);
 
   const [refreshKey, setRefreshKey] = useState(0);
+  const [selectedDate, setSelectedDate] = useState(dateNow());
 
   useEffect(() => {
     Promise.all([
@@ -317,11 +318,9 @@ export default function WorkerPortal({ currentUser, onLogout }: WorkerPortalProp
         setNewReclamation({ target: 'chef', sujet: '', description: '' });
         setIsSubmittingRec(false);
   };
-  const today = dateNow();
-
   const workerSuiviToday = useMemo(() => 
-    data.suivi.filter(s => s.employe_id === selectedWorkerId && s.date_production === today),
-  [data.suivi, selectedWorkerId, today]);
+    data.suivi.filter(s => s.employe_id === selectedWorkerId && s.date_production === selectedDate),
+  [data.suivi, selectedWorkerId, selectedDate]);
 
   const lastEntry = workerSuiviToday[workerSuiviToday.length - 1];
   const activeOp = data.operations.find(o => o.id === lastEntry?.operation_id);
@@ -441,9 +440,17 @@ export default function WorkerPortal({ currentUser, onLogout }: WorkerPortalProp
           <>
             {/* Greeting */}
             <div className="flex justify-between items-start">
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <h1 className="text-2xl font-bold tracking-tight italic">{isAr ? 'مرحباً' : 'Bonjour'} {currentWorker?.prenom} !</h1>
-                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">{isAr ? 'تتبع مسار عملك اليومي' : 'Suivi de votre roadmap aujourd\'hui'}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                   <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">{isAr ? 'تتبع مسار عملك' : 'Suivi de votre roadmap'}</p>
+                   <input 
+                     type="date"
+                     value={selectedDate}
+                     onChange={e => setSelectedDate(e.target.value)}
+                     className="bg-slate-900 border border-slate-700 text-slate-300 text-[10px] font-bold rounded-lg px-2 py-1 outline-none focus:border-indigo-500 shadow-sm w-full sm:w-auto mt-1 sm:mt-0"
+                   />
+                </div>
               </div>
               <button 
                 onClick={() => setRefreshKey(prev => prev + 1)}
