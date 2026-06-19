@@ -995,8 +995,10 @@ export default function ChaineDetaillee() {
                 {modelOps.map((op, idx) => {
                   const totalExpected = calculateTotalExpected(op.id);
                   return (
-                    <div key={op.id} className="group p-6 bg-slate-50 rounded-[2rem] border border-transparent hover:border-indigo-100 hover:bg-white transition-all shadow-sm hover:shadow-xl relative overflow-hidden">
-                       <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl -mr-12 -mt-12 group-hover:bg-indigo-500/10" />
+                    <div key={op.id} className="group p-6 bg-slate-50 rounded-[2rem] border border-transparent hover:border-indigo-100 hover:bg-white transition-all shadow-sm hover:shadow-xl relative">
+                       <div className="absolute inset-0 rounded-[2rem] overflow-hidden pointer-events-none">
+                          <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl -mr-12 -mt-12 group-hover:bg-indigo-500/10" />
+                       </div>
                        
                        <div className="flex items-start justify-between mb-6 relative z-10">
                           <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-sm font-black text-indigo-600 shadow-sm">
@@ -1045,10 +1047,10 @@ export default function ChaineDetaillee() {
                                         setAssignments({...assignments, [op.id]: { ...assignments[op.id], empId: e.id }});
                                         setOpenDropdownId(null);
                                       }}
-                                      className="p-3 hover:bg-indigo-50 cursor-pointer flex items-center justify-between transition-colors border-b border-slate-50 last:border-0"
+                                      className="p-3 hover:bg-indigo-50 cursor-pointer flex flex-col items-start gap-1.5 transition-colors border-b border-slate-50 last:border-0"
                                     >
                                       <span className="text-xs font-black text-slate-800">{e.prenom} {e.nom}</span>
-                                      <span className="text-[9px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-md uppercase tracking-wider">{e.poste}</span>
+                                      <span className="text-[9px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-md uppercase tracking-wider w-fit">{e.poste}</span>
                                     </div>
                                   ))}
                                 </div>
