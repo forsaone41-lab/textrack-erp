@@ -9,7 +9,7 @@ import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
 import { PageLoader } from '../components/PageLoader';
 
-function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onViewMesures, onLaunchSample, isSampleWaiting, isSampleValidated }: {
+function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onViewMesures, onLaunchSample, isSampleWaiting, isSampleValidated, onImageClick }: {
   f: FicheTechnique;
   openEdit: (f: FicheTechnique) => void;
   remove: (id: string) => void;
