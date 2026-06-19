@@ -997,7 +997,7 @@ export default function ChaineDetaillee() {
                 {modelOps.map((op, idx) => {
                   const totalExpected = calculateTotalExpected(op.id);
                   return (
-                    <div key={op.id} className="group p-6 bg-slate-50 rounded-[2rem] border border-transparent hover:border-indigo-100 hover:bg-white transition-all shadow-sm hover:shadow-xl relative">
+                    <div key={op.id} className={`group p-6 bg-slate-50 rounded-[2rem] border border-transparent hover:border-indigo-100 hover:bg-white transition-all shadow-sm hover:shadow-xl relative ${openDropdownId === op.id ? 'z-50' : 'z-10'}`}>
                        <div className="absolute inset-0 rounded-[2rem] overflow-hidden pointer-events-none">
                           <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl -mr-12 -mt-12 group-hover:bg-indigo-500/10" />
                        </div>
