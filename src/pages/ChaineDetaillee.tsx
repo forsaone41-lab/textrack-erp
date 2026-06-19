@@ -215,6 +215,7 @@ export default function ChaineDetaillee() {
   const [syncing, setSyncing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   // Form states
   const [showOpModal, setShowOpModal] = useState(false);
@@ -1010,19 +1011,49 @@ export default function ChaineDetaillee() {
                        <h3 className="text-base font-black text-slate-900 uppercase tracking-tight mb-6 relative z-10">{op.nom_operation}</h3>
                        
                        <div className="space-y-4 relative z-10">
-                          <div className="relative">
-                             <select 
-                               value={assignments[op.id]?.empId || ''}
-                               onChange={e => setAssignments({...assignments, [op.id]: { ...assignments[op.id], empId: e.target.value }})}
-                               className="w-full bg-white border-2 border-slate-100 rounded-xl py-4 px-4 text-xs font-black text-slate-800 appearance-none outline-none focus:border-indigo-500 transition-all shadow-sm"
-                             >
-                                <option value="">-- Choisir un ouvrier --</option>
-                                {employes.map(e => <option key={e.id} value={e.id}>{e.prenom} {e.nom}</option>)}
-                             </select>
-                             <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                           <div className="relative">
+                              <div 
+                                onClick={() => setOpenDropdownId(openDropdownId === op.id ? null : op.id)}
+                                className="w-full bg-white border-2 border-slate-100 rounded-xl py-4 px-4 text-xs font-black text-slate-800 cursor-pointer flex items-center justify-between shadow-sm transition-all hover:border-indigo-200"
+                              >
+                                {assignments[op.id]?.empId ? (
+                                  <div className="flex items-center gap-2">
+                                    <span>{employes.find(e => e.id === assignments[op.id]?.empId)?.prenom} {employes.find(e => e.id === assignments[op.id]?.empId)?.nom}</span>
+                                    <span className="text-[9px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-md uppercase tracking-wider">{employes.find(e => e.id === assignments[op.id]?.empId)?.poste}</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-slate-400">-- Choisir un ouvrier --</span>
+                                )}
                                 <UserPlus className="w-4 h-4 text-slate-300" />
-                             </div>
-                          </div>
+                              </div>
+
+                              {openDropdownId === op.id && (
+                                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
+                                  <div 
+                                    onClick={() => {
+                                      setAssignments({...assignments, [op.id]: { ...assignments[op.id], empId: '' }});
+                                      setOpenDropdownId(null);
+                                    }}
+                                    className="p-3 text-xs font-black text-slate-400 hover:bg-slate-50 cursor-pointer border-b border-slate-50"
+                                  >
+                                    -- Retirer l'ouvrier --
+                                  </div>
+                                  {employes.filter(e => e.type === 'atelier').map(e => (
+                                    <div 
+                                      key={e.id}
+                                      onClick={() => {
+                                        setAssignments({...assignments, [op.id]: { ...assignments[op.id], empId: e.id }});
+                                        setOpenDropdownId(null);
+                                      }}
+                                      className="p-3 hover:bg-indigo-50 cursor-pointer flex items-center justify-between transition-colors border-b border-slate-50 last:border-0"
+                                    >
+                                      <span className="text-xs font-black text-slate-800">{e.prenom} {e.nom}</span>
+                                      <span className="text-[9px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-md uppercase tracking-wider">{e.poste}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                           </div>
 
                           <div className="flex items-center gap-2 bg-slate-100 p-2 rounded-xl">
                              <div className="flex-1">
@@ -1278,7 +1309,7 @@ export default function ChaineDetaillee() {
                               className="w-full bg-slate-100 border-none rounded-xl text-xs font-black text-slate-800 py-3 px-2 outline-none focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer shadow-sm"
                             >
                               <option value="">Ouvrier</option>
-                              {employes.map(e => <option key={e.id} value={e.id}>{e.prenom} {e.nom}</option>)}
+                              {employes.filter(e => e.type === 'atelier').map(e => <option key={e.id} value={e.id}>{e.prenom} {e.nom} - {e.poste}</option>)}
                             </select>
                             <input 
                               type="number"
