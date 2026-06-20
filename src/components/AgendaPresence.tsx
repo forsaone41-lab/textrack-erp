@@ -1,20 +1,75 @@
 import React, { useState, useMemo } from 'react';
 import { Employe, Presence } from '../types';
 import { useLang } from '../contexts/LangContext';
-import { Calendar, Clock, AlertTriangle, CheckCircle, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, Clock, AlertTriangle, CheckCircle, Search, ChevronLeft, ChevronRight, Calculator } from 'lucide-react';
 
 interface Props {
   employes: Employe[];
   presences: Presence[];
 }
 
-function calculateHours(entree: string | null, sortie: string | null) {
+// BEYA CREATIVE Official Rules
+// Moroccan Holidays (Fixed & Estimated 2026)
+const FIXED_HOLIDAYS = ['01-01', '01-11', '05-01', '07-30', '08-14', '08-20', '08-21', '11-06', '11-18'];
+const RELIGIOUS_HOLIDAYS_2026 = [
+  '2026-03-20', '2026-03-21', // Aid Al Fitr (approx)
+  '2026-05-27', '2026-05-28', // Aid Al Adha (approx)
+  '2026-06-17',               // Fatih Muharram (approx)
+  '2026-08-26', '2026-08-27', // Aid Al Mawlid (approx)
+];
+
+function isHoliday(dateStr: string) {
+  const mm_dd = dateStr.substring(5);
+  if (FIXED_HOLIDAYS.includes(mm_dd)) return true;
+  if (RELIGIOUS_HOLIDAYS_2026.includes(dateStr)) return true;
+  return false;
+}
+
+function calculateWorkingHours(entree: string | null, sortie: string | null, dateStr: string) {
   if (!entree || !sortie) return 0;
   try {
     const [eH, eM] = entree.split(':').map(Number);
-    const [sH, sM] = sortie.split(':').map(Number);
-    const diff = (sH + sM / 60) - (eH + eM / 60);
-    return diff > 0 ? diff : 0;
+    let [sH, sM] = sortie.split(':').map(Number);
+    
+    const startHour = eH + eM / 60;
+    const endHour = sH + sM / 60;
+
+    if (endHour <= startHour) return 0;
+
+    let total = endHour - startHour;
+
+    const d = new Date(dateStr);
+    const dayOfWeek = d.getDay(); // 0=Sun, 1=Mon... 5=Fri, 6=Sat
+
+    // Breakfast: 11:00 to 11:15
+    const bStart = 11.0;
+    const bEnd = 11.25;
+
+    // Lunch
+    const lStart = dayOfWeek === 5 ? 13.5 : 14.0; // Fri: 13:30, Others: 14:00
+    const lEnd = 14.75; // 14:45
+
+    // Deduct Breakfast
+    if (startHour <= bStart && endHour >= bEnd) {
+      total -= (bEnd - bStart);
+    } else if (startHour <= bStart && endHour > bStart) {
+      total -= (endHour - bStart);
+    } else if (startHour < bEnd && endHour >= bEnd) {
+      total -= (bEnd - startHour);
+    }
+
+    // Deduct Lunch (Sat has no lunch break because work ends at 13:00)
+    if (dayOfWeek !== 6) {
+      if (startHour <= lStart && endHour >= lEnd) {
+        total -= (lEnd - lStart);
+      } else if (startHour <= lStart && endHour > lStart) {
+        total -= (endHour - lStart);
+      } else if (startHour < lEnd && endHour >= lEnd) {
+        total -= (lEnd - startHour);
+      }
+    }
+
+    return total > 0 ? total : 0;
   } catch {
     return 0;
   }
@@ -26,7 +81,7 @@ export default function AgendaPresence({ employes, presences }: Props) {
   const [searchTerm, setSearchTerm] = useState('');
 
   const year = currentDate.getFullYear();
-  const month = currentDate.getMonth(); // 0-11
+  const month = currentDate.getMonth();
   
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
@@ -50,24 +105,28 @@ export default function AgendaPresence({ employes, presences }: Props) {
     const currentMonthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
     const thisMonthPresences = presences.filter(p => p.date.startsWith(currentMonthStr));
 
-    filtered.forEach(emp => {
-      // Find all valid work days this month (Mon-Sat usually, but let's just count days up to today if current month)
-      const isCurrentMonth = new Date().getMonth() === month && new Date().getFullYear() === year;
-      const daysToCount = isCurrentMonth ? new Date().getDate() : daysInMonth;
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-      for (let i = 1; i <= daysToCount; i++) {
+    filtered.forEach(emp => {
+      for (let i = 1; i <= daysInMonth; i++) {
         const dateStr = `${currentMonthStr}-${String(i).padStart(2, '0')}`;
-        // Skip Sundays
         const d = new Date(year, month, i);
-        if (d.getDay() === 0) continue;
+        
+        // Skip Sundays and Holidays
+        if (d.getDay() === 0 || isHoliday(dateStr)) continue;
 
         const p = thisMonthPresences.find(x => x.employeId === emp.id && x.date === dateStr);
+        
+        const isPastDay = dateStr < todayStr;
+        const isToday = dateStr === todayStr;
+        const shouldCountAbsence = isPastDay || (isToday && today.getHours() >= 10);
+
         if (p) {
           if (p.statut === 'retard') totalRetards++;
           if (p.statut === 'present' || p.statut === 'retard') totalPresent++;
           if (p.statut === 'absent') totalAbsences++;
-        } else {
-          // If no record and it's a past day, it's an absence
+        } else if (shouldCountAbsence) {
           totalAbsences++;
         }
       }
@@ -86,9 +145,9 @@ export default function AgendaPresence({ employes, presences }: Props) {
           </div>
           <div>
             <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">
-              {isAr ? 'أجندة الحضور الشهري' : 'Agenda des Présences'}
+              {isAr ? 'أجندة الحضور' : 'Agenda des Présences'}
             </h2>
-            <p className="text-sm font-bold text-slate-500">{monthName.toUpperCase()}</p>
+            <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">{monthName} | BEYA CREATIVE SYSTEM</p>
           </div>
         </div>
 
@@ -107,12 +166,22 @@ export default function AgendaPresence({ employes, presences }: Props) {
             <button onClick={prevMonth} className="p-1.5 hover:bg-slate-100 rounded text-slate-600 transition-colors">
               <ChevronLeft className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
             </button>
-            <span className="text-sm font-black text-slate-700 min-w-[100px] text-center">{monthName}</span>
+            <span className="text-sm font-black text-slate-700 min-w-[100px] text-center capitalize">{monthName}</span>
             <button onClick={nextMonth} className="p-1.5 hover:bg-slate-100 rounded text-slate-600 transition-colors">
               <ChevronRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Rules Notice */}
+      <div className="bg-indigo-50/50 border-b border-indigo-100 px-6 py-3 flex items-center gap-3">
+        <Calculator className="w-4 h-4 text-indigo-500" />
+        <span className="text-xs font-bold text-indigo-700 uppercase tracking-widest">
+          {isAr 
+            ? "يتم حساب الساعات خصماً لفترات الاستراحة (فطور: 11:00-11:15 | غداء: 14:00-14:45 | الجمعة: 13:30-14:45)"
+            : "Les heures sont calculées en déduisant les pauses (11h00-11h15 | 14h00-14h45 | Vendredi 13h30-14h45)"}
+        </span>
       </div>
 
       {/* KPI Cards */}
@@ -134,7 +203,7 @@ export default function AgendaPresence({ employes, presences }: Props) {
         <div className="flex items-center gap-4 p-4 rounded-2xl bg-rose-50 border border-rose-100">
           <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-xl flex items-center justify-center"><AlertTriangle className="w-6 h-6" /></div>
           <div>
-            <p className="text-xs font-black text-rose-600/70 uppercase tracking-widest">{isAr ? 'غيابات' : 'Absences'}</p>
+            <p className="text-xs font-black text-rose-600/70 uppercase tracking-widest">{isAr ? 'غيابات غير مبررة' : 'Absences'}</p>
             <p className="text-2xl font-black text-rose-700">{stats.totalAbsences}</p>
           </div>
         </div>
@@ -171,7 +240,7 @@ export default function AgendaPresence({ employes, presences }: Props) {
                 <tr key={emp.id} className="hover:bg-slate-50 transition-colors group">
                   <td className="sticky left-0 z-10 bg-white group-hover:bg-slate-50 p-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-black">
+                      <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-black">
                         {(emp.prenom?.[0] || '') + (emp.nom?.[0] || '')}
                       </div>
                       <div>
@@ -187,24 +256,35 @@ export default function AgendaPresence({ employes, presences }: Props) {
                     
                     const d = new Date(year, month, day);
                     const isSunday = d.getDay() === 0;
+                    const isFerie = isHoliday(dateStr);
                     
-                    let bgClass = "bg-slate-100/50";
+                    let bgClass = "bg-slate-100/50 text-slate-300";
                     let tooltip = isAr ? 'لا يوجد تسجيل' : 'Aucun pointage';
+                    let cellText = '';
 
                     if (p) {
-                      totalMonthHours += calculateHours(p.heureEntree, p.heureSortie);
+                      const hours = calculateWorkingHours(p.heureEntree, p.heureSortie, dateStr);
+                      totalMonthHours += hours;
+                      
                       if (p.statut === 'present') {
                         bgClass = "bg-emerald-100 text-emerald-600";
-                        tooltip = `Entrée: ${p.heureEntree || '--'} | Sortie: ${p.heureSortie || '--'}`;
+                        tooltip = `Entrée: ${p.heureEntree || '--'} | Sortie: ${p.heureSortie || '--'} (${hours.toFixed(1)}h)`;
+                        cellText = 'P';
                       } else if (p.statut === 'retard') {
                         bgClass = "bg-amber-100 text-amber-600";
-                        tooltip = `Retard - Entrée: ${p.heureEntree || '--'} | Sortie: ${p.heureSortie || '--'}`;
+                        tooltip = `Retard - Entrée: ${p.heureEntree || '--'} | Sortie: ${p.heureSortie || '--'} (${hours.toFixed(1)}h)`;
+                        cellText = 'R';
                       } else if (p.statut === 'absent') {
                         bgClass = "bg-rose-100 text-rose-600";
                         tooltip = "Absent";
+                        cellText = 'A';
                       }
                     } else if (isSunday) {
                       bgClass = "bg-slate-50";
+                    } else if (isFerie) {
+                      bgClass = "bg-sky-100 text-sky-600";
+                      tooltip = isAr ? "يوم عطلة / عيد" : "Jour Férié";
+                      cellText = 'H';
                     }
 
                     return (
@@ -213,14 +293,14 @@ export default function AgendaPresence({ employes, presences }: Props) {
                           className={`w-6 h-6 mx-auto rounded-md flex items-center justify-center text-[10px] font-bold cursor-pointer transition-transform hover:scale-110 ${bgClass}`}
                           title={tooltip}
                         >
-                          {p?.statut === 'present' ? 'P' : p?.statut === 'retard' ? 'R' : p?.statut === 'absent' ? 'A' : ''}
+                          {cellText}
                         </div>
                       </td>
                     );
                   })}
 
                   <td className="p-3 text-center">
-                    <span className="inline-block px-3 py-1 bg-indigo-50 text-indigo-700 font-black rounded-lg text-xs">
+                    <span className="inline-block px-3 py-1 bg-slate-900 text-white font-black rounded-lg text-xs">
                       {totalMonthHours.toFixed(1)}h
                     </span>
                   </td>
