@@ -103,6 +103,25 @@ export default function Performance() {
         <p className="text-slate-500 text-sm">{isAr ? "تتبع الإنتاجية والجودة" : "Suivi de la productivité et de la qualité"}</p>
       </div>
 
+      <div className="flex gap-2 p-1 bg-slate-100 rounded-2xl w-fit">
+        <button 
+          onClick={() => setView('production')}
+          className={`px-6 py-2.5 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${view === 'production' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          {isAr ? 'الإنتاج والجودة' : 'Production & Qualité'}
+        </button>
+        <button 
+          onClick={() => setView('presence')}
+          className={`px-6 py-2.5 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${view === 'presence' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          {isAr ? 'أجندة الحضور' : 'Agenda Présence'}
+        </button>
+      </div>
+
+      {view === 'presence' ? (
+        <AgendaPresence employes={employes} presences={presences} />
+      ) : (
+        <div className="space-y-6">
       {/* Global KPIs */}
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-4">
@@ -280,6 +299,8 @@ export default function Performance() {
           </table>
         )}
       </div>
+        </div>
+      )}
     </div>
   );
 }
