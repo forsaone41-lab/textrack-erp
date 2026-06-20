@@ -7,6 +7,7 @@ import { Trophy, TrendingUp, Target, Users, Medal } from 'lucide-react';
 import { Employe, PointageEntry, Presence, loadData } from '../types';
 import { useLang } from '../contexts/LangContext';
 import AgendaPresence from '../components/AgendaPresence';
+import { isWorkingDay } from '../utils/beyaRules';
 
 interface EmpStats {
   emp: Employe;
@@ -20,7 +21,7 @@ interface EmpStats {
 
 function calcStats(employes: Employe[], pointages: PointageEntry[], presences: Presence[]): EmpStats[] {
   const today = new Date().toISOString().split('T')[0];
-  const allDates = [...new Set(presences.map(p => p.date))];
+  const allDates = [...new Set(presences.map(p => p.date))].filter(d => isWorkingDay(d) && d <= today);
 
   return employes
     .filter(e => e.actif)

@@ -15,6 +15,7 @@ import { supabase } from '../supabase';
 import { useLang } from '../contexts/LangContext';
 import { NavLink } from 'react-router-dom';
 import { PageLoader } from '../components/PageLoader';
+import { isWorkingDay } from '../utils/beyaRules';
 
 interface DashboardProps {
   allUsers?: User[];
@@ -168,19 +169,20 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
     return true;
   });
 
+  const isWorking = isWorkingDay(todayStr);
   const presencesAujourdhui = presences.filter(p => p.date === todayStr);
-  const presents = actifs.filter(e => presencesAujourdhui.some(p => p.employeId === e.id && p.statut !== 'absent'));
-  const absents = actifs.filter(e => !presencesAujourdhui.some(p => p.employeId === e.id && p.statut !== 'absent'));
+  const presents = isWorking ? actifs.filter(e => presencesAujourdhui.some(p => p.employeId === e.id && p.statut !== 'absent')) : [];
+  const absents = isWorking ? actifs.filter(e => !presencesAujourdhui.some(p => p.employeId === e.id && p.statut !== 'absent')) : [];
   const company = loadCompanyProfile();
   const heureLimite = company?.heureLimiteRetard || '09:15';
-  const retards = actifs.filter(e => presencesAujourdhui.some(p => {
+  const retards = !isWorking ? [] : actifs.filter(e => presencesAujourdhui.some(p => {
     if (p.employeId !== e.id || p.statut === 'absent') return false;
     // Check if the actual entrance time is later than the limit
     if (p.heureEntree && p.heureEntree > heureLimite) return true;
     // Fallback if no entry time but marked as retard
     return p.statut === 'retard' && (!p.heureEntree || p.heureEntree > heureLimite);
   }));
-  const enCoursPresence = actifs.filter(e => presencesAujourdhui.some(p => p.employeId === e.id && p.heureEntree && !p.heureSortie));
+  const enCoursPresence = !isWorking ? [] : actifs.filter(e => presencesAujourdhui.some(p => p.employeId === e.id && p.heureEntree && !p.heureSortie));
 
   const phaseData = PHASE_ORDER.filter(p => p !== 'livré').map(phase => ({
     name: PHASE_LABELS[phase],
