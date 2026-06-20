@@ -615,6 +615,28 @@ export function loadCompanyProfile(): CompanyProfile {
     if (!merged.logoMobileHeader) merged.logoMobileHeader = merged.logoUrl;
     if (!merged.logoFooter) merged.logoFooter = merged.logoUrl;
     
+    // Migration for FAQ MOQ rule (force update if it matches old text)
+    let needsMigration = false;
+    if (merged.faq && Array.isArray(merged.faq)) {
+      merged.faq = merged.faq.map((item: any) => {
+        if (item.id === '2' && item.answerFr && (item.answerFr.includes('20 pièces par modèle') || item.answerFr.includes('50 pièces par modèle'))) {
+          needsMigration = true;
+          return {
+            ...item,
+            answerFr: 'Notre minimum de commande est de 100 pièces au total, avec un minimum strict de 20 pièces par couleur. Nous ne produisons pas moins de 20 pièces par couleur. Pour les échantillons, on peut descendre à 1 pièce.',
+            answerAr: 'الحد الأدنى للطلب هو 100 قطعة إجمالاً، مع توفير 20 قطعة كحد أدنى لكل لون. لا نقوم بإنتاج أقل من 20 قطعة للون الواحد. للعينات يمكن طلب قطعة واحدة.'
+          };
+        }
+        return item;
+      });
+    }
+
+    if (needsMigration) {
+      try {
+        safeStorage.setItem('textrack_profile', JSON.stringify(merged));
+      } catch (e) {}
+    }
+
     return merged;
   } catch (e) {
     return DEFAULT_COMPANY;
