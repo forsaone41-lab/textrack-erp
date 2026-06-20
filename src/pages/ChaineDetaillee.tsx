@@ -626,16 +626,21 @@ export default function ChaineDetaillee() {
       return;
     }
 
-    const newAssignments = { ...assignments };
+    const newAssignments: typeof assignments = { ...assignments };
     const explanations: Record<string, string> = {};
+
+    // 1. Initial assignment
+    // Keep track of how many times a worker is assigned
+    const workerAssignments: Record<string, string[]> = {};
+    const unassignedWorkers = [...availableWorkers];
 
     modelOps.forEach((op) => {
       let bestWorker = '';
       let bestScore = -1;
       let reason = '';
 
-      // Match by past performance
-      availableWorkers.forEach(emp => {
+      // Match by past performance first
+      unassignedWorkers.forEach(emp => {
         const pastPerformances = suivi.filter(s => s.employe_id === emp.id && s.operation_id === op.id);
         if (pastPerformances.length > 0) {
           const avgQty = pastPerformances.reduce((acc, curr) => acc + curr.quantite_realisee, 0) / pastPerformances.length;
@@ -652,7 +657,7 @@ export default function ChaineDetaillee() {
 
       // Smart match by role keywords
       if (!bestWorker) {
-        const matchedRoleWorker = availableWorkers.find(emp => {
+        const matchedRoleWorker = unassignedWorkers.find(emp => {
           const posteStr = (emp.poste || '').toLowerCase();
           const opStr = op.nom_operation.toLowerCase();
           if (!posteStr) return false;
@@ -661,7 +666,7 @@ export default function ChaineDetaillee() {
           if (posteStr.includes(opStr) || opStr.includes(posteStr)) return true;
 
           // Sewing industry fuzzy matching
-          const getBaseWord = (s) => {
+          const getBaseWord = (s: string) => {
             if (s.includes('piq')) return 'piq';
             if (s.includes('surj') || s.includes('serge')) return 'surj';
             if (s.includes('repas') || s.includes('iron')) return 'repas';
@@ -687,8 +692,8 @@ export default function ChaineDetaillee() {
       }
 
       // Match by general availability
-      if (!bestWorker && availableWorkers.length > 0) {
-        const fallbackWorker = availableWorkers[Math.floor(Math.random() * availableWorkers.length)];
+      if (!bestWorker && unassignedWorkers.length > 0) {
+        const fallbackWorker = unassignedWorkers[Math.floor(Math.random() * unassignedWorkers.length)];
         if (fallbackWorker) {
           bestWorker = fallbackWorker.id;
           reason = isAr
@@ -697,18 +702,54 @@ export default function ChaineDetaillee() {
         }
       }
 
+      // If we completely run out of unassigned workers, we must reuse existing workers based on skill/post
+      if (!bestWorker && availableWorkers.length > 0) {
+         // find best matching worker from ALL workers
+         const forcedWorker = availableWorkers.find(emp => {
+          const posteStr = (emp.poste || '').toLowerCase();
+          const opStr = op.nom_operation.toLowerCase();
+          if (!posteStr) return false;
+          if (posteStr.includes(opStr) || opStr.includes(posteStr)) return true;
+          return false;
+         }) || availableWorkers[0];
+         
+         bestWorker = forcedWorker.id;
+         reason = isAr ? `تم إسناد مهمة إضافية بسبب نقص العمال` : `Tâche supplémentaire assignée suite au manque d'effectif`;
+      }
+
       if (bestWorker) {
-        newAssignments[op.id] = {
-          empId: bestWorker,
+        if (!workerAssignments[bestWorker]) workerAssignments[bestWorker] = [];
+        workerAssignments[bestWorker].push(op.id);
+        explanations[op.id] = reason;
+
+        // remove from unassigned to prioritize others for next ops
+        const index = unassignedWorkers.findIndex(w => w.id === bestWorker);
+        if (index !== -1) unassignedWorkers.splice(index, 1);
+      }
+    });
+
+    // 2. Time Splitting
+    // For workers with multiple operations, split their day
+    Object.entries(workerAssignments).forEach(([empId, opIds]) => {
+      const numOps = opIds.length;
+      if (numOps === 1) {
+        newAssignments[opIds[0]] = {
+          empId,
           startHour: availableHours[0] || '08:00',
           endHour: availableHours[availableHours.length - 1] || '18:00'
         };
-        explanations[op.id] = reason;
-
-        if (availableWorkers.length > modelOps.length) {
-          const index = availableWorkers.findIndex(w => w.id === bestWorker);
-          if (index !== -1) availableWorkers.splice(index, 1);
-        }
+      } else {
+        // divide hours evenly
+        const hoursPerOp = Math.floor(availableHours.length / numOps);
+        opIds.forEach((opId, i) => {
+          const startIdx = i * hoursPerOp;
+          const endIdx = i === numOps - 1 ? availableHours.length - 1 : (i + 1) * hoursPerOp;
+          newAssignments[opId] = {
+            empId,
+            startHour: availableHours[startIdx],
+            endHour: availableHours[endIdx]
+          };
+        });
       }
     });
 
