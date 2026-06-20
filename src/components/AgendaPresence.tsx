@@ -26,6 +26,7 @@ export default function AgendaPresence({ employes, presences }: Props) {
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
 
   const monthName = currentDate.toLocaleString(isAr ? 'ar-MA' : 'fr-FR', { month: 'long', year: 'numeric' });
+  const currentMonthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
 
   const actifs = employes.filter(e => e.actif && e.type !== 'sous_traitance');
   const filtered = actifs.filter(e => 
@@ -33,12 +34,28 @@ export default function AgendaPresence({ employes, presences }: Props) {
     (e.poste && e.poste.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  const sortedFiltered = useMemo(() => {
+    return [...filtered].map(emp => {
+      let totalHours = 0;
+      const thisMonthPresences = presences.filter(p => p.employeId === emp.id && p.date.startsWith(currentMonthStr));
+      
+      daysArray.forEach(day => {
+        const dateStr = `${currentMonthStr}-${String(day).padStart(2, '0')}`;
+        const p = thisMonthPresences.find(x => x.date === dateStr);
+        if (p) {
+          totalHours += calculateWorkingHours(p.heureEntree, p.heureSortie, dateStr);
+        }
+      });
+      
+      return { emp, totalHours, thisMonthPresences };
+    }).sort((a, b) => b.totalHours - a.totalHours);
+  }, [filtered, presences, currentMonthStr, daysArray]);
+
   const stats = useMemo(() => {
     let totalRetards = 0;
     let totalAbsences = 0;
     let totalPresent = 0;
 
-    const currentMonthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
     const thisMonthPresences = presences.filter(p => p.date.startsWith(currentMonthStr));
 
     const today = new Date();
@@ -167,10 +184,7 @@ export default function AgendaPresence({ employes, presences }: Props) {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {filtered.map(emp => {
-              let totalMonthHours = 0;
-              const currentMonthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
-              const thisMonthPresences = presences.filter(p => p.employeId === emp.id && p.date.startsWith(currentMonthStr));
+            {sortedFiltered.map(({ emp, totalHours, thisMonthPresences }) => {
 
               return (
                 <tr key={emp.id} className="hover:bg-slate-50 transition-colors group">
@@ -200,7 +214,6 @@ export default function AgendaPresence({ employes, presences }: Props) {
 
                     if (p) {
                       const hours = calculateWorkingHours(p.heureEntree, p.heureSortie, dateStr);
-                      totalMonthHours += hours;
                       
                       if (p.statut === 'present') {
                         bgClass = "bg-emerald-100 text-emerald-600";
@@ -237,7 +250,7 @@ export default function AgendaPresence({ employes, presences }: Props) {
 
                   <td className="p-3 text-center group-hover:bg-slate-50 transition-colors">
                     <span className="inline-block px-3 py-1 bg-slate-900 text-white font-black rounded-lg text-xs">
-                      {totalMonthHours.toFixed(1)}h
+                      {totalHours.toFixed(1)}h
                     </span>
                   </td>
                 </tr>
