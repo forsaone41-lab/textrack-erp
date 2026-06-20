@@ -108,7 +108,7 @@ function AdminLayout({
     <div className="flex min-h-screen bg-slate-50/50" dir={isAr ? 'rtl' : 'ltr'}>
       {/* Mobile Header - Premium Glassy "Zaji" Design */}
       {currentUser.role !== 'worker' && (
-        <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white/70 backdrop-blur-xl border-b border-slate-200/50 z-[140] flex items-center justify-between px-5 shadow-sm">
+        <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white/70 backdrop-blur-xl border-b border-slate-200/50 z-[140] flex items-center justify-between px-5 shadow-sm print:hidden">
           <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : 'flex-row'}`}>
             <MobileLogoWithFallback src={company.logoMobileHeader || company.logoUrl} alt={company.name} />
           </div>
@@ -131,7 +131,7 @@ function AdminLayout({
       
       {/* Mobile Calculator - Bottom Right - Admin Only */}
       {currentUser.role === 'admin' && location.pathname !== '/partenaire-portal' && (
-        <div className={`md:hidden fixed bottom-6 ${isAr ? 'left-6' : 'right-6'} z-[140] scale-90`}>
+        <div className={`md:hidden fixed bottom-6 ${isAr ? 'left-6' : 'right-6'} z-[140] scale-90 print:hidden`}>
           <Calculator />
         </div>
       )}
@@ -147,26 +147,26 @@ function AdminLayout({
         />
       </div>
       
-      <main className={`flex-1 overflow-y-auto w-full relative ${currentUser.role === 'worker' ? 'mt-0' : 'mt-16 md:mt-0'}`}>
+      <main className={`flex-1 overflow-y-auto w-full relative ${currentUser.role === 'worker' ? 'mt-0' : 'mt-16 md:mt-0'} print:mt-0 print:overflow-visible`}>
         {/* Global Tools Bar - Notification only on Dashboard Page for Admin */}
         {currentUser.role === 'admin' && (
-          <div className={`fixed top-8 ${isAr ? 'right-12' : 'right-12'} z-[130] hidden md:flex items-center gap-4`}>
+          <div className={`fixed top-8 ${isAr ? 'right-12' : 'right-12'} z-[130] hidden md:flex items-center gap-4 print:hidden`}>
             {location.pathname === '/' && <NotificationCenter />}
           </div>
         )}
 
         {/* Floating Calculator - Admin Only */}
         {currentUser.role === 'admin' && location.pathname !== '/partenaire-portal' && (
-          <div className={`fixed bottom-8 ${isAr ? 'right-8' : 'right-8'} z-[130] hidden md:block`}>
+          <div className={`fixed bottom-8 ${isAr ? 'right-8' : 'right-8'} z-[130] hidden md:block print:hidden`}>
             <Calculator />
           </div>
         )}
 
         {/* Decorative background element */}
-        <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-indigo-500/5 blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-purple-500/5 blur-[120px] pointer-events-none" />
+        <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-indigo-500/5 blur-[120px] pointer-events-none print:hidden" />
+        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-purple-500/5 blur-[120px] pointer-events-none print:hidden" />
         
-        <div className="p-4 md:p-8 lg:p-12 max-w-[1600px] mx-auto relative">
+        <div className="p-4 md:p-8 lg:p-12 max-w-[1600px] mx-auto relative print:p-0 print:max-w-none">
           <Suspense fallback={<PageLoader />}>
             <Outlet />
           </Suspense>

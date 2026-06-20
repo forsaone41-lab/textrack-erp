@@ -141,7 +141,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
         fixed inset-y-0 ${isAr ? 'right-0' : 'left-0'} z-[200] 
         ${sidebarWidth} bg-[#0b0f1a] border-r border-white/5
         flex flex-col h-screen transition-all duration-300 ease-in-out
-        lg:sticky lg:translate-x-0
+        lg:sticky lg:translate-x-0 print:hidden
         ${mobileOpen ? 'translate-x-0' : (isAr ? 'translate-x-full' : '-translate-x-full')}
       `}>
         {/* Sidebar Header */}
