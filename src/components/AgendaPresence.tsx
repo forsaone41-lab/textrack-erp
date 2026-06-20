@@ -161,7 +161,7 @@ export default function AgendaPresence({ employes, presences }: Props) {
                   </div>
                 </th>
               ))}
-              <th className="sticky end-0 z-20 bg-white p-3 border-b-2 border-slate-200 text-center text-xs font-black text-slate-400 uppercase tracking-widest whitespace-nowrap shadow-[0_0_15px_rgba(0,0,0,0.1)]">
+              <th className="p-3 border-b-2 border-slate-200 text-center text-xs font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
                 {isAr ? 'الساعات' : 'Heures'}
               </th>
             </tr>
@@ -235,7 +235,7 @@ export default function AgendaPresence({ employes, presences }: Props) {
                     );
                   })}
 
-                  <td className="sticky end-0 z-10 bg-white group-hover:bg-slate-50 p-3 text-center shadow-[0_0_15px_rgba(0,0,0,0.1)]">
+                  <td className="p-3 text-center group-hover:bg-slate-50 transition-colors">
                     <span className="inline-block px-3 py-1 bg-slate-900 text-white font-black rounded-lg text-xs">
                       {totalMonthHours.toFixed(1)}h
                     </span>
