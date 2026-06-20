@@ -12,8 +12,8 @@ export default function Tarifs() {
 
   const can = (page: string) => {
     if (!currentUser) return false;
-    let role = (currentUser.role || '').toLowerCase();
-    if (role === 'admin') return true;
+    let role = (currentUser.role || '').toLowerCase().trim();
+    if (role.includes('admin') || role === 'directeur') return true;
     const perms = loadPermissions();
     if (role === 'agent' || role.includes('pointage')) role = 'agent_pointage';
     return (perms[role as keyof typeof perms] || []).includes(page as any);
