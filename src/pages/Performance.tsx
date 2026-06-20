@@ -5,6 +5,7 @@ import {
 } from 'recharts';
 import { Trophy, TrendingUp, Target, Users, Medal } from 'lucide-react';
 import { Employe, PointageEntry, Presence, loadData } from '../types';
+import { useLang } from '../contexts/LangContext';
 
 interface EmpStats {
   emp: Employe;
@@ -52,6 +53,7 @@ const empInitials = (e: Employe) => {
 const empName = (e: Employe) => e.prenom ? `${e.prenom} ${e.nom}` : e.nom;
 
 export default function Performance() {
+  const { isAr } = useLang();
   const [employes, setEmployes] = useState<Employe[]>([]);
   const [pointages, setPointages] = useState<PointageEntry[]>([]);
   const [presences, setPresences] = useState<Presence[]>([]);
@@ -78,11 +80,11 @@ export default function Performance() {
   }));
 
   const radarData = [
-    { subject: 'Efficacité', ...Object.fromEntries(top3.map(s => [s.emp.prenom || s.emp.nom.split(' ')[0], s.efficiency])) },
-    { subject: 'Présence', ...Object.fromEntries(top3.map(s => [s.emp.prenom || s.emp.nom.split(' ')[0], s.presenceRate])) },
-    { subject: 'Pièces', ...Object.fromEntries(top3.map(s => [s.emp.prenom || s.emp.nom.split(' ')[0], Math.min(s.totalPieces, 120)])) },
-    { subject: 'Sessions', ...Object.fromEntries(top3.map(s => [s.emp.prenom || s.emp.nom.split(' ')[0], Math.min(s.sessions * 10, 120)])) },
-    { subject: 'Qualité', ...Object.fromEntries(top3.map(s => [s.emp.prenom || s.emp.nom.split(' ')[0], s.totalPieces > 0 ? Math.min(100 - (s.totalRebut / s.totalPieces) * 100, 120) : 0])) },
+    { subject: isAr ? 'الكفاءة' : 'Efficacité', ...Object.fromEntries(top3.map(s => [s.emp.prenom || s.emp.nom.split(' ')[0], s.efficiency])) },
+    { subject: isAr ? 'الحضور' : 'Présence', ...Object.fromEntries(top3.map(s => [s.emp.prenom || s.emp.nom.split(' ')[0], s.presenceRate])) },
+    { subject: isAr ? 'القطع' : 'Pièces', ...Object.fromEntries(top3.map(s => [s.emp.prenom || s.emp.nom.split(' ')[0], Math.min(s.totalPieces, 120)])) },
+    { subject: isAr ? 'الجلسات' : 'Sessions', ...Object.fromEntries(top3.map(s => [s.emp.prenom || s.emp.nom.split(' ')[0], Math.min(s.sessions * 10, 120)])) },
+    { subject: isAr ? 'الجودة' : 'Qualité', ...Object.fromEntries(top3.map(s => [s.emp.prenom || s.emp.nom.split(' ')[0], s.totalPieces > 0 ? Math.min(100 - (s.totalRebut / s.totalPieces) * 100, 120) : 0])) },
   ];
 
   const radarColors = ['#6366f1', '#22c55e', '#f59e0b'];
@@ -95,8 +97,8 @@ export default function Performance() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">Performance des Ouvriers</h1>
-        <p className="text-slate-500 text-sm">Suivi de la productivité et de la qualité</p>
+        <h1 className="text-2xl font-bold text-slate-800">{isAr ? "أداء العمال" : "Performance des Ouvriers"}</h1>
+        <p className="text-slate-500 text-sm">{isAr ? "تتبع الإنتاجية والجودة" : "Suivi de la productivité et de la qualité"}</p>
       </div>
 
       {/* Global KPIs */}
@@ -104,21 +106,21 @@ export default function Performance() {
         <div className="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-4">
           <div className="p-3 bg-indigo-50 rounded-xl"><TrendingUp className="w-5 h-5 text-indigo-600" /></div>
           <div>
-            <p className="text-xs text-slate-400">Efficacité moyenne</p>
+            <p className="text-xs text-slate-400">{isAr ? "متوسط الكفاءة" : "Efficacité moyenne"}</p>
             <p className="text-2xl font-bold text-indigo-600">{avgEff}%</p>
           </div>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-4">
           <div className="p-3 bg-green-50 rounded-xl"><Target className="w-5 h-5 text-green-600" /></div>
           <div>
-            <p className="text-xs text-slate-400">Pièces produites</p>
+            <p className="text-xs text-slate-400">{isAr ? "القطع المنتجة" : "Pièces produites"}</p>
             <p className="text-2xl font-bold text-green-600">{totPieces}</p>
           </div>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-4">
           <div className="p-3 bg-red-50 rounded-xl"><Users className="w-5 h-5 text-red-500" /></div>
           <div>
-            <p className="text-xs text-slate-400">Total rebut</p>
+            <p className="text-xs text-slate-400">{isAr ? "إجمالي التالف" : "Total rebut"}</p>
             <p className="text-2xl font-bold text-red-500">{totRebut}</p>
           </div>
         </div>
@@ -142,17 +144,17 @@ export default function Performance() {
               </div>
               <div className="grid grid-cols-2 gap-3 mt-4">
                 <div>
-                  <p className="text-xs opacity-70 uppercase tracking-wide">Pièces</p>
+                  <p className="text-xs opacity-70 uppercase tracking-wide">{isAr ? "القطع" : "Pièces"}</p>
                   <p className="text-2xl font-bold">{s.totalPieces}</p>
                 </div>
                 <div>
-                  <p className="text-xs opacity-70 uppercase tracking-wide">Efficacité</p>
+                  <p className="text-xs opacity-70 uppercase tracking-wide">{isAr ? "الكفاءة" : "Efficacité"}</p>
                   <p className="text-2xl font-bold">{s.efficiency}%</p>
                 </div>
               </div>
               <div className="mt-3">
                 <div className="flex justify-between text-xs opacity-70 mb-1">
-                  <span>Score global</span><span>{s.score}%</span>
+                  <span>{isAr ? "النقاط الإجمالية" : "Score global"}</span><span>{s.score}%</span>
                 </div>
                 <div className="h-1.5 bg-white/30 rounded-full overflow-hidden">
                   <div className="h-full bg-white rounded-full" style={{ width: `${s.score}%` }} />
@@ -181,7 +183,7 @@ export default function Performance() {
                 <Bar dataKey="Efficacité" fill="#6366f1" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
-          ) : <p className="text-sm text-slate-400 text-center py-16">Aucune donnée disponible</p>}
+          ) : <p className="text-sm text-slate-400 text-center py-16">{isAr ? "لا توجد بيانات متاحة" : "Aucune donnée disponible"}</p>}
         </div>
 
         {/* Radar Chart */}
@@ -209,31 +211,31 @@ export default function Performance() {
                 <Tooltip />
               </RadarChart>
             </ResponsiveContainer>
-          ) : <p className="text-sm text-slate-400 text-center py-16">Aucune donnée disponible</p>}
+          ) : <p className="text-sm text-slate-400 text-center py-16">{isAr ? "لا توجد بيانات متاحة" : "Aucune donnée disponible"}</p>}
         </div>
       </div>
 
       {/* Full Table */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-100">
-          <h3 className="text-sm font-semibold text-slate-700">Classement Complet</h3>
+          <h3 className="text-sm font-semibold text-slate-700">{isAr ? "التصنيف الكامل" : "Classement Complet"}</h3>
         </div>
         {stats.length === 0 ? (
           <div className="text-center py-12 text-slate-400">
             <Trophy className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p>Aucune donnée de pointage disponible</p>
+            <p>{isAr ? "لا توجد بيانات تسجيل متاحة" : "Aucune donnée de pointage disponible"}</p>
           </div>
         ) : (
           <table className="w-full">
             <thead className="bg-slate-50 border-b border-slate-100">
               <tr>
                 <th className="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase">#</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Ouvrier</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Pièces</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Rebut</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Efficacité</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Présence</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Score</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">{isAr ? "العامل" : "Ouvrier"}</th>
+                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">{isAr ? "القطع" : "Pièces"}</th>
+                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">{isAr ? "التالف" : "Rebut"}</th>
+                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">{isAr ? "الكفاءة" : "Efficacité"}</th>
+                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">{isAr ? "الحضور" : "Présence"}</th>
+                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">{isAr ? "النقاط" : "Score"}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
