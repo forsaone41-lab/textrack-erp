@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Search, ChevronDown, ChevronUp, CheckCircle2, XCircle, MapPin, Clock, DollarSign, Package, HelpCircle, Phone, Mail, MessageCircle, Globe, Sparkles } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, CheckCircle2, XCircle, MapPin, Clock, DollarSign, Package, HelpCircle, Phone, Mail, MessageCircle, Globe, Sparkles, Send } from 'lucide-react';
 import { CompanyProfile, FaqItem, ServiceItem, loadCompanyProfile } from '../types';
 
 const DEFAULT_FAQ: FaqItem[] = [
@@ -255,22 +255,41 @@ export default function ClientInfo({ company: companyProp, standalone = false }:
         </div>
 
         {/* Footer CTA */}
-        <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-[2rem] p-6 text-white text-center shadow-xl shadow-indigo-200/50">
-          <p className="text-lg font-black mb-1">{isAr ? 'لديك سؤال آخر؟' : 'Une autre question ?'}</p>
-          <p className="text-indigo-200 text-sm mb-5 font-medium">
-            {isAr ? 'فريقنا متاح للإجابة' : 'Notre équipe est disponible pour vous répondre'}
+        <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-[2rem] p-8 text-white text-center shadow-xl shadow-indigo-200/50 relative overflow-hidden">
+          {/* Decorative shapes for CTA */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-indigo-400/20 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
+          
+          <h2 className="text-2xl md:text-3xl font-black mb-3 relative z-10">
+            {isAr ? 'مستعد لبدء مشروعك؟' : 'Prêt à lancer votre projet ?'}
+          </h2>
+          <p className="text-indigo-200 text-sm md:text-base mb-8 font-medium max-w-lg mx-auto relative z-10">
+            {isAr 
+              ? 'فريقنا متاح للإجابة على جميع استفساراتكم وتقديم عرض سعر مخصص يلبي احتياجاتكم بدقة.' 
+              : 'Notre équipe est prête à répondre à toutes vos questions et à vous fournir un devis personnalisé selon vos besoins.'}
           </p>
-          {company.phone && (
+          
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10">
             <a
-              href={`https://wa.me/${company.phone.replace(/\D/g,'')}?text=${encodeURIComponent(isAr ? 'السلام عليكم، عندي سؤال...' : 'Bonjour, j\'ai une question...')}`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white text-indigo-700 rounded-2xl text-sm font-black hover:bg-indigo-50 transition-all shadow-lg"
+              href="/"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-emerald-500 text-white rounded-2xl text-sm font-black hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/30 hover:-translate-y-1"
             >
-              <MessageCircle className="w-4 h-4" />
-              {isAr ? 'تواصل عبر واتساب' : 'WhatsApp'}
+              <Send className="w-5 h-5" />
+              {isAr ? 'تقديم طلب عرض سعر' : 'Demander un devis gratuit'}
             </a>
-          )}
+            
+            {company.phone && (
+              <a
+                href={`https://wa.me/${company.phone.replace(/\D/g,'')}?text=${encodeURIComponent(isAr ? 'السلام عليكم، عندي سؤال...' : 'Bonjour, j\'ai une question...')}`}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 border border-white/20 text-white rounded-2xl text-sm font-black backdrop-blur-sm hover:bg-white/20 transition-all"
+              >
+                <MessageCircle className="w-5 h-5" />
+                {isAr ? 'تواصل عبر واتساب' : 'Poser une question'}
+              </a>
+            )}
+          </div>
         </div>
 
         <p className="text-center text-[10px] text-white/30 mt-6 font-medium">
