@@ -150,7 +150,7 @@ export default function AgendaPresence({ employes, presences }: Props) {
         <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
             <tr>
-              <th className="sticky left-0 z-20 bg-white p-3 border-b-2 border-slate-200 text-xs font-black text-slate-400 uppercase tracking-widest min-w-[200px]">
+              <th className="sticky start-0 z-20 bg-white p-3 border-b-2 border-slate-200 text-xs font-black text-slate-400 uppercase tracking-widest min-w-[200px] shadow-[0_0_15px_rgba(0,0,0,0.1)]">
                 {isAr ? 'الموظف' : 'Employé'}
               </th>
               {daysArray.map(day => (
@@ -161,7 +161,7 @@ export default function AgendaPresence({ employes, presences }: Props) {
                   </div>
                 </th>
               ))}
-              <th className="p-3 border-b-2 border-slate-200 text-center text-xs font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
+              <th className="sticky end-0 z-20 bg-white p-3 border-b-2 border-slate-200 text-center text-xs font-black text-slate-400 uppercase tracking-widest whitespace-nowrap shadow-[0_0_15px_rgba(0,0,0,0.1)]">
                 {isAr ? 'الساعات' : 'Heures'}
               </th>
             </tr>
@@ -174,7 +174,7 @@ export default function AgendaPresence({ employes, presences }: Props) {
 
               return (
                 <tr key={emp.id} className="hover:bg-slate-50 transition-colors group">
-                  <td className="sticky left-0 z-10 bg-white group-hover:bg-slate-50 p-3">
+                  <td className="sticky start-0 z-10 bg-white group-hover:bg-slate-50 p-3 shadow-[0_0_15px_rgba(0,0,0,0.1)]">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-black">
                         {(emp.prenom?.[0] || '') + (emp.nom?.[0] || '')}
@@ -235,7 +235,7 @@ export default function AgendaPresence({ employes, presences }: Props) {
                     );
                   })}
 
-                  <td className="p-3 text-center">
+                  <td className="sticky end-0 z-10 bg-white group-hover:bg-slate-50 p-3 text-center shadow-[0_0_15px_rgba(0,0,0,0.1)]">
                     <span className="inline-block px-3 py-1 bg-slate-900 text-white font-black rounded-lg text-xs">
                       {totalMonthHours.toFixed(1)}h
                     </span>
