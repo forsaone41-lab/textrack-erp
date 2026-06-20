@@ -171,7 +171,7 @@ export default function Performance() {
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-indigo-500" />
-            Efficacité par Ouvrier
+            {isAr ? "الكفاءة لكل عامل" : "Efficacité par Ouvrier"}
           </h3>
           {barData.length > 0 ? (
             <ResponsiveContainer width="100%" height={240}>
@@ -190,7 +190,7 @@ export default function Performance() {
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
             <Target className="w-4 h-4 text-green-500" />
-            Analyse Globale
+            {isAr ? "تحليل شامل" : "Analyse Globale"}
           </h3>
           {top3.length > 0 ? (
             <ResponsiveContainer width="100%" height={240}>
