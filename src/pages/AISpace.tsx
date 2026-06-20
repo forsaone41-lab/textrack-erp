@@ -1073,24 +1073,43 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
                         <div className="pt-5 border-t border-indigo-100/50 flex justify-end mt-4">
                           <button
                             onClick={() => {
-                              const suggested = piece?.fabricSuggested || analysisResult.fabricSuggested || (isAr ? 'غير محدد' : 'Non spécifié');
-                              const conso = piece?.consumption || analysisResult.consumption || (isAr ? 'غير محدد' : 'Non spécifié');
-                              const alternatives = ((piece?.fabricAlternatives || analysisResult.fabricAlternatives) as any[]) || [];
-                              
+                              const isEnsemble = analysisResult.pieces && analysisResult.pieces.length > 1;
                               let msgText = isAr 
-                                ? `مرحباً! 👋\nبناءً على طلبكم الخاص بموديل *${piece?.name || analysisResult.category}*، قمنا بتحليل الموديل بدقة وهذه هي اقتراحاتنا للثوب:\n\n`
-                                : `Bonjour! 👋\nSuite à votre demande concernant le modèle *${piece?.name || analysisResult.category}*, nous avons analysé le modèle et voici nos suggestions de tissus :\n\n`;
-                              
-                              msgText += isAr ? `✅ *الثوب المقترح:* ${suggested}\n` : `✅ *Tissu recommandé:* ${suggested}\n`;
-                              msgText += isAr ? `📏 *كمية الثوب المطلوبة:* ${conso}\n\n` : `📏 *Quantité nécessaire:* ${conso}\n\n`;
-                              
-                              if (alternatives.length > 0) {
-                                msgText += isAr ? `🔄 *خيارات بديلة للثوب:*\n` : `🔄 *Options alternatives:*\n`;
-                                alternatives.forEach((alt: any) => {
-                                  msgText += `\n🔹 *${alt.name}*\n`;
-                                  msgText += isAr ? `   ➕ المزايا: ${alt.pros}\n` : `   ➕ Avantages: ${alt.pros}\n`;
-                                  msgText += isAr ? `   ➖ العيوب: ${alt.cons}\n` : `   ➖ Inconvénients: ${alt.cons}\n`;
+                                ? `مرحباً! 👋\nبناءً على طلبكم الخاص بموديل *${analysisResult.category}*، قمنا بتحليل الموديل بدقة وهذه هي اقتراحاتنا:\n\n`
+                                : `Bonjour! 👋\nSuite à votre demande concernant le modèle *${analysisResult.category}*, nous avons analysé le modèle et voici nos suggestions :\n\n`;
+
+                              if (isEnsemble) {
+                                analysisResult.pieces.forEach((p: any) => {
+                                  const suggested = p.fabricSuggested || (isAr ? 'غير محدد' : 'Non spécifié');
+                                  const conso = p.consumption || (isAr ? 'غير محدد' : 'Non spécifié');
+                                  const alternatives = p.fabricAlternatives || [];
+
+                                  msgText += `📦 *${p.name}*\n`;
+                                  msgText += isAr ? `✅ *الثوب المقترح:* ${suggested}\n` : `✅ *Tissu recommandé:* ${suggested}\n`;
+                                  msgText += isAr ? `📏 *الكمية:* ${conso}\n` : `📏 *Quantité:* ${conso}\n`;
+                                  
+                                  if (alternatives.length > 0) {
+                                    msgText += isAr ? `🔄 *بدائل:* ` : `🔄 *Alternatives:* `;
+                                    msgText += alternatives.map((alt: any) => alt.name).join('، ') + '\n';
+                                  }
+                                  msgText += '\n';
                                 });
+                              } else {
+                                const suggested = piece?.fabricSuggested || analysisResult.fabricSuggested || (isAr ? 'غير محدد' : 'Non spécifié');
+                                const conso = piece?.consumption || analysisResult.consumption || (isAr ? 'غير محدد' : 'Non spécifié');
+                                const alternatives = ((piece?.fabricAlternatives || analysisResult.fabricAlternatives) as any[]) || [];
+                                
+                                msgText += isAr ? `✅ *الثوب المقترح:* ${suggested}\n` : `✅ *Tissu recommandé:* ${suggested}\n`;
+                                msgText += isAr ? `📏 *كمية الثوب المطلوبة:* ${conso}\n\n` : `📏 *Quantité nécessaire:* ${conso}\n\n`;
+                                
+                                if (alternatives.length > 0) {
+                                  msgText += isAr ? `🔄 *خيارات بديلة للثوب:*\n` : `🔄 *Options alternatives:*\n`;
+                                  alternatives.forEach((alt: any) => {
+                                    msgText += `\n🔹 *${alt.name}*\n`;
+                                    msgText += isAr ? `   ➕ المزايا: ${alt.pros}\n` : `   ➕ Avantages: ${alt.pros}\n`;
+                                    msgText += isAr ? `   ➖ العيوب: ${alt.cons}\n` : `   ➖ Inconvénients: ${alt.cons}\n`;
+                                  });
+                                }
                               }
                               
                               msgText += isAr ? `\nنحن رهن إشارتكم لأي استفسار أو لتأكيد الطلب! ✨\n*BEYA CREATIVE*` : `\nNous restons à votre disposition pour toute question ou confirmation! ✨\n*BEYA CREATIVE*`;
