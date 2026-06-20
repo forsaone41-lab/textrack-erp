@@ -919,7 +919,7 @@ export default function Settings() {
 
 const DEFAULT_FAQ_ITEMS: FaqItem[] = [
   { id: '1', emoji: '💰', category: 'prix', questionFr: 'Quels sont vos tarifs ?', questionAr: 'ما هي أسعاركم؟', answerFr: 'Nos prix varient selon la quantité, le modèle et les matières. Contactez-nous pour un devis.', answerAr: 'أسعارنا تتفاوت حسب الكمية والنموذج. تواصلوا معنا للحصول على عرض سعر.' },
-  { id: '2', emoji: '📦', category: 'prix', questionFr: 'Quel est le minimum de commande (MOQ) ?', questionAr: 'ما هو الحد الأدنى للطلب؟', answerFr: 'Notre minimum est généralement 50 pièces par modèle.', answerAr: 'الحد الأدنى عادةً 50 قطعة لكل نموذج.' },
+  { id: '2', emoji: '📦', category: 'prix', questionFr: 'Quel est le minimum de commande (MOQ) ?', questionAr: 'ما هو الحد الأدنى للطلب؟', answerFr: 'Notre minimum de commande est de 100 pièces au total, avec un minimum strict de 20 pièces par couleur. Nous ne produisons pas moins de 20 pièces par couleur. Pour les échantillons, on peut descendre à 1 pièce.', answerAr: 'الحد الأدنى للطلب هو 100 قطعة إجمالاً، مع توفير 20 قطعة كحد أدنى لكل لون. لا نقوم بإنتاج أقل من 20 قطعة للون الواحد. للعينات يمكن طلب قطعة واحدة.' },
   { id: '3', emoji: '⏱️', category: 'delai', questionFr: 'Quel est le délai de production ?', questionAr: 'ما هو وقت الإنتاج؟', answerFr: 'En général 15 à 30 jours selon la complexité.', answerAr: 'عادةً من 15 إلى 30 يوم حسب التعقيد.' },
 ];
 
