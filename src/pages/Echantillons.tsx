@@ -23,6 +23,7 @@ export default function Echantillons() {
   const [editingPrixId, setEditingPrixId] = useState<string | null>(null);
   const [editingField, setEditingField] = useState<'echantillon' | 'commande' | null>(null);
   const [editingPrixVal, setEditingPrixVal] = useState<string>('');
+  const [zoomImage, setZoomImage] = useState<string | null>(null);
   
   // PRO Feedback State
   const [portalFeedback, setPortalFeedback] = useState({
@@ -560,8 +561,11 @@ export default function Echantillons() {
               {(c.tissuPhoto || c.modelePhoto) && (
                 <div className="mb-6 grid grid-cols-2 gap-2">
                   {c.tissuPhoto && (
-                    <div className="rounded-xl overflow-hidden border border-slate-100 h-32 relative group/img">
-                      <div className="absolute inset-0 bg-slate-900/10 z-10" />
+                    <div 
+                      className="rounded-xl overflow-hidden border border-slate-100 h-32 relative group/img cursor-pointer"
+                      onClick={() => setZoomImage(c.tissuPhoto!)}
+                    >
+                      <div className="absolute inset-0 bg-slate-900/10 z-10 hover:bg-slate-900/20 transition-colors" />
                       <img src={c.tissuPhoto} alt="Tissu" className="w-full h-full object-cover" />
                       <div className="absolute bottom-2 left-2 z-20 flex items-center gap-1.5 bg-white/90 backdrop-blur px-2 py-1 rounded-lg">
                         <ImageIcon className="w-3 h-3 text-indigo-600" />
@@ -570,8 +574,11 @@ export default function Echantillons() {
                     </div>
                   )}
                   {c.modelePhoto && (
-                    <div className="rounded-xl overflow-hidden border border-slate-100 h-32 relative group/img">
-                      <div className="absolute inset-0 bg-slate-900/10 z-10" />
+                    <div 
+                      className="rounded-xl overflow-hidden border border-slate-100 h-32 relative group/img cursor-pointer"
+                      onClick={() => setZoomImage(c.modelePhoto!)}
+                    >
+                      <div className="absolute inset-0 bg-slate-900/10 z-10 hover:bg-slate-900/20 transition-colors" />
                       <img src={c.modelePhoto} alt="Modele" className="w-full h-full object-cover" />
                       <div className="absolute bottom-2 left-2 z-20 flex items-center gap-1.5 bg-white/90 backdrop-blur px-2 py-1 rounded-lg">
                         <ImageIcon className="w-3 h-3 text-fuchsia-600" />
@@ -725,6 +732,26 @@ export default function Echantillons() {
               <X className="w-4 h-4 text-slate-400" />
             </button>
           </div>
+        </div>
+      )}
+      {/* Image Zoom Modal */}
+      {zoomImage && (
+        <div 
+          className="fixed inset-0 z-[500] bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4 cursor-zoom-out animate-in fade-in duration-200"
+          onClick={() => setZoomImage(null)}
+        >
+          <img 
+            src={zoomImage} 
+            alt="Zoomed" 
+            className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl cursor-default animate-in zoom-in-95 duration-300"
+            onClick={(e) => e.stopPropagation()} 
+          />
+          <button 
+            className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md transition-all"
+            onClick={() => setZoomImage(null)}
+          >
+            <X className="w-6 h-6" />
+          </button>
         </div>
       )}
     </div>
