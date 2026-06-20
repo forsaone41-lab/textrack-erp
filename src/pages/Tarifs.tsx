@@ -7,7 +7,7 @@ export default function Tarifs() {
   const { isAr } = useLang();
   
   const [currentUser] = useState<User | null>(() => {
-    try { return JSON.parse(localStorage.getItem('textrack_user') || 'null'); } catch { return null; }
+    try { return JSON.parse(localStorage.getItem('textrack_auth') || 'null'); } catch { return null; }
   });
 
   const can = (page: string) => {
