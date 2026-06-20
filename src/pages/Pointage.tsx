@@ -450,7 +450,7 @@ export default function Pointage({ onLogout }: { onLogout?: () => void }) {
               </div>
 
               <div className="bg-white p-6 rounded-[2.5rem] shadow-2xl mb-8 transform hover:scale-105 transition-transform duration-500">
-                <QRCodeSVG value={selectedBadge.id} size={180} level="H" />
+                <QRCodeSVG id="qr-code-svg" value={selectedBadge.id} size={180} level="H" />
               </div>
 
               <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-2 leading-tight">
@@ -473,14 +473,14 @@ export default function Pointage({ onLogout }: { onLogout?: () => void }) {
               </button>
               <button 
                 onClick={() => {
-                  const svg = document.querySelector('.QRCodeSVG');
+                  const svg = document.getElementById('qr-code-svg');
                   if (svg) {
                     const svgData = new XMLSerializer().serializeToString(svg);
                     const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement('a');
                     link.href = url;
-                    link.download = `badge_${selectedBadge.nom}.svg`;
+                    link.download = `badge_${selectedBadge.nom || 'employe'}.svg`;
                     link.click();
                   }
                 }}

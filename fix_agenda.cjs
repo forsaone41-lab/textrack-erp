@@ -1,15 +1,81 @@
-import React, { useState, useMemo } from 'react';
+const fs = require('fs');
+
+const content = `import React, { useState, useMemo } from 'react';
 import { Employe, Presence } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { Calendar, Clock, AlertTriangle, CheckCircle, Search, ChevronLeft, ChevronRight, Calculator } from 'lucide-react';
-import { isHoliday, calculateWorkingHours } from '../utils/beyaRules';
 
 interface Props {
   employes: Employe[];
   presences: Presence[];
 }
 
+// BEYA CREATIVE Official Rules
+// Moroccan Holidays (Fixed & Estimated 2026)
+const FIXED_HOLIDAYS = ['01-01', '01-11', '05-01', '07-30', '08-14', '08-20', '08-21', '11-06', '11-18'];
+const RELIGIOUS_HOLIDAYS_2026 = [
+  '2026-03-20', '2026-03-21', // Aid Al Fitr (approx)
+  '2026-05-27', '2026-05-28', // Aid Al Adha (approx)
+  '2026-06-17',               // Fatih Muharram (approx)
+  '2026-08-26', '2026-08-27', // Aid Al Mawlid (approx)
+];
 
+function isHoliday(dateStr: string) {
+  const mm_dd = dateStr.substring(5);
+  if (FIXED_HOLIDAYS.includes(mm_dd)) return true;
+  if (RELIGIOUS_HOLIDAYS_2026.includes(dateStr)) return true;
+  return false;
+}
+
+function calculateWorkingHours(entree: string | null, sortie: string | null, dateStr: string) {
+  if (!entree || !sortie) return 0;
+  try {
+    const [eH, eM] = entree.split(':').map(Number);
+    let [sH, sM] = sortie.split(':').map(Number);
+    
+    const startHour = eH + eM / 60;
+    const endHour = sH + sM / 60;
+
+    if (endHour <= startHour) return 0;
+
+    let total = endHour - startHour;
+
+    const d = new Date(dateStr);
+    const dayOfWeek = d.getDay(); // 0=Sun, 1=Mon... 5=Fri, 6=Sat
+
+    // Breakfast: 11:00 to 11:15
+    const bStart = 11.0;
+    const bEnd = 11.25;
+
+    // Lunch
+    const lStart = dayOfWeek === 5 ? 13.5 : 14.0; // Fri: 13:30, Others: 14:00
+    const lEnd = 14.75; // 14:45
+
+    // Deduct Breakfast
+    if (startHour <= bStart && endHour >= bEnd) {
+      total -= (bEnd - bStart);
+    } else if (startHour <= bStart && endHour > bStart) {
+      total -= (endHour - bStart);
+    } else if (startHour < bEnd && endHour >= bEnd) {
+      total -= (bEnd - startHour);
+    }
+
+    // Deduct Lunch (Sat has no lunch break because work ends at 13:00)
+    if (dayOfWeek !== 6) {
+      if (startHour <= lStart && endHour >= lEnd) {
+        total -= (lEnd - lStart);
+      } else if (startHour <= lStart && endHour > lStart) {
+        total -= (endHour - lStart);
+      } else if (startHour < lEnd && endHour >= lEnd) {
+        total -= (lEnd - startHour);
+      }
+    }
+
+    return total > 0 ? total : 0;
+  } catch {
+    return 0;
+  }
+}
 
 export default function AgendaPresence({ employes, presences }: Props) {
   const { isAr } = useLang();
@@ -26,44 +92,27 @@ export default function AgendaPresence({ employes, presences }: Props) {
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
 
   const monthName = currentDate.toLocaleString(isAr ? 'ar-MA' : 'fr-FR', { month: 'long', year: 'numeric' });
-  const currentMonthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
 
   const actifs = employes.filter(e => e.actif && e.type !== 'sous_traitance');
   const filtered = actifs.filter(e => 
-    `${e.nom} ${e.prenom}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    \`\${e.nom} \${e.prenom}\`.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (e.poste && e.poste.toLowerCase().includes(searchTerm.toLowerCase()))
   );
-
-  const sortedFiltered = useMemo(() => {
-    return [...filtered].map(emp => {
-      let totalHours = 0;
-      const thisMonthPresences = presences.filter(p => p.employeId === emp.id && p.date.startsWith(currentMonthStr));
-      
-      daysArray.forEach(day => {
-        const dateStr = `${currentMonthStr}-${String(day).padStart(2, '0')}`;
-        const p = thisMonthPresences.find(x => x.date === dateStr);
-        if (p) {
-          totalHours += calculateWorkingHours(p.heureEntree, p.heureSortie, dateStr);
-        }
-      });
-      
-      return { emp, totalHours, thisMonthPresences };
-    }).sort((a, b) => b.totalHours - a.totalHours);
-  }, [filtered, presences, currentMonthStr, daysArray]);
 
   const stats = useMemo(() => {
     let totalRetards = 0;
     let totalAbsences = 0;
     let totalPresent = 0;
 
+    const currentMonthStr = \`\${year}-\${String(month + 1).padStart(2, '0')}\`;
     const thisMonthPresences = presences.filter(p => p.date.startsWith(currentMonthStr));
 
     const today = new Date();
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const todayStr = \`\${today.getFullYear()}-\${String(today.getMonth()+1).padStart(2, '0')}-\${String(today.getDate()).padStart(2, '0')}\`;
 
     filtered.forEach(emp => {
       for (let i = 1; i <= daysInMonth; i++) {
-        const dateStr = `${currentMonthStr}-${String(i).padStart(2, '0')}`;
+        const dateStr = \`\${currentMonthStr}-\${String(i).padStart(2, '0')}\`;
         const d = new Date(year, month, i);
         
         // Skip Sundays and Holidays
@@ -89,7 +138,7 @@ export default function AgendaPresence({ employes, presences }: Props) {
   }, [filtered, presences, month, year]);
 
   return (
-    <div className={`bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden ${isAr ? 'text-right' : 'text-left'}`} dir={isAr ? 'rtl' : 'ltr'}>
+    <div className={\`bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden \${isAr ? 'text-right' : 'text-left'}\`} dir={isAr ? 'rtl' : 'ltr'}>
       {/* Header Controls */}
       <div className="p-6 border-b border-slate-100 flex flex-col lg:flex-row items-center justify-between gap-4 bg-slate-50/50">
         <div className="flex items-center gap-4">
@@ -111,38 +160,30 @@ export default function AgendaPresence({ employes, presences }: Props) {
               placeholder={isAr ? 'البحث عن موظف...' : 'Rechercher...'}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className={`w-full h-10 pl-10 pr-4 bg-white border border-slate-200 rounded-lg text-sm focus:border-indigo-500 outline-none ${isAr ? 'pr-10 pl-4' : ''}`}
+              className={\`w-full h-10 pl-10 pr-4 bg-white border border-slate-200 rounded-lg text-sm focus:border-indigo-500 outline-none \${isAr ? 'pr-10 pl-4' : ''}\`}
             />
-            <Search className={`w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 ${isAr ? 'right-3' : 'left-3'}`} />
+            <Search className={\`w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 \${isAr ? 'right-3' : 'left-3'}\`} />
           </div>
           <div className="flex items-center gap-2 bg-white rounded-lg border border-slate-200 p-1">
             <button onClick={prevMonth} className="p-1.5 hover:bg-slate-100 rounded text-slate-600 transition-colors">
-              <ChevronLeft className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
+              <ChevronLeft className={\`w-5 h-5 \${isAr ? 'rotate-180' : ''}\`} />
             </button>
             <span className="text-sm font-black text-slate-700 min-w-[100px] text-center capitalize">{monthName}</span>
             <button onClick={nextMonth} className="p-1.5 hover:bg-slate-100 rounded text-slate-600 transition-colors">
-              <ChevronRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
+              <ChevronRight className={\`w-5 h-5 \${isAr ? 'rotate-180' : ''}\`} />
             </button>
           </div>
         </div>
       </div>
 
       {/* Rules Notice */}
-      <div className="bg-indigo-50/50 border-b border-indigo-100 px-6 py-3 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <Calculator className="w-4 h-4 text-indigo-500" />
-          <span className="text-xs font-bold text-indigo-700 uppercase tracking-widest">
-            {isAr 
-              ? "يتم حساب الساعات خصماً لفترات الاستراحة (فطور: 11:00-11:15 | غداء: 14:00-14:45 | الجمعة: 13:30-14:45)"
-              : "Les heures sont calculées en déduisant les pauses (11h00-11h15 | 14h00-14h45 | Vendredi 13h30-14h45)"}
-          </span>
-        </div>
-        <button 
-          onClick={() => window.open('#/reglement', '_blank')}
-          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-colors"
-        >
-          {isAr ? 'طباعة النظام الداخلي' : 'Imprimer Règlement'}
-        </button>
+      <div className="bg-indigo-50/50 border-b border-indigo-100 px-6 py-3 flex items-center gap-3">
+        <Calculator className="w-4 h-4 text-indigo-500" />
+        <span className="text-xs font-bold text-indigo-700 uppercase tracking-widest">
+          {isAr 
+            ? "يتم حساب الساعات خصماً لفترات الاستراحة (فطور: 11:00-11:15 | غداء: 14:00-14:45 | الجمعة: 13:30-14:45)"
+            : "Les heures sont calculées en déduisant les pauses (11h00-11h15 | 14h00-14h45 | Vendredi 13h30-14h45)"}
+        </span>
       </div>
 
       {/* KPI Cards */}
@@ -175,7 +216,7 @@ export default function AgendaPresence({ employes, presences }: Props) {
         <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
             <tr>
-              <th className="sticky start-0 z-20 bg-white p-3 border-b-2 border-slate-200 text-xs font-black text-slate-400 uppercase tracking-widest min-w-[200px] shadow-[0_0_15px_rgba(0,0,0,0.1)]">
+              <th className="sticky left-0 z-20 bg-white p-3 border-b-2 border-slate-200 text-xs font-black text-slate-400 uppercase tracking-widest min-w-[200px]">
                 {isAr ? 'الموظف' : 'Employé'}
               </th>
               {daysArray.map(day => (
@@ -192,11 +233,14 @@ export default function AgendaPresence({ employes, presences }: Props) {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {sortedFiltered.map(({ emp, totalHours, thisMonthPresences }) => {
+            {filtered.map(emp => {
+              let totalMonthHours = 0;
+              const currentMonthStr = \`\${year}-\${String(month + 1).padStart(2, '0')}\`;
+              const thisMonthPresences = presences.filter(p => p.employeId === emp.id && p.date.startsWith(currentMonthStr));
 
               return (
                 <tr key={emp.id} className="hover:bg-slate-50 transition-colors group">
-                  <td className="sticky start-0 z-10 bg-white group-hover:bg-slate-50 p-3 shadow-[0_0_15px_rgba(0,0,0,0.1)]">
+                  <td className="sticky left-0 z-10 bg-white group-hover:bg-slate-50 p-3">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-black">
                         {(emp.prenom?.[0] || '') + (emp.nom?.[0] || '')}
@@ -209,7 +253,7 @@ export default function AgendaPresence({ employes, presences }: Props) {
                   </td>
                   
                   {daysArray.map(day => {
-                    const dateStr = `${currentMonthStr}-${String(day).padStart(2, '0')}`;
+                    const dateStr = \`\${currentMonthStr}-\${String(day).padStart(2, '0')}\`;
                     const p = thisMonthPresences.find(x => x.date === dateStr);
                     
                     const d = new Date(year, month, day);
@@ -222,14 +266,15 @@ export default function AgendaPresence({ employes, presences }: Props) {
 
                     if (p) {
                       const hours = calculateWorkingHours(p.heureEntree, p.heureSortie, dateStr);
+                      totalMonthHours += hours;
                       
                       if (p.statut === 'present') {
                         bgClass = "bg-emerald-100 text-emerald-600";
-                        tooltip = `Entrée: ${p.heureEntree || '--'} | Sortie: ${p.heureSortie || '--'} (${hours.toFixed(1)}h)`;
+                        tooltip = \`Entrée: \${p.heureEntree || '--'} | Sortie: \${p.heureSortie || '--'} (\${hours.toFixed(1)}h)\`;
                         cellText = 'P';
                       } else if (p.statut === 'retard') {
                         bgClass = "bg-amber-100 text-amber-600";
-                        tooltip = `Retard - Entrée: ${p.heureEntree || '--'} | Sortie: ${p.heureSortie || '--'} (${hours.toFixed(1)}h)`;
+                        tooltip = \`Retard - Entrée: \${p.heureEntree || '--'} | Sortie: \${p.heureSortie || '--'} (\${hours.toFixed(1)}h)\`;
                         cellText = 'R';
                       } else if (p.statut === 'absent') {
                         bgClass = "bg-rose-100 text-rose-600";
@@ -247,7 +292,7 @@ export default function AgendaPresence({ employes, presences }: Props) {
                     return (
                       <td key={day} className="p-1.5 text-center">
                         <div 
-                          className={`w-6 h-6 mx-auto rounded-md flex items-center justify-center text-[10px] font-bold cursor-pointer transition-transform hover:scale-110 ${bgClass}`}
+                          className={\`w-6 h-6 mx-auto rounded-md flex items-center justify-center text-[10px] font-bold cursor-pointer transition-transform hover:scale-110 \${bgClass}\`}
                           title={tooltip}
                         >
                           {cellText}
@@ -256,9 +301,9 @@ export default function AgendaPresence({ employes, presences }: Props) {
                     );
                   })}
 
-                  <td className="p-3 text-center group-hover:bg-slate-50 transition-colors">
+                  <td className="p-3 text-center">
                     <span className="inline-block px-3 py-1 bg-slate-900 text-white font-black rounded-lg text-xs">
-                      {totalHours.toFixed(1)}h
+                      {totalMonthHours.toFixed(1)}h
                     </span>
                   </td>
                 </tr>
@@ -270,3 +315,7 @@ export default function AgendaPresence({ employes, presences }: Props) {
     </div>
   );
 }
+`;
+
+fs.writeFileSync('src/components/AgendaPresence.tsx', content, 'utf8');
+console.log('Successfully applied BEYA CREATIVE rules to AgendaPresence');

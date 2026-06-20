@@ -55,6 +55,7 @@ const PublicMeet      = lazy(() => import('./pages/PublicMeet'));
 const Inbox           = lazy(() => import('./pages/Inbox'));
 const GmailInbox      = lazy(() => import('./pages/GmailInbox'));
 const Tarifs          = lazy(() => import('./pages/Tarifs'));
+const Reglement       = lazy(() => import('./pages/Reglement'));
 
 import { PageLoader } from './components/PageLoader';
 
@@ -430,6 +431,7 @@ function AppContent() {
         <Route path="fournisseurs" element={can('fournisseurs') ? <Fournisseurs /> : <Navigate to="/" replace />} />
         <Route path="performance" element={can('performance') ? <Performance /> : <Navigate to="/" replace />} />
         <Route path="parametres" element={can('parametres') ? <Settings /> : <Navigate to="/" replace />} />
+        <Route path="reglement" element={<Reglement />} />
         
         {/* Shared / Public ERP Routes */}
         <Route path="stocks" element={can('stocks') ? <StockMateriaux /> : <Navigate to="/" replace />} />
