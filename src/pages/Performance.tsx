@@ -6,6 +6,7 @@ import {
 import { Trophy, TrendingUp, Target, Users, Medal } from 'lucide-react';
 import { Employe, PointageEntry, Presence, loadData } from '../types';
 import { useLang } from '../contexts/LangContext';
+import AgendaPresence from '../components/AgendaPresence';
 
 interface EmpStats {
   emp: Employe;
@@ -57,6 +58,7 @@ export default function Performance() {
   const [employes, setEmployes] = useState<Employe[]>([]);
   const [pointages, setPointages] = useState<PointageEntry[]>([]);
   const [presences, setPresences] = useState<Presence[]>([]);
+  const [view, setView] = useState<'production' | 'presence'>('production');
 
   useEffect(() => {
     Promise.all([
