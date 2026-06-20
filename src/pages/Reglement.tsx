@@ -107,22 +107,11 @@ export default function Reglement() {
         </div>
 
         {/* Footer / Stamp area */}
-        <div className="mt-24 flex justify-between items-end relative">
-          <div className="text-sm text-slate-400">
-            وثيقة داخلية - BEYA CREATIVE
-          </div>
-          <div className="text-center relative">
-            <h4 className="text-2xl font-black text-slate-900 mb-2 mr-12">الإدارة:</h4>
-            {/* The Stamp */}
-            <div className="relative">
-              <img 
-                src="/stamp.png" 
-                alt="Cachet Direction" 
-                className="w-80 h-auto opacity-90 rotate-[-5deg] mix-blend-multiply drop-shadow-sm"
-                style={{
-                  filter: 'contrast(1.2) sepia(1) hue-rotate(200deg) saturate(3)'
-                }}
-              />
+        <div className="mt-16 pt-8 border-t border-slate-200">
+          <div className="flex justify-between items-end">
+            <div></div>
+            <div className="text-left w-64 relative">
+              <h3 className="font-bold text-xl mb-12 text-slate-900 border-b-2 border-slate-900 inline-block pb-1">الإدارة:</h3>
             </div>
           </div>
         </div>
