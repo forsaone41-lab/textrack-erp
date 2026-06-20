@@ -8,6 +8,7 @@ import { Employe, PointageEntry, Presence, loadData } from '../types';
 import { useLang } from '../contexts/LangContext';
 import AgendaPresence from '../components/AgendaPresence';
 import { isWorkingDay } from '../utils/beyaRules';
+import { PageLoader } from '../components/PageLoader';
 
 interface EmpStats {
   emp: Employe;
@@ -59,6 +60,7 @@ export default function Performance() {
   const [employes, setEmployes] = useState<Employe[]>([]);
   const [pointages, setPointages] = useState<PointageEntry[]>([]);
   const [presences, setPresences] = useState<Presence[]>([]);
+  const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'production' | 'presence'>('production');
 
   useEffect(() => {
@@ -70,8 +72,13 @@ export default function Performance() {
       setEmployes(emp);
       setPointages(pts);
       setPresences(pres);
+      setLoading(false);
     });
   }, []);
+
+  if (loading) {
+    return <PageLoader />;
+  }
 
   const stats = calcStats(employes, pointages, presences);
   const top3 = stats.slice(0, 3);
