@@ -126,10 +126,10 @@ export default function ManageOrder() {
           const ref = `${prefix}-${year}-${String(lastNum).padStart(3, '0')}`;
           setForm(prev => ({ 
             ...prev, 
-            reference: ref,
-            statut: isEchantillon ? 'echantillon_en_cours' : 'en_cours',
-            quantite: isEchantillon ? 1 : 0,
-            externalTasks: isST ? [{ id: genId(), type: 'confection', partenaireId: '', details: '', status: 'en_attente', avance: 0, quantite: isEchantillon ? 1 : 0 }] : []
+            reference: prev.reference ? prev.reference : ref,
+            statut: prev.statut || (isEchantillon ? 'echantillon_en_cours' : 'en_cours'),
+            quantite: prev.quantite || (isEchantillon ? 1 : 0),
+            externalTasks: prev.externalTasks && prev.externalTasks.length > 0 ? prev.externalTasks : (isST ? [{ id: genId(), type: 'confection', partenaireId: '', details: '', status: 'en_attente', avance: 0, quantite: isEchantillon ? 1 : 0 }] : [])
           }));
         }
       } catch (e) {
@@ -337,8 +337,12 @@ export default function ManageOrder() {
     return t.couleur.toLowerCase().includes(search) || t.type.toLowerCase().includes(search);
   });
 
-  if (loading && !editId) return <div className="p-20 text-center font-black text-slate-300 animate-pulse uppercase tracking-[0.3em]">Establishing Connection...</div>;
-
+  if (loading && editId) return (
+    <div className="min-h-screen bg-slate-50 p-8 flex flex-col items-center justify-center">
+      <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+      <div className="font-black text-slate-400 uppercase tracking-widest text-xs">Chargement de la commande...</div>
+    </div>
+  );
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
       <div className="bg-white border-b border-slate-200 sticky top-0 z-50">
