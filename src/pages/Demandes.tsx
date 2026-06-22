@@ -1637,8 +1637,18 @@ export default function Demandes() {
                             <UserPlus className="w-4 h-4" /> {isAr ? 'إضافة زبون' : 'Créer Client'}
                           </button>
                         ) : (
-                          <button disabled title={isAr ? "تم إضافته كزبون" : "Ajouté comme Client"}
-                            className="h-9 px-3 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-200 text-[10px] font-black flex items-center gap-1 opacity-80 cursor-default shadow-sm">
+                          <button onClick={() => {
+                            const existingUser = users.find(u => u.nom.toLowerCase() === client.name.toLowerCase() && u.role === 'client');
+                            if (existingUser) {
+                              setNewClientCode({ 
+                                name: existingUser.nom, 
+                                code: existingUser.password || existingUser.pinCode || '', 
+                                email: existingUser.email, 
+                                phone: existingUser.telephone || client.phone 
+                              });
+                            }
+                          }} title={isAr ? "إعادة عرض معلومات الزبون" : "Afficher les accès"}
+                            className="h-9 px-3 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 rounded-xl border border-emerald-200 text-[10px] font-black flex items-center gap-1 transition-all shadow-sm">
                             <CheckCircle className="w-4 h-4" /> {isAr ? 'تمت الإضافة كزبون' : 'Client Ajouté'}
                           </button>
                         )
