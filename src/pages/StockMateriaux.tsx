@@ -140,7 +140,7 @@ export default function StockMateriaux() {
       fournisseurEmail: tForm.fournisseurEmail,
       largeur: tForm.largeur, zone: tForm.zone,
       etagere: tForm.etagere, dateReception: tForm.dateReception,
-      imageUrl: tForm.imageUrl,
+      imageUrl: tForm.imageUrl, client: tForm.client,
     };
     const updated = editTId ? tissus.map(t => t.id === editTId ? item : t) : [...tissus, item];
     setTissus(updated); setShowTModal(false);
@@ -171,7 +171,7 @@ export default function StockMateriaux() {
 
   function openCreateT() {
     setEditTId(null);
-    setTForm({ type: '', couleur: '', metrage: 0, prixMetre: 0, seuilAlerte: 0, metrageTotal: 0 });
+    setTForm({ type: '', couleur: '', metrage: 0, prixMetre: 0, seuilAlerte: 0, metrageTotal: 0, client: '' });
     setShowTModal(true);
   }
 
@@ -498,6 +498,15 @@ export default function StockMateriaux() {
                           <p className="text-xs text-slate-600 font-medium">{roll.fournisseur}</p>
                         </div>
                       )}
+                      
+                      {roll.client && (
+                        <div className="flex items-center gap-2">
+                          <Tag className="w-3.5 h-3.5 text-indigo-400" />
+                          <p className="text-xs text-indigo-700 font-bold bg-indigo-50 px-2 py-0.5 rounded uppercase tracking-tighter">
+                            Réservé: {roll.client}
+                          </p>
+                        </div>
+                      )}
 
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -801,6 +810,7 @@ export default function StockMateriaux() {
                 { label: 'Seuil alerte (m)', key: 'seuilAlerte', type: 'number' },
                 { label: 'Largeur (cm)', key: 'largeur', type: 'number' },
                 { label: 'Fournisseur', key: 'fournisseur', type: 'text' },
+                { label: 'Client (Assigné)', key: 'client', type: 'text' },
                 { label: 'Téléphone Fournisseur', key: 'fournisseurTel', type: 'text' },
                 { label: 'Zone', key: 'zone', type: 'text' },
                 { label: 'Étagère', key: 'etagere', type: 'text' },

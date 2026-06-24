@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, UserPlus, Users, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy, Edit2, Search, Globe, Briefcase } from 'lucide-react';
-import { Lead, loadLeads, loadLeadPhoto, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile, Facture } from '../types';
+import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, UserPlus, Users, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy, Edit2, Search, Globe, Briefcase, CheckCircle2 } from 'lucide-react';
+import { Lead, loadLeads, loadLeadPhoto, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile, Facture, StockTissu } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { generatePDF, generatePDFBlob, printElement } from '../utils/pdf';
 import { sendPushToClient, sendPushToAll } from '../utils/pushNotifications';
@@ -29,6 +29,7 @@ export default function Demandes() {
   const navigate = useNavigate();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [tissus, setTissus] = useState<StockTissu[]>([]);
   const [filter, setFilter] = useState<'all' | 'new' | 'completed'>('all');
   const [category, setCategory] = useState<'clients' | 'recrutement'>('clients');
   const [searchQuery, setSearchQuery] = useState('');
@@ -115,10 +116,12 @@ export default function Demandes() {
     // 2. Refresh from network
     async function refresh() {
       try {
-        const [leadsData, usersData] = await Promise.all([
+        const [leadsData, usersData, tissusData] = await Promise.all([
           loadLeads(),
-          loadData<User>('users')
+          loadData<User>('users'),
+          loadData<StockTissu>('tissus')
         ]);
+        if (tissusData) setTissus(tissusData);
         if (leadsData) {
           let validLeads = (leadsData as Lead[]).filter(l => l && !l.type?.startsWith('__') && !l.name?.startsWith('__'));
           
@@ -203,6 +206,26 @@ export default function Demandes() {
       currentColors.push(color);
     }
     setConfirmDetails({ ...confirmDetails, couleurs: currentColors.join(', ') });
+  };
+
+  const handleAddAchat = async (tissuName: string) => {
+    if (!confirmLead) return;
+    try {
+      const newAchat = {
+        id: genId(),
+        client: confirmLead.name,
+        article: tissuName,
+        quantiteRequise: confirmLead.quantity || 0,
+        unite: 'm',
+        statut: 'a_acheter',
+        dateDemande: new Date().toISOString().split('T')[0],
+        categorie: 'tissus'
+      };
+      await saveRecord('achats', newAchat);
+      alert(isAr ? 'تمت إضافة الثوب للمشتريات (Achats) بنجاح.' : 'Tissu ajouté aux achats avec succès.');
+    } catch (e: any) {
+      alert('Error: ' + e.message);
+    }
   };
 
   const handleConvert = async () => {
@@ -1043,16 +1066,64 @@ export default function Demandes() {
                     className="w-full bg-white border-2 border-slate-100 rounded-xl py-2.5 px-3 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
                   />
                   <datalist id="tissus-list">
-                    <option value="Coton 100%" />
-                    <option value="Molleton / 3 Fils" />
-                    <option value="Jersey" />
-                    <option value="Polyester" />
-                    <option value="Denim / Jean" />
-                    <option value="Lin" />
-                    <option value="Viscose" />
-                    <option value="Gabardine" />
-                    <option value="Toile" />
+                    {tissus.map(t => (
+                      <option key={t.id} value={t.type + (t.couleur && t.couleur !== 'Non spécifié' ? ` - ${t.couleur}` : '')} />
+                    ))}
                   </datalist>
+                  
+                  {confirmDetails.tissu && (() => {
+                    const typeColorMatch = (t: StockTissu) => (t.type + (t.couleur && t.couleur !== 'Non spécifié' ? ` - ${t.couleur}` : '')).toLowerCase() === confirmDetails.tissu.toLowerCase() || t.type.toLowerCase() === confirmDetails.tissu.toLowerCase();
+                    const clientNameLower = confirmLead.name.toLowerCase();
+
+                    // Find if there is stock strictly for THIS client
+                    const clientStock = tissus.find(t => typeColorMatch(t) && t.client && t.client.toLowerCase() === clientNameLower);
+                    
+                    // Find if there is generic stock (no client assigned)
+                    const genericStock = tissus.find(t => typeColorMatch(t) && (!t.client || t.client.trim() === ''));
+
+                    // Find if there is stock assigned to ANOTHER client
+                    const otherClientStock = tissus.find(t => typeColorMatch(t) && t.client && t.client.toLowerCase() !== clientNameLower);
+
+                    if (clientStock) {
+                      return (
+                        <div className="mt-2 p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                          <p className="text-[10px] font-black text-emerald-700">{isAr ? `متوفر في الستوك (ديال هاد الكليان) - الكمية: ${clientStock.metrage}m` : `En stock (Pour ce client) - ${clientStock.metrage}m`}</p>
+                        </div>
+                      );
+                    } else if (genericStock) {
+                      return (
+                        <div className="mt-2 p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                          <p className="text-[10px] font-black text-emerald-700">{isAr ? `متوفر في الستوك العام (شايط عندنا) - الكمية: ${genericStock.metrage}m` : `En stock général (Non réservé) - ${genericStock.metrage}m`}</p>
+                        </div>
+                      );
+                    } else if (otherClientStock) {
+                      return (
+                        <div className="mt-2 p-3 bg-red-50 rounded-xl border border-red-100 flex flex-col gap-3">
+                          <div className="flex items-center gap-2">
+                            <AlertTriangle className="w-4 h-4 text-red-600" />
+                            <p className="text-[10px] font-black text-red-700">{isAr ? `هاد الثوب كاين فالستوك ولكن محجوز لكليان آخر (${otherClientStock.client})` : `Ce tissu est en stock mais réservé pour un autre client (${otherClientStock.client})`}</p>
+                          </div>
+                          <button onClick={() => handleAddAchat(confirmDetails.tissu)} className="self-start px-4 py-2 bg-amber-500 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-amber-600 transition-colors shadow-sm">
+                            {isAr ? 'إضافة إلى المشتريات (Achats)' : 'Ajouter aux achats'}
+                          </button>
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <div className="mt-2 p-3 bg-amber-50 rounded-xl border border-amber-100 flex flex-col gap-3">
+                          <div className="flex items-center gap-2">
+                            <AlertTriangle className="w-4 h-4 text-amber-600" />
+                            <p className="text-[10px] font-black text-amber-700">{isAr ? 'غير متوفر في الستوك (خاصك تشريه)' : 'Non disponible en stock (À acheter)'}</p>
+                          </div>
+                          <button onClick={() => handleAddAchat(confirmDetails.tissu)} className="self-start px-4 py-2 bg-amber-500 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-amber-600 transition-colors shadow-sm">
+                            {isAr ? 'إضافة إلى المشتريات (Achats)' : 'Ajouter aux achats'}
+                          </button>
+                        </div>
+                      );
+                    }
+                  })()}
                 </div>
               </div>
 

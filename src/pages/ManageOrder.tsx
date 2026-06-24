@@ -734,17 +734,26 @@ export default function ManageOrder() {
                 </div>
                 <div className="aspect-[4/3] bg-indigo-50/20 rounded-3xl overflow-hidden border-2 border-indigo-100/30 flex items-center justify-center relative group">
                    {selectedFiche?.patronagePhoto ? (
-                      <div className="w-full h-full flex items-center justify-center p-4">
+                      <div className="w-full h-full flex items-center justify-center p-4 relative">
                          {/* We use an image tag but with a fallback if it's not a valid image (e.g. PDF/DXF) */}
                          <img 
                            src={selectedFiche.patronagePhoto} 
                            className="max-w-full max-h-full object-contain" 
                            onError={(e) => {
-                             // If image fails to load, replace with a file icon
                              (e.target as any).style.display = 'none';
-                             (e.target as any).parentElement.innerHTML = `<div class="flex flex-col items-center text-indigo-300"><svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg><span class="text-[9px] font-black uppercase tracking-widest">Fichier Document</span></div>`;
+                             const fallback = (e.target as any).nextElementSibling;
+                             if (fallback) fallback.style.display = 'flex';
+                           }}
+                           onLoad={(e) => {
+                             (e.target as any).style.display = 'block';
+                             const fallback = (e.target as any).nextElementSibling;
+                             if (fallback) fallback.style.display = 'none';
                            }}
                          />
+                         <div style={{ display: 'none' }} className="flex-col items-center text-indigo-300">
+                           <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                           <span className="text-[9px] font-black uppercase tracking-widest">Fichier Document</span>
+                         </div>
                       </div>
                    ) : (
                       <div className="flex flex-col items-center text-slate-300">

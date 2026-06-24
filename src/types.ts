@@ -167,6 +167,7 @@ export interface StockTissu {
   etagere?: string;
   dateReception?: string;
   imageUrl?: string;
+  client?: string;
 }
 
 export interface StockFourniture {

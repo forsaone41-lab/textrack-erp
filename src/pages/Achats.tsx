@@ -157,6 +157,7 @@ export default function Achats() {
         seuilAlerte: receiveForm.seuilAlerte,
         fournisseur: receiveForm.fournisseur,
         dateReception: dateNow,
+        client: b.client,
       };
       await saveRecord('tissus', newTissu);
     } else {
