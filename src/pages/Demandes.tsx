@@ -1066,8 +1066,11 @@ export default function Demandes() {
                     className="w-full bg-white border-2 border-slate-100 rounded-xl py-2.5 px-3 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
                   />
                   <datalist id="tissus-list">
-                    {tissus.map(t => (
-                      <option key={t.id} value={t.type + (t.couleur && t.couleur !== 'Non spécifié' ? ` - ${t.couleur}` : '')} />
+                    {Array.from(new Set([
+                      'Coton 100%', 'Molleton / 3 Fils', 'Jersey', 'Polyester', 'Denim / Jean', 'Lin', 'Viscose', 'Gabardine', 'Toile', 'Satin', 'Soie', 'Velours', 'Crepe', 'Popeline', 'Lycra',
+                      ...tissus.map(t => t.type + (t.couleur && t.couleur !== 'Non spécifié' ? ` - ${t.couleur}` : ''))
+                    ])).map(val => (
+                      <option key={val} value={val} />
                     ))}
                   </datalist>
                   
