@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Mail, Search, RefreshCw, Clock, MessageSquare, Inbox as InboxIcon, Eye, EyeOff } from 'lucide-react';
+import { Mail, Search, RefreshCw, Clock, MessageSquare, Inbox as InboxIcon, Eye, EyeOff, Plus, X, Send } from 'lucide-react';
 import { supabase } from '../supabase';
 import { useLang } from '../contexts/LangContext';
 
@@ -26,6 +26,17 @@ export default function GmailInbox() {
   const [selected, setSelected] = useState<EmailMessage | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [showHidden, setShowHidden] = useState(false);
+
+  const [showCompose, setShowCompose] = useState(false);
+  const [composeData, setComposeData] = useState({ to: '', subject: '', body: '' });
+
+  const handleSendEmail = (e: React.FormEvent) => {
+    e.preventDefault();
+    const mailtoUrl = `mailto:${composeData.to}?subject=${encodeURIComponent(composeData.subject)}&body=${encodeURIComponent(composeData.body)}`;
+    window.location.href = mailtoUrl;
+    setShowCompose(false);
+    setComposeData({ to: '', subject: '', body: '' });
+  };
 
   const fetchEmails = async () => {
     setRefreshing(true);
@@ -106,6 +117,10 @@ export default function GmailInbox() {
               </div>
             </div>
             <div className="flex gap-1">
+              <button onClick={() => setShowCompose(true)}
+                className="h-8 px-3 flex items-center justify-center rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all mr-2">
+                <Plus className="w-4 h-4 mr-1" /> <span className="text-[10px] font-black uppercase tracking-widest">{isAr ? 'رسالة جديدة' : 'Nouveau'}</span>
+              </button>
               {isAdmin && (
                 <button onClick={() => setShowHidden(!showHidden)}
                   title={showHidden ? 'Voir les emails normaux' : 'Voir les emails masqués'}
@@ -229,6 +244,45 @@ export default function GmailInbox() {
         <div className="hidden md:flex flex-1 items-center justify-center text-slate-300 flex-col gap-3">
           <Eye className="w-12 h-12 opacity-20" />
           <p className="text-sm font-bold">{isAr ? 'اختر رسالة' : 'Sélectionner un email'}</p>
+        </div>
+      )}
+
+      {/* Modal Compose */}
+      {showCompose && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <h2 className="text-sm font-black text-slate-900">{isAr ? 'رسالة جديدة' : 'Nouveau Message'}</h2>
+              <button onClick={() => setShowCompose(false)} className="text-slate-400 hover:text-rose-500 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleSendEmail} className="p-6 space-y-4">
+              <div>
+                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">{isAr ? 'إلى (البريد الإلكتروني)' : 'À (Email)'}</label>
+                <input type="email" required value={composeData.to} onChange={e => setComposeData({...composeData, to: e.target.value})}
+                  className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 transition-all"
+                  placeholder="exemple@email.com" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">{isAr ? 'الموضوع' : 'Objet'}</label>
+                <input type="text" required value={composeData.subject} onChange={e => setComposeData({...composeData, subject: e.target.value})}
+                  className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 transition-all"
+                  placeholder={isAr ? 'موضوع الرسالة' : 'Objet du message'} />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">{isAr ? 'الرسالة' : 'Message'}</label>
+                <textarea required rows={6} value={composeData.body} onChange={e => setComposeData({...composeData, body: e.target.value})}
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-mono outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 transition-all resize-none"
+                  placeholder={isAr ? 'اكتب رسالتك هنا...' : 'Tapez votre message ici...'} />
+              </div>
+              <div className="pt-2">
+                <button type="submit" className="w-full flex items-center justify-center gap-2 py-3 bg-indigo-600 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 transition-all">
+                  {isAr ? 'إرسال' : 'Envoyer'} <Send className="w-4 h-4" />
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
