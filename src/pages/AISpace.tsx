@@ -1133,26 +1133,22 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
                               const url = phone ? `https://wa.me/${phone}?text=${encoded}` : `https://wa.me/?text=${encoded}`;
                               
                               if (image) {
-                                fetch(image)
-                                  .then(res => res.blob())
-                                  .then(blob => {
-                                    navigator.clipboard.write([
-                                      new ClipboardItem({ [blob.type]: blob })
-                                    ]).then(() => {
-                                      setCustomAlert({
-                                        title: isAr ? 'تم نسخ الصورة! 📋' : 'Image copiée ! 📋',
-                                        message: isAr 
-                                          ? 'تم نسخ صورة الموديل. ملي يفتح واتساب، دير "لصق" (Coller) باش تصيفطها مع الرسالة.' 
-                                          : 'L\'image a été copiée. Dans WhatsApp, faites "Coller" pour l\'envoyer avec le message.',
-                                        isError: false,
-                                        onConfirm: () => window.open(url, '_blank')
-                                      });
-                                    }).catch((err) => {
-                                      console.error("Clipboard write failed:", err);
-                                      window.open(url, '_blank');
-                                    });
-                                  })
-                                  .catch(() => window.open(url, '_blank'));
+                                try {
+                                  fetch(image)
+                                    .then(res => res.blob())
+                                    .then(blob => {
+                                      navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]).catch(() => {});
+                                    }).catch(() => {});
+                                } catch (e) {}
+
+                                setCustomAlert({
+                                  title: isAr ? 'خطوة أخيرة! 📋' : 'Dernière étape ! 📋',
+                                  message: isAr 
+                                    ? 'تم نسخ صورة الموديل. ملي يفتح واتساب دير "لصق" (Coller) فالبلاصة ديال الكُتبة باش تصيفطها.' 
+                                    : 'L\'image du modèle a été copiée. Dans WhatsApp, faites "Coller" pour l\'envoyer avec le message.',
+                                  isError: false,
+                                  onConfirm: () => window.open(url, '_blank')
+                                });
                               } else {
                                 window.open(url, '_blank');
                               }
