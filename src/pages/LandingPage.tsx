@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, ShieldCheck, Zap, Users, ArrowRight, MessageCircle, Star, Package, Factory, Globe, Shirt, Scissors, CheckCircle, Image as ImageIcon, X, ChevronDown, Search, LogOut, RotateCw, MapPin } from 'lucide-react';
+import { Play, ShieldCheck, Zap, Users, ArrowRight, MessageCircle, Star, Package, Factory, Globe, Shirt, Scissors, CheckCircle, Image as ImageIcon, X, ChevronDown, Search, LogOut, RotateCw, MapPin, AlertTriangle } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { Link } from 'react-router-dom';
 import { loadCompanyProfile, saveLead, syncCompanyProfile, CompanyProfile } from '../types';
