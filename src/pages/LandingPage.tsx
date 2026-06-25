@@ -470,6 +470,11 @@ export default function LandingPage() {
                     const clientEmail = formData.get('email') as string;
                     const clientVille = formData.get('ville') as string;
 
+                    if (!clientName.trim().includes(' ')) {
+                      alert(isAr ? '⚠️ المرجو إدخال الإسم الكامل (الشخصي والعائلي)' : '⚠️ Veuillez entrer votre nom complet (Prénom et Nom)');
+                      return;
+                    }
+
                     const missingPhoto = models.find(m => !m.photo && (!m.photos || m.photos.length === 0));
                     if (missingPhoto) {
                       alert(isAr ? '⚠️ كل موديل خاصو عندو صورة (إجباري)' : '⚠️ Chaque modèle doit avoir une photo (Obligatoire)');
