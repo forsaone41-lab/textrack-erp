@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, UserPlus, Users, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy, Edit2, Search, Globe, Briefcase, CheckCircle2 } from 'lucide-react';
-import { Lead, loadLeads, loadLeadPhoto, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile, Facture, StockTissu } from '../types';
+import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, UserPlus, Users, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy, Edit2, Search, Globe, Briefcase, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Lead, loadLeads, loadLeadPhoto, loadLeadPhotos, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile, Facture, StockTissu } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { generatePDF, generatePDFBlob, printElement } from '../utils/pdf';
 import { sendPushToClient, sendPushToAll } from '../utils/pushNotifications';
@@ -65,6 +65,8 @@ export default function Demandes() {
   const [pdfProgress, setPdfProgress] = useState<'idle' | 'generating' | 'sharing' | 'done' | 'error'>('idle');
   const [detailsLead, setDetailsLead] = useState<Lead | null>(null);
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
+  const [previewPhotos, setPreviewPhotos] = useState<string[]>([]);
+  const [previewIndex, setPreviewIndex] = useState(0);
   const [aiAnalysisLead, setAiAnalysisLead] = useState<Lead | null>(null);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [lensEnabled, setLensEnabled] = useState(false);
@@ -168,6 +170,40 @@ export default function Demandes() {
   }, []);
 
   const [employes, setEmployes] = useState<any[]>([]);
+
+  const openPhotoPreview = async (lead: Lead, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setPreviewPhotos([]);
+    setPreviewIndex(0);
+    setPreviewPhoto(null);
+    setZoomLevel(1);
+    setLensEnabled(false);
+
+    if (lead.photoCount && lead.photoCount > 1) {
+      const data = await loadLeadPhotos(lead.id);
+      if (data.photos && data.photos.length > 0) {
+        setPreviewPhotos(data.photos);
+        setPreviewPhoto(data.photos[0]);
+      } else if (data.photo) {
+        setPreviewPhotos([data.photo]);
+        setPreviewPhoto(data.photo);
+      }
+      return;
+    }
+
+    if (lead.photo) {
+      setPreviewPhotos([lead.photo]);
+      setPreviewPhoto(lead.photo);
+      return;
+    }
+    
+    const photo = await loadLeadPhoto(lead.id);
+    if (photo) {
+      setPreviewPhotos([photo]);
+      setPreviewPhoto(photo);
+      setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, photo } : l));
+    }
+  };
 
   useEffect(() => {
     loadData<any>('employes').then(data => setEmployes(data || []));
@@ -1356,27 +1392,59 @@ export default function Demandes() {
             </button>
           </div>
 
-          {/* Image */}
-          <div className="overflow-auto w-full h-full flex items-center justify-center p-4 md:p-16 mt-8 md:mt-0" onClick={e => e.stopPropagation()}>
-            <img
-              src={previewPhoto}
-              alt="Model Preview"
-              onMouseMove={(e) => {
-                if (!lensEnabled) return;
-                const rect = e.currentTarget.getBoundingClientRect();
-                const x = ((e.clientX - rect.left) / rect.width) * 100;
-                const y = ((e.clientY - rect.top) / rect.height) * 100;
-                setLensPos({ x, y });
-              }}
-              style={{ 
-                transform: lensEnabled ? 'scale(3)' : `scale(${zoomLevel})`, 
-                transformOrigin: lensEnabled ? `${lensPos.x}% ${lensPos.y}%` : 'center', 
-                transition: lensEnabled ? 'transform 0.1s ease-out' : 'transform 0.2s ease',
-                cursor: lensEnabled ? 'crosshair' : 'zoom-in'
-              }}
-              className="max-w-[95vw] md:max-w-4xl max-h-[70vh] md:max-h-[85vh] object-contain rounded-2xl md:rounded-3xl shadow-2xl ring-1 ring-white/10"
-              onClick={() => !lensEnabled && setZoomLevel(z => z >= 3 ? 1 : z + 0.5)}
-            />
+          {/* Image Container with Nav Buttons */}
+          <div className="relative w-full h-full flex items-center justify-center mt-8 md:mt-0 px-4 md:px-16" onClick={e => e.stopPropagation()}>
+            {previewPhotos.length > 1 && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); const nextIdx = previewIndex === 0 ? previewPhotos.length - 1 : previewIndex - 1; setPreviewIndex(nextIdx); setPreviewPhoto(previewPhotos[nextIdx]); setZoomLevel(1); setLensEnabled(false); }}
+                className="absolute left-2 md:left-8 z-[170] w-10 h-10 md:w-14 md:h-14 bg-white/10 hover:bg-white/30 border border-white/20 rounded-full flex items-center justify-center text-white backdrop-blur-md transition-all hover:scale-110 active:scale-95"
+              >
+                <ChevronLeft className="w-6 h-6 md:w-8 md:h-8" />
+              </button>
+            )}
+
+            <div className="overflow-auto w-full h-full flex items-center justify-center" onClick={e => e.stopPropagation()}>
+              <img
+                src={previewPhoto}
+                alt="Model Preview"
+                onMouseMove={(e) => {
+                  if (!lensEnabled) return;
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = ((e.clientX - rect.left) / rect.width) * 100;
+                  const y = ((e.clientY - rect.top) / rect.height) * 100;
+                  setLensPos({ x, y });
+                }}
+                style={{ 
+                  transform: lensEnabled ? 'scale(3)' : `scale(${zoomLevel})`, 
+                  transformOrigin: lensEnabled ? `${lensPos.x}% ${lensPos.y}%` : 'center', 
+                  transition: lensEnabled ? 'transform 0.1s ease-out' : 'transform 0.2s ease',
+                  cursor: lensEnabled ? 'crosshair' : 'zoom-in'
+                }}
+                className="max-w-[95vw] md:max-w-4xl max-h-[70vh] md:max-h-[85vh] object-contain rounded-2xl md:rounded-3xl shadow-2xl ring-1 ring-white/10"
+                onClick={() => !lensEnabled && setZoomLevel(z => z >= 3 ? 1 : z + 0.5)}
+              />
+            </div>
+
+            {previewPhotos.length > 1 && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); const nextIdx = previewIndex === previewPhotos.length - 1 ? 0 : previewIndex + 1; setPreviewIndex(nextIdx); setPreviewPhoto(previewPhotos[nextIdx]); setZoomLevel(1); setLensEnabled(false); }}
+                className="absolute right-2 md:right-8 z-[170] w-10 h-10 md:w-14 md:h-14 bg-white/10 hover:bg-white/30 border border-white/20 rounded-full flex items-center justify-center text-white backdrop-blur-md transition-all hover:scale-110 active:scale-95"
+              >
+                <ChevronRight className="w-6 h-6 md:w-8 md:h-8" />
+              </button>
+            )}
+
+            {previewPhotos.length > 1 && (
+              <div className="absolute bottom-6 md:bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 z-[170]">
+                {previewPhotos.map((_, idx) => (
+                  <button 
+                    key={idx}
+                    onClick={(e) => { e.stopPropagation(); setPreviewIndex(idx); setPreviewPhoto(previewPhotos[idx]); setZoomLevel(1); setLensEnabled(false); }}
+                    className={`w-2.5 h-2.5 rounded-full transition-all ${idx === previewIndex ? 'bg-white scale-125' : 'bg-white/30 hover:bg-white/50'}`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           <p className="hidden md:block absolute bottom-4 text-white/40 text-[10px] font-bold uppercase tracking-widest">
@@ -1738,15 +1806,16 @@ export default function Demandes() {
                           {/* Photo */}
                           {category !== 'recrutement' && (
                           <div className="flex flex-col items-center gap-1.5 shrink-0">
-                            <div className="relative cursor-pointer group" onClick={async () => {
-                              if (lead.photo) { setPreviewPhoto(lead.photo); return; }
-                              const photo = await loadLeadPhoto(lead.id);
-                              if (photo) { setPreviewPhoto(photo); setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, photo } : l)); }
-                            }}>
+                            <div className="relative cursor-pointer group" onClick={(e) => openPhotoPreview(lead, e)}>
                               <div className="w-14 h-14 bg-slate-50 border border-slate-200 rounded-xl overflow-hidden flex items-center justify-center text-slate-300 shadow-sm relative transition-all group-hover:border-indigo-300 group-hover:shadow-md">
                                 {lead.photo
                                   ? <>
                                       <img src={lead.photo} className="w-full h-full object-cover transition-transform group-hover:scale-110" alt="" loading="lazy" />
+                                      {(lead.photoCount || 0) > 1 && (
+                                        <div className="absolute bottom-0 right-0 bg-black/70 text-white text-[8px] font-black px-1.5 py-0.5 rounded-tl-lg backdrop-blur-sm shadow-sm border-t border-l border-white/10">
+                                          +{(lead.photoCount || 0) - 1}
+                                        </div>
+                                      )}
                                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                         <Eye className="w-5 h-5 text-white" />
                                       </div>
@@ -1756,12 +1825,7 @@ export default function Demandes() {
                               </div>
                             </div>
                             <button 
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                if (lead.photo) { setPreviewPhoto(lead.photo); return; }
-                                const photo = await loadLeadPhoto(lead.id);
-                                if (photo) { setPreviewPhoto(photo); setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, photo } : l)); }
-                              }}
+                              onClick={(e) => openPhotoPreview(lead, e)}
                               className="text-[9px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md hover:bg-indigo-100 transition-colors flex items-center gap-1"
                             >
                               <Eye className="w-3 h-3" />

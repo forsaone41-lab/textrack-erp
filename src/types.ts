@@ -560,6 +560,8 @@ export interface Lead {
   date: string;
   status: 'new' | 'completed';
   photo?: string;
+  photos?: string[];
+  photoCount?: number;
   cv?: string;
   email?: string;
   contactedAt?: string;
@@ -948,7 +950,7 @@ export async function loadLeads(): Promise<Lead[]> {
       const supaIds = new Set(supaData.map((l: any) => l.id));
       // Add leads from localStorage that are NOT in Supabase (missing leads!)
       const missingLocal = localLeads.filter(l => !supaIds.has(l.id) && !deletedIds.includes(l.id));
-      finalData = [...supaData, ...missingLocal.map((l: any) => { const c = {...l}; delete c.photo; return c; })];
+      finalData = [...supaData, ...missingLocal.map((l: any) => { const c = {...l}; delete c.photo; delete c.photos; return c; })];
       // Sync missing leads back to Supabase safely in background
       if (missingLocal.length > 0) {
         console.log(`Recovering ${missingLocal.length} leads missing from Supabase...`);
@@ -963,7 +965,7 @@ export async function loadLeads(): Promise<Lead[]> {
       }
     } else {
       // Supabase failed — use localStorage only
-      finalData = localLeads.map((l: any) => { const c = {...l}; delete c.photo; return c; });
+      finalData = localLeads.map((l: any) => { const c = {...l}; delete c.photo; delete c.photos; return c; });
     }
 
     // Filter deleted
@@ -997,12 +999,24 @@ export async function loadLeadPhoto(leadId: string): Promise<string | null> {
   } catch { return null; }
 }
 
+export async function loadLeadPhotos(leadId: string): Promise<{photo: string | null, photos: string[] | null}> {
+  try {
+    const { data } = await supabase
+      .from('leads')
+      .select('photo, photos')
+      .eq('id', leadId)
+      .single();
+    return { photo: data?.photo || null, photos: data?.photos || null };
+  } catch { return {photo: null, photos: null}; }
+}
+
 export async function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'>) {
   const newLead: Lead = {
     ...lead,
     id: genId(),
     date: new Date().toISOString(),
-    status: 'new'
+    status: 'new',
+    photoCount: lead.photos?.length || (lead.photo ? 1 : 0)
   };
   
   // Save to Supabase (primary) - Use pure INSERT for public users to respect RLS

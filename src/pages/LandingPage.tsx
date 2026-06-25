@@ -156,13 +156,14 @@ export default function LandingPage() {
     tailles: Record<string, string>;
     details: string;
     photo: string | null;
+    photos: string[];
   }
 
   const emptyModel = (): ModelEntry => ({
     id: Math.random().toString(36).slice(2),
     type: 'T-Shirt', customType: '', quantity: '',
     tailles: { XS: '', S: '', M: '', L: '', XL: '', XXL: '' },
-    details: '', photo: null,
+    details: '', photo: null, photos: []
   });
 
   const [models, setModels] = useState<ModelEntry[]>([emptyModel()]);
@@ -195,12 +196,29 @@ export default function LandingPage() {
         else if (h > MAX) { w = w * MAX / h; h = MAX; }
         canvas.width = w; canvas.height = h;
         const ctx = canvas.getContext('2d');
-        if (ctx) { ctx.drawImage(img, 0, 0, w, h); updateModel(id, { photo: canvas.toDataURL('image/jpeg', 0.6) }); }
-        else { updateModel(id, { photo: ev.target?.result as string }); }
+        let newPhoto = '';
+        if (ctx) { ctx.drawImage(img, 0, 0, w, h); newPhoto = canvas.toDataURL('image/jpeg', 0.6); }
+        else { newPhoto = ev.target?.result as string; }
+        
+        setModels(prev => prev.map(m => {
+          if (m.id !== id) return m;
+          const currentPhotos = m.photos || (m.photo ? [m.photo] : []);
+          const newPhotos = [...currentPhotos, newPhoto];
+          return { ...m, photo: newPhotos[0], photos: newPhotos };
+        }));
       };
       img.src = ev.target?.result as string;
     };
     reader.readAsDataURL(file);
+  };
+
+  const removeModelPhoto = (id: string, index: number) => {
+    setModels(prev => prev.map(m => {
+      if (m.id !== id) return m;
+      const currentPhotos = m.photos || (m.photo ? [m.photo] : []);
+      const newPhotos = currentPhotos.filter((_, i) => i !== index);
+      return { ...m, photo: newPhotos.length > 0 ? newPhotos[0] : null, photos: newPhotos };
+    }));
   };
 
   // Dynamic SEO Title & Description
@@ -452,7 +470,7 @@ export default function LandingPage() {
                     const clientEmail = formData.get('email') as string;
                     const clientVille = formData.get('ville') as string;
 
-                    const missingPhoto = models.find(m => !m.photo);
+                    const missingPhoto = models.find(m => !m.photo && (!m.photos || m.photos.length === 0));
                     if (missingPhoto) {
                       alert(isAr ? '⚠️ كل موديل خاصو عندو صورة (إجباري)' : '⚠️ Chaque modèle doit avoir une photo (Obligatoire)');
                       return;
@@ -471,7 +489,8 @@ export default function LandingPage() {
                           quantity: Number(m.quantity) || 1,
                           tailles: Object.fromEntries(Object.entries(m.tailles).filter(([_, v]) => v !== '').map(([k, v]) => [k, Number(v)])),
                           details: m.details,
-                          photo: m.photo!,
+                          photo: m.photos?.[0] || m.photo!,
+                          photos: m.photos || (m.photo ? [m.photo] : []),
                         });
                       }
                       
@@ -605,19 +624,20 @@ export default function LandingPage() {
                           <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">
                             {isAr ? 'صورة الموديل' : 'Photo du Modèle'} <span className="text-rose-500">*</span>
                           </label>
-                          <div className="h-[100px]">
-                            {m.photo ? (
-                              <div className="relative h-full rounded-xl overflow-hidden border-2 border-indigo-200">
-                                <img src={m.photo} className="w-full h-full object-cover" alt="" />
-                                <button type="button" onClick={() => updateModel(m.id, { photo: null })}
-                                  className="absolute top-1.5 right-1.5 p-1 bg-rose-500 text-white rounded-full">
+                          <div className="flex flex-wrap gap-2">
+                            {(m.photos || (m.photo ? [m.photo] : [])).map((p, pIdx) => (
+                              <div key={pIdx} className="relative w-[100px] h-[100px] rounded-xl overflow-hidden border-2 border-indigo-200">
+                                <img src={p} className="w-full h-full object-cover" alt="" />
+                                <button type="button" onClick={() => removeModelPhoto(m.id, pIdx)}
+                                  className="absolute top-1 right-1 p-1 bg-rose-500 text-white rounded-full hover:bg-rose-600 transition-colors shadow-sm">
                                   <X className="w-3 h-3" />
                                 </button>
                               </div>
-                            ) : (
-                              <label className="flex flex-col items-center justify-center h-full w-full bg-white border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-indigo-300 hover:bg-indigo-50 transition-all">
-                                <ImageIcon className="w-7 h-7 text-slate-300 mb-1" />
-                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'أضف صورة' : 'Ajouter photo'}</span>
+                            ))}
+                            {(m.photos || (m.photo ? [m.photo] : [])).length < 5 && (
+                              <label className="flex flex-col items-center justify-center w-[100px] h-[100px] bg-white border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-indigo-300 hover:bg-indigo-50 transition-all shrink-0">
+                                <ImageIcon className="w-6 h-6 text-slate-300 mb-1" />
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center px-1 leading-tight">{isAr ? 'إضافة صورة' : 'Ajouter'}</span>
                                 <input type="file" accept="image/*" onChange={e => handleModelPhoto(m.id, e)} className="hidden" />
                               </label>
                             )}
