@@ -547,6 +547,7 @@ export default function LandingPage() {
                     } catch (err: any) {
                       setIsSending(false);
                       console.error("Error in LandingPage:", err);
+                      setErrorMsg(isAr ? 'وقع خطأ أثناء الإرسال. المرجو التأكد من أن جميع الخانات صحيحة.' : 'Une erreur est survenue lors de l\'envoi. Veuillez réessayer.');
                     }
                   }}
                 >

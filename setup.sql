@@ -67,6 +67,8 @@ BEGIN
     BEGIN ALTER TABLE commandes ADD COLUMN "partenaireId" text; EXCEPTION WHEN duplicate_column THEN END;
     BEGIN ALTER TABLE commandes ADD COLUMN "externalTasks" jsonb; EXCEPTION WHEN duplicate_column THEN END;
     BEGIN ALTER TABLE commandes ADD COLUMN "piecesData" jsonb; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE leads ADD COLUMN "photos" jsonb; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE leads ADD COLUMN "photoCount" numeric; EXCEPTION WHEN duplicate_column THEN END;
 END $$;
 
 CREATE TABLE IF NOT EXISTS stocks (
