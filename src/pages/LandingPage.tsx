@@ -147,6 +147,7 @@ export default function LandingPage() {
 
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   interface ModelEntry {
     id: string;
@@ -184,7 +185,7 @@ export default function LandingPage() {
   const handleModelPhoto = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 10 * 1024 * 1024) { alert(isAr ? 'الصورة كبيرة جداً (Max 10MB)' : 'Photo trop grande (Max 10MB)'); return; }
+    if (file.size > 10 * 1024 * 1024) { setErrorMsg(isAr ? 'الصورة كبيرة جداً (Max 10MB)' : 'Photo trop grande (Max 10MB)'); return; }
     const reader = new FileReader();
     reader.onload = (ev) => {
       const img = new Image();
@@ -248,6 +249,27 @@ export default function LandingPage() {
 
   return (
     <div className={`min-h-screen bg-white relative overflow-hidden ${isAr ? 'font-sans' : ''}`} dir={isAr ? 'rtl' : 'ltr'}>
+      {errorMsg && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setErrorMsg(null)}>
+          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200 border border-slate-100" onClick={e => e.stopPropagation()}>
+            <div className="w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="w-8 h-8" />
+            </div>
+            <h4 className="text-xl font-black text-center text-slate-800 mb-2">
+              {isAr ? 'تنبيه' : 'Attention'}
+            </h4>
+            <p className="text-center text-slate-500 font-medium mb-6">
+              {errorMsg}
+            </p>
+            <button 
+              onClick={() => setErrorMsg(null)}
+              className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold uppercase tracking-widest hover:bg-indigo-600 transition-colors active:scale-95"
+            >
+              {isAr ? 'حسناً' : 'OK'}
+            </button>
+          </div>
+        </div>
+      )}
       {/* Success Modal */}
       {showSuccess && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-300">
@@ -471,13 +493,13 @@ export default function LandingPage() {
                     const clientVille = formData.get('ville') as string;
 
                     if (!clientName.trim().includes(' ')) {
-                      alert(isAr ? '⚠️ المرجو إدخال الإسم الكامل (الشخصي والعائلي)' : '⚠️ Veuillez entrer votre nom complet (Prénom et Nom)');
+                      setErrorMsg(isAr ? 'المرجو إدخال الإسم الكامل (الشخصي والعائلي)' : 'Veuillez entrer votre nom complet (Prénom et Nom)');
                       return;
                     }
 
                     const missingPhoto = models.find(m => !m.photo && (!m.photos || m.photos.length === 0));
                     if (missingPhoto) {
-                      alert(isAr ? '⚠️ كل موديل خاصو عندو صورة (إجباري)' : '⚠️ Chaque modèle doit avoir une photo (Obligatoire)');
+                      setErrorMsg(isAr ? 'كل موديل خاصو عندو صورة (إجباري)' : 'Chaque modèle doit avoir une photo (Obligatoire)');
                       return;
                     }
 
