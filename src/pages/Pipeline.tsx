@@ -386,8 +386,8 @@ export default function Pipeline() {
               </div>
 
               {/* Price + confirmed toggle */}
-              <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">{isAr ? 'السعر (درهم)' : 'Prix proposé (DH)'}</label>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3">
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'السعر (درهم)' : 'Prix proposé (DH)'}</label>
                 <div className="flex gap-2 items-center">
                   <input type="number" value={editForm.crmPrice || ''} onChange={(e) => setEditForm({ ...editForm, crmPrice: Number(e.target.value) })}
                     placeholder="0" className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-2 focus:ring-indigo-500/20" />
@@ -397,13 +397,52 @@ export default function Pipeline() {
                     className={`shrink-0 flex items-center gap-2 px-3 py-2.5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${
                       editForm.crmPriceConfirmed
                         ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
-                        : 'bg-slate-50 border-slate-200 text-slate-400'
+                        : 'bg-white border-slate-200 text-slate-400'
                     }`}
                   >
                     <CheckCircle className={`w-4 h-4 ${editForm.crmPriceConfirmed ? 'text-emerald-500' : 'text-slate-300'}`} />
                     {editForm.crmPriceConfirmed ? (isAr ? 'مقبول ✓' : 'Accepté ✓') : (isAr ? 'بانتظار' : 'En attente')}
                   </button>
                 </div>
+                
+                <button
+                    type="button"
+                    onClick={() => {
+                        let msg = isAr 
+                            ? `مرحباً بك أستاذ(ة) *${selectedLead.name}* 👋\n\nنشكرك على تواصلك مع *BEYA CREATIVE* 🇲🇦.\nهذا تلخيص للطلبية ديالك باش نأكدوها:\n\n`
+                            : `Bonjour M./Mme *${selectedLead.name}* 👋\n\nMerci d'avoir contacté *BEYA CREATIVE* 🇲🇦.\nVoici le récapitulatif de votre commande pour confirmation :\n\n`;
+
+                        msg += isAr ? `📦 *المنتوج:* ${selectedLead.type}\n` : `📦 *Produit :* ${selectedLead.type}\n`;
+                        msg += isAr ? `🔢 *الكمية:* ${selectedLead.quantity} قطعة\n` : `🔢 *Quantité :* ${selectedLead.quantity} pièces\n`;
+                        
+                        if (editForm.crmPrice) {
+                            msg += isAr ? `💰 *السعر الإجمالي:* ${editForm.crmPrice} درهم\n` : `💰 *Prix total :* ${editForm.crmPrice} MAD\n`;
+                            const avance = (editForm.crmPrice * 0.5).toFixed(2);
+                            msg += isAr ? `💳 *التسبيق المطلوب (50%):* ${avance} درهم\n` : `💳 *Avance requise (50%) :* ${avance} MAD\n`;
+                        }
+
+                        if (editForm.crmRdvDate) {
+                            const d = new Date(editForm.crmRdvDate).toLocaleString();
+                            msg += isAr ? `📅 *موعدنا:* ${d}\n` : `📅 *Notre RDV :* ${d}\n`;
+                        }
+
+                        msg += isAr 
+                            ? `\n🏦 *المعلومات البنكية (RIB):*\nالشركة: BEYA CREATIVE\nبنك: [اسم البنك]\nRIB: [رقم الحساب]\n\nالمرجو تأكيد الطلب بإرسال صورة التحويل (Reçu) باش نبداو الخدمة إن شاء الله ✨.\n\nتحياتنا!`
+                            : `\n🏦 *Coordonnées Bancaires (RIB):*\nEntreprise : BEYA CREATIVE\nBanque : [Nom de la banque]\nRIB : [Votre RIB]\n\nMerci de confirmer la commande en nous envoyant le reçu du virement pour lancer la production ✨.\n\nCordialement!`;
+
+                        let phone = selectedLead?.phone || '';
+                        if (phone) {
+                            phone = phone.replace(/\D/g, '');
+                            if (phone.startsWith('0')) phone = '212' + phone.substring(1);
+                        }
+                        const encoded = encodeURIComponent(msg);
+                        window.open(phone ? `https://wa.me/${phone}?text=${encoded}` : `https://wa.me/?text=${encoded}`, '_blank');
+                    }}
+                    className="w-full mt-2 py-3 bg-[#25D366] text-white font-bold rounded-xl hover:bg-[#128C7E] transition-colors text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-sm"
+                >
+                    <MessageCircle className="w-4 h-4" />
+                    {isAr ? 'إرسال تأكيد الطلب عبر واتساب' : 'Envoyer Confirmation (WhatsApp)'}
+                </button>
               </div>
 
               {/* Notes */}
