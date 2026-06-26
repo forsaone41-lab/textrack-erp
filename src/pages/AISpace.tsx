@@ -445,8 +445,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
             ]
           }],
           generationConfig: {
-            temperature: 0.3,
-            responseMimeType: "application/json"
+            temperature: 0.3
           }
         })
       });
@@ -466,8 +465,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
               ]
             }],
             generationConfig: {
-              temperature: 0.3,
-              responseMimeType: "application/json"
+              temperature: 0.3
             }
           })
         });
