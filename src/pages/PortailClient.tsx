@@ -65,6 +65,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const lastClientMessageCountRef = React.useRef(0);
   const [viewMesuresFiche, setViewMesuresFiche] = useState<FicheTechnique | null>(null);
   const [showNewOrderModal, setShowNewOrderModal] = useState(false);
+  const [editingDemandeId, setEditingDemandeId] = useState<string | null>(null);
   const [newOrderForm, setNewOrderForm] = useState({
     modele: '',
     quantite: '',
@@ -216,6 +217,13 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     setMesDemandes(prev => prev.filter(m => m.type !== '__MESSAGE__' && m.type !== '__MESSAGE_REPLY__'));
   };
 
+  const handleDeleteDemande = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm(isAr ? 'هل أنت متأكد من حذف هذا الطلب؟' : 'Voulez-vous vraiment supprimer cette demande ?')) return;
+    await deleteRecord('leads', id);
+    setMesDemandes(prev => prev.filter(m => m.id !== id));
+  };
+
   const handleDemandeAnnulation = async () => {
     if (!annulationModal) return;
     setAnnulationSending(true);
@@ -295,7 +303,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
         if (q && parseInt(q) > 0) sizeQuantities[s] = parseInt(q);
       });
 
-      const leadPayload = {
+      const leadPayload: any = {
         name: currentUser.nom,
         email: currentUser.email || '',
         phone: currentUser.telephone || '',
@@ -306,6 +314,10 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
         details: newOrderForm.details,
         tailles: sizeQuantities
       };
+      
+      if (editingDemandeId) {
+         leadPayload.id = editingDemandeId;
+      }
       
       await saveLead(leadPayload);
 
@@ -522,7 +534,17 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                               : 'Suivez vos productions, gérez vos documents et communiquez avec notre équipe en toute simplicité.'}
                        </p>
                        <button 
-                         onClick={() => setShowNewOrderModal(true)}
+                         onClick={() => {
+                           setEditingDemandeId(null);
+                           setNewOrderForm({
+                             modele: '',
+                             quantite: '',
+                             details: '',
+                             photo: null as string | null,
+                             tailles: { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' } as Record<string, string>
+                           });
+                           setShowNewOrderModal(true);
+                         }}
                          className="px-8 py-4 bg-indigo-600 text-white rounded-2xl text-sm font-black uppercase tracking-widest shadow-xl shadow-indigo-500/20 hover:bg-indigo-500 transition-all flex items-center gap-3 mx-auto md:mx-0"
                        >
                          <Plus className="w-5 h-5" />
@@ -756,11 +778,47 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                <span className="text-[10px] font-bold uppercase tracking-widest">{isAr ? 'بدون صورة' : 'Pas de photo'}</span>
                              </div>
                            )}
-                           <div className="absolute top-4 left-4">
+                           <div className="absolute top-4 left-4 flex gap-2">
                              {isAccepted && <span className="px-3 py-1 bg-emerald-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg">{isAr ? 'مقبول ✅' : 'Accepté ✅'}</span>}
                              {isRejected && <span className="px-3 py-1 bg-rose-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg">{isAr ? 'مرفوض ❌' : 'Refusé ❌'}</span>}
                              {isPending && <span className="px-3 py-1 bg-amber-500/90 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg">{isAr ? 'قيد المراجعة ⏳' : 'En attente ⏳'}</span>}
                            </div>
+                           {isPending && (
+                             <div className={`absolute top-4 ${isAr ? 'right-4' : 'right-4'} flex flex-col gap-2 z-10`}>
+                               <button 
+                                 onClick={(e) => {
+                                   e.stopPropagation();
+                                   setEditingDemandeId(d.id);
+                                   let parsedTailles = { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' };
+                                   if (d.tailles) {
+                                      Object.entries(d.tailles).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
+                                   } else if (d.sizes) {
+                                      try {
+                                        const parsed = typeof d.sizes === 'string' ? JSON.parse(d.sizes) : d.sizes;
+                                        Object.entries(parsed).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
+                                      } catch(e) {}
+                                   }
+                                   setNewOrderForm({
+                                     modele: d.type || '',
+                                     quantite: d.quantity?.toString() || '',
+                                     photo: leadPhotos[d.id] || null,
+                                     details: d.details || '',
+                                     tailles: parsedTailles
+                                   });
+                                   setShowNewOrderModal(true);
+                                 }}
+                                 className="w-8 h-8 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-110"
+                               >
+                                 <Sparkles className="w-4 h-4" />
+                               </button>
+                               <button 
+                                 onClick={(e) => handleDeleteDemande(d.id, e)}
+                                 className="w-8 h-8 bg-rose-500 hover:bg-rose-600 text-white rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-110"
+                               >
+                                 <Trash2 className="w-4 h-4" />
+                               </button>
+                             </div>
+                           )}
                          </div>
                          <div className="p-6">
                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">REF: {d.id.substring(0, 8)}</div>
