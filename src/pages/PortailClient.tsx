@@ -2330,15 +2330,15 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       {/* New Order Modal */}
       {showNewOrderModal && (
         <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-[200] p-4" dir={isAr ? 'rtl' : 'ltr'}>
-          <div className="bg-white rounded-[40px] w-full max-w-md overflow-hidden shadow-2xl flex flex-col animate-in zoom-in duration-300">
-            <div className={`p-8 border-b border-slate-100 flex items-center justify-between ${isAr ? 'flex-row-reverse' : ''}`}>
-              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">{isAr ? 'طلب إنتاج جديد' : 'Nouvelle Commande'}</h3>
+          <div className="bg-white rounded-[32px] md:rounded-[40px] w-full max-w-md max-h-[90vh] overflow-hidden shadow-2xl flex flex-col animate-in zoom-in duration-300">
+            <div className={`p-6 md:p-8 border-b border-slate-100 flex items-center justify-between shrink-0 ${isAr ? 'flex-row-reverse' : ''}`}>
+              <h3 className="text-xl md:text-2xl font-black text-slate-900 uppercase tracking-tighter">{isAr ? 'طلب إنتاج جديد' : 'Nouvelle Commande'}</h3>
               <button onClick={() => setShowNewOrderModal(false)} className="text-slate-400 hover:text-slate-900 transition-colors">
                 <X className="w-6 h-6" />
               </button>
             </div>
 
-            <div className="p-8 space-y-6">
+            <div className="p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar flex-1">
               {orderSent ? (
                 <div className="text-center py-10 animate-in fade-in duration-500">
                   <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 mx-auto mb-6">
