@@ -201,7 +201,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
           </div>
 
           {/* Group 2: Commercial */}
-          {(can('demandes') || can('crm') || can('clients') || can('inbox') || can('gmail') || can('tarifs')) && (
+          {(can('demandes') || can('crm') || can('clients') || can('inbox') || can('gmail') || can('tarifs') || can('devis')) && (
             <div className="space-y-1">
               {!collapsed && <SectionTitle title={isAr ? 'التجاري' : 'Commercial'} isAr={isAr} />}
             {can('gmail') && <NavItem to="/gmail-inbox" icon={Mail} label={isAr ? 'البريد الوارد (Gmail)' : 'Boîte Gmail'} />}
@@ -209,6 +209,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
             {can('demandes') && <NavItem to="/demandes" icon={Users} label={isAr ? 'الزبناء المحتملون' : 'Prospects'} />}
             {can('crm') && <NavItem to="/pipeline" icon={PhoneCall} label={isAr ? 'تتبع الزبناء (CRM)' : 'Suivi Prospects'} />}
             {can('demandes') && <NavItem to="/echantillons" icon={Scissors} label={isAr ? 'العينات' : 'Échantillons'} />}
+            {can('devis') && <NavItem to="/devis-pro" icon={FileText} label={isAr ? 'عروض أسعار (PRO)' : 'Devis (PRO)'} pro />}
             {can('clients') && <NavItem to="/clients" icon={UserCheck} label={isAr ? 'قاعدة الزبناء' : 'Clients'} />}
             {can('tarifs') && <NavItem to="/tarifs" icon={Tag} label={isAr ? 'كتالوج الأسعار' : 'Tarifs & Catalogue'} />}
             </div>

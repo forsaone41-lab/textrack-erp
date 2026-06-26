@@ -211,7 +211,7 @@ export default function Devis() {
           </button>
 
           <a
-            href="#/devis/builder"
+            href="#/devis-pro"
             className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl hover:bg-indigo-700 transition text-sm font-semibold shadow-sm"
           >
             <Plus className="w-4 h-4" /> {isAr ? 'إنشاء عرض سعر PRO' : 'Créer un Devis PRO'}

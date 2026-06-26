@@ -419,7 +419,7 @@ function AppContent() {
         {/* Protected Finance Routes */}
         <Route path="factures" element={can('factures') ? <Factures /> : <Navigate to="/" replace />} />
         <Route path="devis" element={can('devis') ? <Devis /> : <Navigate to="/" replace />} />
-        <Route path="devis/builder" element={can('devis') ? <DevisBuilder /> : <Navigate to="/" replace />} />
+        <Route path="devis-pro" element={can('devis') ? <DevisBuilder /> : <Navigate to="/" replace />} />
         <Route path="recus" element={can('recus') ? <Recus /> : <Navigate to="/" replace />} />
         <Route path="prix-marche" element={<PrixMarche />} />
         <Route path="charges" element={can('charges') ? <Charges /> : <Navigate to="/" replace />} />
