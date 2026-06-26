@@ -875,60 +875,56 @@ export default function Demandes() {
                   </div>
 
                   {/* Fabric Type Input */}
-                  <div className="mb-3">
-                    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'نوع الثوب (أو السلعة)' : 'Type de tissu'}</label>
+                  <div className="mb-2">
+                    <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'نوع الثوب (أو السلعة)' : 'Type de tissu'}</label>
                     <input type="text" value={fabricType} onChange={e => setFabricType(e.target.value)} placeholder={isAr ? 'مثال: كريب، قطن، إلخ' : 'Ex: Crêpe, Coton...'}
-                      className="w-full bg-white border-2 border-slate-100 rounded-xl py-2.5 px-3 text-sm font-medium text-slate-900 outline-none focus:border-indigo-400" />
+                      className="w-full bg-slate-50 border border-slate-100 rounded-lg py-2 px-3 text-xs font-medium text-slate-900 outline-none focus:border-indigo-400" />
                   </div>
 
                   {/* Inputs row */}
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2 mb-3">
                     <div>
-                      <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الثوب والسلعة' : 'Matière (MAD)'}</label>
+                      <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'الثوب والسلعة' : 'Matière (MAD)'}</label>
                       <input type="number" value={matierePrice} onChange={e => setMatierePrice(e.target.value)} placeholder="0"
-                        className="w-full bg-white border-2 border-slate-100 rounded-xl py-2.5 px-3 text-base font-black text-slate-900 outline-none focus:border-indigo-400" />
+                        className="w-full bg-slate-50 border border-slate-100 rounded-lg py-2 px-3 text-sm font-black text-slate-900 outline-none focus:border-indigo-400" />
                     </div>
                     <div>
-                      <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'اليد العاملة' : "Main d'œuvre"}</label>
+                      <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'اليد العاملة' : "Main d'œuvre"}</label>
                       <input type="number" value={laborPrice} onChange={e => setLaborPrice(e.target.value)} placeholder="0"
-                        className="w-full bg-white border-2 border-slate-100 rounded-xl py-2.5 px-3 text-base font-black text-slate-900 outline-none focus:border-indigo-400" />
+                        className="w-full bg-slate-50 border border-slate-100 rounded-lg py-2 px-3 text-sm font-black text-slate-900 outline-none focus:border-indigo-400" />
                     </div>
                   </div>
 
                   {/* Total */}
-                  <div className="bg-slate-900 rounded-xl px-4 py-3 text-white flex items-center justify-between">
-                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">{isAr ? 'المجموع التقديري' : 'Total estimé'}</p>
-                    <p className="text-xl font-black">{((Number(matierePrice || 0) + Number(laborPrice || 0)) * (devisMode === 'echantillon' ? 1 : devisLead.quantity)).toLocaleString()} <span className="text-xs">MAD</span></p>
+                  <div className="bg-slate-900 rounded-xl px-4 py-2.5 text-white flex items-center justify-between mb-3 shadow-sm">
+                    <p className="text-[9px] font-black text-white/60 uppercase tracking-widest">{isAr ? 'المجموع التقديري' : 'Total estimé'}</p>
+                    <p className="text-lg font-black">{((Number(matierePrice || 0) + Number(laborPrice || 0)) * (devisMode === 'echantillon' ? 1 : devisLead.quantity)).toLocaleString()} <span className="text-[10px]">MAD</span></p>
                   </div>
 
-                  {/* Action buttons */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <button onClick={() => sendDevis(false)} disabled={!matierePrice && !laborPrice}
-                      className="h-10 bg-slate-100 text-slate-600 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center gap-1.5 disabled:opacity-40">
-                      <MessageSquare className="w-3.5 h-3.5" /> WhatsApp
-                    </button>
+                  {/* Action buttons Grid */}
+                  <div className="grid grid-cols-2 gap-2 mb-2">
                     <button onClick={handleDownloadPDF} disabled={!matierePrice && !laborPrice}
-                      className="h-10 bg-slate-100 text-slate-600 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center gap-1.5 disabled:opacity-40">
-                      <Download className="w-3.5 h-3.5" /> PDF
+                      className="h-9 bg-slate-100 text-slate-700 rounded-lg font-black text-[9px] uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center gap-1.5 disabled:opacity-40">
+                      <Download className="w-3.5 h-3.5" /> {isAr ? 'تحميل PDF' : 'Download PDF'}
+                    </button>
+                    <button onClick={handleSharePDF} disabled={!matierePrice && !laborPrice}
+                      className="h-9 bg-emerald-50 text-emerald-600 rounded-lg font-black text-[9px] uppercase tracking-widest hover:bg-emerald-100 transition-all flex items-center justify-center gap-1.5 disabled:opacity-40">
+                      <FileText className="w-3.5 h-3.5" /> {isAr ? 'مشاركة PDF' : 'Partager PDF'}
+                    </button>
+                    <button onClick={() => sendDevis(false)} disabled={!matierePrice && !laborPrice}
+                      className="h-9 bg-slate-100 text-slate-600 rounded-lg font-black text-[9px] uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center gap-1.5 disabled:opacity-40">
+                      <MessageSquare className="w-3.5 h-3.5" /> {isAr ? 'واتساب (نص)' : 'Texte WhatsApp'}
+                    </button>
+                    <button onClick={handleSendToPortail} disabled={!matierePrice && !laborPrice}
+                      className="h-9 bg-slate-800 text-white rounded-lg font-black text-[9px] uppercase tracking-widest hover:bg-slate-700 transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 shadow-sm">
+                      <Globe className="w-3.5 h-3.5" /> {isAr ? 'للبورتال' : 'Au Portail'}
                     </button>
                   </div>
-
-                  <button onClick={handleSharePDF} disabled={!matierePrice && !laborPrice}
-                    className="w-full h-11 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-40 shadow-lg shadow-emerald-200">
-                    <MessageSquare className="w-4 h-4" /><FileText className="w-4 h-4" />
-                    {isAr ? 'مشاركة PDF مباشرة' : 'Partager PDF direct'}
-                  </button>
-
-                  <button onClick={handleSendToPortail} disabled={!matierePrice && !laborPrice}
-                    className="w-full h-11 bg-gradient-to-r from-slate-700 to-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-40 shadow-lg">
-                    <Globe className="w-4 h-4" />
-                    {isAr ? 'إرسال للبورتال (Devis)' : 'Envoyer au Portail Client'}
-                  </button>
 
                   <button onClick={handleCreateFacture} disabled={!matierePrice && !laborPrice}
-                    className="w-full h-11 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-40 shadow-lg shadow-indigo-200">
+                    className="w-full h-10 mt-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-40 shadow-md shadow-indigo-200">
                     <CheckCircle className="w-4 h-4" />
-                    {isAr ? '✓ قبل العميل ← إنشاء فاتورة' : '✓ Client accepté → Créer Facture'}
+                    {isAr ? '✓ قبول ← إنشاء فاتورة' : '✓ Accepté → Créer Facture'}
                   </button>
                 </>
               )}
