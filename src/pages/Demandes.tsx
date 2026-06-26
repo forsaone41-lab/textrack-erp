@@ -868,12 +868,38 @@ export default function Demandes() {
                     </div>
                   </div>
 
-                  {/* Fabric Type Input */}
+                  {/* Fabric Type / Details Input */}
                   <div className="mb-2">
-                    <label className={`block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 ${isAr ? 'text-right' : ''}`}>{isAr ? 'نوع الثوب (أو السلعة)' : 'Type de tissu'}</label>
-                    <input type="text" value={fabricType} onChange={e => setFabricType(e.target.value)} placeholder={isAr ? 'مثال: كريب، قطن، إلخ' : 'Ex: Crêpe, Coton...'}
+                    <label className={`block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 ${isAr ? 'text-right' : ''}`}>
+                      {isAr ? 'تفاصيل السلعة' : 'Détails Matière'} <span className="text-slate-300 normal-case font-medium">{isAr ? '(اختياري)' : '(Optionnel)'}</span>
+                    </label>
+                    <input type="text" value={fabricType} onChange={e => setFabricType(e.target.value)} placeholder={isAr ? 'اكتب التفاصيل هنا...' : 'Écrivez les détails ici...'}
                       dir={isAr ? 'rtl' : 'ltr'}
                       className={`w-full bg-slate-50 border border-slate-100 rounded-lg py-2 px-3 text-xs font-medium text-slate-900 outline-none focus:border-indigo-400 ${isAr ? 'text-right' : ''}`} />
+                    <div className={`flex flex-wrap gap-1 mt-1.5 ${isAr ? 'flex-row-reverse' : ''}`}>
+                      {(isAr 
+                        ? ['الثوب', 'الخيط', 'الطباعة', 'الطرز', 'اللوازم', 'التغليف']
+                        : ['Tissu', 'Fil', 'Impression', 'Broderie', 'Fournitures', 'Packaging']
+                      ).map(tag => (
+                        <button
+                          key={tag}
+                          onClick={() => {
+                            if (!fabricType.includes(tag)) {
+                              setFabricType(prev => prev ? `${prev} + ${tag}` : tag);
+                            }
+                          }}
+                          className="px-2 py-0.5 bg-slate-100 hover:bg-indigo-100 hover:text-indigo-700 text-slate-500 rounded text-[9px] font-black transition-colors"
+                        >
+                          + {tag}
+                        </button>
+                      ))}
+                      <button 
+                        onClick={() => setFabricType('')}
+                        className="px-2 py-0.5 bg-red-50 hover:bg-red-100 text-red-500 rounded text-[9px] font-black transition-colors"
+                      >
+                        {isAr ? 'مسح' : 'Vider'}
+                      </button>
+                    </div>
                   </div>
 
                   {/* Inputs row */}
