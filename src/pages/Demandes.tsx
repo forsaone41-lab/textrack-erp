@@ -515,9 +515,7 @@ export default function Demandes() {
     saveRecord('leads', updatedLead);
 
     if (!isPDF) {
-      setDevisLead(null);
-      setMatierePrice('');
-      setLaborPrice('');
+      // Intentionally keeping modal open
     }
   };
 
@@ -645,10 +643,6 @@ export default function Demandes() {
     const filename = `Devis_${devisLead.name.replace(/\s/g, '_')}_${new Date().getTime()}`;
     setTimeout(async () => {
       await generatePDF('devis-pdf-template', filename);
-      setDevisLead(null);
-      setMatierePrice('');
-      setLaborPrice('');
-      setFabricType('');
     }, 500);
   };
 
