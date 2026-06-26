@@ -398,7 +398,30 @@ export default function Demandes() {
   const handleSaveEdit = async () => {
     if (!editingLead) return;
     const updatedLead = { ...editingLead, ...editForm };
-    const updatedList = leads.map(l => l.id === editingLead.id ? updatedLead : l);
+    let updatedList = leads.map(l => l.id === editingLead.id ? updatedLead : l);
+    
+    if (editForm.phone || editForm.phone2) {
+      const sameClientLeads = updatedList.filter(l => 
+        l.id !== updatedLead.id && 
+        l.name.toLowerCase() === updatedLead.name.toLowerCase()
+      );
+      
+      for (const l of sameClientLeads) {
+        let changed = false;
+        if (editForm.phone && (!l.phone || l.phone.trim() === '')) {
+          l.phone = editForm.phone;
+          changed = true;
+        }
+        if (editForm.phone2 && (!l.phone2 || l.phone2.trim() === '')) {
+          l.phone2 = editForm.phone2;
+          changed = true;
+        }
+        if (changed) {
+          await saveRecord('leads', l, true);
+        }
+      }
+    }
+
     setLeads(updatedList);
     try {
       await saveRecord('leads', updatedLead, true);

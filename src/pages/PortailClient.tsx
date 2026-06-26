@@ -303,10 +303,14 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
         if (q && parseInt(q) > 0) sizeQuantities[s] = parseInt(q);
       });
 
+      const pastPhone = mesDemandes.find(d => d.phone && d.phone.trim() !== '')?.phone || '';
+      const pastPhone2 = mesDemandes.find(d => d.phone2 && d.phone2.trim() !== '')?.phone2 || '';
+
       const leadPayload: any = {
         name: currentUser.nom,
         email: currentUser.email || '',
-        phone: currentUser.telephone || '',
+        phone: currentUser.telephone || pastPhone,
+        phone2: pastPhone2,
         ville: '',
         type: newOrderForm.modele,
         quantity: parseInt(newOrderForm.quantite),
