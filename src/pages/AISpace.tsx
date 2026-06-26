@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check, Languages } from 'lucide-react';
+import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check, Languages, Maximize2, Minimize2 } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { saveRecord, genId, FicheTechnique, loadLeads, Lead } from '../types';
@@ -67,6 +67,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     { role: 'ai', text: isAr ? 'مرحباً بك في مساحة التحليل. ارفع صورة موديل للبدء في تحليلها.' : 'Bienvenue dans l\'espace d\'analyse. Uploadez une photo de modèle pour commencer.' }
   ]);
   const [msg, setMsg] = useState('');
+  const [isChatMaximized, setIsChatMaximized] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -876,7 +877,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
         {/* Left: Visualization & Analysis */}
-        <div className="lg:col-span-7 space-y-6">
+        <div className={`${isChatMaximized ? 'hidden' : 'lg:col-span-7'} space-y-6`}>
           <div className="bg-white rounded-[40px] border-2 border-slate-50 shadow-sm p-4 md:p-8 h-[400px] lg:h-[550px] flex flex-col relative overflow-hidden group">
             {!image ? (
               <div className="flex-1 flex flex-col items-center justify-center text-slate-300 border-4 border-dashed border-slate-50 rounded-[32px] hover:border-indigo-100 hover:text-indigo-200 transition-all cursor-pointer" onClick={() => fileInputRef.current?.click()}>
@@ -1167,7 +1168,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
         </div>
 
         {/* Right: Chatbot space */}
-        <div className="lg:col-span-5 flex flex-col h-[400px] lg:h-[550px] bg-white rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden border border-slate-100/80">
+        <div className={`${isChatMaximized ? 'lg:col-span-12 lg:h-[800px]' : 'lg:col-span-5 lg:h-[550px]'} flex flex-col h-[400px] bg-white rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden border border-slate-100/80 transition-all duration-300`}>
           
           {/* Subtle top gradient */}
           <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-indigo-50/40 to-transparent pointer-events-none" />
@@ -1187,6 +1188,9 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
               </div>
             </div>
             <div className="flex gap-1.5">
+              <button onClick={() => setIsChatMaximized(!isChatMaximized)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all" title={isChatMaximized ? (isAr ? 'تصغير' : 'Réduire') : (isAr ? 'تكبير' : 'Agrandir')}>
+                {isChatMaximized ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+              </button>
               <button onClick={() => setShowApiKeyModal(true)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all" title="API Key">
                 <Zap className="w-4 h-4" />
               </button>
