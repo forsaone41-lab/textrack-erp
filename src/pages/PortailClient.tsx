@@ -317,9 +317,13 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       
       if (editingDemandeId) {
          leadPayload.id = editingDemandeId;
+         const existing = mesDemandes.find(d => d.id === editingDemandeId);
+         const updatedLead = existing ? { ...existing, ...leadPayload } : leadPayload;
+         await saveRecord('leads', updatedLead);
+         setMesDemandes(prev => prev.map(m => m.id === editingDemandeId ? updatedLead : m));
+      } else {
+         await saveLead(leadPayload);
       }
-      
-      await saveLead(leadPayload);
 
       // Track Facebook Pixel Lead event
       trackPixelEvent('Lead', {
