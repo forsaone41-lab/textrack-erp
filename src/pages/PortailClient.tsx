@@ -856,7 +856,15 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                </div>
 
                <div className="space-y-4 md:space-y-8">
-                 {found.map(cmd => (
+                 {found.length === 0 ? (
+                    <div className="text-center py-20 bg-white rounded-[2rem] border border-slate-100 shadow-sm animate-in fade-in zoom-in duration-500">
+                      <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Package className="w-12 h-12 text-indigo-300" />
+                      </div>
+                      <h3 className="text-2xl font-black text-slate-800 mb-2 uppercase tracking-tight">{isAr ? 'لا توجد طلبيات' : 'Aucune Production'}</h3>
+                      <p className="text-slate-500 max-w-md mx-auto">{isAr ? 'ليس لديك أي طلبيات في طور الإنتاج حالياً. سيتم عرض طلبياتك هنا بمجرد تأكيدها لبدء الخدمة.' : 'Vous n\'avez aucune commande en cours de production pour le moment. Vos commandes apparaîtront ici une fois validées.'}</p>
+                    </div>
+                 ) : found.map(cmd => (
                    <div key={cmd.id} id={`order-card-${cmd.id}`} className="bg-white rounded-xl md:rounded-[3rem] border border-slate-100 shadow-lg shadow-slate-200/40 overflow-hidden group transition-all duration-500 hover:shadow-indigo-100">
                       {/* PRO Gradient Header */}
                       <div className="p-3 md:p-8 bg-gradient-to-r from-slate-900 via-indigo-950 to-indigo-900 text-white flex flex-col md:flex-row items-center justify-between gap-3 md:gap-8 relative overflow-hidden text-center md:text-left">
