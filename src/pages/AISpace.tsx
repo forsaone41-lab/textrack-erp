@@ -479,7 +479,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
         } else if (errMsg.includes('limit: 0') || errMsg.includes('Quota exceeded')) {
           throw new Error("⚠️ مفتاحك ماعندو حتى رصيد (Limit: 0). Google كتفرض تفعيل الدفع (Billing) في حساب Google Cloud ديالك باش تقدر تخدم الـ API في المغرب.");
         } else if (errMsg.includes('not found') || errMsg.includes('not supported')) {
-          throw new Error("⚠️ هاد الموديل غير متاح للمفتاح ديالك. تأكد باللي فعلتي الـ API الصحيح في Google Cloud Console.");
+          throw new Error("⚠️ هاد الموديل غير متاح للمفتاح ديالك (" + errMsg + "). تأكد باللي فعلتي الـ API الصحيح.");
         } else if (errMsg.includes('API key not valid')) {
           throw new Error("⚠️ المفتاح (API Key) اللي دخلتي غير صحيح.");
         }
@@ -724,7 +724,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
           } else if (errMsg.includes('limit: 0') || errMsg.includes('Quota exceeded')) {
             aiText = "⚠️ خطأ في المفتاح (API Key): مفتاحك ماعندو حتى رصيد (Limit: 0). هادشي كيوقع حيت Google كتفرض تفعيل الدفع (Billing) في حساب Google Cloud ديالك باش تقدر تخدم الـ API في المغرب.";
           } else if (errMsg.includes('not found') || errMsg.includes('not supported')) {
-            aiText = "⚠️ خطأ في المفتاح: هاد الموديل غير متاح للمفتاح ديالك. تأكد باللي فعلتي الـ API الصحيح.";
+            aiText = "⚠️ خطأ في المفتاح: هاد الموديل غير متاح للمفتاح ديالك (" + errMsg + ").";
           } else if (errMsg.includes('API key not valid')) {
             aiText = "⚠️ خطأ: المفتاح (API Key) اللي دخلتي غير صحيح.";
           } else {
