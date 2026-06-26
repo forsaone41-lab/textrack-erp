@@ -1022,10 +1022,18 @@ export async function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'>) {
   // Save to Supabase (primary) - Use pure INSERT for public users to respect RLS
   const { error } = await supabase.from('leads').insert(newLead);
   if (error) {
-    console.error("Erreur d'insertion lead:", error);
-    throw error;
+    const errMsg = error.message.toLowerCase();
+    if (errMsg.includes('column') || errMsg.includes('not find') || errMsg.includes('schema cache')) {
+      const fallbackLead = { ...newLead as any };
+      const newCols = ['photo', 'adresse', 'notes', 'crmStage', 'crmContactMethod', 'crmRdvDate', 'crmNotes', 'crmPrice', 'crmPriceConfirmed', 'crmPriority', 'preuveClient', 'annulationRaison', 'cv', 'sampleFeedback', 'prixEchantillon', 'phone2', 'contactedBy'];
+      newCols.forEach(col => delete fallbackLead[col]);
+      const { error: retryError } = await supabase.from('leads').insert(fallbackLead);
+      if (retryError) throw retryError;
+    } else {
+      console.error("Erreur d'insertion lead:", error);
+      throw error;
+    }
   }
-  
   // Also save to local (legacy fallback)
   const leads = await loadLeads();
   safeStorage.setItem('textrack_leads', JSON.stringify([newLead, ...leads]));
