@@ -205,11 +205,17 @@ export default function Devis() {
           
           <button
             onClick={() => openCreate('devis')}
-            className="flex items-center gap-2 bg-slate-800 text-white px-4 py-2.5 rounded-xl hover:bg-slate-900 transition text-sm font-semibold shadow-sm "
+            className="flex items-center gap-2 bg-white border border-slate-200 text-slate-600 px-4 py-2.5 rounded-xl hover:bg-slate-50 transition text-sm font-semibold shadow-sm"
           >
-            <Plus className="w-4 h-4" /> Nouveau Devis
+            <Plus className="w-4 h-4" /> {isAr ? 'عرض بسيط' : 'Devis Simple'}
           </button>
-          
+
+          <a
+            href="#/devis/builder"
+            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl hover:bg-indigo-700 transition text-sm font-semibold shadow-sm"
+          >
+            <Plus className="w-4 h-4" /> {isAr ? 'إنشاء عرض سعر PRO' : 'Créer un Devis PRO'}
+          </a>
         </div>
       </div>
 
