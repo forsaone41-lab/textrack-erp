@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Plus, Trash2, Camera, Download, FileText, CheckCircle, Clock } from 'lucide-react';
-import { User, FicheTechnique, loadData, loadCompanyProfile, genId, Facture, saveRecord } from '../types';
+import { FicheTechnique, loadData, loadCompanyProfile, genId, Facture, saveRecord } from '../types';
+import type { User } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
 import { compressImage } from '../utils/image';
