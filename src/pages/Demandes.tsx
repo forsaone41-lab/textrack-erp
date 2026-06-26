@@ -61,6 +61,7 @@ export default function Demandes() {
   const [contactingLeadRequests, setContactingLeadRequests] = useState<Lead[]>([]);
   const [matierePrice, setMatierePrice] = useState<string>('');
   const [laborPrice, setLaborPrice] = useState<string>('');
+  const [fabricType, setFabricType] = useState<string>('');
   const [factureCreated, setFactureCreated] = useState<{numero: string; client: string; montant: number} | null>(null);
   const [pdfProgress, setPdfProgress] = useState<'idle' | 'generating' | 'sharing' | 'done' | 'error'>('idle');
   const [detailsLead, setDetailsLead] = useState<Lead | null>(null);
@@ -647,6 +648,7 @@ export default function Demandes() {
       setDevisLead(null);
       setMatierePrice('');
       setLaborPrice('');
+      setFabricType('');
     }, 500);
   };
 
@@ -753,7 +755,7 @@ export default function Demandes() {
                 </div>
               </div>
               <button
-                onClick={() => { setDevisLead(null); setDevisLeadRequests([]); setModelPrices({}); setMatierePrice(''); setLaborPrice(''); }}
+                onClick={() => { setDevisLead(null); setDevisLeadRequests([]); setModelPrices({}); setMatierePrice(''); setLaborPrice(''); setFabricType(''); }}
                 className="w-8 h-8 bg-white rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all border border-slate-200 shadow-sm"
               >
                 <X className="w-4 h-4" />
@@ -870,6 +872,13 @@ export default function Demandes() {
                       <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">{isAr ? 'ثمن القطعة' : 'Prix/unité'}</p>
                       <p className="text-base font-black text-indigo-600">{Number(matierePrice || 0) + Number(laborPrice || 0)} <span className="text-[10px]">MAD</span></p>
                     </div>
+                  </div>
+
+                  {/* Fabric Type Input */}
+                  <div className="mb-3">
+                    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'نوع الثوب (أو السلعة)' : 'Type de tissu'}</label>
+                    <input type="text" value={fabricType} onChange={e => setFabricType(e.target.value)} placeholder={isAr ? 'مثال: كريب، قطن، إلخ' : 'Ex: Crêpe, Coton...'}
+                      className="w-full bg-white border-2 border-slate-100 rounded-xl py-2.5 px-3 text-sm font-medium text-slate-900 outline-none focus:border-indigo-400" />
                   </div>
 
                   {/* Inputs row */}
@@ -1067,7 +1076,7 @@ export default function Demandes() {
               </div>
             </div>
             <button
-              onClick={() => { setFactureCreated(null); setDevisLead(null); setMatierePrice(''); setLaborPrice(''); }}
+              onClick={() => { setFactureCreated(null); setDevisLead(null); setMatierePrice(''); setLaborPrice(''); setFabricType(''); }}
               className="w-full h-14 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-all"
             >
               {isAr ? 'حسناً' : 'OK'}
@@ -1785,7 +1794,7 @@ export default function Demandes() {
                               const initPrices: Record<string, { matiere: string; labor: string }> = {};
                               requests.forEach(r => { initPrices[r.id] = { matiere: '', labor: '' }; });
                               setModelPrices(initPrices);
-                              setMatierePrice(''); setLaborPrice(''); setDevisMode('commande');
+                              setMatierePrice(''); setLaborPrice(''); setFabricType(''); setDevisMode('commande');
                             }}
                             className="h-9 w-9 rounded-xl flex items-center justify-center border border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all shadow-sm"
                             title={isAr ? 'إنشاء ديفيز لكل الموديلات' : 'Devis tous modèles'}
@@ -2074,7 +2083,7 @@ export default function Demandes() {
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <h2 style={{ fontSize: '24px', fontWeight: 900, margin: 0, color: '#1e1b4b', textTransform: 'uppercase' }}>DEVIS</h2>
+                <h2 style={{ fontSize: '24px', fontWeight: 900, margin: 0, color: '#1e1b4b', textTransform: 'uppercase' }}>DEVIS OFFICIEL</h2>
                 <p style={{ fontSize: '9px', fontWeight: 700, color: '#94a3b8', margin: '2px 0 0' }}>N° {devisNum} — {new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
               </div>
             </div>
@@ -2119,7 +2128,7 @@ export default function Demandes() {
                 <tbody>
                   {Number(matierePrice) > 0 && (
                     <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                      <td style={{ padding: '10px 12px', fontWeight: 800 }}>Tissu & Fournitures</td>
+                      <td style={{ padding: '10px 12px', fontWeight: 800 }}>Tissu & Fournitures {fabricType ? <span style={{color: '#6366f1'}}>({fabricType})</span> : ''}</td>
                       <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600 }}>{currentQuantity}</td>
                       <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600, color: '#64748b' }}>{Number(matierePrice).toFixed(2)}</td>
                       <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 800 }}>{totalMatiere.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</td>
@@ -2137,7 +2146,7 @@ export default function Demandes() {
 
             {/* ===== TOTALS ===== */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 32px 14px' }}>
-              <div style={{ width: '300px' }}>
+              <div style={{ width: '320px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 12px', fontSize: '10px', fontWeight: 700, color: '#64748b', borderBottom: '1px solid #f1f5f9' }}>
                   <span>Prix Unitaire</span>
                   <span style={{ fontWeight: 800 }}>{unitPrice.toFixed(2)} MAD</span>
@@ -2152,34 +2161,79 @@ export default function Demandes() {
                   <span>Sous-total MO</span>
                   <span style={{ fontWeight: 800 }}>{totalLabor.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD</span>
                 </div>
-                <div style={{
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  background: 'linear-gradient(135deg, #312e81, #4f46e5)',
-                  color: 'white', padding: '16px', borderRadius: '12px', marginTop: '8px'
-                }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0f172a', color: 'white', padding: '12px 16px', borderRadius: '12px 12px 0 0', marginTop: '12px' }}>
                   <div>
                     <span style={{ fontSize: '8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px', opacity: 0.7, display: 'block' }}>Total Général</span>
                     <span style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase' }}>TTC</span>
                   </div>
-                  <span style={{ fontSize: '26px', fontWeight: 900, letterSpacing: '-1px' }}>{totalGeneral.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} <span style={{ fontSize: '13px', fontWeight: 800 }}>MAD</span></span>
+                  <span style={{ fontSize: '22px', fontWeight: 900, letterSpacing: '-1px' }}>{totalGeneral.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} <span style={{ fontSize: '12px', fontWeight: 800 }}>MAD</span></span>
+                </div>
+                {/* ACOMPTE 50% HIGHLIGHT */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', padding: '12px 16px', borderRadius: '0 0 12px 12px' }}>
+                  <div>
+                    <span style={{ fontSize: '9px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', display: 'block' }}>Acompte à la commande</span>
+                    <span style={{ fontSize: '8px', fontWeight: 600, opacity: 0.9 }}>50% requis (Pour achat tissu)</span>
+                  </div>
+                  <span style={{ fontSize: '18px', fontWeight: 900 }}>{(totalGeneral * 0.5).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} <span style={{ fontSize: '10px' }}>MAD</span></span>
                 </div>
               </div>
             </div>
 
-            {/* ===== CONDITIONS — CLEAR & READABLE ===== */}
-            <div style={{ margin: '0 32px 12px', padding: '14px 18px', borderRadius: '10px', border: '2px solid #312e81', borderLeft: '6px solid #4f46e5', background: '#fafaff' }}>
-              <p style={{ fontWeight: 900, color: '#1e1b4b', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 8px', borderBottom: '1px solid #e0e7ff', paddingBottom: '6px' }}>📋 Conditions Générales</p>
-              <div style={{ fontSize: '11px', color: '#334155', fontWeight: 600, lineHeight: '2' }}>
-                <p style={{ margin: '0 0 2px' }}><strong style={{ color: '#4f46e5' }}>1.</strong> Ce devis est <strong>valable 15 jours</strong> à compter de la date d'émission.</p>
-                <p style={{ margin: '0 0 2px' }}><strong style={{ color: '#4f46e5' }}>2.</strong> Un <strong>acompte de 50%</strong> est requis à la confirmation de la commande.</p>
-                <p style={{ margin: '0 0 2px' }}><strong style={{ color: '#4f46e5' }}>3.</strong> Le <strong>délai de production</strong> sera confirmé après validation de l'échantillon.</p>
-                <p style={{ margin: 0 }}><strong style={{ color: '#4f46e5' }}>4.</strong> Toute <strong>modification du modèle</strong> après lancement peut entraîner une révision tarifaire.</p>
+            {/* ===== PAGE 2 : CHARTE QUALITE ET PROCESSUS ===== */}
+            <div style={{ pageBreakBefore: 'always', padding: '40px 32px' }}>
+              <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: 900, color: '#1e1b4b', textTransform: 'uppercase', margin: 0 }}>LA CHARTE QUALITÉ BEYA</h2>
+                <p style={{ fontSize: '11px', color: '#4f46e5', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', margin: '6px 0 0' }}>Votre Garantie d'Excellence</p>
+              </div>
+
+              <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', marginBottom: '28px' }}>
+                <p style={{ fontSize: '12px', fontWeight: 600, color: '#334155', lineHeight: '1.6', margin: 0, textAlign: 'justify' }}>
+                  Afin de vous garantir un produit final d'une qualité irréprochable et un service totalement transparent, nous avons mis en place un processus de production strict en 4 étapes. Ce devis fait office de contrat d'engagement entre <strong>{company.name}</strong> et <strong>{devisLead.name}</strong>.
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {/* Etape 1 */}
+                <div style={{ display: 'flex', gap: '16px', background: 'white', border: '1px solid #e2e8f0', borderLeft: '4px solid #4f46e5', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }}>
+                  <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#eef2ff', color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', fontWeight: 900, flexShrink: 0 }}>1</div>
+                  <div>
+                    <h3 style={{ fontSize: '15px', fontWeight: 900, color: '#1e1b4b', margin: '0 0 6px', textTransform: 'uppercase' }}>Accord & Achat Matière</h3>
+                    <p style={{ fontSize: '11px', color: '#475569', margin: 0, lineHeight: '1.6' }}>Le paiement de l'acompte de 50% <strong>({(totalGeneral * 0.5).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD)</strong> valide officiellement la commande. Ce montant est exclusivement dédié à l'achat immédiat de votre tissu {fabricType ? `(${fabricType})` : ''} qui restera stocké en toute sécurité dans nos ateliers.</p>
+                  </div>
+                </div>
+
+                {/* Etape 2 */}
+                <div style={{ display: 'flex', gap: '16px', background: 'white', border: '1px solid #e2e8f0', borderLeft: '4px solid #f59e0b', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }}>
+                  <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#fef3c7', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', fontWeight: 900, flexShrink: 0 }}>2</div>
+                  <div>
+                    <h3 style={{ fontSize: '15px', fontWeight: 900, color: '#1e1b4b', margin: '0 0 6px', textTransform: 'uppercase' }}>Création de l'Échantillon</h3>
+                    <p style={{ fontSize: '11px', color: '#475569', margin: 0, lineHeight: '1.6' }}>Avant de lancer la production globale, notre bureau d'étude confectionne le tout premier prototype (l'Échantillon) avec la plus grande précision. Cet échantillon vous est ensuite envoyé physiquement ou présenté lors d'une session vidéo.</p>
+                  </div>
+                </div>
+
+                {/* Etape 3 */}
+                <div style={{ display: 'flex', gap: '16px', background: 'white', border: '1px solid #e2e8f0', borderLeft: '4px solid #10b981', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }}>
+                  <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#d1fae5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', fontWeight: 900, flexShrink: 0 }}>3</div>
+                  <div>
+                    <h3 style={{ fontSize: '15px', fontWeight: 900, color: '#1e1b4b', margin: '0 0 6px', textTransform: 'uppercase' }}>Validation Client (OK)</h3>
+                    <p style={{ fontSize: '11px', color: '#475569', margin: 0, lineHeight: '1.6' }}>Vous vérifiez la coupe, la qualité du tissu et les finitions de l'échantillon. Nous n'entamons la suite de la production qu'après votre validation officielle et votre feu vert ("OK") explicite. Votre satisfaction totale est primordiale.</p>
+                  </div>
+                </div>
+
+                {/* Etape 4 */}
+                <div style={{ display: 'flex', gap: '16px', background: 'white', border: '1px solid #e2e8f0', borderLeft: '4px solid #3b82f6', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }}>
+                  <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#dbeafe', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', fontWeight: 900, flexShrink: 0 }}>4</div>
+                  <div>
+                    <h3 style={{ fontSize: '15px', fontWeight: 900, color: '#1e1b4b', margin: '0 0 6px', textTransform: 'uppercase' }}>Production Globale</h3>
+                    <p style={{ fontSize: '11px', color: '#475569', margin: 0, lineHeight: '1.6' }}>Une fois l'échantillon validé, la production en série démarre en respectant à 100% la copie conforme de l'échantillon. Le reste du paiement (50%) s'effectue à la livraison finale de la commande.</p>
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* ===== FOOTER ===== */}
-            <div style={{ margin: '0 32px', borderTop: '2px solid #e2e8f0', paddingTop: '10px', textAlign: 'center' }}>
-              <p style={{ fontSize: '9px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 2px' }}>
+            <div style={{ margin: '30px 32px 0', borderTop: '2px solid #e2e8f0', paddingTop: '14px', textAlign: 'center' }}>
+              <p style={{ fontSize: '9px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 3px' }}>
                 Merci de votre confiance — {company.name}
               </p>
               <p style={{ fontSize: '8px', fontWeight: 700, color: '#cbd5e1', margin: 0 }}>
