@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Plus, Trash2, Camera, Download, FileText, CheckCircle, Clock, User as UserIcon } from 'lucide-react';
 import { FicheTechnique, loadData, loadCompanyProfile, genId, Facture, saveRecord } from '../types';
-import type { User } from '../types';
+import type { User, Lead } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
 import { compressImage } from '../utils/image';
@@ -24,10 +24,11 @@ export default function DevisBuilder() {
   const company = loadCompanyProfile();
 
   const [clients, setClients] = useState<User[]>([]);
+  const [leads, setLeads] = useState<Lead[]>([]);
   const [fiches, setFiches] = useState<FicheTechnique[]>([]);
   const [factures, setFactures] = useState<Facture[]>([]);
 
-  const [selectedClient, setSelectedClient] = useState<User | null>(null);
+  const [selectedClient, setSelectedClient] = useState<{id: string, nom: string, telephone: string} | null>(null);
   const [newClientName, setNewClientName] = useState('');
   const [newClientPhone, setNewClientPhone] = useState('');
   
@@ -41,9 +42,11 @@ export default function DevisBuilder() {
     Promise.all([
       loadData<User>('utilisateurs'),
       loadData<FicheTechnique>('fiches_techniques'),
-      loadData<Facture>('factures')
-    ]).then(([users, fchs, facs]) => {
+      loadData<Facture>('factures'),
+      loadData<Lead>('demandes')
+    ]).then(([users, fchs, facs, dmds]) => {
       setClients(users.filter(u => u.role === 'client'));
+      setLeads(dmds);
       setFiches(fchs);
       setFactures(facs);
       
@@ -159,13 +162,33 @@ export default function DevisBuilder() {
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-indigo-500 font-medium"
                   value={selectedClient?.id || ''}
                   onChange={e => {
-                    if (!e.target.value) setSelectedClient(null);
-                    else setSelectedClient(clients.find(c => c.id === e.target.value) || null);
+                    const val = e.target.value;
+                    if (!val) {
+                      setSelectedClient(null);
+                    } else {
+                      const client = clients.find(c => c.id === val);
+                      if (client) setSelectedClient({ id: client.id, nom: client.nom, telephone: client.telephone || '' });
+                      else {
+                        const lead = leads.find(l => l.id === val);
+                        if (lead) setSelectedClient({ id: lead.id, nom: lead.name, telephone: lead.phone });
+                      }
+                    }
                   }}
                   dir={isAr ? 'rtl' : 'ltr'}
                 >
                   <option value="">{isAr ? 'زبون جديد...' : 'Nouveau client...'}</option>
-                  {clients.map(c => <option key={c.id} value={c.id}>{c.nom} ({c.telephone})</option>)}
+                  
+                  {clients.length > 0 && (
+                    <optgroup label={isAr ? 'الزبناء الحاليين' : 'Clients Actuels'}>
+                      {clients.map(c => <option key={c.id} value={c.id}>{c.nom} {c.telephone ? `(${c.telephone})` : ''}</option>)}
+                    </optgroup>
+                  )}
+                  
+                  {leads.length > 0 && (
+                    <optgroup label={isAr ? 'الزبناء المحتملين (Leads)' : 'Prospects (Leads)'}>
+                      {leads.map(l => <option key={l.id} value={l.id}>{l.name} ({l.phone})</option>)}
+                    </optgroup>
+                  )}
                 </select>
               </div>
 
@@ -198,7 +221,7 @@ export default function DevisBuilder() {
             <div className="space-y-6">
               {models.map((model, idx) => (
                 <div key={model.id} className="p-5 border border-slate-200 rounded-2xl bg-slate-50/50 relative group">
-                  <button onClick={() => removeModel(model.id)} className={`absolute top-4 ${isAr ? 'left-4' : 'right-4'} p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition opacity-0 group-hover:opacity-100`}>
+                  <button onClick={() => removeModel(model.id)} className={`absolute -top-3 ${isAr ? '-left-3' : '-right-3'} w-8 h-8 flex items-center justify-center bg-red-100 text-red-600 hover:bg-red-500 hover:text-white rounded-full transition-all shadow-md z-10 border border-red-200`} title={isAr ? 'حذف الموديل' : 'Supprimer'}>
                     <Trash2 className="w-4 h-4" />
                   </button>
                   
