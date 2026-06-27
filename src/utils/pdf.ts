@@ -26,7 +26,10 @@ export function printElement(elementId: string) {
 
   // Clone element, DO NOT strip classes so Tailwind styles remain
   const clone = original.cloneNode(true) as HTMLElement;
-  
+  clone.classList.remove('opacity-0', 'pointer-events-none', '-z-[100]', 'hidden', 'invisible');
+  clone.style.opacity = '1';
+  clone.style.visibility = 'visible';
+  clone.style.display = 'block';  
   // Get all styles from the parent document to inject into iframe
   let stylesHtml = '';
   document.querySelectorAll('style, link[rel="stylesheet"]').forEach(el => {
