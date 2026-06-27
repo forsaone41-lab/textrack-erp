@@ -540,9 +540,42 @@ export default function DevisBuilder() {
           </table>
         </div>
 
-        {/* TOTALS */}
-        <div style={{ display: 'flex', justifyContent: isAr ? 'flex-start' : 'flex-end', margin: '0 32px 14px' }}>
-          <div style={{ width: '320px', direction: isAr ? 'rtl' : 'ltr' }}>
+        {/* CHARTE QUALITE & TOTALS */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', margin: '0 32px 14px', gap: '24px', flexDirection: isAr ? 'row-reverse' : 'row' }}>
+          
+          {/* COMPACT CHARTE QUALITE */}
+          <div style={{ flex: 1, background: '#f8fafc', padding: '16px', borderRadius: '16px', border: '1px solid #e2e8f0', direction: isAr ? 'rtl' : 'ltr' }}>
+             <h3 style={{ fontSize: '11px', fontWeight: 900, color: '#1e1b4b', textTransform: 'uppercase', margin: '0 0 6px 0' }}>
+                {isAr ? 'ميثاق الجودة BEYA' : 'LA CHARTE QUALITÉ BEYA'}
+             </h3>
+             <p style={{ fontSize: '8px', color: '#64748b', margin: '0 0 12px 0', lineHeight: '1.4' }}>
+                {isAr 
+                  ? `نعتمد مسار إنتاج صارم لضمان جودة عالية. هذا العرض يمثل التزاماً مبدئياً. مدة الإنجاز ${delai} يوماً تبدأ بعد دفع التسبيق.`
+                  : `Nous garantissons une qualité irréprochable via un processus strict. Ce devis vaut contrat d'engagement. Délai de réalisation: ${delai} jours après acompte.`}
+             </p>
+             
+             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <div style={{ background: 'white', padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                   <div style={{ fontSize: '9px', fontWeight: 800, color: '#4f46e5', marginBottom: '2px' }}>1. {isAr ? 'التسبيق' : 'Acompte'}</div>
+                   <div style={{ fontSize: '7px', color: '#64748b', lineHeight: '1.3' }}>{isAr ? 'يؤكد الطلب وشراء الثوب' : 'Valide la commande et le tissu'}</div>
+                </div>
+                <div style={{ background: 'white', padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                   <div style={{ fontSize: '9px', fontWeight: 800, color: '#d97706', marginBottom: '2px' }}>2. {isAr ? 'العينة' : 'Échantillon'}</div>
+                   <div style={{ fontSize: '7px', color: '#64748b', lineHeight: '1.3' }}>{isAr ? 'صناعة النموذج الأول للمراجعة' : 'Création du 1er prototype'}</div>
+                </div>
+                <div style={{ background: 'white', padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                   <div style={{ fontSize: '9px', fontWeight: 800, color: '#059669', marginBottom: '2px' }}>3. {isAr ? 'الموافقة' : 'Validation'}</div>
+                   <div style={{ fontSize: '7px', color: '#64748b', lineHeight: '1.3' }}>{isAr ? 'مراجعة وقبول الزبون النهائي' : 'Vérification et feu vert (OK)'}</div>
+                </div>
+                <div style={{ background: 'white', padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                   <div style={{ fontSize: '9px', fontWeight: 800, color: '#2563eb', marginBottom: '2px' }}>4. {isAr ? 'الإنتاج' : 'Production'}</div>
+                   <div style={{ fontSize: '7px', color: '#64748b', lineHeight: '1.3' }}>{isAr ? 'الإنتاج الشامل والتسليم' : 'Production globale et livraison'}</div>
+                </div>
+             </div>
+          </div>
+
+          {/* TOTALS */}
+          <div style={{ width: '300px', direction: isAr ? 'rtl' : 'ltr', flexShrink: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 12px', fontSize: '10px', fontWeight: 700, color: '#64748b', borderBottom: '1px solid #f1f5f9' }}>
               <span>{isAr ? 'مجموع السلعة' : 'Sous-total Matière'}</span>
               <span style={{ fontWeight: 800 }} dir="ltr">{totalMatiere.toLocaleString(isAr ? 'ar-MA' : 'fr-FR', { minimumFractionDigits: 2 })} MAD</span>
@@ -564,76 +597,6 @@ export default function DevisBuilder() {
               <div style={{ textAlign: isAr ? 'right' : 'left' }}>
                 <span style={{ fontSize: '9px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', display: 'block' }}>{isAr ? 'التسبيق المطلوب' : 'Acompte requis'}</span>
                 <span style={{ fontSize: '8px', fontWeight: 600, opacity: 0.9 }}>{isAr ? `${acomptePercent}% لتأكيد الطلب` : `${acomptePercent}% à la commande`}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* PAGE 2 : CHARTE QUALITE ET PROCESSUS */}
-        <div style={{ pageBreakBefore: 'always', padding: '40px 32px', direction: isAr ? 'rtl' : 'ltr' }}>
-          <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: 900, color: '#1e1b4b', textTransform: 'uppercase', margin: 0 }}>{isAr ? 'ميثاق الجودة والعمل' : 'LA CHARTE QUALITÉ BEYA'}</h2>
-            <p style={{ fontSize: '11px', color: '#4f46e5', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', margin: '6px 0 0' }}>{isAr ? 'ضمانكم للتميز والاحترافية' : "Votre Garantie d'Excellence"}</p>
-          </div>
-
-          <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', marginBottom: '28px' }}>
-            <p style={{ fontSize: '12px', fontWeight: 600, color: '#334155', lineHeight: '1.6', margin: 0, textAlign: 'justify' }}>
-              {isAr 
-                ? `لضمان منتوج نهائي بجودة عالية وخدمة شفافة بالكامل، نعتمد على مسار إنتاج صارم يمر عبر 4 مراحل أساسية. يُعتبر هذا العرض بمثابة عقد التزام مبدئي بين ${company.name} و ${clientName || 'الزبون'}. مدة الإنجاز المتفق عليها هي ${delai} يوماً تبدأ من تاريخ دفع التسبيق.`
-                : `Afin de vous garantir un produit final d'une qualité irréprochable et un service totalement transparent, nous avons mis en place un processus de production strict en 4 étapes. Ce devis fait office de contrat d'engagement entre ${company.name} et ${clientName || 'le client'}. Le délai de réalisation convenu est de ${delai} jours à compter du paiement de l'acompte.`}
-            </p>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {/* Etape 1 */}
-            <div style={{ display: 'flex', gap: '16px', background: 'white', border: '1px solid #e2e8f0', borderLeft: isAr ? 'none' : '4px solid #4f46e5', borderRight: isAr ? '4px solid #4f46e5' : 'none', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }}>
-              <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#eef2ff', color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', fontWeight: 900, flexShrink: 0 }}>1</div>
-              <div>
-                <h3 style={{ fontSize: '15px', fontWeight: 900, color: '#1e1b4b', margin: '0 0 6px', textTransform: 'uppercase' }}>{isAr ? 'الموافقة ودفع التسبيق' : 'Accord & Acompte'}</h3>
-                <p style={{ fontSize: '11px', color: '#475569', margin: 0, lineHeight: '1.6' }}>
-                  {isAr 
-                    ? `دفع التسبيق المقدر بـ ${acomptePercent}% يُعتبر موافقة رسمية وتأكيداً للطلب. يتم بعدها مباشرة اقتناء الأثواب والمواد الأولية.`
-                    : `Le paiement de l'acompte de ${acomptePercent}% valide officiellement la commande. Nous procédons ensuite immédiatement à l'achat des matières premières.`}
-                </p>
-              </div>
-            </div>
-
-            {/* Etape 2 */}
-            <div style={{ display: 'flex', gap: '16px', background: 'white', border: '1px solid #e2e8f0', borderLeft: isAr ? 'none' : '4px solid #f59e0b', borderRight: isAr ? '4px solid #f59e0b' : 'none', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }}>
-              <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#fef3c7', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', fontWeight: 900, flexShrink: 0 }}>2</div>
-              <div>
-                <h3 style={{ fontSize: '15px', fontWeight: 900, color: '#1e1b4b', margin: '0 0 6px', textTransform: 'uppercase' }}>{isAr ? 'صناعة العينة (Echantillon)' : "Création de l'Échantillon"}</h3>
-                <p style={{ fontSize: '11px', color: '#475569', margin: 0, lineHeight: '1.6' }}>
-                  {isAr 
-                    ? `نقوم بصناعة العينة الأولى لكل موديل وعرضها عليكم عبر الصور أو الفيديو أو الإرسال الفعلي للتأكد من المقاسات والتفاصيل.`
-                    : `Nous confectionnons le premier prototype pour chaque modèle et vous le présentons (photo, vidéo ou envoi physique) pour validation des mesures et détails.`}
-                </p>
-              </div>
-            </div>
-
-            {/* Etape 3 */}
-            <div style={{ display: 'flex', gap: '16px', background: 'white', border: '1px solid #e2e8f0', borderLeft: isAr ? 'none' : '4px solid #10b981', borderRight: isAr ? '4px solid #10b981' : 'none', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }}>
-              <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#d1fae5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', fontWeight: 900, flexShrink: 0 }}>3</div>
-              <div>
-                <h3 style={{ fontSize: '15px', fontWeight: 900, color: '#1e1b4b', margin: '0 0 6px', textTransform: 'uppercase' }}>{isAr ? 'مصادقة الزبون (OK)' : 'Validation Client (OK)'}</h3>
-                <p style={{ fontSize: '11px', color: '#475569', margin: 0, lineHeight: '1.6' }}>
-                  {isAr 
-                    ? `تقومون بفحص الفصالة، جودة الثوب، والخياطة الخاصة بالعينة. لا ننتقل إلى مرحلة الإنتاج إلا بعد موافقتكم الرسمية وإعطاء الضوء الأخضر (OK). رضاكم التام هو أولوية.`
-                    : `La production en série n'est lancée qu'après votre feu vert et la validation finale explicite des échantillons.`}
-                </p>
-              </div>
-            </div>
-
-            {/* Etape 4 */}
-            <div style={{ display: 'flex', gap: '16px', background: 'white', border: '1px solid #e2e8f0', borderLeft: isAr ? 'none' : '4px solid #3b82f6', borderRight: isAr ? '4px solid #3b82f6' : 'none', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }}>
-              <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#dbeafe', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', fontWeight: 900, flexShrink: 0 }}>4</div>
-              <div>
-                <h3 style={{ fontSize: '15px', fontWeight: 900, color: '#1e1b4b', margin: '0 0 6px', textTransform: 'uppercase' }}>{isAr ? 'الإنتاج الكلي' : 'Production Globale'}</h3>
-                <p style={{ fontSize: '11px', color: '#475569', margin: 0, lineHeight: '1.6' }}>
-                  {isAr 
-                    ? `يبدأ الإنتاج الكلي باحترام تام للعينات المصادق عليها وفي حدود مدة الإنجاز المتفق عليها (${delai} أيام).`
-                    : `La production en série démarre dans le respect total des échantillons validés et dans la limite du délai convenu (${delai} jours).`}
-                </p>
               </div>
             </div>
           </div>
