@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Plus, Trash2, Camera, Download, FileText, CheckCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Search, Plus, Trash2, Camera, Download, FileText, CheckCircle, Clock, User as UserIcon } from 'lucide-react';
 import { FicheTechnique, loadData, loadCompanyProfile, genId, Facture, saveRecord } from '../types';
 import type { User } from '../types';
 import { useLang } from '../contexts/LangContext';
@@ -147,7 +147,7 @@ export default function DevisBuilder() {
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
             <div className={`flex items-center gap-3 mb-6 ${isAr ? 'flex-row-reverse' : ''}`}>
               <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center">
-                <User className="w-5 h-5 text-indigo-600" />
+                <UserIcon className="w-5 h-5 text-indigo-600" />
               </div>
               <h2 className="text-lg font-bold text-slate-800">{isAr ? 'معلومات الزبون' : 'Informations du Client'}</h2>
             </div>
