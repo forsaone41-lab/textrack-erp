@@ -491,7 +491,7 @@ export default function DevisBuilder() {
                 <h3 style={{ fontSize: '15px', fontWeight: 900, color: '#1e1b4b', margin: '0 0 6px', textTransform: 'uppercase' }}>{isAr ? 'مصادقة الزبون (OK)' : 'Validation Client (OK)'}</h3>
                 <p style={{ fontSize: '11px', color: '#475569', margin: 0, lineHeight: '1.6' }}>
                   {isAr 
-                    ? `لا يتم إطلاق الإنتاج الكلي إلا بعد إعطائكم الضوء الأخضر والمصادقة النهائية على العينات.`
+                    ? `تقومون بفحص الفصالة، جودة الثوب، والخياطة الخاصة بالعينة. لا ننتقل إلى مرحلة الإنتاج إلا بعد موافقتكم الرسمية وإعطاء الضوء الأخضر (OK). رضاكم التام هو أولوية.`
                     : `La production en série n'est lancée qu'après votre feu vert et la validation finale explicite des échantillons.`}
                 </p>
               </div>

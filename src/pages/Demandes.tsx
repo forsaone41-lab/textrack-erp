@@ -2245,7 +2245,7 @@ export default function Demandes() {
                     <h3 style={{ fontSize: '15px', fontWeight: 900, color: '#1e1b4b', margin: '0 0 6px', textTransform: 'uppercase' }}>{isAr ? 'مصادقة الزبون (OK)' : 'Validation Client (OK)'}</h3>
                     <p style={{ fontSize: '11px', color: '#475569', margin: 0, lineHeight: '1.6' }}>
                       {isAr 
-                        ? `تقومون بفحص الفصالة، جودة الثوب والتشطيبات الخاصة بالعينة. لا ننتقل إلى مرحلة الإنتاج إلا بعد موافقتكم الرسمية وإعطاء الضوء الأخضر (OK). رضاكم التام هو أولوية.`
+                        ? `تقومون بفحص الفصالة، جودة الثوب، والخياطة الخاصة بالعينة. لا ننتقل إلى مرحلة الإنتاج إلا بعد موافقتكم الرسمية وإعطاء الضوء الأخضر (OK). رضاكم التام هو أولوية.`
                         : `Vous vérifiez la coupe, la qualité du tissu et les finitions de l'échantillon. Nous n'entamons la suite de la production qu'après votre validation officielle et votre feu vert ("OK") explicite. Votre satisfaction totale est primordiale.`}
                     </p>
                   </div>
