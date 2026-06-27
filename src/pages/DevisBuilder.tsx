@@ -113,6 +113,43 @@ export default function DevisBuilder() {
   const clientName = selectedClient ? selectedClient.nom : newClientName;
   const clientPhone = selectedClient ? selectedClient.telephone : newClientPhone;
 
+  const handleShareWhatsApp = () => {
+    if (!clientName || models.length === 0) {
+      alert(isAr ? 'المرجو إضافة زبون وموديلات أولاً' : 'Veuillez ajouter un client et des modèles d\'abord.');
+      return;
+    }
+
+    const greeting = isAr 
+      ? `مرحباً *${clientName}*، معكم *${company.name}*. ✨\n\nإليكم تفاصيل عرض السعر الخاص بطلبكم:\n`
+      : `Bonjour *${clientName}*, ici *${company.name}*. ✨\n\nVoici le devis de votre commande:\n`;
+
+    const modelsText = models.map((m, idx) => {
+      const name = m.name || (isAr ? 'موديل ' : 'Modèle ') + (idx + 1);
+      const totalItem = (m.matierePrice + m.laborPrice) * m.quantity;
+      const pu = (m.matierePrice + m.laborPrice);
+      return `• ${name}: ${m.quantity} pcs × ${pu} MAD = *${totalItem.toLocaleString(isAr ? 'ar-MA' : 'fr-FR')} MAD*`;
+    }).join('\n');
+
+    const totalText = isAr 
+      ? `\n*المجموع العام: ${totalGeneral.toLocaleString('ar-MA')} MAD*`
+      : `\n*Total général: ${totalGeneral.toLocaleString('fr-FR')} MAD*`;
+
+    const footer = isAr 
+      ? `\n\nنحن في خدمتكم! ✨`
+      : `\n\nÀ votre service! ✨`;
+
+    const fullMessage = greeting + modelsText + "\n" + totalText + footer;
+    
+    if (clientPhone) {
+      const whatsappUrl = `https://wa.me/${clientPhone.replace(/\D/g, '')}?text=${encodeURIComponent(fullMessage)}`;
+      window.open(whatsappUrl, '_blank');
+    } else {
+      // Just copy to clipboard if no phone number
+      navigator.clipboard.writeText(fullMessage);
+      alert(isAr ? 'تم نسخ الرسالة للحافظة!' : 'Message copié dans le presse-papiers !');
+    }
+  };
+
   const handleSave = async () => {
     if (!clientName) {
       alert(isAr ? 'المرجو إدخال اسم الزبون' : 'Veuillez saisir le nom du client');
@@ -170,6 +207,9 @@ export default function DevisBuilder() {
           </div>
         </div>
         <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
+          <button onClick={handleShareWhatsApp} className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-600 transition">
+            <MessageCircle className="w-4 h-4" /> {isAr ? 'مشاركة عبر واتساب' : 'Partager via WhatsApp'}
+          </button>
           <button onClick={handleSave} className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition">
             <Download className="w-4 h-4" /> {isAr ? 'حفظ وتحميل PDF' : 'Enregistrer & Télécharger PDF'}
           </button>
