@@ -34,6 +34,26 @@ export default function DevisBuilder() {
   
   const [models, setModels] = useState<ModelItem[]>([]);
   
+  const currentPhone = selectedClient?.telephone || newClientPhone;
+  const currentName = selectedClient?.nom || newClientName;
+  const clientLeads = leads.filter(l => 
+    (currentPhone && l.phone && (l.phone.includes(currentPhone) || currentPhone.includes(l.phone))) ||
+    (currentName && l.name && l.name.toLowerCase() === currentName.toLowerCase())
+  );
+
+  const importLeadAsModel = (lead: Lead) => {
+    const newModel: ModelItem = {
+      id: genId(),
+      name: lead.type || '',
+      image: lead.photo || (lead.photos && lead.photos.length > 0 ? lead.photos[0] : ''),
+      quantity: lead.quantity || 1,
+      matierePrice: 0,
+      laborPrice: 0,
+      fabricType: ''
+    };
+    setModels(prev => [...prev, newModel]);
+  };
+  
   const [delai, setDelai] = useState('15');
   const [acomptePercent, setAcomptePercent] = useState(50);
   const [devisNum, setDevisNum] = useState('');
@@ -201,6 +221,37 @@ export default function DevisBuilder() {
                   <div>
                     <label className={`block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 ${isAr ? 'text-right' : ''}`}>{isAr ? 'رقم الهاتف' : 'Téléphone'}</label>
                     <input type="text" value={newClientPhone} onChange={e => setNewClientPhone(e.target.value)} dir="ltr" className={`w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-indigo-500 ${isAr ? 'text-right' : ''}`} placeholder="+212 6..." />
+                  </div>
+                </div>
+              )}
+
+              {clientLeads.length > 0 && (
+                <div className="mt-6 pt-4 border-t border-slate-100 animate-in fade-in zoom-in-95 duration-300">
+                  <label className={`block text-[11px] font-black text-indigo-600 uppercase tracking-widest mb-3 ${isAr ? 'text-right' : ''}`}>
+                    {isAr ? '✨ طلبات هذا الزبون (انقر لإضافتها للتسعير)' : '✨ Demandes de ce client (Cliquez pour ajouter)'}
+                  </label>
+                  <div className={`flex gap-3 overflow-x-auto pb-2 custom-scrollbar ${isAr ? 'flex-row-reverse' : ''}`}>
+                    {clientLeads.map(lead => (
+                      <button key={lead.id} onClick={() => importLeadAsModel(lead)}
+                        className={`flex items-center gap-3 p-2 pr-4 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 hover:border-indigo-300 hover:shadow-md transition-all whitespace-nowrap group shrink-0 ${isAr ? 'flex-row-reverse pl-4 pr-2' : ''}`}>
+                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-white shrink-0 border border-indigo-100">
+                          {(lead.photo || (lead.photos && lead.photos[0])) ? (
+                            <img src={lead.photo || lead.photos![0]} alt={lead.type} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-indigo-50 text-indigo-300">
+                              <FileText className="w-4 h-4" />
+                            </div>
+                          )}
+                        </div>
+                        <div className={isAr ? 'text-right' : 'text-left'}>
+                          <p className="text-xs font-bold text-indigo-900">{lead.type || 'Modèle'}</p>
+                          <p className="text-[10px] font-bold text-indigo-500">{lead.quantity} pcs</p>
+                        </div>
+                        <div className={`w-6 h-6 rounded-full bg-white shadow-sm text-indigo-600 flex items-center justify-center opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100 transition-all ${isAr ? 'mr-2' : 'ml-2'}`}>
+                          <Plus className="w-4 h-4" />
+                        </div>
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
