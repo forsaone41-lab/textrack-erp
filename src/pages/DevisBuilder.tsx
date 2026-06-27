@@ -4,6 +4,7 @@ import { ArrowLeft, Search, Plus, Trash2, Camera, Download, FileText, CheckCircl
 import { FicheTechnique, loadData, loadCompanyProfile, genId, Facture, saveRecord, loadLeads } from '../types';
 import type { User, Lead } from '../types';
 import { useLang } from '../contexts/LangContext';
+import { PageLoader } from '../components/PageLoader';
 import { t } from '../i18n';
 import { compressImage } from '../utils/image';
 import { printElement } from '../utils/pdf';
@@ -23,6 +24,7 @@ export default function DevisBuilder() {
   const navigate = useNavigate();
   const company = loadCompanyProfile();
 
+  const [loading, setLoading] = useState(true);
   const [clients, setClients] = useState<User[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [fiches, setFiches] = useState<FicheTechnique[]>([]);
@@ -78,6 +80,7 @@ export default function DevisBuilder() {
         .filter(n => !isNaN(n));
       const nextNum = existingNums.length > 0 ? Math.max(...existingNums) + 1 : 1;
       setDevisNum(`${prefix}${String(nextNum).padStart(3, '0')}`);
+      setLoading(false);
     });
   }, []);
 
@@ -144,6 +147,14 @@ export default function DevisBuilder() {
     printElement('devis-builder-pdf');
     navigate('/devis');
   };
+
+  if (loading) {
+    return (
+      <div className={`p-4 md:p-8 space-y-6 max-w-7xl mx-auto pb-32 ${isAr ? 'text-right' : 'text-left'}`}>
+        <PageLoader />
+      </div>
+    );
+  }
 
   return (
     <div className={`p-4 md:p-8 space-y-6 max-w-7xl mx-auto pb-32 animate-in fade-in duration-500 ${isAr ? 'text-right' : 'text-left'}`}>
