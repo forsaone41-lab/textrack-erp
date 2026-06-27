@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Plus, Trash2, Camera, Download, FileText, CheckCircle, Clock, User as UserIcon } from 'lucide-react';
+import { ArrowLeft, Search, Plus, Trash2, Camera, Download, FileText, CheckCircle, Clock, User as UserIcon, Maximize2, X } from 'lucide-react';
 import { FicheTechnique, loadData, loadCompanyProfile, genId, Facture, saveRecord, loadLeads } from '../types';
 import type { User, Lead } from '../types';
 import { useLang } from '../contexts/LangContext';
@@ -25,6 +25,7 @@ export default function DevisBuilder() {
   const company = loadCompanyProfile();
 
   const [loading, setLoading] = useState(true);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [clients, setClients] = useState<User[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [fiches, setFiches] = useState<FicheTechnique[]>([]);
@@ -289,25 +290,32 @@ export default function DevisBuilder() {
                   
                   <div className={`flex flex-col md:flex-row gap-5 ${isAr ? 'flex-row-reverse md:flex-row-reverse' : ''}`}>
                     {/* Image */}
-                    <div className="w-full md:w-32 h-32 bg-white rounded-xl border border-slate-200 overflow-hidden relative flex-shrink-0 flex items-center justify-center group/img">
-                      {model.image ? (
-                        <>
-                          <img src={model.image} alt="Model" className="w-full h-full object-cover" />
-                          <label className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 flex items-center justify-center cursor-pointer transition">
-                            <Camera className="w-6 h-6 text-white" />
+                    <div className="flex flex-col gap-2 shrink-0">
+                      <div className="w-full md:w-32 h-32 bg-white rounded-xl border border-slate-200 overflow-hidden relative flex items-center justify-center group/img">
+                        {model.image ? (
+                          <>
+                            <img src={model.image} alt="Model" className="w-full h-full object-cover" />
+                            <label className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 flex items-center justify-center cursor-pointer transition">
+                              <Camera className="w-6 h-6 text-white" />
+                              <input type="file" accept="image/*" className="hidden" onChange={async e => {
+                                if (e.target.files?.[0]) updateModel(model.id, { image: await compressImage(e.target.files[0]) });
+                              }} />
+                            </label>
+                          </>
+                        ) : (
+                          <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer hover:bg-slate-50 transition">
+                            <Camera className="w-6 h-6 text-slate-300 mb-2" />
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{isAr ? 'صورة' : 'Image'}</span>
                             <input type="file" accept="image/*" className="hidden" onChange={async e => {
                               if (e.target.files?.[0]) updateModel(model.id, { image: await compressImage(e.target.files[0]) });
                             }} />
                           </label>
-                        </>
-                      ) : (
-                        <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer hover:bg-slate-50 transition">
-                          <Camera className="w-6 h-6 text-slate-300 mb-2" />
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{isAr ? 'صورة' : 'Image'}</span>
-                          <input type="file" accept="image/*" className="hidden" onChange={async e => {
-                            if (e.target.files?.[0]) updateModel(model.id, { image: await compressImage(e.target.files[0]) });
-                          }} />
-                        </label>
+                        )}
+                      </div>
+                      {model.image && (
+                        <button onClick={() => setPreviewImage(model.image)} className="w-full flex items-center justify-center gap-1.5 py-1.5 bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors shadow-sm">
+                          <Maximize2 className="w-3 h-3" /> {isAr ? 'تكبير الصورة' : 'Agrandir'}
+                        </button>
                       )}
                     </div>
 
@@ -607,6 +615,18 @@ export default function DevisBuilder() {
           </p>
         </div>
       </div>
+
+      {/* Image Preview Modal */}
+      {previewImage && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setPreviewImage(null)}>
+          <div className="relative max-w-4xl max-h-[90vh] w-full rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setPreviewImage(null)} className="absolute top-4 right-4 w-10 h-10 bg-black/50 hover:bg-rose-500 text-white rounded-full flex items-center justify-center backdrop-blur-md transition-colors z-10">
+              <X className="w-5 h-5" />
+            </button>
+            <img src={previewImage} alt="Preview" className="max-w-full max-h-[90vh] object-contain rounded-xl" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
