@@ -199,10 +199,44 @@ export default function DevisBuilder() {
                       setSelectedClient(null);
                     } else {
                       const client = clients.find(c => c.id === val);
-                      if (client) setSelectedClient({ id: client.id, nom: client.nom, telephone: client.telephone || '' });
-                      else {
-                        const lead = leads.find(l => l.id === val);
-                        if (lead) setSelectedClient({ id: lead.id, nom: lead.name, telephone: lead.phone });
+                      const leadMatch = leads.find(l => l.id === val);
+                      
+                      let newSelectedClient = null;
+                      let phoneToMatch = '';
+                      let nameToMatch = '';
+
+                      if (client) {
+                        newSelectedClient = { id: client.id, nom: client.nom, telephone: client.telephone || '' };
+                        phoneToMatch = client.telephone || '';
+                        nameToMatch = client.nom;
+                      }
+                      else if (leadMatch) {
+                        newSelectedClient = { id: leadMatch.id, nom: leadMatch.name, telephone: leadMatch.phone };
+                        phoneToMatch = leadMatch.phone;
+                        nameToMatch = leadMatch.name;
+                      }
+                      
+                      setSelectedClient(newSelectedClient);
+
+                      // Auto-populate models from leads
+                      if (newSelectedClient) {
+                        const clientLeadsToImport = leads.filter(l => 
+                          (phoneToMatch && l.phone && (l.phone.includes(phoneToMatch) || phoneToMatch.includes(l.phone))) ||
+                          (nameToMatch && l.name && l.name.toLowerCase() === nameToMatch.toLowerCase())
+                        );
+
+                        if (clientLeadsToImport.length > 0) {
+                          const newModels = clientLeadsToImport.map(lead => ({
+                            id: genId(),
+                            name: lead.type || '',
+                            image: lead.photo || (lead.photos && lead.photos.length > 0 ? lead.photos[0] : ''),
+                            quantity: lead.quantity || 1,
+                            matierePrice: 0,
+                            laborPrice: 0,
+                            fabricType: ''
+                          }));
+                          setModels(newModels);
+                        }
                       }
                     }
                   }}
