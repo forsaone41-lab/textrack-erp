@@ -71,6 +71,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
     quantite: '',
     details: '',
     photo: null as string | null,
+    telephone: currentUser?.telephone || '',
     tailles: { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' } as Record<string, string>
   });
   const [sendingOrder, setSendingOrder] = useState(false);
@@ -309,7 +310,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       const leadPayload: any = {
         name: currentUser.nom,
         email: currentUser.email || '',
-        phone: currentUser.telephone || pastPhone,
+        phone: newOrderForm.telephone || currentUser.telephone || pastPhone,
         phone2: pastPhone2,
         ville: '',
         type: newOrderForm.modele,
@@ -346,6 +347,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
           quantite: '', 
           details: '', 
           photo: null,
+          telephone: currentUser?.telephone || pastPhone || '',
           tailles: { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' }
         });
       }, 2000);
@@ -549,6 +551,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                              quantite: '',
                              details: '',
                              photo: null as string | null,
+                             telephone: currentUser?.telephone || '',
                              tailles: { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' } as Record<string, string>
                            });
                            setShowNewOrderModal(true);
@@ -778,8 +781,8 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                      return (
                        <div key={d.id} className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden group">
                          <div className="h-48 bg-slate-100 relative overflow-hidden">
-                           {leadPhotos[d.id] ? (
-                             <img src={leadPhotos[d.id]} alt={d.type} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                           {(d.photo || (d.photos && d.photos.length > 0) || leadPhotos[d.id]) ? (
+                             <img src={d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id]} alt={d.type} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                            ) : (
                              <div className="w-full h-full flex flex-col gap-2 items-center justify-center bg-slate-50 text-slate-300">
                                <Camera className="w-10 h-10" />
@@ -809,8 +812,9 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                    setNewOrderForm({
                                      modele: d.type || '',
                                      quantite: d.quantity?.toString() || '',
-                                     photo: leadPhotos[d.id] || null,
+                                     photo: d.photo || (d.photos && d.photos[0]) || leadPhotos[d.id] || null,
                                      details: d.details || '',
+                                     telephone: d.phone || currentUser?.telephone || '',
                                      tailles: parsedTailles
                                    });
                                    setShowNewOrderModal(true);
@@ -2365,6 +2369,16 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                         value={newOrderForm.modele}
                         onChange={e => setNewOrderForm({...newOrderForm, modele: e.target.value})}
                         placeholder={isAr ? 'مثلاً: قميص بولو' : 'Ex: Polo Shirt'}
+                        className={`w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:border-indigo-600 transition-all ${isAr ? 'text-right' : ''}`}
+                      />
+                    </div>
+                    <div>
+                      <label className={`block text-xs font-black text-slate-500 uppercase tracking-widest mb-2 ${isAr ? 'text-right' : ''}`}>{isAr ? 'رقم الهاتف' : 'TÉLÉPHONE / WHATSAPP'}</label>
+                      <input 
+                        type="tel" 
+                        value={newOrderForm.telephone}
+                        onChange={e => setNewOrderForm({...newOrderForm, telephone: e.target.value})}
+                        placeholder={isAr ? '06XXXXXXXX' : 'Ex: 06XXXXXXXX'}
                         className={`w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:border-indigo-600 transition-all ${isAr ? 'text-right' : ''}`}
                       />
                     </div>
