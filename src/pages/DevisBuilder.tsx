@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Plus, Trash2, Camera, Download, FileText, CheckCircle, Clock, User as UserIcon } from 'lucide-react';
-import { FicheTechnique, loadData, loadCompanyProfile, genId, Facture, saveRecord } from '../types';
+import { FicheTechnique, loadData, loadCompanyProfile, genId, Facture, saveRecord, loadLeads } from '../types';
 import type { User, Lead } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
@@ -43,7 +43,7 @@ export default function DevisBuilder() {
       loadData<User>('utilisateurs'),
       loadData<FicheTechnique>('fiches_techniques'),
       loadData<Facture>('factures'),
-      loadData<Lead>('demandes')
+      loadLeads()
     ]).then(([users, fchs, facs, dmds]) => {
       setClients(users.filter(u => u.role === 'client'));
       setLeads(dmds);
