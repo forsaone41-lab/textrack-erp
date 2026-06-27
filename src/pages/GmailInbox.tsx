@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Mail, Search, RefreshCw, Clock, MessageSquare, Inbox as InboxIcon, Eye, EyeOff, Plus, X, Send } from 'lucide-react';
 import { supabase } from '../supabase';
 import { useLang } from '../contexts/LangContext';
+import { loadCompanyProfile } from '../types';
 
 interface EmailMessage {
   id: string;
@@ -18,6 +19,7 @@ interface EmailMessage {
 
 export default function GmailInbox() {
   const { isAr } = useLang();
+  const company = loadCompanyProfile();
   const isAdmin = (() => { try { return JSON.parse(localStorage.getItem('textrack_auth') || '{}')?.role === 'admin'; } catch { return false; } })();
   const [emails, setEmails] = useState<EmailMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,7 +114,14 @@ export default function GmailInbox() {
                 <InboxIcon className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h1 className="text-sm font-black text-slate-900">{isAr ? 'البريد الوارد' : 'Boîte Gmail'}</h1>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-sm font-black text-slate-900">{isAr ? 'البريد الوارد' : 'Boîte Gmail'}</h1>
+                  {company.email && (
+                    <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200" dir="ltr">
+                      {company.email}
+                    </span>
+                  )}
+                </div>
                 {unreadCount > 0 && <p className="text-[10px] text-indigo-600 font-black">{unreadCount} {isAr ? 'غير مقروء' : 'non lu(s)'}</p>}
               </div>
             </div>
