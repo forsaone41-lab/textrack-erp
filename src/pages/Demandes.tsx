@@ -192,9 +192,10 @@ export default function Demandes() {
       return;
     }
 
-    if (lead.photo) {
-      setPreviewPhotos([lead.photo]);
-      setPreviewPhoto(lead.photo);
+    if (lead.photo || (lead.photos && lead.photos.length > 0)) {
+      const photos = lead.photos && lead.photos.length > 0 ? lead.photos : [lead.photo!];
+      setPreviewPhotos(photos);
+      setPreviewPhoto(photos[0]);
       return;
     }
     
@@ -1857,9 +1858,9 @@ export default function Demandes() {
                           <div className="flex flex-col items-center gap-1.5 shrink-0">
                             <div className="relative cursor-pointer group" onClick={(e) => openPhotoPreview(lead, e)}>
                               <div className="w-14 h-14 bg-slate-50 border border-slate-200 rounded-xl overflow-hidden flex items-center justify-center text-slate-300 shadow-sm relative transition-all group-hover:border-indigo-300 group-hover:shadow-md">
-                                {lead.photo
+                                {(lead.photo || (lead.photos && lead.photos.length > 0))
                                   ? <>
-                                      <img src={lead.photo} className="w-full h-full object-cover transition-transform group-hover:scale-110" alt="" loading="lazy" />
+                                      <img src={lead.photo || lead.photos![0]} className="w-full h-full object-cover transition-transform group-hover:scale-110" alt="" loading="lazy" />
                                       {(lead.photoCount || 0) > 1 && (
                                         <div className="absolute bottom-0 right-0 bg-black/70 text-white text-[8px] font-black px-1.5 py-0.5 rounded-tl-lg backdrop-blur-sm shadow-sm border-t border-l border-white/10">
                                           +{(lead.photoCount || 0) - 1}
@@ -2011,7 +2012,7 @@ export default function Demandes() {
                                 <button onClick={() => setConfirmLead(lead)}
                                   className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-500 hover:text-white transition-all shadow-sm">✓ {isAr ? 'تأكيد' : 'Valider'}</button>
                               )}
-                              {lead.photo && !lead.type.startsWith('RECRUTEMENT:') && (
+                              {(lead.photo || (lead.photos && lead.photos.length > 0)) && !lead.type.startsWith('RECRUTEMENT:') && (
                                 <button onClick={() => setAiAnalysisLead(lead)}
                                   className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-fuchsia-50 text-fuchsia-600 border-fuchsia-200 hover:bg-fuchsia-500 hover:text-white transition-all shadow-sm flex items-center gap-1"
                                   title={isAr ? 'تحليل الموديل واستخراج القياسات' : 'Analyser le modèle et extraire les mesures'}>
