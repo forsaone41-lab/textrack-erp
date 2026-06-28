@@ -234,7 +234,7 @@ export default function AdsLanding() {
             )}
           </div>
           <button onClick={() => { setShowSimulatorModal(true); setSimulatorStep(1); }} className="px-6 py-2.5 bg-slate-900 text-white rounded-full text-sm font-bold shadow-lg hover:bg-indigo-600 hover:shadow-indigo-200 transition-all flex items-center gap-2">
-            احسب التكلفة مجاناً <ChevronRight className="w-4 h-4 rotate-180" />
+            احسب التكلفة واطلب الآن <ChevronRight className="w-4 h-4 rotate-180" />
           </button>
         </div>
       </header>
@@ -257,9 +257,9 @@ export default function AdsLanding() {
               كنوفروا ليك جودة عالمية باش تبني الثقة مع الكليان ديالك، مع إمكانية تجربة السوق بكميات معقولة.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <button onClick={() => document.getElementById('devis')?.scrollIntoView({ behavior: 'smooth' })} className="px-8 py-4 bg-indigo-500 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/30 hover:bg-indigo-400 transition-all hover:scale-105">
+              <button onClick={() => { setShowSimulatorModal(true); setSimulatorStep(1); }} className="px-8 py-4 bg-indigo-500 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/30 hover:bg-indigo-400 transition-all hover:scale-105">
                 <Zap className="w-5 h-5" />
-                احسب تكلفة الإنتاج مجاناً
+                احسب التكلفة وقدم طلبك
               </button>
               <div className="flex items-center gap-4 text-sm font-bold text-slate-400 px-4">
                 <div className="flex -space-x-2 space-x-reverse">
@@ -357,7 +357,7 @@ export default function AdsLanding() {
           <p className="text-slate-400 font-medium text-lg mb-10">استعمل السيميلاطور ديالنا باش تعرف التكلفة التقريبية فـ أقل من دقيقة، وبلا ماتدخل حتى معلومة شخصية!</p>
           <button onClick={() => { setShowSimulatorModal(true); setSimulatorStep(1); }} className="px-8 py-4 bg-indigo-600 text-white rounded-full font-black uppercase tracking-widest shadow-xl shadow-indigo-500/20 hover:bg-indigo-700 hover:scale-105 transition-all flex items-center justify-center gap-3 mx-auto">
             <Zap className="w-5 h-5" />
-            فتح السيميلاطور الآن
+            احسب التكلفة وابدأ الطلب
           </button>
         </div>
       </section>
