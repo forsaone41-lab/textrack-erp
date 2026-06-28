@@ -9,6 +9,8 @@ export default function AdsLanding() {
   const [company, setCompany] = useState<CompanyProfile>(loadCompanyProfile());
   const [isSending, setIsSending] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [totalEstimate, setTotalEstimate] = useState<{min: number, max: number} | null>(null);
+  const [submittedName, setSubmittedName] = useState('');
   const [isAr, setIsAr] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -34,6 +36,43 @@ export default function AdsLanding() {
 
   const updateModel = (id: string, field: Partial<ModelEntry>) => {
     setModels(prev => prev.map(m => m.id === id ? { ...m, ...field } : m));
+  };
+
+  const calculateEstimate = (type: string, qtyStr: string) => {
+    const quantity = parseInt(qtyStr) || 0;
+    if (quantity === 0) return null;
+    
+    let baseMin = 0;
+    let baseMax = 0;
+    
+    switch(type) {
+      case 'T-Shirt': baseMin = 35; baseMax = 45; break;
+      case 'Polo': baseMin = 60; baseMax = 75; break;
+      case 'T-Shirt Oversize': baseMin = 45; baseMax = 60; break;
+      case 'Sweat / Hoodie': baseMin = 120; baseMax = 150; break;
+      case 'Djellaba / Gandoura': baseMin = 150; baseMax = 250; break;
+      case 'Ensemble / Survêtement': baseMin = 180; baseMax = 260; break;
+      case 'Pyjama': baseMin = 80; baseMax = 120; break;
+      case 'Uniforme / Travail': baseMin = 100; baseMax = 180; break;
+      case 'Pantalon': baseMin = 80; baseMax = 130; break;
+      default: return null; // For 'Autre'
+    }
+
+    // Adjust price based on quantity
+    if (quantity < 100) {
+      baseMin *= 1.15;
+      baseMax *= 1.15;
+    } else if (quantity >= 500) {
+      baseMin *= 0.9;
+      baseMax *= 0.9;
+    }
+
+    return {
+      min: Math.round(baseMin),
+      max: Math.round(baseMax),
+      totalMin: Math.round(baseMin * quantity),
+      totalMax: Math.round(baseMax * quantity)
+    };
   };
 
   const updateModelTaille = (id: string, size: string, val: string) => {
@@ -101,14 +140,45 @@ export default function AdsLanding() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 rtl">
-        <div className="bg-white p-8 md:p-12 rounded-[2rem] max-w-md w-full text-center shadow-2xl animate-in fade-in zoom-in duration-500">
-          <div className="w-20 h-20 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 className="w-10 h-10" />
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 rtl font-sans" dir="rtl">
+        <div className="bg-white p-8 md:p-12 rounded-[3rem] max-w-lg w-full text-center shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-500">
+          <div className="w-24 h-24 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
+            <CheckCircle2 className="w-12 h-12" />
           </div>
-          <h2 className="text-2xl font-black text-slate-800 mb-4">تم تسجيل طلبكم بنجاح!</h2>
-          <p className="text-slate-600 mb-8 font-medium">سيتم توجيهكم الآن إلى الواتساب للتواصل المباشر وتأكيد التفاصيل...</p>
-          <Loader2 className="w-8 h-8 text-indigo-500 animate-spin mx-auto" />
+          <h2 className="text-3xl font-black text-slate-800 mb-4">تم تسجيل طلبك بنجاح!</h2>
+          <p className="text-slate-500 mb-8 font-medium text-lg leading-relaxed">
+            مرحباً <span className="font-bold text-slate-800">{submittedName}</span>، شكراً على ثقتك في BEYA CREATIVE. لقد توصلنا بطلبك وسنقوم بدراسته.
+          </p>
+
+          {totalEstimate && (
+            <div className="bg-indigo-50 border-2 border-indigo-100 rounded-2xl p-6 mb-8 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500 opacity-5 rounded-full blur-2xl -mr-10 -mt-10"></div>
+              <p className="text-sm font-bold text-indigo-600 mb-2 uppercase tracking-widest">التكلفة التقديرية الإجمالية</p>
+              <div className="text-3xl font-black text-slate-800 flex items-center justify-center gap-2">
+                <span>{totalEstimate.min.toLocaleString()}</span>
+                <span className="text-slate-400 font-medium text-xl">-</span>
+                <span>{totalEstimate.max.toLocaleString()}</span>
+                <span className="text-sm font-bold text-slate-500 ml-1">درهم</span>
+              </div>
+              <p className="text-[10px] text-indigo-400 mt-3 font-bold">* هذا الثمن تقديري وقد يتغير حسب نوع الثوب والتفاصيل المحددة.</p>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <p className="text-sm font-bold text-slate-600 mb-4">لتسريع العملية والبدء في تصنيع العينة (Échantillon)، يرجى تأكيد الطلب عبر الواتساب:</p>
+            <a 
+              href={`https://wa.me/${company.phone ? company.phone.replace(/\D/g, '') : '212624465962'}?text=${encodeURIComponent(`مرحباً BEYA CREATIVE، لقد سجلت طلبي للتو باسم ${submittedName}. أريد تأكيد الطلب والبدء في العينة. ${totalEstimate ? `(التكلفة التقديرية التي ظهرت لي: ${totalEstimate.min} - ${totalEstimate.max} درهم)` : ''}`)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="w-full py-5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black text-lg transition-all shadow-xl shadow-emerald-200 flex items-center justify-center gap-3"
+            >
+              تأكيد الطلب عبر الواتساب
+              <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+            </a>
+            <a href="/" className="block py-4 text-slate-500 font-bold hover:text-slate-800 transition-colors">
+              العودة إلى الصفحة الرئيسية
+            </a>
+          </div>
         </div>
       </div>
     );
@@ -153,19 +223,19 @@ export default function AdsLanding() {
         <div className="max-w-6xl mx-auto relative z-10 grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-full text-xs font-bold mb-6 backdrop-blur-sm">
-              <Sparkles className="w-4 h-4" /> مصنع خياطة بمعايير عالمية
+              <Sparkles className="w-4 h-4" /> البرنامج الخاص بأصحاب العلامات التجارية والتجارة الإلكترونية
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-[1.1] tracking-tight mb-6">
-              علامتك التجارية تستحق <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">جودة لا تُضاهى.</span>
+              ركز على المبيعات والتسويق، <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">وخلي الإنتاج علينا.</span>
             </h1>
             <p className="text-lg text-slate-300 font-medium leading-relaxed mb-8 max-w-xl">
-              هل تبحث عن مصنع يضمن لك الفصالة المتقنة، الجودة العالية، واحترام وقت التسليم؟ 
-              نحن في <b>BEYA CREATIVE</b> نقدم لك حلاً متكاملاً من الفصالة إلى الإنتاج الشامل.
+              أنت صاحب <b>Brand</b> أو خدام فـ <b>E-commerce</b>؟ مصنع BEYA CREATIVE هو الشريك الاستراتيجي ديالك. 
+              كنوفروا ليك جودة عالمية باش تبني الثقة مع الكليان ديالك، مع إمكانية تجربة السوق بكميات معقولة.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <a href="#devis" className="px-8 py-4 bg-indigo-500 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/30 hover:bg-indigo-400 transition-all hover:scale-105">
-                <Scissors className="w-5 h-5" />
-                طلب عرض سعر الآن
+                <Zap className="w-5 h-5" />
+                احسب تكلفة الإنتاج مجاناً
               </a>
               <div className="flex items-center gap-4 text-sm font-bold text-slate-400 px-4">
                 <div className="flex -space-x-2 space-x-reverse">
@@ -175,7 +245,7 @@ export default function AdsLanding() {
                     </div>
                   ))}
                 </div>
-                <div>+50 علامة تجارية<br/>تثق بنا</div>
+                <div>+50 Brand<br/>بدأت ونجحت معنا</div>
               </div>
             </div>
           </div>
@@ -202,31 +272,53 @@ export default function AdsLanding() {
       <section className="py-20 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-4">لماذا تختار مصنع BEYA CREATIVE؟</h2>
-            <p className="text-slate-500 font-medium max-w-2xl mx-auto">لأننا نفهم مخاوفك، ونوفر لك بيئة عمل شفافة واحترافية.</p>
+            <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-4">ليش كاع الـ Brands كايخدمو معانا؟</h2>
+            <p className="text-slate-500 font-medium max-w-2xl mx-auto">وفرنا ليك البيئة المثالية باش تكبر الـ Brand ديالك بلا مشاكل د الإنتاج.</p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
-              <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-6">
+            <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100 hover:border-indigo-300 transition-colors">
+              <div className="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mb-6">
+                <Sparkles className="w-7 h-7" />
+              </div>
+              <h3 className="text-xl font-black text-slate-800 mb-3">بدا وجرب السوق (Test)</h3>
+              <p className="text-slate-600 font-medium leading-relaxed">كنعرفو باللي باش تطلق Brand جديدة خاصك تجرب. كنعطيوك الفرصة تبدا بكميات صغيرة (100 بياسة) باش تـ Testi المنتوج ديالك.</p>
+            </div>
+            <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100 hover:border-emerald-300 transition-colors">
+              <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-6">
                 <ShieldCheck className="w-7 h-7" />
               </div>
-              <h3 className="text-xl font-black text-slate-800 mb-3">العينة أولاً (Échantillon)</h3>
-              <p className="text-slate-600 font-medium leading-relaxed">لا نبدأ الإنتاج الشامل حتى نصنع لك العينة الأولى وتوافق عليها 100% لتكون مرتاحاً تماماً لطلبيتك.</p>
+              <h3 className="text-xl font-black text-slate-800 mb-3">العينة قبل كلشي (Échantillon)</h3>
+              <p className="text-slate-600 font-medium leading-relaxed">المعقول هو الأساس! كنصايبو ليك العينة الأولى، كتقيسها وتأكد من جودة الثوب والفصالة 100% عاد كنبداو الإنتاج الشامل.</p>
             </div>
-            <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
-              <div className="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mb-6">
-                <Zap className="w-7 h-7" />
-              </div>
-              <h3 className="text-xl font-black text-slate-800 mb-3">سرعة وشفافية</h3>
-              <p className="text-slate-600 font-medium leading-relaxed">نلتزم بوقت التسليم المتفق عليه، ونبقيك على اطلاع دائم بمراحل الإنتاج الخاصة بموديلاتك.</p>
-            </div>
-            <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
-              <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-6">
+            <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100 hover:border-blue-300 transition-colors">
+              <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-6">
                 <Factory className="w-7 h-7" />
               </div>
-              <h3 className="text-xl font-black text-slate-800 mb-3">قدرة إنتاجية عالية</h3>
-              <p className="text-slate-600 font-medium leading-relaxed">سواء كنت تحتاج 100 قطعة أو 10,000 قطعة، نمتلك الفريق والمعدات لتلبية طلبك بأعلى جودة.</p>
+              <h3 className="text-xl font-black text-slate-800 mb-3">توسع وكبر (Scaling)</h3>
+              <p className="text-slate-600 font-medium leading-relaxed">ملي المنتوج ديالك كيضرب وكيتباع بزاف، المصنع ديالنا مستعد يوفر ليك 10,000 قطعة فـ وقت قياسي باش مايوقفش الإشهار ديالك.</p>
+            </div>
+          </div>
+
+          {/* FAQ Section */}
+          <div className="mt-24 max-w-3xl mx-auto">
+            <div className="text-center mb-10">
+              <h3 className="text-2xl font-black text-slate-800 mb-3">الأسئلة الشائعة (FAQ)</h3>
+              <p className="text-slate-500 font-medium">كل ما يخص الإنتاج والتعامل معنا</p>
+            </div>
+            <div className="space-y-4">
+              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6">
+                <h4 className="font-black text-slate-800 mb-2 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-500"></div> شنو هي أقل كمية (Minimum Order)؟</h4>
+                <p className="text-slate-600 font-medium text-sm pr-4">لدعم أصحاب الـ Brands الجديدة، أقل كمية للبدء هي 100 قطعة للموديل (موزعة على المقاسات التي تختارها). هذه الكمية ممتازة لتجربة السوق.</p>
+              </div>
+              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6">
+                <h4 className="font-black text-slate-800 mb-2 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-500"></div> واش كديرو الثوب ولا خاصني نجيبو؟</h4>
+                <p className="text-slate-600 font-medium text-sm pr-4">نحن نقدم خدمة متكاملة (Full Package). نتكلف بالثوب، الفصالة، الخياطة، الطباعة/الطرز، والتغليف. نستخدم أفضل الأثواب التركية والمحلية لضمان جودة الـ Brand.</p>
+              </div>
+              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6">
+                <h4 className="font-black text-slate-800 mb-2 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-500"></div> كيفاش كنعرف الأثمنة ديالكم؟</h4>
+                <p className="text-slate-600 font-medium text-sm pr-4">الثمن يعتمد على نوع اللباس والكمية. يمكنك استخدام <a href="#devis" className="text-indigo-600 font-bold underline">سيميلاطور الأثمنة أسفله</a>، قم بإدخال الموديل والكمية وسيعطيك تقديراً فورياً.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -239,8 +331,8 @@ export default function AdsLanding() {
         <div className="max-w-4xl mx-auto relative z-10">
           <div className="bg-white p-8 md:p-12 rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.1)] border border-slate-100 overflow-hidden">
             <div className="text-center mb-10">
-              <h2 className="text-3xl font-black text-slate-800 mb-4">احصل على عرض سعر اليوم</h2>
-              <p className="text-slate-500 font-medium">املأ الاستمارة وسنتواصل معك فوراً عبر الواتساب لتزويدك بجميع التفاصيل والأسعار.</p>
+              <h2 className="text-3xl font-black text-slate-800 mb-4">سيميلاطور الأثمنة والطلب</h2>
+              <p className="text-slate-500 font-medium">أدخل الموديلات التي ترغب في تصنيعها للحصول على تقدير فوري للتكلفة.</p>
             </div>
 
             <form
@@ -269,8 +361,17 @@ export default function AdsLanding() {
 
                 setIsSending(true);
                 try {
+                  let totMin = 0;
+                  let totMax = 0;
+                  
                   for (const m of models) {
                     const finalType = (m.type === 'Autre' || m.type === 'آخر') ? m.customType : m.type;
+                    const est = calculateEstimate(m.type, m.quantity);
+                    if (est) {
+                      totMin += est.totalMin;
+                      totMax += est.totalMax;
+                    }
+                    
                     await saveLead({
                       name: clientName,
                       email: clientEmail,
@@ -293,14 +394,17 @@ export default function AdsLanding() {
                     currency: 'MAD'
                   });
 
+                  setSubmittedName(clientName);
+                  if (totMin > 0) {
+                    setTotalEstimate({ min: totMin, max: totMax });
+                  } else {
+                    setTotalEstimate(null);
+                  }
+
                   setIsSending(false);
                   setIsSuccess(true);
                   
-                  // Open WhatsApp
-                  setTimeout(() => {
-                    const adminPhone = company.phone ? company.phone.replace(/\D/g, '') : '212624465962';
-                    window.location.href = `https://wa.me/${adminPhone}?text=${encodeURIComponent(`مرحباً BEYA CREATIVE، لقد سجلت طلبي للتو باسم ${clientName}. أريد تفاصيل أكثر.`)}`;
-                  }, 2500);
+                  // Do NOT auto open whatsapp. Let them read the success page and click.
 
                   setModels([emptyModel()]);
                   formElement.reset();
@@ -432,6 +536,24 @@ export default function AdsLanding() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Simulator display */}
+                  {(() => {
+                    const est = calculateEstimate(m.type, m.quantity);
+                    if (!est) return null;
+                    return (
+                      <div className="mt-4 p-4 bg-white border-2 border-emerald-100 rounded-xl flex items-center justify-between">
+                        <div>
+                          <p className="text-xs font-black text-emerald-600 uppercase tracking-widest">التكلفة التقديرية للموديل</p>
+                          <p className="text-[10px] text-slate-400 font-medium mt-1">بناءً على {m.quantity} قطعة من نوع {m.type}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-black text-slate-800">{est.min} - {est.max} MAD <span className="text-xs text-slate-500">/ قطعة</span></p>
+                          <p className="text-xs font-bold text-emerald-500">الإجمالي: {est.totalMin.toLocaleString()} - {est.totalMax.toLocaleString()} MAD</p>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               ))}
 
