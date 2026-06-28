@@ -28,13 +28,14 @@ export default function AdsLanding() {
     details: string;
     photo: string | null;
     photos: string[];
+    provideFabric: boolean;
   }
 
   const emptyModel = (): ModelEntry => ({
     id: Math.random().toString(36).slice(2),
     type: 'T-Shirt', customType: '', quantity: '',
     tailles: { XS: '', S: '', M: '', L: '', XL: '', XXL: '' },
-    details: '', photo: null, photos: []
+    details: '', photo: null, photos: [], provideFabric: false
   });
 
   const [models, setModels] = useState<ModelEntry[]>([emptyModel()]);
@@ -43,7 +44,7 @@ export default function AdsLanding() {
     setModels(prev => prev.map(m => m.id === id ? { ...m, ...field } : m));
   };
 
-  const calculateEstimate = (type: string, qtyStr: string) => {
+  const calculateEstimate = (type: string, qtyStr: string, provideFabric: boolean = false) => {
     const quantity = parseInt(qtyStr) || 0;
     if (quantity === 0) return null;
     
@@ -534,8 +535,8 @@ export default function AdsLanding() {
                     let totMax = 0;
                     
                     for (const m of models) {
-                      const finalType = (m.type === 'Autre' || m.type === 'آخر') ? m.customType : m.type;
-                      const est = calculateEstimate(m.type, m.quantity);
+                      const finalType = ((m.type === 'Autre' || m.type === 'آخر') ? m.customType : m.type) + (m.provideFabric ? ' (CMT - Client Tissu)' : '');
+                      const est = calculateEstimate(m.type, m.quantity, m.provideFabric);
                       if (est) {
                         totMin += est.totalMin;
                         totMax += est.totalMax;
@@ -641,6 +642,14 @@ export default function AdsLanding() {
                             <input type="number" min="1" placeholder="100" value={m.quantity} onChange={e => updateModel(m.id, { quantity: e.target.value })}
                               className="w-full bg-white border-2 border-slate-200 rounded-xl py-2 px-3 text-sm font-bold outline-none focus:border-indigo-600 h-[40px]" required />
                           </div>
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">{isAr ? 'الثوب (Tissu)' : 'Tissu'}</label>
+                            <select value={m.provideFabric ? 'yes' : 'no'} onChange={e => updateModel(m.id, { provideFabric: e.target.value === 'yes' })}
+                              className="w-full bg-white border-2 border-slate-200 rounded-xl py-2 px-3 text-sm font-bold outline-none focus:border-indigo-600 h-[40px]">
+                              <option value="no">{isAr ? 'نتكلفو بالثوب (Full Package)' : 'Fourni par nous (Full Package)'}</option>
+                              <option value="yes">{isAr ? 'غنجيب الثوب ديالي (CMT)' : 'Je fournis le tissu (CMT)'}</option>
+                            </select>
+                          </div>
                         </div>
 
                         <div>
@@ -690,7 +699,7 @@ export default function AdsLanding() {
 
                         {/* Line Simulator Display */}
                         {(() => {
-                          const est = calculateEstimate(m.type, m.quantity);
+                          const est = calculateEstimate(m.type, m.quantity, m.provideFabric);
                           if (!est) return null;
                           return (
                             <div className="mt-4 p-4 bg-white border-2 border-emerald-100 rounded-xl flex items-center justify-between">
@@ -714,7 +723,7 @@ export default function AdsLanding() {
 
                     {(() => {
                       const liveTotals = models.reduce((acc, m) => {
-                        const est = calculateEstimate(m.type, m.quantity);
+                        const est = calculateEstimate(m.type, m.quantity, m.provideFabric);
                         if (est) {
                           acc.min += est.totalMin;
                           acc.max += est.totalMax;

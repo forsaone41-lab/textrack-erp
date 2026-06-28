@@ -167,7 +167,7 @@ export default function LandingPage() {
     id: Math.random().toString(36).slice(2),
     type: 'T-Shirt', customType: '', quantity: '',
     tailles: { XS: '', S: '', M: '', L: '', XL: '', XXL: '' },
-    details: '', photo: null, photos: []
+    details: '', photo: null, photos: [], provideFabric: false
   });
 
   const [models, setModels] = useState<ModelEntry[]>([emptyModel()]);
@@ -256,7 +256,7 @@ export default function LandingPage() {
     fetchTarifs();
   }, []);
 
-  const calculateEstimate = (type: string, qtyStr: string) => {
+  const calculateEstimate = (type: string, qtyStr: string, provideFabric: boolean = false) => {
     const quantity = parseInt(qtyStr) || 0;
     if (quantity === 0) return null;
     let baseMin = 0;
@@ -281,6 +281,11 @@ export default function LandingPage() {
     }
     if (quantity < 100) { baseMin *= 1.15; baseMax *= 1.15; }
     else if (quantity >= 500) { baseMin *= 0.9; baseMax *= 0.9; }
+
+    if (provideFabric) {
+      baseMin *= 0.45;
+      baseMax *= 0.45;
+    }
     return {
       min: Math.round(baseMin),
       max: Math.round(baseMax),
@@ -662,7 +667,7 @@ export default function LandingPage() {
                     setIsSending(true);
                     try {
                       for (const m of models) {
-                        const finalType = (m.type === 'Autre' || m.type === 'آخر') ? m.customType : m.type;
+                        const finalType = ((m.type === 'Autre' || m.type === 'آخر') ? m.customType : m.type) + (m.provideFabric ? ' (CMT - Client Tissu)' : '');
                         await saveLead({
                           name: clientName,
                           email: clientEmail,
@@ -754,7 +759,7 @@ export default function LandingPage() {
                             )}
                           </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                               <label className="block text-[10px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">{isAr ? 'نوع اللباس' : 'Type de vêtement'}</label>
                               <div className="relative">
@@ -830,7 +835,7 @@ export default function LandingPage() {
 
                           {/* Line Simulator Display */}
                           {(() => {
-                            const est = calculateEstimate(m.type, m.quantity);
+                            const est = calculateEstimate(m.type, m.quantity, m.provideFabric);
                             if (!est) return null;
                             return (
                               <div className="mt-4 p-4 bg-white border-2 border-emerald-100 rounded-xl flex items-center justify-between">
@@ -854,7 +859,7 @@ export default function LandingPage() {
 
                       {(() => {
                         const liveTotals = models.reduce((acc, m) => {
-                          const est = calculateEstimate(m.type, m.quantity);
+                          const est = calculateEstimate(m.type, m.quantity, m.provideFabric);
                           if (est) {
                             acc.min += est.totalMin;
                             acc.max += est.totalMax;
