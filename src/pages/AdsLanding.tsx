@@ -209,9 +209,9 @@ export default function AdsLanding() {
             <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-indigo-200">B</div>
             <span className="font-black text-xl tracking-tight text-slate-800">BEYA <span className="text-indigo-600">CREATIVE</span></span>
           </div>
-          <a href="#devis" className="px-6 py-2.5 bg-slate-900 text-white rounded-full text-sm font-bold shadow-lg hover:bg-indigo-600 hover:shadow-indigo-200 transition-all flex items-center gap-2">
+          <button onClick={() => document.getElementById('devis')?.scrollIntoView({ behavior: 'smooth' })} className="px-6 py-2.5 bg-slate-900 text-white rounded-full text-sm font-bold shadow-lg hover:bg-indigo-600 hover:shadow-indigo-200 transition-all flex items-center gap-2">
             احصل على عرض سعر <ChevronRight className="w-4 h-4 rotate-180" />
-          </a>
+          </button>
         </div>
       </header>
 
@@ -233,10 +233,10 @@ export default function AdsLanding() {
               كنوفروا ليك جودة عالمية باش تبني الثقة مع الكليان ديالك، مع إمكانية تجربة السوق بكميات معقولة.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <a href="#devis" className="px-8 py-4 bg-indigo-500 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/30 hover:bg-indigo-400 transition-all hover:scale-105">
+              <button onClick={() => document.getElementById('devis')?.scrollIntoView({ behavior: 'smooth' })} className="px-8 py-4 bg-indigo-500 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/30 hover:bg-indigo-400 transition-all hover:scale-105">
                 <Zap className="w-5 h-5" />
                 احسب تكلفة الإنتاج مجاناً
-              </a>
+              </button>
               <div className="flex items-center gap-4 text-sm font-bold text-slate-400 px-4">
                 <div className="flex -space-x-2 space-x-reverse">
                   {[1,2,3].map(i => (
@@ -317,7 +317,7 @@ export default function AdsLanding() {
               </div>
               <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6">
                 <h4 className="font-black text-slate-800 mb-2 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-500"></div> كيفاش كنعرف الأثمنة ديالكم؟</h4>
-                <p className="text-slate-600 font-medium text-sm pr-4">الثمن يعتمد على نوع اللباس والكمية. يمكنك استخدام <a href="#devis" className="text-indigo-600 font-bold underline">سيميلاطور الأثمنة أسفله</a>، قم بإدخال الموديل والكمية وسيعطيك تقديراً فورياً.</p>
+                <p className="text-slate-600 font-medium text-sm pr-4">الثمن يعتمد على نوع اللباس والكمية. يمكنك استخدام <button onClick={() => document.getElementById('devis')?.scrollIntoView({ behavior: 'smooth' })} className="text-indigo-600 font-bold underline">سيميلاطور الأثمنة أسفله</button>، قم بإدخال الموديل والكمية وسيعطيك تقديراً فورياً.</p>
               </div>
             </div>
           </div>
