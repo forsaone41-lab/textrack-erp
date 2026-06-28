@@ -623,8 +623,8 @@ export default function AdsLanding() {
                         <input type="text" name="name" placeholder="Ex: Ahmed Alami" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" required />
                       </div>
                       <div>
-                        <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">Email (اختياري)</label>
-                        <input type="email" name="email" placeholder="email@example.com" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" />
+                        <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">Email</label>
+                        <input type="email" name="email" placeholder="email@example.com" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" required />
                       </div>
                     </div>
 
@@ -647,8 +647,8 @@ export default function AdsLanding() {
                         </div>
                       </div>
                       <div>
-                        <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">المدينة (اختياري)</label>
-                        <input type="text" name="ville" placeholder="مثال: الدار البيضاء" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" />
+                        <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">المدينة</label>
+                        <input type="text" name="ville" placeholder="مثال: الدار البيضاء" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" required />
                       </div>
                     </div>
 
