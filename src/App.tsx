@@ -12,6 +12,7 @@ const Dashboard        = lazy(() => import('./pages/Dashboard'));
 const Demandes         = lazy(() => import('./pages/Demandes'));
 const Pipeline         = lazy(() => import('./pages/Pipeline'));
 const FichesTechniques = lazy(() => import('./pages/FichesTechniques'));
+const EvaluationPatronage = lazy(() => import('./pages/EvaluationPatronage'));
 const OrdresDeCoupe    = lazy(() => import('./pages/OrdresDeCoupe'));
 const ChaineDeMontage  = lazy(() => import('./pages/ChaineDeMontage'));
 const ChaineDetaillee  = lazy(() => import('./pages/ChaineDetaillee'));
