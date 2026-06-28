@@ -53,6 +53,7 @@ export interface FicheTechnique {
   mesures: { nom: string; valeurs: Record<string, number> }[];
   tissuConsommation: number; // mètres par pièce
   type: string;
+  tissuRecommande?: string;
   createdAt: string;
   photo?: string;
   patronagePhoto?: string;

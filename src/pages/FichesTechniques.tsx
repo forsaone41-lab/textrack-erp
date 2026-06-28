@@ -295,6 +295,14 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
                   <span className="text-xs font-bold text-slate-700">{f.tailles.length}</span>
                 </div>
               </div>
+              {f.tissuRecommande && (
+                <div className="flex flex-col flex-1 overflow-hidden">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 truncate">{isAr ? 'الثوب المقترح' : 'Tissu Rec.'}</span>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 rounded-lg border border-slate-200/50 overflow-hidden">
+                    <span className="text-xs font-bold text-slate-700 truncate">{f.tissuRecommande}</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1189,6 +1197,14 @@ export default function FichesTechniques() {
                       ))}
                     </div>
                   </div>
+                </div>
+                <div className="mb-3">
+                  <label className={`block text-xs font-semibold text-slate-600 mb-1.5 ${isAr ? 'text-right' : ''}`}>
+                    🧵 {isAr ? 'معلومات الثوب المقترح' : 'Tissu Recommandé / Informations'}
+                  </label>
+                  <input value={form.tissuRecommande || ''} onChange={e => setForm({ ...form, tissuRecommande: e.target.value })}
+                    placeholder={isAr ? 'مثلا: بوليستر ايلاستين...' : 'ex: Polyester Élasthanne...'}
+                    className={`w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors ${isAr ? 'text-right' : ''}`} />
                 </div>
                 <div className="mb-3">
                   <label className={`block text-xs font-semibold text-slate-600 mb-1.5 ${isAr ? 'text-right' : ''}`}>{t('client_label', lang)} *</label>
