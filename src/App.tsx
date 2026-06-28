@@ -410,6 +410,7 @@ function AppContent() {
         <Route path="tarifs" element={can('tarifs') ? <Tarifs /> : <Navigate to="/" replace />} />
         <Route path="echantillons" element={can('demandes') ? <Echantillons /> : <Navigate to="/" replace />} />
         <Route path="fiches-techniques" element={can('fiches') ? <FichesTechniques /> : <Navigate to="/" replace />} />
+              <Route path="evaluation-patronage" element={can('evaluation_patronage') ? <EvaluationPatronage /> : <Navigate to="/" replace />} />
         <Route path="ordres-de-coupe" element={can('ordres') ? <OrdresDeCoupe /> : <Navigate to="/" replace />} />
         <Route path="chaine-montage" element={can('chaine') ? <ChaineDeMontage /> : <Navigate to="/" replace />} />
         <Route path="pilotage-chaine" element={can('pilotage') ? <ChaineDetaillee /> : <Navigate to="/" replace />} />

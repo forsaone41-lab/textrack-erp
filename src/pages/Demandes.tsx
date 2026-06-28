@@ -1919,6 +1919,21 @@ export default function Demandes() {
                                       ✂️ CMT (Tissu Client)
                                     </span>
                                   )}
+                                  {(() => {
+                                    let ext = {} as any;
+                                    try { ext = JSON.parse(lead.details || '{}'); } catch(e){}
+                                    if (ext.patronageStatus === 'requested') return (
+                                      <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-600 border border-indigo-200 text-[9px] font-black uppercase tracking-widest rounded flex items-center gap-1 shadow-sm">
+                                        ⏳ Patronage...
+                                      </span>
+                                    );
+                                    if (ext.patronageStatus === 'priced') return (
+                                      <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-600 border border-emerald-200 text-[9px] font-black uppercase tracking-widest rounded flex items-center gap-1 shadow-sm">
+                                        ✂️ Patronage: {ext.patronagePrice} MAD
+                                      </span>
+                                    );
+                                    return null;
+                                  })()}
                                 </div>
                               )}
                               {lead.crmStage === 'confirme' && (

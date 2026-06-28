@@ -232,6 +232,9 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
             {can('fiches') && (
               <NavItem to="/fiches-techniques" icon={FileText} label={isAr ? 'البطاقات التقنية' : 'Fiches Tech.'} />
             )}
+            {can('evaluation_patronage') && (
+              <NavItem to="/evaluation-patronage" icon={Scissors} label={isAr ? 'تسعير الباترون' : 'Prix Patronage'} />
+            )}
             {can('ai_space') && (
               <NavItem to="/ai-space" icon={Sparkles} label={isAr ? 'المساعد الذكي' : 'Assistant IA'} pro />
             )}

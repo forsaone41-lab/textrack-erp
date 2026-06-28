@@ -402,17 +402,17 @@ export type AppPage =
   | 'rh' | 'commandes' | 'clients' | 'factures' | 'charges' | 'bilan' | 'fast_scanner'
   | 'pointage' | 'portail_client' | 'performance' | 'utilisateurs' | 'parametres' | 'demandes'
   | 'worker_portal' | 'controle_qualite' | 'partenaire_portal' | 'agenda' | 'notifications' | 'ai_space' | 'crm' | 'chef_chaine_portal'
-  | 'inbox' | 'gmail' | 'plaintes' | 'fournisseurs' | 'achats' | 'visio' | 'tarifs' | 'tarifs_edit' | 'devis' | 'recus';
+  | 'inbox' | 'gmail' | 'plaintes' | 'fournisseurs' | 'achats' | 'visio' | 'tarifs' | 'tarifs_edit' | 'devis' | 'recus' | 'evaluation_patronage';
 
 export type RolePermMap = Record<'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire' | 'chef_chaine', AppPage[]>;
 
 export const DEFAULT_PERMISSIONS: RolePermMap = {
-  admin: ['dashboard', 'demandes', 'crm', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'stocks', 'rh', 'commandes', 'clients', 'factures', 'devis', 'recus', 'charges', 'bilan', 'fast_scanner', 'pointage', 'portail_client', 'performance', 'utilisateurs', 'parametres', 'worker_portal', 'controle_qualite', 'partenaire_portal', 'agenda', 'notifications', 'ai_space', 'chef_chaine_portal', 'inbox', 'gmail', 'plaintes', 'fournisseurs', 'achats', 'visio', 'tarifs', 'tarifs_edit'],
+  admin: ['dashboard', 'demandes', 'crm', 'evaluation_patronage', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'stocks', 'rh', 'commandes', 'clients', 'factures', 'devis', 'recus', 'charges', 'bilan', 'fast_scanner', 'pointage', 'portail_client', 'performance', 'utilisateurs', 'parametres', 'worker_portal', 'controle_qualite', 'partenaire_portal', 'agenda', 'notifications', 'ai_space', 'chef_chaine_portal', 'inbox', 'gmail', 'plaintes', 'fournisseurs', 'achats', 'visio', 'tarifs', 'tarifs_edit'],
   pointeur: ['dashboard', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'pointage', 'performance', 'worker_portal', 'controle_qualite'],
   client: ['portail_client'],
   worker: ['worker_portal'],
   coupeur: ['ordres'],
-  modeliste: ['fiches', 'ai_space'],
+  modeliste: ['evaluation_patronage', 'fiches', 'ai_space'],
   controleur: ['scan_production', 'controle_qualite', 'worker_portal'],
   agent_pointage: ['pointage', 'rh'],
   partenaire: ['partenaire_portal'],
@@ -450,6 +450,8 @@ export function loadPermissions(): RolePermMap {
     if (result.admin) {
       if (!result.admin.includes('chef_chaine_portal')) result.admin.push('chef_chaine_portal');
       if (!result.admin.includes('tarifs')) result.admin.push('tarifs');
+      if (!result.admin.includes('evaluation_patronage')) result.admin.push('evaluation_patronage');
+      if (result.modeliste && !result.modeliste.includes('evaluation_patronage')) result.modeliste.push('evaluation_patronage');
       if (!result.admin.includes('devis')) result.admin.push('devis');
       if (!result.admin.includes('recus')) result.admin.push('recus');
       if (!result.admin.includes('inbox')) result.admin.push('inbox');
