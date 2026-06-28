@@ -39,15 +39,17 @@ export default function AdsLanding() {
       const fullPhone = "+212" + (rawPhone.startsWith('0') ? rawPhone.substring(1) : rawPhone);
       
       const newLead = {
+        id: Math.random().toString(36).slice(2),
         name: formData.name,
         email: formData.brand || 'Marque non spécifiée',
         phone: fullPhone,
         type: formData.modele,
         quantity: parseInt(formData.quantite) || 100,
-        status: 'nouveau',
+        status: 'new',
         source: 'FB_ADS_LANDING',
         ville: 'Non spécifié',
-        date: new Date().toISOString()
+        date: new Date().toISOString(),
+        photoCount: 0
       };
 
       await supabase.from('leads').insert([newLead]);
