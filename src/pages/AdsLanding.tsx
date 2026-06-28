@@ -356,7 +356,7 @@ export default function AdsLanding() {
               </div>
               <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6">
                 <h4 className="font-black text-slate-800 mb-2 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-500"></div> {isAr ? 'كيفاش كنعرف الأثمنة ديالكم؟' : 'Comment puis-je connaître vos prix ?'}</h4>
-                <p className={`text-slate-600 font-medium text-sm ${isAr ? 'pr-4' : 'pl-4'}`}>{isAr ? 'الثمن يعتمد على نوع اللباس والكمية. يمكنك استخدام' : 'Le prix dépend du modèle et de la quantité. Utilisez'} <button onClick={() => { setShowSimulatorModal(true); setSimulatorStep(1); }} className="text-indigo-600 font-bold underline">{isAr ? 'سيميلاطور الأثمنة أسفله' : 'notre simulateur'}</button>{isAr ? '، قم بإدخال الموديل والكمية وسيعطيك تقديراً فورياً.' : ' pour avoir une estimation instantanée.'}</p>
+                <p className={`text-slate-600 font-medium text-sm ${isAr ? 'pr-4' : 'pl-4'}`}>{isAr ? 'الثمن يعتمد على نوع اللباس والكمية. يمكنك استخدام' : 'Le prix dépend du modèle et de la quantité. Utilisez'} <button onClick={() => { setShowSimulatorModal(true); setSimulatorStep(1); }} className="text-indigo-600 font-bold underline">{isAr ? 'حاسبة التكلفة أسفله' : 'notre simulateur'}</button>{isAr ? '، قم بإدخال الموديل والكمية وسيعطيك تقديراً فورياً.' : ' pour avoir une estimation instantanée.'}</p>
               </div>
             </div>
           </div>
@@ -369,7 +369,7 @@ export default function AdsLanding() {
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1558769132-cb1fac08c04a?auto=format&fit=crop&q=80')] opacity-5 bg-cover bg-center mix-blend-overlay"></div>
         <div className="max-w-3xl mx-auto relative z-10">
           <h2 className="text-4xl md:text-5xl font-black text-white mb-6">{isAr ? 'مستعد تبدا المشروع ديالك؟' : 'Prêt à lancer votre projet ?'}</h2>
-          <p className="text-slate-400 font-medium text-lg mb-10">{isAr ? 'استعمل السيميلاطور ديالنا باش تعرف التكلفة التقريبية فـ أقل من دقيقة، وبلا ماتدخل حتى معلومة شخصية!' : "Utilisez notre simulateur pour connaître le coût estimé en moins d'une minute, sans aucune information personnelle !"}</p>
+          <p className="text-slate-400 font-medium text-lg mb-10">{isAr ? 'استعمل حاسبة التكلفة ديالنا باش تعرف التكلفة التقريبية فـ أقل من دقيقة، وبلا ماتدخل حتى معلومة شخصية!' : "Utilisez notre simulateur pour connaître le coût estimé en moins d'une minute, sans aucune information personnelle !"}</p>
           <button onClick={() => { setShowSimulatorModal(true); setSimulatorStep(1); }} className="px-8 py-4 bg-indigo-600 text-white rounded-full font-black uppercase tracking-widest shadow-xl shadow-indigo-500/20 hover:bg-indigo-700 hover:scale-105 transition-all flex items-center justify-center gap-3 mx-auto">
             <Zap className="w-5 h-5" />
             {isAr ? 'احسب التكلفة وابدأ الطلب' : 'Calculer le Coût & Commander'}
@@ -389,7 +389,7 @@ export default function AdsLanding() {
               <div className="text-center mb-8">
                 <h2 className="text-2xl md:text-3xl font-black text-slate-800 mb-3">
                   {simulatorStep === 1 
-                    ? (isAr ? 'سيميلاطور الأثمنة' : 'Simulateur de Prix') 
+                    ? (isAr ? 'حاسبة التكلفة' : 'Simulateur de Prix') 
                     : (isAr ? 'إكمال المعلومات' : 'Compléter vos informations')}
                 </h2>
                 <p className="text-slate-500 font-medium text-sm">
