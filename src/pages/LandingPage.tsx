@@ -472,19 +472,19 @@ export default function LandingPage() {
           {/* CTA → Info page */}
           <div className="mt-10 mb-6 flex flex-col items-center gap-3 text-center px-4">
             <p className="text-slate-500 text-sm font-medium">
-              {isAr ? '💡 عندك أسئلة قبل ما تبدأ؟' : '💡 Des questions avant de commencer ?'}
+              {isAr ? '💡 عندك براند أو كدير التجارة الإلكترونية؟' : '💡 Vous avez une marque ou faites du E-commerce ?'}
             </p>
             <a
-              href="/#/info"
+              href="/#/devis-express"
               className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl transition-all hover:scale-105 active:scale-95 group"
               style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)', color: 'white', boxShadow: '0 10px 40px rgba(79,70,229,0.35)' }}
             >
-              <span className="text-xl">📋</span>
-              {isAr ? 'تعرف على أسعارنا وخدماتنا' : 'Voir les Prix, Délais & Services'}
+              <span className="text-xl">🚀</span>
+              {isAr ? 'احصل على عرض سعر سريع (Devis Express)' : 'Demander un Devis Express'}
               <span className="text-white/70 group-hover:translate-x-1 transition-transform text-base">→</span>
             </a>
             <p className="text-[11px] text-slate-400 font-medium">
-              {isAr ? 'أسعار · مواعيد · أسئلة شائعة · كل ما تحتاج معرفته' : 'Prix · Délais · FAQ · Tout ce que vous devez savoir'}
+              {isAr ? 'خدمة مخصصة وسريعة لأصحاب المشاريع والتجارة الإلكترونية' : 'Service rapide dédié aux marques et E-commerce'}
             </p>
           </div>
 
