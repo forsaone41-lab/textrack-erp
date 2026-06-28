@@ -311,8 +311,8 @@ export default function AdsLanding() {
       <section className="py-20 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-4">علاش كاع الـ Brands كايخدمو معانا؟</h2>
-            <p className="text-slate-500 font-medium max-w-2xl mx-auto">وفرنا ليك البيئة المثالية باش تكبر الـ Brand ديالك بلا مشاكل د الإنتاج.</p>
+            <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-4">{isAr ? 'علاش كاع الـ Brands كايخدمو معانا؟' : 'Pourquoi toutes les Marques travaillent avec nous ?'}</h2>
+            <p className="text-slate-500 font-medium max-w-2xl mx-auto">{isAr ? 'وفرنا ليك البيئة المثالية باش تكبر الـ Brand ديالك بلا مشاكل د الإنتاج.' : "Nous avons créé l'environnement idéal pour développer votre marque sans soucis de production."}</p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
@@ -320,43 +320,43 @@ export default function AdsLanding() {
               <div className="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mb-6">
                 <Sparkles className="w-7 h-7" />
               </div>
-              <h3 className="text-xl font-black text-slate-800 mb-3">بدا وجرب السوق (Test)</h3>
-              <p className="text-slate-600 font-medium leading-relaxed">كنعرفو باللي باش تطلق Brand جديدة خاصك تجرب. كنعطيوك الفرصة تبدا بكميات صغيرة (100 بياسة) باش تـ Testi المنتوج ديالك.</p>
+              <h3 className="text-xl font-black text-slate-800 mb-3">{isAr ? 'بدا وجرب السوق (Test)' : 'Testez le marché'}</h3>
+              <p className="text-slate-600 font-medium leading-relaxed">{isAr ? 'كنعرفو باللي باش تطلق Brand جديدة خاصك تجرب. كنعطيوك الفرصة تبدا بكميات صغيرة (100 بياسة) باش تـ Testi المنتوج ديالك.' : 'Nous vous offrons la possibilité de démarrer avec de petites quantités (100 pièces) pour tester votre produit sereinement.'}</p>
             </div>
             <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100 hover:border-emerald-300 transition-colors">
               <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-6">
                 <ShieldCheck className="w-7 h-7" />
               </div>
-              <h3 className="text-xl font-black text-slate-800 mb-3">العينة قبل كلشي (Échantillon)</h3>
-              <p className="text-slate-600 font-medium leading-relaxed">المعقول هو الأساس! كنصايبو ليك العينة الأولى، كتقيسها وتأكد من جودة الثوب والفصالة 100% عاد كنبداو الإنتاج الشامل.</p>
+              <h3 className="text-xl font-black text-slate-800 mb-3">{isAr ? 'العينة قبل كلشي (Échantillon)' : "L'échantillon d'abord"}</h3>
+              <p className="text-slate-600 font-medium leading-relaxed">{isAr ? 'المعقول هو الأساس! كنصايبو ليك العينة الأولى، كتقيسها وتأكد من جودة الثوب والفصالة 100% عاد كنبداو الإنتاج الشامل.' : 'Nous confectionnons le premier échantillon, vous vérifiez la qualité et la coupe à 100% avant de lancer la production globale.'}</p>
             </div>
             <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100 hover:border-blue-300 transition-colors">
               <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-6">
                 <Factory className="w-7 h-7" />
               </div>
-              <h3 className="text-xl font-black text-slate-800 mb-3">توسع وكبر (Scaling)</h3>
-              <p className="text-slate-600 font-medium leading-relaxed">ملي المنتوج ديالك كيضرب وكيتباع بزاف، المصنع ديالنا مستعد يوفر ليك 10,000 قطعة فـ وقت قياسي باش مايوقفش الإشهار ديالك.</p>
+              <h3 className="text-xl font-black text-slate-800 mb-3">{isAr ? 'توسع وكبر (Scaling)' : 'Scalez et Grandissez'}</h3>
+              <p className="text-slate-600 font-medium leading-relaxed">{isAr ? 'ملي المنتوج ديالك كيضرب وكيتباع بزاف، المصنع ديالنا مستعد يوفر ليك 10,000 قطعة فـ وقت قياسي باش مايوقفش الإشهار ديالك.' : 'Lorsque votre produit se vend bien, notre usine est prête à fournir de grandes quantités en un temps record pour suivre vos ventes.'}</p>
             </div>
           </div>
 
           {/* FAQ Section */}
           <div className="mt-24 max-w-3xl mx-auto">
             <div className="text-center mb-10">
-              <h3 className="text-2xl font-black text-slate-800 mb-3">الأسئلة الشائعة (FAQ)</h3>
-              <p className="text-slate-500 font-medium">كل ما يخص الإنتاج والتعامل معنا</p>
+              <h3 className="text-2xl font-black text-slate-800 mb-3">{isAr ? 'الأسئلة الشائعة (FAQ)' : 'Foire aux Questions (FAQ)'}</h3>
+              <p className="text-slate-500 font-medium">{isAr ? 'كل ما يخص الإنتاج والتعامل معنا' : 'Tout ce qui concerne la production et la collaboration avec nous'}</p>
             </div>
             <div className="space-y-4">
               <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6">
-                <h4 className="font-black text-slate-800 mb-2 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-500"></div> شنو هي أقل كمية (Minimum Order)؟</h4>
-                <p className="text-slate-600 font-medium text-sm pr-4">لدعم أصحاب الـ Brands الجديدة، أقل كمية للبدء هي 100 قطعة للموديل (موزعة على المقاسات التي تختارها). هذه الكمية ممتازة لتجربة السوق.</p>
+                <h4 className="font-black text-slate-800 mb-2 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-500"></div> {isAr ? 'شنو هي أقل كمية (Minimum Order)؟' : 'Quelle est la quantité minimum ?'}</h4>
+                <p className={`text-slate-600 font-medium text-sm ${isAr ? 'pr-4' : 'pl-4'}`}>{isAr ? 'لدعم أصحاب الـ Brands الجديدة، أقل كمية للبدء هي 100 قطعة للموديل (موزعة على المقاسات التي تختارها). هذه الكمية ممتازة لتجربة السوق.' : 'La quantité minimum pour commencer est de 100 pièces par modèle. Idéal pour tester le marché avec votre marque.'}</p>
               </div>
               <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6">
-                <h4 className="font-black text-slate-800 mb-2 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-500"></div> واش كديرو الثوب ولا خاصني نجيبو؟</h4>
-                <p className="text-slate-600 font-medium text-sm pr-4">نحن نقدم خدمة متكاملة (Full Package). نتكلف بالثوب، الفصالة، الخياطة، الطباعة/الطرز، والتغليف. نستخدم أفضل الأثواب التركية، الإيطالية، والمحلية لضمان جودة الـ Brand.</p>
+                <h4 className="font-black text-slate-800 mb-2 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-500"></div> {isAr ? 'واش كديرو الثوب ولا خاصني نجيبو؟' : "Fournissez-vous le tissu ?"}</h4>
+                <p className={`text-slate-600 font-medium text-sm ${isAr ? 'pr-4' : 'pl-4'}`}>{isAr ? 'نحن نقدم خدمة متكاملة (Full Package). نتكلف بالثوب، الفصالة، الخياطة، الطباعة/الطرز، والتغليف. نستخدم أفضل الأثواب التركية، الإيطالية، والمحلية لضمان جودة الـ Brand.' : 'Nous offrons un service complet (Full Package). Tissu, coupe, couture, impression et emballage. Nous gérons tout de A à Z.'}</p>
               </div>
               <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6">
-                <h4 className="font-black text-slate-800 mb-2 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-500"></div> كيفاش كنعرف الأثمنة ديالكم؟</h4>
-                <p className="text-slate-600 font-medium text-sm pr-4">الثمن يعتمد على نوع اللباس والكمية. يمكنك استخدام <button onClick={() => { setShowSimulatorModal(true); setSimulatorStep(1); }} className="text-indigo-600 font-bold underline">سيميلاطور الأثمنة أسفله</button>، قم بإدخال الموديل والكمية وسيعطيك تقديراً فورياً.</p>
+                <h4 className="font-black text-slate-800 mb-2 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-500"></div> {isAr ? 'كيفاش كنعرف الأثمنة ديالكم؟' : 'Comment puis-je connaître vos prix ?'}</h4>
+                <p className={`text-slate-600 font-medium text-sm ${isAr ? 'pr-4' : 'pl-4'}`}>{isAr ? 'الثمن يعتمد على نوع اللباس والكمية. يمكنك استخدام' : 'Le prix dépend du modèle et de la quantité. Utilisez'} <button onClick={() => { setShowSimulatorModal(true); setSimulatorStep(1); }} className="text-indigo-600 font-bold underline">{isAr ? 'سيميلاطور الأثمنة أسفله' : 'notre simulateur'}</button>{isAr ? '، قم بإدخال الموديل والكمية وسيعطيك تقديراً فورياً.' : ' pour avoir une estimation instantanée.'}</p>
               </div>
             </div>
           </div>
