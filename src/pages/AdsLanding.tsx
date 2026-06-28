@@ -368,11 +368,11 @@ export default function AdsLanding() {
       <section className="py-24 px-6 bg-slate-900 text-center relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1558769132-cb1fac08c04a?auto=format&fit=crop&q=80')] opacity-5 bg-cover bg-center mix-blend-overlay"></div>
         <div className="max-w-3xl mx-auto relative z-10">
-          <h2 className="text-4xl md:text-5xl font-black text-white mb-6">مستعد تبدا المشروع ديالك؟</h2>
-          <p className="text-slate-400 font-medium text-lg mb-10">استعمل السيميلاطور ديالنا باش تعرف التكلفة التقريبية فـ أقل من دقيقة، وبلا ماتدخل حتى معلومة شخصية!</p>
+          <h2 className="text-4xl md:text-5xl font-black text-white mb-6">{isAr ? 'مستعد تبدا المشروع ديالك؟' : 'Prêt à lancer votre projet ?'}</h2>
+          <p className="text-slate-400 font-medium text-lg mb-10">{isAr ? 'استعمل السيميلاطور ديالنا باش تعرف التكلفة التقريبية فـ أقل من دقيقة، وبلا ماتدخل حتى معلومة شخصية!' : "Utilisez notre simulateur pour connaître le coût estimé en moins d'une minute, sans aucune information personnelle !"}</p>
           <button onClick={() => { setShowSimulatorModal(true); setSimulatorStep(1); }} className="px-8 py-4 bg-indigo-600 text-white rounded-full font-black uppercase tracking-widest shadow-xl shadow-indigo-500/20 hover:bg-indigo-700 hover:scale-105 transition-all flex items-center justify-center gap-3 mx-auto">
             <Zap className="w-5 h-5" />
-            احسب التكلفة وابدأ الطلب
+            {isAr ? 'احسب التكلفة وابدأ الطلب' : 'Calculer le Coût & Commander'}
           </button>
         </div>
       </section>
@@ -388,12 +388,14 @@ export default function AdsLanding() {
             <div className="p-6 md:p-10 max-h-[85vh] overflow-y-auto custom-scrollbar">
               <div className="text-center mb-8">
                 <h2 className="text-2xl md:text-3xl font-black text-slate-800 mb-3">
-                  {simulatorStep === 1 ? 'سيميلاطور الأثمنة' : 'إكمال المعلومات'}
+                  {simulatorStep === 1 
+                    ? (isAr ? 'سيميلاطور الأثمنة' : 'Simulateur de Prix') 
+                    : (isAr ? 'إكمال المعلومات' : 'Compléter vos informations')}
                 </h2>
                 <p className="text-slate-500 font-medium text-sm">
                   {simulatorStep === 1 
-                    ? 'أدخل الموديلات التي ترغب في تصنيعها للحصول على تقدير فوري للتكلفة.' 
-                    : 'التكلفة مناسبة؟ أدخل معلوماتك لنتواصل معك ونبدأ العمل فوراً.'}
+                    ? (isAr ? 'أدخل الموديلات التي ترغب في تصنيعها للحصول على تقدير فوري للتكلفة.' : 'Entrez les modèles que vous souhaitez fabriquer pour obtenir une estimation instantanée.')
+                    : (isAr ? 'التكلفة مناسبة؟ أدخل معلوماتك لنتواصل معك ونبدأ العمل فوراً.' : 'Le coût vous convient ? Entrez vos informations pour que nous puissions vous contacter et commencer le travail.')}
                 </p>
                 
                 {/* Stepper indicator */}
@@ -412,7 +414,7 @@ export default function AdsLanding() {
                   if (simulatorStep === 1) {
                     const missingPhoto = models.find(m => !m.photo && (!m.photos || m.photos.length === 0));
                     if (missingPhoto) {
-                      setErrorMsg('كل موديل خاصو عندو صورة (إجباري)');
+                      setErrorMsg(isAr ? 'كل موديل خاصو عندو صورة (إجباري)' : 'Chaque modèle doit avoir au moins une photo (Obligatoire)');
                       return;
                     }
                     setSimulatorStep(2);
@@ -428,7 +430,7 @@ export default function AdsLanding() {
                   const clientVille = formData.get('ville') as string || 'Non spécifié';
 
                   if (!clientName.trim().includes(' ')) {
-                    setErrorMsg('المرجو إدخال الإسم الكامل (الشخصي والعائلي)');
+                    setErrorMsg(isAr ? 'المرجو إدخال الإسم الكامل (الشخصي والعائلي)' : 'Veuillez entrer votre nom complet (Prénom et Nom)');
                     return;
                   }
 
@@ -492,9 +494,10 @@ export default function AdsLanding() {
                     {models.map((m, idx) => (
                       <div key={m.id} className="border-2 border-indigo-100 rounded-2xl p-4 md:p-6 space-y-4 bg-indigo-50/30 relative">
                         <div className="flex items-center justify-between mb-2">
-                          <p className="text-xs font-black text-indigo-600 uppercase tracking-widest bg-indigo-100/50 px-3 py-1.5 rounded-lg">
-                            الموديل {idx + 1}
-                          </p>
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-sm">{idx + 1}</div>
+                            <h3 className="font-black text-slate-800 text-lg">{isAr ? 'الموديل' : 'Modèle'} {idx + 1}</h3>
+                          </div>
                           {models.length > 1 && (
                             <button type="button" onClick={() => setModels(prev => prev.filter(x => x.id !== m.id))}
                               className="w-8 h-8 bg-rose-100 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg flex items-center justify-center transition-all text-xs font-black shadow-sm">
@@ -517,19 +520,19 @@ export default function AdsLanding() {
                             </div>
                             {m.type === 'Autre' && (
                               <input type="text" value={m.customType} onChange={e => updateModel(m.id, { customType: e.target.value })}
-                                placeholder="حدد النوع"
+                                placeholder={isAr ? 'حدد النوع' : 'Spécifiez le type'}
                                 className="mt-2 w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600" required />
                             )}
                           </div>
                           <div>
-                            <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">الكمية الإجمالية للموديل</label>
+                            <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">{isAr ? 'الكمية الإجمالية للموديل' : 'Quantité Totale'}</label>
                             <input type="number" min="1" placeholder="100" value={m.quantity} onChange={e => updateModel(m.id, { quantity: e.target.value })}
                               className="w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600 h-[50px]" required />
                           </div>
                         </div>
 
                         <div>
-                          <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">المقاسات (اختياري - وزع الكمية)</label>
+                          <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">{isAr ? 'المقاسات (اختياري - وزع الكمية)' : 'Tailles (Optionnel)'}</label>
                           <div className="grid grid-cols-6 gap-2">
                             {['XS','S','M','L','XL','XXL'].map(size => (
                               <div key={size} className="relative group">
@@ -543,14 +546,14 @@ export default function AdsLanding() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">تفاصيل الطلب (ألوان، نوع الثوب...)</label>
+                            <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">{isAr ? 'تفاصيل الطلب (ألوان، نوع الثوب...)' : 'Détails de la commande (Couleurs, Tissu...)'}</label>
                             <textarea rows={3} value={m.details} onChange={e => updateModel(m.id, { details: e.target.value })}
-                              placeholder="اشرح شنو باغي..."
+                              placeholder={isAr ? 'اشرح شنو باغي...' : 'Expliquez ce que vous voulez...'}
                               className="w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600 resize-none" />
                           </div>
                           <div>
                             <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">
-                              صورة الموديل <span className="text-rose-500">*</span>
+                              {isAr ? 'صورة الموديل' : 'Photo du modèle'} <span className="text-rose-500">*</span>
                             </label>
                             <div className="flex flex-wrap gap-2">
                               {(m.photos || (m.photo ? [m.photo] : [])).map((p, pIdx) => (
@@ -565,7 +568,7 @@ export default function AdsLanding() {
                               {(m.photos || (m.photo ? [m.photo] : [])).length < 5 && (
                                 <label className="flex flex-col items-center justify-center w-[100px] h-[100px] bg-white border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-indigo-300 hover:bg-indigo-50 transition-all shrink-0">
                                   <ImageIcon className="w-6 h-6 text-slate-300 mb-1" />
-                                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center px-1 leading-tight">إضافة صورة</span>
+                                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center px-1 leading-tight">{isAr ? 'إضافة صورة' : 'Ajouter'}</span>
                                   <input type="file" accept="image/*" onChange={e => handleModelPhoto(m.id, e)} className="hidden" />
                                 </label>
                               )}
@@ -580,11 +583,11 @@ export default function AdsLanding() {
                           return (
                             <div className="mt-4 p-4 bg-white border-2 border-emerald-100 rounded-xl flex items-center justify-between">
                               <div>
-                                <p className="text-xs font-black text-emerald-600 uppercase tracking-widest">التكلفة التقديرية</p>
+                                <p className="text-xs font-black text-emerald-600 uppercase tracking-widest">{isAr ? 'التكلفة التقديرية' : 'Coût Estimé'}</p>
                               </div>
-                              <div className="text-right">
-                                <p className="text-sm font-black text-slate-800">{est.min} - {est.max} MAD <span className="text-xs text-slate-500">/ قطعة</span></p>
-                                <p className="text-xs font-bold text-emerald-500">الإجمالي: {est.totalMin.toLocaleString()} - {est.totalMax.toLocaleString()} MAD</p>
+                              <div className={`text-${isAr ? 'right' : 'left'}`}>
+                                <p className="text-sm font-black text-slate-800">{est.min} - {est.max} MAD <span className="text-xs text-slate-500">{isAr ? '/ قطعة' : '/ Pièce'}</span></p>
+                                <p className="text-xs font-bold text-emerald-500">{isAr ? 'الإجمالي:' : 'Total :'} {est.totalMin.toLocaleString()} - {est.totalMax.toLocaleString()} MAD</p>
                               </div>
                             </div>
                           );
@@ -594,7 +597,7 @@ export default function AdsLanding() {
 
                     <button type="button" onClick={() => setModels(prev => [...prev, emptyModel()])}
                       className="w-full py-4 border-2 border-dashed border-indigo-300 text-indigo-600 bg-indigo-50/50 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-indigo-100 transition-all flex items-center justify-center gap-2">
-                      + إضافة موديل آخر
+                      + {isAr ? 'إضافة موديل آخر' : 'Ajouter un autre modèle'}
                     </button>
 
                     {(() => {
@@ -609,17 +612,17 @@ export default function AdsLanding() {
 
                       return liveTotals.max > 0 && (
                         <div className="bg-emerald-50 border-2 border-emerald-500 rounded-2xl p-6 text-center animate-in zoom-in-95 duration-300">
-                          <p className="text-sm font-black text-emerald-600 uppercase tracking-widest mb-2">إجمالي تكلفة مشروعك التقديرية</p>
+                          <p className="text-sm font-black text-emerald-600 uppercase tracking-widest mb-2">{isAr ? 'إجمالي تكلفة مشروعك التقديرية' : 'Estimation Totale du Projet'}</p>
                           <p className="text-3xl font-black text-emerald-700">
-                            {liveTotals.min.toLocaleString()} - {liveTotals.max.toLocaleString()} درهم
+                            {liveTotals.min.toLocaleString()} - {liveTotals.max.toLocaleString()} {isAr ? 'درهم' : 'DH'}
                           </p>
-                          <p className="text-xs font-medium text-emerald-600/70 mt-2">السعر قابل للتفاوض البسيط حسب التفاصيل الدقيقة.</p>
+                          <p className="text-xs font-medium text-emerald-600/70 mt-2">{isAr ? 'السعر قابل للتفاوض البسيط حسب التفاصيل الدقيقة.' : 'Prix légèrement négociable selon les détails exacts.'}</p>
                         </div>
                       );
                     })()}
 
                     <button type="submit" className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black text-lg uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-3">
-                      أنا موافق، أكمل معلوماتي للعمل فوراً <ArrowRight className="w-5 h-5 -scale-x-100" />
+                      {isAr ? 'أنا موافق، أكمل معلوماتي للعمل فوراً' : "Je suis d'accord, compléter mes informations"} <ArrowRight className={`w-5 h-5 ${isAr ? '-scale-x-100' : ''}`} />
                     </button>
                   </div>
                 )}
@@ -629,13 +632,13 @@ export default function AdsLanding() {
                   <div className="space-y-6 animate-in slide-in-from-left-4 duration-300">
                     <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
                       <Zap className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-                      <p className="text-sm text-amber-800 font-medium">خطوة أخيرة! أدخل معلوماتك لكي يتواصل معك فريقنا في أقرب وقت لتأكيد الطلب وبدء العمل على العينة.</p>
+                      <p className="text-sm text-amber-800 font-medium">{isAr ? 'خطوة أخيرة! أدخل معلوماتك لكي يتواصل معك فريقنا في أقرب وقت لتأكيد الطلب وبدء العمل على العينة.' : "Dernière étape ! Entrez vos informations pour que notre équipe vous contacte rapidement et commence le travail sur l'échantillon."}</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">الإسم الكامل</label>
-                        <input type="text" name="name" placeholder="Ex: Ahmed Alami" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" required />
+                        <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">{isAr ? 'الإسم الكامل' : 'Nom Complet'}</label>
+                        <input type="text" name="name" placeholder={isAr ? "مثال: أحمد العلمي" : "Ex: Ahmed Alami"} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" required />
                       </div>
                       <div>
                         <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">Email</label>
@@ -645,7 +648,7 @@ export default function AdsLanding() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">رقم الهاتف / الواتساب</label>
+                        <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">{isAr ? 'رقم الهاتف / الواتساب' : 'Téléphone / WhatsApp'}</label>
                         <div className="flex gap-3">
                           <div className="relative w-[100px] flex-shrink-0">
                             <select name="countryCode" className="w-full appearance-none bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 pl-4 pr-8 text-xs font-black outline-none focus:border-indigo-600 transition-colors h-[58px]">
@@ -662,21 +665,21 @@ export default function AdsLanding() {
                         </div>
                       </div>
                       <div>
-                        <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">المدينة</label>
-                        <input type="text" name="ville" placeholder="مثال: الدار البيضاء" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" required />
+                        <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">{isAr ? 'المدينة' : 'Ville'}</label>
+                        <input type="text" name="ville" placeholder={isAr ? "مثال: الدار البيضاء" : "Ex: Casablanca"} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" required />
                       </div>
                     </div>
 
                     <div className="flex gap-4 pt-4">
                       <button type="button" onClick={() => setSimulatorStep(1)} className="px-6 py-5 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-200 transition-all">
-                        رجوع
+                        {isAr ? 'رجوع' : 'Retour'}
                       </button>
                       <button type="submit" disabled={isSending} className="flex-1 py-5 bg-indigo-600 text-white rounded-2xl font-black text-lg uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-3 disabled:opacity-60">
-                        {isSending ? 'جاري الإرسال...' : 'تأكيد الطلب الآن'}
+                        {isSending ? (isAr ? 'جاري الإرسال...' : 'Envoi en cours...') : (isAr ? 'تأكيد الطلب الآن' : 'Confirmer la commande')}
                         {!isSending && <CheckCircle2 className="w-5 h-5 ml-2" />}
                       </button>
                     </div>
-                    <p className="text-center text-[10px] font-bold text-slate-400 mt-4">معلوماتك آمنة ولن يتم مشاركتها مع أي طرف ثالث.</p>
+                    <p className="text-center text-[10px] font-bold text-slate-400 mt-4">{isAr ? 'معلوماتك آمنة ولن يتم مشاركتها مع أي طرف ثالث.' : 'Vos informations sont en sécurité et ne seront pas partagées.'}</p>
                   </div>
                 )}
               </form>
