@@ -303,7 +303,7 @@ export default function AdsLanding() {
         <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setErrorMsg(null)}>
           <div className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200 border border-slate-100" onClick={e => e.stopPropagation()}>
             <div className="w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertTriangle className="w-8 h-8" />
+              <AlertTriangle className="w-6 h-6" />
             </div>
             <h4 className="text-xl font-black text-center text-slate-800 mb-2">تنبيه</h4>
             <p className="text-center text-slate-500 font-medium mb-6">{errorMsg}</p>
@@ -474,13 +474,13 @@ export default function AdsLanding() {
       {/* Simulator Modal */}
       {showSimulatorModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto">
-          <div className="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-300 my-auto">
+          <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-300 my-auto">
             <button onClick={() => setShowSimulatorModal(false)} className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 bg-slate-100 text-slate-500 hover:bg-slate-200 rounded-full transition-colors z-10">
               <X className="w-5 h-5" />
             </button>
             
-            <div className="p-6 md:p-10 max-h-[85vh] overflow-y-auto custom-scrollbar">
-              <div className="text-center mb-8">
+            <div className="p-4 md:p-6 max-h-[85vh] overflow-y-auto custom-scrollbar">
+              <div className="text-center mb-6">
                 <h2 className="text-2xl md:text-3xl font-black text-slate-800 mb-3">
                   {simulatorStep === 1 
                     ? (isAr ? 'حاسبة التكلفة' : 'Simulateur de Prix') 
@@ -500,7 +500,7 @@ export default function AdsLanding() {
               </div>
 
               <form
-                className="space-y-6"
+                className="space-y-4"
                 onSubmit={async (e) => {
                   e.preventDefault();
                   const formElement = e.currentTarget;
@@ -602,17 +602,17 @@ export default function AdsLanding() {
               >
                 {/* STEP 1: SIMULATOR */}
                 {simulatorStep === 1 && (
-                  <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                  <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
                     {models.map((m, idx) => (
-                      <div key={m.id} className="border-2 border-indigo-100 rounded-2xl p-4 md:p-6 space-y-4 bg-indigo-50/30 relative">
+                      <div key={m.id} className="border-2 border-indigo-100 rounded-2xl p-3 md:p-4 space-y-3 bg-indigo-50/30 relative">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-sm">{idx + 1}</div>
+                            <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-sm">{idx + 1}</div>
                             <h3 className="font-black text-slate-800 text-lg">{isAr ? 'الموديل' : 'Modèle'} {idx + 1}</h3>
                           </div>
                           {models.length > 1 && (
                             <button type="button" onClick={() => setModels(prev => prev.filter(x => x.id !== m.id))}
-                              className="w-8 h-8 bg-rose-100 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg flex items-center justify-center transition-all text-xs font-black shadow-sm">
+                              className="w-6 h-6 bg-rose-100 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg flex items-center justify-center transition-all text-xs font-black shadow-sm">
                               <X className="w-4 h-4" />
                             </button>
                           )}
@@ -620,10 +620,10 @@ export default function AdsLanding() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">نوع اللباس</label>
+                            <label className="block text-[10px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">نوع اللباس</label>
                             <div className="relative">
                               <select value={m.type} onChange={e => updateModel(m.id, { type: e.target.value })}
-                                className="w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors appearance-none">
+                                className="w-full bg-white border-2 border-slate-200 rounded-xl py-2 px-3 text-sm font-bold outline-none focus:border-indigo-600 transition-colors appearance-none">
                                 {tarifsDb.map(t => <option key={t.id} value={t.titre}>{t.titre}</option>)}
                                 {tarifsDb.length === 0 && <option value="T-Shirt">T-Shirt</option>}
                                 <option value="Autre">نوع آخر (Autre...)</option>
@@ -633,24 +633,24 @@ export default function AdsLanding() {
                             {m.type === 'Autre' && (
                               <input type="text" value={m.customType} onChange={e => updateModel(m.id, { customType: e.target.value })}
                                 placeholder={isAr ? 'حدد النوع' : 'Spécifiez le type'}
-                                className="mt-2 w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600" required />
+                                className="mt-2 w-full bg-white border-2 border-slate-200 rounded-xl py-2 px-3 text-sm font-bold outline-none focus:border-indigo-600" required />
                             )}
                           </div>
                           <div>
-                            <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">{isAr ? 'الكمية الإجمالية للموديل' : 'Quantité Totale'}</label>
+                            <label className="block text-[10px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">{isAr ? 'الكمية الإجمالية للموديل' : 'Quantité Totale'}</label>
                             <input type="number" min="1" placeholder="100" value={m.quantity} onChange={e => updateModel(m.id, { quantity: e.target.value })}
-                              className="w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600 h-[50px]" required />
+                              className="w-full bg-white border-2 border-slate-200 rounded-xl py-2 px-3 text-sm font-bold outline-none focus:border-indigo-600 h-[40px]" required />
                           </div>
                         </div>
 
                         <div>
-                          <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">{isAr ? 'المقاسات (اختياري - وزع الكمية)' : 'Tailles (Optionnel)'}</label>
+                          <label className="block text-[10px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">{isAr ? 'المقاسات (اختياري - وزع الكمية)' : 'Tailles (Optionnel)'}</label>
                           <div className="grid grid-cols-6 gap-2">
                             {['XS','S','M','L','XL','XXL'].map(size => (
                               <div key={size} className="relative group">
                                 <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 bg-indigo-50 text-[8px] font-black text-indigo-600 rounded-full border border-indigo-100 z-10">{size}</div>
                                 <input type="number" value={m.tailles[size]} onChange={e => updateModelTaille(m.id, size, e.target.value)} placeholder="0"
-                                  className="w-full bg-white border-2 border-slate-200 rounded-xl pt-3 pb-1 px-1 text-center text-xs font-black outline-none focus:border-indigo-600 h-[50px]" />
+                                  className="w-full bg-white border-2 border-slate-200 rounded-xl pt-3 pb-1 px-1 text-center text-xs font-black outline-none focus:border-indigo-600 h-[40px]" />
                               </div>
                             ))}
                           </div>
@@ -658,18 +658,18 @@ export default function AdsLanding() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">{isAr ? 'تفاصيل الطلب (ألوان، نوع الثوب...)' : 'Détails de la commande (Couleurs, Tissu...)'}</label>
+                            <label className="block text-[10px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">{isAr ? 'تفاصيل الطلب (ألوان، نوع الثوب...)' : 'Détails de la commande (Couleurs, Tissu...)'}</label>
                             <textarea rows={3} value={m.details} onChange={e => updateModel(m.id, { details: e.target.value })}
                               placeholder={isAr ? 'اشرح شنو باغي...' : 'Expliquez ce que vous voulez...'}
-                              className="w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600 resize-none" />
+                              className="w-full bg-white border-2 border-slate-200 rounded-xl py-2 px-3 text-sm font-bold outline-none focus:border-indigo-600 resize-none" />
                           </div>
                           <div>
-                            <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">
+                            <label className="block text-[10px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">
                               {isAr ? 'صورة الموديل' : 'Photo du modèle'} <span className="text-rose-500">*</span>
                             </label>
                             <div className="flex flex-wrap gap-2">
                               {(m.photos || (m.photo ? [m.photo] : [])).map((p, pIdx) => (
-                                <div key={pIdx} className="relative w-[100px] h-[100px] rounded-xl overflow-hidden border-2 border-indigo-200 shadow-sm">
+                                <div key={pIdx} className="relative w-[70px] h-[70px] rounded-xl overflow-hidden border-2 border-indigo-200 shadow-sm">
                                   <img src={p} className="w-full h-full object-cover" alt="" />
                                   <button type="button" onClick={() => removeModelPhoto(m.id, pIdx)}
                                     className="absolute top-1 right-1 p-1 bg-rose-500 text-white rounded-full hover:bg-rose-600 transition-colors shadow-sm">
@@ -678,8 +678,8 @@ export default function AdsLanding() {
                                 </div>
                               ))}
                               {(m.photos || (m.photo ? [m.photo] : [])).length < 5 && (
-                                <label className="flex flex-col items-center justify-center w-[100px] h-[100px] bg-white border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-indigo-300 hover:bg-indigo-50 transition-all shrink-0">
-                                  <ImageIcon className="w-6 h-6 text-slate-300 mb-1" />
+                                <label className="flex flex-col items-center justify-center w-[70px] h-[70px] bg-white border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-indigo-300 hover:bg-indigo-50 transition-all shrink-0">
+                                  <ImageIcon className="w-4 h-4 text-slate-300 mb-1" />
                                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center px-1 leading-tight">{isAr ? 'إضافة صورة' : 'Ajouter'}</span>
                                   <input type="file" accept="image/*" onChange={e => handleModelPhoto(m.id, e)} className="hidden" />
                                 </label>
@@ -741,7 +741,7 @@ export default function AdsLanding() {
 
                 {/* STEP 2: CONTACT INFO */}
                 {simulatorStep === 2 && (
-                  <div className="space-y-6 animate-in slide-in-from-left-4 duration-300">
+                  <div className="space-y-4 animate-in slide-in-from-left-4 duration-300">
                     <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
                       <Zap className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
                       <p className="text-sm text-amber-800 font-medium">{isAr ? 'خطوة أخيرة! أدخل معلوماتك لكي يتواصل معك فريقنا في أقرب وقت لتأكيد الطلب وبدء العمل على العينة.' : "Dernière étape ! Entrez vos informations pour que notre équipe vous contacte rapidement et commence le travail sur l'échantillon."}</p>

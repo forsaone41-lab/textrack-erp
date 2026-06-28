@@ -302,7 +302,7 @@ export default function LandingPage() {
         <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setErrorMsg(null)}>
           <div className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200 border border-slate-100" onClick={e => e.stopPropagation()}>
             <div className="w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertTriangle className="w-8 h-8" />
+              <AlertTriangle className="w-6 h-6" />
             </div>
             <h4 className="text-xl font-black text-center text-slate-800 mb-2">
               {isAr ? 'تنبيه' : 'Attention'}
@@ -588,7 +588,7 @@ export default function LandingPage() {
               {isAr ? 'احصل على عرض سعر سريع (Devis Express)' : 'Demander un Devis Express'}
               <span className="text-white/70 group-hover:translate-x-1 transition-transform text-base">→</span>
             </a>
-            <p className="text-[11px] text-slate-400 font-medium">
+            <p className="text-[10px] text-slate-400 font-medium">
               {isAr ? 'خدمة مخصصة وسريعة لأصحاب المشاريع والتجارة الإلكترونية' : 'Service rapide dédié aux marques et E-commerce'}
             </p>
           </div>
@@ -607,7 +607,7 @@ export default function LandingPage() {
                     : 'Remplissez ce formulaire et notre équipe vous contactera en moins de 24h pour discuter de votre projet et vous proposer le meilleur tarif.'}
                 </p>
 
-                <div className="space-y-6 relative z-10">
+                <div className="space-y-4 relative z-10">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-indigo-400 border border-white/10">
                       <Zap className="w-6 h-6" />
@@ -631,7 +631,7 @@ export default function LandingPage() {
 
               <div className="p-6 md:p-12 lg:p-16">
                                 <form
-                  className="space-y-6"
+                  className="space-y-4"
                   onSubmit={async (e) => {
                     e.preventDefault();
                     const formElement = e.currentTarget;
@@ -738,17 +738,17 @@ export default function LandingPage() {
                   </div>
 
                   {simulatorStep === 1 && (
-                    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                    <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
                       {models.map((m, idx) => (
-                        <div key={m.id} className="border-2 border-indigo-100 rounded-2xl p-4 md:p-6 space-y-4 bg-indigo-50/30 relative">
+                        <div key={m.id} className="border-2 border-indigo-100 rounded-2xl p-3 md:p-4 space-y-3 bg-indigo-50/30 relative">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-sm">{idx + 1}</div>
+                              <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-sm">{idx + 1}</div>
                               <h3 className="font-black text-slate-800 text-lg">{isAr ? 'الموديل' : 'Modèle'} {idx + 1}</h3>
                             </div>
                             {models.length > 1 && (
                               <button type="button" onClick={() => setModels(prev => prev.filter(x => x.id !== m.id))}
-                                className="w-8 h-8 bg-rose-100 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg flex items-center justify-center transition-all text-xs font-black shadow-sm">
+                                className="w-6 h-6 bg-rose-100 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg flex items-center justify-center transition-all text-xs font-black shadow-sm">
                                 <X className="w-4 h-4" />
                               </button>
                             )}
@@ -756,10 +756,10 @@ export default function LandingPage() {
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                              <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">{isAr ? 'نوع اللباس' : 'Type de vêtement'}</label>
+                              <label className="block text-[10px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">{isAr ? 'نوع اللباس' : 'Type de vêtement'}</label>
                               <div className="relative">
                                 <select value={m.type} onChange={e => updateModel(m.id, { type: e.target.value })}
-                                  className="w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors appearance-none">
+                                  className="w-full bg-white border-2 border-slate-200 rounded-xl py-2 px-3 text-sm font-bold outline-none focus:border-indigo-600 transition-colors appearance-none">
                                   {tarifsDb.map(t => <option key={t.id} value={t.titre}>{t.titre}</option>)}
                                   {tarifsDb.length === 0 && (
                                     <>
@@ -773,24 +773,24 @@ export default function LandingPage() {
                               {m.type === 'Autre' && (
                                 <input type="text" value={m.customType} onChange={e => updateModel(m.id, { customType: e.target.value })}
                                   placeholder={isAr ? 'حدد النوع' : 'Spécifiez le type'}
-                                  className="mt-2 w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600" required />
+                                  className="mt-2 w-full bg-white border-2 border-slate-200 rounded-xl py-2 px-3 text-sm font-bold outline-none focus:border-indigo-600" required />
                               )}
                             </div>
                             <div>
-                              <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">{isAr ? 'الكمية الإجمالية للموديل' : 'Quantité Totale'}</label>
+                              <label className="block text-[10px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">{isAr ? 'الكمية الإجمالية للموديل' : 'Quantité Totale'}</label>
                               <input type="number" min="1" placeholder="100" value={m.quantity} onChange={e => updateModel(m.id, { quantity: e.target.value })}
-                                className="w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600 h-[50px]" required />
+                                className="w-full bg-white border-2 border-slate-200 rounded-xl py-2 px-3 text-sm font-bold outline-none focus:border-indigo-600 h-[40px]" required />
                             </div>
                           </div>
 
                           <div>
-                            <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">{isAr ? 'المقاسات (اختياري - وزع الكمية)' : 'Tailles (Optionnel)'}</label>
+                            <label className="block text-[10px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">{isAr ? 'المقاسات (اختياري - وزع الكمية)' : 'Tailles (Optionnel)'}</label>
                             <div className="grid grid-cols-6 gap-2">
                               {['XS','S','M','L','XL','XXL'].map(size => (
                                 <div key={size} className="relative group">
                                   <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 bg-indigo-50 text-[8px] font-black text-indigo-600 rounded-full border border-indigo-100 z-10">{size}</div>
                                   <input type="number" value={m.tailles[size]} onChange={e => updateModelTaille(m.id, size, e.target.value)} placeholder="0"
-                                    className="w-full bg-white border-2 border-slate-200 rounded-xl pt-3 pb-1 px-1 text-center text-xs font-black outline-none focus:border-indigo-600 h-[50px]" />
+                                    className="w-full bg-white border-2 border-slate-200 rounded-xl pt-3 pb-1 px-1 text-center text-xs font-black outline-none focus:border-indigo-600 h-[40px]" />
                                 </div>
                               ))}
                             </div>
@@ -798,18 +798,18 @@ export default function LandingPage() {
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                              <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">{isAr ? 'تفاصيل الطلب (ألوان، نوع الثوب...)' : 'Détails de la commande (Couleurs, Tissu...)'}</label>
+                              <label className="block text-[10px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">{isAr ? 'تفاصيل الطلب (ألوان، نوع الثوب...)' : 'Détails de la commande (Couleurs, Tissu...)'}</label>
                               <textarea rows={3} value={m.details} onChange={e => updateModel(m.id, { details: e.target.value })}
                                 placeholder={isAr ? 'اشرح شنو باغي...' : 'Expliquez ce que vous voulez...'}
-                                className="w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600 resize-none" />
+                                className="w-full bg-white border-2 border-slate-200 rounded-xl py-2 px-3 text-sm font-bold outline-none focus:border-indigo-600 resize-none" />
                             </div>
                             <div>
-                              <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">
+                              <label className="block text-[10px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">
                                 {isAr ? 'صورة الموديل' : 'Photo du modèle'} <span className="text-rose-500">*</span>
                               </label>
                               <div className="flex flex-wrap gap-2">
                                 {(m.photos || (m.photo ? [m.photo] : [])).map((p, pIdx) => (
-                                  <div key={pIdx} className="relative w-[100px] h-[100px] rounded-xl overflow-hidden border-2 border-indigo-200 shadow-sm">
+                                  <div key={pIdx} className="relative w-[70px] h-[70px] rounded-xl overflow-hidden border-2 border-indigo-200 shadow-sm">
                                     <img src={p} className="w-full h-full object-cover" alt="" />
                                     <button type="button" onClick={() => removeModelPhoto(m.id, pIdx)}
                                       className="absolute top-1 right-1 p-1 bg-rose-500 text-white rounded-full hover:bg-rose-600 transition-colors shadow-sm">
@@ -818,8 +818,8 @@ export default function LandingPage() {
                                   </div>
                                 ))}
                                 {(m.photos || (m.photo ? [m.photo] : [])).length < 5 && (
-                                  <label className="flex flex-col items-center justify-center w-[100px] h-[100px] bg-white border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-indigo-300 hover:bg-indigo-50 transition-all shrink-0">
-                                    <ImageIcon className="w-6 h-6 text-slate-300 mb-1" />
+                                  <label className="flex flex-col items-center justify-center w-[70px] h-[70px] bg-white border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-indigo-300 hover:bg-indigo-50 transition-all shrink-0">
+                                    <ImageIcon className="w-4 h-4 text-slate-300 mb-1" />
                                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center px-1 leading-tight">{isAr ? 'إضافة صورة' : 'Ajouter'}</span>
                                     <input type="file" accept="image/*" onChange={e => handleModelPhoto(m.id, e)} className="hidden" />
                                   </label>
@@ -881,7 +881,7 @@ export default function LandingPage() {
 
                   {/* STEP 2: CONTACT INFO */}
                   {simulatorStep === 2 && (
-                    <div className="space-y-6 animate-in slide-in-from-left-4 duration-300">
+                    <div className="space-y-4 animate-in slide-in-from-left-4 duration-300">
                       <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
                         <Zap className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
                         <p className="text-sm text-amber-800 font-medium">{isAr ? 'خطوة أخيرة! أدخل معلوماتك لكي يتواصل معك فريقنا في أقرب وقت لتأكيد الطلب وبدء العمل على العينة.' : "Dernière étape ! Entrez vos informations pour que notre équipe vous contacte rapidement et commence le travail sur l'échantillon."}</p>
@@ -962,7 +962,7 @@ export default function LandingPage() {
             {services.map((s, i) => (
               <div key={i} className="group p-10 bg-white rounded-3xl md:rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-100/50 hover:shadow-2xl hover:border-indigo-100 transition-all duration-500">
                 <div className={`w-16 h-16 rounded-[2rem] bg-gradient-to-br ${s.color} flex items-center justify-center text-white mb-8 shadow-lg transform group-hover:rotate-12 transition-transform`}>
-                  <s.icon className="w-8 h-8" />
+                  <s.icon className="w-6 h-6" />
                 </div>
                 <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-4">{s.title}</h3>
                 <p className="text-slate-500 font-medium leading-relaxed">{s.desc}</p>
@@ -982,7 +982,7 @@ export default function LandingPage() {
               <div className="w-24 h-24 bg-indigo-50 rounded-[2.5rem] flex items-center justify-center text-indigo-600 shadow-xl shadow-indigo-100 border-4 border-white animate-bounce duration-1000">
                 <RotateCw className="w-10 h-10 animate-spin" />
               </div>
-              <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-emerald-500 rounded-full border-4 border-white flex items-center justify-center animate-pulse">
+              <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-emerald-500 rounded-full border-4 border-white flex items-center justify-center animate-pulse">
                 <div className="w-2 h-2 bg-white rounded-full" />
               </div>
             </div>
@@ -1081,7 +1081,7 @@ export default function LandingPage() {
             {/* Contact Info Cards */}
             <div className="bg-slate-50 p-10 rounded-[3rem] border border-slate-100 flex flex-col items-center text-center group hover:bg-slate-900 hover:text-white transition-all duration-500">
               <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-indigo-600 mb-6 shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                <Globe className="w-8 h-8" />
+                <Globe className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-black uppercase tracking-tight mb-2">{isAr ? 'مقرنا' : 'Adresse'}</h3>
               <p className="text-sm font-medium opacity-70">{company.address}</p>
@@ -1089,7 +1089,7 @@ export default function LandingPage() {
 
             <div className="bg-slate-50 p-10 rounded-[3rem] border border-slate-100 flex flex-col items-center text-center group hover:bg-slate-900 hover:text-white transition-all duration-500">
               <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-emerald-600 mb-6 shadow-sm group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-                <MessageCircle className="w-8 h-8" />
+                <MessageCircle className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-black uppercase tracking-tight mb-2">{isAr ? 'واتساب' : 'WhatsApp'}</h3>
               <p className="text-sm font-black tracking-widest tabular-nums">{company.phone}</p>
@@ -1098,7 +1098,7 @@ export default function LandingPage() {
 
             <div className="bg-slate-50 p-10 rounded-[3rem] border border-slate-100 flex flex-col items-center text-center group hover:bg-slate-900 hover:text-white transition-all duration-500">
               <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-rose-600 mb-6 shadow-sm group-hover:bg-rose-600 group-hover:text-white transition-colors">
-                <LogOut className="w-8 h-8 rotate-180" />
+                <LogOut className="w-6 h-6 rotate-180" />
               </div>
               <h3 className="text-xl font-black uppercase tracking-tight mb-2">Email</h3>
               <p className="text-sm font-medium opacity-70">{company.email}</p>
