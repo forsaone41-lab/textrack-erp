@@ -86,6 +86,33 @@ export default function Tarifs() {
 
   const categories = ['Toutes', 'Confection', 'Impression', 'Broderie', 'Finition', 'Matière Première', 'Patronnage', 'Autre'];
 
+  const getCategoryName = (cat: string) => {
+    if (!isAr) return cat === 'Toutes' ? 'Tous' : cat;
+    switch (cat) {
+      case 'Toutes': return 'الكل';
+      case 'Confection': return 'خياطة';
+      case 'Impression': return 'طباعة';
+      case 'Broderie': return 'تطريز';
+      case 'Finition': return 'تشطيب';
+      case 'Matière Première': return 'مواد أولية';
+      case 'Patronnage': return 'تصميم وباترون';
+      case 'Autre': return 'أخرى';
+      default: return cat;
+    }
+  };
+
+  const getUnitName = (u: string) => {
+    if (!isAr) return u;
+    switch (u) {
+      case 'Pièce': return 'قطعة';
+      case 'Mètre': return 'متر';
+      case 'Logo': return 'شعار';
+      case 'Heure': return 'ساعة';
+      case 'Forfait': return 'خدمة كاملة';
+      default: return u;
+    }
+  };
+
   const filtered = tarifs.filter(t => {
     const matchSearch = t.titre.toLowerCase().includes(search.toLowerCase()) || 
                         (t.description || '').toLowerCase().includes(search.toLowerCase());
@@ -142,7 +169,7 @@ export default function Tarifs() {
                   : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
               }`}
             >
-              {c === 'Toutes' ? (isAr ? 'الكل' : 'Tous') : c}
+              {getCategoryName(c)}
             </button>
           ))}
         </div>
@@ -171,7 +198,7 @@ export default function Tarifs() {
             <div key={t.id} className="bg-white rounded-[2rem] p-6 border-2 border-slate-50 shadow-sm hover:shadow-xl hover:border-indigo-50 transition-all group flex flex-col h-full relative overflow-hidden">
               {!t.actif && (
                 <div className="absolute top-4 right-4 px-2 py-1 bg-slate-100 text-slate-400 text-[9px] font-black uppercase tracking-widest rounded-md">
-                  Inactif
+                  {isAr ? 'غير متاح' : 'Inactif'}
                 </div>
               )}
               
@@ -203,7 +230,7 @@ export default function Tarifs() {
                     t.categorie === 'Patronnage' ? 'text-cyan-500' :
                     'text-slate-500'
                   }`}>
-                    {t.categorie}
+                    {getCategoryName(t.categorie)}
                   </span>
                   <h3 className="text-base font-black text-slate-900 uppercase tracking-tight leading-tight mt-1">{t.titre}</h3>
                 </div>
@@ -228,7 +255,7 @@ export default function Tarifs() {
                     )}
                     <span className="text-xs font-bold text-slate-500 ml-1">MAD</span>
                   </div>
-                  <span className="text-xs font-black text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md mt-1 inline-block">/ {t.unite}</span>
+                  <span className="text-xs font-black text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md mt-1 inline-block">/ {getUnitName(t.unite)}</span>
                 </div>
                 
                 {can('tarifs_edit') && (
@@ -282,24 +309,24 @@ export default function Tarifs() {
                   placeholder="Ex: Confection T-shirt Col Rond"
                 />
                 <datalist id="vetements-list">
-                  <option value="Confection T-shirt Oversize" />
-                  <option value="Confection T-shirt Col Rond" />
-                  <option value="Confection Polo Classique" />
-                  <option value="Confection Sweat à Capuche (Hoodie)" />
-                  <option value="Confection Sweat sans Capuche (Crewneck)" />
-                  <option value="Confection Pantalon Jogging" />
-                  <option value="Confection Pantalon Cargo" />
-                  <option value="Confection Ensemble Sportwear" />
-                  <option value="Confection Veste Zippée" />
-                  <option value="Confection Chemise" />
-                  <option value="Confection Short" />
-                  <option value="Impression DTF (Format A3)" />
-                  <option value="Impression DTF (Format A4)" />
-                  <option value="Impression Sérigraphie (1 Couleur)" />
-                  <option value="Broderie Logo Cœur (Petite)" />
-                  <option value="Broderie Dos (Grande)" />
-                  <option value="Finition : Pose d'étiquette" />
-                  <option value="Finition : Repassage + Emballage" />
+                  <option value={isAr ? "خياطة تيشرت أوفرسايز" : "Confection T-shirt Oversize"} />
+                  <option value={isAr ? "خياطة تيشرت كول روند" : "Confection T-shirt Col Rond"} />
+                  <option value={isAr ? "خياطة بولو كلاسيك" : "Confection Polo Classique"} />
+                  <option value={isAr ? "خياطة سويت شيرت بقبعة" : "Confection Sweat à Capuche (Hoodie)"} />
+                  <option value={isAr ? "خياطة سويت شيرت عادي" : "Confection Sweat sans Capuche (Crewneck)"} />
+                  <option value={isAr ? "خياطة سروال رياضي" : "Confection Pantalon Jogging"} />
+                  <option value={isAr ? "خياطة سروال كارجو" : "Confection Pantalon Cargo"} />
+                  <option value={isAr ? "خياطة طقم رياضي" : "Confection Ensemble Sportwear"} />
+                  <option value={isAr ? "خياطة فيست (Veste)" : "Confection Veste Zippée"} />
+                  <option value={isAr ? "خياطة قميص" : "Confection Chemise"} />
+                  <option value={isAr ? "خياطة شورت" : "Confection Short"} />
+                  <option value={isAr ? "طباعة DTF (حجم A3)" : "Impression DTF (Format A3)"} />
+                  <option value={isAr ? "طباعة DTF (حجم A4)" : "Impression DTF (Format A4)"} />
+                  <option value={isAr ? "طباعة سيريغرافي (لون واحد)" : "Impression Sérigraphie (1 Couleur)"} />
+                  <option value={isAr ? "تطريز شعار (صغير)" : "Broderie Logo Cœur (Petite)"} />
+                  <option value={isAr ? "تطريز ظهر (كبير)" : "Broderie Dos (Grande)"} />
+                  <option value={isAr ? "تشطيب: تركيب الملصق (Étiquette)" : "Finition : Pose d'étiquette"} />
+                  <option value={isAr ? "تشطيب: مصلوح + تغليف" : "Finition : Repassage + Emballage"} />
                 </datalist>
               </div>
 
