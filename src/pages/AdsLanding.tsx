@@ -14,6 +14,8 @@ export default function AdsLanding() {
   const [isAr, setIsAr] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [tarifsDb, setTarifsDb] = useState<TarifService[]>([]);
+  const [showSimulatorModal, setShowSimulatorModal] = useState(false);
+  const [simulatorStep, setSimulatorStep] = useState(1);
 
   interface ModelEntry {
     id: string;
@@ -231,8 +233,8 @@ export default function AdsLanding() {
               </>
             )}
           </div>
-          <button onClick={() => document.getElementById('devis')?.scrollIntoView({ behavior: 'smooth' })} className="px-6 py-2.5 bg-slate-900 text-white rounded-full text-sm font-bold shadow-lg hover:bg-indigo-600 hover:shadow-indigo-200 transition-all flex items-center gap-2">
-            احصل على عرض سعر <ChevronRight className="w-4 h-4 rotate-180" />
+          <button onClick={() => { setShowSimulatorModal(true); setSimulatorStep(1); }} className="px-6 py-2.5 bg-slate-900 text-white rounded-full text-sm font-bold shadow-lg hover:bg-indigo-600 hover:shadow-indigo-200 transition-all flex items-center gap-2">
+            احسب التكلفة مجاناً <ChevronRight className="w-4 h-4 rotate-180" />
           </button>
         </div>
       </header>
@@ -339,7 +341,7 @@ export default function AdsLanding() {
               </div>
               <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6">
                 <h4 className="font-black text-slate-800 mb-2 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-500"></div> كيفاش كنعرف الأثمنة ديالكم؟</h4>
-                <p className="text-slate-600 font-medium text-sm pr-4">الثمن يعتمد على نوع اللباس والكمية. يمكنك استخدام <button onClick={() => document.getElementById('devis')?.scrollIntoView({ behavior: 'smooth' })} className="text-indigo-600 font-bold underline">سيميلاطور الأثمنة أسفله</button>، قم بإدخال الموديل والكمية وسيعطيك تقديراً فورياً.</p>
+                <p className="text-slate-600 font-medium text-sm pr-4">الثمن يعتمد على نوع اللباس والكمية. يمكنك استخدام <button onClick={() => { setShowSimulatorModal(true); setSimulatorStep(1); }} className="text-indigo-600 font-bold underline">سيميلاطور الأثمنة أسفله</button>، قم بإدخال الموديل والكمية وسيعطيك تقديراً فورياً.</p>
               </div>
             </div>
           </div>
@@ -347,256 +349,326 @@ export default function AdsLanding() {
       </section>
 
       {/* Form Section */}
-      <section id="devis" className="py-20 px-6 bg-slate-50 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2U1ZTdlYiIgc3Ryb2tlLXdpZHRoPSIwLjUiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-50"></div>
-        
-        <div className="max-w-4xl mx-auto relative z-10">
-          <div className="bg-white p-8 md:p-12 rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.1)] border border-slate-100 overflow-hidden">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl font-black text-slate-800 mb-4">سيميلاطور الأثمنة والطلب</h2>
-              <p className="text-slate-500 font-medium">أدخل الموديلات التي ترغب في تصنيعها للحصول على تقدير فوري للتكلفة.</p>
-            </div>
-
-            <form
-              className="space-y-6"
-              onSubmit={async (e) => {
-                e.preventDefault();
-                const formElement = e.currentTarget;
-                const formData = new FormData(formElement);
-                const countryCode = (formElement.querySelector('select[name="countryCode"]') as HTMLSelectElement)?.value || '+212';
-                const rawPhone = formData.get('phone') as string;
-                const fullPhone = countryCode + (rawPhone.startsWith('0') ? rawPhone.substring(1) : rawPhone);
-                const clientName = formData.get('name') as string;
-                const clientEmail = formData.get('email') as string || 'Non spécifié';
-                const clientVille = formData.get('ville') as string || 'Non spécifié';
-
-                if (!clientName.trim().includes(' ')) {
-                  setErrorMsg('المرجو إدخال الإسم الكامل (الشخصي والعائلي)');
-                  return;
-                }
-
-                const missingPhoto = models.find(m => !m.photo && (!m.photos || m.photos.length === 0));
-                if (missingPhoto) {
-                  setErrorMsg('كل موديل خاصو عندو صورة (إجباري)');
-                  return;
-                }
-
-                setIsSending(true);
-                try {
-                  let totMin = 0;
-                  let totMax = 0;
-                  
-                  for (const m of models) {
-                    const finalType = (m.type === 'Autre' || m.type === 'آخر') ? m.customType : m.type;
-                    const est = calculateEstimate(m.type, m.quantity);
-                    if (est) {
-                      totMin += est.totalMin;
-                      totMax += est.totalMax;
-                    }
-                    
-                    await saveLead({
-                      name: clientName,
-                      email: clientEmail,
-                      phone: fullPhone,
-                      ville: clientVille,
-                      type: finalType,
-                      quantity: Number(m.quantity) || 1,
-                      tailles: Object.fromEntries(Object.entries(m.tailles).filter(([_, v]) => v !== '').map(([k, v]) => [k, Number(v)])),
-                      details: m.details,
-                      photo: m.photos?.[0] || m.photo!,
-                      photos: m.photos || (m.photo ? [m.photo] : []),
-                    });
-                  }
-                  
-                  // Track Facebook Pixel Lead event
-                  trackPixelEvent('Lead', {
-                    content_name: models.map(m => m.type).join(', '),
-                    content_category: 'Confection Lead',
-                    value: models.reduce((acc, m) => acc + (Number(m.quantity) || 1), 0),
-                    currency: 'MAD'
-                  });
-
-                  setSubmittedName(clientName);
-                  if (totMin > 0) {
-                    setTotalEstimate({ min: totMin, max: totMax });
-                  } else {
-                    setTotalEstimate(null);
-                  }
-
-                  setIsSending(false);
-                  setIsSuccess(true);
-                  
-                  // Do NOT auto open whatsapp. Let them read the success page and click.
-
-                  setModels([emptyModel()]);
-                  formElement.reset();
-                } catch (err: any) {
-                  setIsSending(false);
-                  console.error("Error in AdsLanding:", err);
-                  setErrorMsg('وقع خطأ أثناء الإرسال. المرجو التأكد من أن جميع الخانات صحيحة.');
-                }
-              }}
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">الإسم الكامل</label>
-                  <input type="text" name="name" placeholder="Ex: Ahmed Alami" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" required />
-                </div>
-                <div>
-                  <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">Email (اختياري)</label>
-                  <input type="email" name="email" placeholder="email@example.com" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-6">
-                <div>
-                  <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">المدينة (اختياري)</label>
-                  <input type="text" name="ville" placeholder="مثال: الدار البيضاء" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-6">
-                <div>
-                  <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">رقم الهاتف / الواتساب</label>
-                  <div className="flex gap-3">
-                    <div className="relative w-[100px] flex-shrink-0">
-                      <select name="countryCode" className="w-full appearance-none bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 pl-4 pr-8 text-xs font-black outline-none focus:border-indigo-600 transition-colors h-[58px]">
-                        <option value="+212">🇲🇦 212</option>
-                        <option value="+33">🇫🇷 33</option>
-                        <option value="+34">🇪🇸 34</option>
-                        <option value="+1">🇺🇸 1</option>
-                      </select>
-                      <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400">
-                        <ChevronDown className="w-4 h-4" />
-                      </div>
-                    </div>
-                    <input type="tel" name="phone" placeholder="6XXXXXXXX" className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold outline-none focus:border-indigo-600 transition-colors h-[58px]" dir="ltr" required />
-                  </div>
-                </div>
-              </div>
-
-              {/* Dynamic models */}
-              {models.map((m, idx) => (
-                <div key={m.id} className="border-2 border-indigo-100 rounded-2xl p-4 md:p-6 space-y-4 bg-indigo-50/30 relative">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs font-black text-indigo-600 uppercase tracking-widest bg-indigo-100/50 px-3 py-1.5 rounded-lg">
-                      الموديل {idx + 1}
-                    </p>
-                    {models.length > 1 && (
-                      <button type="button" onClick={() => setModels(prev => prev.filter(x => x.id !== m.id))}
-                        className="w-8 h-8 bg-rose-100 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg flex items-center justify-center transition-all text-xs font-black shadow-sm">
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">نوع اللباس</label>
-                      <div className="relative">
-                        <select value={m.type} onChange={e => updateModel(m.id, { type: e.target.value })}
-                          className="w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors appearance-none">
-                          {tarifsDb.map(t => <option key={t.id} value={t.titre}>{t.titre}</option>)}
-                          {tarifsDb.length === 0 && (
-                            <option value="T-Shirt">T-Shirt</option>
-                          )}
-                          <option value="Autre">نوع آخر (Autre...)</option>
-                        </select>
-                        <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                      </div>
-                      {m.type === 'Autre' && (
-                        <input type="text" value={m.customType} onChange={e => updateModel(m.id, { customType: e.target.value })}
-                          placeholder="حدد النوع"
-                          className="mt-2 w-full bg-indigo-50 border-2 border-indigo-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600" required />
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">الكمية الإجمالية للموديل</label>
-                      <input type="number" min="1" placeholder="100" value={m.quantity} onChange={e => updateModel(m.id, { quantity: e.target.value })}
-                        className="w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600 h-[50px]" required />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">المقاسات (اختياري - وزع الكمية)</label>
-                    <div className="grid grid-cols-6 gap-2">
-                      {['XS','S','M','L','XL','XXL'].map(size => (
-                        <div key={size} className="relative group">
-                          <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 bg-indigo-50 text-[8px] font-black text-indigo-600 rounded-full border border-indigo-100 z-10">{size}</div>
-                          <input type="number" value={m.tailles[size]} onChange={e => updateModelTaille(m.id, size, e.target.value)} placeholder="0"
-                            className="w-full bg-white border-2 border-slate-200 rounded-xl pt-3 pb-1 px-1 text-center text-xs font-black outline-none focus:border-indigo-600 h-[50px]" />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">تفاصيل الطلب (ألوان، نوع الثوب...)</label>
-                      <textarea rows={3} value={m.details} onChange={e => updateModel(m.id, { details: e.target.value })}
-                        placeholder="اشرح شنو باغي..."
-                        className="w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600 resize-none" />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">
-                        صورة الموديل <span className="text-rose-500">*</span>
-                      </label>
-                      <div className="flex flex-wrap gap-2">
-                        {(m.photos || (m.photo ? [m.photo] : [])).map((p, pIdx) => (
-                          <div key={pIdx} className="relative w-[100px] h-[100px] rounded-xl overflow-hidden border-2 border-indigo-200 shadow-sm">
-                            <img src={p} className="w-full h-full object-cover" alt="" />
-                            <button type="button" onClick={() => removeModelPhoto(m.id, pIdx)}
-                              className="absolute top-1 right-1 p-1 bg-rose-500 text-white rounded-full hover:bg-rose-600 transition-colors shadow-sm">
-                              <X className="w-3 h-3" />
-                            </button>
-                          </div>
-                        ))}
-                        {(m.photos || (m.photo ? [m.photo] : [])).length < 5 && (
-                          <label className="flex flex-col items-center justify-center w-[100px] h-[100px] bg-white border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-indigo-300 hover:bg-indigo-50 transition-all shrink-0">
-                            <ImageIcon className="w-6 h-6 text-slate-300 mb-1" />
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center px-1 leading-tight">إضافة صورة</span>
-                            <input type="file" accept="image/*" onChange={e => handleModelPhoto(m.id, e)} className="hidden" />
-                          </label>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Simulator display */}
-                  {(() => {
-                    const est = calculateEstimate(m.type, m.quantity);
-                    if (!est) return null;
-                    return (
-                      <div className="mt-4 p-4 bg-white border-2 border-emerald-100 rounded-xl flex items-center justify-between">
-                        <div>
-                          <p className="text-xs font-black text-emerald-600 uppercase tracking-widest">التكلفة التقديرية للموديل</p>
-                          <p className="text-[10px] text-slate-400 font-medium mt-1">بناءً على {m.quantity} قطعة من نوع {m.type}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-black text-slate-800">{est.min} - {est.max} MAD <span className="text-xs text-slate-500">/ قطعة</span></p>
-                          <p className="text-xs font-bold text-emerald-500">الإجمالي: {est.totalMin.toLocaleString()} - {est.totalMax.toLocaleString()} MAD</p>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              ))}
-
-              {/* Add model button */}
-              <button type="button" onClick={() => setModels(prev => [...prev, emptyModel()])}
-                className="w-full py-4 border-2 border-dashed border-indigo-300 text-indigo-600 bg-indigo-50/50 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-indigo-100 transition-all flex items-center justify-center gap-2">
-                + إضافة موديل آخر
-              </button>
-
-              <button type="submit" disabled={isSending} className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-3 disabled:opacity-60 mt-4">
-                {isSending ? 'جاري الإرسال...' : `أرسل الطلب الآن ${models.length > 1 ? `(${models.length} موديلات)` : ''}`}
-                {!isSending && <Send className="w-5 h-5 ml-2" />}
-              </button>
-              <p className="text-center text-[10px] font-bold text-slate-400 mt-4">معلوماتك آمنة ولن يتم مشاركتها مع أي طرف ثالث.</p>
-            </form>
-          </div>
+      {/* CTA Section instead of inline form */}
+      <section className="py-24 px-6 bg-slate-900 text-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1558769132-cb1fac08c04a?auto=format&fit=crop&q=80')] opacity-5 bg-cover bg-center mix-blend-overlay"></div>
+        <div className="max-w-3xl mx-auto relative z-10">
+          <h2 className="text-4xl md:text-5xl font-black text-white mb-6">مستعد تبدا المشروع ديالك؟</h2>
+          <p className="text-slate-400 font-medium text-lg mb-10">استعمل السيميلاطور ديالنا باش تعرف التكلفة التقريبية فـ أقل من دقيقة، وبلا ماتدخل حتى معلومة شخصية!</p>
+          <button onClick={() => { setShowSimulatorModal(true); setSimulatorStep(1); }} className="px-8 py-4 bg-indigo-600 text-white rounded-full font-black uppercase tracking-widest shadow-xl shadow-indigo-500/20 hover:bg-indigo-700 hover:scale-105 transition-all flex items-center justify-center gap-3 mx-auto">
+            <Zap className="w-5 h-5" />
+            فتح السيميلاطور الآن
+          </button>
         </div>
       </section>
+
+      {/* Simulator Modal */}
+      {showSimulatorModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto">
+          <div className="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-300 my-auto">
+            <button onClick={() => setShowSimulatorModal(false)} className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 bg-slate-100 text-slate-500 hover:bg-slate-200 rounded-full transition-colors z-10">
+              <X className="w-5 h-5" />
+            </button>
+            
+            <div className="p-6 md:p-10 max-h-[85vh] overflow-y-auto custom-scrollbar">
+              <div className="text-center mb-8">
+                <h2 className="text-2xl md:text-3xl font-black text-slate-800 mb-3">
+                  {simulatorStep === 1 ? 'سيميلاطور الأثمنة' : 'إكمال المعلومات'}
+                </h2>
+                <p className="text-slate-500 font-medium text-sm">
+                  {simulatorStep === 1 
+                    ? 'أدخل الموديلات التي ترغب في تصنيعها للحصول على تقدير فوري للتكلفة.' 
+                    : 'التكلفة مناسبة؟ أدخل معلوماتك لنتواصل معك ونبدأ العمل فوراً.'}
+                </p>
+                
+                {/* Stepper indicator */}
+                <div className="flex items-center justify-center gap-4 mt-6">
+                  <div className={`h-2 rounded-full transition-all ${simulatorStep >= 1 ? 'w-16 bg-indigo-600' : 'w-4 bg-slate-200'}`}></div>
+                  <div className={`h-2 rounded-full transition-all ${simulatorStep >= 2 ? 'w-16 bg-indigo-600' : 'w-4 bg-slate-200'}`}></div>
+                </div>
+              </div>
+
+              <form
+                className="space-y-6"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const formElement = e.currentTarget;
+                  
+                  if (simulatorStep === 1) {
+                    const missingPhoto = models.find(m => !m.photo && (!m.photos || m.photos.length === 0));
+                    if (missingPhoto) {
+                      setErrorMsg('كل موديل خاصو عندو صورة (إجباري)');
+                      return;
+                    }
+                    setSimulatorStep(2);
+                    return;
+                  }
+
+                  const formData = new FormData(formElement);
+                  const countryCode = (formElement.querySelector('select[name="countryCode"]') as HTMLSelectElement)?.value || '+212';
+                  const rawPhone = formData.get('phone') as string;
+                  const fullPhone = countryCode + (rawPhone.startsWith('0') ? rawPhone.substring(1) : rawPhone);
+                  const clientName = formData.get('name') as string;
+                  const clientEmail = formData.get('email') as string || 'Non spécifié';
+                  const clientVille = formData.get('ville') as string || 'Non spécifié';
+
+                  if (!clientName.trim().includes(' ')) {
+                    setErrorMsg('المرجو إدخال الإسم الكامل (الشخصي والعائلي)');
+                    return;
+                  }
+
+                  setIsSending(true);
+                  try {
+                    let totMin = 0;
+                    let totMax = 0;
+                    
+                    for (const m of models) {
+                      const finalType = (m.type === 'Autre' || m.type === 'آخر') ? m.customType : m.type;
+                      const est = calculateEstimate(m.type, m.quantity);
+                      if (est) {
+                        totMin += est.totalMin;
+                        totMax += est.totalMax;
+                      }
+                      
+                      await saveLead({
+                        name: clientName,
+                        email: clientEmail,
+                        phone: fullPhone,
+                        ville: clientVille,
+                        type: finalType,
+                        quantity: Number(m.quantity) || 1,
+                        tailles: Object.fromEntries(Object.entries(m.tailles).filter(([_, v]) => v !== '').map(([k, v]) => [k, Number(v)])),
+                        details: m.details,
+                        photo: m.photos?.[0] || m.photo!,
+                        photos: m.photos || (m.photo ? [m.photo] : []),
+                      });
+                    }
+                    
+                    trackPixelEvent('Lead', {
+                      content_name: models.map(m => m.type).join(', '),
+                      content_category: 'Confection Lead',
+                      value: models.reduce((acc, m) => acc + (Number(m.quantity) || 1), 0),
+                      currency: 'MAD'
+                    });
+
+                    setSubmittedName(clientName);
+                    if (totMin > 0) {
+                      setTotalEstimate({ min: totMin, max: totMax });
+                    } else {
+                      setTotalEstimate(null);
+                    }
+
+                    setIsSending(false);
+                    setShowSimulatorModal(false);
+                    setIsSuccess(true);
+                    
+                    setModels([emptyModel()]);
+                    formElement.reset();
+                  } catch (err: any) {
+                    setIsSending(false);
+                    console.error("Error in AdsLanding:", err);
+                    setErrorMsg('وقع خطأ أثناء الإرسال. المرجو التأكد من أن جميع الخانات صحيحة.');
+                  }
+                }}
+              >
+                {/* STEP 1: SIMULATOR */}
+                {simulatorStep === 1 && (
+                  <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                    {models.map((m, idx) => (
+                      <div key={m.id} className="border-2 border-indigo-100 rounded-2xl p-4 md:p-6 space-y-4 bg-indigo-50/30 relative">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-xs font-black text-indigo-600 uppercase tracking-widest bg-indigo-100/50 px-3 py-1.5 rounded-lg">
+                            الموديل {idx + 1}
+                          </p>
+                          {models.length > 1 && (
+                            <button type="button" onClick={() => setModels(prev => prev.filter(x => x.id !== m.id))}
+                              className="w-8 h-8 bg-rose-100 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg flex items-center justify-center transition-all text-xs font-black shadow-sm">
+                              <X className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">نوع اللباس</label>
+                            <div className="relative">
+                              <select value={m.type} onChange={e => updateModel(m.id, { type: e.target.value })}
+                                className="w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors appearance-none">
+                                {tarifsDb.map(t => <option key={t.id} value={t.titre}>{t.titre}</option>)}
+                                {tarifsDb.length === 0 && <option value="T-Shirt">T-Shirt</option>}
+                                <option value="Autre">نوع آخر (Autre...)</option>
+                              </select>
+                              <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                            </div>
+                            {m.type === 'Autre' && (
+                              <input type="text" value={m.customType} onChange={e => updateModel(m.id, { customType: e.target.value })}
+                                placeholder="حدد النوع"
+                                className="mt-2 w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600" required />
+                            )}
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">الكمية الإجمالية للموديل</label>
+                            <input type="number" min="1" placeholder="100" value={m.quantity} onChange={e => updateModel(m.id, { quantity: e.target.value })}
+                              className="w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600 h-[50px]" required />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">المقاسات (اختياري - وزع الكمية)</label>
+                          <div className="grid grid-cols-6 gap-2">
+                            {['XS','S','M','L','XL','XXL'].map(size => (
+                              <div key={size} className="relative group">
+                                <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 bg-indigo-50 text-[8px] font-black text-indigo-600 rounded-full border border-indigo-100 z-10">{size}</div>
+                                <input type="number" value={m.tailles[size]} onChange={e => updateModelTaille(m.id, size, e.target.value)} placeholder="0"
+                                  className="w-full bg-white border-2 border-slate-200 rounded-xl pt-3 pb-1 px-1 text-center text-xs font-black outline-none focus:border-indigo-600 h-[50px]" />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">تفاصيل الطلب (ألوان، نوع الثوب...)</label>
+                            <textarea rows={3} value={m.details} onChange={e => updateModel(m.id, { details: e.target.value })}
+                              placeholder="اشرح شنو باغي..."
+                              className="w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600 resize-none" />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">
+                              صورة الموديل <span className="text-rose-500">*</span>
+                            </label>
+                            <div className="flex flex-wrap gap-2">
+                              {(m.photos || (m.photo ? [m.photo] : [])).map((p, pIdx) => (
+                                <div key={pIdx} className="relative w-[100px] h-[100px] rounded-xl overflow-hidden border-2 border-indigo-200 shadow-sm">
+                                  <img src={p} className="w-full h-full object-cover" alt="" />
+                                  <button type="button" onClick={() => removeModelPhoto(m.id, pIdx)}
+                                    className="absolute top-1 right-1 p-1 bg-rose-500 text-white rounded-full hover:bg-rose-600 transition-colors shadow-sm">
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              ))}
+                              {(m.photos || (m.photo ? [m.photo] : [])).length < 5 && (
+                                <label className="flex flex-col items-center justify-center w-[100px] h-[100px] bg-white border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-indigo-300 hover:bg-indigo-50 transition-all shrink-0">
+                                  <ImageIcon className="w-6 h-6 text-slate-300 mb-1" />
+                                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center px-1 leading-tight">إضافة صورة</span>
+                                  <input type="file" accept="image/*" onChange={e => handleModelPhoto(m.id, e)} className="hidden" />
+                                </label>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Line Simulator Display */}
+                        {(() => {
+                          const est = calculateEstimate(m.type, m.quantity);
+                          if (!est) return null;
+                          return (
+                            <div className="mt-4 p-4 bg-white border-2 border-emerald-100 rounded-xl flex items-center justify-between">
+                              <div>
+                                <p className="text-xs font-black text-emerald-600 uppercase tracking-widest">التكلفة التقديرية</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-black text-slate-800">{est.min} - {est.max} MAD <span className="text-xs text-slate-500">/ قطعة</span></p>
+                                <p className="text-xs font-bold text-emerald-500">الإجمالي: {est.totalMin.toLocaleString()} - {est.totalMax.toLocaleString()} MAD</p>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    ))}
+
+                    <button type="button" onClick={() => setModels(prev => [...prev, emptyModel()])}
+                      className="w-full py-4 border-2 border-dashed border-indigo-300 text-indigo-600 bg-indigo-50/50 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-indigo-100 transition-all flex items-center justify-center gap-2">
+                      + إضافة موديل آخر
+                    </button>
+
+                    {(() => {
+                      const liveTotals = models.reduce((acc, m) => {
+                        const est = calculateEstimate(m.type, m.quantity);
+                        if (est) {
+                          acc.min += est.totalMin;
+                          acc.max += est.totalMax;
+                        }
+                        return acc;
+                      }, { min: 0, max: 0 });
+
+                      return liveTotals.max > 0 && (
+                        <div className="bg-emerald-50 border-2 border-emerald-500 rounded-2xl p-6 text-center animate-in zoom-in-95 duration-300">
+                          <p className="text-sm font-black text-emerald-600 uppercase tracking-widest mb-2">إجمالي تكلفة مشروعك التقديرية</p>
+                          <p className="text-3xl font-black text-emerald-700">
+                            {liveTotals.min.toLocaleString()} - {liveTotals.max.toLocaleString()} درهم
+                          </p>
+                          <p className="text-xs font-medium text-emerald-600/70 mt-2">السعر قابل للتفاوض البسيط حسب التفاصيل الدقيقة.</p>
+                        </div>
+                      );
+                    })()}
+
+                    <button type="submit" className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black text-lg uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-3">
+                      أنا موافق، أكمل معلوماتي للعمل فوراً <ArrowRight className="w-5 h-5 -scale-x-100" />
+                    </button>
+                  </div>
+                )}
+
+                {/* STEP 2: CONTACT INFO */}
+                {simulatorStep === 2 && (
+                  <div className="space-y-6 animate-in slide-in-from-left-4 duration-300">
+                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
+                      <Zap className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                      <p className="text-sm text-amber-800 font-medium">خطوة أخيرة! أدخل معلوماتك لكي يتواصل معك فريقنا في أقرب وقت لتأكيد الطلب وبدء العمل على العينة.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">الإسم الكامل</label>
+                        <input type="text" name="name" placeholder="Ex: Ahmed Alami" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" required />
+                      </div>
+                      <div>
+                        <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">Email (اختياري)</label>
+                        <input type="email" name="email" placeholder="email@example.com" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">رقم الهاتف / الواتساب</label>
+                        <div className="flex gap-3">
+                          <div className="relative w-[100px] flex-shrink-0">
+                            <select name="countryCode" className="w-full appearance-none bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 pl-4 pr-8 text-xs font-black outline-none focus:border-indigo-600 transition-colors h-[58px]">
+                              <option value="+212">🇲🇦 212</option>
+                              <option value="+33">🇫🇷 33</option>
+                              <option value="+34">🇪🇸 34</option>
+                              <option value="+1">🇺🇸 1</option>
+                            </select>
+                            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400">
+                              <ChevronDown className="w-4 h-4" />
+                            </div>
+                          </div>
+                          <input type="tel" name="phone" placeholder="6XXXXXXXX" className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold outline-none focus:border-indigo-600 transition-colors h-[58px]" dir="ltr" required />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">المدينة (اختياري)</label>
+                        <input type="text" name="ville" placeholder="مثال: الدار البيضاء" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" />
+                      </div>
+                    </div>
+
+                    <div className="flex gap-4 pt-4">
+                      <button type="button" onClick={() => setSimulatorStep(1)} className="px-6 py-5 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-200 transition-all">
+                        رجوع
+                      </button>
+                      <button type="submit" disabled={isSending} className="flex-1 py-5 bg-indigo-600 text-white rounded-2xl font-black text-lg uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-3 disabled:opacity-60">
+                        {isSending ? 'جاري الإرسال...' : 'تأكيد الطلب الآن'}
+                        {!isSending && <CheckCircle2 className="w-5 h-5 ml-2" />}
+                      </button>
+                    </div>
+                    <p className="text-center text-[10px] font-bold text-slate-400 mt-4">معلوماتك آمنة ولن يتم مشاركتها مع أي طرف ثالث.</p>
+                  </div>
+                )}
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="bg-slate-900 py-8 text-center border-t border-white/10 mt-20">
