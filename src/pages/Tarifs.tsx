@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLang } from '../contexts/LangContext';
-import { Plus, Search, Tag, DollarSign, Layers, Edit, Trash2, X, Check, FileText } from 'lucide-react';
+import { Plus, Search, Tag, DollarSign, Layers, Edit, Trash2, X, Check, FileText, Scissors, Printer, PenTool, Sparkles, Package, Ruler, MoreHorizontal } from 'lucide-react';
 import { TarifService, User, loadPermissions, loadData, saveRecord, deleteRecord, genId } from '../types';
 
 export default function Tarifs() {
@@ -84,7 +84,7 @@ export default function Tarifs() {
     await deleteRecord('tarifs', id);
   };
 
-  const categories = ['Toutes', 'Confection', 'Impression', 'Broderie', 'Finition', 'Matière Première', 'Autre'];
+  const categories = ['Toutes', 'Confection', 'Impression', 'Broderie', 'Finition', 'Matière Première', 'Patronnage', 'Autre'];
 
   const filtered = tarifs.filter(t => {
     const matchSearch = t.titre.toLowerCase().includes(search.toLowerCase()) || 
@@ -181,9 +181,17 @@ export default function Tarifs() {
                   t.categorie === 'Impression' ? 'bg-blue-50 text-blue-500' :
                   t.categorie === 'Broderie' ? 'bg-purple-50 text-purple-500' :
                   t.categorie === 'Finition' ? 'bg-amber-50 text-amber-500' :
+                  t.categorie === 'Matière Première' ? 'bg-emerald-50 text-emerald-500' :
+                  t.categorie === 'Patronnage' ? 'bg-cyan-50 text-cyan-500' :
                   'bg-slate-50 text-slate-500'
                 }`}>
-                  <Layers className="w-6 h-6" />
+                  {t.categorie === 'Confection' ? <Scissors className="w-6 h-6" /> :
+                   t.categorie === 'Impression' ? <Printer className="w-6 h-6" /> :
+                   t.categorie === 'Broderie' ? <PenTool className="w-6 h-6" /> :
+                   t.categorie === 'Finition' ? <Sparkles className="w-6 h-6" /> :
+                   t.categorie === 'Matière Première' ? <Package className="w-6 h-6" /> :
+                   t.categorie === 'Patronnage' ? <Ruler className="w-6 h-6" /> :
+                   <MoreHorizontal className="w-6 h-6" />}
                 </div>
                 <div>
                   <span className={`text-[10px] font-black uppercase tracking-widest ${
@@ -191,6 +199,8 @@ export default function Tarifs() {
                     t.categorie === 'Impression' ? 'text-blue-500' :
                     t.categorie === 'Broderie' ? 'text-purple-500' :
                     t.categorie === 'Finition' ? 'text-amber-500' :
+                    t.categorie === 'Matière Première' ? 'text-emerald-500' :
+                    t.categorie === 'Patronnage' ? 'text-cyan-500' :
                     'text-slate-500'
                   }`}>
                     {t.categorie}
@@ -306,6 +316,7 @@ export default function Tarifs() {
                     <option value="Broderie">{isAr ? 'تطريز' : 'Broderie'}</option>
                     <option value="Finition">{isAr ? 'تشطيب' : 'Finition'}</option>
                     <option value="Matière Première">{isAr ? 'مواد أولية' : 'Matière Première'}</option>
+                    <option value="Patronnage">{isAr ? 'تصميم وباترون' : 'Patronnage'}</option>
                     <option value="Autre">{isAr ? 'أخرى' : 'Autre'}</option>
                   </select>
                 </div>
