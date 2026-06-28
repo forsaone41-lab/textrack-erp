@@ -258,8 +258,8 @@ export default function AdsLanding() {
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-full text-xs font-bold mb-6 backdrop-blur-sm">
               <Sparkles className="w-4 h-4" /> {isAr ? 'البرنامج الخاص بأصحاب العلامات التجارية والتجارة الإلكترونية' : 'Programme Spécial pour les Marques & E-commerce'}
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-[1.1] tracking-tight mb-6">
-              {isAr ? 'ركز على المبيعات والتسويق،' : 'Concentrez-vous sur les Ventes,'} <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">{isAr ? 'وخلي الإنتاج علينا.' : "On s'occupe de la Production."}</span>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-[1.4] tracking-tight mb-6">
+              {isAr ? 'ركز على المبيعات والتسويق،' : 'Concentrez-vous sur les Ventes,'} <br className="hidden sm:block" /><span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 pb-3">{isAr ? 'وخلي الإنتاج علينا.' : "On s'occupe de la Production."}</span>
             </h1>
             <p className="text-lg text-slate-300 font-medium leading-relaxed mb-8 max-w-xl">
               {isAr ? (
