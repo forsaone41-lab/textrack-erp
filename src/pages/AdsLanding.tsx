@@ -351,7 +351,7 @@ export default function AdsLanding() {
         <div className="max-w-6xl mx-auto relative z-10 grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-full text-xs font-bold mb-6 backdrop-blur-sm">
-              <Sparkles className="w-4 h-4" /> {isAr ? 'البرنامج الخاص بأصحاب العلامات التجارية والتجارة الإلكترونية' : 'Programme Spécial pour les Marques & E-commerce'}
+              {isAr ? 'البرنامج الخاص بأصحاب العلامات التجارية والتجارة الإلكترونية' : 'Programme Spécial pour les Marques & E-commerce'}
             </div>
             <h1 className={`text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-6 ${isAr ? 'leading-[1.3]' : 'leading-[1.1]'}`}>
               {isAr ? 'ركز على المبيعات والتسويق، ' : 'Concentrez-vous sur les Ventes, '}
