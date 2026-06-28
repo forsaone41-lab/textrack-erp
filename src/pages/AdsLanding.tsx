@@ -222,8 +222,14 @@ export default function AdsLanding() {
       <header className="fixed top-0 inset-x-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100 transition-all">
         <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-indigo-200">B</div>
-            <span className="font-black text-xl tracking-tight text-slate-800">BEYA <span className="text-indigo-600">CREATIVE</span></span>
+            {company?.logo ? (
+              <img src={company.logo} alt={company.name || "BEYA CREATIVE"} className="h-12 object-contain" />
+            ) : (
+              <>
+                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-indigo-200">B</div>
+                <span className="font-black text-xl tracking-tight text-slate-800">BEYA <span className="text-indigo-600">CREATIVE</span></span>
+              </>
+            )}
           </div>
           <button onClick={() => document.getElementById('devis')?.scrollIntoView({ behavior: 'smooth' })} className="px-6 py-2.5 bg-slate-900 text-white rounded-full text-sm font-bold shadow-lg hover:bg-indigo-600 hover:shadow-indigo-200 transition-all flex items-center gap-2">
             احصل على عرض سعر <ChevronRight className="w-4 h-4 rotate-180" />
