@@ -3,7 +3,7 @@ import { supabase } from '../supabase';
 import { Search, Save, Package, Phone, CheckCircle, ChevronDown, Check, Scissors, AlertCircle, X, ShieldAlert } from 'lucide-react';
 import { Lead, saveRecord } from '../types';
 import { useLang } from '../contexts/LangContext';
-import { toast, Toaster } from 'react-hot-toast';
+
 
 export default function EvaluationPatronage() {
   const { isAr } = useLang();
@@ -44,7 +44,7 @@ export default function EvaluationPatronage() {
       }
     } catch (e) {
       console.error(e);
-      toast.error('Erreur de chargement');
+      alert('Erreur de chargement');
     }
     setLoading(false);
   };
@@ -58,7 +58,7 @@ export default function EvaluationPatronage() {
   const handleSavePrice = async () => {
     if (!selectedLead) return;
     if (!priceInput) {
-      toast.error(isAr ? 'أدخل الثمن أولا' : 'Veuillez entrer un prix');
+      alert(isAr ? 'أدخل الثمن أولا' : 'Veuillez entrer un prix');
       return;
     }
 
@@ -83,11 +83,11 @@ export default function EvaluationPatronage() {
       };
       
       await saveRecord('leads', dbLead, true);
-      toast.success(isAr ? 'تم حفظ الثمن بنجاح' : 'Prix enregistré avec succès');
+      alert(isAr ? 'تم حفظ الثمن بنجاح' : 'Prix enregistré avec succès');
       fetchLeads();
       setSelectedLead(null);
     } catch (e) {
-      toast.error(isAr ? 'حدث خطأ' : 'Erreur lors de la sauvegarde');
+      alert(isAr ? 'حدث خطأ' : 'Erreur lors de la sauvegarde');
     }
   };
 
@@ -98,7 +98,7 @@ export default function EvaluationPatronage() {
 
   return (
     <div className={`p-4 md:p-8 space-y-6 ${isAr ? 'font-sans rtl' : 'ltr'}`} dir={isAr ? 'rtl' : 'ltr'}>
-      <Toaster position="top-center" />
+      
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-black text-slate-800 tracking-tight flex items-center gap-3">
