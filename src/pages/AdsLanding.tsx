@@ -142,7 +142,11 @@ export default function AdsLanding() {
       const remote = await syncCompanyProfile();
       setCompany(remote);
       const tarifsList = await loadData<TarifService>('tarifs');
-      setTarifsDb(tarifsList || []);
+      const activeConfections = (tarifsList || []).filter(t => t.categorie === 'Confection' && t.actif);
+      setTarifsDb(activeConfections);
+      if (activeConfections.length > 0) {
+        setModels(prev => prev.map(m => m.type === 'T-Shirt' ? { ...m, type: activeConfections[0].titre } : m));
+      }
     };
     sync();
     return () => {
@@ -486,8 +490,11 @@ export default function AdsLanding() {
                       <div className="relative">
                         <select value={m.type} onChange={e => updateModel(m.id, { type: e.target.value })}
                           className="w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors appearance-none">
-                          {['T-Shirt','Polo','T-Shirt Oversize','Sweat / Hoodie','Djellaba / Gandoura','Ensemble / Survêtement','Pyjama','Uniforme / Travail','Pantalon'].map(t => <option key={t}>{t}</option>)}
-                          <option value="Autre">نوع آخر</option>
+                          {tarifsDb.map(t => <option key={t.id} value={t.titre}>{t.titre}</option>)}
+                          {tarifsDb.length === 0 && (
+                            <option value="T-Shirt">T-Shirt</option>
+                          )}
+                          <option value="Autre">نوع آخر (Autre...)</option>
                         </select>
                         <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                       </div>
