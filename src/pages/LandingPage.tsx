@@ -300,7 +300,7 @@ export default function LandingPage() {
     <div className={`min-h-screen bg-white relative overflow-hidden ${isAr ? 'font-sans' : ''}`} dir={isAr ? 'rtl' : 'ltr'}>
       {errorMsg && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setErrorMsg(null)}>
-          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200 border border-slate-100" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl p-6 md:p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200 border border-slate-100" onClick={e => e.stopPropagation()}>
             <div className="w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertTriangle className="w-6 h-6" />
             </div>
@@ -322,10 +322,10 @@ export default function LandingPage() {
       {/* Success Modal */}
       {showSuccess && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="bg-white rounded-3xl md:rounded-[3rem] p-6 md:p-12 max-w-lg w-full text-center shadow-[0_50px_100px_rgba(0,0,0,0.3)] border border-white/20 relative overflow-hidden">
+          <div className="bg-white rounded-2xl md:rounded-2xl p-6 md:p-12 max-w-lg w-full text-center shadow-[0_50px_100px_rgba(0,0,0,0.3)] border border-white/20 relative overflow-hidden">
             <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-emerald-400 to-teal-500" />
 
-            <div className="w-24 h-24 bg-emerald-50 rounded-[2rem] flex items-center justify-center mx-auto mb-8 animate-bounce">
+            <div className="w-24 h-24 bg-emerald-50 rounded-xl flex items-center justify-center mx-auto mb-8 animate-bounce">
               <CheckCircle className="w-12 h-12 text-emerald-500" />
             </div>
 
@@ -340,7 +340,7 @@ export default function LandingPage() {
 
             <div className="space-y-4">
               {newClientCode && (
-                <div className="bg-white border-2 border-slate-100 rounded-[2rem] p-6 md:p-8 mb-8 text-right shadow-sm relative overflow-hidden">
+                <div className="bg-white border-2 border-slate-100 rounded-xl p-6 md:p-8 mb-8 text-right shadow-sm relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500 opacity-5 rounded-full blur-2xl -mr-10 -mt-10"></div>
                   <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center justify-between">
                     <span>{isAr ? 'معلومات حسابك الخاص' : 'Vos informations de connexion'}</span>
@@ -511,16 +511,16 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button 
               onClick={() => document.getElementById('contact-form')?.scrollIntoView({ behavior: 'smooth' })}
-              className="w-full sm:w-auto px-10 py-5 bg-indigo-600 text-white rounded-[2rem] font-black uppercase tracking-widest shadow-2xl shadow-indigo-200 hover:scale-105 transition-all flex items-center justify-center gap-3"
+              className="w-full sm:w-auto px-10 py-5 bg-indigo-600 text-white rounded-xl font-black uppercase tracking-widest shadow-2xl shadow-indigo-200 hover:scale-105 transition-all flex items-center justify-center gap-3"
             >
               {isAr ? 'ابدأ مشروعك معنا' : 'Démarrer votre projet'}
               <ArrowRight className="w-5 h-5" />
             </button>
-            <Link to="/login" className="w-full sm:w-auto px-10 py-5 bg-white text-slate-900 border-2 border-slate-100 rounded-[2rem] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center gap-3">
+            <Link to="/login" className="w-full sm:w-auto px-10 py-5 bg-white text-slate-900 border-2 border-slate-100 rounded-xl font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center gap-3">
               <Search className="w-5 h-5 text-indigo-500" />
               {isAr ? 'تتبع طلبيتك' : 'Suivre votre commande'}
             </Link>
-            <a href={`https://wa.me/${company.phone.replace(/\D/g, '')}`} target="_blank" className="w-full sm:w-auto px-10 py-5 bg-white text-slate-900 border-2 border-slate-100 rounded-[2rem] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center gap-3">
+            <a href={`https://wa.me/${company.phone.replace(/\D/g, '')}`} target="_blank" className="w-full sm:w-auto px-10 py-5 bg-white text-slate-900 border-2 border-slate-100 rounded-xl font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center gap-3">
               <MessageCircle className="w-5 h-5 text-emerald-500" />
               {isAr ? 'تواصل معنا' : 'Contactez-nous'}
             </a>
@@ -533,10 +533,10 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="relative group">
             {/* Background Decoration */}
-            <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl md:rounded-[3rem] opacity-20 blur-3xl group-hover:opacity-30 transition-opacity" />
+            <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl md:rounded-2xl opacity-20 blur-3xl group-hover:opacity-30 transition-opacity" />
 
             {/* Video Container */}
-            <div className="relative aspect-video bg-slate-900 rounded-3xl md:rounded-[3rem] overflow-hidden shadow-[0_30px_100px_rgba(0,0,0,0.2)] border-8 border-white">
+            <div className="relative aspect-video bg-slate-900 rounded-2xl md:rounded-2xl overflow-hidden shadow-[0_30px_100px_rgba(0,0,0,0.2)] border-8 border-white">
               {embedUrl ? (
                 embedUrl.match(/\.(mp4|webm|ogg)$/i) ? (
                   <video 
@@ -594,7 +594,7 @@ export default function LandingPage() {
           </div>
 
           {/* Lead Generation Form Section */}
-          <div id="contact-form" className="mt-6 bg-white rounded-3xl md:rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.1)] border border-slate-100 overflow-hidden">
+          <div id="contact-form" className="mt-6 bg-white rounded-2xl md:rounded-2xl shadow-[0_50px_100px_rgba(0,0,0,0.1)] border border-slate-100 overflow-hidden">
             <div className="grid grid-cols-1 lg:grid-cols-2">
               <div className="p-6 md:p-12 lg:p-16 bg-slate-900 text-white relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600 rounded-full blur-3xl opacity-20 -mr-32 -mt-32" />
@@ -960,8 +960,8 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {services.map((s, i) => (
-              <div key={i} className="group p-10 bg-white rounded-3xl md:rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-100/50 hover:shadow-2xl hover:border-indigo-100 transition-all duration-500">
-                <div className={`w-16 h-16 rounded-[2rem] bg-gradient-to-br ${s.color} flex items-center justify-center text-white mb-8 shadow-lg transform group-hover:rotate-12 transition-transform`}>
+              <div key={i} className="group p-10 bg-white rounded-2xl md:rounded-2xl border border-slate-100 shadow-xl shadow-slate-100/50 hover:shadow-2xl hover:border-indigo-100 transition-all duration-500">
+                <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${s.color} flex items-center justify-center text-white mb-8 shadow-lg transform group-hover:rotate-12 transition-transform`}>
                   <s.icon className="w-6 h-6" />
                 </div>
                 <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-4">{s.title}</h3>
@@ -975,11 +975,11 @@ export default function LandingPage() {
       {/* Premium Loading Modal */}
       {isSending && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="bg-white/90 backdrop-blur-2xl rounded-[3rem] p-12 max-w-sm w-full shadow-2xl border border-white/50 relative overflow-hidden flex flex-col items-center text-center animate-in zoom-in-95 duration-300">
+          <div className="bg-white/90 backdrop-blur-2xl rounded-2xl p-12 max-w-sm w-full shadow-2xl border border-white/50 relative overflow-hidden flex flex-col items-center text-center animate-in zoom-in-95 duration-300">
             <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 animate-pulse" />
             
             <div className="relative mb-8">
-              <div className="w-24 h-24 bg-indigo-50 rounded-[2.5rem] flex items-center justify-center text-indigo-600 shadow-xl shadow-indigo-100 border-4 border-white animate-bounce duration-1000">
+              <div className="w-24 h-24 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 shadow-xl shadow-indigo-100 border-4 border-white animate-bounce duration-1000">
                 <RotateCw className="w-10 h-10 animate-spin" />
               </div>
               <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-emerald-500 rounded-full border-4 border-white flex items-center justify-center animate-pulse">
@@ -1013,13 +1013,13 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
             <div className="relative">
-              <div className="absolute -inset-4 bg-indigo-600 rounded-[3rem] blur-2xl opacity-20 animate-pulse" />
+              <div className="absolute -inset-4 bg-indigo-600 rounded-2xl blur-2xl opacity-20 animate-pulse" />
               <img 
                 src={company.aboutPhotoUrl || "https://images.unsplash.com/photo-1524234107056-1c1f48f64ab8?q=80&w=2070"} 
                 alt="Atelier BEYA" 
-                className="relative rounded-[3rem] shadow-2xl border-4 border-white/5 object-cover h-[500px] w-full"
+                className="relative rounded-2xl shadow-2xl border-4 border-white/5 object-cover h-[500px] w-full"
               />
-              <div className={`absolute -bottom-10 ${isAr ? '-left-10' : '-right-10'} bg-white p-8 rounded-[2rem] shadow-2xl hidden md:block border border-slate-100 animate-in slide-in-from-bottom-10 duration-700`}>
+              <div className={`absolute -bottom-10 ${isAr ? '-left-10' : '-right-10'} bg-white p-8 rounded-xl shadow-2xl hidden md:block border border-slate-100 animate-in slide-in-from-bottom-10 duration-700`}>
                 <p className="text-4xl font-black text-indigo-600 mb-1 leading-none">{company.experienceYears || '15+'}</p>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                   {isAr ? (company.experienceTextAr || 'سنة من الخبرة') : (company.experienceTextFr || 'Ans d\'Expérience')}
@@ -1079,7 +1079,7 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Contact Info Cards */}
-            <div className="bg-slate-50 p-10 rounded-[3rem] border border-slate-100 flex flex-col items-center text-center group hover:bg-slate-900 hover:text-white transition-all duration-500">
+            <div className="bg-slate-50 p-10 rounded-2xl border border-slate-100 flex flex-col items-center text-center group hover:bg-slate-900 hover:text-white transition-all duration-500">
               <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-indigo-600 mb-6 shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-colors">
                 <Globe className="w-6 h-6" />
               </div>
@@ -1087,7 +1087,7 @@ export default function LandingPage() {
               <p className="text-sm font-medium opacity-70">{company.address}</p>
             </div>
 
-            <div className="bg-slate-50 p-10 rounded-[3rem] border border-slate-100 flex flex-col items-center text-center group hover:bg-slate-900 hover:text-white transition-all duration-500">
+            <div className="bg-slate-50 p-10 rounded-2xl border border-slate-100 flex flex-col items-center text-center group hover:bg-slate-900 hover:text-white transition-all duration-500">
               <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-emerald-600 mb-6 shadow-sm group-hover:bg-emerald-600 group-hover:text-white transition-colors">
                 <MessageCircle className="w-6 h-6" />
               </div>
@@ -1096,7 +1096,7 @@ export default function LandingPage() {
               <a href={`https://wa.me/${company.phone.replace(/\D/g, '')}`} className="mt-4 px-6 py-2 bg-emerald-500 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform">{isAr ? 'دردشة مباشرة' : 'Chat Direct'}</a>
             </div>
 
-            <div className="bg-slate-50 p-10 rounded-[3rem] border border-slate-100 flex flex-col items-center text-center group hover:bg-slate-900 hover:text-white transition-all duration-500">
+            <div className="bg-slate-50 p-10 rounded-2xl border border-slate-100 flex flex-col items-center text-center group hover:bg-slate-900 hover:text-white transition-all duration-500">
               <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-rose-600 mb-6 shadow-sm group-hover:bg-rose-600 group-hover:text-white transition-colors">
                 <LogOut className="w-6 h-6 rotate-180" />
               </div>
@@ -1110,7 +1110,7 @@ export default function LandingPage() {
             href={company.googleMapsUrl || "https://www.google.com/maps/search/?api=1&query=Meknes+Morocco"} 
             target="_blank" 
             rel="noopener noreferrer"
-            className="mt-20 relative rounded-[3rem] overflow-hidden h-[400px] border-8 border-slate-50 group block cursor-pointer"
+            className="mt-20 relative rounded-2xl overflow-hidden h-[400px] border-8 border-slate-50 group block cursor-pointer"
           >
              <div className="absolute inset-0 bg-slate-900/40 group-hover:bg-slate-900/20 transition-all flex items-center justify-center z-10">
                 <div className="bg-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 animate-bounce group-hover:scale-110 transition-transform">

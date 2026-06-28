@@ -161,7 +161,7 @@ export default function AdsLanding() {
   if (isSuccess) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 rtl font-sans" dir="rtl">
-        <div className="bg-white p-8 md:p-12 rounded-[3rem] max-w-lg w-full text-center shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-500">
+        <div className="bg-white p-8 md:p-12 rounded-2xl max-w-lg w-full text-center shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-500">
           <div className="w-24 h-24 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
             <CheckCircle2 className="w-12 h-12" />
           </div>
@@ -185,7 +185,7 @@ export default function AdsLanding() {
           )}
 
           {newClientCode && (
-            <div className="bg-white border-2 border-slate-100 rounded-[2rem] p-6 md:p-8 mb-8 text-right shadow-sm relative overflow-hidden">
+            <div className="bg-white border-2 border-slate-100 rounded-xl p-6 md:p-8 mb-8 text-right shadow-sm relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500 opacity-5 rounded-full blur-2xl -mr-10 -mt-10"></div>
               <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center justify-between">
                 <span>{isAr ? 'معلومات حسابك الخاص' : 'Vos informations de connexion'}</span>
@@ -301,7 +301,7 @@ export default function AdsLanding() {
       
       {errorMsg && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setErrorMsg(null)}>
-          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200 border border-slate-100" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl p-6 md:p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200 border border-slate-100" onClick={e => e.stopPropagation()}>
             <div className="w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertTriangle className="w-6 h-6" />
             </div>
@@ -384,11 +384,11 @@ export default function AdsLanding() {
           </div>
           
           <div className="relative hidden lg:block">
-            <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500 to-cyan-500 rounded-[3rem] rotate-3 opacity-20 blur-2xl"></div>
-            <img src="/beya_creative_streetwear.png" alt="BEYA CREATIVE Streetwear Idea to Reality" className="relative z-10 w-full aspect-square object-cover rounded-[3rem] shadow-2xl border border-white/10" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500 to-cyan-500 rounded-2xl rotate-3 opacity-20 blur-2xl"></div>
+            <img src="/beya_creative_streetwear.png" alt="BEYA CREATIVE Streetwear Idea to Reality" className="relative z-10 w-full aspect-square object-cover rounded-2xl shadow-2xl border border-white/10" />
             
             {/* Floating Badge */}
-            <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-3xl shadow-2xl z-20 flex items-center gap-4 border border-slate-100">
+            <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-2xl shadow-2xl z-20 flex items-center gap-4 border border-slate-100">
               <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
@@ -410,21 +410,21 @@ export default function AdsLanding() {
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100 hover:border-indigo-300 transition-colors">
+            <div className="bg-slate-50 p-8 rounded-xl border border-slate-100 hover:border-indigo-300 transition-colors">
               <div className="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mb-6">
                 <Sparkles className="w-7 h-7" />
               </div>
               <h3 className="text-xl font-black text-slate-800 mb-3">{isAr ? 'بدا وجرب السوق (Test)' : 'Testez le marché'}</h3>
               <p className="text-slate-600 font-medium leading-relaxed">{isAr ? 'كنعرفو باللي باش تطلق Brand جديدة خاصك تجرب. كنعطيوك الفرصة تبدا بكميات صغيرة (100 بياسة) باش تـ Testi المنتوج ديالك.' : 'Nous vous offrons la possibilité de démarrer avec de petites quantités (100 pièces) pour tester votre produit sereinement.'}</p>
             </div>
-            <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100 hover:border-emerald-300 transition-colors">
+            <div className="bg-slate-50 p-8 rounded-xl border border-slate-100 hover:border-emerald-300 transition-colors">
               <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-6">
                 <ShieldCheck className="w-7 h-7" />
               </div>
               <h3 className="text-xl font-black text-slate-800 mb-3">{isAr ? 'العينة قبل كلشي (Échantillon)' : "L'échantillon d'abord"}</h3>
               <p className="text-slate-600 font-medium leading-relaxed">{isAr ? 'المعقول هو الأساس! كنصايبو ليك العينة الأولى، كتقيسها وتأكد من جودة الثوب والفصالة 100% عاد كنبداو الإنتاج الشامل.' : 'Nous confectionnons le premier échantillon, vous vérifiez la qualité et la coupe à 100% avant de lancer la production globale.'}</p>
             </div>
-            <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100 hover:border-blue-300 transition-colors">
+            <div className="bg-slate-50 p-8 rounded-xl border border-slate-100 hover:border-blue-300 transition-colors">
               <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-6">
                 <Factory className="w-7 h-7" />
               </div>
@@ -474,7 +474,7 @@ export default function AdsLanding() {
       {/* Simulator Modal */}
       {showSimulatorModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto">
-          <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-300 my-auto">
+          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-300 my-auto">
             <button onClick={() => setShowSimulatorModal(false)} className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 bg-slate-100 text-slate-500 hover:bg-slate-200 rounded-full transition-colors z-10">
               <X className="w-5 h-5" />
             </button>
