@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Shirt, Scissors, Zap, ShieldCheck, ChevronRight, CheckCircle2, Factory, Loader2, Sparkles, Send, X, ChevronDown, ImageIcon, ArrowRight, AlertTriangle } from 'lucide-react';
 import { supabase } from '../supabase';
-import { loadCompanyProfile, syncCompanyProfile, CompanyProfile, saveLead } from '../types';
+import { loadCompanyProfile, syncCompanyProfile, CompanyProfile, saveLead, loadData, TarifService } from '../types';
 import { sendEmailNotification } from './LandingPage';
 import { trackPixelEvent } from '../utils/pixel';
 
@@ -13,6 +13,7 @@ export default function AdsLanding() {
   const [submittedName, setSubmittedName] = useState('');
   const [isAr, setIsAr] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [tarifsDb, setTarifsDb] = useState<TarifService[]>([]);
 
   interface ModelEntry {
     id: string;
@@ -45,17 +46,26 @@ export default function AdsLanding() {
     let baseMin = 0;
     let baseMax = 0;
     
-    switch(type) {
-      case 'T-Shirt': baseMin = 35; baseMax = 45; break;
-      case 'Polo': baseMin = 60; baseMax = 75; break;
-      case 'T-Shirt Oversize': baseMin = 45; baseMax = 60; break;
-      case 'Sweat / Hoodie': baseMin = 120; baseMax = 150; break;
-      case 'Djellaba / Gandoura': baseMin = 150; baseMax = 250; break;
-      case 'Ensemble / Survêtement': baseMin = 180; baseMax = 260; break;
-      case 'Pyjama': baseMin = 80; baseMax = 120; break;
-      case 'Uniforme / Travail': baseMin = 100; baseMax = 180; break;
-      case 'Pantalon': baseMin = 80; baseMax = 130; break;
-      default: return null; // For 'Autre'
+    // Try to find exact match in DB first
+    const dbTarif = tarifsDb.find(t => t.titre.toLowerCase() === type.toLowerCase());
+    
+    if (dbTarif) {
+      baseMin = dbTarif.prixMin;
+      baseMax = dbTarif.prixMax || dbTarif.prixMin;
+    } else {
+      // Fallback to defaults
+      switch(type) {
+        case 'T-Shirt': baseMin = 35; baseMax = 45; break;
+        case 'Polo': baseMin = 60; baseMax = 75; break;
+        case 'T-Shirt Oversize': baseMin = 45; baseMax = 60; break;
+        case 'Sweat / Hoodie': baseMin = 120; baseMax = 150; break;
+        case 'Djellaba / Gandoura': baseMin = 150; baseMax = 250; break;
+        case 'Ensemble / Survêtement': baseMin = 180; baseMax = 260; break;
+        case 'Pyjama': baseMin = 80; baseMax = 120; break;
+        case 'Uniforme / Travail': baseMin = 100; baseMax = 180; break;
+        case 'Pantalon': baseMin = 80; baseMax = 130; break;
+        default: return null; // For 'Autre'
+      }
     }
 
     // Adjust price based on quantity
@@ -131,6 +141,8 @@ export default function AdsLanding() {
     const sync = async () => {
       const remote = await syncCompanyProfile();
       setCompany(remote);
+      const tarifsList = await loadData<TarifService>('tarifs');
+      setTarifsDb(tarifsList || []);
     };
     sync();
     return () => {
