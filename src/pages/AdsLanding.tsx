@@ -272,7 +272,7 @@ export default function AdsLanding() {
       <section className="py-20 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-4">ليش كاع الـ Brands كايخدمو معانا؟</h2>
+            <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-4">علاش كاع الـ Brands كايخدمو معانا؟</h2>
             <p className="text-slate-500 font-medium max-w-2xl mx-auto">وفرنا ليك البيئة المثالية باش تكبر الـ Brand ديالك بلا مشاكل د الإنتاج.</p>
           </div>
           
