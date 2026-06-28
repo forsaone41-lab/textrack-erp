@@ -203,7 +203,7 @@ export default function AdsLanding() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans rtl selection:bg-indigo-500 selection:text-white" dir="rtl">
+    <div className={`min-h-screen bg-slate-50 font-sans selection:bg-indigo-500 selection:text-white ${isAr ? 'rtl' : 'ltr'}`} dir={isAr ? "rtl" : "ltr"}>
       
       {errorMsg && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setErrorMsg(null)}>
@@ -233,9 +233,18 @@ export default function AdsLanding() {
               </>
             )}
           </div>
-          <button onClick={() => { setShowSimulatorModal(true); setSimulatorStep(1); }} className="px-6 py-2.5 bg-slate-900 text-white rounded-full text-sm font-bold shadow-lg hover:bg-indigo-600 hover:shadow-indigo-200 transition-all flex items-center gap-2">
-            احسب التكلفة واطلب الآن <ChevronRight className="w-4 h-4 rotate-180" />
-          </button>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <button 
+              onClick={() => setIsAr(!isAr)}
+              className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black transition-colors border border-slate-200"
+            >
+              <Globe className="w-4 h-4" />
+              {isAr ? 'FR' : 'AR'}
+            </button>
+            <button onClick={() => { setShowSimulatorModal(true); setSimulatorStep(1); }} className="px-4 sm:px-6 py-2.5 bg-slate-900 text-white rounded-full text-xs sm:text-sm font-bold shadow-lg hover:bg-indigo-600 hover:shadow-indigo-200 transition-all flex items-center gap-2">
+              {isAr ? 'احسب التكلفة واطلب الآن' : 'Calculer le Coût'} <ChevronRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
+            </button>
+          </div>
         </div>
       </header>
 
@@ -247,19 +256,22 @@ export default function AdsLanding() {
         <div className="max-w-6xl mx-auto relative z-10 grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-full text-xs font-bold mb-6 backdrop-blur-sm">
-              <Sparkles className="w-4 h-4" /> البرنامج الخاص بأصحاب العلامات التجارية والتجارة الإلكترونية
+              <Sparkles className="w-4 h-4" /> {isAr ? 'البرنامج الخاص بأصحاب العلامات التجارية والتجارة الإلكترونية' : 'Programme Spécial pour les Marques & E-commerce'}
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-[1.1] tracking-tight mb-6">
-              ركز على المبيعات والتسويق، <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">وخلي الإنتاج علينا.</span>
+              {isAr ? 'ركز على المبيعات والتسويق،' : 'Concentrez-vous sur les Ventes,'} <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">{isAr ? 'وخلي الإنتاج علينا.' : "On s'occupe de la Production."}</span>
             </h1>
             <p className="text-lg text-slate-300 font-medium leading-relaxed mb-8 max-w-xl">
-              أنت صاحب <b>Brand</b> أو خدام فـ <b>E-commerce</b>؟ مصنع BEYA CREATIVE هو الشريك الاستراتيجي ديالك. 
-              كنوفروا ليك جودة عالمية باش تبني الثقة مع الكليان ديالك، مع إمكانية تجربة السوق بكميات معقولة.
+              {isAr ? (
+                <>أنت صاحب <b>Brand</b> أو خدام فـ <b>E-commerce</b>؟ مصنع BEYA CREATIVE هو الشريك الاستراتيجي ديالك. كنوفروا ليك جودة عالمية باش تبني الثقة مع الكليان ديالك، مع إمكانية تجربة السوق بكميات معقولة.</>
+              ) : (
+                <>Vous avez une <b>Marque</b> ou vous faites du <b>E-commerce</b> ? BEYA CREATIVE est votre partenaire stratégique. Qualité internationale pour bâtir la confiance avec vos clients, avec possibilité de tester le marché avec des quantités raisonnables.</>
+              )}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <button onClick={() => { setShowSimulatorModal(true); setSimulatorStep(1); }} className="px-8 py-4 bg-indigo-500 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/30 hover:bg-indigo-400 transition-all hover:scale-105">
                 <Zap className="w-5 h-5" />
-                احسب التكلفة وقدم طلبك
+                {isAr ? 'احسب التكلفة وقدم طلبك' : 'Calculer le Coût & Commander'}
               </button>
               <div className="flex items-center gap-4 text-sm font-bold text-slate-400 px-4">
                 <div className="flex -space-x-2 space-x-reverse">
@@ -269,7 +281,7 @@ export default function AdsLanding() {
                     </div>
                   ))}
                 </div>
-                <div>+50 Brand<br/>بدأت ونجحت معنا</div>
+                <div>{isAr ? '+50 Brand' : '+50 Marques'}<br/>{isAr ? 'بدأت ونجحت معنا' : 'Ont réussi avec nous'}</div>
               </div>
             </div>
           </div>
@@ -284,8 +296,8 @@ export default function AdsLanding() {
                 <CheckCircle2 className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-xs font-bold text-slate-400">ضمان الجودة</p>
-                <p className="text-sm font-black text-slate-800">صناعة العينة قبل الإنتاج</p>
+                <p className="text-xs font-bold text-slate-400">{isAr ? 'ضمان الجودة' : 'Garantie Qualité'}</p>
+                <p className="text-sm font-black text-slate-800">{isAr ? 'صناعة العينة قبل الإنتاج' : 'Échantillon avant production'}</p>
               </div>
             </div>
           </div>
