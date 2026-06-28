@@ -115,7 +115,7 @@ export default function AdsLanding() {
             </h1>
             <p className="text-lg text-slate-300 font-medium leading-relaxed mb-8 max-w-xl">
               هل تبحث عن مصنع يضمن لك الفصالة المتقنة، الجودة العالية، واحترام وقت التسليم؟ 
-              نحن في <b>BEYA</b> نقدم لك حلاً متكاملاً من الفصالة إلى الإنتاج الشامل.
+              نحن في <b>BEYA CREATIVE</b> نقدم لك حلاً متكاملاً من الفصالة إلى الإنتاج الشامل.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <a href="#devis" className="px-8 py-4 bg-indigo-500 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/30 hover:bg-indigo-400 transition-all hover:scale-105">
@@ -157,7 +157,7 @@ export default function AdsLanding() {
       <section className="py-20 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-4">لماذا تختار مصنع BEYA؟</h2>
+            <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-4">لماذا تختار مصنع BEYA CREATIVE؟</h2>
             <p className="text-slate-500 font-medium max-w-2xl mx-auto">لأننا نفهم مخاوفك، ونوفر لك بيئة عمل شفافة واحترافية.</p>
           </div>
           
