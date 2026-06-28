@@ -313,7 +313,7 @@ export default function AdsLanding() {
               </div>
               <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6">
                 <h4 className="font-black text-slate-800 mb-2 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-500"></div> واش كديرو الثوب ولا خاصني نجيبو؟</h4>
-                <p className="text-slate-600 font-medium text-sm pr-4">نحن نقدم خدمة متكاملة (Full Package). نتكلف بالثوب، الفصالة، الخياطة، الطباعة/الطرز، والتغليف. نستخدم أفضل الأثواب التركية والمحلية لضمان جودة الـ Brand.</p>
+                <p className="text-slate-600 font-medium text-sm pr-4">نحن نقدم خدمة متكاملة (Full Package). نتكلف بالثوب، الفصالة، الخياطة، الطباعة/الطرز، والتغليف. نستخدم أفضل الأثواب التركية، الإيطالية، والمحلية لضمان جودة الـ Brand.</p>
               </div>
               <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6">
                 <h4 className="font-black text-slate-800 mb-2 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-500"></div> كيفاش كنعرف الأثمنة ديالكم؟</h4>
