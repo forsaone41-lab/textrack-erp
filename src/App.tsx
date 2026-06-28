@@ -39,6 +39,7 @@ const BilanFinancier   = lazy(() => import('./pages/BilanFinancier'));
 const Settings         = lazy(() => import('./pages/Settings'));
 const Login            = lazy(() => import('./pages/Login'));
 const LandingPage      = lazy(() => import('./pages/LandingPage'));
+const AdsLanding       = lazy(() => import('./pages/AdsLanding'));
 const KioskScanner     = lazy(() => import('./pages/KioskScanner'));
 const FastScanner      = lazy(() => import('./pages/FastScanner'));
 const PlanningView     = lazy(() => import('./pages/PlanningView'));
@@ -339,6 +340,7 @@ function AppContent() {
         <Route path="/recrutemen" element={<Navigate to="/recrutement" replace />} />
         <Route path="/recrutemben" element={<Navigate to="/recrutement" replace />} />
         <Route path="/recrut" element={<Navigate to="/recrutement" replace />} />
+        <Route path="/devis-express" element={<AdsLanding />} />
         <Route path="/" element={<LandingPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -447,6 +449,7 @@ function AppContent() {
         <Route path="visio" element={can('visio') ? <VisioRoom /> : <Navigate to="/" replace />} />
         <Route path="meet" element={<PublicMeet />} />
         <Route path="planning-view/:id" element={<PlanningView />} />
+        <Route path="/devis-express" element={<AdsLanding />} />
 
       </Route>
       <Route element={<PointageLayout />}>
