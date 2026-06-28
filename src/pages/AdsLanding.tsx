@@ -1,20 +1,89 @@
 import React, { useState, useEffect } from 'react';
-import { Shirt, Scissors, Zap, ShieldCheck, ChevronRight, CheckCircle2, Factory, Loader2, Sparkles, Send } from 'lucide-react';
+import { Shirt, Scissors, Zap, ShieldCheck, ChevronRight, CheckCircle2, Factory, Loader2, Sparkles, Send, X, ChevronDown, ImageIcon, ArrowRight, AlertTriangle } from 'lucide-react';
 import { supabase } from '../supabase';
-import { loadCompanyProfile, syncCompanyProfile, CompanyProfile } from '../types';
+import { loadCompanyProfile, syncCompanyProfile, CompanyProfile, saveLead } from '../types';
+import { sendEmailNotification } from './LandingPage';
+import { trackPixelEvent } from '../utils/pixel';
 
 export default function AdsLanding() {
   const [company, setCompany] = useState<CompanyProfile>(loadCompanyProfile());
-  const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    brand: '',
-    modele: '',
-    quantite: '100'
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isAr, setIsAr] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  interface ModelEntry {
+    id: string;
+    type: string;
+    customType: string;
+    quantity: string;
+    tailles: Record<string, string>;
+    details: string;
+    photo: string | null;
+    photos: string[];
+  }
+
+  const emptyModel = (): ModelEntry => ({
+    id: Math.random().toString(36).slice(2),
+    type: 'T-Shirt', customType: '', quantity: '',
+    tailles: { XS: '', S: '', M: '', L: '', XL: '', XXL: '' },
+    details: '', photo: null, photos: []
+  });
+
+  const [models, setModels] = useState<ModelEntry[]>([emptyModel()]);
+
+  const updateModel = (id: string, field: Partial<ModelEntry>) => {
+    setModels(prev => prev.map(m => m.id === id ? { ...m, ...field } : m));
+  };
+
+  const updateModelTaille = (id: string, size: string, val: string) => {
+    setModels(prev => prev.map(m => {
+      if (m.id !== id) return m;
+      const newTailles = { ...m.tailles, [size]: val };
+      const total = Object.values(newTailles).reduce((a, v) => a + (Number(v) || 0), 0);
+      return { ...m, tailles: newTailles, quantity: total > 0 ? total.toString() : m.quantity };
+    }));
+  };
+
+  const handleModelPhoto = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) { setErrorMsg(isAr ? 'الصورة كبيرة جداً (Max 10MB)' : 'Photo trop grande (Max 10MB)'); return; }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX = 800;
+        let w = img.width, h = img.height;
+        if (w > h && w > MAX) { h = h * MAX / w; w = MAX; }
+        else if (h > MAX) { w = w * MAX / h; h = MAX; }
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        let newPhoto = '';
+        if (ctx) { ctx.drawImage(img, 0, 0, w, h); newPhoto = canvas.toDataURL('image/jpeg', 0.6); }
+        else { newPhoto = ev.target?.result as string; }
+        
+        setModels(prev => prev.map(m => {
+          if (m.id !== id) return m;
+          const currentPhotos = m.photos || (m.photo ? [m.photo] : []);
+          const newPhotos = [...currentPhotos, newPhoto];
+          return { ...m, photo: newPhotos[0], photos: newPhotos };
+        }));
+      };
+      img.src = ev.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeModelPhoto = (id: string, index: number) => {
+    setModels(prev => prev.map(m => {
+      if (m.id !== id) return m;
+      const currentPhotos = m.photos || (m.photo ? [m.photo] : []);
+      const newPhotos = currentPhotos.filter((_, i) => i !== index);
+      return { ...m, photo: newPhotos.length > 0 ? newPhotos[0] : null, photos: newPhotos };
+    }));
+  };
 
   // Auto-redirect to Arabic because it's for Moroccan FB ads
   useEffect(() => {
@@ -29,45 +98,6 @@ export default function AdsLanding() {
       document.documentElement.dir = 'ltr';
     };
   }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    try {
-      // Basic formatting
-      const rawPhone = formData.phone;
-      const fullPhone = "+212" + (rawPhone.startsWith('0') ? rawPhone.substring(1) : rawPhone);
-      
-      const newLead = {
-        id: Math.random().toString(36).slice(2),
-        name: formData.name,
-        email: formData.brand || 'Marque non spécifiée',
-        phone: fullPhone,
-        type: formData.modele,
-        quantity: parseInt(formData.quantite) || 100,
-        status: 'new',
-        source: 'FB_ADS_LANDING',
-        ville: 'Non spécifié',
-        date: new Date().toISOString(),
-        photoCount: 0
-      };
-
-      await supabase.from('leads').insert([newLead]);
-
-      // Show success
-      setIsSuccess(true);
-      setTimeout(() => {
-        const adminPhone = company.phone ? company.phone.replace(/\D/g, '') : '212624465962';
-        window.location.href = `https://wa.me/${adminPhone}?text=${encodeURIComponent(`مرحباً ${company.name}، لقد سجلت طلبي للتو باسم ${formData.name} لموديل ${formData.modele} (${formData.quantite} قطعة). أريد تفاصيل أكثر.`)}`;
-      }, 2500);
-
-    } catch (error) {
-      console.error(error);
-      alert('Une erreur est survenue, veuillez réessayer.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   if (isSuccess) {
     return (
@@ -87,6 +117,21 @@ export default function AdsLanding() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans rtl selection:bg-indigo-500 selection:text-white" dir="rtl">
       
+      {errorMsg && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setErrorMsg(null)}>
+          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200 border border-slate-100" onClick={e => e.stopPropagation()}>
+            <div className="w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="w-8 h-8" />
+            </div>
+            <h4 className="text-xl font-black text-center text-slate-800 mb-2">تنبيه</h4>
+            <p className="text-center text-slate-500 font-medium mb-6">{errorMsg}</p>
+            <button onClick={() => setErrorMsg(null)} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold uppercase tracking-widest hover:bg-indigo-600 transition-colors active:scale-95">
+              حسناً
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="fixed top-0 inset-x-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100 transition-all">
         <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
@@ -192,55 +237,222 @@ export default function AdsLanding() {
         <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2U1ZTdlYiIgc3Ryb2tlLXdpZHRoPSIwLjUiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-50"></div>
         
         <div className="max-w-4xl mx-auto relative z-10">
-          <div className="bg-white p-8 md:p-12 rounded-[3rem] shadow-xl border border-slate-100">
+          <div className="bg-white p-8 md:p-12 rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.1)] border border-slate-100 overflow-hidden">
             <div className="text-center mb-10">
               <h2 className="text-3xl font-black text-slate-800 mb-4">احصل على عرض سعر اليوم</h2>
               <p className="text-slate-500 font-medium">املأ الاستمارة وسنتواصل معك فوراً عبر الواتساب لتزويدك بجميع التفاصيل والأسعار.</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
+            <form
+              className="space-y-6"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const formElement = e.currentTarget;
+                const formData = new FormData(formElement);
+                const countryCode = (formElement.querySelector('select[name="countryCode"]') as HTMLSelectElement)?.value || '+212';
+                const rawPhone = formData.get('phone') as string;
+                const fullPhone = countryCode + (rawPhone.startsWith('0') ? rawPhone.substring(1) : rawPhone);
+                const clientName = formData.get('name') as string;
+                const clientEmail = formData.get('email') as string || 'Non spécifié';
+                const clientVille = formData.get('ville') as string || 'Non spécifié';
+
+                if (!clientName.trim().includes(' ')) {
+                  setErrorMsg('المرجو إدخال الإسم الكامل (الشخصي والعائلي)');
+                  return;
+                }
+
+                const missingPhoto = models.find(m => !m.photo && (!m.photos || m.photos.length === 0));
+                if (missingPhoto) {
+                  setErrorMsg('كل موديل خاصو عندو صورة (إجباري)');
+                  return;
+                }
+
+                setIsSending(true);
+                try {
+                  for (const m of models) {
+                    const finalType = (m.type === 'Autre' || m.type === 'آخر') ? m.customType : m.type;
+                    await saveLead({
+                      name: clientName,
+                      email: clientEmail,
+                      phone: fullPhone,
+                      ville: clientVille,
+                      type: finalType,
+                      quantity: Number(m.quantity) || 1,
+                      tailles: Object.fromEntries(Object.entries(m.tailles).filter(([_, v]) => v !== '').map(([k, v]) => [k, Number(v)])),
+                      details: m.details,
+                      photo: m.photos?.[0] || m.photo!,
+                      photos: m.photos || (m.photo ? [m.photo] : []),
+                    });
+                  }
+                  
+                  // Track Facebook Pixel Lead event
+                  trackPixelEvent('Lead', {
+                    content_name: models.map(m => m.type).join(', '),
+                    content_category: 'Confection Lead',
+                    value: models.reduce((acc, m) => acc + (Number(m.quantity) || 1), 0),
+                    currency: 'MAD'
+                  });
+
+                  setIsSending(false);
+                  setIsSuccess(true);
+                  
+                  // Open WhatsApp
+                  setTimeout(() => {
+                    const adminPhone = company.phone ? company.phone.replace(/\D/g, '') : '212624465962';
+                    window.location.href = `https://wa.me/${adminPhone}?text=${encodeURIComponent(`مرحباً BEYA CREATIVE، لقد سجلت طلبي للتو باسم ${clientName}. أريد تفاصيل أكثر.`)}`;
+                  }, 2500);
+
+                  setModels([emptyModel()]);
+                  formElement.reset();
+                } catch (err: any) {
+                  setIsSending(false);
+                  console.error("Error in AdsLanding:", err);
+                  setErrorMsg('وقع خطأ أثناء الإرسال. المرجو التأكد من أن جميع الخانات صحيحة.');
+                }
+              }}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">الاسم الكامل</label>
-                  <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 font-bold focus:border-indigo-500 outline-none transition-colors" placeholder="اسمك" />
+                  <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">الإسم الكامل</label>
+                  <input type="text" name="name" placeholder="Ex: Ahmed Alami" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">رقم الواتساب</label>
-                  <input type="tel" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 font-bold focus:border-indigo-500 outline-none transition-colors text-left" dir="ltr" placeholder="06XXXXXXXX" />
+                  <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">Email (اختياري)</label>
+                  <input type="email" name="email" placeholder="email@example.com" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">اسم علامتك التجارية (اختياري)</label>
-                <input type="text" value={formData.brand} onChange={e => setFormData({...formData, brand: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 font-bold focus:border-indigo-500 outline-none transition-colors" placeholder="مثال: Maison Fashion" />
+              <div className="grid grid-cols-1 gap-6">
+                <div>
+                  <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">المدينة (اختياري)</label>
+                  <input type="text" name="ville" placeholder="مثال: الدار البيضاء" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors" />
+                </div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">نوع الموديل (مثال: T-shirt, Robe)</label>
-                  <div className="relative">
-                    <Shirt className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <input type="text" required value={formData.modele} onChange={e => setFormData({...formData, modele: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl pr-12 pl-5 py-4 font-bold focus:border-indigo-500 outline-none transition-colors" placeholder="ماذا تريد أن تصنع؟" />
+                  <label className="block text-[13px] font-extrabold text-slate-700 uppercase tracking-widest mb-3">رقم الهاتف / الواتساب</label>
+                  <div className="flex gap-3">
+                    <div className="relative w-[100px] flex-shrink-0">
+                      <select name="countryCode" className="w-full appearance-none bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 pl-4 pr-8 text-xs font-black outline-none focus:border-indigo-600 transition-colors h-[58px]">
+                        <option value="+212">🇲🇦 212</option>
+                        <option value="+33">🇫🇷 33</option>
+                        <option value="+34">🇪🇸 34</option>
+                        <option value="+1">🇺🇸 1</option>
+                      </select>
+                      <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400">
+                        <ChevronDown className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <input type="tel" name="phone" placeholder="6XXXXXXXX" className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold outline-none focus:border-indigo-600 transition-colors h-[58px]" dir="ltr" required />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">الكمية التقديرية</label>
-                  <input type="number" min="10" required value={formData.quantite} onChange={e => setFormData({...formData, quantite: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 font-bold focus:border-indigo-500 outline-none transition-colors" placeholder="100" />
-                </div>
               </div>
 
-              <button type="submit" disabled={isSubmitting} className="w-full py-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-lg transition-all shadow-xl shadow-indigo-200 flex items-center justify-center gap-3 disabled:opacity-70 mt-8">
-                {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : <Send className="w-6 h-6 ml-2" />}
-                أرسل الطلب الآن
+              {/* Dynamic models */}
+              {models.map((m, idx) => (
+                <div key={m.id} className="border-2 border-indigo-100 rounded-2xl p-4 md:p-6 space-y-4 bg-indigo-50/30 relative">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-black text-indigo-600 uppercase tracking-widest bg-indigo-100/50 px-3 py-1.5 rounded-lg">
+                      الموديل {idx + 1}
+                    </p>
+                    {models.length > 1 && (
+                      <button type="button" onClick={() => setModels(prev => prev.filter(x => x.id !== m.id))}
+                        className="w-8 h-8 bg-rose-100 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg flex items-center justify-center transition-all text-xs font-black shadow-sm">
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">نوع اللباس</label>
+                      <div className="relative">
+                        <select value={m.type} onChange={e => updateModel(m.id, { type: e.target.value })}
+                          className="w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600 transition-colors appearance-none">
+                          {['T-Shirt','Polo','T-Shirt Oversize','Sweat / Hoodie','Djellaba / Gandoura','Ensemble / Survêtement','Pyjama','Uniforme / Travail','Pantalon'].map(t => <option key={t}>{t}</option>)}
+                          <option value="Autre">نوع آخر</option>
+                        </select>
+                        <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                      </div>
+                      {m.type === 'Autre' && (
+                        <input type="text" value={m.customType} onChange={e => updateModel(m.id, { customType: e.target.value })}
+                          placeholder="حدد النوع"
+                          className="mt-2 w-full bg-indigo-50 border-2 border-indigo-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600" required />
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">الكمية الإجمالية للموديل</label>
+                      <input type="number" min="1" placeholder="100" value={m.quantity} onChange={e => updateModel(m.id, { quantity: e.target.value })}
+                        className="w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600 h-[50px]" required />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">المقاسات (اختياري - وزع الكمية)</label>
+                    <div className="grid grid-cols-6 gap-2">
+                      {['XS','S','M','L','XL','XXL'].map(size => (
+                        <div key={size} className="relative group">
+                          <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 bg-indigo-50 text-[8px] font-black text-indigo-600 rounded-full border border-indigo-100 z-10">{size}</div>
+                          <input type="number" value={m.tailles[size]} onChange={e => updateModelTaille(m.id, size, e.target.value)} placeholder="0"
+                            className="w-full bg-white border-2 border-slate-200 rounded-xl pt-3 pb-1 px-1 text-center text-xs font-black outline-none focus:border-indigo-600 h-[50px]" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">تفاصيل الطلب (ألوان، نوع الثوب...)</label>
+                      <textarea rows={3} value={m.details} onChange={e => updateModel(m.id, { details: e.target.value })}
+                        placeholder="اشرح شنو باغي..."
+                        className="w-full bg-white border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-indigo-600 resize-none" />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-widest mb-2">
+                        صورة الموديل <span className="text-rose-500">*</span>
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {(m.photos || (m.photo ? [m.photo] : [])).map((p, pIdx) => (
+                          <div key={pIdx} className="relative w-[100px] h-[100px] rounded-xl overflow-hidden border-2 border-indigo-200 shadow-sm">
+                            <img src={p} className="w-full h-full object-cover" alt="" />
+                            <button type="button" onClick={() => removeModelPhoto(m.id, pIdx)}
+                              className="absolute top-1 right-1 p-1 bg-rose-500 text-white rounded-full hover:bg-rose-600 transition-colors shadow-sm">
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                        {(m.photos || (m.photo ? [m.photo] : [])).length < 5 && (
+                          <label className="flex flex-col items-center justify-center w-[100px] h-[100px] bg-white border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-indigo-300 hover:bg-indigo-50 transition-all shrink-0">
+                            <ImageIcon className="w-6 h-6 text-slate-300 mb-1" />
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center px-1 leading-tight">إضافة صورة</span>
+                            <input type="file" accept="image/*" onChange={e => handleModelPhoto(m.id, e)} className="hidden" />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* Add model button */}
+              <button type="button" onClick={() => setModels(prev => [...prev, emptyModel()])}
+                className="w-full py-4 border-2 border-dashed border-indigo-300 text-indigo-600 bg-indigo-50/50 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-indigo-100 transition-all flex items-center justify-center gap-2">
+                + إضافة موديل آخر
               </button>
-              <p className="text-center text-xs font-bold text-slate-400 mt-4">معلوماتك آمنة ولن يتم مشاركتها مع أي طرف ثالث.</p>
+
+              <button type="submit" disabled={isSending} className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-3 disabled:opacity-60 mt-4">
+                {isSending ? 'جاري الإرسال...' : `أرسل الطلب الآن ${models.length > 1 ? `(${models.length} موديلات)` : ''}`}
+                {!isSending && <Send className="w-5 h-5 ml-2" />}
+              </button>
+              <p className="text-center text-[10px] font-bold text-slate-400 mt-4">معلوماتك آمنة ولن يتم مشاركتها مع أي طرف ثالث.</p>
             </form>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-900 py-8 text-center border-t border-white/10">
+      <footer className="bg-slate-900 py-8 text-center border-t border-white/10 mt-20">
         <div className="flex justify-center items-center gap-2 text-white/50 text-sm font-bold">
           <div className="w-6 h-6 bg-white/10 rounded flex items-center justify-center text-white text-xs">B</div>
           BEYA CREATIVE © {new Date().getFullYear()}
@@ -249,3 +461,4 @@ export default function AdsLanding() {
     </div>
   );
 }
+
