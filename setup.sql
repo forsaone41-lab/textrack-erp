@@ -69,6 +69,17 @@ BEGIN
     BEGIN ALTER TABLE commandes ADD COLUMN "piecesData" jsonb; EXCEPTION WHEN duplicate_column THEN END;
     BEGIN ALTER TABLE leads ADD COLUMN "photos" jsonb; EXCEPTION WHEN duplicate_column THEN END;
     BEGIN ALTER TABLE leads ADD COLUMN "photoCount" numeric; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE leads ADD COLUMN "crmStage" text; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE leads ADD COLUMN "crmContactMethod" text; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE leads ADD COLUMN "crmRdvDate" text; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE leads ADD COLUMN "crmNotes" text; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE leads ADD COLUMN "crmPrice" numeric; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE leads ADD COLUMN "crmDevisMode" text; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE leads ADD COLUMN "crmPriceConfirmed" boolean; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE leads ADD COLUMN "crmPriority" boolean; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE leads ADD COLUMN "rejectedAt" text; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE leads ADD COLUMN "contactedBy" text; EXCEPTION WHEN duplicate_column THEN END;
+    BEGIN ALTER TABLE leads ADD COLUMN "phone2" text; EXCEPTION WHEN duplicate_column THEN END;
 END $$;
 
 CREATE TABLE IF NOT EXISTS stocks (
