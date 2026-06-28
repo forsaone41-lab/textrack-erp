@@ -691,8 +691,12 @@ export default function AdsLanding() {
       {/* Footer */}
       <footer className="bg-slate-900 py-8 text-center border-t border-white/10 mt-20">
         <div className="flex justify-center items-center gap-2 text-white/50 text-sm font-bold">
-          <div className="w-6 h-6 bg-white/10 rounded flex items-center justify-center text-white text-xs">B</div>
-          BEYA CREATIVE © {new Date().getFullYear()}
+          {company.logo ? (
+            <img src={company.logo} alt="Logo" className="h-6 w-auto object-contain opacity-60" />
+          ) : (
+            <div className="w-6 h-6 bg-white/10 rounded flex items-center justify-center text-white text-xs">B</div>
+          )}
+          {company.companyName || 'BEYA CREATIVE'} © {new Date().getFullYear()}
         </div>
       </footer>
     </div>
