@@ -276,7 +276,7 @@ export default function AdsLanding() {
           
           <div className="relative hidden lg:block">
             <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500 to-cyan-500 rounded-[3rem] rotate-3 opacity-20 blur-2xl"></div>
-            <img src="https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&q=80" alt="Atelier de confection" className="relative z-10 w-full aspect-square object-cover rounded-[3rem] shadow-2xl border border-white/10" />
+            <img src="/beya_creative_streetwear.png" alt="BEYA CREATIVE Streetwear Idea to Reality" className="relative z-10 w-full aspect-square object-cover rounded-[3rem] shadow-2xl border border-white/10" />
             
             {/* Floating Badge */}
             <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-3xl shadow-2xl z-20 flex items-center gap-4 border border-slate-100">
