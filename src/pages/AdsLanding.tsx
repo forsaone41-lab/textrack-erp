@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shirt, Scissors, Zap, ShieldCheck, ChevronRight, CheckCircle2, Factory, Loader2, Sparkles, Send, X, ChevronDown, ImageIcon, ArrowRight, AlertTriangle } from 'lucide-react';
+import { Shirt, Scissors, Zap, ShieldCheck, ChevronRight, CheckCircle2, Factory, Loader2, Sparkles, Send, X, ChevronDown, ImageIcon, ArrowRight, AlertTriangle, Globe } from 'lucide-react';
 import { supabase } from '../supabase';
 import { loadCompanyProfile, syncCompanyProfile, CompanyProfile, saveLead, loadData, TarifService } from '../types';
 import { sendEmailNotification } from './LandingPage';
