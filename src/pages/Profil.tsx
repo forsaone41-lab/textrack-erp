@@ -14,7 +14,10 @@ export default function Profil({ currentUser }: ProfilProps) {
     nom: currentUser.nom,
     email: currentUser.email,
     telephone: currentUser.telephone || '',
+    role: currentUser.role,
+    photo: currentUser.photo || ''
   });
+  const [isUploading, setIsUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [missions, setMissions] = useState<{
@@ -64,15 +67,76 @@ export default function Profil({ currentUser }: ProfilProps) {
     }
   };
 
+  const handlePhotoChange = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e: any) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      setIsUploading(true);
+      try {
+        const reader = new FileReader();
+        reader.onload = async (event: any) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 256;
+            const MAX_HEIGHT = 256;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > MAX_WIDTH) {
+                height *= MAX_WIDTH / width;
+                width = MAX_WIDTH;
+              }
+            } else {
+              if (height > MAX_HEIGHT) {
+                width *= MAX_HEIGHT / height;
+                height = MAX_HEIGHT;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx?.drawImage(img, 0, 0, width, height);
+
+            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.5);
+            setFormData(prev => ({ ...prev, photo: compressedBase64 }));
+            setIsUploading(false);
+          };
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      } catch (err) {
+        setIsUploading(false);
+        alert(isAr ? 'فشل تحميل الصورة' : 'Échec du téléchargement');
+      }
+    };
+    input.click();
+  };
+
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-8 pb-20">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end gap-6">
         <div className="relative group">
-          <div className="w-24 h-24 md:w-32 md:h-32 rounded-[2rem] bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-4xl font-black shadow-2xl shadow-indigo-200">
-            {currentUser.nom[0].toUpperCase()}
+          <div className="w-24 h-24 md:w-32 md:h-32 rounded-[2rem] bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-4xl font-black shadow-2xl shadow-indigo-200 overflow-hidden relative border-4 border-white">
+            {isUploading && (
+              <div className="absolute inset-0 z-10 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center">
+                <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+            {formData.photo ? (
+              <img src={formData.photo} className="w-full h-full object-cover" alt="Profile" />
+            ) : (
+              <span>{currentUser.nom[0].toUpperCase()}</span>
+            )}
           </div>
-          <button className="absolute bottom-0 right-0 w-10 h-10 bg-white rounded-2xl shadow-xl flex items-center justify-center text-slate-600 hover:text-indigo-600 transition-all border border-slate-100">
+          <button onClick={handlePhotoChange} className="absolute bottom-0 right-0 w-10 h-10 bg-white rounded-2xl shadow-xl flex items-center justify-center text-slate-600 hover:text-indigo-600 transition-all border border-slate-100 z-20 hover:scale-110 active:scale-95">
             <Camera className="w-5 h-5" />
           </button>
         </div>
@@ -81,7 +145,7 @@ export default function Profil({ currentUser }: ProfilProps) {
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">{currentUser.nom}</h1>
           <div className="flex flex-wrap gap-3">
             <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-black uppercase tracking-widest border border-indigo-100">
-              {currentUser.role}
+              {formData.role}
             </span>
             <span className="px-3 py-1 bg-slate-50 text-slate-500 rounded-lg text-xs font-black uppercase tracking-widest border border-slate-100">
               ID: {currentUser.id.substring(0, 8)}
@@ -228,8 +292,23 @@ export default function Profil({ currentUser }: ProfilProps) {
             </h2>
             <div className="space-y-4">
               <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Rôle Actuel</p>
-                <p className="text-sm font-bold">{currentUser.role.toUpperCase()}</p>
+                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">{isAr ? 'الدور الحالي' : 'Rôle Actuel'}</p>
+                <select 
+                  value={formData.role}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
+                  className="w-full bg-transparent text-sm font-bold text-white outline-none cursor-pointer appearance-none uppercase"
+                >
+                  <option value="admin" className="text-slate-900">Admin</option>
+                  <option value="pointeur" className="text-slate-900">Pointeur</option>
+                  <option value="chef_chaine" className="text-slate-900">Chef de Chaîne</option>
+                  <option value="client" className="text-slate-900">Client</option>
+                  <option value="worker" className="text-slate-900">Worker</option>
+                  <option value="coupeur" className="text-slate-900">Coupeur</option>
+                  <option value="modeliste" className="text-slate-900">Modéliste</option>
+                  <option value="controleur" className="text-slate-900">Contrôle Qualité</option>
+                  <option value="agent_pointage" className="text-slate-900">Agent de Pointage</option>
+                  <option value="partenaire" className="text-slate-900">Partenaire</option>
+                </select>
               </div>
               <button className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/5 transition-all group">
                 <div className="flex items-center gap-3">
