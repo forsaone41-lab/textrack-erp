@@ -2048,8 +2048,8 @@ export default function Demandes() {
                               {!lead.type.startsWith('RECRUTEMENT:') && (
                                 <button onClick={async () => {
                                     if (window.confirm(isAr ? 'إرسال طلب تسعير الباترون للمودليست؟' : 'Demander le prix de patronage au modéliste?')) {
-                                      let extras = {};
-                                      try { extras = JSON.parse(lead.details || '{}'); } catch(e){}
+                                      let extras: any = {};
+                                      try { extras = JSON.parse(lead.details || '{}'); } catch(e){ extras = { clientNotes: lead.details }; }
                                       const updated = { ...lead, details: JSON.stringify({...extras, patronageStatus: 'requested'}) };
                                       setLeads(prev => prev.map(l => l.id === lead.id ? updated : l));
                                       await saveRecord('leads', updated, true);

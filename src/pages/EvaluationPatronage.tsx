@@ -14,6 +14,7 @@ export default function EvaluationPatronage() {
   
   const [priceInput, setPriceInput] = useState<string>('');
   const [notesInput, setNotesInput] = useState<string>('');
+  const [customAlert, setCustomAlert] = useState<{ title: string; message: string; onConfirm?: () => void; isError?: boolean } | null>(null);
 
   useEffect(() => {
     fetchLeads();
@@ -44,7 +45,11 @@ export default function EvaluationPatronage() {
       }
     } catch (e) {
       console.error(e);
-      alert('Erreur de chargement');
+      setCustomAlert({
+        title: isAr ? 'خطأ ❌' : 'Erreur ❌',
+        message: isAr ? 'خطأ في التحميل' : 'Erreur de chargement',
+        isError: true
+      });
     }
     setLoading(false);
   };
@@ -58,7 +63,11 @@ export default function EvaluationPatronage() {
   const handleSavePrice = async () => {
     if (!selectedLead) return;
     if (!priceInput) {
-      alert(isAr ? 'أدخل الثمن أولا' : 'Veuillez entrer un prix');
+      setCustomAlert({
+        title: isAr ? 'تنبيه' : 'Attention',
+        message: isAr ? 'أدخل الثمن أولا' : 'Veuillez entrer un prix',
+        isError: true
+      });
       return;
     }
 
@@ -83,11 +92,18 @@ export default function EvaluationPatronage() {
       };
       
       await saveRecord('leads', dbLead, true);
-      alert(isAr ? 'تم حفظ الثمن بنجاح' : 'Prix enregistré avec succès');
+      setCustomAlert({
+        title: isAr ? 'تم بنجاح! 🎉' : 'Succès! 🎉',
+        message: isAr ? 'تم حفظ الثمن بنجاح' : 'Prix enregistré avec succès',
+      });
       fetchLeads();
       setSelectedLead(null);
     } catch (e) {
-      alert(isAr ? 'حدث خطأ' : 'Erreur lors de la sauvegarde');
+      setCustomAlert({
+        title: isAr ? 'خطأ ❌' : 'Erreur ❌',
+        message: isAr ? 'حدث خطأ أثناء الحفظ' : 'Erreur lors de la sauvegarde',
+        isError: true
+      });
     }
   };
 
@@ -217,10 +233,10 @@ export default function EvaluationPatronage() {
                 </div>
               </div>
 
-              {selectedLead.details && (
+              {((selectedLead as any).clientNotes || (selectedLead.details && !selectedLead.details.trim().startsWith('{'))) && (
                 <div className="mb-6 p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
                   <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-2">{isAr ? 'التفاصيل / ملاحظات الكليان' : 'Détails du client'}</p>
-                  <p className="text-sm font-bold text-slate-700 whitespace-pre-wrap">{selectedLead.details}</p>
+                  <p className="text-sm font-bold text-slate-700 whitespace-pre-wrap">{(selectedLead as any).clientNotes || selectedLead.details}</p>
                 </div>
               )}
 
@@ -261,6 +277,40 @@ export default function EvaluationPatronage() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Beautiful Custom Alert Modal */}
+      {customAlert && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300" dir={isAr ? 'rtl' : 'ltr'}>
+          <div className="bg-white rounded-[40px] border-2 border-slate-100 w-full max-w-md p-8 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col items-center text-center">
+            {/* Top decorative badge */}
+            <div className={`w-16 h-16 rounded-3xl flex items-center justify-center mb-6 shadow-lg ${
+              customAlert.isError 
+                ? 'bg-rose-50 border border-rose-100 text-rose-500 shadow-rose-200/50' 
+                : 'bg-emerald-50 border border-emerald-100 text-emerald-500 shadow-emerald-200/50'
+            }`}>
+              {customAlert.isError ? <X className="w-8 h-8" /> : <Check className="w-8 h-8" />}
+            </div>
+
+            <h3 className="text-lg font-black text-slate-900 mb-2">{customAlert.title}</h3>
+            <p className="text-sm font-semibold leading-relaxed text-slate-500 mb-6">{customAlert.message}</p>
+
+            <button
+              onClick={() => {
+                const onConf = customAlert.onConfirm;
+                setCustomAlert(null);
+                if (onConf) onConf();
+              }}
+              className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-md ${
+                customAlert.isError
+                  ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/20'
+                  : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
+              }`}
+            >
+              {isAr ? 'موافق' : 'D\'accord'}
+            </button>
           </div>
         </div>
       )}
