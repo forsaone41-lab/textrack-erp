@@ -63,6 +63,29 @@ export default function Profil({ currentUser }: ProfilProps) {
     try {
       const updatedUser = { ...currentUser, ...formData };
       await saveRecord('users', updatedUser);
+      
+      // ✅ Backup save photo to leads table to ensure cross-device sync (bypass users table limits)
+      if (formData.photo && formData.photo !== currentUser.photo) {
+        try {
+          const { supabase } = await import('../supabase');
+          const { genId } = await import('../types');
+          
+          await supabase.from('leads').delete().eq('name', '__WORKER_PHOTO__').eq('phone', currentUser.id);
+          await supabase.from('leads').insert({
+            id: genId(),
+            name: '__WORKER_PHOTO__',
+            phone: currentUser.id,
+            type: 'PHOTO',
+            quantity: 0,
+            status: 'completed',
+            date: new Date().toISOString(),
+            details: formData.photo
+          });
+        } catch (e) {
+          console.error("Failed to sync photo to cloud", e);
+        }
+      }
+      
       localStorage.setItem('textrack_auth', JSON.stringify(updatedUser));
       setSuccess(true);
       setTimeout(() => {

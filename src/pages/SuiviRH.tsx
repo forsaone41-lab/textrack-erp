@@ -758,8 +758,14 @@ export default function SuiviRH() {
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'المنصب / الوظيفة' : 'Poste / Fonction'}</label>
                     <select value={form.poste || ''} onChange={e => setForm({ ...form, poste: e.target.value })} className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-900 outline-none ${isAr ? 'text-right' : ''}`}>
                       <option value="">{isAr ? 'اختر المنصب...' : 'Sélectionner...'}</option>
-                      {POSTES_ATELIER.map((p, i) => <option key={p} value={p}>{isAr ? POSTES_ATELIER_AR[i] : p}</option>)}
-                      {POSTES_SOUSTRAITANCE.map((p, i) => <option key={p} value={p}>{isAr ? POSTES_SOUSTRAITANCE_AR[i] : p}</option>)}
+                      {POSTES_ATELIER.map((p, i) => {
+                        const currentUserRaw = localStorage.getItem('textrack_auth');
+                        const isAdmin = currentUserRaw ? JSON.parse(currentUserRaw).role === 'admin' : false;
+                        const isAdminRole = i >= 16;
+                        if (isAdminRole && !isAdmin) return null;
+                        return <option key={p} value={p} disabled={p.startsWith('—')}>{isAr ? POSTES_ATELIER_AR[i] : p}</option>;
+                      })}
+                      {POSTES_SOUSTRAITANCE.map((p, i) => <option key={p} value={p} disabled={p.startsWith('—')}>{isAr ? POSTES_SOUSTRAITANCE_AR[i] : p}</option>)}
                     </select>
                   </div>
                   <div className={isAr ? 'text-right' : ''}>

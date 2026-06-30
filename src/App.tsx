@@ -60,6 +60,7 @@ const Inbox           = lazy(() => import('./pages/Inbox'));
 const GmailInbox      = lazy(() => import('./pages/GmailInbox'));
 const Tarifs          = lazy(() => import('./pages/Tarifs'));
 const Reglement       = lazy(() => import('./pages/Reglement'));
+const ValidationBoard = lazy(() => import('./pages/ValidationBoard'));
 
 import { PageLoader } from './components/PageLoader';
 
@@ -286,14 +287,37 @@ function AppContent() {
     const fetchUsers = async () => {
       const users = await loadData<User>('users');
       if (users) {
+        // Fetch photos from leads table to restore stripped photos
+        try {
+          const { supabase } = await import('./supabase');
+          const { data: photos } = await supabase
+            .from('leads')
+            .select('phone, details')
+            .eq('name', '__WORKER_PHOTO__');
+          if (photos) {
+            photos.forEach(p => {
+              const u = users.find(u => u.id === p.phone);
+              if (u) u.photo = p.details;
+            });
+          }
+        } catch (e) { console.error(e); }
+        
         setAllUsers(users);
         
         // ✅ Sync current user state with database (handles photo persistence)
         if (currentUser) {
           const latest = users.find(u => u.id === currentUser.id);
-          if (latest && latest.photo !== currentUser.photo) {
-            setCurrentUser(latest);
-            localStorage.setItem(AUTH_KEY, JSON.stringify(latest));
+          
+          if (latest) {
+             // Keep local photo if remote doesn't have it (fallback)
+             if (!latest.photo && currentUser.photo) {
+                latest.photo = currentUser.photo;
+             }
+             // Only update if there are actual changes
+             if (JSON.stringify(latest) !== JSON.stringify(currentUser)) {
+               setCurrentUser(latest);
+               localStorage.setItem(AUTH_KEY, JSON.stringify(latest));
+             }
           }
         }
       }
@@ -409,6 +433,7 @@ function AppContent() {
         <Route path="inbox" element={can('inbox') ? <Inbox /> : <Navigate to="/" replace />} />
         <Route path="gmail-inbox" element={can('gmail') ? <GmailInbox /> : <Navigate to="/" replace />} />
         <Route path="pipeline" element={can('crm') ? <Pipeline /> : <Navigate to="/" replace />} />
+        <Route path="validation" element={can('validation') ? <ValidationBoard currentUser={currentUser} /> : <Navigate to="/" replace />} />
         <Route path="tarifs" element={can('tarifs') ? <Tarifs /> : <Navigate to="/" replace />} />
         <Route path="echantillons" element={can('demandes') ? <Echantillons /> : <Navigate to="/" replace />} />
         <Route path="fiches-techniques" element={can('fiches') ? <FichesTechniques /> : <Navigate to="/" replace />} />

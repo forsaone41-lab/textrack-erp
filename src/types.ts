@@ -1114,12 +1114,11 @@ export async function loadData<T>(table: string): Promise<T[]> {
 }
 
 export async function saveRecord<T>(table: string, record: T, silent: boolean = false): Promise<void> {
-  // Guard against deleting or modifying master-admin
+  // Guard against locking out master-admin by changing their role
   if (table === 'users') {
     const r = record as any;
     if (r.id === 'master-admin' || r.id === 'yassine-admin' || r.email === '00.belbachir@gmail.com') {
-      console.warn(`Skipping save for protected admin: ${r.id}`);
-      return;
+      r.role = 'admin'; // Force role to remain admin
     }
   }
 
@@ -1194,6 +1193,11 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
 }
 
 export async function deleteRecord(table: string, id: string, email?: string): Promise<void> {
+  // Prevent deletion of master-admin
+  if (table === 'users' && (id === 'master-admin' || id === 'yassine-admin' || email === '00.belbachir@gmail.com')) {
+    console.warn(`Skipping deletion of protected admin: ${id}`);
+    return;
+  }
   console.log(`[DEBUG] Deleting from ${table} | ID: ${id} | Email: ${email}`);
   
   try {

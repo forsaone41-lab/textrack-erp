@@ -209,6 +209,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
             {can('inbox') && <NavItem to="/inbox" icon={Inbox} label={isAr ? 'صندوق الرسائل' : 'Boîte de Réception'} />}
             {can('demandes') && <NavItem to="/demandes" icon={Users} label={isAr ? 'الزبناء المحتملون' : 'Prospects'} />}
             {can('crm') && <NavItem to="/pipeline" icon={PhoneCall} label={isAr ? 'تتبع الزبناء (CRM)' : 'Suivi Prospects'} />}
+            {can('validation') && <NavItem to="/validation" icon={CheckCircle} label={isAr ? 'تأكيد الطلبات' : 'Validation'} />}
             {can('demandes') && <NavItem to="/echantillons" icon={Scissors} label={isAr ? 'العينات' : 'Échantillons'} />}
             {(can('devis') || can('demandes')) && <NavItem to="/devis-pro" icon={FileText} label={isAr ? 'عروض أسعار (PRO)' : 'Devis (PRO)'} pro />}
             {can('clients') && <NavItem to="/clients" icon={UserCheck} label={isAr ? 'قاعدة الزبناء' : 'Clients'} />}

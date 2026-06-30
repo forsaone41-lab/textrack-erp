@@ -35,6 +35,7 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
   const [loading, setLoading] = useState(true);
   const [kpiDetail, setKpiDetail] = useState<number | null>(null);
   const [listModal, setListModal] = useState<{ title: string, employees: Employe[] } | null>(null);
+  const [zoomedPhoto, setZoomedPhoto] = useState<string | null>(null);
 
   function loadAll() {
     // Instant cache render
@@ -490,18 +491,20 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
               <div className="flex gap-4 min-w-max px-1">
                 {enCoursPresence.map(e => {
                   const p = presencesAujourdhui.find(pr => pr.employeId === e.id);
+                  const photo = e.photo 
+                    || (typeof workerPhotos !== 'undefined' ? workerPhotos[e.id] : null)
+                    || localStorage.getItem(`beya_worker_photo_${e.id}`);
                   return (
                     <div key={e.id} className="flex flex-col items-center gap-3 group">
                       <div className="relative">
-                        <div className="w-16 h-16 rounded-[24px] bg-slate-100 border-2 border-white shadow-lg overflow-hidden group-hover:scale-110 transition-transform flex items-center justify-center">
-                          {(() => {
-                            const photo = e.photo 
-                              || (typeof workerPhotos !== 'undefined' ? workerPhotos[e.id] : null)
-                              || localStorage.getItem(`beya_worker_photo_${e.id}`);
-                            return photo 
-                              ? <img src={photo} alt={e.nom} className="w-full h-full object-cover" />
-                              : <div className="text-slate-400 font-black text-xl">{e.nom[0]}</div>;
-                          })()}
+                        <div 
+                          onClick={() => photo && setZoomedPhoto(photo)}
+                          className={`w-16 h-16 rounded-[24px] bg-slate-100 border-2 border-white shadow-lg overflow-hidden group-hover:scale-110 transition-transform flex items-center justify-center ${photo ? 'cursor-zoom-in' : ''}`}
+                        >
+                          {photo 
+                            ? <img src={photo} alt={e.nom} className="w-full h-full object-cover" />
+                            : <div className="text-slate-400 font-black text-xl">{e.nom[0]}</div>
+                          }
                         </div>
                         <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 border-4 border-white rounded-full shadow-sm flex items-center justify-center">
                           <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
@@ -755,8 +758,15 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
                   
                   const initials = (selectedUser.nom || 'User').split(' ').filter(Boolean).map(n => n?.[0] || '').join('').toUpperCase() || '??';
                   return (
-                    <div className="w-24 h-24 bg-indigo-50 rounded-[2.5rem] flex items-center justify-center text-indigo-600 text-2xl font-black mb-6 shadow-xl shadow-indigo-100 border-4 border-white overflow-hidden">
-                      {photo ? <img src={photo} alt={selectedUser.nom} className="w-full h-full object-cover" /> : initials}
+                    <div 
+                      onClick={(e) => {
+                         e.stopPropagation();
+                         e.preventDefault();
+                         if (photo) setZoomedPhoto(photo);
+                      }}
+                      className={`w-24 h-24 bg-indigo-50 rounded-[2.5rem] flex items-center justify-center text-indigo-600 text-2xl font-black mb-6 shadow-xl shadow-indigo-100 border-4 border-white overflow-hidden ${photo ? 'cursor-zoom-in hover:scale-105 active:scale-95 transition-transform' : ''}`}
+                    >
+                      {photo ? <img src={photo} alt={selectedUser.nom} className="w-full h-full object-cover pointer-events-none" /> : initials}
                     </div>
                   );
                 })()}
@@ -815,7 +825,10 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
                   
                   return (
                     <div key={e.id} className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                      <div className="w-12 h-12 rounded-[1rem] overflow-hidden flex items-center justify-center text-xs font-black shrink-0 relative bg-slate-100 border-2 border-white shadow-sm">
+                      <div 
+                        onClick={() => photo && setZoomedPhoto(photo)}
+                        className={`w-12 h-12 rounded-[1rem] overflow-hidden flex items-center justify-center text-xs font-black shrink-0 relative bg-slate-100 border-2 border-white shadow-sm ${photo ? 'cursor-zoom-in hover:scale-105 transition-transform' : ''}`}
+                      >
                         {photo ? (
                           <img src={photo} className="w-full h-full object-cover" alt="" />
                         ) : (
@@ -848,6 +861,20 @@ export default function Dashboard({ allUsers = [] }: DashboardProps) {
         </div>
       )}
 
+      {zoomedPhoto && (
+        <div 
+          className="fixed inset-0 bg-slate-900/95 backdrop-blur-xl z-[99999] flex items-center justify-center p-4 animate-in zoom-in-95 duration-200 cursor-zoom-out"
+          onClick={() => setZoomedPhoto(null)}
+        >
+          <img src={zoomedPhoto} className="max-w-full max-h-[90vh] rounded-[2.5rem] shadow-2xl border-4 border-white/10 object-contain" alt="Zoomed view" />
+          <button 
+            onClick={() => setZoomedPhoto(null)}
+            className="absolute top-6 right-6 p-4 bg-white/10 hover:bg-white/20 text-white rounded-2xl backdrop-blur-sm transition-all"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

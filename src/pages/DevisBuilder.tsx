@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Plus, Trash2, Camera, Download, FileText, CheckCircle, Clock, User as UserIcon, Maximize2, X } from 'lucide-react';
+import { ArrowLeft, Search, Plus, Trash2, Camera, Download, FileText, CheckCircle, Clock, User as UserIcon, Maximize2, X, MessageCircle } from 'lucide-react';
 import { FicheTechnique, loadData, loadCompanyProfile, genId, Facture, saveRecord, loadLeads } from '../types';
 import type { User, Lead } from '../types';
 import { useLang } from '../contexts/LangContext';
@@ -175,6 +175,7 @@ export default function DevisBuilder() {
       client: clientName,
       montant: totalGeneral,
       date: new Date().toISOString().split('T')[0],
+      echeance: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       statut: 'en_attente',
       typeDoc: 'devis',
       articles: articles,
