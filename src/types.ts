@@ -61,6 +61,7 @@ export interface FicheTechnique {
   fit?: string;
   complexity?: string;
   clientId?: string;
+  modelisteId?: string;
 }
 
 export interface OrdreDeCoupe {

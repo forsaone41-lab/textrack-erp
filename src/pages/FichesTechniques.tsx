@@ -345,6 +345,7 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
 }
 
 export default function FichesTechniques() {
+  const currentUser = JSON.parse(localStorage.getItem('textrack_auth') || '{}') as User;
   const { lang, isAr } = useLang();
   const navigate = useNavigate();
   const [fiches, setFiches] = useState<FicheTechnique[]>([]);
@@ -365,6 +366,7 @@ export default function FichesTechniques() {
     modelePhoto: ''
   });
   const [clients, setClients] = useState<any[]>([]);
+  const [modelistes, setModelistes] = useState<User[]>([]);
   const [clientSearch, setClientSearch] = useState('');
   const [form, setForm] = useState<Partial<FicheTechnique>>({
     modele: '', description: '', client: '', tailles: [], type: '',
@@ -417,6 +419,7 @@ export default function FichesTechniques() {
       setFiches(f);
       setTissus(t);
       setClients(u.filter((x: any) => x.role === 'client'));
+      setModelistes(u.filter((x: any) => x.role === 'modeliste'));
       setCommandes(c);
 
       // Check for lead pre-filling from location state (via HashRouter)
@@ -458,10 +461,11 @@ export default function FichesTechniques() {
     }
   };
 
-  const filtered = fiches.filter(f =>
-    f.modele.toLowerCase().includes(search.toLowerCase()) ||
-    f.client.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = fiches.filter(f => {
+    if (currentUser?.role === 'modeliste' && f.modelisteId !== currentUser.id) return false;
+    return f.modele.toLowerCase().includes(search.toLowerCase()) ||
+           f.client.toLowerCase().includes(search.toLowerCase());
+  });
 
   function openCreate() {
     setEditId(null);
@@ -1224,6 +1228,23 @@ export default function FichesTechniques() {
                     ))}
                   </select>
                 </div>
+                {currentUser?.role !== 'modeliste' && (
+                  <div className="mb-3">
+                    <label className={`block text-xs font-semibold text-slate-600 mb-1.5 ${isAr ? 'text-right' : ''}`}>
+                      {isAr ? 'تعيين موديلست (اختياري)' : 'Assigner Modéliste (Optionnel)'}
+                    </label>
+                    <select
+                      value={form.modelisteId || ''}
+                      onChange={e => setForm({ ...form, modelisteId: e.target.value })}
+                      className={`w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition-colors ${isAr ? 'text-right' : ''}`}
+                    >
+                      <option value="">{isAr ? '-- غير معين --' : '-- Non assigné --'}</option>
+                      {modelistes.map(m => (
+                        <option key={m.id} value={m.id}>{m.nom} {m.telephone ? `(${m.telephone})` : ''}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                   <div>
                     <label className={`block text-xs font-semibold text-slate-600 mb-1.5 ${isAr ? 'text-right' : ''}`}>
