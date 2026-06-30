@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { User as UserIcon, Mail, Phone, Shield, Calendar, Save, Camera, Lock } from 'lucide-react';
+import { User as UserIcon, Mail, Phone, Shield, Calendar, Save, Camera, Lock, Trash2 } from 'lucide-react';
 import { User, saveRecord, loadData, OperationModele, Commande, SuiviHoraire } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { QRCodeSVG } from 'qrcode.react';
