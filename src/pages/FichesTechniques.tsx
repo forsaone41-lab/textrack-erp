@@ -5,6 +5,7 @@ import {
   FicheTechnique, StockTissu, loadData, saveRecord, deleteRecord, genId, Commande, User
 } from '../types';
 import { printFicheTechnique as printFT } from '../utils/print';
+import { compressImage } from '../utils/image';
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
 import { PageLoader } from '../components/PageLoader';

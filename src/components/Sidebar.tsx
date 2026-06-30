@@ -193,6 +193,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
           
           {/* Group 1: Access */}
           <div className="space-y-1">
+            <NavItem to="/profil" icon={UserIcon} label={isAr ? 'حسابي' : 'Mon Profil'} />
             {can('dashboard') && <NavItem to="/" icon={LayoutDashboard} label={t('dashboard', lang)} end />}
             {can('worker_portal') && <NavItem to="/worker-portal" icon={UserIcon} label={isAr ? 'فضاء العامل' : 'Espace Ouvrier'} />}
             {can('chef_chaine_portal') && <NavItem to="/chef-portal" icon={ShieldCheck} label={isAr ? 'بوابة رئيس السلسلة' : 'Portail Chef Chaîne'} />}
@@ -337,9 +338,13 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
               </div>
 
               <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-4 border border-white/5 shadow-xl">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                    <ShieldCheck className="w-5 h-5 text-white" />
+                <NavLink to="/profil" onClick={() => setIsMobileOpen(false)} className="flex items-center gap-3 mb-4 hover:opacity-80 transition-opacity cursor-pointer">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 overflow-hidden border-2 border-indigo-500/30">
+                    {currentUser.photo ? (
+                      <img src={currentUser.photo} className="w-full h-full object-cover" />
+                    ) : (
+                      <ShieldCheck className="w-5 h-5 text-white" />
+                    )}
                   </div>
                   <div className="flex flex-col min-w-0">
                     <span className="text-xs font-bold text-white truncate">{currentUser.nom || 'Admin'}</span>
@@ -347,7 +352,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
                       {currentUser.role}
                     </span>
                   </div>
-                </div>
+                </NavLink>
                 
                 <button 
                   onClick={onLogout}

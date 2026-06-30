@@ -38,6 +38,7 @@ const Performance      = lazy(() => import('./pages/Performance'));
 const Charges          = lazy(() => import('./pages/Charges'));
 const BilanFinancier   = lazy(() => import('./pages/BilanFinancier'));
 const Settings         = lazy(() => import('./pages/Settings'));
+const Profil           = lazy(() => import('./pages/Profil'));
 const Login            = lazy(() => import('./pages/Login'));
 const LandingPage      = lazy(() => import('./pages/LandingPage'));
 const AdsLanding       = lazy(() => import('./pages/AdsLanding'));
@@ -437,6 +438,7 @@ function AppContent() {
         <Route path="fournisseurs" element={can('fournisseurs') ? <Fournisseurs /> : <Navigate to="/" replace />} />
         <Route path="performance" element={can('performance') ? <Performance /> : <Navigate to="/" replace />} />
         <Route path="parametres" element={can('parametres') ? <Settings /> : <Navigate to="/" replace />} />
+        <Route path="profil" element={<Profil currentUser={currentUser} />} />
         <Route path="reglement" element={<Reglement />} />
         
         {/* Shared / Public ERP Routes */}

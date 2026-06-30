@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <title>Guide de Collaboration - BEYA CREATIVE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        @media print {
+            body {
+                background-color: white;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+            .no-print {
+                display: none;
+            }
+            .print-container {
+                box-shadow: none !important;
+                margin: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+        }
+        .a4-page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 20px auto;
+            background: white;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            position: relative;
+            overflow: hidden;
+        }
+        .bg-pattern {
+            background-image: radial-gradient(#6366f1 1px, transparent 1px);
+            background-size: 20px 20px;
+            opacity: 0.03;
+        }
+    </style>
+</head>
+<body class="py-10 print:py-0">
+
+    <!-- Print Button -->
+    <div class="fixed top-5 right-5 no-print">
+        <button onclick="window.print()" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            Télécharger en PDF
+        </button>
+    </div>
+
+    <div class="a4-page print-container relative">
+        <div class="absolute inset-0 bg-pattern z-0"></div>
+        
+        <!-- Header -->
+        <header class="relative z-10 p-12 bg-slate-900 text-white">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-indigo-500 opacity-20 rounded-full blur-3xl -mr-20 -mt-20"></div>
+            <div class="flex justify-between items-center relative z-10">
+                <div>
+                    <h1 class="text-4xl font-black italic tracking-tighter">BEYA<span class="text-indigo-400">.</span></h1>
+                    <p class="text-sm text-slate-400 font-semibold tracking-widest mt-1 uppercase">Creative Factory</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-2xl font-black text-indigo-400">GUIDE CLIENT</p>
+                    <p class="text-slate-400 text-sm mt-1">Notre processus de collaboration</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <main class="relative z-10 p-12 space-y-10">
+            
+            <div class="text-center max-w-2xl mx-auto mb-4">
+                <h2 class="text-2xl font-black text-slate-800 mb-3">Bienvenue chez BEYA CREATIVE</h2>
+                <p class="text-slate-500 leading-relaxed text-sm">
+                    Nous sommes ravis de vous compter parmi nos clients potentiels. Ce document explique de manière transparente les étapes de notre collaboration, de la conception à la livraison finale de vos vêtements.
+                </p>
+            </div>
+
+            <!-- Steps -->
+            <div class="space-y-6">
+                <!-- Step 1 -->
+                <div class="flex gap-6 items-start bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center font-black text-xl shrink-0">1</div>
+                    <div>
+                        <h3 class="text-lg font-black text-slate-800 mb-2">Devis & Consultation</h3>
+                        <p class="text-slate-600 text-sm leading-relaxed">
+                            Tout commence par l'analyse de votre besoin (modèle, quantité, type de tissu). Nous vous offrons deux options de fabrication :
+                            <br><span class="font-bold text-slate-700 mt-2 inline-block">• Full Package :</span> Nous prenons en charge le tissu et la confection.
+                            <br><span class="font-bold text-slate-700">• CMT (Tissu Client) :</span> Vous fournissez le tissu, nous facturons uniquement la main d'œuvre.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="flex gap-6 items-start bg-emerald-50 p-6 rounded-2xl border border-emerald-100">
+                    <div class="w-12 h-12 bg-emerald-200 text-emerald-700 rounded-xl flex items-center justify-center font-black text-xl shrink-0">2</div>
+                    <div>
+                        <h3 class="text-lg font-black text-slate-800 mb-2">Patronage & Échantillon</h3>
+                        <p class="text-slate-600 text-sm leading-relaxed">
+                            Avant toute production, notre modéliste réalise le patronage et nous confectionnons un premier échantillon (prototype) pour votre validation.
+                            <br><br><span class="font-bold text-rose-500 text-xs uppercase tracking-widest">Important :</span> Les frais de patronage et d'échantillonnage sont facturés séparément et doivent être réglés avant le début de cette phase.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="flex gap-6 items-start bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center font-black text-xl shrink-0">3</div>
+                    <div>
+                        <h3 class="text-lg font-black text-slate-800 mb-2">Lancement de Production</h3>
+                        <p class="text-slate-600 text-sm leading-relaxed">
+                            Une fois l'échantillon validé par vos soins, nous demandons une <span class="font-bold text-slate-800">avance de 50%</span> pour lancer la production en série. 
+                            Vos articles passeront par plusieurs phases rigoureuses : Coupe, Montage, Finition et Contrôle Qualité.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="flex gap-6 items-start bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center font-black text-xl shrink-0">4</div>
+                    <div>
+                        <h3 class="text-lg font-black text-slate-800 mb-2">Livraison & Solde</h3>
+                        <p class="text-slate-600 text-sm leading-relaxed">
+                            Dès que la production est terminée et emballée, nous vous informons. Le paiement du reliquat (50% restants) s'effectue avant l'expédition ou à la livraison de la marchandise.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MOQ & Rules -->
+            <div class="mt-10 pt-8 border-t-2 border-dashed border-slate-200">
+                <h3 class="text-xl font-black text-slate-800 mb-6 text-center">Conditions & Quantités (MOQ)</h3>
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="p-5 bg-white border border-slate-200 rounded-2xl shadow-sm">
+                        <div class="w-8 h-8 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                        </div>
+                        <h4 class="font-black text-slate-800 text-sm mb-1">Minimum de Commande</h4>
+                        <p class="text-xs text-slate-500 font-medium">100 pièces au total par commande, avec un strict minimum de 20 pièces par couleur.</p>
+                    </div>
+                    <div class="p-5 bg-white border border-slate-200 rounded-2xl shadow-sm">
+                        <div class="w-8 h-8 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                        </div>
+                        <h4 class="font-black text-slate-800 text-sm mb-1">Modalités de Paiement</h4>
+                        <p class="text-xs text-slate-500 font-medium">Frais d'échantillon à l'avance. Ensuite, 50% à la commande et 50% à la livraison.</p>
+                    </div>
+                </div>
+            </div>
+            
+        </main>
+
+        <!-- Footer -->
+        <footer class="absolute bottom-0 w-full bg-slate-900 text-slate-400 text-xs py-6 px-12 flex justify-between items-center">
+            <div class="flex flex-col gap-1">
+                <span class="font-bold text-white">BEYA CREATIVE FACTORY</span>
+                <span>Sidi Said, Meknès 50000, Maroc</span>
+            </div>
+            <div class="flex flex-col gap-1 text-right">
+                <span class="font-bold text-white">Contact</span>
+                <span>contact@beyacreative.com | +212 600 000 000</span>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
