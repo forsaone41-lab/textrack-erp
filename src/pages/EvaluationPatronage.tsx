@@ -11,6 +11,7 @@ export default function EvaluationPatronage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   
   const [priceInput, setPriceInput] = useState<string>('');
   const [notesInput, setNotesInput] = useState<string>('');
@@ -162,7 +163,12 @@ export default function EvaluationPatronage() {
                 <div className="flex gap-4 mb-4">
                   <div className="w-16 h-16 rounded-xl bg-white border border-slate-200 flex-shrink-0 overflow-hidden flex items-center justify-center">
                     {lead.photo || (lead.photos && lead.photos[0]) ? (
-                      <img src={lead.photo || (lead.photos && lead.photos[0])} className="w-full h-full object-cover" alt="" />
+                      <img 
+                        src={lead.photo || (lead.photos && lead.photos[0])} 
+                        className="w-full h-full object-cover cursor-pointer hover:scale-110 transition-transform duration-300" 
+                        alt="" 
+                        onClick={(e) => { e.stopPropagation(); setSelectedImage(lead.photo || (lead.photos && lead.photos[0]) as string); }}
+                      />
                     ) : (
                       <Package className="w-6 h-6 text-slate-300" />
                     )}
@@ -217,7 +223,12 @@ export default function EvaluationPatronage() {
               <div className="flex gap-4 mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <div className="w-20 h-20 rounded-xl bg-white shadow-sm overflow-hidden border border-slate-200 shrink-0">
                   {selectedLead.photo || (selectedLead.photos && selectedLead.photos[0]) ? (
-                      <img src={selectedLead.photo || (selectedLead.photos && selectedLead.photos[0])} className="w-full h-full object-cover" alt="" />
+                      <img 
+                        src={selectedLead.photo || (selectedLead.photos && selectedLead.photos[0])} 
+                        className="w-full h-full object-cover cursor-pointer hover:scale-110 transition-transform duration-300" 
+                        alt="" 
+                        onClick={(e) => { e.stopPropagation(); setSelectedImage(selectedLead.photo || (selectedLead.photos && selectedLead.photos[0]) as string); }}
+                      />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center"><Package className="w-8 h-8 text-slate-300" /></div>
                   )}
@@ -312,6 +323,27 @@ export default function EvaluationPatronage() {
               {isAr ? 'موافق' : 'D\'accord'}
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Full Screen Image Modal */}
+      {selectedImage && (
+        <div 
+          className="fixed inset-0 z-[400] flex items-center justify-center bg-black/90 backdrop-blur-md animate-in fade-in duration-200" 
+          onClick={() => setSelectedImage(null)}
+        >
+          <button 
+            onClick={() => setSelectedImage(null)} 
+            className="absolute top-6 right-6 p-3 bg-white/10 text-white rounded-2xl hover:bg-white/20 transition-all z-10 border border-white/10"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <img 
+            src={selectedImage} 
+            className="max-w-[95vw] max-h-[90vh] object-contain rounded-3xl shadow-2xl" 
+            alt="Full screen" 
+            onClick={e => e.stopPropagation()} 
+          />
         </div>
       )}
 

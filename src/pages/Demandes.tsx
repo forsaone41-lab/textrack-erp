@@ -1004,6 +1004,19 @@ export default function Demandes() {
                   </div>
                 </div>
               )}
+
+              {detailsLead.aiNotes && (
+                <div className="mt-6 pt-4 border-t border-slate-100">
+                  <p className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-2 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5"><MessageSquare className="w-3 h-3" /> {isAr ? 'تقرير الذكاء الاصطناعي' : 'Rapport IA'}</span>
+                  </p>
+                  <div className="bg-gradient-to-br from-indigo-50 to-slate-50 rounded-xl p-4 border border-indigo-100/50 shadow-sm">
+                    <p className="text-xs text-slate-700 font-bold leading-relaxed whitespace-pre-wrap">
+                      {detailsLead.aiNotes}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

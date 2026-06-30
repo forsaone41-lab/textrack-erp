@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check, Languages, Maximize2, Minimize2 } from 'lucide-react';
+import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check, Languages, Maximize2, Minimize2, Download } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { saveRecord, genId, FicheTechnique, loadLeads, Lead } from '../types';
+import { saveRecord, genId, FicheTechnique, loadLeads, Lead, loadCompanyProfile } from '../types';
+import { printElement } from '../utils/pdf';
 
 const STANDARD_MESURES: Record<string, { nom: string; valeurs: Record<string, number> }[]> = {
   Robe: [
@@ -37,6 +38,8 @@ const STANDARD_MESURES: Record<string, { nom: string; valeurs: Record<string, nu
 };
 export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, onClose?: () => void }) {
   const { isAr } = useLang();
+  const company = loadCompanyProfile();
+  const [pdfChatText, setPdfChatText] = useState('');
   const [aiLangOverride, setAiLangOverride] = useState<'ar' | 'fr' | null>(null);
   const [image, setImage] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
@@ -296,6 +299,46 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     } finally {
       setExporting(false);
     }
+  };
+
+  const exportChatToPDFAndSave = async (text: string) => {
+    setPdfChatText(text);
+    
+    if (initialLead) {
+      const allLeads = await loadLeads();
+      const currentLead = allLeads.find(l => l.id === initialLead.id);
+      if (currentLead) {
+        currentLead.aiNotes = currentLead.aiNotes ? currentLead.aiNotes + '\n\n---\n\n' + text : text;
+        await saveRecord('leads', currentLead, true);
+      }
+    } else {
+      const newFT: FicheTechnique = {
+        id: genId(),
+        modele: isAr ? 'استشارة الذكاء الاصطناعي' : 'Consultation IA',
+        description: text,
+        client: 'BEYA Assistant',
+        tailles: [],
+        mesures: [],
+        tissuConsommation: 0,
+        type: 'creations',
+        tissuRecommande: '',
+        createdAt: new Date().toISOString().split('T')[0],
+        photo: image || undefined,
+        fit: '',
+        complexity: ''
+      };
+      await saveRecord('fiches', newFT);
+    }
+    
+    setTimeout(() => {
+      printElement('chat-pdf-template');
+      setCustomAlert({
+        title: isAr ? "تم الحفظ بنجاح 🎉" : "Sauvegardé avec succès 🎉",
+        message: isAr 
+          ? (initialLead ? "تم حفظ التقرير وإرفاقه بتفاصيل الطلب، وتم تصديره كملف PDF احترافي." : "تم حفظ التقرير في 'البطاقات التقنية' وتصديره كملف PDF احترافي.")
+          : (initialLead ? "Le rapport a été attaché aux détails du lead et exporté en PDF." : "Le rapport a été sauvegardé dans les Fiches Techniques et exporté en PDF."),
+      });
+    }, 500);
   };
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1215,12 +1258,21 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
                     </div>
                   )}
 
-                  <div className={`max-w-[75%] p-4 text-[13px] font-medium leading-relaxed whitespace-pre-line shadow-sm ${
+                  <div className={`max-w-[75%] p-4 text-[13px] font-medium leading-relaxed whitespace-pre-line shadow-sm relative group ${
                     c.role === 'user'
                       ? 'bg-slate-800 text-white rounded-3xl ' + (isAr ? 'rounded-bl-md' : 'rounded-br-md')
                       : 'bg-white text-slate-700 border border-slate-100 rounded-3xl ' + (isAr ? 'rounded-br-md' : 'rounded-bl-md')
                   } ${isAr ? 'text-right' : 'text-left'}`}>
                     {c.text}
+                    {c.role === 'ai' && c.text !== '...' && (
+                      <button 
+                        onClick={() => exportChatToPDFAndSave(c.text)}
+                        className={`absolute -bottom-3 ${isAr ? 'left-2' : 'right-2'} transition-all bg-white border border-slate-200 text-indigo-600 p-1.5 rounded-full shadow-sm hover:bg-indigo-50 hover:scale-110 z-10`}
+                        title={isAr ? 'حفظ وتصدير PDF' : 'Sauvegarder & Exporter PDF'}
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                   
                   {/* User Avatar */}
@@ -1490,6 +1542,58 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
           </div>
         </div>
       )}
+      
+      {/* HIDDEN PDF TEMPLATE FOR CHAT */}
+      <div id="chat-pdf-template" className="fixed top-0 left-0 opacity-0 pointer-events-none -z-[100] w-[800px] bg-white font-sans" style={{ color: '#0f172a', direction: isAr ? 'rtl' : 'ltr' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '3px solid #4f46e5', padding: '20px 32px 14px', flexDirection: isAr ? 'row-reverse' : 'row' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexDirection: isAr ? 'row-reverse' : 'row' }}>
+            {company.logoInvoice && company.logoInvoice !== '/logo.png' ? (
+              <img src={company.logoInvoice} alt="Logo" style={{ height: '44px', objectFit: 'contain' }} />
+            ) : (
+              <div style={{ width: '44px', height: '44px', background: '#4f46e5', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900, fontSize: '20px' }}>
+                {company.name?.charAt(0) || 'B'}
+              </div>
+            )}
+            <div style={{ textAlign: isAr ? 'right' : 'left' }}>
+              <h1 style={{ fontSize: '18px', fontWeight: 900, color: '#1e1b4b', margin: 0, textTransform: 'uppercase' }}>{company.name || 'BEYA CREATIVE'}</h1>
+              <p style={{ fontSize: '8px', fontWeight: 700, color: '#6366f1', margin: 0, textTransform: 'uppercase', letterSpacing: '2px' }}>{company.subtitle || (isAr ? 'صناعة النسيج' : 'Confection Textile')}</p>
+            </div>
+          </div>
+          <div style={{ textAlign: isAr ? 'left' : 'right' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: 900, margin: 0, color: '#1e1b4b', textTransform: 'uppercase' }}>{isAr ? 'استشارة الذكاء الاصطناعي' : 'CONSULTATION IA'}</h2>
+            <p style={{ fontSize: '9px', fontWeight: 700, color: '#94a3b8', margin: '2px 0 0' }}>{new Date().toLocaleDateString(isAr ? 'ar-MA' : 'fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+          </div>
+        </div>
+        <div style={{ padding: '30px 32px' }}>
+          <div style={{ display: 'flex', gap: '20px', flexDirection: isAr ? 'row-reverse' : 'row' }}>
+            {image && (
+              <div style={{ width: '250px', flexShrink: 0 }}>
+                <img src={image} style={{ width: '100%', borderRadius: '16px', border: '2px solid #e2e8f0', objectFit: 'cover' }} />
+              </div>
+            )}
+            <div style={{ flex: 1 }}>
+              <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                <h3 style={{ fontSize: '12px', fontWeight: 900, color: '#4f46e5', textTransform: 'uppercase', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', flexDirection: isAr ? 'row-reverse' : 'row' }}>
+                  <span style={{ fontSize: '16px' }}>✨</span>
+                  {isAr ? 'تحليل وخبرة BEYA Assistant' : 'Analyse et Expertise BEYA Assistant'}
+                </h3>
+                <div style={{ fontSize: '12px', lineHeight: '2.0', color: '#1e293b', fontWeight: 600, whiteSpace: 'pre-wrap', textAlign: isAr ? 'right' : 'left' }}>
+                  {pdfChatText}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style={{ margin: '20px 32px 30px', borderTop: '2px solid #e2e8f0', paddingTop: '14px', textAlign: 'center' }}>
+          <p style={{ fontSize: '9px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 3px' }}>
+            {isAr ? `شكرا على ثقتكم — ${company.name}` : `Merci de votre confiance — ${company.name}`}
+          </p>
+          <p style={{ fontSize: '8px', fontWeight: 700, color: '#cbd5e1', margin: 0 }}>
+            {company.address} | <span dir="ltr">{company.phone}</span> | {company.email}
+          </p>
+        </div>
+      </div>
+
       {/* Fullscreen Image Modal */}
       {showFullImage && image && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setShowFullImage(false)}>

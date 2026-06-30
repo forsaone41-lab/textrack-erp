@@ -580,6 +580,7 @@ export interface Lead {
   crmPriceConfirmed?: boolean;
   crmPriority?: boolean;
   rejectedAt?: string;
+  aiNotes?: string;
 }
 
 export const DEFAULT_COMPANY: CompanyProfile = {
@@ -937,7 +938,14 @@ export async function loadLeads(): Promise<Lead[]> {
         l.name !== '__DELETED__' &&
         l.type !== '__EN_TEST__' &&
         !deletedIds.includes(l.id)
-      );
+      ).map((l: any) => {
+        if (l.details && typeof l.details === 'string' && l.details.includes('| AI_NOTES:')) {
+          const parts = l.details.split('| AI_NOTES:');
+          l.details = parts[0];
+          l.aiNotes = parts[1];
+        }
+        return l;
+      });
 
       // If Supabase returns 0 but localStorage has data → fallback
       if (cleanSupaData.length === 0 && localLeads.length > 0) {
@@ -1122,8 +1130,16 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
     }
   }
 
+  let payload = { ...record as any };
+  if (table === 'leads') {
+    if (payload.aiNotes) {
+      payload.details = (payload.details ? payload.details.split('| AI_NOTES:')[0] : '') + '| AI_NOTES:' + payload.aiNotes;
+      delete payload.aiNotes;
+    }
+  }
+
   try {
-    const { error } = await supabase.from(table).upsert(record as any);
+    const { error } = await supabase.from(table).upsert(payload);
     if (!error) {
       // ✅ Invalidate both caches on success
       localStorage.removeItem(`textrack_data_${table}`);
@@ -1139,7 +1155,7 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
       const isMissingColumn = errMsg.includes('column') || errMsg.includes('not find') || errMsg.includes('attribute') || errMsg.includes('schema cache');
       
       if (isMissingColumn) {
-        const fallbackRecord = { ...record as any };
+        const fallbackRecord = { ...payload };
         const newCols = [
           'tissuPrix', 'coutMainOeuvre', 'tissuSourcing', 
           'tissuConsommation', 'fournisseurTel', 'fournisseurEmail',
@@ -1152,7 +1168,8 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
           'partenaireId', 'externalTasks', 'typeDossier',
           'photo', 'adresse', 'notes',
           'crmStage', 'crmContactMethod', 'crmRdvDate', 'crmNotes', 'crmPrice', 'crmPriceConfirmed', 'crmPriority',
-          'preuveClient', 'annulationRaison', 'cv', 'sampleFeedback', 'prixEchantillon', 'phone2', 'contactedBy'
+          'preuveClient', 'annulationRaison', 'cv', 'sampleFeedback', 'prixEchantillon', 'phone2', 'contactedBy',
+          'tissuRecommande', 'aiNotes', 'fit', 'complexity', 'patronageFileName', 'patronagePhoto', 'modelisteId'
         ];
         newCols.forEach(col => delete fallbackRecord[col]);
         
