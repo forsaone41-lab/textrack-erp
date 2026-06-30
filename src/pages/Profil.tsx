@@ -19,6 +19,7 @@ export default function Profil({ currentUser }: ProfilProps) {
   });
   const [isUploading, setIsUploading] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [viewImage, setViewImage] = useState(false);
   const [passForm, setPassForm] = useState({ current: '', new: '', confirm: '' });
   const [passError, setPassError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -167,7 +168,12 @@ export default function Profil({ currentUser }: ProfilProps) {
               </div>
             )}
             {formData.photo ? (
-              <img src={formData.photo} className="w-full h-full object-cover" alt="Profile" />
+              <img 
+                src={formData.photo} 
+                className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity" 
+                alt="Profile" 
+                onClick={() => setViewImage(true)}
+              />
             ) : (
               <span>{currentUser.nom[0].toUpperCase()}</span>
             )}
@@ -376,6 +382,21 @@ export default function Profil({ currentUser }: ProfilProps) {
           </div>
         </div>
       </div>
+
+      {/* Image Viewer Modal */}
+      {viewImage && formData.photo && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/95 backdrop-blur-md" onClick={() => setViewImage(false)}>
+          <div className="relative max-w-4xl max-h-[90vh] flex items-center justify-center animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            <img src={formData.photo} className="max-w-full max-h-[85vh] rounded-[2rem] shadow-2xl object-contain border-4 border-white/10" alt="Profile Full" />
+            <button 
+              onClick={() => setViewImage(false)}
+              className="absolute -top-4 -right-4 w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 rounded-full shadow-xl flex items-center justify-center text-white transition-all z-10 hover:scale-110 active:scale-95"
+            >
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Password Modal */}
       {showPasswordModal && (
