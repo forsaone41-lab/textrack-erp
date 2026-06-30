@@ -60,9 +60,14 @@ export default function Profil({ currentUser }: ProfilProps) {
   const handleSave = async () => {
     setLoading(true);
     try {
-      await saveRecord('users', { ...currentUser, ...formData });
+      const updatedUser = { ...currentUser, ...formData };
+      await saveRecord('users', updatedUser);
+      localStorage.setItem('textrack_auth', JSON.stringify(updatedUser));
       setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
+      setTimeout(() => {
+        setSuccess(false);
+        window.location.reload();
+      }, 1000);
     } catch (e) {
       alert('Erreur lors de la sauvegarde');
     } finally {
@@ -170,6 +175,15 @@ export default function Profil({ currentUser }: ProfilProps) {
           <button onClick={handlePhotoChange} className="absolute bottom-0 right-0 w-10 h-10 bg-white rounded-2xl shadow-xl flex items-center justify-center text-slate-600 hover:text-indigo-600 transition-all border border-slate-100 z-20 hover:scale-110 active:scale-95">
             <Camera className="w-5 h-5" />
           </button>
+          {formData.photo && (
+            <button 
+              onClick={() => setFormData({ ...formData, photo: '' })} 
+              title={isAr ? 'حذف الصورة' : 'Supprimer la photo'}
+              className="absolute -top-2 -right-2 w-8 h-8 bg-rose-100 rounded-full shadow-lg flex items-center justify-center text-rose-600 hover:text-white hover:bg-rose-500 transition-all border-2 border-white z-20 hover:scale-110 active:scale-95"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
         <div className="flex-1 space-y-2">
