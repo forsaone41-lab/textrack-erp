@@ -1258,7 +1258,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
                     </div>
                   )}
 
-                  <div className={`max-w-[75%] p-4 text-[13px] font-medium leading-relaxed whitespace-pre-line shadow-sm relative group ${
+                  <div dir={isAr ? 'rtl' : 'ltr'} className={`max-w-[75%] p-4 text-[13px] font-medium leading-relaxed whitespace-pre-line shadow-sm relative group ${
                     c.role === 'user'
                       ? 'bg-slate-800 text-white rounded-3xl ' + (isAr ? 'rounded-bl-md' : 'rounded-br-md')
                       : 'bg-white text-slate-700 border border-slate-100 rounded-3xl ' + (isAr ? 'rounded-br-md' : 'rounded-bl-md')

@@ -1011,7 +1011,7 @@ export default function Demandes() {
                     <span className="flex items-center gap-1.5"><MessageSquare className="w-3 h-3" /> {isAr ? 'تقرير الذكاء الاصطناعي' : 'Rapport IA'}</span>
                   </p>
                   <div className="bg-gradient-to-br from-indigo-50 to-slate-50 rounded-xl p-4 border border-indigo-100/50 shadow-sm">
-                    <p className="text-xs text-slate-700 font-bold leading-relaxed whitespace-pre-wrap">
+                    <p dir={isAr ? 'rtl' : 'ltr'} className={`text-xs text-slate-700 font-bold leading-relaxed whitespace-pre-wrap ${isAr ? 'text-right' : 'text-left'}`}>
                       {detailsLead.aiNotes}
                     </p>
                   </div>
