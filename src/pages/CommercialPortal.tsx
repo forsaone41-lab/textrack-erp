@@ -12,7 +12,14 @@ import {
   Target,
   Search,
   X,
-  DollarSign
+  DollarSign,
+  UserCheck,
+  Calculator,
+  UserPlus,
+  Scissors,
+  MessageSquare,
+  Edit2,
+  Trash2
 } from 'lucide-react';
 import { 
   Lead,
@@ -285,6 +292,22 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                               className="h-9 px-3 rounded-xl text-xs font-black uppercase flex items-center gap-2 border transition-all shadow-sm bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-600">
                               <MessageCircle className="w-4 h-4" /> WhatsApp
                             </button>
+                            
+                            <div className="h-9 px-3 bg-fuchsia-50 text-fuchsia-600 border-fuchsia-200 rounded-xl flex items-center gap-2 text-xs font-black uppercase border transition-all shadow-sm">
+                              <UserCheck className="w-4 h-4" />
+                              {isAr ? 'صلاحية ممنوحة' : 'Accès Donné'}
+                            </div>
+
+                            <button onClick={() => alert(isAr ? 'ديفيز متوفر في الإدارة' : 'Le devis complet est géré par l\'administration')}
+                              className="h-9 w-9 rounded-xl flex items-center justify-center border border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all shadow-sm"
+                            >
+                              <Calculator className="w-4 h-4" />
+                            </button>
+
+                            <button onClick={() => alert(isAr ? 'تمت إضافة الزبون' : 'Le client est déjà enregistré')}
+                              className="h-9 px-3 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 rounded-xl border border-emerald-200 text-[10px] font-black flex items-center gap-1 transition-all shadow-sm">
+                              <CheckCircle className="w-4 h-4" /> {isAr ? 'تمت الإضافة كزبون' : 'Client Ajouté'}
+                            </button>
                           </>
                         ) : (
                           <div className="h-9 px-3 bg-slate-50 text-slate-400 rounded-xl flex items-center gap-2 text-[10px] font-black border border-slate-200 shadow-sm cursor-not-allowed">
@@ -346,20 +369,71 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                                 )}
 
                                 {req.crmStage !== 'confirme' && req.crmStage !== 'annule' && (
-                                  <button onClick={() => {
-                                    setSelectedLead(req);
-                                    setEditForm({
-                                      crmStage: req.crmStage || 'nouveau',
-                                      crmContactMethod: req.crmContactMethod,
-                                      crmPrice: req.crmPrice,
-                                      crmPriceConfirmed: req.crmPriceConfirmed,
-                                      crmNotes: req.crmNotes
-                                    });
-                                  }}
-                                    className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-500 hover:text-white transition-all shadow-sm">
-                                    ✓ {isAr ? 'تأكيد' : 'Valider'}
-                                  </button>
+                                  <>
+                                    <button onClick={() => {
+                                      setSelectedLead(req);
+                                      setEditForm({
+                                        crmStage: req.crmStage || 'nouveau',
+                                        crmContactMethod: req.crmContactMethod,
+                                        crmPrice: req.crmPrice,
+                                        crmPriceConfirmed: req.crmPriceConfirmed,
+                                        crmNotes: req.crmNotes
+                                      });
+                                    }}
+                                      className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-500 hover:text-white transition-all shadow-sm">
+                                      ✓ {isAr ? 'تأكيد' : 'Valider'}
+                                    </button>
+
+                                    <button onClick={() => alert(isAr ? 'تحليل الموديل متوفر في الإدارة' : 'L\'analyse de modèle est gérée par l\'administration')}
+                                      className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-fuchsia-50 text-fuchsia-600 border-fuchsia-200 hover:bg-fuchsia-500 hover:text-white transition-all shadow-sm flex items-center gap-1">
+                                      <Scissors className="w-3.5 h-3.5" /> {isAr ? 'تحليل الموديل' : 'Analyser Modèle'}
+                                    </button>
+
+                                    <button onClick={() => alert(isAr ? 'طلب تسعير الباترون متوفر في الإدارة' : 'Le prix de patronage est géré par l\'administration')}
+                                      className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-500 hover:text-white transition-all shadow-sm flex items-center gap-1">
+                                      <Scissors className="w-3.5 h-3.5" /> {isAr ? 'باترون' : 'Prix Patronage'}
+                                    </button>
+                                  </>
                                 )}
+
+                                <button onClick={() => {
+                                  setSelectedLead(req);
+                                  setEditForm({
+                                    crmStage: req.crmStage || 'nouveau',
+                                    crmContactMethod: req.crmContactMethod,
+                                    crmPrice: req.crmPrice,
+                                    crmPriceConfirmed: req.crmPriceConfirmed,
+                                    crmNotes: req.crmNotes
+                                  });
+                                }} title="Notes"
+                                  className="w-8 h-8 bg-white text-slate-500 hover:bg-slate-100 rounded-lg border border-slate-200 flex items-center justify-center transition-all shadow-sm">
+                                  <MessageSquare className="w-3.5 h-3.5" />
+                                </button>
+                                
+                                <button onClick={() => {
+                                  setSelectedLead(req);
+                                  setEditForm({
+                                    crmStage: req.crmStage || 'nouveau',
+                                    crmContactMethod: req.crmContactMethod,
+                                    crmPrice: req.crmPrice,
+                                    crmPriceConfirmed: req.crmPriceConfirmed,
+                                    crmNotes: req.crmNotes
+                                  });
+                                }} title="Modifier"
+                                  className="w-8 h-8 bg-white text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg border border-slate-200 flex items-center justify-center transition-all shadow-sm">
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </button>
+
+                                <button onClick={async () => {
+                                  if (window.confirm(isAr ? 'هل أنت متأكد من حذف هذا الطلب؟' : 'Voulez-vous supprimer ce prospect ?')) {
+                                    const updated = { ...req, crmStage: 'annule' as const };
+                                    setLeads(prev => prev.map(l => l.id === req.id ? updated : l));
+                                    await saveRecord('leads', updated, true);
+                                  }
+                                }} title="Supprimer"
+                                  className="w-8 h-8 bg-white text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg border border-slate-200 flex items-center justify-center transition-all shadow-sm">
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
                               </>
                             ) : (
                               <button disabled className="h-8 px-3 rounded-lg text-[9px] font-black uppercase border bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed">
