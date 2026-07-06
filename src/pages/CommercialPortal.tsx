@@ -289,7 +289,7 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                 </h4>
 
                 <div>
-                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">{isAr ? 'السعر المتفق عليه (درهم)' : 'Prix Convenu (DH)'}</label>
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">{isAr ? 'ثمن القطعة (درهم)' : 'Prix Unitaire (DH)'}</label>
                   <div className="relative">
                     <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input 
@@ -325,8 +325,13 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                         msg += isAr ? `🔢 *الكمية:* ${selectedLead.quantity} قطعة\n` : `🔢 *Quantité :* ${selectedLead.quantity} pièces\n`;
                         
                         if (editForm.crmPrice) {
-                            msg += isAr ? `💰 *السعر الإجمالي:* ${editForm.crmPrice} درهم\n` : `💰 *Prix total :* ${editForm.crmPrice} MAD\n`;
-                            const avance = (editForm.crmPrice * 0.5).toFixed(2);
+                            const unitPrice = editForm.crmPrice;
+                            const qty = selectedLead.quantity || 1;
+                            const totalPrice = unitPrice * qty;
+                            const avance = (totalPrice * 0.5).toFixed(2);
+                            
+                            msg += isAr ? `🏷️ *ثمن القطعة:* ${unitPrice} درهم\n` : `🏷️ *Prix unitaire :* ${unitPrice} MAD\n`;
+                            msg += isAr ? `💰 *السعر الإجمالي:* ${totalPrice} درهم\n` : `💰 *Prix total :* ${totalPrice} MAD\n`;
                             msg += isAr ? `💳 *التسبيق المطلوب (50%):* ${avance} درهم\n` : `💳 *Avance requise (50%) :* ${avance} MAD\n`;
                         }
 

@@ -387,7 +387,7 @@ export default function Pipeline() {
 
               {/* Price + confirmed toggle */}
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3">
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'السعر (درهم)' : 'Prix proposé (DH)'}</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? 'ثمن القطعة (درهم)' : 'Prix Unitaire (DH)'}</label>
                 <div className="flex gap-2 items-center">
                   <input type="number" value={editForm.crmPrice || ''} onChange={(e) => setEditForm({ ...editForm, crmPrice: Number(e.target.value) })}
                     placeholder="0" className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-2 focus:ring-indigo-500/20" />
@@ -416,8 +416,13 @@ export default function Pipeline() {
                         msg += isAr ? `🔢 *الكمية:* ${selectedLead.quantity} قطعة\n` : `🔢 *Quantité :* ${selectedLead.quantity} pièces\n`;
                         
                         if (editForm.crmPrice) {
-                            msg += isAr ? `💰 *السعر الإجمالي:* ${editForm.crmPrice} درهم\n` : `💰 *Prix total :* ${editForm.crmPrice} MAD\n`;
-                            const avance = (editForm.crmPrice * 0.5).toFixed(2);
+                            const unitPrice = editForm.crmPrice;
+                            const qty = selectedLead.quantity || 1;
+                            const totalPrice = unitPrice * qty;
+                            const avance = (totalPrice * 0.5).toFixed(2);
+                            
+                            msg += isAr ? `🏷️ *ثمن القطعة:* ${unitPrice} درهم\n` : `🏷️ *Prix unitaire :* ${unitPrice} MAD\n`;
+                            msg += isAr ? `💰 *السعر الإجمالي:* ${totalPrice} درهم\n` : `💰 *Prix total :* ${totalPrice} MAD\n`;
                             msg += isAr ? `💳 *التسبيق المطلوب (50%):* ${avance} درهم\n` : `💳 *Avance requise (50%) :* ${avance} MAD\n`;
                         }
 
