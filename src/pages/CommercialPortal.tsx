@@ -46,7 +46,26 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
   const [savedOk, setSavedOk] = useState(false);
 
   useEffect(() => {
-    fetchLeads();
+    // 1. Instantly load from cache to avoid spinner delay
+    try {
+      const cachedLeads = localStorage.getItem('textrack_data_leads');
+      if (cachedLeads) {
+        const parsed = JSON.parse(cachedLeads);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const activeLeads = parsed.filter((l: any) => 
+            l && !l.type?.startsWith('RECRUTEMENT:') && 
+            (!l.crmStage || ['nouveau', 'contact_en_cours', 'rdv_fixe', 'attente_confirmation'].includes(l.crmStage))
+          );
+          activeLeads.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          setLeads(activeLeads);
+          setLoading(false);
+        }
+      }
+    } catch { /* ignore */ }
+
+    // 2. Fetch fresh data
+    fetchLeads(false);
+
     // Auto-refresh every 10 seconds to feel real-time when Admin grants access
     const interval = setInterval(() => {
       fetchLeads(false); // background fetch, no loading spinner
@@ -55,17 +74,18 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
   }, []);
 
   const fetchLeads = async (showLoading = true) => {
-    if (showLoading) setLoading(true);
-    const data = await loadLeads();
-    // Only show leads that are not workers and are in active CRM stages
-    const activeLeads = data.filter(l => 
-      !l.type.startsWith('RECRUTEMENT:') && 
-      (!l.crmStage || ['nouveau', 'contact_en_cours', 'rdv_fixe', 'attente_confirmation'].includes(l.crmStage))
-    );
-    // Sort by newest first
-    activeLeads.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    setLeads(activeLeads);
-    setLoading(false);
+    if (showLoading && leads.length === 0) setLoading(true);
+    try {
+      const data = await loadLeads();
+      const activeLeads = data.filter(l => 
+        !l.type.startsWith('RECRUTEMENT:') && 
+        (!l.crmStage || ['nouveau', 'contact_en_cours', 'rdv_fixe', 'attente_confirmation'].includes(l.crmStage))
+      );
+      activeLeads.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      setLeads(activeLeads);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const filteredLeads = leads.filter(l => {
