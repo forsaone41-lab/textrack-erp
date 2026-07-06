@@ -244,7 +244,8 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
 
               return Object.values(groupedLeads).map(group => {
                 const { client, requests } = group;
-                const isUnlocked = !!(client as any).commercialUnlocked;
+                // Check if ANY lead in the group has been unlocked (not just the first)
+                const isUnlocked = requests.some(r => !!(r as any).commercialUnlocked) || !!(client as any).commercialUnlocked;
                 const displayPhone = isUnlocked ? client.phone : client.phone.substring(0, 4) + ' ••• ••• •••';
                 const hasPriority = requests.some(r => r.crmPriority);
 
