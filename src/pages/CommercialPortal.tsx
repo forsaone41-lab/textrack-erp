@@ -34,6 +34,7 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
   const [leads, setLeads] = useState<Lead[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [accessFilter, setAccessFilter] = useState<'all' | 'unlocked' | 'locked'>('all');
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
   const [savedOk, setSavedOk] = useState(false);
 
@@ -56,9 +57,16 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
   };
 
   const filteredLeads = leads.filter(l => {
-    return l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const isUnlocked = !!(l as any).commercialUnlocked;
+    const matchAccess = accessFilter === 'all' || 
+                        (accessFilter === 'unlocked' && isUnlocked) || 
+                        (accessFilter === 'locked' && !isUnlocked);
+
+    const matchSearch = l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
            l.phone.includes(searchQuery) ||
            l.type.toLowerCase().includes(searchQuery.toLowerCase());
+           
+    return matchAccess && matchSearch;
   });
 
   const stats = useMemo(() => {
@@ -176,6 +184,27 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
             onChange={(e) => setSearchQuery(e.target.value)}
             className={`w-full ${isAr ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-3.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500/20 shadow-sm`}
           />
+        </div>
+
+        <div className="flex gap-2 mb-6">
+          <button
+            onClick={() => setAccessFilter('all')}
+            className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${accessFilter === 'all' ? 'bg-indigo-50 text-indigo-600 shadow-sm ring-1 ring-indigo-200' : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'}`}
+          >
+            {isAr ? 'الكل' : 'Tous'}
+          </button>
+          <button
+            onClick={() => setAccessFilter('unlocked')}
+            className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 ${accessFilter === 'unlocked' ? 'bg-emerald-50 text-emerald-600 shadow-sm ring-1 ring-emerald-200' : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'}`}
+          >
+            <CheckCircle className="w-3.5 h-3.5" /> {isAr ? 'مسموح التواصل' : 'Accès Donné'}
+          </button>
+          <button
+            onClick={() => setAccessFilter('locked')}
+            className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 ${accessFilter === 'locked' ? 'bg-rose-50 text-rose-600 shadow-sm ring-1 ring-rose-200' : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'}`}
+          >
+            🔒 {isAr ? 'مقفل' : 'Verrouillé'}
+          </button>
         </div>
 
         <div className="space-y-4">
