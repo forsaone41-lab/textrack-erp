@@ -185,59 +185,117 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                <p className="text-slate-500 font-bold uppercase text-xs">{isAr ? 'لا توجد طلبات حالياً' : 'Aucun prospect pour le moment'}</p>
              </div>
           ) : (
-            filteredLeads.map(lead => (
-              <div 
-                key={lead.id} 
-                onClick={() => {
-                  setSelectedLead(lead);
-                  setEditForm({
-                    crmStage: lead.crmStage || 'nouveau',
-                    crmContactMethod: lead.crmContactMethod,
-                    crmPrice: lead.crmPrice,
-                    crmPriceConfirmed: lead.crmPriceConfirmed,
-                    crmNotes: lead.crmNotes
-                  });
-                }}
-                className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer group active:scale-[0.98]"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    {lead.photo ? (
-                      <img src={lead.photo} className="w-12 h-12 rounded-full object-cover border-2 border-slate-100" alt={lead.name} />
-                    ) : (
-                      <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-black text-sm uppercase">
-                        {lead.name.substring(0,2)}
+            (() => {
+              const groupedLeads = filteredLeads.reduce((acc, lead) => {
+                const key = lead.name.toLowerCase().trim();
+                if (!acc[key]) acc[key] = { client: { ...lead }, requests: [] };
+                acc[key].requests.push(lead);
+                return acc;
+              }, {} as Record<string, { client: Lead, requests: Lead[] }>);
+
+              return Object.values(groupedLeads).map(group => {
+                const { client, requests } = group;
+                const isUnlocked = !!(client as any).commercialUnlocked;
+                const displayPhone = isUnlocked ? client.phone : client.phone.substring(0, 4) + ' ••• ••• •••';
+                const hasPriority = requests.some(r => r.crmPriority);
+
+                return (
+                  <div key={client.phone + client.name} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition-all relative">
+                    {/* CLIENT HEADER */}
+                    <div className="flex flex-wrap items-start justify-between gap-4 mb-4 border-b border-slate-50 pb-4">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-xl shrink-0 ${isUnlocked ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-50 text-slate-400'}`}>
+                          {client.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <h3 className="text-base font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
+                            {client.name}
+                            {hasPriority && <span className="text-xs">⭐</span>}
+                            {!isUnlocked && <span className="px-1.5 py-0.5 bg-rose-50 text-rose-600 border border-rose-200 text-[8px] font-black uppercase tracking-widest rounded shadow-sm">{isAr ? 'مقفل' : 'Verrouillé'}</span>}
+                          </h3>
+                          <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] font-bold text-slate-500 mt-1" dir="ltr">
+                            <span className="flex items-center gap-1"><Phone className="w-3 h-3 text-indigo-400" /> {displayPhone}</span>
+                          </div>
+                        </div>
                       </div>
-                    )}
-                    <div>
-                      <h3 className="text-base font-black text-slate-800">{lead.name}</h3>
-                      <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 mt-1" dir="ltr">
-                        <Phone className="w-3 h-3" /> {lead.phone}
+                      
+                      {/* CLIENT ACTIONS */}
+                      <div className="flex items-center gap-2">
+                        {isUnlocked ? (
+                          <>
+                            <a href={`tel:${client.phone.replace(/\\D/g, '').startsWith('0') ? '212' + client.phone.replace(/\\D/g, '').substring(1) : client.phone.replace(/\\D/g, '')}`}
+                              className="h-9 px-3 bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl flex items-center gap-2 text-xs font-black transition-all border border-slate-200 shadow-sm">
+                              <PhoneCall className="w-4 h-4" /> {isAr ? 'اتصال' : 'Appel'}
+                            </a>
+                            <button onClick={() => {
+                              const rawPhone = String(client.phone || '').replace(/\\D/g, '');
+                              const phone = rawPhone.startsWith('2120') ? '212' + rawPhone.slice(3) : rawPhone.startsWith('0') ? '212' + rawPhone.slice(1) : rawPhone;
+                              window.open(`https://wa.me/${phone}`, '_blank');
+                            }}
+                              className="h-9 px-3 rounded-xl text-xs font-black uppercase flex items-center gap-2 border transition-all shadow-sm bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-600">
+                              <MessageCircle className="w-4 h-4" /> WhatsApp
+                            </button>
+                          </>
+                        ) : (
+                          <div className="h-9 px-3 bg-slate-50 text-slate-400 rounded-xl flex items-center gap-2 text-[10px] font-black border border-slate-200 shadow-sm cursor-not-allowed">
+                            <Store className="w-3.5 h-3.5" /> {isAr ? 'بانتظار الصلاحية' : 'Accès requis'}
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
-                  <div className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${
-                    !lead.crmStage || lead.crmStage === 'nouveau' ? 'bg-blue-50 text-blue-600' :
-                    lead.crmStage === 'attente_confirmation' ? 'bg-amber-50 text-amber-600' :
-                    'bg-slate-100 text-slate-600'
-                  }`}>
-                    {!lead.crmStage || lead.crmStage === 'nouveau' ? (isAr ? 'جديد' : 'Nouveau') : 
-                     lead.crmStage === 'attente_confirmation' ? (isAr ? 'في الانتظار' : 'En Attente') : 
-                     lead.crmStage}
-                  </div>
-                </div>
 
-                <div className="bg-slate-50 rounded-2xl p-3 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-sm">
-                    <Store className="w-4 h-4 text-slate-500" />
+                    {/* REQUESTS LIST */}
+                    <div className="space-y-2">
+                      {requests.map(req => (
+                        <div key={req.id} className={`flex flex-col md:flex-row items-start md:items-center justify-between p-3 rounded-xl border gap-4 transition-colors ${req.crmStage === 'confirme' ? 'bg-emerald-50/30 border-emerald-100' : 'bg-slate-50/50 border-slate-100'}`}>
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                <span className="flex items-center gap-1 text-slate-700 font-black text-sm uppercase tracking-tight">
+                                  {req.type} <span className="text-slate-400 text-xs font-bold">({req.quantity} pcs)</span>
+                                </span>
+                                {req.crmStage === 'confirme' && (
+                                  <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-600 border border-emerald-200 text-[9px] font-black uppercase tracking-widest rounded flex items-center gap-1">
+                                    <CheckCircle className="w-3 h-3" /> {isAr ? 'مؤكد' : 'Validé'}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span className="flex items-center gap-1 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                                  <Clock className="w-3 h-3" /> {new Date(req.date).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {isUnlocked ? (
+                              <button onClick={() => {
+                                setSelectedLead(req);
+                                setEditForm({
+                                  crmStage: req.crmStage || 'nouveau',
+                                  crmContactMethod: req.crmContactMethod,
+                                  crmPrice: req.crmPrice,
+                                  crmPriceConfirmed: req.crmPriceConfirmed,
+                                  crmNotes: req.crmNotes
+                                });
+                              }}
+                                className="h-8 px-3 rounded-lg text-[9px] font-black uppercase border bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-500 hover:text-white transition-all shadow-sm">
+                                ✓ {isAr ? 'تأكيد الطلبية' : 'Validation'}
+                              </button>
+                            ) : (
+                              <button disabled className="h-8 px-3 rounded-lg text-[9px] font-black uppercase border bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed">
+                                🔒 {isAr ? 'مغلق' : 'Bloqué'}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs font-black text-slate-700">{lead.type}</p>
-                    <p className="text-[10px] font-bold text-slate-500">{lead.quantity} {isAr ? 'قطعة' : 'Pièces'}</p>
-                  </div>
-                </div>
-              </div>
-            ))
+                );
+              });
+            })()
           )}
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, UserPlus, Users, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy, Edit2, Search, Globe, Briefcase, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, UserPlus, Users, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy, Edit2, Search, Globe, Briefcase, CheckCircle2, ChevronLeft, ChevronRight, UserCheck } from 'lucide-react';
 import { Lead, loadLeads, loadLeadPhoto, loadLeadPhotos, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile, Facture, StockTissu } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { generatePDF, generatePDFBlob, printElement } from '../utils/pdf';
@@ -1813,6 +1813,25 @@ export default function Demandes() {
                         ) : 'WhatsApp'}
                       </button>
                       
+                      <button
+                        onClick={async () => {
+                          const isUnlocked = !!(client as any).commercialUnlocked;
+                          if (window.confirm(isAr ? (isUnlocked ? 'إلغاء الصلاحية للمبيعات؟' : 'إعطاء الصلاحية للمبيعات؟') : (isUnlocked ? 'Retirer l\'accès au commercial ?' : 'Donner accès au commercial ?'))) {
+                            const newLeads = [...leads];
+                            for (const l of requests) {
+                              const updated = { ...l, commercialUnlocked: !isUnlocked };
+                              const idx = newLeads.findIndex(x => x.id === updated.id);
+                              if (idx >= 0) newLeads[idx] = updated;
+                              await saveRecord('leads', updated, true);
+                            }
+                            setLeads(newLeads);
+                          }
+                        }}
+                        className={`h-9 px-3 rounded-xl text-xs font-black uppercase flex items-center gap-2 border transition-all shadow-sm ${(client as any).commercialUnlocked ? 'bg-fuchsia-50 text-fuchsia-600 border-fuchsia-200 hover:bg-fuchsia-100' : 'bg-white text-slate-400 border-slate-200 hover:text-fuchsia-500'}`}
+                      >
+                        <UserCheck className="w-4 h-4" />
+                        {(client as any).commercialUnlocked ? (isAr ? 'صلاحية ممنوحة' : 'Accès Donné') : (isAr ? 'منح الصلاحية' : 'Donner Accès')}
+                      </button>
                       {category !== 'recrutement' && (() => {
                         const totalQty = requests.reduce((s, r) => s + (r.quantity || 0), 0);
                         const combinedType = requests.map(r => `${r.type} (${r.quantity} pcs)`).join(' + ');
