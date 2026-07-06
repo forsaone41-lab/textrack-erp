@@ -80,6 +80,7 @@ export default function Demandes() {
   const [visibleCount, setVisibleCount] = useState(10);
   const [expandedDetails, setExpandedDetails] = useState<string[]>([]);
   const [filterStarred, setFilterStarred] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
   const [templates, setTemplates] = useState(() => {
     try {
       const saved = localStorage.getItem('textrack_msg_templates');
@@ -733,6 +734,37 @@ export default function Demandes() {
 
   return (
     <div className={`space-y-6 ${isAr ? 'text-right' : 'text-left'} relative`} dir={isAr ? 'rtl' : 'ltr'}>
+      {/* Custom Confirm Modal */}
+      {confirmModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-[0_50px_100px_rgba(0,0,0,0.3)] border border-slate-100 relative overflow-hidden">
+            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-fuchsia-500 to-indigo-500" />
+            <div className="w-14 h-14 bg-fuchsia-50 rounded-2xl flex items-center justify-center mb-5">
+              <UserCheck className="w-7 h-7 text-fuchsia-600" />
+            </div>
+            <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight mb-2">{confirmModal.title}</h3>
+            <p className="text-sm text-slate-500 font-medium leading-relaxed mb-7">{confirmModal.message}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmModal(null)}
+                className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-200 transition-all"
+              >
+                {isAr ? 'إلغاء' : 'Annuler'}
+              </button>
+              <button
+                onClick={async () => {
+                  setConfirmModal(null);
+                  await confirmModal.onConfirm();
+                }}
+                className="flex-1 py-3 bg-gradient-to-r from-fuchsia-600 to-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:opacity-90 transition-all shadow-lg shadow-fuchsia-200"
+              >
+                {isAr ? 'تأكيد' : 'Confirmer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Devis Calculator Modal */}
       {devisLead && (
         <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200">
@@ -1814,18 +1846,28 @@ export default function Demandes() {
                       </button>
                       
                       <button
-                        onClick={async () => {
+                        onClick={() => {
                           const isUnlocked = !!(client as any).commercialUnlocked;
-                          if (window.confirm(isAr ? (isUnlocked ? 'إلغاء الصلاحية للمبيعات؟' : 'إعطاء الصلاحية للمبيعات؟') : (isUnlocked ? 'Retirer l\'accès au commercial ?' : 'Donner accès au commercial ?'))) {
-                            const newLeads = [...leads];
-                            for (const l of requests) {
-                              const updated = { ...l, commercialUnlocked: !isUnlocked };
-                              const idx = newLeads.findIndex(x => x.id === updated.id);
-                              if (idx >= 0) newLeads[idx] = updated;
-                              await saveRecord('leads', updated, true);
+                          setConfirmModal({
+                            title: isAr ? (isUnlocked ? 'إلغاء الصلاحية' : 'منح الصلاحية') : (isUnlocked ? 'Retirer l\'accès' : 'Donner l\'accès'),
+                            message: isAr 
+                              ? (isUnlocked 
+                                ? `هل تريد إلغاء صلاحية التواصل مع "${client.name}"?` 
+                                : `هل تريد منح التجاري (Commercial) صلاحية التواصل مع "${client.name}"?`)
+                              : (isUnlocked 
+                                ? `Voulez-vous retirer l'accès commercial pour "${client.name}" ?` 
+                                : `Voulez-vous donner au commercial l'accès pour contacter "${client.name}" ?`),
+                            onConfirm: async () => {
+                              const newLeads = [...leads];
+                              for (const l of requests) {
+                                const updated = { ...l, commercialUnlocked: !isUnlocked };
+                                const idx = newLeads.findIndex(x => x.id === updated.id);
+                                if (idx >= 0) newLeads[idx] = updated;
+                                await saveRecord('leads', updated, true);
+                              }
+                              setLeads(newLeads);
                             }
-                            setLeads(newLeads);
-                          }
+                          });
                         }}
                         className={`h-9 px-3 rounded-xl text-xs font-black uppercase flex items-center gap-2 border transition-all shadow-sm ${(client as any).commercialUnlocked ? 'bg-fuchsia-50 text-fuchsia-600 border-fuchsia-200 hover:bg-fuchsia-100' : 'bg-white text-slate-400 border-slate-200 hover:text-fuchsia-500'}`}
                       >
