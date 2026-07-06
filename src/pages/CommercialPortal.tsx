@@ -292,11 +292,7 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                               className="h-9 px-3 rounded-xl text-xs font-black uppercase flex items-center gap-2 border transition-all shadow-sm bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-600">
                               <MessageCircle className="w-4 h-4" /> WhatsApp
                             </button>
-                            
-                            <div className="h-9 px-3 bg-fuchsia-50 text-fuchsia-600 border-fuchsia-200 rounded-xl flex items-center gap-2 text-xs font-black uppercase border transition-all shadow-sm">
-                              <UserCheck className="w-4 h-4" />
-                              {isAr ? 'صلاحية ممنوحة' : 'Accès Donné'}
-                            </div>
+
 
                             <button onClick={() => alert(isAr ? 'ديفيز متوفر في الإدارة' : 'Le devis complet est géré par l\'administration')}
                               className="h-9 w-9 rounded-xl flex items-center justify-center border border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all shadow-sm"
