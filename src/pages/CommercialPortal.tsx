@@ -129,16 +129,14 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-slate-50 pb-24 font-sans" dir={isAr ? 'rtl' : 'ltr'}>
+      {/* Slim top progress bar — only shows during background sync */}
+      {loading && (
+        <div className="fixed top-0 left-0 right-0 z-50 h-0.5 bg-indigo-100 overflow-hidden">
+          <div className="h-full bg-indigo-500 animate-pulse w-2/3" style={{ animation: 'progress 1.5s ease-in-out infinite' }} />
+        </div>
+      )}
       {/* Premium Header */}
       <div className="bg-white/80 backdrop-blur-xl border-b border-slate-200/50 px-6 py-4 flex items-center justify-between sticky top-0 z-40 shadow-sm">
         <div className="flex items-center gap-4">
