@@ -6,7 +6,7 @@ import {
   DollarSign, Mail, Edit3, Save, X
 } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
-import { Lead, loadLeads, saveRecord } from '../types';
+import { Lead, loadLeads, saveRecord, loadCompanyProfile } from '../types';
 
 
 const STAGES = [
@@ -20,6 +20,7 @@ const STAGES = [
 
 export default function Pipeline() {
   const { isAr } = useLang();
+  const company = loadCompanyProfile();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -431,9 +432,13 @@ export default function Pipeline() {
                             msg += isAr ? `📅 *موعدنا:* ${d}\n` : `📅 *Notre RDV :* ${d}\n`;
                         }
 
+                        const bName = company.bankName || 'CIH';
+                        const bRib = company.rib || '230 000 0000000000000000 00';
+                        const bBenef = company.bankBeneficiary || company.name || 'BEYA CREATIVE';
+
                         msg += isAr 
-                            ? `\n🏦 *المعلومات البنكية (RIB):*\nالشركة: BEYA CREATIVE\nبنك: [اسم البنك]\nRIB: [رقم الحساب]\n\nالمرجو تأكيد الطلب بإرسال صورة التحويل (Reçu) باش نبداو الخدمة إن شاء الله ✨.\n\nتحياتنا!`
-                            : `\n🏦 *Coordonnées Bancaires (RIB):*\nEntreprise : BEYA CREATIVE\nBanque : [Nom de la banque]\nRIB : [Votre RIB]\n\nMerci de confirmer la commande en nous envoyant le reçu du virement pour lancer la production ✨.\n\nCordialement!`;
+                            ? `\n🏦 *المعلومات البنكية (RIB):*\nالاسم/الشركة: ${bBenef}\nبنك: ${bName}\nRIB: ${bRib}\n\nالمرجو تأكيد الطلب بإرسال صورة التحويل (Reçu) باش نبداو الخدمة إن شاء الله ✨.\n\nتحياتنا!`
+                            : `\n🏦 *Coordonnées Bancaires (RIB):*\nNom/Entreprise : ${bBenef}\nBanque : ${bName}\nRIB : ${bRib}\n\nMerci de confirmer la commande en nous envoyant le reçu du virement pour lancer la production ✨.\n\nCordialement!`;
 
                         let phone = selectedLead?.phone || '';
                         if (phone) {
