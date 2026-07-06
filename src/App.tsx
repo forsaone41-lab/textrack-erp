@@ -19,6 +19,7 @@ const ChaineDetaillee  = lazy(() => import('./pages/ChaineDetaillee'));
 const ProductionScanner= lazy(() => import('./pages/ProductionScanner'));
 const WorkerPortal     = lazy(() => import('./pages/WorkerPortal'));
 const ChefChainePortal = lazy(() => import('./pages/ChefChainePortal'));
+const CommercialPortal = lazy(() => import('./pages/CommercialPortal'));
 const StockMateriaux   = lazy(() => import('./pages/StockMateriaux'));
 const SuiviRH          = lazy(() => import('./pages/SuiviRH'));
 const Echantillons     = lazy(() => import('./pages/Echantillons'));
@@ -385,6 +386,10 @@ function AppContent() {
     return <Suspense fallback={<PageLoader />}><ChefChainePortal currentUser={currentUser} onLogout={handleLogout} /></Suspense>;
   }
 
+  if (currentUser.role === 'commercial') {
+    return <Suspense fallback={<PageLoader />}><CommercialPortal currentUser={currentUser} onLogout={handleLogout} /></Suspense>;
+  }
+
   const permissions = loadPermissions();
   let userRoleRaw = (currentUser.role || '').toLowerCase();
   if (userRoleRaw === 'agent' || userRoleRaw.includes('pointage')) userRoleRaw = 'agent_pointage';
@@ -445,6 +450,7 @@ function AppContent() {
         <Route path="worker-portal" element={<WorkerPortal currentUser={currentUser} onLogout={handleLogout} />} />
         <Route path="chef-portal" element={<ChefChainePortal currentUser={currentUser} onLogout={handleLogout} />} />
         <Route path="partenaire-portal" element={<PartenairePortal currentUser={currentUser} onLogout={handleLogout} />} />
+        <Route path="commercial-portal" element={<CommercialPortal currentUser={currentUser} onLogout={handleLogout} />} />
         
         {/* Protected Finance Routes */}
         <Route path="factures" element={can('factures') ? <Factures /> : <Navigate to="/" replace />} />

@@ -13,8 +13,10 @@ import {
   Info,
   Video,
   Inbox,
+  Inbox,
   Mail,
-  Tag
+  Tag,
+  Target
 } from 'lucide-react';
 
 import { User, CompanyProfile, loadPermissions, AppPage, syncCompanyProfile } from '../types';
@@ -197,6 +199,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
             {can('dashboard') && <NavItem to="/" icon={LayoutDashboard} label={t('dashboard', lang)} end />}
             {can('worker_portal') && <NavItem to="/worker-portal" icon={UserIcon} label={isAr ? 'فضاء العامل' : 'Espace Ouvrier'} />}
             {can('chef_chaine_portal') && <NavItem to="/chef-portal" icon={ShieldCheck} label={isAr ? 'بوابة رئيس السلسلة' : 'Portail Chef Chaîne'} />}
+            {can('commercial_portal') && <NavItem to="/commercial-portal" icon={Target} label={isAr ? 'البوابة التجارية' : 'Portail Commercial'} />}
             {can('partenaire_portal') && <NavItem to="/partenaire-portal" icon={Globe} label={isAr ? 'بوابة الشركاء' : 'Portail Partenaire'} />}
             {can('visio') && <NavItem to="/visio" icon={Video} label={isAr ? 'قاعة الاجتماعات' : 'Salle Visio'} />}
           </div>

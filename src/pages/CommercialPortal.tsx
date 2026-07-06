@@ -1,0 +1,384 @@
+import { useState, useEffect, useMemo } from 'react';
+import { 
+  Users, 
+  Store,
+  Phone,
+  MessageCircle,
+  PhoneCall,
+  Video,
+  CheckCircle,
+  Clock,
+  LogOut,
+  Target,
+  Search,
+  X,
+  DollarSign
+} from 'lucide-react';
+import { 
+  Lead,
+  loadLeads,
+  saveRecord
+} from '../types';
+import { useLang } from '../contexts/LangContext';
+
+interface CommercialPortalProps {
+  currentUser: any;
+  onLogout: () => void;
+}
+
+export default function CommercialPortal({ currentUser, onLogout }: CommercialPortalProps) {
+  const { isAr, toggle } = useLang();
+  const [loading, setLoading] = useState(true);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [editForm, setEditForm] = useState<Partial<Lead>>({});
+  const [savedOk, setSavedOk] = useState(false);
+
+  useEffect(() => {
+    fetchLeads();
+  }, []);
+
+  const fetchLeads = async () => {
+    setLoading(true);
+    const data = await loadLeads();
+    // Only show leads that are not workers and are in active CRM stages
+    const activeLeads = data.filter(l => 
+      !l.type.startsWith('RECRUTEMENT:') && 
+      (!l.crmStage || ['nouveau', 'contact_en_cours', 'rdv_fixe', 'attente_confirmation'].includes(l.crmStage))
+    );
+    // Sort by newest first
+    activeLeads.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    setLeads(activeLeads);
+    setLoading(false);
+  };
+
+  const filteredLeads = leads.filter(l => {
+    return l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           l.phone.includes(searchQuery) ||
+           l.type.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  const stats = useMemo(() => {
+    return {
+      nouveaux: leads.filter(l => !l.crmStage || l.crmStage === 'nouveau').length,
+      enAttente: leads.filter(l => l.crmStage === 'attente_confirmation').length,
+      totalActive: leads.length
+    };
+  }, [leads]);
+
+  const handleSave = async (nextStage?: string) => {
+    if (!selectedLead) return;
+    try {
+      const updatedLead = { ...selectedLead, ...editForm, ...(nextStage ? { crmStage: nextStage } : {}) };
+      await saveRecord('leads', updatedLead);
+      setLeads(prev => prev.map(l => l.id === updatedLead.id ? updatedLead as Lead : l));
+      setSavedOk(true);
+      setTimeout(() => { 
+        setSavedOk(false); 
+        if (nextStage === 'confirme' || nextStage === 'annule') {
+           setSelectedLead(null);
+           fetchLeads(); // Refresh to remove confirmed/cancelled from this view
+        }
+      }, 1200);
+    } catch (e) {
+      alert(isAr ? 'حدث خطأ' : 'Une erreur est survenue');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 pb-24 font-sans" dir={isAr ? 'rtl' : 'ltr'}>
+      {/* Premium Header */}
+      <div className="bg-white/80 backdrop-blur-xl border-b border-slate-200/50 px-6 py-4 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            {currentUser?.photo ? (
+              <img src={currentUser.photo} className="w-12 h-12 rounded-2xl object-cover shadow-md border border-slate-200" alt="Avatar" />
+            ) : (
+              <div className="w-12 h-12 bg-gradient-to-tr from-indigo-500 to-violet-600 rounded-2xl flex items-center justify-center text-white font-bold shadow-md">
+                <Users className="w-6 h-6 text-white" />
+              </div>
+            )}
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full" />
+          </div>
+          <div>
+            <h2 className="text-sm font-black uppercase tracking-tight text-slate-800">{currentUser?.nom || 'Commercial'}</h2>
+            <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest mt-0.5">
+              {isAr ? 'القسم التجاري' : 'Service Commercial'}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={toggle}
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all font-bold text-xs"
+          >
+            {isAr ? 'FR' : 'AR'}
+          </button>
+          <button 
+            onClick={onLogout}
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition-all"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Hero Stats */}
+      <div className="px-6 pt-8 pb-6">
+        <h1 className="text-2xl font-black text-slate-800 tracking-tight mb-6">
+          {isAr ? 'لوحة التحكم التجارية' : 'Tableau de Bord Commercial'}
+        </h1>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-200 relative overflow-hidden group">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center">
+                <Target className="w-4 h-4 text-blue-600" />
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{isAr ? 'طلبات جديدة' : 'Nouveaux'}</span>
+            </div>
+            <div className="flex items-end gap-2">
+              <span className="text-3xl font-black text-slate-800">{stats.nouveaux}</span>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-200 relative overflow-hidden group">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center">
+                <Clock className="w-4 h-4 text-amber-600" />
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{isAr ? 'في انتظار التأكيد' : 'En Attente'}</span>
+            </div>
+            <div className="flex items-end gap-2">
+              <span className="text-3xl font-black text-slate-800">{stats.enAttente}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-6">
+        <div className="relative mb-6">
+          <Search className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 ${isAr ? 'right-4' : 'left-4'}`} />
+          <input
+            type="text"
+            placeholder={isAr ? 'بحث عن زبون أو طلب...' : 'Rechercher un prospect...'}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={`w-full ${isAr ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-3.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500/20 shadow-sm`}
+          />
+        </div>
+
+        <div className="space-y-4">
+          {filteredLeads.length === 0 ? (
+             <div className="bg-white rounded-[2rem] p-12 text-center border border-dashed border-slate-300">
+               <Target className="w-8 h-8 text-slate-300 mx-auto mb-3" />
+               <p className="text-slate-500 font-bold uppercase text-xs">{isAr ? 'لا توجد طلبات حالياً' : 'Aucun prospect pour le moment'}</p>
+             </div>
+          ) : (
+            filteredLeads.map(lead => (
+              <div 
+                key={lead.id} 
+                onClick={() => {
+                  setSelectedLead(lead);
+                  setEditForm({
+                    crmStage: lead.crmStage || 'nouveau',
+                    crmContactMethod: lead.crmContactMethod,
+                    crmPrice: lead.crmPrice,
+                    crmPriceConfirmed: lead.crmPriceConfirmed,
+                    crmNotes: lead.crmNotes
+                  });
+                }}
+                className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer group active:scale-[0.98]"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    {lead.photo ? (
+                      <img src={lead.photo} className="w-12 h-12 rounded-full object-cover border-2 border-slate-100" alt={lead.name} />
+                    ) : (
+                      <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-black text-sm uppercase">
+                        {lead.name.substring(0,2)}
+                      </div>
+                    )}
+                    <div>
+                      <h3 className="text-base font-black text-slate-800">{lead.name}</h3>
+                      <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 mt-1" dir="ltr">
+                        <Phone className="w-3 h-3" /> {lead.phone}
+                      </div>
+                    </div>
+                  </div>
+                  <div className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${
+                    !lead.crmStage || lead.crmStage === 'nouveau' ? 'bg-blue-50 text-blue-600' :
+                    lead.crmStage === 'attente_confirmation' ? 'bg-amber-50 text-amber-600' :
+                    'bg-slate-100 text-slate-600'
+                  }`}>
+                    {!lead.crmStage || lead.crmStage === 'nouveau' ? (isAr ? 'جديد' : 'Nouveau') : 
+                     lead.crmStage === 'attente_confirmation' ? (isAr ? 'في الانتظار' : 'En Attente') : 
+                     lead.crmStage}
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 rounded-2xl p-3 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                    <Store className="w-4 h-4 text-slate-500" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-black text-slate-700">{lead.type}</p>
+                    <p className="text-[10px] font-bold text-slate-500">{lead.quantity} {isAr ? 'قطعة' : 'Pièces'}</p>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Confirmation Modal */}
+      {selectedLead && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in">
+          <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md flex flex-col max-h-[90vh] overflow-hidden">
+            
+            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-100">
+              <h2 className="text-lg font-black text-slate-800">{isAr ? 'تأكيد الطلبية' : 'Confirmation Commande'}</h2>
+              <button onClick={() => setSelectedLead(null)} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto p-6 space-y-6">
+              
+              {/* Client Info */}
+              <div className="flex items-center gap-4">
+                {selectedLead.photo ? (
+                  <img src={selectedLead.photo} className="w-14 h-14 rounded-full object-cover border border-slate-200" alt="" />
+                ) : (
+                  <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-black text-lg">
+                    {selectedLead.name.substring(0,2)}
+                  </div>
+                )}
+                <div>
+                  <h3 className="font-black text-slate-800">{selectedLead.name}</h3>
+                  <p className="text-xs font-bold text-slate-500" dir="ltr">{selectedLead.phone}</p>
+                </div>
+              </div>
+
+              {/* Order Details */}
+              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{isAr ? 'المنتوج' : 'Produit'}</span>
+                  <span className="text-sm font-bold text-slate-700">{selectedLead.type}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{isAr ? 'الكمية' : 'Quantité'}</span>
+                  <span className="text-sm font-bold text-slate-700">{selectedLead.quantity} pcs</span>
+                </div>
+              </div>
+
+              {/* Confirmation Section (Blasa dial lconfirmation) */}
+              <div className="space-y-4">
+                <h4 className="text-xs font-black uppercase tracking-widest text-indigo-600 flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4" />
+                  {isAr ? 'منطقة التأكيد' : 'Zone de Confirmation'}
+                </h4>
+
+                <div>
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">{isAr ? 'السعر المتفق عليه (درهم)' : 'Prix Convenu (DH)'}</label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input 
+                      type="number" 
+                      value={editForm.crmPrice || ''} 
+                      onChange={(e) => setEditForm({ ...editForm, crmPrice: Number(e.target.value) })}
+                      placeholder="0.00" 
+                      className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-base font-black text-slate-800 focus:ring-2 focus:ring-indigo-500/20" 
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">{isAr ? 'ملاحظات' : 'Notes (Options)'}</label>
+                  <textarea 
+                    value={editForm.crmNotes || ''} 
+                    onChange={(e) => setEditForm({ ...editForm, crmNotes: e.target.value })}
+                    rows={2} 
+                    placeholder={isAr ? 'أضف ملاحظات...' : 'Ajoutez des notes...'}
+                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500/20 resize-none" 
+                  />
+                </div>
+
+                {/* WhatsApp Confirmation Button */}
+                <button
+                    type="button"
+                    onClick={() => {
+                        let msg = isAr 
+                            ? `مرحباً بك أستاذ(ة) *${selectedLead.name}* 👋\n\nنشكرك على تواصلك مع *BEYA CREATIVE* 🇲🇦.\nهذا تلخيص للطلبية ديالك باش نأكدوها:\n\n`
+                            : `Bonjour M./Mme *${selectedLead.name}* 👋\n\nMerci d'avoir contacté *BEYA CREATIVE* 🇲🇦.\nVoici le récapitulatif de votre commande pour confirmation :\n\n`;
+
+                        msg += isAr ? `📦 *المنتوج:* ${selectedLead.type}\n` : `📦 *Produit :* ${selectedLead.type}\n`;
+                        msg += isAr ? `🔢 *الكمية:* ${selectedLead.quantity} قطعة\n` : `🔢 *Quantité :* ${selectedLead.quantity} pièces\n`;
+                        
+                        if (editForm.crmPrice) {
+                            msg += isAr ? `💰 *السعر الإجمالي:* ${editForm.crmPrice} درهم\n` : `💰 *Prix total :* ${editForm.crmPrice} MAD\n`;
+                            const avance = (editForm.crmPrice * 0.5).toFixed(2);
+                            msg += isAr ? `💳 *التسبيق المطلوب (50%):* ${avance} درهم\n` : `💳 *Avance requise (50%) :* ${avance} MAD\n`;
+                        }
+
+                        msg += isAr 
+                            ? `\n🏦 *المعلومات البنكية (RIB):*\nالشركة: BEYA CREATIVE\nبنك: CIH\nRIB: 230 000 0000000000000000 00\n\nالمرجو تأكيد الطلب بإرسال صورة التحويل (Reçu) باش نبداو الخدمة إن شاء الله ✨.\n\nتحياتنا!`
+                            : `\n🏦 *Coordonnées Bancaires (RIB):*\nEntreprise : BEYA CREATIVE\nBanque : CIH\nRIB : 230 000 0000000000000000 00\n\nMerci de confirmer la commande en nous envoyant le reçu du virement pour lancer la production ✨.\n\nCordialement!`;
+
+                        let phone = selectedLead?.phone || '';
+                        if (phone) {
+                            phone = phone.replace(/\D/g, '');
+                            if (phone.startsWith('0')) phone = '212' + phone.substring(1);
+                        }
+                        const encoded = encodeURIComponent(msg);
+                        window.open(phone ? `https://wa.me/${phone}?text=${encoded}` : `https://wa.me/?text=${encoded}`, '_blank');
+                        
+                        // Automatically update stage to attente_confirmation when sending message
+                        setEditForm(prev => ({ ...prev, crmStage: 'attente_confirmation' }));
+                    }}
+                    className="w-full py-4 bg-[#25D366] text-white font-black rounded-2xl hover:bg-[#128C7E] transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-[#25D366]/20 mt-4"
+                >
+                    <MessageCircle className="w-5 h-5" />
+                    {isAr ? 'إرسال رسالة التأكيد عبر واتساب' : 'Envoyer Confirmation via WhatsApp'}
+                </button>
+              </div>
+
+              {savedOk && (
+                <div className="bg-emerald-50 text-emerald-600 p-3 rounded-xl text-center text-sm font-bold animate-in zoom-in">
+                  {isAr ? 'تم حفظ التغييرات بنجاح!' : 'Modifications enregistrées !'}
+                </div>
+              )}
+
+            </div>
+
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex gap-3">
+              <button 
+                onClick={() => handleSave('attente_confirmation')}
+                className="flex-1 py-3.5 bg-amber-500 text-white font-black rounded-xl hover:bg-amber-600 transition-colors text-xs uppercase tracking-widest"
+              >
+                {isAr ? 'في الانتظار' : 'En Attente'}
+              </button>
+              <button 
+                onClick={() => handleSave('confirme')}
+                className="flex-[1.5] py-3.5 bg-emerald-500 text-white font-black rounded-xl hover:bg-emerald-600 transition-colors text-xs uppercase tracking-widest flex items-center justify-center gap-2"
+              >
+                <CheckCircle className="w-4 h-4" />
+                {isAr ? 'تأكيد الطلبية ✓' : 'Confirmer ✓'}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

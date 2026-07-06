@@ -307,7 +307,7 @@ export interface Presence {
 export interface User {
   id: string;
   nom: string;
-  role: 'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire' | 'chef_chaine';
+  role: 'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire' | 'chef_chaine' | 'commercial';
   email: string;
   telephone?: string;
   password?: string;
@@ -404,12 +404,12 @@ export type AppPage =
   | 'rh' | 'commandes' | 'clients' | 'factures' | 'charges' | 'bilan' | 'fast_scanner'
   | 'pointage' | 'portail_client' | 'performance' | 'utilisateurs' | 'parametres' | 'demandes'
   | 'worker_portal' | 'controle_qualite' | 'partenaire_portal' | 'agenda' | 'notifications' | 'ai_space' | 'crm' | 'chef_chaine_portal'
-  | 'inbox' | 'gmail' | 'plaintes' | 'fournisseurs' | 'achats' | 'visio' | 'tarifs' | 'tarifs_edit' | 'devis' | 'recus' | 'evaluation_patronage';
+  | 'inbox' | 'gmail' | 'plaintes' | 'fournisseurs' | 'achats' | 'visio' | 'tarifs' | 'tarifs_edit' | 'devis' | 'recus' | 'evaluation_patronage' | 'commercial_portal';
 
-export type RolePermMap = Record<'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire' | 'chef_chaine', AppPage[]>;
+export type RolePermMap = Record<'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire' | 'chef_chaine' | 'commercial', AppPage[]>;
 
 export const DEFAULT_PERMISSIONS: RolePermMap = {
-  admin: ['dashboard', 'demandes', 'crm', 'evaluation_patronage', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'stocks', 'rh', 'commandes', 'clients', 'factures', 'devis', 'recus', 'charges', 'bilan', 'fast_scanner', 'pointage', 'portail_client', 'performance', 'utilisateurs', 'parametres', 'worker_portal', 'controle_qualite', 'partenaire_portal', 'agenda', 'notifications', 'ai_space', 'chef_chaine_portal', 'inbox', 'gmail', 'plaintes', 'fournisseurs', 'achats', 'visio', 'tarifs', 'tarifs_edit'],
+  admin: ['dashboard', 'demandes', 'crm', 'evaluation_patronage', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'stocks', 'rh', 'commandes', 'clients', 'factures', 'devis', 'recus', 'charges', 'bilan', 'fast_scanner', 'pointage', 'portail_client', 'performance', 'utilisateurs', 'parametres', 'worker_portal', 'controle_qualite', 'partenaire_portal', 'agenda', 'notifications', 'ai_space', 'chef_chaine_portal', 'inbox', 'gmail', 'plaintes', 'fournisseurs', 'achats', 'visio', 'tarifs', 'tarifs_edit', 'commercial_portal'],
   pointeur: ['dashboard', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'pointage', 'performance', 'worker_portal', 'controle_qualite'],
   client: ['portail_client'],
   worker: ['worker_portal'],
@@ -419,9 +419,10 @@ export const DEFAULT_PERMISSIONS: RolePermMap = {
   agent_pointage: ['pointage', 'rh'],
   partenaire: ['partenaire_portal'],
   chef_chaine: ['chef_chaine_portal'],
+  commercial: ['commercial_portal', 'crm', 'demandes', 'agenda', 'visio', 'ai_space', 'devis', 'recus']
 };
 
-const PERMISSIONS_VERSION = 13;
+const PERMISSIONS_VERSION = 14;
 
 export function loadPermissions(): RolePermMap {
   try {
@@ -441,7 +442,7 @@ export function loadPermissions(): RolePermMap {
     if (d) {
       const parsed = JSON.parse(d) as RolePermMap & { _v?: number };
       if ((parsed._v ?? 1) >= PERMISSIONS_VERSION) {
-        const keys: (keyof RolePermMap)[] = ['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'controleur', 'agent_pointage', 'partenaire', 'chef_chaine'];
+        const keys: (keyof RolePermMap)[] = ['admin', 'pointeur', 'client', 'worker', 'coupeur', 'modeliste', 'controleur', 'agent_pointage', 'partenaire', 'chef_chaine', 'commercial'];
         keys.forEach(k => {
           if (parsed[k]) (result as any)[k] = parsed[k];
         });
@@ -466,6 +467,7 @@ export function loadPermissions(): RolePermMap {
       if (!result.admin.includes('tarifs_edit')) result.admin.push('tarifs_edit');
       if (!result.admin.includes('devis')) result.admin.push('devis');
       if (!result.admin.includes('recus')) result.admin.push('recus');
+      if (!result.admin.includes('commercial_portal')) result.admin.push('commercial_portal');
     }
     
     return result;
