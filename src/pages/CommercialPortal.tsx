@@ -318,21 +318,49 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-1.5 shrink-0">
+                          <div className="flex items-center gap-1.5 flex-wrap justify-end shrink-0">
                             {isUnlocked ? (
-                              <button onClick={() => {
-                                setSelectedLead(req);
-                                setEditForm({
-                                  crmStage: req.crmStage || 'nouveau',
-                                  crmContactMethod: req.crmContactMethod,
-                                  crmPrice: req.crmPrice,
-                                  crmPriceConfirmed: req.crmPriceConfirmed,
-                                  crmNotes: req.crmNotes
-                                });
-                              }}
-                                className="h-8 px-3 rounded-lg text-[9px] font-black uppercase border bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-500 hover:text-white transition-all shadow-sm">
-                                ✓ {isAr ? 'تأكيد الطلبية' : 'Validation'}
-                              </button>
+                              <>
+                                <button onClick={async () => {
+                                  const updated = { ...req, crmPriority: !req.crmPriority };
+                                  setLeads(prev => prev.map(l => l.id === req.id ? updated : l));
+                                  await saveRecord('leads', updated, true);
+                                }} title={req.crmPriority ? 'Retirer priorité' : 'Marquer important'}
+                                  className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all border ${req.crmPriority ? 'bg-amber-50 border-amber-200 shadow-sm' : 'bg-white border-slate-200 opacity-50 hover:opacity-100'}`}>
+                                  ⭐
+                                </button>
+                                
+                                <div className="w-px h-5 bg-slate-200 mx-1" />
+
+                                {req.crmStage !== 'annule' && req.crmStage !== 'confirme' && (
+                                  <button onClick={async () => {
+                                    if (window.confirm(isAr ? 'هل أنت متأكد من رفض هذا الطلب؟' : 'Voulez-vous vraiment refuser cette demande ?')) {
+                                      const updated = { ...req, crmStage: 'annule' as const, rejectedAt: new Date().toISOString() };
+                                      setLeads(prev => prev.map(l => l.id === req.id ? updated : l));
+                                      await saveRecord('leads', updated, true);
+                                    }
+                                  }}
+                                    className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-rose-50 text-rose-500 border-rose-200 hover:bg-rose-500 hover:text-white transition-all shadow-sm">
+                                    ✕ {isAr ? 'رفض' : 'Refuser'}
+                                  </button>
+                                )}
+
+                                {req.crmStage !== 'confirme' && req.crmStage !== 'annule' && (
+                                  <button onClick={() => {
+                                    setSelectedLead(req);
+                                    setEditForm({
+                                      crmStage: req.crmStage || 'nouveau',
+                                      crmContactMethod: req.crmContactMethod,
+                                      crmPrice: req.crmPrice,
+                                      crmPriceConfirmed: req.crmPriceConfirmed,
+                                      crmNotes: req.crmNotes
+                                    });
+                                  }}
+                                    className="h-8 px-2.5 rounded-lg text-[9px] font-black uppercase border bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-500 hover:text-white transition-all shadow-sm">
+                                    ✓ {isAr ? 'تأكيد' : 'Valider'}
+                                  </button>
+                                )}
+                              </>
                             ) : (
                               <button disabled className="h-8 px-3 rounded-lg text-[9px] font-black uppercase border bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed">
                                 🔒 {isAr ? 'مغلق' : 'Bloqué'}
