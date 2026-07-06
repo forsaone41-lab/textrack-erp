@@ -37,8 +37,25 @@ interface CommercialPortalProps {
 export default function CommercialPortal({ currentUser, onLogout }: CommercialPortalProps) {
   const { isAr, toggle } = useLang();
   const company = loadCompanyProfile();
-  const [loading, setLoading] = useState(true);
-  const [leads, setLeads] = useState<Lead[]>([]);
+  const [leads, setLeads] = useState<Lead[]>(() => {
+    try {
+      const cachedLeads = localStorage.getItem('textrack_data_leads');
+      if (cachedLeads) {
+        const parsed = JSON.parse(cachedLeads);
+        if (Array.isArray(parsed)) {
+          const activeLeads = parsed.filter((l: any) => 
+            l && !l.type?.startsWith('RECRUTEMENT:') && 
+            (!l.crmStage || ['nouveau', 'contact_en_cours', 'rdv_fixe', 'attente_confirmation'].includes(l.crmStage))
+          );
+          activeLeads.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          return activeLeads;
+        }
+      }
+    } catch { /* ignore */ }
+    return [];
+  });
+  
+  const [loading, setLoading] = useState(() => leads.length === 0);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [accessFilter, setAccessFilter] = useState<'all' | 'unlocked' | 'locked'>('all');
@@ -46,22 +63,6 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
   const [savedOk, setSavedOk] = useState(false);
 
   useEffect(() => {
-    // 1. Instantly load from cache to avoid spinner delay
-    try {
-      const cachedLeads = localStorage.getItem('textrack_data_leads');
-      if (cachedLeads) {
-        const parsed = JSON.parse(cachedLeads);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const activeLeads = parsed.filter((l: any) => 
-            l && !l.type?.startsWith('RECRUTEMENT:') && 
-            (!l.crmStage || ['nouveau', 'contact_en_cours', 'rdv_fixe', 'attente_confirmation'].includes(l.crmStage))
-          );
-          activeLeads.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-          setLeads(activeLeads);
-          setLoading(false);
-        }
-      }
-    } catch { /* ignore */ }
 
     // 2. Fetch fresh data
     fetchLeads(false);
