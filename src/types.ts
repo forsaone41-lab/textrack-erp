@@ -941,10 +941,16 @@ export async function loadLeads(): Promise<Lead[]> {
         l.type !== '__EN_TEST__' &&
         !deletedIds.includes(l.id)
       ).map((l: any) => {
-        if (l.details && typeof l.details === 'string' && l.details.includes('| AI_NOTES:')) {
-          const parts = l.details.split('| AI_NOTES:');
-          l.details = parts[0];
-          l.aiNotes = parts[1];
+        if (l.details && typeof l.details === 'string') {
+          if (l.details.includes('| COM_UNLOCK:true')) {
+            l.commercialUnlocked = true;
+            l.details = l.details.replace('| COM_UNLOCK:true', '');
+          }
+          if (l.details.includes('| AI_NOTES:')) {
+            const parts = l.details.split('| AI_NOTES:');
+            l.details = parts[0];
+            l.aiNotes = parts[1];
+          }
         }
         return l;
       });
@@ -1134,10 +1140,23 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
 
   let payload = { ...record as any };
   if (table === 'leads') {
-    if (payload.aiNotes) {
-      payload.details = (payload.details ? payload.details.split('| AI_NOTES:')[0] : '') + '| AI_NOTES:' + payload.aiNotes;
-      delete payload.aiNotes;
+    let baseDetails = payload.details || '';
+    if (typeof baseDetails === 'string') {
+      baseDetails = baseDetails.replace('| COM_UNLOCK:true', '').split('| AI_NOTES:')[0];
+    } else {
+      baseDetails = '';
     }
+    
+    if (payload.commercialUnlocked) {
+      baseDetails += '| COM_UNLOCK:true';
+    }
+    if (payload.aiNotes) {
+      baseDetails += '| AI_NOTES:' + payload.aiNotes;
+    }
+    
+    payload.details = baseDetails;
+    delete payload.aiNotes;
+    delete payload.commercialUnlocked;
   }
 
   try {
