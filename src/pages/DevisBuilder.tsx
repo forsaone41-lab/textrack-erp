@@ -33,6 +33,7 @@ export default function DevisBuilder({ embedded = false, onBack }: DevisBuilderP
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [clients, setClients] = useState<User[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
+  const visibleLeads = embedded ? leads.filter(l => l.commercialUnlocked) : leads;
   const [fiches, setFiches] = useState<FicheTechnique[]>([]);
   const [factures, setFactures] = useState<Facture[]>([]);
 
@@ -44,7 +45,7 @@ export default function DevisBuilder({ embedded = false, onBack }: DevisBuilderP
   
   const currentPhone = selectedClient?.telephone || newClientPhone;
   const currentName = selectedClient?.nom || newClientName;
-  const clientLeads = leads.filter(l => 
+  const clientLeads = visibleLeads.filter(l => 
     (currentPhone && l.phone && (l.phone.includes(currentPhone) || currentPhone.includes(l.phone))) ||
     (currentName && l.name && l.name.toLowerCase() === currentName.toLowerCase())
   );
@@ -251,7 +252,7 @@ export default function DevisBuilder({ embedded = false, onBack }: DevisBuilderP
                       setSelectedClient(null);
                     } else {
                       const client = clients.find(c => c.id === val);
-                      const leadMatch = leads.find(l => l.id === val);
+                      const leadMatch = visibleLeads.find(l => l.id === val);
                       
                       let newSelectedClient = null;
                       let phoneToMatch = '';
@@ -272,7 +273,7 @@ export default function DevisBuilder({ embedded = false, onBack }: DevisBuilderP
 
                       // Auto-populate models from leads
                       if (newSelectedClient) {
-                        const clientLeadsToImport = leads.filter(l => 
+                        const clientLeadsToImport = visibleLeads.filter(l => 
                           (phoneToMatch && l.phone && (l.phone.includes(phoneToMatch) || phoneToMatch.includes(l.phone))) ||
                           (nameToMatch && l.name && l.name.toLowerCase() === nameToMatch.toLowerCase())
                         );
@@ -302,9 +303,9 @@ export default function DevisBuilder({ embedded = false, onBack }: DevisBuilderP
                     </optgroup>
                   )}
                   
-                  {leads.length > 0 && (
+                  {visibleLeads.length > 0 && (
                     <optgroup label={isAr ? 'الزبناء المحتملين (Leads)' : 'Prospects (Leads)'}>
-                      {leads.map(l => <option key={l.id} value={l.id}>{l.name} ({l.phone})</option>)}
+                      {visibleLeads.map(l => <option key={l.id} value={l.id}>{l.name} ({l.phone})</option>)}
                     </optgroup>
                   )}
                 </select>
