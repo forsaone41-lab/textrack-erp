@@ -19,7 +19,10 @@ import {
   Scissors,
   MessageSquare,
   Edit2,
-  Trash2
+  Trash2,
+  FileText,
+  UserCircle2,
+  LayoutGrid
 } from 'lucide-react';
 import { 
   Lead,
@@ -63,6 +66,7 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
   const [savedOk, setSavedOk] = useState(false);
   const [leadPhotos, setLeadPhotos] = useState<Record<string, string>>({});
+  const [bottomTab, setBottomTab] = useState<'leads' | 'devis' | 'profil'>('leads');
 
 
 
@@ -636,6 +640,80 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* ── Bottom Navigation Bar ── */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-slate-200 flex items-stretch shadow-xl" dir="ltr">
+        {([
+          { key: 'leads', icon: LayoutGrid, labelFr: 'Prospects', labelAr: 'الطلبات' },
+          { key: 'devis',  icon: FileText,   labelFr: 'Devis (PRO)', labelAr: 'تسعيرة' },
+          { key: 'profil', icon: UserCircle2, labelFr: 'Mon Profil', labelAr: 'ملفي' },
+        ] as const).map(({ key, icon: Icon, labelFr, labelAr }) => (
+          <button
+            key={key}
+            onClick={() => setBottomTab(key)}
+            className={`flex-1 flex flex-col items-center justify-center gap-1 py-3 transition-all ${
+              bottomTab === key ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'
+            }`}
+          >
+            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${
+              bottomTab === key ? 'bg-indigo-50' : ''
+            }`}>
+              <Icon className={`w-5 h-5 ${bottomTab === key ? 'text-indigo-600' : 'text-slate-400'}`} />
+            </div>
+            <span className="text-[9px] font-black uppercase tracking-widest">{isAr ? labelAr : labelFr}</span>
+            {bottomTab === key && <div className="absolute bottom-0 w-8 h-0.5 bg-indigo-600 rounded-full" />}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Devis Tab ── */}
+      {bottomTab === 'devis' && (
+        <div className="fixed inset-0 z-40 bg-slate-100 pt-4 pb-24 overflow-y-auto" dir={isAr ? 'rtl' : 'ltr'}>
+          <div className="px-4">
+            <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter mb-6">{isAr ? 'عروض الأسعار' : 'Devis (PRO)'}</h2>
+            <div className="bg-white rounded-3xl p-8 text-center border border-dashed border-slate-200 shadow-sm">
+              <FileText className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+              <p className="font-black text-slate-500 uppercase text-xs tracking-widest">{isAr ? 'قريباً — إنشاء عروض أسعار احترافية' : 'Bientôt — Créez des devis professionnels'}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Profil Tab ── */}
+      {bottomTab === 'profil' && (
+        <div className="fixed inset-0 z-40 bg-slate-100 pt-4 pb-24 overflow-y-auto" dir={isAr ? 'rtl' : 'ltr'}>
+          <div className="px-4">
+            <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter mb-6">{isAr ? 'ملفي الشخصي' : 'Mon Profil'}</h2>
+            <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
+              <div className="flex items-center gap-4 mb-6">
+                {currentUser?.photo ? (
+                  <img src={currentUser.photo} className="w-16 h-16 rounded-2xl object-cover border border-slate-100" alt="" />
+                ) : (
+                  <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl flex items-center justify-center text-white font-black text-2xl">
+                    {(currentUser?.nom || 'C')[0]}
+                  </div>
+                )}
+                <div>
+                  <p className="font-black text-slate-900 uppercase tracking-tight text-lg">{currentUser?.nom || '—'}</p>
+                  <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">{isAr ? 'تجاري' : 'Commercial'}</p>
+                  <p className="text-xs text-slate-400 font-bold mt-1">{currentUser?.email || '—'}</p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                {[{label: isAr?'البريد':'Email', val: currentUser?.email},{label:isAr?'الدور':'Rôle', val:'Commercial'},{label:isAr?'الطلبات':'Prospects', val:`${leads.length}`}].map(r=>(
+                  <div key={r.label} className="flex justify-between items-center py-2 border-b border-slate-50">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{r.label}</span>
+                    <span className="text-sm font-bold text-slate-800">{r.val}</span>
+                  </div>
+                ))}
+              </div>
+              <button onClick={onLogout} className="w-full mt-6 py-3.5 bg-rose-50 text-rose-600 border border-rose-100 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-rose-500 hover:text-white transition-all">
+                <LogOut className="w-4 h-4" />{isAr ? 'تسجيل الخروج' : 'Se Déconnecter'}
+              </button>
+            </div>
           </div>
         </div>
       )}
