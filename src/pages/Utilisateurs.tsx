@@ -133,6 +133,7 @@ const ALL_PAGES: PageDef[] = [
   { key: 'worker_portal', label: 'Espace Ouvrier', labelAr: 'فضاء العامل', icon: UserCircle, group: 'Portails' },
   { key: 'partenaire_portal', label: 'Portail Partenaire', labelAr: 'بوابة الشركاء', icon: Globe, group: 'Portails' },
   { key: 'chef_chaine_portal', label: 'Portail Chef de Chaîne', labelAr: 'بوابة رئيس السلسلة', icon: Users, group: 'Portails' },
+  { key: 'commercial_portal', label: 'Portail Commercial', labelAr: 'بوابة التجاري', icon: Briefcase, group: 'Portails' },
   { key: 'performance', label: 'Performance', labelAr: 'أداء العمال', icon: Trophy, group: 'Outils' },
   { key: 'utilisateurs', label: 'Gestion Utilisateurs', labelAr: 'إدارة المستخدمين', icon: UserCircle, group: 'Outils' },
   { key: 'parametres', label: 'Paramètres', labelAr: 'الإعدادات', icon: Settings, group: 'Outils' },
