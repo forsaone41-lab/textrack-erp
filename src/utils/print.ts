@@ -409,19 +409,19 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
   const align = isAr ? 'right' : 'left';
   const revAlign = isAr ? 'left' : 'right';
 
-  const t_title = isAr ? 'تقرير الذكاء الاصطناعي (تحليل الموديل)' : 'Rapport IA (Analyse du Modèle)';
-  const t_general = isAr ? 'معلومات عامة' : 'Informations Générales';
+  const t_title = isAr ? 'تفاصيل وتحليل الموديل' : 'ANALYSE DU MODÈLE';
+  const t_general = isAr ? 'معلومات الموديل' : 'Informations du Modèle';
   const t_category = isAr ? 'الصنف / الموديل' : 'Catégorie / Modèle';
-  const t_cost = isAr ? 'التكلفة التقديرية' : 'Coût Estimé';
+  const t_cost = isAr ? 'تكلفة الخياطة (تقدير)' : 'Coût de Façon (Estimé)';
   const t_consumption = isAr ? 'استهلاك الثوب' : 'Consommation Tissu';
-  const t_complexity = isAr ? 'درجة التعقيد' : 'Complexité';
+  const t_complexity = isAr ? 'مستوى التفاصيل' : 'Niveau de Détail';
   const t_fit = isAr ? 'القصة / Fit' : 'Coupe / Fit';
-  const t_fabrics = isAr ? 'تحليل الأثواب المقترحة' : 'Analyse & Suggestions de Tissus';
-  const t_primary = isAr ? 'الثوب الرئيسي المثالي' : 'Tissu Principal Idéal';
+  const t_fabrics = isAr ? 'اقتراحات الأثواب المناسبة' : 'Suggestions de Tissus';
+  const t_primary = isAr ? 'الثوب الرئيسي الموصى به' : 'Tissu Principal Recommandé';
   const t_alternatives = isAr ? 'بدائل أخرى' : 'Alternatives Possibles';
   const t_pros = isAr ? 'المميزات:' : 'Avantages:';
-  const t_cons = isAr ? 'العيوب:' : 'Inconvénients:';
-  const t_components = isAr ? 'مكونات الموديل' : 'Composants du Modèle';
+  const t_cons = isAr ? 'ملاحظات:' : 'À noter:';
+  const t_components = isAr ? 'مكونات الموديل' : 'Détails du Modèle';
 
   // Process global vs piece-specific data
   const globalCost = analysis.costEstimate || '—';
@@ -444,41 +444,42 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
       body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       .no-print { display: none !important; }
     }
-    .page { max-width: 900px; margin: 0 auto; padding: 40px; }
-    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; border-bottom: 3px solid #4f46e5; padding-bottom: 20px; flex-direction: ${isAr ? 'row-reverse' : 'row'}; }
-    .brand-name { font-size: 26px; font-weight: 900; color: #1e1b4b; text-transform: uppercase; }
-    .brand-sub { font-size: 11px; color: #6366f1; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
+    @page { margin: 10mm; size: A4 portrait; }
+    .page { max-width: 900px; margin: 0 auto; padding: 20px; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 3px solid #4f46e5; padding-bottom: 15px; flex-direction: ${isAr ? 'row-reverse' : 'row'}; }
+    .brand-name { font-size: 24px; font-weight: 900; color: #1e1b4b; text-transform: uppercase; }
+    .brand-sub { font-size: 10px; color: #6366f1; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
     .doc-title { text-align: ${revAlign}; }
-    .doc-title h1 { font-size: 22px; font-weight: 900; color: #1e293b; margin: 0; text-transform: uppercase; }
-    .doc-title p { font-size: 11px; color: #94a3b8; font-weight: 700; margin-top: 4px; }
+    .doc-title h1 { font-size: 20px; font-weight: 900; color: #1e293b; margin: 0; text-transform: uppercase; }
+    .doc-title p { font-size: 10px; color: #94a3b8; font-weight: 700; margin-top: 4px; }
 
-    .main-grid { display: flex; gap: 30px; margin-bottom: 30px; flex-direction: ${isAr ? 'row-reverse' : 'row'}; }
-    .photo-col { width: 300px; flex-shrink: 0; }
-    .photo-box { width: 100%; border: 2px solid #e2e8f0; border-radius: 16px; overflow: hidden; background: #f8fafc; display: flex; align-items: center; justify-content: center; padding: 10px; }
-    .photo-box img { width: 100%; border-radius: 8px; object-fit: contain; }
+    .main-grid { display: flex; gap: 20px; margin-bottom: 20px; flex-direction: ${isAr ? 'row-reverse' : 'row'}; }
+    .photo-col { width: 260px; flex-shrink: 0; }
+    .photo-box { width: 100%; border: 2px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #f8fafc; display: flex; align-items: center; justify-content: center; padding: 8px; }
+    .photo-box img { width: 100%; max-height: 400px; border-radius: 6px; object-fit: contain; }
 
     .info-col { flex: 1; }
-    .section-title { font-size: 14px; font-weight: 800; color: #4f46e5; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; border-bottom: 2px solid #e0e7ff; padding-bottom: 5px; display: flex; align-items: center; gap: 8px; flex-direction: ${isAr ? 'row-reverse' : 'row'}; }
+    .section-title { font-size: 13px; font-weight: 800; color: #4f46e5; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; border-bottom: 2px solid #e0e7ff; padding-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-direction: ${isAr ? 'row-reverse' : 'row'}; }
     
-    .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
-    .metric-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px; text-align: center; }
-    .metric-label { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-    .metric-val { font-size: 16px; font-weight: 900; color: #0f172a; }
+    .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .metric-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px; border-radius: 10px; text-align: center; }
+    .metric-label { font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+    .metric-val { font-size: 14px; font-weight: 900; color: #0f172a; }
 
-    .comps-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 25px; justify-content: ${isAr ? 'flex-end' : 'flex-start'}; }
-    .comp-item { background: #eff6ff; color: #3b82f6; font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 8px; border: 1px solid #bfdbfe; }
+    .comps-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; justify-content: ${isAr ? 'flex-end' : 'flex-start'}; }
+    .comp-item { background: #eff6ff; color: #3b82f6; font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 6px; border: 1px solid #bfdbfe; }
 
-    .fabric-card { background: #fdf4ff; border: 1px solid #fbcfe8; padding: 16px; border-radius: 12px; margin-bottom: 15px; text-align: ${align}; }
-    .fabric-label { font-size: 10px; font-weight: 800; color: #d946ef; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-    .fabric-val { font-size: 18px; font-weight: 900; color: #86198f; }
+    .fabric-card { background: #fdf4ff; border: 1px solid #fbcfe8; padding: 12px; border-radius: 10px; margin-bottom: 10px; text-align: ${align}; }
+    .fabric-label { font-size: 9px; font-weight: 800; color: #d946ef; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+    .fabric-val { font-size: 14px; font-weight: 900; color: #86198f; }
 
-    .alt-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
-    .alt-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; text-align: ${align}; }
-    .alt-title { font-size: 13px; font-weight: 800; color: #1e293b; margin-bottom: 8px; }
-    .alt-pros { color: #059669; font-size: 11px; font-weight: 600; margin-bottom: 4px; }
-    .alt-cons { color: #dc2626; font-size: 11px; font-weight: 600; }
+    .alt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .alt-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px; border-radius: 8px; text-align: ${align}; }
+    .alt-title { font-size: 11px; font-weight: 800; color: #1e293b; margin-bottom: 4px; }
+    .alt-pros { color: #059669; font-size: 10px; font-weight: 600; margin-bottom: 2px; }
+    .alt-cons { color: #dc2626; font-size: 10px; font-weight: 600; }
 
-    .footer { margin-top: 50px; padding-top: 20px; border-top: 2px solid #f1f5f9; text-align: center; font-size: 10px; color: #94a3b8; font-weight: 600; }
+    .footer { margin-top: 20px; padding-top: 15px; border-top: 2px solid #f1f5f9; text-align: center; font-size: 9px; color: #94a3b8; font-weight: 600; }
     .print-btn { position: fixed; bottom: 30px; right: 30px; background: #4f46e5; color: white; border: none; padding: 14px 28px; border-radius: 50px; font-weight: 700; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4); }
   </style>
 </head>
@@ -568,7 +569,7 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
     </div>
 
     <div class="footer">
-      <div>Document généré automatiquement par BEYA Assistant Intelligence Artificielle</div>
+      <div>Généré par BEYA CREATIVE - Analyse Technique</div>
       <div>© ${new Date().getFullYear()} ${company.name} - Tous droits réservés.</div>
     </div>
   </div>
