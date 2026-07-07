@@ -73,6 +73,7 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
   const [leadPhotos, setLeadPhotos] = useState<Record<string, string>>({});
   const [bottomTab, setBottomTab] = useState<'leads' | 'devis' | 'profil'>('leads');
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(15);
 
 
 
@@ -81,10 +82,10 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
     // 2. Fetch fresh data
     fetchLeads(false);
 
-    // Auto-refresh every 10 seconds to feel real-time when Admin grants access
+    // Auto-refresh every 30 seconds to feel real-time when Admin grants access
     const interval = setInterval(() => {
       fetchLeads(false); // background fetch, no loading spinner
-    }, 10000);
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -303,7 +304,9 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                 return acc;
               }, {} as Record<string, { client: Lead, requests: Lead[] }>);
 
-              return Object.values(groupedLeads).map(group => {
+              const groupedLeadsList = Object.values(groupedLeads).slice(0, visibleCount);
+
+              return groupedLeadsList.map(group => {
                 const { client, requests } = group;
                 // Check if ANY lead in the group has been unlocked (not just the first)
                 const isUnlocked = requests.some(r => !!(r as any).commercialUnlocked) || !!(client as any).commercialUnlocked;
@@ -509,6 +512,29 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
               });
             })()
           )}
+
+          {/* Load More Button */}
+          {(() => {
+            const groupedLeadsCount = Object.keys(
+              filteredLeads.reduce((acc, lead) => {
+                const key = lead.name.toLowerCase().trim();
+                if (!acc[key]) acc[key] = { client: { ...lead }, requests: [] };
+                acc[key].requests.push(lead);
+                return acc;
+              }, {} as Record<string, { client: Lead, requests: Lead[] }>)
+            ).length;
+
+            return visibleCount < groupedLeadsCount ? (
+              <div className="flex justify-center mt-6 mb-8">
+                <button 
+                  onClick={() => setVisibleCount(prev => prev + 15)}
+                  className="px-6 py-3 bg-white text-indigo-600 font-bold text-sm rounded-xl border border-indigo-100 shadow-sm hover:bg-indigo-50 transition-colors"
+                >
+                  {isAr ? 'عرض المزيد' : 'Afficher plus'}
+                </button>
+              </div>
+            ) : null;
+          })()}
         </div>
         </>
       )}
