@@ -64,29 +64,7 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
   const [savedOk, setSavedOk] = useState(false);
   const [leadPhotos, setLeadPhotos] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    const fetchPhotos = async () => {
-      const missingPhotos = filteredLeads.filter(l => (l.photoCount || 0) > 0 && !leadPhotos[l.id]);
-      if (missingPhotos.length === 0) return;
-      
-      const newPhotos: Record<string, string> = {};
-      await Promise.all(
-        missingPhotos.map(async (l) => {
-          try {
-            const photo = await loadLeadPhoto(l.id);
-            if (photo) newPhotos[l.id] = photo;
-          } catch (e) {
-            console.error('Failed to load photo for', l.id);
-          }
-        })
-      );
-      
-      if (Object.keys(newPhotos).length > 0) {
-        setLeadPhotos(prev => ({ ...prev, ...newPhotos }));
-      }
-    };
-    fetchPhotos();
-  }, [filteredLeads]);
+
 
   useEffect(() => {
 
@@ -127,6 +105,30 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
            
     return matchAccess && matchSearch;
   });
+
+  useEffect(() => {
+    const fetchPhotos = async () => {
+      const missingPhotos = filteredLeads.filter(l => (l.photoCount || 0) > 0 && !leadPhotos[l.id]);
+      if (missingPhotos.length === 0) return;
+      
+      const newPhotos: Record<string, string> = {};
+      await Promise.all(
+        missingPhotos.map(async (l) => {
+          try {
+            const photo = await loadLeadPhoto(l.id);
+            if (photo) newPhotos[l.id] = photo;
+          } catch (e) {
+            console.error('Failed to load photo for', l.id);
+          }
+        })
+      );
+      
+      if (Object.keys(newPhotos).length > 0) {
+        setLeadPhotos(prev => ({ ...prev, ...newPhotos }));
+      }
+    };
+    fetchPhotos();
+  }, [filteredLeads, leadPhotos]);
 
   const stats = useMemo(() => {
     return {
