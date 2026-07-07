@@ -425,7 +425,12 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
 
   // Process global vs piece-specific data
   const globalCost = analysis.costEstimate || '—';
-  const globalConso = analysis.consumption || '—';
+  let globalConso = analysis.consumption || '—';
+  if (globalConso.includes(':')) {
+    globalConso = globalConso.split('|')[0].split(':')[1]?.trim() || globalConso;
+  } else if (globalConso.includes('|')) {
+    globalConso = globalConso.split('|')[0].trim();
+  }
   const globalComp = analysis.complexity || '—';
   
   // Fabrics
@@ -462,16 +467,16 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
     .section-title { font-size: 13px; font-weight: 800; color: #4f46e5; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; border-bottom: 2px solid #e0e7ff; padding-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-direction: ${isAr ? 'row-reverse' : 'row'}; }
     
     .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-    .metric-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px; border-radius: 10px; text-align: center; }
+    .metric-card { background: #fff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 10px; text-align: center; }
     .metric-label { font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
-    .metric-val { font-size: 14px; font-weight: 900; color: #0f172a; }
+    .metric-val { font-size: 14px; font-weight: 900; color: #1e293b; }
 
     .comps-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; justify-content: ${isAr ? 'flex-end' : 'flex-start'}; }
-    .comp-item { background: #eff6ff; color: #3b82f6; font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 6px; border: 1px solid #bfdbfe; }
+    .comp-item { background: #f8fafc; color: #475569; font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 6px; border: 1px solid #e2e8f0; }
 
-    .fabric-card { background: #fdf4ff; border: 1px solid #fbcfe8; padding: 12px; border-radius: 10px; margin-bottom: 10px; text-align: ${align}; }
-    .fabric-label { font-size: 9px; font-weight: 800; color: #d946ef; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
-    .fabric-val { font-size: 14px; font-weight: 900; color: #86198f; }
+    .fabric-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 10px; margin-bottom: 10px; text-align: ${align}; }
+    .fabric-label { font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+    .fabric-val { font-size: 14px; font-weight: 900; color: #1e293b; }
 
     .alt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .alt-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px; border-radius: 8px; text-align: ${align}; }
@@ -518,19 +523,19 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
         <div class="metrics-grid">
           <div class="metric-card">
             <div class="metric-label">${t_cost}</div>
-            <div class="metric-val" style="color: #d97706">${globalCost}</div>
+            <div class="metric-val">${globalCost}</div>
           </div>
           <div class="metric-card">
             <div class="metric-label">${t_consumption}</div>
-            <div class="metric-val" style="color: #4f46e5">${globalConso}</div>
+            <div class="metric-val">${globalConso}</div>
           </div>
           <div class="metric-card">
             <div class="metric-label">${t_complexity}</div>
-            <div class="metric-val" style="color: #059669">${globalComp}</div>
+            <div class="metric-val">${globalComp}</div>
           </div>
           <div class="metric-card">
             <div class="metric-label">${t_fit}</div>
-            <div class="metric-val" style="color: #7c3aed">${analysis.fit || analysis.pieces?.[0]?.fit || '—'}</div>
+            <div class="metric-val">${analysis.fit || analysis.pieces?.[0]?.fit || '—'}</div>
           </div>
         </div>
 
