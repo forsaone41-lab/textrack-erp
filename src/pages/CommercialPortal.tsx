@@ -87,11 +87,13 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
     try {
       const data = await loadLeads();
       const activeLeads = data.filter(l => 
-        !l.type.startsWith('RECRUTEMENT:') && 
+        l && (!l.type || !l.type.startsWith('RECRUTEMENT:')) && 
         (!l.crmStage || ['nouveau', 'contact_en_cours', 'rdv_fixe', 'attente_confirmation'].includes(l.crmStage))
       );
       activeLeads.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       setLeads(activeLeads);
+    } catch (e) {
+      console.error("Failed to fetch leads in commercial portal", e);
     } finally {
       setLoading(false);
     }
@@ -224,16 +226,18 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
 
       {/* Content lifted over hero */}
       <div className="px-4 -mt-6 relative z-10">
-        <div className="relative mb-6">
-          <Search className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 ${isAr ? 'right-4' : 'left-4'}`} />
-          <input
-            type="text"
-            placeholder={isAr ? 'بحث عن زبون أو طلب...' : 'Rechercher un prospect...'}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={`w-full ${isAr ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-3.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500/20 shadow-sm`}
-          />
-        </div>
+        {bottomTab === 'leads' && (
+          <>
+            <div className="relative mb-6">
+              <Search className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 ${isAr ? 'right-4' : 'left-4'}`} />
+              <input
+                type="text"
+                placeholder={isAr ? 'بحث عن زبون أو طلب...' : 'Rechercher un prospect...'}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`w-full ${isAr ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-3.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500/20 shadow-sm`}
+              />
+            </div>
 
         <div className="bg-slate-100/80 p-1.5 rounded-2xl mb-8 flex gap-1.5 border border-slate-200/50 backdrop-blur-md">
           <button
@@ -493,6 +497,8 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
             })()
           )}
         </div>
+        </>
+      )}
       </div>
 
       {/* Confirmation Modal */}
