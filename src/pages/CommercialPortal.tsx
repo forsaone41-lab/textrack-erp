@@ -33,8 +33,10 @@ import {
   loadLeadPhoto
 } from '../types';
 import { useLang } from '../contexts/LangContext';
-import DevisBuilder from './DevisBuilder';
 import { compressImage } from '../utils/image';
+import { lazy, Suspense } from 'react';
+
+const DevisBuilder = lazy(() => import('./DevisBuilder'));
 
 interface CommercialPortalProps {
   currentUser: any;
@@ -127,16 +129,18 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
       missingPhotos.forEach(l => fetchedPhotosRef.current.add(l.id));
 
       const newPhotos: Record<string, string> = {};
-      await Promise.all(
-        missingPhotos.map(async (l) => {
-          try {
-            const photo = await loadLeadPhoto(l.id);
-            if (photo) newPhotos[l.id] = photo;
-          } catch (e) {
-            console.error('Failed to load photo for', l.id);
-          }
-        })
-      );
+      
+      for (const l of missingPhotos) {
+        try {
+          const photo = await loadLeadPhoto(l.id);
+          if (photo) newPhotos[l.id] = photo;
+          
+          // Small delay to let the browser breathe
+          await new Promise(resolve => setTimeout(resolve, 50));
+        } catch (e) {
+          console.error('Failed to load photo for', l.id);
+        }
+      }
       
       if (Object.keys(newPhotos).length > 0) {
         setLeadPhotos(prev => ({ ...prev, ...newPhotos }));
@@ -687,7 +691,9 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
       {/* ── Devis Tab ── */}
       {bottomTab === 'devis' && (
         <div className="fixed inset-0 z-40 bg-slate-50 pt-0 pb-20 overflow-y-auto h-full w-full">
-          <DevisBuilder embedded={true} onBack={() => setBottomTab('leads')} />
+          <Suspense fallback={<div className="flex items-center justify-center h-full"><div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div></div>}>
+            <DevisBuilder embedded={true} onBack={() => setBottomTab('leads')} />
+          </Suspense>
         </div>
       )}
 
