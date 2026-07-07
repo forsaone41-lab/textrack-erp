@@ -260,7 +260,7 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
                     );
                   }
 
-                  const isReadyForSample = f.patronagePhoto && f.tailles.length > 0 && f.mesures.length > 0;
+                  const isReadyForSample = f.patronagePhoto && (f.tailles || []).length > 0 && (f.mesures || []).length > 0;
                   return (
                     <button
                       onClick={() => isReadyForSample && onLaunchSample(f)}
@@ -293,7 +293,7 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{t('tailles', lang)}</span>
                 <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 rounded-lg border border-slate-200/50">
                   <Calculator className="w-3 h-3 text-indigo-500" />
-                  <span className="text-xs font-bold text-slate-700">{f.tailles.length}</span>
+                  <span className="text-xs font-bold text-slate-700">{(f.tailles || []).length}</span>
                 </div>
               </div>
               {f.tissuRecommande && (
@@ -313,10 +313,10 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
       {/* Bottom Footer Area: Tailles Chips only */}
       <div className={`bg-slate-50/50 border-t border-slate-100 overflow-hidden px-5 py-4 flex items-center justify-between ${isAr ? 'flex-row-reverse' : 'flex-row'}`}>
         <div className="flex-1 overflow-hidden">
-          {f.tailles.length > 0 ? (
+          {(f.tailles || []).length > 0 ? (
             <div className={`flex flex-wrap items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
               <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mr-1">{t('tailles', lang)}:</span>
-              {f.tailles.map(t => (
+              {(f.tailles || []).map(t => (
                 <span key={t} className="px-2.5 py-1 bg-white border border-slate-200 text-slate-700 text-[10px] font-bold rounded-lg shadow-sm">{t}</span>
               ))}
             </div>
