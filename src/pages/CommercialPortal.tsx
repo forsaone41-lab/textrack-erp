@@ -70,6 +70,7 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
   const [savedOk, setSavedOk] = useState(false);
   const [leadPhotos, setLeadPhotos] = useState<Record<string, string>>({});
   const [bottomTab, setBottomTab] = useState<'leads' | 'devis' | 'profil'>('leads');
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
 
 
@@ -366,7 +367,7 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                               <img 
                                 src={leadPhotos[req.id]} 
                                 alt={req.type} 
-                                onClick={() => window.open(leadPhotos[req.id], '_blank')}
+                                onClick={() => setPreviewImage(leadPhotos[req.id])}
                                 className="w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm shrink-0 cursor-pointer hover:opacity-80 transition-opacity" 
                               />
                             ) : (
@@ -736,6 +737,15 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
               </button>
             </div>
           </div>
+        </div>
+      )}
+      {/* Image Preview Modal */}
+      {previewImage && (
+        <div className="fixed inset-0 z-[60] bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in" onClick={() => setPreviewImage(null)}>
+          <button onClick={() => setPreviewImage(null)} className="absolute top-6 right-6 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors z-[70]">
+            <X className="w-6 h-6" />
+          </button>
+          <img src={previewImage} onClick={(e) => e.stopPropagation()} className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl" alt="Preview" />
         </div>
       )}
     </div>
