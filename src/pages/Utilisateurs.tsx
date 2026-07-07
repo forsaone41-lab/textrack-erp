@@ -124,6 +124,8 @@ const ALL_PAGES: PageDef[] = [
   { key: 'clients', label: 'Base Clients', labelAr: 'قاعدة الزبناء', icon: UserCheck, group: 'RH & Finance' },
   { key: 'commandes', label: 'Commandes', labelAr: 'الطلبيات', icon: ShoppingCart, group: 'RH & Finance' },
   { key: 'factures', label: 'Factures', labelAr: 'الفواتير', icon: Receipt, group: 'RH & Finance' },
+  { key: 'devis', label: 'Devis (PRO)', labelAr: 'عروض الأسعار (PRO)', icon: FileText, group: 'RH & Finance' },
+  { key: 'recus', label: 'Reçus & Bons', labelAr: 'الوصولات والبونات', icon: Receipt, group: 'RH & Finance' },
   { key: 'charges', label: 'Charges & Dépenses', labelAr: 'المصاريف', icon: TrendingDown, group: 'RH & Finance' },
   { key: 'bilan', label: 'Bilan Financier', labelAr: 'الميزانية والأرباح', icon: BarChart3, group: 'RH & Finance' },
   
