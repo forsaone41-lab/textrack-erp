@@ -158,82 +158,68 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24 font-sans" dir={isAr ? 'rtl' : 'ltr'}>
-      {/* Slim top progress bar — only shows during background sync */}
+    <div className="min-h-screen bg-slate-100 pb-24 font-sans" dir={isAr ? 'rtl' : 'ltr'}>
       {loading && (
-        <div className="fixed top-0 left-0 right-0 z-50 h-0.5 bg-indigo-100 overflow-hidden">
-          <div className="h-full bg-indigo-500 animate-pulse w-2/3" style={{ animation: 'progress 1.5s ease-in-out infinite' }} />
+        <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-indigo-100 overflow-hidden">
+          <div className="h-full bg-indigo-500 w-2/3 animate-pulse" />
         </div>
       )}
-      {/* Premium Header */}
-      <div className="bg-white/80 backdrop-blur-xl border-b border-slate-200/50 px-6 py-4 flex items-center justify-between sticky top-0 z-40 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            {currentUser?.photo ? (
-              <img src={currentUser.photo} className="w-12 h-12 rounded-2xl object-cover shadow-md border border-slate-200" alt="Avatar" />
-            ) : (
-              <div className="w-12 h-12 bg-gradient-to-tr from-indigo-500 to-violet-600 rounded-2xl flex items-center justify-center text-white font-bold shadow-md">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-            )}
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full" />
-          </div>
-          <div>
-            <h2 className="text-sm font-black uppercase tracking-tight text-slate-800">{currentUser?.nom || 'Commercial'}</h2>
-            <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest mt-0.5">
-              {isAr ? 'القسم التجاري' : 'Service Commercial'}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={toggle}
-            className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all font-bold text-xs"
-          >
-            {isAr ? 'FR' : 'AR'}
-          </button>
-          <button 
-            onClick={onLogout}
-            className="w-10 h-10 flex items-center justify-center rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition-all"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
 
-      {/* Hero Stats */}
-      <div className="px-6 pt-8 pb-6">
-        <h1 className="text-2xl font-black text-slate-800 tracking-tight mb-6">
+      {/* Hero Banner */}
+      <div className="relative bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 px-6 pt-10 pb-20 overflow-hidden">
+        <div className="absolute inset-0 opacity-10" style={{backgroundImage:'radial-gradient(circle at 20% 50%, white 1px, transparent 1px)',backgroundSize:'30px 30px'}} />
+        <div className="absolute -bottom-8 -right-8 w-48 h-48 bg-white/5 rounded-full" />
+        {/* Top bar */}
+        <div className={`flex items-center justify-between mb-6 relative z-10 ${isAr ? 'flex-row-reverse' : ''}`}>
+          <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
+            <div className="relative">
+              {currentUser?.photo ? (
+                <img src={currentUser.photo} className="w-10 h-10 rounded-xl object-cover border-2 border-white/30" alt="" />
+              ) : (
+                <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border-2 border-white/30">
+                  <Users className="w-5 h-5 text-white" />
+                </div>
+              )}
+              <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-400 border-2 border-indigo-600 rounded-full" />
+            </div>
+            <div className={isAr ? 'text-right' : ''}>
+              <p className="text-white font-black text-sm uppercase tracking-tight">{currentUser?.nom || 'Commercial'}</p>
+              <p className="text-indigo-200 text-[9px] font-bold uppercase tracking-widest">{isAr ? 'تجاري' : 'Commercial'}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={toggle} className="w-9 h-9 bg-white/15 backdrop-blur-sm border border-white/20 rounded-xl text-white text-[10px] font-black flex items-center justify-center">
+              {isAr ? 'FR' : 'AR'}
+            </button>
+            <button onClick={onLogout} className="w-9 h-9 bg-white/15 backdrop-blur-sm border border-white/20 rounded-xl flex items-center justify-center text-white">
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+        {/* Title */}
+        <p className="text-indigo-200 text-[10px] font-black uppercase tracking-[0.3em] mb-1 relative z-10">BEYA CREATIVE</p>
+        <h1 className="text-2xl font-black text-white tracking-tight mb-6 relative z-10">
           {isAr ? 'لوحة التحكم التجارية' : 'Tableau de Bord Commercial'}
         </h1>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-200 relative overflow-hidden group">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center">
-                <Target className="w-4 h-4 text-blue-600" />
+        <div className="grid grid-cols-3 gap-3 relative z-10">
+          {[
+            { icon: Target, value: stats.totalActive, label: isAr ? 'إجمالي' : 'Total', color: 'bg-white/20' },
+            { icon: UserPlus, value: stats.nouveaux, label: isAr ? 'جديد' : 'Nouveaux', color: 'bg-emerald-400/20' },
+            { icon: Clock, value: stats.enAttente, label: isAr ? 'انتظار' : 'Attente', color: 'bg-amber-400/20' },
+          ].map(({ icon: Icon, value, label, color }) => (
+            <div key={label} className="bg-white/15 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+              <div className={`w-8 h-8 rounded-xl ${color} flex items-center justify-center mb-3`}>
+                <Icon className="w-4 h-4 text-white" />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{isAr ? 'طلبات جديدة' : 'Nouveaux'}</span>
+              <p className="text-2xl font-black text-white">{value}</p>
+              <p className="text-[9px] font-bold text-indigo-200 uppercase tracking-widest mt-0.5">{label}</p>
             </div>
-            <div className="flex items-end gap-2">
-              <span className="text-3xl font-black text-slate-800">{stats.nouveaux}</span>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-200 relative overflow-hidden group">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center">
-                <Clock className="w-4 h-4 text-amber-600" />
-              </div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{isAr ? 'في انتظار التأكيد' : 'En Attente'}</span>
-            </div>
-            <div className="flex items-end gap-2">
-              <span className="text-3xl font-black text-slate-800">{stats.enAttente}</span>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 
-      <div className="px-6">
+      {/* Content lifted over hero */}
+      <div className="px-4 -mt-6 relative z-10">
         <div className="relative mb-6">
           <Search className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 ${isAr ? 'right-4' : 'left-4'}`} />
           <input
