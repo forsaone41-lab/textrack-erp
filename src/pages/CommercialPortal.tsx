@@ -25,7 +25,8 @@ import {
   Lead,
   loadLeads,
   saveRecord,
-  loadCompanyProfile
+  loadCompanyProfile,
+  loadLeadPhoto
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 
@@ -61,6 +62,31 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
   const [accessFilter, setAccessFilter] = useState<'all' | 'unlocked' | 'locked'>('all');
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
   const [savedOk, setSavedOk] = useState(false);
+  const [leadPhotos, setLeadPhotos] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const fetchPhotos = async () => {
+      const missingPhotos = filteredLeads.filter(l => (l.photoCount || 0) > 0 && !leadPhotos[l.id]);
+      if (missingPhotos.length === 0) return;
+      
+      const newPhotos: Record<string, string> = {};
+      await Promise.all(
+        missingPhotos.map(async (l) => {
+          try {
+            const photo = await loadLeadPhoto(l.id);
+            if (photo) newPhotos[l.id] = photo;
+          } catch (e) {
+            console.error('Failed to load photo for', l.id);
+          }
+        })
+      );
+      
+      if (Object.keys(newPhotos).length > 0) {
+        setLeadPhotos(prev => ({ ...prev, ...newPhotos }));
+      }
+    };
+    fetchPhotos();
+  }, [filteredLeads]);
 
   useEffect(() => {
 
@@ -337,6 +363,16 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                       {requests.map(req => (
                         <div key={req.id} className={`flex flex-col md:flex-row items-start md:items-center justify-between p-3 rounded-xl border gap-4 transition-colors ${req.crmStage === 'confirme' ? 'bg-emerald-50/30 border-emerald-100' : 'bg-slate-50/50 border-slate-100'}`}>
                           <div className="flex items-center gap-3 flex-1 min-w-0">
+                            {leadPhotos[req.id] ? (
+                              <img 
+                                src={leadPhotos[req.id]} 
+                                alt={req.type} 
+                                onClick={() => window.open(leadPhotos[req.id], '_blank')}
+                                className="w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm shrink-0 cursor-pointer hover:opacity-80 transition-opacity" 
+                              />
+                            ) : (
+                              <div className="w-1.5 h-12 bg-indigo-100 rounded-full shrink-0"></div>
+                            )}
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2 flex-wrap mb-1">
                                 <span className="flex items-center gap-1 text-slate-700 font-black text-sm uppercase tracking-tight">
