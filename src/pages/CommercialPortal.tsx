@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Users, 
   Store,
@@ -116,11 +116,16 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
     return matchAccess && matchSearch;
   });
 
+  const fetchedPhotosRef = useRef<Set<string>>(new Set());
+
   useEffect(() => {
     const fetchPhotos = async () => {
-      const missingPhotos = filteredLeads.filter(l => (l.photoCount || 0) > 0 && !leadPhotos[l.id]);
+      const missingPhotos = filteredLeads.filter(l => (l.photoCount || 0) > 0 && !fetchedPhotosRef.current.has(l.id));
       if (missingPhotos.length === 0) return;
       
+      // Mark as fetched immediately to prevent concurrent duplicate fetches
+      missingPhotos.forEach(l => fetchedPhotosRef.current.add(l.id));
+
       const newPhotos: Record<string, string> = {};
       await Promise.all(
         missingPhotos.map(async (l) => {
@@ -138,7 +143,7 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
       }
     };
     fetchPhotos();
-  }, [filteredLeads, leadPhotos]);
+  }, [filteredLeads]);
 
   const stats = useMemo(() => {
     return {
