@@ -32,6 +32,7 @@ import {
   loadLeadPhoto
 } from '../types';
 import { useLang } from '../contexts/LangContext';
+import DevisBuilder from './DevisBuilder';
 
 interface CommercialPortalProps {
   currentUser: any;
@@ -677,14 +678,8 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
 
       {/* ── Devis Tab ── */}
       {bottomTab === 'devis' && (
-        <div className="fixed inset-0 z-40 bg-slate-100 pt-4 pb-24 overflow-y-auto" dir={isAr ? 'rtl' : 'ltr'}>
-          <div className="px-4">
-            <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter mb-6">{isAr ? 'عروض الأسعار' : 'Devis (PRO)'}</h2>
-            <div className="bg-white rounded-3xl p-8 text-center border border-dashed border-slate-200 shadow-sm">
-              <FileText className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-              <p className="font-black text-slate-500 uppercase text-xs tracking-widest">{isAr ? 'قريباً — إنشاء عروض أسعار احترافية' : 'Bientôt — Créez des devis professionnels'}</p>
-            </div>
-          </div>
+        <div className="fixed inset-0 z-40 bg-slate-50 pt-0 pb-20 overflow-y-auto h-full w-full">
+          <DevisBuilder embedded={true} onBack={() => setBottomTab('leads')} />
         </div>
       )}
 

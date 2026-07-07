@@ -19,7 +19,12 @@ interface ModelItem {
   fabricType: string;
 }
 
-export default function DevisBuilder() {
+interface DevisBuilderProps {
+  embedded?: boolean;
+  onBack?: () => void;
+}
+
+export default function DevisBuilder({ embedded = false, onBack }: DevisBuilderProps = {}) {
   const { lang, isAr } = useLang();
   const navigate = useNavigate();
   const company = loadCompanyProfile();
@@ -184,7 +189,13 @@ export default function DevisBuilder() {
 
     await saveRecord('factures', newDevis);
     printElement('devis-builder-pdf');
-    navigate('/devis');
+    if (onBack) onBack();
+    else navigate('/devis');
+  };
+
+  const handleBack = () => {
+    if (onBack) onBack();
+    else navigate('/devis');
   };
 
   if (loading) {
@@ -199,7 +210,7 @@ export default function DevisBuilder() {
     <div className={`p-4 md:p-8 space-y-6 max-w-7xl mx-auto pb-32 animate-in fade-in duration-500 ${isAr ? 'text-right' : 'text-left'}`}>
       <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${isAr ? 'flex-row-reverse' : ''}`}>
         <div className={`flex items-center gap-4 ${isAr ? 'flex-row-reverse' : ''}`}>
-          <button onClick={() => navigate('/devis')} className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm hover:bg-slate-50 transition border border-slate-200">
+          <button onClick={handleBack} className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm hover:bg-slate-50 transition border border-slate-200 shrink-0">
             <ArrowLeft className={`w-5 h-5 text-slate-600 ${isAr ? 'rotate-180' : ''}`} />
           </button>
           <div>
