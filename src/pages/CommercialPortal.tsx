@@ -22,7 +22,8 @@ import {
   Trash2,
   FileText,
   UserCircle2,
-  LayoutGrid
+  LayoutGrid,
+  Camera
 } from 'lucide-react';
 import { 
   Lead,
@@ -33,6 +34,7 @@ import {
 } from '../types';
 import { useLang } from '../contexts/LangContext';
 import DevisBuilder from './DevisBuilder';
+import { compressImage } from '../utils/image';
 
 interface CommercialPortalProps {
   currentUser: any;
@@ -690,13 +692,31 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
             <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter mb-6">{isAr ? 'ملفي الشخصي' : 'Mon Profil'}</h2>
             <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
               <div className="flex items-center gap-4 mb-6">
-                {currentUser?.photo ? (
-                  <img src={currentUser.photo} className="w-16 h-16 rounded-2xl object-cover border border-slate-100" alt="" />
-                ) : (
-                  <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl flex items-center justify-center text-white font-black text-2xl">
-                    {(currentUser?.nom || 'C')[0]}
+                <label className="relative cursor-pointer group shrink-0">
+                  {currentUser?.photo ? (
+                    <img src={currentUser.photo} className="w-16 h-16 rounded-2xl object-cover border border-slate-100 group-hover:opacity-50 transition" alt="" />
+                  ) : (
+                    <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl flex items-center justify-center text-white font-black text-2xl group-hover:opacity-50 transition">
+                      {(currentUser?.nom || 'C')[0]}
+                    </div>
+                  )}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                    <Camera className="w-6 h-6 text-slate-800 drop-shadow-md" />
                   </div>
-                )}
+                  <input type="file" accept="image/*" className="hidden" onChange={async e => {
+                    if (e.target.files?.[0] && currentUser?.id) {
+                      try {
+                        const b64 = await compressImage(e.target.files[0]);
+                        const updatedUser = { ...currentUser, photo: b64 };
+                        await saveRecord('utilisateurs', updatedUser);
+                        localStorage.setItem('textrack_currentUser', JSON.stringify(updatedUser));
+                        window.location.reload();
+                      } catch (err) {
+                        console.error("Failed to update photo", err);
+                      }
+                    }
+                  }} />
+                </label>
                 <div>
                   <p className="font-black text-slate-900 uppercase tracking-tight text-lg">{currentUser?.nom || '—'}</p>
                   <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">{isAr ? 'تجاري' : 'Commercial'}</p>
