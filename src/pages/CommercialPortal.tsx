@@ -394,7 +394,7 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2 flex-wrap mb-1">
                                 <span className="flex items-center gap-1 text-slate-700 font-black text-sm uppercase tracking-tight">
-                                  {['entreprise', 'marque', 'modeliste', 'ecom', 'debutant', 'N/A'].includes(req.type || 'N/A') ? (
+                                  {['entreprise', 'marque', 'modeliste', 'ecom', 'debutant', 'N/A', 'Demande via New Landing'].includes(req.type || 'N/A') ? (
                                     isAr ? 'مشروع جديد' : 'Nouveau Projet'
                                   ) : (
                                     req.type

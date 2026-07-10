@@ -102,7 +102,8 @@ export default function NewLanding() {
         phone: formData.phone,
         type: 'Demande via New Landing',
         details: `Type: ${formData.clientType} | Nom: ${formData.companyName || 'N/A'} ${formData.companySector ? `(${formData.companySector})` : ''} | Budget: ${formData.budget} | Délai: ${formData.deadline} | Objectif: ${formData.intent} | Notes: ${formData.details}`,
-        status: 'nouveau'
+        status: 'new',
+        date: new Date().toISOString()
       };
       
       // Ajout de la photo si elle existe
