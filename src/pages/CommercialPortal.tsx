@@ -24,7 +24,8 @@ import {
   UserCircle2,
   LayoutGrid,
   Camera,
-  Info
+  Info,
+  ImageIcon
 } from 'lucide-react';
 import { 
   Lead,
@@ -389,7 +390,9 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                                 className="w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm shrink-0 cursor-pointer hover:opacity-80 transition-opacity" 
                               />
                             ) : (
-                              <div className="w-1.5 h-12 bg-indigo-100 rounded-full shrink-0"></div>
+                              <div className="w-12 h-12 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center shrink-0 shadow-sm">
+                                <ImageIcon className="w-6 h-6 text-slate-300 opacity-50" />
+                              </div>
                             )}
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2 flex-wrap mb-1">
