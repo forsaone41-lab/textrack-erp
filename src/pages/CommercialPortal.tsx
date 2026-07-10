@@ -325,11 +325,6 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                         <div>
                           <h3 className="text-base font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
                             {client.name}
-                            {client.details && (
-                              <button onClick={(e) => { e.stopPropagation(); setSelectedLeadInfo(client); }} className="text-slate-400 hover:text-indigo-600 transition-colors bg-slate-50 hover:bg-indigo-50 p-1.5 rounded-lg border border-slate-200 shadow-sm">
-                                <Info className="w-4 h-4" />
-                              </button>
-                            )}
                             {hasPriority && <span className="text-xs">⭐</span>}
                             {!isUnlocked && <span className="px-1.5 py-0.5 bg-rose-50 text-rose-600 border border-rose-200 text-[8px] font-black uppercase tracking-widest rounded shadow-sm">{isAr ? 'مقفل' : 'Verrouillé'}</span>}
                           </h3>
@@ -343,6 +338,11 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                       <div className="flex items-center gap-2">
                         {isUnlocked ? (
                           <>
+                            <button onClick={() => setSelectedLeadInfo({ ...client, details: requests.map(r => r.details).filter(Boolean).join(' | ') } as Lead)}
+                              className="h-9 px-3 bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white rounded-xl flex items-center gap-2 text-xs font-black transition-all border border-amber-200 shadow-sm"
+                            >
+                              <FileText className="w-4 h-4" /> {isAr ? 'معلومات' : 'Infos'}
+                            </button>
                             <a href={`tel:${client.phone.replace(/\\D/g, '').startsWith('0') ? '212' + client.phone.replace(/\\D/g, '').substring(1) : client.phone.replace(/\\D/g, '')}`}
                               className="h-9 px-3 bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl flex items-center gap-2 text-xs font-black transition-all border border-slate-200 shadow-sm">
                               <PhoneCall className="w-4 h-4" /> {isAr ? 'اتصال' : 'Appel'}
