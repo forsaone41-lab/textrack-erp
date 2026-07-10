@@ -394,7 +394,11 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2 flex-wrap mb-1">
                                 <span className="flex items-center gap-1 text-slate-700 font-black text-sm uppercase tracking-tight">
-                                  {req.type} <span className="text-slate-400 text-xs font-bold">({req.quantity} pcs)</span>
+                                  {['entreprise', 'marque', 'modeliste', 'ecom', 'debutant', 'N/A'].includes(req.type || 'N/A') ? (
+                                    isAr ? 'مشروع جديد' : 'Nouveau Projet'
+                                  ) : (
+                                    req.type
+                                  )} <span className="text-slate-400 text-xs font-bold">({req.quantity || 1} pcs)</span>
                                 </span>
                                 {req.crmStage === 'confirme' && (
                                   <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-600 border border-emerald-200 text-[9px] font-black uppercase tracking-widest rounded flex items-center gap-1">
@@ -402,6 +406,28 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                                   </span>
                                 )}
                               </div>
+                              
+                              {/* New Project Details Tags */}
+                              {(() => {
+                                if (!req.details) return null;
+                                const parts = req.details.split(' | ');
+                                const tags = parts.filter(p => p.startsWith('Budget:') || p.startsWith('Objectif:') || p.startsWith('Délai:'));
+                                if (tags.length === 0) return null;
+                                
+                                return (
+                                  <div className="flex flex-wrap gap-1.5 mb-2 mt-1">
+                                    {tags.map((tag, i) => {
+                                      const [k, ...v] = tag.split(': ');
+                                      return (
+                                        <span key={i} className="px-2 py-1 bg-indigo-50 text-indigo-700 border border-indigo-100 text-[10px] font-bold rounded-md">
+                                          {v.join(': ')}
+                                        </span>
+                                      );
+                                    })}
+                                  </div>
+                                );
+                              })()}
+
                               <div className="flex items-center gap-3">
                                 <span className="flex items-center gap-1 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
                                   <Clock className="w-3 h-3" /> {new Date(req.date).toLocaleDateString()}
