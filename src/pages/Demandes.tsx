@@ -2037,26 +2037,6 @@ export default function Demandes() {
                               )}
                             </div>
                             
-                            {/* New Project Details Tags */}
-                            {(() => {
-                              if (!lead.details || category === 'recrutement') return null;
-                              const parts = lead.details.split(' | ');
-                              const tags = parts.filter(p => p.startsWith('Budget:') || p.startsWith('Objectif:') || p.startsWith('Délai:'));
-                              if (tags.length === 0) return null;
-                              
-                              return (
-                                <div className="flex flex-wrap gap-1.5 mb-2 mt-1">
-                                  {tags.map((tag, i) => {
-                                    const [k, ...v] = tag.split(': ');
-                                    return (
-                                      <span key={i} className="px-2 py-1 bg-indigo-50 text-indigo-700 border border-indigo-100 text-[10px] font-bold rounded-md">
-                                        {v.join(': ')}
-                                      </span>
-                                    );
-                                  })}
-                                </div>
-                              );
-                            })()}
 
                             <div className="flex items-center gap-3">
                               <span className="flex items-center gap-1 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
