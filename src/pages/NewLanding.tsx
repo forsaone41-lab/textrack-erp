@@ -124,7 +124,7 @@ export default function NewLanding() {
         telephone: formData.phone
       };
       await saveRecord('users', userPayload);
-      setCredentials({ email: formData.email.trim().toLowerCase(), code: autoCode });
+      setNewClientCode({ name: formData.name || 'Client', email: formData.email.trim().toLowerCase(), code: autoCode });
 
       setIsSuccess(true);
     } catch (error: any) {
@@ -305,16 +305,16 @@ export default function NewLanding() {
                   <h3 className="text-2xl font-bold mb-2">{isAr ? 'تم إرسال طلبك بنجاح !' : 'Demande envoyée !'}</h3>
                   <p className={`mb-6 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{isAr ? 'تم إنشاء حسابك في المنصة الخاصة بنا لتتبع طلبك.' : 'Votre compte a été créé sur notre plateforme pour suivre votre commande.'}</p>
                   
-                  {credentials && (
+                  {newClientCode && (
                     <div className="bg-slate-900 border border-indigo-500/30 rounded-2xl p-6 mb-6 relative overflow-hidden text-left">
                       <h4 className="text-sm font-bold text-indigo-400 mb-4 text-center">{isAr ? 'معلومات الدخول لحسابك' : 'Vos informations de connexion'}</h4>
                       <div className={`rounded-xl p-4 md:p-6 mb-4 text-center border ${isDark ? 'bg-slate-800 border-white/5' : 'bg-slate-800 border-slate-700'}`}>
                         <p className="text-slate-400 text-xs font-bold tracking-widest uppercase mb-2">IDENTIFIANT</p>
-                        <p className="text-white font-mono text-lg md:text-xl font-bold tracking-tight">{credentials.email}</p>
+                        <p className="text-white font-mono text-lg md:text-xl font-bold tracking-tight">{newClientCode.email}</p>
                       </div>
                       <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl text-center">
                         <p className="text-[10px] text-emerald-400 uppercase mb-1">{isAr ? 'الرمز السري' : 'Code Secret'}</p>
-                        <p className="text-2xl font-black text-emerald-400 tracking-widest font-mono">{credentials.code}</p>
+                        <p className="text-2xl font-black text-emerald-400 tracking-widest font-mono">{newClientCode.code}</p>
                       </div>
                     </div>
                   )}
