@@ -1158,7 +1158,7 @@ export default function SuiviRH() {
 
         <div className="text-center mb-10">
           <h2 className="text-2xl font-black underline decoration-slate-900 underline-offset-8 uppercase">
-            {isAr ? 'عقد عمل مهني' : 'CONTRAT DE TRAVAIL'}
+            {isAr ? 'عقد عمل محدد المدة (CDD)' : 'CONTRAT DE TRAVAIL À DURÉE DÉTERMINÉE (CDD)'}
           </h2>
         </div>
 
@@ -1169,6 +1169,9 @@ export default function SuiviRH() {
               <p>• <b>{isAr ? 'المشغل' : 'Employeur'}:</b> BEYA CREATIVE — Représenté par la Direction.</p>
               <p>• <b>{isAr ? 'الأجير' : 'Employé(e)'}:</b> {empName(selectedContractEmp!)}</p>
               <p>• <b>{isAr ? 'رقم البطاقة الوطنية' : 'CIN'}:</b> {selectedContractEmp?.cin || '...................'}</p>
+              <p>• <b>{isAr ? 'العنوان' : 'Adresse'}:</b> {selectedContractEmp?.adresse || '......................................'}</p>
+              <p>• <b>{isAr ? 'رقم الهاتف' : 'N° Téléphone'}:</b> {selectedContractEmp?.telephone || '...................'}</p>
+              <p>• <b>{isAr ? 'تاريخ الازدياد' : 'Date de naissance'}:</b> {(selectedContractEmp as any)?.dateNaissance || '...................'}</p>
             </div>
           </section>
 
@@ -1176,8 +1179,8 @@ export default function SuiviRH() {
             <p className="font-black border-b border-slate-900 pb-0.5 mb-2">2. {isAr ? 'فترة التجربة' : "PÉRIODE D'ESSAI"}:</p>
             <p className="italic leading-normal">
               {isAr 
-                ? "يخضع هذا العقد لفترة تجربة مدتها 15 يوماً (خاضعة للتجديد مرة واحدة)، طبقاً لمقتضيات المادة 14 من مدونة الشغل. خلال هذه الفترة، يمكن لأي طرف إنهاء العقد دون إشعار مسبق أو تعويض." 
-                : "Le présent contrat est soumis à une période d'essai de 15 jours (renouvelable une fois), conformément à l'article 14 du Code du Travail. Durant cette période, chacune des parties peut rompre le contrat sans préavis ni indemnité."}
+                ? "هذا العقد هو عقد محدد المدة (CDD). يخضع العقد لفترة تجربة مدتها 15 يوماً (خاضعة للتجديد مرة واحدة) وهي فترة غير مؤدى عنها، طبقاً لمقتضيات المادة 14 من مدونة الشغل. خلال هذه الفترة، يمكن لأي طرف إنهاء أو فسخ العقد في حال وقوع أي خطأ دون إشعار مسبق أو تعويض." 
+                : "Le présent contrat est un Contrat à Durée Déterminée (CDD). Il est soumis à une période d'essai de 15 jours (renouvelable une fois) non rémunérée, conformément à l'article 14 du Code du Travail. Durant cette période, chacune des parties peut rompre ou résilier le contrat en cas d'erreur sans préavis ni indemnité."}
             </p>
           </section>
 
@@ -1185,8 +1188,8 @@ export default function SuiviRH() {
             <p className="font-black border-b border-slate-900 pb-0.5 mb-2">3. {isAr ? 'طبيعة العمل وساعات العمل' : 'POSTE ET DURÉE DU TRAVAIL'}:</p>
             <p>
               {isAr 
-                ? `يشتغل الأجير كـ "${selectedContractEmp?.poste || 'عامل'}" لمدة 44 ساعة في الأسبوع. وتحدد أوقات العمل من الساعة 08:00 صباحاً إلى الساعة 18:00 مساءً، مع احترام القوانين الداخلية للورشة.` 
-                : `L'employé(e) occupera le poste de "${selectedContractEmp?.poste || 'Ouvrier'}" pour une durée hebdomadaire de 44 heures. Les horaires de travail sont fixés de 08h00 à 18h00, conformément à la législation en vigueur et au règlement intérieur.`}
+                ? `يشتغل الأجير كـ "${selectedContractEmp?.poste || 'عامل'}" لمدة 44 ساعة في الأسبوع. وتحدد أوقات العمل من الساعة 09:00 صباحاً إلى الساعة 18:00 مساءً، مع احترام القوانين الداخلية للورشة.` 
+                : `L'employé(e) occupera le poste de "${selectedContractEmp?.poste || 'Ouvrier'}" pour une durée hebdomadaire de 44 heures. Les horaires de travail sont fixés de 09h00 à 18h00, conformément à la législation en vigueur et au règlement intérieur.`}
             </p>
           </section>
 
@@ -1194,8 +1197,8 @@ export default function SuiviRH() {
             <p className="font-black border-b border-slate-900 pb-0.5 mb-2">4. {isAr ? 'الأجر والضمان الاجتماعي' : 'RÉMUNÉRATION ET CNSS'}:</p>
             <p>
               {isAr 
-                ? `تم تحديد الأجر في ${(selectedContractEmp?.salaireMensuel || 0).toLocaleString()} درهم. تلتزم الشركة بالتصريح بالأجير لدى الصندوق الوطني للضمان الاجتماعي (CNSS) فور استيفاء الشروط القانونية.` 
-                : `Le salaire est fixé à ${(selectedContractEmp?.salaireMensuel || 0).toLocaleString()} MAD. L'employeur s'engage à déclarer l'employé(e) à la CNSS conformément aux dispositions légales.`}
+                ? `تم تحديد الأجر في ${(selectedContractEmp?.salaireMensuel || 0).toLocaleString()} درهم. سيتم تحويل الأجر حصرياً إلى الحساب البنكي للأجير (عبر الـ RIB الخاص به). تلتزم الشركة بالتصريح بالأجير لدى الصندوق الوطني للضمان الاجتماعي (CNSS) فور استيفاء الشروط القانونية.` 
+                : `Le salaire est fixé à ${(selectedContractEmp?.salaireMensuel || 0).toLocaleString()} MAD. Le salaire sera versé exclusivement par virement sur le compte bancaire de l'employé(e) selon son RIB. L'employeur s'engage à déclarer l'employé(e) à la CNSS conformément aux dispositions légales.`}
             </p>
           </section>
 
