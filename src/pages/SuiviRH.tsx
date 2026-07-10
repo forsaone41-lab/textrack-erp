@@ -1224,7 +1224,7 @@ export default function SuiviRH() {
         </div>
 
         <div className="mt-12 text-[8px] text-center text-slate-400 uppercase tracking-widest border-t pt-2">
-          {isAr ? 'تم الاستخراج عبر نظام BEYA ERP — نظام التسيير المندمج' : 'Généré via BEYA ERP — Systéme de Gestion Intégré Textile'}
+          {isAr ? 'تم الاستخراج عبر نظام BEYA — نظام التسيير المندمج' : 'Généré via BEYA — Systéme de Gestion Intégré Textile'}
         </div>
       </div>
       {/* 📊 Salary & CNSS Simulator */}
