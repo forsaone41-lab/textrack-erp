@@ -121,10 +121,7 @@ export default function NewLanding() {
         email: formData.email.trim().toLowerCase(),
         password: autoCode,
         pinCode: autoCode,
-        telephone: formData.phone,
-        actif: true,
-        ville: '',
-        adresse: ''
+        telephone: formData.phone
       };
       await saveRecord('users', userPayload);
       setCredentials({ email: formData.email.trim().toLowerCase(), code: autoCode });
