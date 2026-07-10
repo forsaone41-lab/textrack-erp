@@ -23,7 +23,8 @@ import {
   FileText,
   UserCircle2,
   LayoutGrid,
-  Camera
+  Camera,
+  Info
 } from 'lucide-react';
 import { 
   Lead,
@@ -74,7 +75,7 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
   const [bottomTab, setBottomTab] = useState<'leads' | 'devis' | 'profil'>('leads');
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(15);
-
+  const [selectedLeadInfo, setSelectedLeadInfo] = useState<Lead | null>(null);
 
 
   useEffect(() => {
@@ -324,6 +325,11 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
                         <div>
                           <h3 className="text-base font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
                             {client.name}
+                            {client.details && (
+                              <button onClick={(e) => { e.stopPropagation(); setSelectedLeadInfo(client); }} className="text-slate-400 hover:text-indigo-600 transition-colors bg-slate-50 hover:bg-indigo-50 p-1.5 rounded-lg border border-slate-200 shadow-sm">
+                                <Info className="w-4 h-4" />
+                              </button>
+                            )}
                             {hasPriority && <span className="text-xs">⭐</span>}
                             {!isUnlocked && <span className="px-1.5 py-0.5 bg-rose-50 text-rose-600 border border-rose-200 text-[8px] font-black uppercase tracking-widest rounded shadow-sm">{isAr ? 'مقفل' : 'Verrouillé'}</span>}
                           </h3>
@@ -776,6 +782,50 @@ export default function CommercialPortal({ currentUser, onLogout }: CommercialPo
           </div>
         </div>
       )}
+      {/* Lead Info Modal */}
+      {selectedLeadInfo && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 animate-in fade-in" onClick={() => setSelectedLeadInfo(null)}>
+          <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md flex flex-col max-h-[90vh] overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-100">
+              <h2 className="text-lg font-black text-slate-800 flex items-center gap-2">
+                <Info className="w-5 h-5 text-indigo-500" />
+                {isAr ? 'معلومات الزبون' : 'Informations du Prospect'}
+              </h2>
+              <button onClick={() => setSelectedLeadInfo(null)} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="overflow-y-auto p-6 space-y-4">
+              <div className="flex items-center gap-4 mb-2">
+                <div className="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-black text-xl">
+                  {selectedLeadInfo.name.substring(0, 2).toUpperCase()}
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-800 text-lg uppercase">{selectedLeadInfo.name}</h3>
+                  <p className="text-xs font-bold text-slate-500" dir="ltr">{selectedLeadInfo.phone}</p>
+                </div>
+              </div>
+              
+              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-3">
+                {selectedLeadInfo.details?.split('|').filter(part => part.trim() && !part.includes('COM_UNLOCK:')).map((detail, idx) => {
+                  const parts = detail.split(':');
+                  if (parts.length < 2) return null;
+                  const label = parts[0].trim();
+                  const value = parts.slice(1).join(':').trim();
+                  if (!value || value === 'undefined' || value === 'N/A') return null;
+                  return (
+                    <div key={idx} className="flex flex-col gap-1 border-b border-slate-200/50 pb-2 last:border-0 last:pb-0">
+                      <span className="text-[10px] font-black uppercase text-indigo-400 tracking-widest">{label}</span>
+                      <span className="text-sm font-bold text-slate-700">{value}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Image Preview Modal */}
       {previewImage && (
         <div className="fixed inset-0 z-[60] bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in" onClick={() => setPreviewImage(null)}>
