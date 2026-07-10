@@ -802,7 +802,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                                    setEditingDemandeId(d.id);
                                    let parsedTailles = { 'XS': '', 'S': '', 'M': '', 'L': '', 'XL': '', 'XXL': '' };
                                    if (d.tailles) {
-                                      Object.entries(d.tailles).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
+                                      (d.tailles ? Object.entries(d.tailles) : []).forEach(([k, v]) => { if (parsedTailles[k] !== undefined) parsedTailles[k] = String(v); });
                                    } else if (d.sizes) {
                                       try {
                                         const parsed = typeof d.sizes === 'string' ? JSON.parse(d.sizes) : d.sizes;

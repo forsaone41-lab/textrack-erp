@@ -1026,7 +1026,7 @@ export default function Demandes() {
                   </p>
                   <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
                     <div className="flex flex-wrap gap-2">
-                      {Object.entries(detailsLead.tailles).filter(([,v]) => v > 0).map(([size, qty]) => (
+                      {detailsLead.tailles && Object.entries(detailsLead.tailles).filter(([,v]) => v > 0).map(([size, qty]) => (
                         <div key={size} className="bg-white rounded-lg px-3 py-2 border border-indigo-100 text-center shadow-sm">
                           <p className="text-[9px] font-black text-indigo-400 uppercase">{size}</p>
                           <p className="text-base font-black text-indigo-700">{qty}</p>

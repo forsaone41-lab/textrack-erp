@@ -13,7 +13,6 @@ import {
   Info,
   Video,
   Inbox,
-  Inbox,
   Mail,
   Tag,
   Target
@@ -342,7 +341,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
               </div>
 
               <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-4 border border-white/5 shadow-xl">
-                <NavLink to="/profil" onClick={() => setIsMobileOpen(false)} className="flex items-center gap-3 mb-4 hover:opacity-80 transition-opacity cursor-pointer">
+                <NavLink to="/profil" onClick={closeMobile} className="flex items-center gap-3 mb-4 hover:opacity-80 transition-opacity cursor-pointer">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 overflow-hidden border-2 border-indigo-500/30">
                     {currentUser.photo ? (
                       <img src={currentUser.photo} className="w-full h-full object-cover" />

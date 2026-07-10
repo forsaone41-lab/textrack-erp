@@ -1045,7 +1045,7 @@ export async function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'>) {
     const errMsg = error.message.toLowerCase();
     if (errMsg.includes('column') || errMsg.includes('not find') || errMsg.includes('schema cache')) {
       const fallbackLead = { ...newLead as any };
-      const newCols = ['photo', 'adresse', 'notes', 'crmStage', 'crmContactMethod', 'crmRdvDate', 'crmNotes', 'crmPrice', 'crmPriceConfirmed', 'crmPriority', 'preuveClient', 'annulationRaison', 'cv', 'sampleFeedback', 'prixEchantillon', 'phone2', 'contactedBy'];
+      const newCols = ['photo', 'photos', 'photoCount', 'tailles', 'aiNotes', 'adresse', 'notes', 'crmStage', 'crmContactMethod', 'crmRdvDate', 'crmNotes', 'crmPrice', 'crmPriceConfirmed', 'crmPriority', 'preuveClient', 'annulationRaison', 'cv', 'sampleFeedback', 'prixEchantillon', 'phone2', 'contactedBy'];
       newCols.forEach(col => delete fallbackLead[col]);
       const { error: retryError } = await supabase.from('leads').insert(fallbackLead);
       if (retryError) throw retryError;
@@ -1054,11 +1054,16 @@ export async function saveLead(lead: Omit<Lead, 'id' | 'date' | 'status'>) {
       throw error;
     }
   }
-  // Also save to local (legacy fallback)
-  const leads = await loadLeads();
-  safeStorage.setItem('textrack_leads', JSON.stringify([newLead, ...leads]));
-  
-  return newLead;
+    // Also save to local (legacy fallback)
+    try {
+      const localRaw = safeStorage.getItem('textrack_data_leads') || safeStorage.getItem('textrack_leads');
+      const leads = localRaw ? JSON.parse(localRaw) : [];
+      safeStorage.setItem('textrack_leads', JSON.stringify([newLead, ...leads]));
+    } catch (e) {
+      console.warn("Failed to update local leads cache:", e);
+    }
+    
+    return newLead;
 }
 
 export async function saveCompanyProfile(profile: CompanyProfile): Promise<void> {

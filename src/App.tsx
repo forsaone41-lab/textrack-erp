@@ -43,6 +43,7 @@ const Profil           = lazy(() => import('./pages/Profil'));
 const Login            = lazy(() => import('./pages/Login'));
 const LandingPage      = lazy(() => import('./pages/LandingPage'));
 const AdsLanding       = lazy(() => import('./pages/AdsLanding'));
+const NewLanding       = lazy(() => import('./pages/NewLanding'));
 const KioskScanner     = lazy(() => import('./pages/KioskScanner'));
 const FastScanner      = lazy(() => import('./pages/FastScanner'));
 const PlanningView     = lazy(() => import('./pages/PlanningView'));
@@ -368,6 +369,7 @@ function AppContent() {
         <Route path="/recrutemben" element={<Navigate to="/recrutement" replace />} />
         <Route path="/recrut" element={<Navigate to="/recrutement" replace />} />
         <Route path="/devis-express" element={<AdsLanding />} />
+        <Route path="/new" element={<NewLanding />} />
         <Route path="/" element={<LandingPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
