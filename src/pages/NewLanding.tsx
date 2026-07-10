@@ -320,7 +320,7 @@ export default function NewLanding() {
                   )}
 
                   <a 
-                    href={`https://wa.me/212624465962?text=${encodeURIComponent(isAr ? `مرحباً BEYA CREATIVE، لقد سجلت طلبي للتو باسم ${formData.name}. الرمز السري الخاص بي هو: ${credentials?.code}. أريد تأكيد الطلب.` : `Bonjour BEYA CREATIVE, je viens de passer ma commande sous le nom ${formData.name}. Mon code secret est : ${credentials?.code}. Je souhaite confirmer ma commande.`)}`}
+                    href={`https://wa.me/212624465962?text=${encodeURIComponent(isAr ? `مرحباً BEYA CREATIVE، لقد سجلت طلبي للتو باسم ${formData.name}. الرمز السري الخاص بي هو: ${newClientCode?.code}. أريد تأكيد الطلب.` : `Bonjour BEYA CREATIVE, je viens de passer ma commande sous le nom ${formData.name}. Mon code secret est : ${newClientCode?.code}. Je souhaite confirmer ma commande.`)}`}
                     target="_blank"
                     rel="noreferrer"
                     className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-base transition-all flex items-center justify-center gap-2 mb-4 shadow-lg shadow-emerald-600/20"
