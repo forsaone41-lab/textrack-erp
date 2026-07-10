@@ -1826,6 +1826,12 @@ export default function Demandes() {
                     </div>
                     {/* CLIENT ACTIONS */}
                     <div className="flex items-center gap-2">
+                      <button onClick={() => setDetailsLead({ ...client, details: requests.map(r => r.details).filter(Boolean).join('\n\n---\n\n') } as Lead)}
+                        className="h-9 px-3 bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white rounded-xl flex items-center gap-2 text-xs font-black transition-all border border-amber-200 shadow-sm"
+                        title={isAr ? 'معلومات المشروع' : 'Informations du projet'}
+                      >
+                        <FileText className="w-4 h-4" /> {isAr ? 'معلومات' : 'Infos'}
+                      </button>
                       <a href={`tel:${client.phone.replace(/\D/g, '').startsWith('0') ? '212' + client.phone.replace(/\D/g, '').substring(1) : client.phone.replace(/\D/g, '')}`}
                         className="h-9 px-3 bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl flex items-center gap-2 text-xs font-black transition-all border border-slate-200 shadow-sm">
                         <PhoneCall className="w-4 h-4" /> {isAr ? 'اتصال' : 'Appel'}
