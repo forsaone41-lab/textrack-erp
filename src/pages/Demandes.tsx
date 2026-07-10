@@ -1011,10 +1011,24 @@ export default function Demandes() {
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
                     <MessageSquare className="w-3 h-3" /> {isAr ? 'تفاصيل المشروع' : 'Détails du projet'}
                   </p>
-                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                    <p className="text-sm text-slate-700 font-medium leading-relaxed">
-                      {detailsLead.details.split('| CV_ATTACHMENT:')[0]}
-                    </p>
+                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                    {detailsLead.details.split('| CV_ATTACHMENT:')[0].split('\n\n---\n\n').map((reqDetails, idx) => (
+                      <div key={idx} className="space-y-2">
+                        {idx > 0 && <div className="h-px w-full bg-slate-200 my-2" />}
+                        {reqDetails.split(' | ').map((line, i) => {
+                          const parts = line.split(': ');
+                          if (parts.length > 1) {
+                            return (
+                              <div key={i} className="flex flex-col mb-1 border-b border-slate-200/50 pb-2 last:border-0 last:pb-0">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{parts[0]}</span>
+                                <span className="text-sm text-slate-800 font-bold whitespace-pre-wrap">{parts.slice(1).join(': ') || '-'}</span>
+                              </div>
+                            );
+                          }
+                          return <div key={i} className="text-sm text-slate-800 font-bold whitespace-pre-wrap">{line}</div>;
+                        })}
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
