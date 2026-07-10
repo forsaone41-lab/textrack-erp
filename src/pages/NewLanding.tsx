@@ -127,9 +127,9 @@ export default function NewLanding() {
       setCredentials({ email: formData.email.trim().toLowerCase(), code: autoCode });
 
       setIsSuccess(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert(isAr ? 'حدث خطأ، يرجى المحاولة مرة أخرى.' : 'Une erreur est survenue.');
+      alert(isAr ? 'حدث خطأ: ' + (error.message || String(error)) : 'Une erreur est survenue: ' + (error.message || String(error)));
     } finally {
       setIsSubmitting(false);
     }
