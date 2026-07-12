@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, FileText, ZoomIn, ZoomOut, Maximize, Scissors } from 'lucide-react';
+import { Upload, FileText, ZoomIn, ZoomOut, Maximize, Scissors, Expand, Shrink } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { PageLoader } from '../components/PageLoader';
 
@@ -13,6 +13,7 @@ export default function HPGLViewer() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [parsedData, setParsedData] = useState<any>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const parseHPGL = (text: string) => {
     let currentX = 0, currentY = 0;
@@ -195,18 +196,27 @@ export default function HPGLViewer() {
              </label>
           </div>
         ) : (
-          <div className="w-full relative rounded-[24px] border border-slate-200 overflow-hidden bg-slate-50">
+          <div className={`w-full relative overflow-hidden bg-slate-50 transition-all ${isFullscreen ? 'fixed inset-0 z-[500] m-0 border-0 rounded-none' : 'rounded-[24px] border border-slate-200'}`}>
             {/* Toolbar */}
             <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10 pointer-events-none">
-              <div className="bg-white/90 backdrop-blur pointer-events-auto px-4 py-2 rounded-xl shadow-sm border border-slate-200 flex items-center gap-2">
-                <FileText className="w-4 h-4 text-slate-400" />
-                <span className="text-xs font-bold text-slate-700">{file?.name}</span>
+              <div className="bg-white/90 backdrop-blur pointer-events-auto px-4 py-2 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-slate-400" />
+                  <span className="text-xs font-bold text-slate-700">{file?.name}</span>
+                </div>
+                <div className="w-px h-4 bg-slate-200" />
+                <span className="text-[11px] font-black text-indigo-600 tracking-wider">
+                  {(((parsedData.maxX - parsedData.minX) * 0.025) / 1000).toFixed(2)}m × {(((parsedData.maxY - parsedData.minY) * 0.025) / 1000).toFixed(2)}m
+                </span>
               </div>
               <div className="bg-white/90 backdrop-blur pointer-events-auto p-1.5 rounded-xl shadow-sm border border-slate-200 flex items-center gap-1">
                 <button onClick={() => setZoom(z => z * 1.2)} className="p-2 hover:bg-slate-100 rounded-lg text-slate-600"><ZoomIn className="w-4 h-4" /></button>
                 <button onClick={() => setZoom(z => Math.max(0.1, z / 1.2))} className="p-2 hover:bg-slate-100 rounded-lg text-slate-600"><ZoomOut className="w-4 h-4" /></button>
                 <button onClick={() => { setZoom(1); setOffset({x:0, y:0}); }} className="p-2 hover:bg-slate-100 rounded-lg text-slate-600"><Maximize className="w-4 h-4" /></button>
                 <div className="w-px h-6 bg-slate-200 mx-1" />
+                <button onClick={() => setIsFullscreen(!isFullscreen)} className="p-2 hover:bg-slate-100 rounded-lg text-indigo-600">
+                  {isFullscreen ? <Shrink className="w-4 h-4" /> : <Expand className="w-4 h-4" />}
+                </button>
                 <label className="p-2 hover:bg-slate-100 rounded-lg text-indigo-600 cursor-pointer font-bold text-xs uppercase tracking-widest flex items-center gap-2">
                   <Upload className="w-4 h-4" />
                   <input type="file" accept=".hpgl,.plt" className="hidden" onChange={handleFileUpload} />
@@ -217,9 +227,9 @@ export default function HPGLViewer() {
             {/* Canvas Area */}
             <canvas 
               ref={canvasRef}
-              width={1200}
-              height={800}
-              className="w-full h-[70vh] cursor-move touch-none bg-white"
+              width={1600}
+              height={1000}
+              className={`w-full cursor-move touch-none bg-white ${isFullscreen ? 'h-screen' : 'h-[70vh]'}`}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
