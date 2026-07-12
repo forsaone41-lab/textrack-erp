@@ -202,12 +202,18 @@ export default function HPGLViewer() {
               <div className="bg-white/90 backdrop-blur pointer-events-auto px-4 py-2 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
                 <div className="flex items-center gap-2">
                   <FileText className="w-4 h-4 text-slate-400" />
-                  <span className="text-xs font-bold text-slate-700">{file?.name}</span>
+                  <span className="text-xs font-bold text-slate-700 max-w-[150px] truncate">{file?.name}</span>
                 </div>
                 <div className="w-px h-4 bg-slate-200" />
-                <span className="text-[11px] font-black text-indigo-600 tracking-wider">
-                  {(((parsedData.maxX - parsedData.minX) * 0.025) / 1000).toFixed(2)}m × {(((parsedData.maxY - parsedData.minY) * 0.025) / 1000).toFixed(2)}m
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-[11px] font-black text-indigo-600 tracking-wider flex items-center gap-1">
+                    <span className="text-slate-400">↔</span> {isAr ? 'الطول:' : 'Longueur:'} {(((parsedData.maxX - parsedData.minX) * 0.025) / 1000).toFixed(2)}m
+                  </span>
+                  <span className="text-slate-300">|</span>
+                  <span className="text-[11px] font-black text-indigo-600 tracking-wider flex items-center gap-1">
+                    <span className="text-slate-400">↕</span> {isAr ? 'العرض:' : 'Largeur:'} {(((parsedData.maxY - parsedData.minY) * 0.025) / 1000).toFixed(2)}m
+                  </span>
+                </div>
               </div>
               <div className="bg-white/90 backdrop-blur pointer-events-auto p-1.5 rounded-xl shadow-sm border border-slate-200 flex items-center gap-1">
                 <button onClick={() => setZoom(z => z * 1.2)} className="p-2 hover:bg-slate-100 rounded-lg text-slate-600"><ZoomIn className="w-4 h-4" /></button>
