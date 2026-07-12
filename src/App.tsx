@@ -63,7 +63,7 @@ const GmailInbox      = lazy(() => import('./pages/GmailInbox'));
 const Tarifs          = lazy(() => import('./pages/Tarifs'));
 const Reglement       = lazy(() => import('./pages/Reglement'));
 const ValidationBoard = lazy(() => import('./pages/ValidationBoard'));
-
+const HPGLViewer      = lazy(() => import('./pages/HPGLViewer'));
 import { PageLoader } from './components/PageLoader';
 
 import { initMockData, User, loadPermissions, AppPage, loadCompanyProfile, syncCompanyProfile, loadData, saveRecord } from './types';
@@ -449,6 +449,7 @@ function AppContent() {
         <Route path="chaine-montage" element={can('chaine') ? <ChaineDeMontage /> : <Navigate to="/" replace />} />
         <Route path="pilotage-chaine" element={can('pilotage') ? <ChaineDetaillee /> : <Navigate to="/" replace />} />
         <Route path="scan-production" element={can('scan_production') ? <ProductionScanner /> : <Navigate to="/" replace />} />
+        <Route path="hpgl-viewer" element={(can('ordres') || can('fiches')) ? <HPGLViewer /> : <Navigate to="/" replace />} />
         <Route path="worker-portal" element={<WorkerPortal currentUser={currentUser} onLogout={handleLogout} />} />
         <Route path="chef-portal" element={<ChefChainePortal currentUser={currentUser} onLogout={handleLogout} />} />
         <Route path="partenaire-portal" element={<PartenairePortal currentUser={currentUser} onLogout={handleLogout} />} />
