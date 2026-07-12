@@ -15,7 +15,6 @@ export default function HPGLViewer() {
   const [parsedData, setParsedData] = useState<any>(null);
 
   const parseHPGL = (text: string) => {
-    const commands = text.split(';').map(c => c.trim()).filter(c => c);
     let currentX = 0, currentY = 0;
     let isPenDown = false, isAbsolute = true;
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -30,50 +29,63 @@ export default function HPGLViewer() {
     };
 
     const parseCoords = (str: string) => {
-      // Some HPGL commands have coordinates stuck together or separated by spaces/commas
-      const cleaned = str.replace(/([a-zA-Z])/g, '').trim();
-      return cleaned.split(/[\s,]+/).map(s => parseFloat(s)).filter(n => !isNaN(n));
+      return str.split(/[\s,]+/).map(s => parseFloat(s)).filter(n => !isNaN(n));
     };
 
-    for (const cmd of commands) {
-      if (cmd.startsWith('IN')) {
+    // Use regex to find all 2-letter commands and their arguments
+    const regex = /([A-Z]{2})([^A-Za-z]*)/g;
+    let match;
+    const upperText = text.toUpperCase();
+
+    while ((match = regex.exec(upperText)) !== null) {
+      const cmd = match[1];
+      const argsStr = match[2].trim().replace(/;+$/, '');
+      const coords = parseCoords(argsStr);
+
+      if (cmd === 'IN') {
          isAbsolute = true; isPenDown = false;
-      } else if (cmd.startsWith('PU')) {
+      } else if (cmd === 'PU') {
          isPenDown = false;
          if (currentPath.length > 0) { paths.push(currentPath); currentPath = []; }
-         const coords = parseCoords(cmd.substring(2));
-         for(let i=0; i<coords.length; i+=2) {
+         for (let i = 0; i < coords.length; i += 2) {
            currentX = isAbsolute ? coords[i] : currentX + coords[i];
            currentY = isAbsolute ? coords[i+1] : currentY + coords[i+1];
            updateBounds(currentX, currentY);
          }
-      } else if (cmd.startsWith('PD')) {
+      } else if (cmd === 'PD') {
          isPenDown = true;
          if (currentPath.length === 0) currentPath.push({x: currentX, y: currentY});
-         const coords = parseCoords(cmd.substring(2));
-         for(let i=0; i<coords.length; i+=2) {
+         for (let i = 0; i < coords.length; i += 2) {
              currentX = isAbsolute ? coords[i] : currentX + coords[i];
              currentY = isAbsolute ? coords[i+1] : currentY + coords[i+1];
              updateBounds(currentX, currentY);
              currentPath.push({x: currentX, y: currentY});
          }
-      } else if (cmd.startsWith('PA')) {
+      } else if (cmd === 'PA') {
          isAbsolute = true;
-         const coords = parseCoords(cmd.substring(2));
-         for(let i=0; i<coords.length; i+=2) {
+         for (let i = 0; i < coords.length; i += 2) {
+             const prevX = currentX, prevY = currentY;
              currentX = coords[i]; currentY = coords[i+1];
              updateBounds(currentX, currentY);
-             if (isPenDown) currentPath.push({x: currentX, y: currentY});
-             else currentPath = [];
+             if (isPenDown) {
+                 if (currentPath.length === 0) currentPath.push({x: prevX, y: prevY});
+                 currentPath.push({x: currentX, y: currentY});
+             } else {
+                 if (currentPath.length > 0) { paths.push(currentPath); currentPath = []; }
+             }
          }
-      } else if (cmd.startsWith('PR')) {
+      } else if (cmd === 'PR') {
          isAbsolute = false;
-         const coords = parseCoords(cmd.substring(2));
-         for(let i=0; i<coords.length; i+=2) {
+         for (let i = 0; i < coords.length; i += 2) {
+             const prevX = currentX, prevY = currentY;
              currentX += coords[i]; currentY += coords[i+1];
              updateBounds(currentX, currentY);
-             if (isPenDown) currentPath.push({x: currentX, y: currentY});
-             else currentPath = [];
+             if (isPenDown) {
+                 if (currentPath.length === 0) currentPath.push({x: prevX, y: prevY});
+                 currentPath.push({x: currentX, y: currentY});
+             } else {
+                 if (currentPath.length > 0) { paths.push(currentPath); currentPath = []; }
+             }
          }
       }
     }
