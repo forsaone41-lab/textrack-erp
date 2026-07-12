@@ -443,49 +443,61 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
   <meta charset="UTF-8" />
   <title>${t_title}</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; background: #fff; line-height: 1.6; }
+    body { font-family: 'Inter', system-ui, sans-serif; color: #0f172a; background: #fff; line-height: 1.5; -webkit-font-smoothing: antialiased; }
     @media print {
       body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       .no-print { display: none !important; }
     }
     @page { margin: 10mm; size: A4 portrait; }
-    .page { max-width: 900px; margin: 0 auto; padding: 20px; }
-    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 3px solid #4f46e5; padding-bottom: 15px; flex-direction: ${isAr ? 'row-reverse' : 'row'}; }
-    .brand-name { font-size: 24px; font-weight: 900; color: #1e1b4b; text-transform: uppercase; }
-    .brand-sub { font-size: 10px; color: #6366f1; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
+    .page { max-width: 900px; margin: 0 auto; padding: 30px 40px; }
+    
+    .header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; flex-direction: ${isAr ? 'row-reverse' : 'row'}; }
+    .brand-name { font-size: 26px; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: -0.5px; line-height: 1; }
+    .brand-sub { font-size: 11px; color: #6366f1; text-transform: uppercase; letter-spacing: 2.5px; font-weight: 800; margin-top: 6px; }
+    
     .doc-title { text-align: ${revAlign}; }
-    .doc-title h1 { font-size: 20px; font-weight: 900; color: #1e293b; margin: 0; text-transform: uppercase; }
-    .doc-title p { font-size: 10px; color: #94a3b8; font-weight: 700; margin-top: 4px; }
+    .doc-title h1 { font-size: 18px; font-weight: 800; color: #0f172a; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
+    .doc-title p { font-size: 11px; color: #64748b; font-weight: 600; margin-top: 6px; }
 
-    .main-grid { display: flex; gap: 20px; margin-bottom: 20px; flex-direction: ${isAr ? 'row-reverse' : 'row'}; }
-    .photo-col { width: 260px; flex-shrink: 0; }
-    .photo-box { width: 100%; border: 2px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #f8fafc; display: flex; align-items: center; justify-content: center; padding: 8px; }
-    .photo-box img { width: 100%; max-height: 400px; border-radius: 6px; object-fit: contain; }
+    .main-grid { display: flex; gap: 40px; margin-bottom: 30px; flex-direction: ${isAr ? 'row-reverse' : 'row'}; }
+    
+    .photo-col { width: 320px; flex-shrink: 0; }
+    .photo-box { width: 100%; background: #f8fafc; border-radius: 20px; padding: 12px; text-align: center; border: 1px solid #f1f5f9; }
+    .photo-box img { width: 100%; max-height: 450px; border-radius: 12px; object-fit: contain; }
 
     .info-col { flex: 1; }
-    .section-title { font-size: 13px; font-weight: 800; color: #4f46e5; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; border-bottom: 2px solid #e0e7ff; padding-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-direction: ${isAr ? 'row-reverse' : 'row'}; }
     
-    .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-    .metric-card { background: #fff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 10px; text-align: center; }
-    .metric-label { font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
-    .metric-val { font-size: 14px; font-weight: 900; color: #1e293b; }
+    .section-title { font-size: 14px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px; margin-top: 24px; display: flex; align-items: center; gap: 10px; flex-direction: ${isAr ? 'row-reverse' : 'row'}; }
+    .section-title:first-child { margin-top: 0; }
+    
+    .category-box { margin-bottom: 24px; text-align: ${align}; }
+    .category-label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; }
+    .category-val { font-size: 22px; font-weight: 900; color: #0f172a; line-height: 1.2; letter-spacing: -0.5px; }
 
-    .comps-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; justify-content: ${isAr ? 'flex-end' : 'flex-start'}; }
-    .comp-item { background: #f8fafc; color: #475569; font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 6px; border: 1px solid #e2e8f0; }
+    .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+    .metric-card { background: #f8fafc; padding: 16px; border-radius: 16px; text-align: ${align}; }
+    .metric-label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .metric-val { font-size: 16px; font-weight: 800; color: #0f172a; }
 
-    .fabric-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 10px; margin-bottom: 10px; text-align: ${align}; }
-    .fabric-label { font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
-    .fabric-val { font-size: 14px; font-weight: 900; color: #1e293b; }
+    .comps-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; justify-content: ${isAr ? 'flex-end' : 'flex-start'}; }
+    .comp-item { background: #f1f5f9; color: #334155; font-size: 11px; font-weight: 600; padding: 8px 14px; border-radius: 8px; }
 
-    .alt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .alt-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px; border-radius: 8px; text-align: ${align}; }
-    .alt-title { font-size: 11px; font-weight: 800; color: #1e293b; margin-bottom: 4px; }
-    .alt-pros { color: #059669; font-size: 10px; font-weight: 600; margin-bottom: 2px; }
-    .alt-cons { color: #dc2626; font-size: 10px; font-weight: 600; }
+    .fabric-card { background: #0f172a; color: white; padding: 24px; border-radius: 20px; margin-bottom: 16px; text-align: ${align}; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.2); }
+    .fabric-label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+    .fabric-val { font-size: 20px; font-weight: 900; color: white; }
 
-    .footer { margin-top: 20px; padding-top: 15px; border-top: 2px solid #f1f5f9; text-align: center; font-size: 9px; color: #94a3b8; font-weight: 600; }
-    .print-btn { position: fixed; bottom: 30px; right: 30px; background: #4f46e5; color: white; border: none; padding: 14px 28px; border-radius: 50px; font-weight: 700; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4); }
+    .alt-grid { display: flex; flex-direction: column; gap: 12px; }
+    .alt-card { background: #fff; border: 1px solid #e2e8f0; padding: 16px; border-radius: 16px; text-align: ${align}; }
+    .alt-title { font-size: 14px; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
+    .alt-pros, .alt-cons { font-size: 11px; line-height: 1.5; margin-bottom: 4px; font-weight: 500; }
+    .alt-pros strong { color: #059669; font-weight: 800; }
+    .alt-cons strong { color: #dc2626; font-weight: 800; }
+
+    .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; flex-direction: ${isAr ? 'row-reverse' : 'row'}; }
+    .print-btn { position: fixed; bottom: 30px; right: 30px; background: #0f172a; color: white; border: none; padding: 16px 32px; border-radius: 50px; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.3); transition: transform 0.2s; }
+    .print-btn:active { transform: scale(0.95); }
   </style>
 </head>
 <body>
@@ -511,13 +523,14 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
       ` : ''}
       
       <div class="info-col">
-        <div class="section-title">
-          <span>🎯</span> ${t_general}
-        </div>
         
-        <div style="margin-bottom: 20px; text-align: ${align}">
-          <div class="metric-label">${t_category}</div>
-          <div style="font-size: 20px; font-weight: 900; color: #1e293b;">${analysis.category || '—'}</div>
+        <div class="category-box">
+          <div class="category-label">${t_category}</div>
+          <div class="category-val">${analysis.category || '—'}</div>
+        </div>
+
+        <div class="section-title">
+          <span style="font-size: 16px;">📊</span> ${t_general}
         </div>
 
         <div class="metrics-grid">
@@ -541,7 +554,7 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
 
         ${analysis.components && analysis.components.length > 0 ? `
         <div class="section-title">
-          <span>🧩</span> ${t_components}
+          <span style="font-size: 16px;">🧩</span> ${t_components}
         </div>
         <div class="comps-list">
           ${analysis.components.map((c: string) => `<div class="comp-item">${c}</div>`).join('')}
@@ -549,7 +562,7 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
         ` : ''}
 
         <div class="section-title">
-          <span>🧵</span> ${t_fabrics}
+          <span style="font-size: 16px;">🧵</span> ${t_fabrics}
         </div>
         
         <div class="fabric-card">
@@ -558,7 +571,7 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
         </div>
 
         ${alts.length > 0 ? `
-        <div class="metric-label" style="margin-bottom: 8px; text-align: ${align}">${t_alternatives}</div>
+        <div class="category-label" style="margin-bottom: 12px; margin-top: 16px; text-align: ${align}">${t_alternatives}</div>
         <div class="alt-grid">
           ${alts.map((a: any) => `
           <div class="alt-card">
@@ -575,7 +588,7 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
 
     <div class="footer">
       <div>Généré par BEYA CREATIVE - Analyse Technique</div>
-      <div>© ${new Date().getFullYear()} ${company.name} - Tous droits réservés.</div>
+      <div>© ${new Date().getFullYear()} ${company.name}</div>
     </div>
   </div>
 
