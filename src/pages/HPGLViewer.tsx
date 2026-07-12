@@ -131,7 +131,9 @@ export default function HPGLViewer() {
     
     ctx.beginPath();
     ctx.strokeStyle = '#0f172a';
-    ctx.lineWidth = 2 / scale; // Keep lines thin despite zoom
+    ctx.lineWidth = 1.5; // Stroke is in canvas pixels because coordinates are manually scaled
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
     
     for (const path of paths) {
       if (path.length === 0) continue;
