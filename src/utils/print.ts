@@ -1,4 +1,4 @@
-import { Facture, Commande, loadCompanyProfile, FicheTechnique } from '../types';
+import { Facture, Commande, loadCompanyProfile, FicheTechnique, loadData } from '../types';
 
 function printHTML(html: string, title: string) {
   const win = window.open('', '_blank', 'width=900,height=700');
@@ -600,12 +600,25 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
 }
 
 // ─── DOSSIER TECHNIQUE COMPLET (STYLE MARWA) ─────────────────────
-export function printDossierTechniqueMarwa(fiche: FicheTechnique) {
+export async function printDossierTechniqueMarwa(fiche: FicheTechnique) {
   const company = loadCompanyProfile();
   
-  const authRaw = localStorage.getItem('textrack_auth');
-  const currentUser = authRaw ? JSON.parse(authRaw) : { nom: 'BEYA SYSTEM' };
-  const modelisteName = currentUser.nom.toUpperCase();
+  let modelisteName = "BEYA SYSTEM";
+  try {
+    const users = await loadData<any>('users');
+    if (fiche.modelisteId) {
+      const assigned = users.find((u: any) => u.id === fiche.modelisteId);
+      if (assigned) modelisteName = assigned.nom.toUpperCase();
+    } else {
+      const authRaw = localStorage.getItem('textrack_auth');
+      const currentUser = authRaw ? JSON.parse(authRaw) : { nom: 'BEYA SYSTEM' };
+      modelisteName = currentUser.nom.toUpperCase();
+    }
+  } catch (e) {
+    const authRaw = localStorage.getItem('textrack_auth');
+    const currentUser = authRaw ? JSON.parse(authRaw) : { nom: 'BEYA SYSTEM' };
+    modelisteName = currentUser.nom.toUpperCase();
+  }
   const echantillonneurName = "_________________________";
 
   // Parse descriptions for BOM / Matelassage
