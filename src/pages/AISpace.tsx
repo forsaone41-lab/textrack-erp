@@ -269,7 +269,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
         id: genId(),
         modele: ftModele,
         description: ftDescription,
-        client: isAr ? 'اقتراح الذكاء الاصطناعي' : 'Suggestion IA',
+        client: isAr ? 'اقتراح خبير BEYA' : 'Suggestion Expert',
         tailles: selectedTailles,
         mesures: ftMesures,
         tissuConsommation: ftConso,
@@ -315,9 +315,9 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     } else {
       const newFT: FicheTechnique = {
         id: genId(),
-        modele: isAr ? 'استشارة الذكاء الاصطناعي' : 'Consultation IA',
+        modele: isAr ? 'استشارة تقنية' : 'Consultation Experte',
         description: text,
-        client: 'BEYA Assistant',
+        client: 'BEYA Expert',
         tailles: [],
         mesures: [],
         tissuConsommation: 0,
@@ -1237,7 +1237,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
                 <span className={`absolute -bottom-0.5 ${isAr ? '-left-0.5' : '-right-0.5'} w-3 h-3 bg-emerald-400 border-[2.5px] border-white rounded-full`} />
               </div>
               <div className={isAr ? 'text-right' : ''}>
-                <h3 className="font-bold text-slate-800 text-sm tracking-wide">{isAr ? 'المساعد الذكي BEYA' : 'Assistant BEYA'}</h3>
+                <h3 className="font-bold text-slate-800 text-sm tracking-wide">{isAr ? 'الخبير التقني BEYA' : 'Expert BEYA'}</h3>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{isAr ? 'متصل دائماً' : 'Toujours Actif'}</p>
               </div>
             </div>
@@ -1570,7 +1570,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
             </div>
           </div>
           <div style={{ textAlign: isAr ? 'left' : 'right' }}>
-            <h2 style={{ fontSize: '20px', fontWeight: 900, margin: 0, color: '#1e1b4b', textTransform: 'uppercase' }}>{isAr ? 'استشارة الذكاء الاصطناعي' : 'CONSULTATION IA'}</h2>
+            <h2 style={{ fontSize: '20px', fontWeight: 900, margin: 0, color: '#1e1b4b', textTransform: 'uppercase' }}>{isAr ? 'استشارة تقنية' : 'CONSULTATION EXPERTE'}</h2>
             <p style={{ fontSize: '9px', fontWeight: 700, color: '#94a3b8', margin: '2px 0 0' }}>{new Date().toLocaleDateString(isAr ? 'ar-MA' : 'fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
           </div>
         </div>
@@ -1585,7 +1585,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
               <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
                 <h3 style={{ fontSize: '12px', fontWeight: 900, color: '#4f46e5', textTransform: 'uppercase', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', flexDirection: isAr ? 'row-reverse' : 'row' }}>
                   <span style={{ fontSize: '16px' }}>✨</span>
-                  {isAr ? 'تحليل وخبرة BEYA Assistant' : 'Analyse et Expertise BEYA Assistant'}
+                  {isAr ? 'تحليل وخبرة BEYA Expert' : 'Analyse et Expertise BEYA Expert'}
                 </h3>
                 <div style={{ fontSize: '12px', lineHeight: '2.0', color: '#1e293b', fontWeight: 600, whiteSpace: 'pre-wrap', textAlign: isAr ? 'right' : 'left' }}>
                   {pdfChatText}

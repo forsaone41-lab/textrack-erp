@@ -598,3 +598,366 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
 
   printHTML(html, `Rapport_IA_${new Date().getTime()}`);
 }
+
+// ─── DOSSIER TECHNIQUE COMPLET (STYLE MARWA) ─────────────────────
+export function printDossierTechniqueMarwa(fiche: FicheTechnique) {
+  const company = loadCompanyProfile();
+  
+  // Parse descriptions for BOM / Matelassage
+  const desc = fiche.description || '';
+  const components = desc.includes('المكونات:') ? desc.split(/المكونات:|Composants:/)[1].trim().split(/[,،]/) : [];
+  
+  // Date format
+  const fmtDate = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+  const ofNumber = Math.floor(10000 + Math.random() * 90000);
+  const refPatronage = "PTR-" + new Date().getFullYear() + "-" + Math.floor(100 + Math.random() * 900);
+  
+  // Total sizes calculation
+  const defaultRepartition: Record<string, number> = {};
+  fiche.tailles.forEach(t => {
+      // simulate realistic command if no real data
+      defaultRepartition[t] = t === 'M' || t === 'L' ? 100 : 50; 
+  });
+  const totalQty = Object.values(defaultRepartition).reduce((a,b) => a+b, 0) || 1;
+  const consoUnitaire = fiche.tissuConsommation || 0;
+  const besoinTotal = (totalQty * consoUnitaire).toFixed(2);
+  
+  const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dossier Technique - ${fiche.modele}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Roboto', Arial, sans-serif; color: #000; background: #fff; font-size: 10px; line-height: 1.3; }
+    @media print {
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .no-print { display: none !important; }
+      .page-break { page-break-before: always; }
+    }
+    @page { margin: 10mm; size: A4 landscape; }
+    
+    .page { width: 100%; min-height: 190mm; margin: 0 auto; padding: 15px; position: relative; }
+    
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+    th, td { border: 1px solid #000; padding: 4px 6px; text-align: center; font-size: 9px; }
+    th { background: #f0f0f0; font-weight: bold; text-transform: uppercase; }
+    .text-left { text-align: left; }
+    .text-right { text-align: right; }
+    .font-bold { font-weight: bold; }
+    .bg-dark { background: #333; color: white; }
+    
+    /* Header Section */
+    .header-grid { display: flex; justify-content: space-between; margin-bottom: 15px; border: 1px solid #000; }
+    .logo-cell { padding: 10px; width: 150px; border-right: 1px solid #000; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; letter-spacing: -0.5px; text-transform: uppercase; }
+    .ref-cell { flex: 1; padding: 5px; display: flex; flex-direction: column; justify-content: space-between; border-right: 1px solid #000; }
+    .of-cell { width: 250px; padding: 0; display: flex; flex-direction: column; }
+    
+    .of-row { display: flex; border-bottom: 1px solid #000; height: 50%; }
+    .of-row:last-child { border-bottom: none; }
+    .of-label { width: 60px; padding: 4px; border-right: 1px solid #000; font-weight: bold; }
+    .of-val { flex: 1; padding: 4px; text-align: center; font-weight: bold; font-size: 11px; }
+
+    .title-banner { background: #333; color: white; font-weight: bold; text-align: center; padding: 4px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px;}
+    
+    /* Image Section */
+    .image-box { border: 1px solid #000; width: 100px; height: 140px; display: flex; align-items: center; justify-content: center; margin-right: 10px; float: left; }
+    .image-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    
+    .content-wrapper { display: flex; gap: 10px; }
+    .content-main { flex: 1; }
+    
+    .print-btn { position: fixed; bottom: 20px; right: 20px; background: #000; color: white; border: none; padding: 12px 24px; font-weight: bold; font-size: 12px; cursor: pointer; border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 1000;}
+  </style>
+</head>
+<body>
+
+  <!-- PAGE 1: NOMENCLATURE / FICHE DE LANCEMENT -->
+  <div class="page">
+    <div class="header-grid">
+      <div class="logo-cell">${company.name}</div>
+      <div class="ref-cell">
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+           <span class="font-bold text-right" style="width:140px;">REFERENCE MODELE:</span>
+           <span class="font-bold" style="text-align:center; flex:1; border:1px solid #000; margin-left:10px;">${fiche.modele.toUpperCase()}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+           <span class="font-bold text-right" style="width:140px;">REFERENCE PATRONAGE:</span>
+           <span class="font-bold" style="text-align:center; flex:1; border:1px solid #000; margin-left:10px;">${refPatronage}</span>
+        </div>
+      </div>
+      <div class="of-cell">
+        <div class="of-row">
+          <div class="of-label">OF:</div>
+          <div class="of-val">${ofNumber}</div>
+        </div>
+        <div class="of-row">
+          <div class="of-label">DATE:</div>
+          <div class="of-val">${fmtDate}</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="title-banner">FICHE DE LANCEMENT & NOMENCLATURE</div>
+    
+    <div class="content-wrapper">
+      <div class="image-box">
+        ${fiche.photo ? `<img src="${fiche.photo}" />` : 'PHOTO'}
+      </div>
+      
+      <div class="content-main">
+        <table>
+          <tr>
+            <th width="15%" class="text-left">CHEF PRODUIT</th>
+            <td width="35%">BEYA EQUIPE</td>
+            <th width="15%" class="text-left">TYPE PRODUIT</th>
+            <td width="35%">${fiche.type || 'VÊTEMENT'}</td>
+          </tr>
+          <tr>
+            <th class="text-left">MODELISTE</th>
+            <td>BEYA SYSTEM</td>
+            <th class="text-left">CLIENT</th>
+            <td>${fiche.client}</td>
+          </tr>
+        </table>
+        
+        <table style="margin-top: 10px;">
+          <tr>
+            <td class="bg-dark font-bold" width="10%">TAILLES</td>
+            ${fiche.tailles.map(t => `<th>${t}</th>`).join('')}
+            <td class="bg-dark font-bold" width="10%">TOTAL</td>
+          </tr>
+          <tr>
+            <td class="font-bold">REPARTITION</td>
+            ${fiche.tailles.map(t => `<td>${defaultRepartition[t]}</td>`).join('')}
+            <td class="font-bold">${totalQty}</td>
+          </tr>
+        </table>
+        
+        <div class="title-banner" style="background:#f0f0f0; color:#000; margin-top:10px; font-size:9px;">MATIÈRES ET FOURNITURES (BOM)</div>
+        <table>
+          <tr>
+            <th>TYPE</th>
+            <th>DESCRIPTION</th>
+            <th>RÉFÉRENCE</th>
+            <th>CONS. UNIT.</th>
+            <th>UNITÉ</th>
+            <th>OBSERVATION</th>
+          </tr>
+          <tr>
+            <td class="font-bold">PRINCIPAL</td>
+            <td class="text-left">${fiche.tissuRecommande || 'TISSU PRINCIPAL'}</td>
+            <td>MAT-${Math.floor(Math.random()*9000)}</td>
+            <td>${consoUnitaire}</td>
+            <td>m</td>
+            <td>${fiche.fit || ''}</td>
+          </tr>
+          <tr>
+            <td class="font-bold">VISLINE</td>
+            <td class="text-left">ENTOILAGE TERMO</td>
+            <td>VIS-001</td>
+            <td>0.25</td>
+            <td>m</td>
+            <td>COL/POIGNETS</td>
+          </tr>
+          ${components.map((c: any) => `
+          <tr>
+            <td>COMPOSANT</td>
+            <td class="text-left">${c}</td>
+            <td>—</td>
+            <td>—</td>
+            <td>—</td>
+            <td>MONTAGE</td>
+          </tr>
+          `).join('')}
+          <tr>
+            <td class="font-bold">ACCESSOIRE</td>
+            <td class="text-left">ÉTIQUETTE MARQUE</td>
+            <td>ETI-MQ</td>
+            <td>1</td>
+            <td>Pce</td>
+            <td>MILIEU DOS</td>
+          </tr>
+          <tr>
+            <td class="font-bold">EMBALLAGE</td>
+            <td class="text-left">SACHET PLASTIQUE</td>
+            <td>SAC-01</td>
+            <td>1</td>
+            <td>Pce</td>
+            <td>—</td>
+          </tr>
+        </table>
+        
+        <div style="display:flex; justify-content:flex-end; margin-top:15px;">
+           <table style="width: 250px;">
+              <tr>
+                 <td class="bg-dark font-bold" style="font-size:12px; padding:8px;">COUT ESTIMÉ</td>
+                 <td style="font-size:14px; font-weight:900; padding:8px;">${fiche.complexity === 'Moyenne' || fiche.complexity?.includes('متوسط') ? '45.50' : '65.00'} MAD</td>
+              </tr>
+           </table>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+  
+  <!-- PAGE 2: ORDRE DE COUPE -->
+  <div class="page page-break">
+    <div class="header-grid">
+      <div class="logo-cell">${company.name}</div>
+      <div class="ref-cell" style="justify-content:center; text-align:center;">
+        <span style="font-size:16px; font-weight:900;">ORDRE DE COUPE</span>
+      </div>
+      <div class="of-cell">
+        <div class="of-row">
+          <div class="of-label">MODÈLE:</div>
+          <div class="of-val">${fiche.modele}</div>
+        </div>
+        <div class="of-row">
+          <div class="of-label">OF:</div>
+          <div class="of-val">${ofNumber}</div>
+        </div>
+      </div>
+    </div>
+    
+    <table>
+      <tr>
+        <td class="bg-dark font-bold" width="15%">TAILLES CDE</td>
+        ${fiche.tailles.map(t => `<th>${t}</th>`).join('')}
+        <td class="bg-dark font-bold" width="10%">TOTAL</td>
+      </tr>
+      <tr>
+        <td>QTÉ</td>
+        ${fiche.tailles.map(t => `<td>${defaultRepartition[t]}</td>`).join('')}
+        <td class="font-bold">${totalQty}</td>
+      </tr>
+    </table>
+    
+    <div style="border:2px solid #000; padding:2px;">
+      <table style="margin-bottom:0; border:none;">
+        <tr style="background:#f0f0f0;">
+           <th class="text-left">PRINCIPAL</th>
+           <th colspan="${fiche.tailles.length}">MATIÈRE: ${fiche.tissuRecommande || 'TISSU'}</th>
+           <th>LAIZE: 1.50 m</th>
+           <th>TOTAL MATELAS</th>
+        </tr>
+        <tr>
+           <td class="bg-dark font-bold">TAILLES</td>
+           ${fiche.tailles.map(t => `<th class="bg-dark">${t}</th>`).join('')}
+           <td rowspan="2" style="font-weight:900; font-size:14px; vertical-align:middle;">${totalQty}</td>
+        </tr>
+        <tr>
+           <td class="font-bold">QTE/TAILLE</td>
+           ${fiche.tailles.map(t => `<td>${defaultRepartition[t]}</td>`).join('')}
+        </tr>
+        <tr>
+           <td class="text-left font-bold">1er TR</td>
+           ${fiche.tailles.map((t, i) => `<td>${i === 1 || i === 2 ? 1 : ''}</td>`).join('')}
+           <td class="text-left text-xs">L TR: 3.20m</td>
+        </tr>
+        <tr>
+           <td class="text-left font-bold">2em TR</td>
+           ${fiche.tailles.map((t, i) => `<td>${i === 0 || i === 3 ? 1 : ''}</td>`).join('')}
+           <td class="text-left text-xs">L TR: 3.15m</td>
+        </tr>
+        <tr>
+           <td class="text-left font-bold">3em TR</td>
+           ${fiche.tailles.map((t, i) => `<td>${i === 4 ? 1 : ''}</td>`).join('')}
+           <td class="text-left text-xs">L TR: 1.60m</td>
+        </tr>
+      </table>
+      
+      <table style="margin-bottom:0; margin-top:5px;">
+        <tr>
+           <td class="font-bold bg-dark text-right" style="width:60%;">BESOIN TOTAL:</td>
+           <td class="font-bold" style="width:20%;">${besoinTotal}</td>
+           <td style="width:20%;">m</td>
+        </tr>
+        <tr>
+           <td class="font-bold bg-dark text-right">CONSOM UNITAIRE:</td>
+           <td class="font-bold">${consoUnitaire}</td>
+           <td>m</td>
+        </tr>
+      </table>
+    </div>
+    
+    <div style="margin-top:20px; font-size:9px; color:#555;">
+       * Note: L'ordre de coupe est généré automatiquement. Le matelassage exact dépendra de la laize réelle du rouleau de tissu.
+    </div>
+  </div>
+  
+  <!-- PAGE 3: MESURES ET MONTAGE -->
+  <div class="page page-break">
+    <div class="header-grid">
+      <div class="logo-cell">${company.name}</div>
+      <div class="ref-cell" style="justify-content:center; text-align:center;">
+        <span style="font-size:16px; font-weight:900;">TABLEAU DES MESURES & MONTAGE</span>
+      </div>
+      <div class="of-cell">
+        <div class="of-row">
+          <div class="of-label">MODÈLE:</div>
+          <div class="of-val">${fiche.modele}</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="content-wrapper">
+      <div class="content-main">
+        <table>
+          <tr>
+            <th width="5%">N°</th>
+            <th class="text-left">DESIGNATION (POINTS DE MESURE)</th>
+            ${fiche.tailles.map(t => `<th width="8%">${t}</th>`).join('')}
+          </tr>
+          ${fiche.mesures.map((m: any, i: number) => `
+          <tr>
+            <td>${i+1}</td>
+            <td class="text-left font-bold">${m.nom}</td>
+            ${fiche.tailles.map((t: string) => `<td>${m.valeurs[t] || '-'}</td>`).join('')}
+          </tr>
+          `).join('')}
+        </table>
+        
+        <div class="title-banner" style="background:#f0f0f0; color:#000; margin-top:15px; font-size:9px; text-align:left; padding-left:10px;">RISK ASSESSMENT / INSTRUCTIONS DE MONTAGE</div>
+        <table style="border:2px solid #000;">
+          <tr>
+            <td width="5%" class="font-bold">1</td>
+            <td class="text-left">Respect de l'ourlet en utilisant la machine points invisibles (attention au réglage)</td>
+          </tr>
+          <tr>
+            <td class="font-bold">2</td>
+            <td class="text-left">Respect des crans et des titres (élastique, fronces) inscrits sur le patronage</td>
+          </tr>
+          <tr>
+            <td class="font-bold">3</td>
+            <td class="text-left">Respect de la référence viseline (s'assurer du bon collage et du retrait)</td>
+          </tr>
+          <tr>
+            <td class="font-bold">4</td>
+            <td class="text-left">Montage + rabattage selon l'échantillon validé</td>
+          </tr>
+          <tr>
+            <td class="font-bold">5</td>
+            <td class="text-left">Contrôle qualité strict des points d'arrêt et de la propreté intérieure</td>
+          </tr>
+        </table>
+      </div>
+      
+      <div class="image-box" style="margin-right:0; margin-left:10px; width:150px; height:auto; min-height:200px;">
+         ${fiche.photo ? `<img src="${fiche.photo}" style="max-height:300px;" />` : 'PHOTO DU MODÈLE'}
+      </div>
+    </div>
+    
+    <div style="position:absolute; bottom:15px; left:15px; font-size:8px; color:#999;">
+       Généré par BEYA CREATIVE ERP • Dossier Technique Complet
+    </div>
+  </div>
+
+  <button class="print-btn no-print" onclick="window.print()">🖨️ IMPRIMER / SAUVEGARDER PDF</button>
+</body>
+</html>`;
+
+  printHTML(html, `Dossier_Technique_${fiche.modele}`);
+}

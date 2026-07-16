@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   FicheTechnique, StockTissu, loadData, saveRecord, deleteRecord, genId, Commande, User
 } from '../types';
-import { printFicheTechnique as printFT } from '../utils/print';
+import { printFicheTechnique as printFT, printDossierTechniqueMarwa } from '../utils/print';
 import { compressImage } from '../utils/image';
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
@@ -233,6 +233,12 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
                     <Download className="w-3.5 h-3.5" /> {isAr ? 'ملف PDF' : 'FICHE PDF'}
                   </button>
                 </div>
+                <button
+                  onClick={() => printDossierTechniqueMarwa(f)}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-gradient-to-r from-slate-800 to-slate-900 text-white rounded-xl text-[10px] font-bold hover:from-indigo-600 hover:to-indigo-700 hover:shadow-lg transition-all shadow-md mt-1 mb-1"
+                >
+                  <FileText className="w-3.5 h-3.5" /> {isAr ? 'الملف التقني الشامل (Dossier Technique)' : 'DOSSIER TECHNIQUE COMPLET'}
+                </button>
                 <button
                   onClick={() => onViewMesures(f)}
                   className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-white border border-indigo-200 text-indigo-600 rounded-xl text-[10px] font-bold hover:bg-indigo-50 hover:border-indigo-500 transition-all shadow-sm"
