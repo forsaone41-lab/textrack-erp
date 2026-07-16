@@ -603,6 +603,11 @@ export function printRapportIA(analysis: any, image: string | null, isAr: boolea
 export function printDossierTechniqueMarwa(fiche: FicheTechnique) {
   const company = loadCompanyProfile();
   
+  const authRaw = localStorage.getItem('textrack_auth');
+  const currentUser = authRaw ? JSON.parse(authRaw) : { nom: 'BEYA SYSTEM' };
+  const modelisteName = currentUser.nom.toUpperCase();
+  const echantillonneurName = "_________________________";
+
   // Parse descriptions for BOM / Matelassage
   const desc = fiche.description || '';
   const components = desc.includes('المكونات:') ? desc.split(/المكونات:|Composants:/)[1].trim().split(/[,،]/) : [];
@@ -612,15 +617,25 @@ export function printDossierTechniqueMarwa(fiche: FicheTechnique) {
   const ofNumber = Math.floor(10000 + Math.random() * 90000);
   const refPatronage = "PTR-" + new Date().getFullYear() + "-" + Math.floor(100 + Math.random() * 900);
   
-  // Total sizes calculation
+  // Total sizes calculation (Echantillon logic = 1 piece per size)
   const defaultRepartition: Record<string, number> = {};
   fiche.tailles.forEach(t => {
-      // simulate realistic command if no real data
-      defaultRepartition[t] = t === 'M' || t === 'L' ? 100 : 50; 
+      defaultRepartition[t] = 1; 
   });
-  const totalQty = Object.values(defaultRepartition).reduce((a,b) => a+b, 0) || 1;
+  const totalQty = fiche.tailles.length || 1;
   const consoUnitaire = fiche.tissuConsommation || 0;
   const besoinTotal = (totalQty * consoUnitaire).toFixed(2);
+  
+  const tracagesHtml: string[] = [];
+  fiche.tailles.forEach((t, i) => {
+      tracagesHtml.push(`
+        <tr>
+           <td class="text-left font-bold">${i + 1}er TR</td>
+           ${fiche.tailles.map((_, idx) => `<td>${idx === i ? 1 : ''}</td>`).join('')}
+           <td class="text-left text-xs">L TR: ${consoUnitaire.toFixed(2)}m</td>
+        </tr>
+      `);
+  });
   
   const html = `<!DOCTYPE html>
 <html lang="fr">
@@ -710,14 +725,14 @@ export function printDossierTechniqueMarwa(fiche: FicheTechnique) {
       <div class="content-main">
         <table>
           <tr>
-            <th width="15%" class="text-left">CHEF PRODUIT</th>
-            <td width="35%">BEYA EQUIPE</td>
+            <th width="15%" class="text-left">ÉCHANTILLONNEUR</th>
+            <td width="35%">${echantillonneurName}</td>
             <th width="15%" class="text-left">TYPE PRODUIT</th>
             <td width="35%">${fiche.type || 'VÊTEMENT'}</td>
           </tr>
           <tr>
             <th class="text-left">MODELISTE</th>
-            <td>BEYA SYSTEM</td>
+            <td>${modelisteName}</td>
             <th class="text-left">CLIENT</th>
             <td>${fiche.client}</td>
           </tr>
@@ -852,21 +867,7 @@ export function printDossierTechniqueMarwa(fiche: FicheTechnique) {
            <td class="font-bold">QTE/TAILLE</td>
            ${fiche.tailles.map(t => `<td>${defaultRepartition[t]}</td>`).join('')}
         </tr>
-        <tr>
-           <td class="text-left font-bold">1er TR</td>
-           ${fiche.tailles.map((t, i) => `<td>${i === 1 || i === 2 ? 1 : ''}</td>`).join('')}
-           <td class="text-left text-xs">L TR: 3.20m</td>
-        </tr>
-        <tr>
-           <td class="text-left font-bold">2em TR</td>
-           ${fiche.tailles.map((t, i) => `<td>${i === 0 || i === 3 ? 1 : ''}</td>`).join('')}
-           <td class="text-left text-xs">L TR: 3.15m</td>
-        </tr>
-        <tr>
-           <td class="text-left font-bold">3em TR</td>
-           ${fiche.tailles.map((t, i) => `<td>${i === 4 ? 1 : ''}</td>`).join('')}
-           <td class="text-left text-xs">L TR: 1.60m</td>
-        </tr>
+        ${tracagesHtml.join('')}
       </table>
       
       <table style="margin-bottom:0; margin-top:5px;">
