@@ -11,30 +11,39 @@ const THEMES = [
   { id: 'kids', name: 'Playful Kids', layout: 'playful', defaultColor: '#0ea5e9', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=800&auto=format&fit=crop' }
 ];
 
+
+const getSavedConfig = () => {
+    try {
+        const saved = localStorage.getItem('beya_store_config');
+        return saved ? JSON.parse(saved) : {};
+    } catch(e) { return {}; }
+};
+
 export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: boolean }) {
+  const config = getSavedConfig();
   const { isAr } = useLang();
   const [platformMode, setPlatformMode] = useState<'gestion'|'builder'>('gestion');
   const [productsViewMode, setProductsViewMode] = useState<'list'|'grid'>('list');
   const [activeTab, setActiveTab] = useState<string>('orders');
-  const [storeName, setStoreName] = useState('My Brand');
+  const [storeName, setStoreName] = useState(config.storeName || 'My Brand');
   const [showPreview, setShowPreview] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<'desktop'|'mobile'>('desktop');
   const [isControlsCollapsed, setIsControlsCollapsed] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
-  const [storeLang, setStoreLang] = useState<'fr'|'en'|'ar'>('fr');
+  const [storeLang, setStoreLang] = useState<'fr'|'en'|'ar'>(config.storeLang || 'fr');
   
   // Customization States (The PRO way)
-  const [activeTheme, setActiveTheme] = useState(THEMES[0]);
-  const [primaryColor, setPrimaryColor] = useState(THEMES[0].defaultColor);
-  const [fontFamily, setFontFamily] = useState(THEMES[0].defaultFont);
-  const [heroImage, setHeroImage] = useState(THEMES[0].previewImg);
+  const [activeTheme, setActiveTheme] = useState(config.activeTheme || THEMES[0]);
+  const [primaryColor, setPrimaryColor] = useState(config.primaryColor || THEMES[0].defaultColor);
+  const [fontFamily, setFontFamily] = useState(config.fontFamily || THEMES[0].defaultFont);
+  const [heroImage, setHeroImage] = useState(config.heroImage || THEMES[0].previewImg);
   
   // Theme Inline Texts
-  const [heroTitle, setHeroTitle] = useState('New Collection');
-  const [heroSubtitle, setHeroSubtitle] = useState('Discover our latest premium quality garments.');
-  const [heroButtonText, setHeroButtonText] = useState('Shop Now');
-  const [homeCollectionsTitle, setHomeCollectionsTitle] = useState('Trending Now');
-  const [allCollectionsTitle, setAllCollectionsTitle] = useState('All Products');
+  const [heroTitle, setHeroTitle] = useState(config.heroTitle || 'New Collection');
+  const [heroSubtitle, setHeroSubtitle] = useState(config.heroSubtitle || 'Discover our latest premium quality garments.');
+  const [heroButtonText, setHeroButtonText] = useState(config.heroButtonText || 'Shop Now');
+  const [homeCollectionsTitle, setHomeCollectionsTitle] = useState(config.homeCollectionsTitle || 'Trending Now');
+  const [allCollectionsTitle, setAllCollectionsTitle] = useState(config.allCollectionsTitle || 'All Products');
   
   const [cartCount, setCartCount] = useState(0);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
