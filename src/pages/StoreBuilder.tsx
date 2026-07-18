@@ -91,6 +91,31 @@ export default function StoreBuilder() {
             </div>
           </>
         )}
+        {page === 'collections' && (
+            <div className={`${isModal ? 'p-16 max-w-[1400px]' : 'p-8'} mx-auto w-full`}>
+               <h3 className="text-2xl font-black uppercase text-center mb-10">All Products</h3>
+               <div className={`grid gap-8 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-4' : 'grid-cols-3')}`}>
+                  {storeProducts.map((p: any) => (
+                     <div key={p.id} className="group cursor-pointer">
+                        <div className="aspect-[3/4] bg-slate-100 mb-4 overflow-hidden relative rounded-xl">
+                           <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-12 h-12" /></div>
+                           <div className={`absolute bottom-4 left-0 right-0 flex justify-center transition-opacity ${(previewDevice === 'mobile' && !isModal) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                              <button onClick={handleAddToCart} className="px-8 py-3 text-white text-xs font-bold uppercase tracking-wider shadow-2xl rounded-full" style={{ backgroundColor: primaryColor }}>Add to cart</button>
+                           </div>
+                        </div>
+                        <h4 className="font-bold text-sm">{p.name}</h4>
+                        <p className="text-slate-500 text-sm mt-1">{p.price} MAD</p>
+                     </div>
+                  ))}
+               </div>
+            </div>
+        )}
+        {page === 'about' && (
+           <div className={`${isModal ? 'p-16 max-w-3xl' : 'p-8'} mx-auto w-full text-center mt-10`}>
+              <h3 className="text-3xl font-black uppercase mb-6 text-slate-800">About {storeName}</h3>
+              <p className="text-slate-500 text-lg leading-relaxed mb-6">Welcome to {storeName}. We are dedicated to providing the best quality products for our customers. Every piece is carefully crafted to ensure maximum comfort and style.</p>
+           </div>
+        )}
       </div>
     </div>
   );
@@ -143,6 +168,33 @@ export default function StoreBuilder() {
             </div>
           </>
         )}
+        {page === 'collections' && (
+            <div className={`${isModal ? 'p-20' : 'p-8'} mx-auto w-full`}>
+               <div className="flex justify-between items-end mb-12 border-b pb-4">
+                  <h3 className="text-2xl font-light">All Products</h3>
+               </div>
+               <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-3'}`}>
+                  {storeProducts.map((p: any) => (
+                     <div key={p.id} className="group cursor-pointer">
+                        <div className="aspect-[4/5] bg-gray-100 mb-6 overflow-hidden relative">
+                           <div className="absolute inset-0 flex items-center justify-center opacity-10"><ImageIcon className="w-16 h-16" /></div>
+                           <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <button onClick={handleAddToCart} className="px-8 py-3 bg-white text-black text-xs tracking-widest hover:bg-black hover:text-white transition-colors">ADD TO CART</button>
+                           </div>
+                        </div>
+                        <h4 className="font-medium text-lg mb-2">{p.name}</h4>
+                        <p className="text-gray-500">{p.price} MAD</p>
+                     </div>
+                  ))}
+               </div>
+            </div>
+        )}
+        {page === 'about' && (
+           <div className={`${isModal ? 'p-20 max-w-4xl' : 'p-8'} mx-auto w-full text-center mt-12`}>
+              <h3 className="text-4xl font-light mb-8">About {storeName}</h3>
+              <p className="text-gray-500 text-xl font-light leading-relaxed mb-6">Welcome to {storeName}. We are dedicated to providing the best quality products for our customers. Every piece is carefully crafted to ensure maximum comfort and style.</p>
+           </div>
+        )}
       </div>
     </div>
   );
@@ -189,6 +241,27 @@ export default function StoreBuilder() {
                </div>
             </div>
           </>
+        )}
+        {page === 'collections' && (
+            <div className={`${isModal ? 'p-16' : 'p-8'} mx-auto w-full`}>
+               <h3 className="text-xl tracking-widest uppercase text-center mb-16" style={{ color: primaryColor }}>All Products</h3>
+               <div className={`grid gap-4 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                  {storeProducts.map((p: any) => (
+                     <div key={p.id} className="group cursor-pointer relative aspect-square bg-[#1a1a1a] border border-white/5 p-4 flex flex-col items-center justify-center">
+                        <ImageIcon className="w-16 h-16 opacity-10 mb-8" />
+                        <h4 className="font-serif text-2xl mb-2 group-hover:text-white transition-colors" style={{ color: primaryColor }}>{p.name}</h4>
+                        <p className="text-white/50 tracking-widest text-sm mb-6">{p.price} MAD</p>
+                        <button onClick={handleAddToCart} className="opacity-0 group-hover:opacity-100 transition-opacity px-6 py-2 bg-white text-black text-xs tracking-widest">ADD TO CART</button>
+                     </div>
+                  ))}
+               </div>
+            </div>
+        )}
+        {page === 'about' && (
+           <div className={`${isModal ? 'p-16 max-w-3xl' : 'p-8'} mx-auto w-full text-center mt-12`}>
+              <h3 className="text-3xl font-serif mb-8 text-white">About {storeName}</h3>
+              <p className="text-[#888] text-lg tracking-wide leading-relaxed mb-6">Welcome to {storeName}. We are dedicated to providing the best quality products for our customers. Every piece is carefully crafted to ensure maximum comfort and style.</p>
+           </div>
         )}
       </div>
     </div>
@@ -240,6 +313,31 @@ export default function StoreBuilder() {
                </div>
             </div>
           </>
+        )}
+        {page === 'collections' && (
+            <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-6'} mx-auto w-full`}>
+               <h3 className="text-3xl font-black text-center mb-10 text-slate-800">All Products ✨</h3>
+               <div className={`grid gap-6 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-4' : 'grid-cols-2')}`}>
+                  {storeProducts.map((p: any) => (
+                     <div key={p.id} className="group cursor-pointer bg-slate-50 p-4 rounded-3xl hover:bg-slate-100 transition-colors border-2 border-transparent hover:border-current" style={{ borderColor: primaryColor }}>
+                        <div className="aspect-square bg-white mb-4 overflow-hidden relative rounded-2xl shadow-sm flex items-center justify-center">
+                           <ImageIcon className="w-12 h-12 opacity-10" />
+                           <div className={`absolute inset-0 bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center`}>
+                              <button onClick={handleAddToCart} className="px-6 py-3 text-white text-xs font-black uppercase tracking-wider rounded-full shadow-xl hover:scale-105 transition-transform" style={{ backgroundColor: primaryColor }}>Add to cart</button>
+                           </div>
+                        </div>
+                        <h4 className="font-bold text-base text-center text-slate-700">{p.name}</h4>
+                        <p className="text-center font-black mt-1" style={{ color: primaryColor }}>{p.price} MAD</p>
+                     </div>
+                  ))}
+               </div>
+            </div>
+        )}
+        {page === 'about' && (
+           <div className={`${isModal ? 'p-16 max-w-3xl' : 'p-6'} mx-auto w-full text-center mt-10 bg-slate-100 rounded-[3rem] p-12`}>
+              <h3 className="text-4xl font-black mb-6 text-slate-800">About {storeName}</h3>
+              <p className="text-slate-600 text-xl font-bold leading-relaxed mb-6">Welcome to {storeName}. We are dedicated to providing the best quality products for our customers. Every piece is carefully crafted to ensure maximum comfort and style.</p>
+           </div>
         )}
       </div>
     </div>
