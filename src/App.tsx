@@ -353,12 +353,12 @@ function AppContent() {
     window.location.hash = '#/'; // Force go to login
   }
 
-  // Handle SaaS Wildcard Subdomains
+  // Handle SaaS Wildcard Subdomains and Custom Domains
   const hostname = window.location.hostname;
-  // If it's a subdomain (not www and not app)
   const isSubdomain = hostname.includes('.beyacreative.com') && hostname !== 'www.beyacreative.com' && hostname !== 'app.beyacreative.com';
+  const isCustomDomain = !hostname.includes('beyacreative.com') && !hostname.includes('localhost') && !hostname.includes('vercel.app');
   
-  if (isSubdomain) {
+  if (isSubdomain || isCustomDomain) {
      return (
         <Suspense fallback={<PageLoader />}>
            <StoreBuilder isLiveStore={true} />
