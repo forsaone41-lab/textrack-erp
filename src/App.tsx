@@ -64,6 +64,7 @@ const Tarifs          = lazy(() => import('./pages/Tarifs'));
 const Reglement       = lazy(() => import('./pages/Reglement'));
 const ValidationBoard = lazy(() => import('./pages/ValidationBoard'));
 const HPGLViewer      = lazy(() => import('./pages/HPGLViewer'));
+const StoreBuilder    = lazy(() => import('./pages/StoreBuilder'));
 import { PageLoader } from './components/PageLoader';
 
 import { initMockData, User, loadPermissions, AppPage, loadCompanyProfile, syncCompanyProfile, loadData, saveRecord } from './types';
@@ -479,6 +480,7 @@ function AppContent() {
         <Route path="stocks" element={can('stocks') ? <StockMateriaux /> : <Navigate to="/" replace />} />
         <Route path="achats" element={can('achats') ? <Achats /> : <Navigate to="/" replace />} />
         <Route path="commandes" element={can('commandes') ? <Commandes /> : <Navigate to="/" replace />} />
+        <Route path="store-builder" element={currentUser.role === 'admin' ? <StoreBuilder /> : <Navigate to="/" replace />} />
         <Route path="agenda" element={can('agenda') ? <Agenda /> : <Navigate to="/" replace />} />
         <Route path="commandes/manage" element={can('commandes') ? <ManageOrder /> : <Navigate to="/" replace />} />
         <Route path="liste-attente" element={can('rh') ? <ListeAttente /> : <Navigate to="/" replace />} />

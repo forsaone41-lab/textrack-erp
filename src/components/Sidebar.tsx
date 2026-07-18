@@ -219,6 +219,14 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
             </div>
           )}
 
+          {/* Group: E-Commerce (BEYA STORE) */}
+          {currentUser.role === 'admin' && (
+            <div className="space-y-1">
+              {!collapsed && <SectionTitle title={isAr ? 'التجارة الإلكترونية (SaaS)' : 'E-Commerce (SaaS)'} isAr={isAr} />}
+              <NavItem to="/store-builder" icon={Globe} label="BEYA STORE" pro />
+            </div>
+          )}
+
           {/* Group 3: Production */}
           {(can('commandes') || can('stocks') || can('fiches') || can('ai_space') || can('ordres') || can('chaine') || can('fournisseurs') || can('achats')) && (
             <div className="space-y-1">
