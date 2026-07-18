@@ -796,11 +796,9 @@ export default function StoreBuilder() {
       </div>
 
       <div className={`flex gap-6 ${isAr ? 'flex-row-reverse' : ''}`}>
-        {/* Left Sidebar - Controls */}
-        <div className={`${['themes', 'design'].includes(activeTab) ? 'w-[420px]' : 'flex-1'} flex flex-col gap-4 shrink-0 transition-all duration-300`}>
-          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-            <div className={`flex border-b border-slate-200 flex-wrap ${isAr ? 'flex-row-reverse' : ''}`}>
-              {[
+        {/* VERTICAL SIDE NAVIGATION */}
+        <div className="w-24 shrink-0 flex flex-col gap-3">
+           {[
                  { id: 'orders', icon: ListOrdered, label: 'Commandes' },
                  { id: 'themes', icon: LayoutTemplate, label: 'Thèmes' },
                  { id: 'design', icon: Paintbrush, label: 'Design' },
@@ -808,18 +806,20 @@ export default function StoreBuilder() {
                  { id: 'payments', icon: CreditCard, label: 'Paiements' },
                  { id: 'apps', icon: Box, label: 'Apps' },
                  { id: 'settings', icon: Settings, label: 'Config' }
-              ].map(tab => (
+           ].map(tab => (
                  <button 
                    key={tab.id}
                    onClick={() => setActiveTab(tab.id as any)}
-                   className={`w-[25%] py-3 px-1 text-[10px] font-bold flex flex-col items-center justify-center gap-1 transition-colors border-b-2 ${activeTab === tab.id ? 'text-indigo-600 border-indigo-600 bg-indigo-50/50' : 'border-transparent text-slate-500 hover:bg-slate-50'}`}
+                   className={`w-full py-4 px-2 text-[10px] font-bold flex flex-col items-center justify-center gap-2 rounded-2xl transition-all border ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-lg scale-105 border-indigo-600' : 'bg-white text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 border-slate-200 shadow-sm'}`}
                  >
-                   <tab.icon className="w-4 h-4" /> <span className="truncate w-full text-center">{tab.label}</span>
+                   <tab.icon className="w-5 h-5" /> <span className="text-center leading-tight">{tab.label}</span>
                  </button>
-              ))}
-            </div>
+           ))}
+        </div>
 
-            <div className={`p-5 overflow-y-auto h-[calc(100vh-240px)] flex justify-center`}>
+        {/* CONTROLS / CONTENT PANEL */}
+        <div className={`${['themes', 'design'].includes(activeTab) ? 'w-[420px]' : 'flex-1'} bg-white rounded-3xl border border-slate-200 shadow-sm shrink-0 transition-all duration-300 overflow-hidden flex flex-col h-[calc(100vh-140px)]`}>
+            <div className={`p-8 overflow-y-auto flex-1 flex justify-center`}>
               <div className="w-full max-w-2xl">
               {/* THEMES TAB */}
               {activeTab === 'themes' && (
@@ -1149,11 +1149,10 @@ export default function StoreBuilder() {
               </div>
             </div>
           </div>
-        </div>
 
         {/* Right Area - Live Preview */}
         {['themes', 'design'].includes(activeTab) && (
-        <div className="flex-1 bg-slate-100 rounded-3xl border-4 border-slate-200 overflow-hidden flex flex-col relative min-h-[600px] animate-in fade-in slide-in-from-right-4 duration-500">
+        <div className="flex-1 bg-slate-100 rounded-3xl border-4 border-slate-200 overflow-hidden flex flex-col relative h-[calc(100vh-140px)] animate-in fade-in slide-in-from-right-4 duration-500">
           {/* Browser Header */}
           <div className="bg-white border-b border-slate-200 p-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
