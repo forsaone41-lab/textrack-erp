@@ -1,45 +1,13 @@
 const fs = require('fs');
-let c = fs.readFileSync('src/pages/LandingPage.tsx', 'utf8');
 
-c = c.replace(
-  "💡 عندك أسئلة قبل ما تبدأ؟",
-  "💡 عندك براند أو كدير التجارة الإلكترونية؟"
-);
+let content = fs.readFileSync('src/pages/StoreBuilder.tsx', 'utf8');
 
-c = c.replace(
-  "💡 Des questions avant de commencer ?",
-  "💡 Vous avez une marque ou faites du E-commerce ?"
-);
+content = content.replace(/(<input[^>]+placeholder="Delivery Address"[^>]*\/>)/g, (match) => {
+    return match.replace('Delivery Address', 'Ville / City') + '\n' + ' '.repeat(30) + match;
+});
 
-c = c.replace(
-  "href=\"/#/info\"",
-  "href=\"/#/devis-express\""
-);
+content = content.replace(/(Confirm Order \(COD\)<\/button>)/g, (match) => {
+    return match + '\n' + ' '.repeat(30) + '<p className="text-center text-xs font-bold text-green-600 mt-4 flex items-center justify-center gap-1"><CheckCircle className="w-3 h-3" /> Livraison Gratuite (Paiement à la livraison)</p>';
+});
 
-c = c.replace(
-  "<span className=\"text-xl\">📋</span>",
-  "<span className=\"text-xl\">🚀</span>"
-);
-
-c = c.replace(
-  "تعرف على أسعارنا وخدماتنا",
-  "احصل على عرض سعر سريع (Devis Express)"
-);
-
-c = c.replace(
-  "Voir les Prix, Délais & Services",
-  "Demander un Devis Express"
-);
-
-c = c.replace(
-  "أسعار · مواعيد · أسئلة شائعة · كل ما تحتاج معرفته",
-  "خدمة مخصصة وسريعة لأصحاب المشاريع والتجارة الإلكترونية"
-);
-
-c = c.replace(
-  "Prix · Délais · FAQ · Tout ce que vous devez savoir",
-  "Service rapide dédié aux marques et E-commerce"
-);
-
-fs.writeFileSync('src/pages/LandingPage.tsx', c);
-console.log('done');
+fs.writeFileSync('src/pages/StoreBuilder.tsx', content);

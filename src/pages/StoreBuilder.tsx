@@ -20,6 +20,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [showPreview, setShowPreview] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<'desktop'|'mobile'>('desktop');
   const [isControlsCollapsed, setIsControlsCollapsed] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
   
   // Customization States (The PRO way)
   const [activeTheme, setActiveTheme] = useState(THEMES[0]);
@@ -358,8 +359,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              <h4 className="font-black text-slate-800 mb-2">Express Checkout</h4>
                              <input type="text" placeholder="Full Name" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-sm" />
                              <input type="text" placeholder="Phone Number" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-sm" />
-                             <input type="text" placeholder="Delivery Address" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-sm" />
+                             <input type="text" placeholder="Ville / City" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-sm" />
+                              <input type="text" placeholder="Delivery Address" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-sm" />
                              <button onClick={() => setPage('success')} className="w-full py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg mt-2" style={{ backgroundColor: primaryColor }}>Confirm Order (COD)</button>
+                              <p className="text-center text-xs font-bold text-green-600 mt-4 flex items-center justify-center gap-1"><CheckCircle className="w-3 h-3" /> Livraison Gratuite (Paiement à la livraison)</p>
                           </div>
                        ) : (
                           <div className="flex gap-4">
@@ -383,8 +386,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                  <div className="space-y-4">
                     <input type="text" placeholder="Full Name" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500" />
                     <input type="text" placeholder="Phone Number" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500" />
-                    <input type="text" placeholder="Delivery Address" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500" />
+                    <input type="text" placeholder="Ville / City" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500" />
+                              <input type="text" placeholder="Delivery Address" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500" />
                     <button onClick={() => setPage('success')} className="w-full py-4 text-white font-black uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg mt-4" style={{ backgroundColor: primaryColor }}>Confirm Order (COD)</button>
+                              <p className="text-center text-xs font-bold text-green-600 mt-4 flex items-center justify-center gap-1"><CheckCircle className="w-3 h-3" /> Livraison Gratuite (Paiement à la livraison)</p>
                  </div>
               </div>
            </div>
@@ -567,7 +572,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              <h4 className="text-xl font-light mb-4" style={{ color: primaryColor }}>Checkout</h4>
                              <input type="text" placeholder="Full Name" className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
                              <input type="text" placeholder="Phone Number" className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
-                             <input type="text" placeholder="Delivery Address" className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
+                             <input type="text" placeholder="Ville / City" className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
+                              <input type="text" placeholder="Delivery Address" className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
                              <button onClick={() => setPage('success')} className="w-full py-5 text-white text-xs tracking-widest mt-4 transition-opacity hover:opacity-90" style={{ backgroundColor: primaryColor }}>CONFIRM ORDER</button>
                           </div>
                        ) : (
@@ -592,7 +598,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                  <div className="space-y-6">
                     <input type="text" placeholder="Full Name" className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
                     <input type="text" placeholder="Phone Number" className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
-                    <input type="text" placeholder="Delivery Address" className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
+                    <input type="text" placeholder="Ville / City" className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
+                              <input type="text" placeholder="Delivery Address" className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
                     <button onClick={() => setPage('success')} className="w-full py-5 text-white text-xs tracking-widest mt-8 transition-opacity hover:opacity-90" style={{ backgroundColor: primaryColor }}>CONFIRM ORDER</button>
                  </div>
               </div>
@@ -747,7 +754,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              <h4 className="text-xl font-serif mb-4 text-white">Secure Checkout</h4>
                              <input type="text" placeholder="Full Name" className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
                              <input type="text" placeholder="Phone Number" className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
-                             <input type="text" placeholder="Delivery Address" className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
+                             <input type="text" placeholder="Ville / City" className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
+                              <input type="text" placeholder="Delivery Address" className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
                              <button onClick={() => setPage('success')} className="w-full py-5 bg-white text-black text-xs tracking-widest mt-4 hover:bg-gray-200 transition-colors">PLACE ORDER</button>
                           </div>
                        ) : (
@@ -772,7 +780,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                  <div className="space-y-6">
                     <input type="text" placeholder="Full Name" className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
                     <input type="text" placeholder="Phone Number" className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
-                    <input type="text" placeholder="Delivery Address" className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
+                    <input type="text" placeholder="Ville / City" className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
+                              <input type="text" placeholder="Delivery Address" className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
                     <button onClick={() => setPage('success')} className="w-full py-5 bg-white text-black text-xs tracking-widest mt-8 hover:bg-gray-200 transition-colors">PLACE ORDER</button>
                  </div>
               </div>
@@ -1190,7 +1199,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              { id: '#1040', customer: 'Karim Tazi', amount: '1200.00 MAD', status: 'En cours', statusColor: 'bg-amber-100 text-amber-700', date: 'Hier', items: '3 articles' },
                              { id: '#1039', customer: 'Maha Alami', amount: '350.00 MAD', status: 'Refusé', statusColor: 'bg-rose-100 text-rose-700', date: 'Hier', items: '1 article' }
                           ].map(order => (
-                             <div key={order.id} className="p-3 border border-slate-200 rounded-2xl bg-white shadow-sm cursor-pointer hover:border-indigo-500 transition-colors hover:shadow-md group">
+                             <div key={order.id} onClick={() => setSelectedOrder(order)} className="p-3 border border-slate-200 rounded-2xl bg-white shadow-sm cursor-pointer hover:border-indigo-500 transition-colors hover:shadow-md group">
                                 <div className="flex justify-between items-start mb-2">
                                    <div className="flex items-center gap-2">
                                       <span className="text-xs font-black text-slate-800 group-hover:text-indigo-600 transition-colors">{order.id}</span>
@@ -2070,6 +2079,82 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               </div>
            </div>
         </div>
+      )}
+
+      {/* ORDER DETAILS MODAL */}
+      {selectedOrder && (
+         <div className="fixed inset-0 z-[500] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+               <div className="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50/50">
+                  <div className="flex items-center gap-3">
+                     <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center font-black">
+                        <ListOrdered className="w-5 h-5" />
+                     </div>
+                     <div>
+                        <h2 className="text-lg font-black text-slate-800">Commande {selectedOrder.id}</h2>
+                        <p className="text-xs font-bold text-slate-500">{selectedOrder.date}</p>
+                     </div>
+                  </div>
+                  <button onClick={() => setSelectedOrder(null)} className="w-8 h-8 flex items-center justify-center bg-white border border-slate-200 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors"><X className="w-4 h-4" /></button>
+               </div>
+               
+               <div className="p-6 space-y-6">
+                  {/* Customer Info */}
+                  <div>
+                     <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-3">Informations du Client</h3>
+                     <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+                        <div className="flex items-center gap-3">
+                           <div className="w-8 h-8 bg-white rounded-full border border-slate-200 flex items-center justify-center"><Users className="w-4 h-4 text-slate-400" /></div>
+                           <div>
+                              <p className="text-[10px] font-bold text-slate-500">Nom Complet</p>
+                              <p className="text-sm font-black text-slate-800">{selectedOrder.customer}</p>
+                           </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                           <div className="w-8 h-8 bg-white rounded-full border border-slate-200 flex items-center justify-center"><Smartphone className="w-4 h-4 text-slate-400" /></div>
+                           <div>
+                              <p className="text-[10px] font-bold text-slate-500">Téléphone</p>
+                              <p className="text-sm font-black text-slate-800">06 12 34 56 78</p>
+                           </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                           <div className="w-8 h-8 bg-white rounded-full border border-slate-200 flex items-center justify-center"><Globe className="w-4 h-4 text-slate-400" /></div>
+                           <div>
+                              <p className="text-[10px] font-bold text-slate-500">Ville / Adresse</p>
+                              <p className="text-sm font-black text-slate-800">Casablanca, Maarif</p>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+
+                  {/* Order Summary */}
+                  <div>
+                     <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-3">Détails de la Commande</h3>
+                     <div className="bg-white border border-slate-200 rounded-2xl p-4">
+                        <div className="flex justify-between items-center mb-3 pb-3 border-b border-slate-100">
+                           <span className="text-sm font-bold text-slate-600">{selectedOrder.items}</span>
+                           <span className="text-sm font-black text-slate-800">{selectedOrder.amount}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs text-slate-500 font-bold mb-1">
+                           <span>Frais de livraison</span>
+                           <span className="text-green-600 uppercase tracking-widest font-black text-[10px]">Gratuite</span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm font-black text-slate-800 pt-3 mt-3 border-t border-slate-100">
+                           <span>Total</span>
+                           <span className="text-indigo-600">{selectedOrder.amount}</span>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div className="p-6 border-t border-slate-100 bg-slate-50 flex gap-3">
+                  <button onClick={() => setSelectedOrder(null)} className="flex-1 py-3 bg-white border border-rose-200 text-rose-600 font-bold rounded-xl hover:bg-rose-50 transition-colors text-sm">Refuser</button>
+                  <button onClick={() => setSelectedOrder(null)} className="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors text-sm shadow-md shadow-indigo-200 flex items-center justify-center gap-2">
+                     <CheckCircle className="w-4 h-4" /> Confirmer
+                  </button>
+               </div>
+            </div>
+         </div>
       )}
 
       {/* PUBLISH MODAL */}
