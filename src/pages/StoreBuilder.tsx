@@ -1438,8 +1438,6 @@ export default function StoreBuilder() {
                              <textarea rows={4} placeholder="Décrivez votre produit en détail..." value={productForm?.description || ''} onChange={e => setProductForm({...productForm, description: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 resize-none"></textarea>
                           </div>
                        </div>
-                       
-                       </div>
                     </div>
                     {/* Right Column (Variants) */}
                     <div className="col-span-4 space-y-6">
@@ -1612,11 +1610,11 @@ export default function StoreBuilder() {
                      <Globe className="w-5 h-5 text-indigo-600 shrink-0" />
                      <div className="flex-1 text-left overflow-hidden">
                         <p className="text-xs font-bold text-slate-400 uppercase mb-1">Lien de la boutique</p>
-                        <p className="text-sm font-medium text-slate-800 truncate">https://{storeName.toLowerCase().replace(/[^a-z0-9]/g, '')}.beyacreative.com</p>
+                        <p className="text-sm font-medium text-slate-800 truncate">https://{storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com</p>
                      </div>
                      <button 
                         onClick={() => {
-                           navigator.clipboard.writeText(`https://${storeName.toLowerCase().replace(/[^a-z0-9]/g, '')}.beyacreative.com`);
+                           navigator.clipboard.writeText(`https://${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`);
                         }} 
                         className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 text-slate-600 transition-colors" 
                         title="Copier le lien"
