@@ -136,10 +136,34 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
      );
   };
 
+   const LogoEditor = ({ className, style, onClick }: any) => {
+      if (isLiveStore) {
+         return (
+            <div onClick={onClick} className={`cursor-pointer ${className}`} style={style}>
+               {storeLogo ? <img src={storeLogo} alt={storeName} className="h-10 object-contain" /> : storeName}
+            </div>
+         );
+      }
+      return (
+         <label className={`cursor-pointer relative group inline-flex items-center ${className}`} style={style} onClick={(e) => e.stopPropagation()}>
+            <div onClick={onClick} className="hover:opacity-80 transition-opacity outline-dashed outline-2 outline-transparent hover:outline-indigo-500 rounded px-1">
+               {storeLogo ? <img src={storeLogo} alt={storeName} className="h-10 object-contain" /> : storeName}
+            </div>
+            <div className="absolute -top-3 -right-4 w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-50" title="Changer le logo">
+               <ImageIcon className="w-3 h-3" />
+               <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) setStoreLogo(URL.createObjectURL(file));
+               }} />
+            </div>
+         </label>
+      );
+   };
+
   const ThemeFooter = ({ bgColor = '#f8f9fa', textColor = '#64748b', setPage }: any) => (
      <footer className="mt-auto py-12 px-6 border-t" style={{ backgroundColor: bgColor, borderColor: 'rgba(0,0,0,0.05)' }}>
         <div className="max-w-4xl mx-auto flex flex-col items-center text-center gap-6">
-           <h3 className="text-xl font-bold" style={{ color: primaryColor }}>{storeName}</h3>
+           <div className="text-xl font-bold" style={{ color: primaryColor }}>{storeLogo ? <img src={storeLogo} alt={storeName} className="h-10 object-contain" /> : storeName}</div>
            <div className="flex flex-wrap justify-center gap-6 text-sm font-medium" style={{ color: textColor }}>
               {footerSettings.showPrivacy && <button onClick={() => setPage('privacy')} className="hover:opacity-70 transition-opacity">Politique de Confidentialité</button>}
               {footerSettings.showTerms && <button onClick={() => setPage('terms')} className="hover:opacity-70 transition-opacity">Conditions Générales</button>}
@@ -158,7 +182,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     return (
     <div className={`w-full min-h-full bg-white text-slate-900 ${fontFamily} flex flex-col`}>
       <div className={`p-6 flex justify-between items-center border-b border-slate-100 ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4' : 'flex-col md:flex-row gap-4 md:gap-0'}`}>
-         <h2 onClick={() => setPage('home')} className="text-2xl font-black uppercase tracking-tighter cursor-pointer">{storeName}</h2>
+         <LogoEditor onClick={() => setPage('home')} className="text-2xl font-black uppercase tracking-tighter" />
          <div className={`flex gap-6 text-sm font-bold ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
             {storePages.map(p => (
                <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer capitalize hover:opacity-70 transition-opacity" style={{ color: page === p.id ? primaryColor : '#64748b' }}>{p.title}</span>
@@ -353,7 +377,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                <span key={p.id} onClick={() => setPage(p.id)} className={`cursor-pointer capitalize pb-1 border-b-2 ${page === p.id ? 'border-current' : 'border-transparent text-gray-400'}`}>{p.title}</span>
             ))}
          </div>
-         <h2 onClick={() => setPage('home')} className="text-3xl font-normal tracking-wide cursor-pointer" style={{ color: primaryColor }}>{storeName}</h2>
+         <LogoEditor onClick={() => setPage('home')} className="text-3xl font-normal tracking-wide" style={{ color: primaryColor }} />
          <button className="relative" onClick={() => alert('Panier cliqué !')}>
             <ShoppingBag className="w-6 h-6 font-light" />
             {cartCount > 0 && <span className="absolute -top-2 -right-2 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: primaryColor }}>{cartCount}</span>}
@@ -522,7 +546,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     return (
     <div className={`w-full min-h-full bg-[#111] text-[#f5f5f5] ${fontFamily} flex flex-col`}>
       <div className={`p-8 flex flex-col items-center gap-6 border-b border-white/10 ${previewDevice === 'mobile' && !isModal ? 'p-4' : 'p-4 md:p-8'}`}>
-         <h2 onClick={() => setPage('home')} className="text-4xl font-serif tracking-widest cursor-pointer" style={{ color: primaryColor }}>{storeName}</h2>
+         <LogoEditor onClick={() => setPage('home')} className="text-4xl font-serif tracking-widest" style={{ color: primaryColor }} />
          <div className={`flex gap-12 text-xs tracking-widest uppercase ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
             {storePages.map(p => (
                <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer hover:text-white transition-colors" style={{ color: page === p.id ? primaryColor : '#888' }}>{p.title}</span>
@@ -686,7 +710,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     return (
     <div className={`w-full min-h-full bg-white text-slate-900 ${fontFamily} flex flex-col`}>
       <div className={`p-4 mx-4 mt-4 bg-slate-100 rounded-full flex justify-between items-center ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4 rounded-3xl' : 'flex-col md:flex-row gap-4 rounded-3xl md:rounded-full'}`}>
-         <h2 onClick={() => setPage('home')} className="text-2xl font-black tracking-tight cursor-pointer px-4" style={{ color: primaryColor }}>{storeName}</h2>
+         <LogoEditor onClick={() => setPage('home')} className="text-2xl font-black tracking-tight px-4" style={{ color: primaryColor }} />
          <div className={`flex gap-2 text-sm font-bold ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
             {storePages.map(p => (
                <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer capitalize px-4 py-2 rounded-full transition-colors" style={{ backgroundColor: page === p.id ? primaryColor : 'transparent', color: page === p.id ? '#fff' : '#64748b' }}>{p.title}</span>
