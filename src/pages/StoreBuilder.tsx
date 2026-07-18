@@ -797,7 +797,7 @@ export default function StoreBuilder() {
 
       <div className={`flex gap-6 ${isAr ? 'flex-row-reverse' : ''}`}>
         {/* Left Sidebar - Controls */}
-        <div className="w-[420px] flex flex-col gap-4 shrink-0">
+        <div className={`${['themes', 'design'].includes(activeTab) ? 'w-[420px]' : 'flex-1'} flex flex-col gap-4 shrink-0 transition-all duration-300`}>
           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
             <div className={`flex border-b border-slate-200 flex-wrap ${isAr ? 'flex-row-reverse' : ''}`}>
               {[
@@ -1150,7 +1150,8 @@ export default function StoreBuilder() {
         </div>
 
         {/* Right Area - Live Preview */}
-        <div className="flex-1 bg-slate-100 rounded-3xl border-4 border-slate-200 overflow-hidden flex flex-col relative min-h-[600px]">
+        {['themes', 'design'].includes(activeTab) && (
+        <div className="flex-1 bg-slate-100 rounded-3xl border-4 border-slate-200 overflow-hidden flex flex-col relative min-h-[600px] animate-in fade-in slide-in-from-right-4 duration-500">
           {/* Browser Header */}
           <div className="bg-white border-b border-slate-200 p-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -1171,6 +1172,7 @@ export default function StoreBuilder() {
              </div>
           </div>
         </div>
+        )}
       </div>
 
       {/* FULL SCREEN PREVIEW MODAL */}
