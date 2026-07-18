@@ -1425,9 +1425,17 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
       {showPreview && (
         <div className="fixed inset-0 z-[200] bg-slate-900 flex flex-col">
           <div className="bg-slate-800 text-white p-4 flex items-center justify-between shadow-xl z-10">
-            <button onClick={() => setShowPreview(false)} className="flex items-center gap-2 bg-rose-500 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-rose-600 transition-colors">
+            <button onClick={() => setShowPreview(false)} className="flex items-center gap-2 bg-rose-500 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-rose-600 transition-colors shrink-0">
               Fermer l'aperçu
             </button>
+            <div className="flex-1 flex justify-center px-4">
+               <div className="w-full max-w-2xl bg-slate-900/80 rounded-xl px-4 py-2.5 flex items-center gap-3 text-slate-300 text-sm font-mono border border-slate-700/50 shadow-inner">
+                  <Globe className="w-4 h-4 text-slate-500" />
+                  <span className="opacity-50">https://</span>
+                  <span className="text-white">{customDomain || `${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`}</span>
+               </div>
+            </div>
+            <div className="w-[140px] shrink-0"></div>
           </div>
           <div className="flex-1 overflow-y-auto bg-slate-100 flex justify-center">
              <div className="w-full">
