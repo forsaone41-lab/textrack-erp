@@ -3,6 +3,53 @@ import { ShoppingBag, Globe, Palette, LayoutTemplate, Settings, Plus, Monitor, S
 import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
 
+const THEMES = {
+  streetwear: {
+    name: 'Streetwear Pro',
+    id: 'streetwear',
+    bg: 'bg-white',
+    text: 'text-slate-900',
+    navBg: 'bg-white',
+    navText: 'text-slate-900',
+    heroBg: 'bg-slate-900',
+    heroText: 'text-white',
+    heroBtn: 'bg-white text-slate-900',
+    font: 'font-sans',
+    productBg: 'bg-slate-100',
+    button: 'bg-slate-900 text-white hover:bg-indigo-600 rounded-full',
+  },
+  minimalist: {
+    name: 'Minimalist',
+    id: 'minimalist',
+    bg: 'bg-[#faf9f6]',
+    text: 'text-[#2c2c2c]',
+    navBg: 'bg-[#faf9f6]',
+    navText: 'text-[#2c2c2c]',
+    heroBg: 'bg-[#e5e5e5]',
+    heroText: 'text-[#2c2c2c]',
+    heroBtn: 'bg-[#2c2c2c] text-white',
+    font: 'font-serif',
+    productBg: 'bg-[#f0f0f0]',
+    button: 'bg-[#2c2c2c] text-white hover:bg-black rounded-none',
+  },
+  abaya: {
+    name: 'Luxury Abaya',
+    id: 'abaya',
+    bg: 'bg-[#0f1110]',
+    text: 'text-[#e5d3b3]',
+    navBg: 'bg-[#0f1110]',
+    navText: 'text-[#e5d3b3]',
+    heroBg: 'bg-[#1a1c1b]',
+    heroText: 'text-[#e5d3b3]',
+    heroBtn: 'bg-[#cfa162] text-[#0f1110]',
+    font: 'font-serif',
+    productBg: 'bg-[#1a1c1b] border border-[#cfa162]/20',
+    button: 'bg-[#cfa162] text-[#0f1110] hover:bg-[#b08852] rounded-sm',
+  }
+};
+
+type ThemeId = keyof typeof THEMES;
+
 export default function StoreBuilder() {
   const { lang, isAr } = useLang();
   const [activeTab, setActiveTab] = useState<'themes' | 'settings' | 'products'>('themes');
@@ -11,10 +58,59 @@ export default function StoreBuilder() {
   const [previewDevice, setPreviewDevice] = useState<'desktop'|'mobile'>('desktop');
   const [cartCount, setCartCount] = useState(0);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [activeThemeId, setActiveThemeId] = useState<ThemeId>('streetwear');
 
-  const handleAddToCart = () => {
+  const theme = THEMES[activeThemeId];
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+     e.stopPropagation();
      setCartCount(c => c + 1);
   };
+
+  const StorePreview = ({ isModal = false }: { isModal?: boolean }) => (
+    <div className={`w-full min-h-full ${theme.bg} ${theme.text} ${theme.font} flex flex-col transition-colors duration-500`}>
+      {/* Navbar */}
+      <div className={`p-6 flex justify-between items-center border-b ${theme.navBg} border-current/10 ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4 p-4' : ''}`}>
+         <h2 className={`text-2xl font-black uppercase tracking-tighter ${theme.navText}`}>{storeName}</h2>
+         <div className={`flex gap-6 text-sm font-bold opacity-70 ${previewDevice === 'mobile' && !isModal ? 'hidden' : ''}`}>
+            <span className="hover:opacity-100 cursor-pointer transition-opacity">Home</span>
+            <span className="hover:opacity-100 cursor-pointer transition-opacity">Collections</span>
+            <span className="hover:opacity-100 cursor-pointer transition-opacity">About</span>
+         </div>
+         <button className="relative hover:scale-110 transition-transform" onClick={() => alert('Panier cliqué !')}>
+            <ShoppingBag className="w-6 h-6" />
+            {cartCount > 0 && <span className={`absolute -top-1 -right-1 ${theme.heroBtn} text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center`}>{cartCount}</span>}
+         </button>
+      </div>
+      {/* Hero */}
+      <div className={`h-[${isModal ? '500px' : '320px'}] ${theme.heroBg} ${theme.heroText} flex flex-col items-center justify-center text-center p-8 bg-[url('https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center relative`}>
+         <div className={`absolute inset-0 ${activeThemeId === 'abaya' ? 'bg-black/70' : activeThemeId === 'minimalist' ? 'bg-white/70' : 'bg-black/50'}`}></div>
+         <div className="relative z-10 flex flex-col items-center">
+            <h1 className={`${isModal ? 'text-6xl' : 'text-5xl'} font-black uppercase tracking-tighter mb-4`}>New Collection Drop</h1>
+            <p className={`${isModal ? 'text-xl mb-10 max-w-2xl' : 'text-lg mb-8 max-w-md'} opacity-90`}>Discover our latest premium quality garments designed for the modern lifestyle. Exclusively manufactured by BEYA.</p>
+            <button className={`px-8 py-3 ${theme.heroBtn} font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform`}>Shop Now</button>
+         </div>
+      </div>
+      {/* Products */}
+      <div className={`${isModal ? 'p-12 max-w-[1400px]' : 'p-12'} mx-auto w-full`}>
+         <h3 className="text-xl font-black uppercase text-center mb-8">Trending Now</h3>
+         <div className={`grid gap-6 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-4')}`}>
+            {[1,2,3,4, ...(isModal ? [5,6,7,8] : [])].map(i => (
+               <div key={i} className="group cursor-pointer">
+                  <div className={`aspect-[3/4] ${theme.productBg} mb-4 overflow-hidden relative ${activeThemeId === 'streetwear' ? 'rounded-lg' : ''}`}>
+                     <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-8 h-8" /></div>
+                     <div className={`absolute bottom-4 left-0 right-0 flex justify-center transition-opacity ${(previewDevice === 'mobile' && !isModal) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                        <button onClick={handleAddToCart} className={`px-6 py-2 text-xs font-bold uppercase tracking-wider shadow-xl ${theme.button}`}>Add to cart</button>
+                     </div>
+                  </div>
+                  <h4 className="font-bold text-sm">Premium Product {i}</h4>
+                  <p className="opacity-60 text-sm mt-1">450.00 MAD</p>
+               </div>
+            ))}
+         </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className={`space-y-6 ${isAr ? 'text-right' : 'text-left'}`}>
@@ -68,25 +164,29 @@ export default function StoreBuilder() {
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Thème Actif</label>
                     <div className="border-2 border-indigo-600 rounded-xl p-1 relative">
                       <div className="absolute top-2 right-2 bg-indigo-600 text-white p-1 rounded-full"><CheckCircle className="w-3 h-3" /></div>
-                      <div className="aspect-video bg-slate-100 rounded-lg mb-2 overflow-hidden relative">
-                         <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
-                            <span className="text-white font-black tracking-widest">STREETWEAR PRO</span>
+                      <div className={`aspect-video ${theme.bg} rounded-lg mb-2 overflow-hidden relative`}>
+                         <div className={`absolute inset-0 ${theme.heroBg} flex items-center justify-center`}>
+                            <span className={`${theme.heroText} ${theme.font} font-black tracking-widest`}>{theme.name}</span>
                          </div>
                       </div>
-                      <p className="text-xs font-bold text-slate-800 text-center py-1">Streetwear Edition</p>
+                      <p className="text-xs font-bold text-slate-800 text-center py-1">{theme.name} Edition</p>
                     </div>
                   </div>
                   <div className="pt-4 border-t border-slate-100">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Autres Thèmes</label>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Changer le Thème</label>
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="border border-slate-200 rounded-xl p-1 cursor-pointer hover:border-indigo-300 transition-colors opacity-60 hover:opacity-100">
-                        <div className="aspect-video bg-slate-100 rounded-lg mb-1 flex items-center justify-center text-slate-300"><LayoutTemplate className="w-6 h-6" /></div>
-                        <p className="text-[10px] font-bold text-slate-600 text-center">Minimalist</p>
-                      </div>
-                      <div className="border border-slate-200 rounded-xl p-1 cursor-pointer hover:border-indigo-300 transition-colors opacity-60 hover:opacity-100">
-                        <div className="aspect-video bg-slate-100 rounded-lg mb-1 flex items-center justify-center text-slate-300"><LayoutTemplate className="w-6 h-6" /></div>
-                        <p className="text-[10px] font-bold text-slate-600 text-center">Luxury Abaya</p>
-                      </div>
+                      {(Object.entries(THEMES) as [ThemeId, typeof THEMES[ThemeId]][]).filter(([id]) => id !== activeThemeId).map(([id, t]) => (
+                        <div 
+                           key={id} 
+                           onClick={() => setActiveThemeId(id)}
+                           className="border border-slate-200 rounded-xl p-1 cursor-pointer hover:border-indigo-300 transition-colors opacity-60 hover:opacity-100"
+                        >
+                          <div className={`aspect-video ${t.heroBg} rounded-lg mb-1 flex items-center justify-center`}>
+                             <span className={`${t.heroText} text-[8px] font-black tracking-widest`}>{t.name}</span>
+                          </div>
+                          <p className="text-[10px] font-bold text-slate-600 text-center">{t.name}</p>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -166,43 +266,7 @@ export default function StoreBuilder() {
           <div className="flex-1 bg-slate-200 relative overflow-y-auto flex items-start justify-center p-4">
              {/* Dummy Store Preview */}
              <div className={`bg-white shadow-2xl transition-all duration-500 overflow-hidden ${previewDevice === 'mobile' ? 'w-[375px] h-[812px] rounded-[2rem] border-[8px] border-slate-800' : 'w-full min-h-full rounded-lg'}`}>
-                {/* Navbar */}
-                <div className={`p-6 flex justify-between items-center border-b border-slate-100 ${previewDevice === 'mobile' ? 'flex-col gap-4 p-4' : ''}`}>
-                   <h2 className="text-2xl font-black uppercase tracking-tighter">{storeName}</h2>
-                   <div className={`flex gap-6 text-sm font-bold text-slate-500 ${previewDevice === 'mobile' ? 'hidden' : ''}`}>
-                      <span className="hover:text-indigo-600 cursor-pointer">Home</span>
-                      <span className="hover:text-indigo-600 cursor-pointer">Collections</span>
-                      <span className="hover:text-indigo-600 cursor-pointer">About</span>
-                   </div>
-                   <button className="relative" onClick={() => alert('Panier cliqué !')}>
-                      <ShoppingBag className="w-6 h-6" />
-                      {cartCount > 0 && <span className="absolute -top-1 -right-1 bg-indigo-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{cartCount}</span>}
-                   </button>
-                </div>
-                {/* Hero */}
-                <div className="h-80 bg-slate-900 text-white flex flex-col items-center justify-center text-center p-8">
-                   <h1 className="text-5xl font-black uppercase tracking-tighter mb-4">New Collection Drop</h1>
-                   <p className="text-lg text-slate-300 mb-8 max-w-md">Discover our latest premium quality garments designed for the modern lifestyle.</p>
-                   <button className="px-8 py-3 bg-white text-slate-900 font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform">Shop Now</button>
-                </div>
-                {/* Products */}
-                <div className="p-12">
-                   <h3 className="text-xl font-black uppercase text-center mb-8">Trending Now</h3>
-                   <div className={`grid gap-6 ${previewDevice === 'mobile' ? 'grid-cols-1' : 'grid-cols-4'}`}>
-                      {[1,2,3,4].map(i => (
-                         <div key={i} className="group cursor-pointer" onClick={handleAddToCart}>
-                            <div className="aspect-[3/4] bg-slate-100 mb-4 rounded-lg overflow-hidden relative">
-                               <div className="absolute inset-0 flex items-center justify-center"><Box className="w-8 h-8 text-slate-300" /></div>
-                               <div className={`absolute bottom-4 left-0 right-0 flex justify-center transition-opacity ${previewDevice === 'mobile' ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                                  <button className="px-6 py-2 bg-slate-900 text-white text-xs font-bold uppercase tracking-wider rounded-full shadow-xl hover:bg-indigo-600">Add to cart</button>
-                               </div>
-                            </div>
-                            <h4 className="font-bold text-sm">Premium Product {i}</h4>
-                            <p className="text-slate-500 text-sm">450.00 MAD</p>
-                         </div>
-                      ))}
-                   </div>
-                </div>
+                <StorePreview />
              </div>
           </div>
         </div>
@@ -224,48 +288,9 @@ export default function StoreBuilder() {
             </button>
           </div>
           {/* Modal Content - The Store */}
-          <div className="flex-1 overflow-y-auto bg-white">
-             {/* Navbar */}
-             <div className="p-6 flex justify-between items-center border-b border-slate-100 max-w-[1400px] mx-auto w-full">
-                <h2 className="text-3xl font-black uppercase tracking-tighter">{storeName}</h2>
-                <div className="flex gap-8 text-sm font-bold text-slate-500">
-                   <span className="text-slate-900 cursor-pointer">Home</span>
-                   <span className="cursor-pointer hover:text-slate-900 transition-colors">Collections</span>
-                   <span className="cursor-pointer hover:text-slate-900 transition-colors">About</span>
-                </div>
-                <button className="relative">
-                   <ShoppingBag className="w-6 h-6" />
-                   <span className="absolute -top-1 -right-1 bg-indigo-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">0</span>
-                </button>
-             </div>
-             {/* Hero */}
-             <div className="h-[500px] bg-slate-900 text-white flex flex-col items-center justify-center text-center p-8 bg-[url('https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center relative">
-                <div className="absolute inset-0 bg-black/50"></div>
-                <div className="relative z-10">
-                   <h1 className="text-6xl font-black uppercase tracking-tighter mb-6">New Collection Drop</h1>
-                   <p className="text-xl text-slate-200 mb-10 max-w-2xl mx-auto">Discover our latest premium quality garments designed for the modern lifestyle. Exclusively manufactured by BEYA.</p>
-                   <button className="px-10 py-4 bg-white text-slate-900 font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform">Shop Now</button>
-                </div>
-             </div>
-             {/* Products */}
-             <div className="p-12 max-w-[1400px] mx-auto">
-                <h3 className="text-3xl font-black uppercase text-center mb-12">Trending Now</h3>
-                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                   {[1,2,3,4,5,6,7,8].map(i => (
-                      <div key={i} className="group cursor-pointer" onClick={handleAddToCart}>
-                         <div className="aspect-[3/4] bg-slate-100 mb-4 rounded-xl overflow-hidden relative">
-                            <div className="absolute inset-0 flex items-center justify-center text-slate-300">
-                               <Box className="w-12 h-12" />
-                            </div>
-                            <div className="absolute bottom-4 left-0 right-0 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                               <button className="px-6 py-3 bg-slate-900 text-white text-xs font-bold uppercase tracking-wider rounded-full shadow-xl hover:bg-indigo-600 transition-colors">Add to cart</button>
-                            </div>
-                         </div>
-                         <h4 className="font-bold text-base group-hover:text-indigo-600 transition-colors">Premium Article {i}</h4>
-                         <p className="text-slate-500 text-sm mt-1">450.00 MAD</p>
-                      </div>
-                   ))}
-                </div>
+          <div className="flex-1 overflow-y-auto bg-white flex justify-center">
+             <div className="w-full">
+                <StorePreview isModal={true} />
              </div>
           </div>
         </div>
