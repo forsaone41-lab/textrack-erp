@@ -353,6 +353,19 @@ function AppContent() {
     window.location.hash = '#/'; // Force go to login
   }
 
+  // Handle SaaS Wildcard Subdomains
+  const hostname = window.location.hostname;
+  // If it's a subdomain (not www and not app)
+  const isSubdomain = hostname.includes('.beyacreative.com') && hostname !== 'www.beyacreative.com' && hostname !== 'app.beyacreative.com';
+  
+  if (isSubdomain) {
+     return (
+        <Suspense fallback={<PageLoader />}>
+           <StoreBuilder isLiveStore={true} />
+        </Suspense>
+     );
+  }
+
   if (!currentUser) {
     return (
       <Routes>

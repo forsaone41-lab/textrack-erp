@@ -11,7 +11,7 @@ const THEMES = [
   { id: 'kids', name: 'Playful Kids', layout: 'playful', defaultColor: '#0ea5e9', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=800&auto=format&fit=crop' }
 ];
 
-export default function StoreBuilder() {
+export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: boolean }) {
   const { isAr } = useLang();
   const [activeTab, setActiveTab] = useState<string>('orders');
   const [storeName, setStoreName] = useState('My Brand');
@@ -785,6 +785,14 @@ export default function StoreBuilder() {
     if (activeTheme.layout === 'playful') return <LayoutPlayful {...props} />;
     return <LayoutHeroCenter {...props} />;
   };
+
+  if (isLiveStore) {
+    return (
+      <div className="w-full min-h-screen bg-white">
+        <StorePreviewWrapper isModal={false} />
+      </div>
+    );
+  }
 
   return (
     <div className={`space-y-6 ${isAr ? 'text-right' : 'text-left'} bg-slate-50 min-h-screen p-6`}>
@@ -1609,12 +1617,12 @@ export default function StoreBuilder() {
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center gap-3 mb-8">
                      <Globe className="w-5 h-5 text-indigo-600 shrink-0" />
                      <div className="flex-1 text-left overflow-hidden">
-                        <p className="text-xs font-bold text-slate-400 uppercase mb-1">Lien de la boutique</p>
-                        <p className="text-sm font-medium text-slate-800 truncate">https://{storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com</p>
+                        <p className="text-xs font-bold text-slate-400 uppercase mb-1">Lien de démonstration (Provisoire)</p>
+                        <p className="text-sm font-medium text-slate-800 truncate">{window.location.origin}{window.location.pathname}#/store/{storeName.toLowerCase().replace(/\s+/g, '')}</p>
                      </div>
                      <button 
                         onClick={() => {
-                           navigator.clipboard.writeText(`https://${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`);
+                           navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}#/store/${storeName.toLowerCase().replace(/\s+/g, '')}`);
                         }} 
                         className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 text-slate-600 transition-colors" 
                         title="Copier le lien"
