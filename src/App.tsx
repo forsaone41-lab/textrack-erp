@@ -480,7 +480,6 @@ function AppContent() {
         <Route path="stocks" element={can('stocks') ? <StockMateriaux /> : <Navigate to="/" replace />} />
         <Route path="achats" element={can('achats') ? <Achats /> : <Navigate to="/" replace />} />
         <Route path="commandes" element={can('commandes') ? <Commandes /> : <Navigate to="/" replace />} />
-        <Route path="store-builder" element={currentUser.role === 'admin' ? <StoreBuilder /> : <Navigate to="/" replace />} />
         <Route path="agenda" element={can('agenda') ? <Agenda /> : <Navigate to="/" replace />} />
         <Route path="commandes/manage" element={can('commandes') ? <ManageOrder /> : <Navigate to="/" replace />} />
         <Route path="liste-attente" element={can('rh') ? <ListeAttente /> : <Navigate to="/" replace />} />
@@ -497,6 +496,8 @@ function AppContent() {
         <Route path="kiosk" element={<KioskScanner />} />
         <Route path="fast-scanner" element={can('fast_scanner') ? <FastScanner /> : <Navigate to="/" replace />} />
       </Route>
+      {/* Standalone SaaS Route for BEYA STORE Builder */}
+      <Route path="/store-builder" element={currentUser?.role === 'admin' ? <div className="min-h-screen bg-white"><StoreBuilder /></div> : <Navigate to="/" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

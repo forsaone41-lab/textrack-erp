@@ -26,6 +26,11 @@ export default function StoreBuilder() {
   
   const [cartCount, setCartCount] = useState(0);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [storeProducts, setStoreProducts] = useState([
+    { id: 1, name: 'Premium Hoodie', price: '450.00' },
+    { id: 2, name: 'Essential T-Shirt', price: '150.00' }
+  ]);
+  const [newProduct, setNewProduct] = useState({ name: '', price: '' });
 
   const applyTheme = (theme: typeof THEMES[0]) => {
      setActiveTheme(theme);
@@ -250,14 +255,25 @@ export default function StoreBuilder() {
   };
 
   return (
-    <div className={`space-y-6 ${isAr ? 'text-right' : 'text-left'}`}>
+    <div className={`space-y-6 ${isAr ? 'text-right' : 'text-left'} bg-slate-50 min-h-screen p-6`}>
+      {/* Top Navigation / Back Button */}
+      <div className="flex items-center justify-between mb-4">
+         <button onClick={() => window.location.href = '#/'} className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors font-bold text-sm bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-200">
+            ← Retour à BEYA ERP
+         </button>
+         <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">SaaS Builder Active</span>
+         </div>
+      </div>
+
       <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${isAr ? 'sm:flex-row-reverse' : ''}`}>
         <div className={isAr ? 'text-right' : 'text-left'}>
           <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
             <h1 className="text-2xl font-black text-slate-800 tracking-tight">BEYA STORE PRO</h1>
-            <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded uppercase tracking-widest">Advanced SaaS Builder</span>
+            <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded uppercase tracking-widest">SaaS ÉDITION</span>
           </div>
-          <p className="text-slate-500 text-sm mt-1">Créez des boutiques E-commerce sur-mesure avec un moteur de thème avancé.</p>
+          <p className="text-slate-500 text-sm mt-1">Gérez la boutique e-commerce de votre client de A à Z.</p>
         </div>
         <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
           <button onClick={() => setShowPreview(true)} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all shadow-sm">
@@ -384,10 +400,70 @@ export default function StoreBuilder() {
 
               {/* PRODUCTS TAB */}
               {activeTab === 'products' && (
-                <div className="space-y-4">
+                <div className="space-y-6">
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <h4 className="text-xs font-black text-slate-800 mb-3 uppercase tracking-wider">Ajouter un Produit</h4>
+                    <div className="space-y-3">
+                       <input 
+                         type="text" 
+                         placeholder="Nom du produit (ex: T-Shirt)" 
+                         value={newProduct.name}
+                         onChange={e => setNewProduct({...newProduct, name: e.target.value})}
+                         className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" 
+                       />
+                       <input 
+                         type="number" 
+                         placeholder="Prix (MAD)" 
+                         value={newProduct.price}
+                         onChange={e => setNewProduct({...newProduct, price: e.target.value})}
+                         className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" 
+                       />
+                       <button 
+                         onClick={() => {
+                            if(newProduct.name && newProduct.price) {
+                               setStoreProducts([{ id: Date.now(), ...newProduct }, ...storeProducts]);
+                               setNewProduct({ name: '', price: '' });
+                            }
+                         }}
+                         className="w-full py-2 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-indigo-600 transition-colors"
+                       >
+                         Ajouter
+                       </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                     <div className="flex-1 h-px bg-slate-200"></div>
+                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">OU</span>
+                     <div className="flex-1 h-px bg-slate-200"></div>
+                  </div>
+
                   <button onClick={() => setIsImportModalOpen(true)} className="w-full py-3 border-2 border-dashed border-slate-300 text-slate-500 rounded-xl text-xs font-bold hover:border-indigo-500 hover:text-indigo-600 transition-colors flex flex-col items-center justify-center gap-1">
-                    <Plus className="w-5 h-5" /> Importer depuis BEYA ERP
+                    <Plus className="w-5 h-5" /> Importer depuis l'ERP
                   </button>
+
+                  <div className="pt-4 border-t border-slate-100">
+                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Catalogue ({storeProducts.length})</h4>
+                    <div className="space-y-2">
+                       {storeProducts.map(p => (
+                          <div key={p.id} className="p-3 border border-slate-100 bg-white rounded-xl flex items-center gap-3 shadow-sm hover:border-indigo-200 transition-colors">
+                             <div className="w-10 h-10 bg-slate-50 rounded-lg flex items-center justify-center border border-slate-100">
+                                <Box className="w-5 h-5 text-slate-400" />
+                             </div>
+                             <div className="flex-1">
+                                <p className="text-xs font-bold text-slate-800">{p.name}</p>
+                                <p className="text-[10px] font-black text-indigo-600">{p.price} MAD</p>
+                             </div>
+                             <button 
+                               onClick={() => setStoreProducts(storeProducts.filter(x => x.id !== p.id))}
+                               className="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded"
+                             >
+                                <X className="w-4 h-4" />
+                             </button>
+                          </div>
+                       ))}
+                    </div>
+                  </div>
                 </div>
               )}
 
