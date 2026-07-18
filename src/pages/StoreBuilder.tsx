@@ -42,6 +42,8 @@ export default function StoreBuilder() {
   const [buyMode, setBuyMode] = useState<'cart'|'direct'|'both'|'form'>('both');
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [productForm, setProductForm] = useState<any>(null);
+  const [newSizeInput, setNewSizeInput] = useState('');
+  const [newColorInput, setNewColorInput] = useState('#000000');
 
   const applyTheme = (theme: typeof THEMES[0]) => {
      setActiveTheme(theme);
@@ -1164,8 +1166,8 @@ export default function StoreBuilder() {
 
       {/* PRO PRODUCT FORM MODAL */}
       {isProductModalOpen && (
-        <div className="fixed inset-0 z-[400] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-8">
-           <div className="bg-white w-full max-w-4xl h-[90vh] rounded-[2rem] shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-[400] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8">
+           <div className="bg-white w-full max-w-[1400px] h-full max-h-[95vh] rounded-[2rem] shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
               <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50 sticky top-0 z-10">
                  <div>
                     <h2 className="text-3xl font-black text-slate-800">{productForm?.id ? 'Modifier le Produit' : 'Créer un Produit'}</h2>
@@ -1226,25 +1228,39 @@ export default function StoreBuilder() {
                           <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Variantes (Tailles & Couleurs)</label>
                           <div>
                              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-3">Tailles Disponibles</label>
+                             <div className="flex gap-2 mb-4">
+                                <input type="text" placeholder="Ex: XXL, 42, 6 Ans..." value={newSizeInput} onChange={e => setNewSizeInput(e.target.value)} onKeyDown={e => { if(e.key === 'Enter' && newSizeInput) { setProductForm({...productForm, sizes: [...(productForm.sizes||[]), newSizeInput]}); setNewSizeInput(''); e.preventDefault(); } }} className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" />
+                                <button onClick={() => { if(newSizeInput) { setProductForm({...productForm, sizes: [...(productForm.sizes||[]), newSizeInput]}); setNewSizeInput(''); } }} className="px-4 py-2 bg-slate-900 text-white font-bold text-xs rounded-lg hover:bg-slate-800 transition-colors">Ajouter</button>
+                             </div>
                              <div className="flex flex-wrap gap-2">
-                                {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map(size => (
-                                   <button key={size} onClick={() => {
-                                      const sizes = productForm?.sizes || [];
-                                      setProductForm({...productForm, sizes: sizes.includes(size) ? sizes.filter((s:string) => s !== size) : [...sizes, size]});
-                                   }} className={`px-4 py-2 rounded-lg font-bold border transition-colors ${productForm?.sizes?.includes(size) ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-indigo-400'}`}>
-                                      {size}
-                                   </button>
+                                {(productForm?.sizes || []).map((size: string) => (
+                                   <div key={size} className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg group">
+                                      <span className="text-xs font-bold text-slate-700">{size}</span>
+                                      <button onClick={() => setProductForm({...productForm, sizes: productForm.sizes.filter((s:string) => s !== size)})} className="text-slate-400 hover:text-rose-500"><X className="w-3 h-3" /></button>
+                                   </div>
                                 ))}
                              </div>
                           </div>
                           <div>
                              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-3">Couleurs Disponibles</label>
+                             <div className="flex gap-2 mb-4">
+                                <div className="relative w-12 h-10 rounded-lg overflow-hidden border border-slate-200 shadow-sm shrink-0">
+                                   <input type="color" value={newColorInput} onChange={e => setNewColorInput(e.target.value)} className="absolute -inset-4 w-[200%] h-[200%] cursor-pointer" />
+                                </div>
+                                <input type="text" value={newColorInput} readOnly className="w-24 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 focus:outline-none uppercase" />
+                                <button onClick={() => { if(!productForm?.colors?.includes(newColorInput)) { setProductForm({...productForm, colors: [...(productForm.colors||[]), newColorInput]}); } }} className="px-4 py-2 bg-slate-900 text-white font-bold text-xs rounded-lg hover:bg-slate-800 transition-colors">Ajouter</button>
+                             </div>
                              <div className="flex flex-wrap gap-3">
-                                {['#0f172a', '#ffffff', '#ef4444', '#3b82f6', '#22c55e', '#eab308'].map(color => (
-                                   <button key={color} onClick={() => {
-                                      const colors = productForm?.colors || [];
-                                      setProductForm({...productForm, colors: colors.includes(color) ? colors.filter((c:string) => c !== color) : [...colors, color]});
-                                   }} className={`w-8 h-8 rounded-full border shadow-sm transition-transform ${productForm?.colors?.includes(color) ? 'scale-125 ring-2 ring-indigo-500 ring-offset-2' : 'hover:scale-110'}`} style={{ backgroundColor: color }}></button>
+                                {(productForm?.colors || []).map((color: string) => (
+                                   <div key={color} className="relative group">
+                                      <div className="w-8 h-8 rounded-full border shadow-sm" style={{ backgroundColor: color }}></div>
+                                      <button onClick={() => {
+                                         const newColors = productForm.colors.filter((c:string) => c !== color);
+                                         const newColorImages = {...(productForm.colorImages||{})};
+                                         delete newColorImages[color];
+                                         setProductForm({...productForm, colors: newColors, colorImages: newColorImages});
+                                      }} className="absolute -top-2 -right-2 w-4 h-4 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"><X className="w-3 h-3" /></button>
+                                   </div>
                                 ))}
                              </div>
                           </div>
