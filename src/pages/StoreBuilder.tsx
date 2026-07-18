@@ -797,7 +797,7 @@ export default function StoreBuilder() {
 
       <div className={`flex gap-6 ${isAr ? 'flex-row-reverse' : ''}`}>
         {/* Left Sidebar - Controls */}
-        <div className="w-80 flex flex-col gap-4">
+        <div className="w-[420px] flex flex-col gap-4 shrink-0">
           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
             <div className={`flex border-b border-slate-200 flex-wrap ${isAr ? 'flex-row-reverse' : ''}`}>
               {[
@@ -819,7 +819,7 @@ export default function StoreBuilder() {
               ))}
             </div>
 
-            <div className="p-5 overflow-y-auto max-h-[600px]">
+            <div className="p-5 overflow-y-auto h-[calc(100vh-240px)]">
               {/* THEMES TAB */}
               {activeTab === 'themes' && (
                 <div className="space-y-6">
