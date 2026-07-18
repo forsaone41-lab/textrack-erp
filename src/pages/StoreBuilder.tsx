@@ -1369,7 +1369,7 @@ export default function StoreBuilder() {
       {/* PRO PRODUCT FORM MODAL */}
       {isProductModalOpen && (
         <div className="fixed inset-0 z-[400] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8">
-           <div className="bg-white w-full max-w-5xl h-[90vh] rounded-[2rem] shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+           <div className="bg-white w-full max-w-7xl max-h-[95vh] rounded-[2rem] shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
               <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50 sticky top-0 z-10">
                  <div>
                     <h2 className="text-3xl font-black text-slate-800">{productForm?.id ? 'Modifier le Produit' : 'Créer un Produit'}</h2>
@@ -1380,9 +1380,9 @@ export default function StoreBuilder() {
                  </button>
               </div>
               <div className="flex-1 overflow-y-auto p-8 bg-slate-50/50">
-                 <div className="grid grid-cols-3 gap-8">
+                 <div className="grid grid-cols-12 gap-6">
                     {/* Left Column (Images & Basic) */}
-                    <div className="col-span-1 space-y-6">
+                    <div className="col-span-3 space-y-6 flex flex-col">
                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                           <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-4">Image du Produit</label>
                           <label className="aspect-square bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-indigo-500 transition-colors group relative overflow-hidden">
@@ -1403,8 +1403,8 @@ export default function StoreBuilder() {
                           </label>
                        </div>
                     </div>
-                    {/* Right Column (Details & Variants) */}
-                    <div className="col-span-2 space-y-6">
+                    {/* Middle Column (Details) */}
+                    <div className="col-span-5 space-y-6 flex flex-col">
                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                           <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Informations Générales</label>
                           <div>
@@ -1426,6 +1426,10 @@ export default function StoreBuilder() {
                           </div>
                        </div>
                        
+                       </div>
+                    </div>
+                    {/* Right Column (Variants) */}
+                    <div className="col-span-4 space-y-6">
                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
                           <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Variantes (Tailles & Couleurs)</label>
                           <div>
