@@ -1167,7 +1167,7 @@ export default function StoreBuilder() {
       {/* PRO PRODUCT FORM MODAL */}
       {isProductModalOpen && (
         <div className="fixed inset-0 z-[400] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8">
-           <div className="bg-white w-full max-w-[1400px] h-full max-h-[95vh] rounded-[2rem] shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+           <div className="bg-white w-full max-w-5xl h-[90vh] rounded-[2rem] shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
               <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50 sticky top-0 z-10">
                  <div>
                     <h2 className="text-3xl font-black text-slate-800">{productForm?.id ? 'Modifier le Produit' : 'Créer un Produit'}</h2>
@@ -1299,6 +1299,62 @@ export default function StoreBuilder() {
                                  </div>
                               </div>
                            )}
+
+                           {/* VARIANT QUANTITY MATRIX */}
+                           {(() => {
+                              const sizes = productForm?.sizes || [];
+                              const colors = productForm?.colors || [];
+
+                              let combinations: {size?: string, color?: string}[] = [];
+                              if (sizes.length > 0 && colors.length > 0) {
+                                  sizes.forEach((s:string) => colors.forEach((c:string) => combinations.push({size: s, color: c})));
+                              } else if (sizes.length > 0) {
+                                  sizes.forEach((s:string) => combinations.push({size: s}));
+                              } else if (colors.length > 0) {
+                                  colors.forEach((c:string) => combinations.push({color: c}));
+                              }
+
+                              if (combinations.length === 0) return null;
+
+                              return (
+                                  <div className="mt-8 pt-8 border-t border-slate-100">
+                                      <label className="block text-xs font-black text-slate-800 uppercase mb-4">Stock par Variante</label>
+                                      <div className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                                          <table className="w-full text-left text-sm">
+                                              <thead className="bg-white border-b border-slate-200 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+                                                  <tr>
+                                                      <th className="px-6 py-4">Variante</th>
+                                                      <th className="px-6 py-4 w-40">Quantité (Stock)</th>
+                                                  </tr>
+                                              </thead>
+                                              <tbody className="divide-y divide-slate-100 bg-white">
+                                                  {combinations.map((comb) => {
+                                                      const key = `${comb.size || 'nosize'}-${comb.color || 'nocolor'}`;
+                                                      const qty = productForm.variantQuantities?.[key] || '';
+                                                      return (
+                                                          <tr key={key} className="hover:bg-slate-50/50 transition-colors">
+                                                              <td className="px-6 py-4 font-bold text-slate-700 flex items-center gap-3">
+                                                                  {comb.color && <div className="w-5 h-5 rounded-full border shadow-sm shrink-0" style={{ backgroundColor: comb.color }}></div>}
+                                                                  {comb.size && <span className="bg-slate-100 px-2 py-1 rounded text-xs">{comb.size}</span>}
+                                                                  {(!comb.size && comb.color) && <span className="uppercase text-[10px] text-slate-400 font-bold">Couleur</span>}
+                                                              </td>
+                                                              <td className="px-6 py-3">
+                                                                  <input type="number" placeholder="0" value={qty} onChange={(e) => {
+                                                                      setProductForm({
+                                                                          ...productForm, 
+                                                                          variantQuantities: { ...(productForm.variantQuantities || {}), [key]: e.target.value }
+                                                                      });
+                                                                  }} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors" />
+                                                              </td>
+                                                          </tr>
+                                                      )
+                                                  })}
+                                              </tbody>
+                                          </table>
+                                      </div>
+                                  </div>
+                              );
+                           })()}
                         </div>
                     </div>
                  </div>
