@@ -212,7 +212,7 @@ export default function StoreBuilder() {
                         disabled
                         className="w-full px-3 py-2 border border-slate-200 rounded-l-lg text-sm font-medium bg-slate-50 text-slate-500" 
                       />
-                      <span className="px-3 py-2 bg-slate-100 border border-l-0 border-slate-200 rounded-r-lg text-xs font-bold text-slate-500">.beyastore.ma</span>
+                      <span className="px-3 py-2 bg-slate-100 border border-l-0 border-slate-200 rounded-r-lg text-xs font-bold text-slate-500">.beyacreative.com</span>
                     </div>
                   </div>
                   <div className="pt-4 border-t border-slate-100 space-y-3">
@@ -254,7 +254,7 @@ export default function StoreBuilder() {
               <div className="w-3 h-3 rounded-full bg-green-400"></div>
             </div>
             <div className="px-4 py-1.5 bg-slate-100 rounded-md text-[10px] font-bold text-slate-400 flex items-center gap-2 w-1/2 justify-center">
-              <Globe className="w-3 h-3" /> {storeName.toLowerCase().replace(/\s+/g, '')}.beyastore.ma
+              <Globe className="w-3 h-3" /> {storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com
             </div>
             <div className="flex items-center gap-2 text-slate-400">
               <button onClick={() => setPreviewDevice('desktop')} className={`p-1.5 rounded-md ${previewDevice === 'desktop' ? 'text-indigo-600 bg-indigo-50' : 'hover:bg-slate-100'}`}><Monitor className="w-4 h-4" /></button>
@@ -279,7 +279,7 @@ export default function StoreBuilder() {
           <div className="bg-slate-800 text-white p-4 flex items-center justify-between shadow-xl z-10">
             <div className="flex items-center gap-3">
                <div className="px-3 py-1 bg-slate-700 rounded-md text-xs font-bold font-mono">
-                 {storeName.toLowerCase().replace(/\s+/g, '')}.beyastore.ma
+                 {storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com
                </div>
                <span className="text-xs text-slate-400">Mode Aperçu (Prévisualisation)</span>
             </div>
