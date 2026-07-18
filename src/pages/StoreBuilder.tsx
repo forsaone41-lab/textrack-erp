@@ -32,6 +32,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [isControlsCollapsed, setIsControlsCollapsed] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [storeLang, setStoreLang] = useState<'fr'|'en'|'ar'>(config.storeLang || 'fr');
+  const storeIsAr = storeLang === 'ar';
   
   // Customization States (The PRO way)
   const [activeTheme, setActiveTheme] = useState(config.activeTheme || THEMES[0]);
@@ -1223,7 +1224,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   }
 
   return (
-    <div className={`space-y-6 ${isAr ? 'text-right' : 'text-left'} bg-slate-50 min-h-screen p-6`}>
+    <div className={`space-y-6 ${storeIsAr ? 'text-right' : 'text-left'} bg-slate-50 min-h-screen p-6`}>
       {/* Top Navigation / Back Button */}
       <div className="flex items-center justify-between mb-4">
          <button onClick={() => window.location.href = '#/'} className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors font-bold text-sm bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-200">
@@ -1235,46 +1236,46 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
          </div>
       </div>
 
-      <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${isAr ? 'sm:flex-row-reverse' : ''}`}>
-        <div className={isAr ? 'text-right' : 'text-left'}>
-          <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
+      <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${storeIsAr ? 'sm:flex-row-reverse' : ''}`}>
+        <div className={storeIsAr ? 'text-right' : 'text-left'}>
+          <div className={`flex items-center gap-3 ${storeIsAr ? 'flex-row-reverse' : ''}`}>
             <h1 className="text-2xl font-black text-slate-800 tracking-tight">BEYA STORE PRO</h1>
             <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded uppercase tracking-widest">SaaS ÉDITION</span>
             <span className="flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-black rounded uppercase tracking-widest" title="Connexion chiffrée de bout en bout et route protégée (Admin uniquement)"><ShieldCheck className="w-3 h-3" /> Sécurisé</span>
           </div>
           <div className="flex bg-slate-100 p-1 rounded-xl w-max mt-4 shadow-inner">
-             <button onClick={() => { setPlatformMode('gestion'); setActiveTab('orders'); }} className={`px-5 py-2 rounded-lg text-xs font-black transition-all ${platformMode === 'gestion' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>{isAr ? 'إدارة المتجر' : 'Gestion Boutique'}</button>
-             <button onClick={() => { setPlatformMode('builder'); setActiveTab('themes'); }} className={`px-5 py-2 rounded-lg text-xs font-black transition-all ${platformMode === 'builder' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>{isAr ? 'تطوير الموقع' : 'Développement Site'}</button>
+             <button onClick={() => { setPlatformMode('gestion'); setActiveTab('orders'); }} className={`px-5 py-2 rounded-lg text-xs font-black transition-all ${platformMode === 'gestion' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>{storeIsAr ? 'إدارة المتجر' : 'Gestion Boutique'}</button>
+             <button onClick={() => { setPlatformMode('builder'); setActiveTab('themes'); }} className={`px-5 py-2 rounded-lg text-xs font-black transition-all ${platformMode === 'builder' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>{storeIsAr ? 'تطوير الموقع' : 'Développement Site'}</button>
           </div>
         </div>
-        <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+        <div className={`flex items-center gap-2 ${storeIsAr ? 'flex-row-reverse' : ''}`}>
           <button onClick={handleSave} disabled={isSaving} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${isSaving ? 'bg-green-500 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
-            {isSaving ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />} {isSaving ? (isAr ? 'تم الحفظ' : 'Enregistré') : (isAr ? 'حفظ' : 'Enregistrer')}
+            {isSaving ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />} {isSaving ? (storeIsAr ? 'تم الحفظ' : 'Enregistré') : (isAr ? 'حفظ' : 'Enregistrer')}
           </button>
           <button onClick={() => setShowPreview(true)} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all shadow-sm">
             <ExternalLink className="w-4 h-4" /> Prévisualiser
           </button>
           <button onClick={handlePublish} disabled={isPublishing} className="flex items-center gap-2 bg-gradient-to-r from-slate-800 to-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold hover:shadow-lg transition-all shadow-sm disabled:opacity-70 disabled:cursor-not-allowed">
             {isPublishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />} 
-            {isPublishing ? (isAr ? 'جاري النشر...' : 'Publication...') : (isAr ? 'نشر' : 'Publier')}
+            {isPublishing ? (storeIsAr ? 'جاري النشر...' : 'Publication...') : (isAr ? 'نشر' : 'Publier')}
           </button>
         </div>
       </div>
 
-      <div className={`flex gap-6 ${isAr ? 'flex-row-reverse' : ''}`}>
+      <div className={`flex gap-6 ${storeIsAr ? 'flex-row-reverse' : ''}`}>
         {/* VERTICAL SIDE NAVIGATION */}
         <div className="w-24 shrink-0 flex flex-col gap-3">
            {(platformMode === 'gestion' ? [
-                 { id: 'orders', icon: ListOrdered, label: isAr ? 'الطلبات' : 'Commandes' },
-                 { id: 'products', icon: ShoppingBag, label: isAr ? 'المنتجات' : 'Produits' },
-                 { id: 'customers', icon: Users, label: isAr ? 'الزبائن' : 'Clients' },
-                 { id: 'payments', icon: CreditCard, label: isAr ? 'الأداء' : 'Paiements' },
-                 { id: 'delivery', icon: Truck, label: isAr ? 'التوصيل' : 'Livraison' }
+                 { id: 'orders', icon: ListOrdered, label: storeIsAr ? 'الطلبات' : 'Commandes' },
+                 { id: 'products', icon: ShoppingBag, label: storeIsAr ? 'المنتجات' : 'Produits' },
+                 { id: 'customers', icon: Users, label: storeIsAr ? 'الزبائن' : 'Clients' },
+                 { id: 'payments', icon: CreditCard, label: storeIsAr ? 'الأداء' : 'Paiements' },
+                 { id: 'delivery', icon: Truck, label: storeIsAr ? 'التوصيل' : 'Livraison' }
            ] : [
-                 { id: 'themes', icon: LayoutTemplate, label: isAr ? 'القوالب' : 'Thèmes' },
-                 { id: 'design', icon: Paintbrush, label: isAr ? 'التصميم' : 'Design' },
-                 { id: 'apps', icon: Box, label: isAr ? 'تطبيقات' : 'Apps' },
-                 { id: 'settings', icon: Settings, label: isAr ? 'إعدادات' : 'Config' }
+                 { id: 'themes', icon: LayoutTemplate, label: storeIsAr ? 'القوالب' : 'Thèmes' },
+                 { id: 'design', icon: Paintbrush, label: storeIsAr ? 'التصميم' : 'Design' },
+                 { id: 'apps', icon: Box, label: storeIsAr ? 'تطبيقات' : 'Apps' },
+                 { id: 'settings', icon: Settings, label: storeIsAr ? 'إعدادات' : 'Config' }
            ]).map(tab => (
                  <button 
                    key={tab.id}
@@ -1538,11 +1539,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               {activeTab === 'settings' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{isAr ? 'اسم العلامة التجارية' : 'Nom de la marque'}</label>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{storeIsAr ? 'اسم العلامة التجارية' : 'Nom de la marque'}</label>
                     <input type="text" value={storeName} onChange={(e) => setStoreName(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-medium focus:outline-none focus:border-indigo-500" />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{isAr ? 'النطاق (URL)' : 'Domaine (URL)'}</label>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{storeIsAr ? 'النطاق (URL)' : 'Domaine (URL)'}</label>
                     <div className="flex items-center">
                       <input type="text" value={storeName.toLowerCase().replace(/\s+/g, '')} disabled className="w-full px-3 py-2 border border-slate-200 rounded-l-lg text-sm font-medium bg-slate-50 text-slate-500" />
                       <span className="px-3 py-2 bg-slate-100 border border-l-0 border-slate-200 rounded-r-lg text-xs font-bold text-slate-500">.beyacreative.com</span>
@@ -1684,7 +1685,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                  <div className="space-y-6">
                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
                         <div>
-                           <h4 className="text-xs font-black text-slate-800 mb-2 uppercase tracking-wider">{isAr ? 'لغة المتجر' : 'Langue de la boutique'}</h4>
+                           <h4 className="text-xs font-black text-slate-800 mb-2 uppercase tracking-wider">{storeIsAr ? 'لغة المتجر' : 'Langue de la boutique'}</h4>
                            <div className="flex gap-2">
                               <button onClick={() => setStoreLang('fr')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${storeLang === 'fr' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}`}>Français</button>
                               <button onClick={() => setStoreLang('en')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${storeLang === 'en' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}`}>English</button>
@@ -1695,7 +1696,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
                        <div>
-                          <h4 className="text-xs font-black text-slate-800 mb-1 uppercase tracking-wider">{isAr ? 'اسم المتجر' : 'Nom de la boutique'}</h4>
+                          <h4 className="text-xs font-black text-slate-800 mb-1 uppercase tracking-wider">{storeIsAr ? 'اسم المتجر' : 'Nom de la boutique'}</h4>
                           <input 
                             type="text" 
                             value={storeName} 
@@ -1705,38 +1706,38 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        </div>
                        
                        <div className="pt-4 border-t border-slate-200">
-                          <h4 className="text-xs font-black text-slate-800 mb-2 uppercase tracking-wider">{isAr ? 'شعار المتجر (اختياري)' : 'Logo de la boutique (Optionnel)'}</h4>
+                          <h4 className="text-xs font-black text-slate-800 mb-2 uppercase tracking-wider">{storeIsAr ? 'شعار المتجر (اختياري)' : 'Logo de la boutique (Optionnel)'}</h4>
                           <div className="flex items-center gap-4">
                              <div className="w-16 h-16 bg-white border border-slate-200 rounded-xl flex items-center justify-center overflow-hidden shadow-sm shrink-0">
                                 {storeLogo ? <img src={storeLogo} className="w-full h-full object-contain p-1" alt="Logo" /> : <ImageIcon className="w-6 h-6 text-slate-300" />}
                              </div>
                              <label className="cursor-pointer px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm">
-                                {isAr ? 'رفع الشعار' : 'Importer un logo'}
+                                {storeIsAr ? 'رفع الشعار' : 'Importer un logo'}
                                 <input type="file" className="hidden" accept="image/*" onChange={(e) => {
                                    const file = e.target.files?.[0];
                                    if (file) setStoreLogo(URL.createObjectURL(file));
                                 }} />
                              </label>
                              {storeLogo && (
-                                <button onClick={() => setStoreLogo('')} className="text-xs font-bold text-rose-500 hover:text-rose-600">{isAr ? 'إزالة' : 'Retirer'}</button>
+                                <button onClick={() => setStoreLogo('')} className="text-xs font-bold text-rose-500 hover:text-rose-600">{storeIsAr ? 'إزالة' : 'Retirer'}</button>
                              )}
                           </div>
                        </div>
                     </div>
 
                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                       <h4 className="text-xs font-black text-slate-800 mb-1 uppercase tracking-wider flex items-center gap-2"><Globe className="w-4 h-4 text-indigo-600" /> {isAr ? 'نطاق مخصص (دومين)' : 'Domaine Personnalisé'}</h4>
-                       <p className="text-[10px] text-slate-500 mb-2">{isAr ? 'اربط النطاق الخاص بك (مثال: www.maboutique.com)' : 'Connectez votre propre domaine (ex: www.maboutique.com).'}</p>
+                       <h4 className="text-xs font-black text-slate-800 mb-1 uppercase tracking-wider flex items-center gap-2"><Globe className="w-4 h-4 text-indigo-600" /> {storeIsAr ? 'نطاق مخصص (دومين)' : 'Domaine Personnalisé'}</h4>
+                       <p className="text-[10px] text-slate-500 mb-2">{storeIsAr ? 'اربط النطاق الخاص بك (مثال: www.maboutique.com)' : 'Connectez votre propre domaine (ex: www.maboutique.com).'}</p>
                        <div className="flex gap-2">
                          <input 
                            type="text" 
-                           placeholder={isAr ? 'مثال: www.maboutique.com' : 'ex: www.maboutique.com'}
+                           placeholder={storeIsAr ? 'مثال: www.maboutique.com' : 'ex: www.maboutique.com'}
                            value={customDomain} 
                            onChange={e => setCustomDomain(e.target.value)} 
                            className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 font-medium"
                          />
                          <button onClick={handleLinkDomain} disabled={isLinkingDomain} className="bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-800 transition-colors disabled:opacity-50">
-                           {isLinkingDomain ? '...' : isAr ? 'ربط' : 'Lier'}
+                           {isLinkingDomain ? '...' : storeIsAr ? 'ربط' : 'Lier'}
                          </button>
                        </div>
                        {domainError && <p className="text-xs text-rose-500 mt-2 font-bold flex items-center gap-1"><AlertCircle className="w-3 h-3"/> {domainError}</p>}
@@ -1745,15 +1746,15 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                           <div className="mt-4 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
                              <div className="bg-indigo-50/50 p-3 border-b border-slate-100 flex items-center gap-2">
                                 <ShieldCheck className="w-4 h-4 text-indigo-600" />
-                                <span className="text-xs font-bold text-slate-700">{isAr ? 'إعدادات مطلوبة (Namecheap, Hostinger...)' : 'Configuration requise (Namecheap, Hostinger...)'}</span>
+                                <span className="text-xs font-bold text-slate-700">{storeIsAr ? 'إعدادات مطلوبة (Namecheap, Hostinger...)' : 'Configuration requise (Namecheap, Hostinger...)'}</span>
                              </div>
                              <div className="p-4 space-y-4">
                                 <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
-                                   {isAr ? <>لكي يعمل نطاقك، أضف <b>سجل A (A Record)</b> عند مزود الخدمة الخاص بك (Namecheap, Hostinger...) بهذه المعلومات :</> : <>Pour que votre domaine fonctionne, ajoutez un <b>Enregistrement A (A Record)</b> chez votre fournisseur (Namecheap, Hostinger...) avec ces informations :</>}
+                                   {storeIsAr ? <>لكي يعمل نطاقك، أضف <b>سجل A (A Record)</b> عند مزود الخدمة الخاص بك (Namecheap, Hostinger...) بهذه المعلومات :</> : <>Pour que votre domaine fonctionne, ajoutez un <b>Enregistrement A (A Record)</b> chez votre fournisseur (Namecheap, Hostinger...) avec ces informations :</>}
                                 </p>
                                 <div className="space-y-2">
                                    <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-100 rounded-lg group">
-                                      <span className="text-xs text-slate-500 font-medium w-16">{isAr ? 'النوع' : 'Type'}</span>
+                                      <span className="text-xs text-slate-500 font-medium w-16">{storeIsAr ? 'النوع' : 'Type'}</span>
                                       <code className="text-xs font-black text-slate-800 tracking-wide flex-1">A</code>
                                    </div>
                                    <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-100 rounded-lg group">
