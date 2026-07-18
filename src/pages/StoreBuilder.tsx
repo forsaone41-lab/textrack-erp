@@ -184,19 +184,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
       );
    };
 
-   const FloatingColorPicker = () => {
-      if (isLiveStore) return null;
-      return (
-         <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-2 animate-bounce">
-            <div className="bg-white p-2 rounded-full shadow-2xl flex items-center gap-3 border-2 border-slate-200 hover:scale-105 transition-transform">
-               <span className="text-xs font-black text-slate-700 pl-2 uppercase tracking-wider">Couleur:</span>
-               <label className="w-10 h-10 rounded-full cursor-pointer shadow-inner border-[3px] border-white ring-2 ring-slate-100" style={{ backgroundColor: primaryColor }} title="Changer la couleur">
-                  <input type="color" className="opacity-0 w-0 h-0" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} />
-               </label>
-            </div>
-         </div>
-      );
-   };
+
 
   const ThemeFooter = ({ bgColor = '#f8f9fa', textColor = '#64748b', setPage }: any) => (
      <footer className="mt-auto py-12 px-6 border-t" style={{ backgroundColor: bgColor, borderColor: 'rgba(0,0,0,0.05)' }}>
@@ -1025,7 +1013,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     return (
        <>
           <Layout />
-          <FloatingColorPicker />
+          
        </>
     );
   };
@@ -2228,6 +2216,17 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
          </div>
       )}
 
+    
+       {!isLiveStore && (
+          <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-2">
+             <div className="bg-white p-2 rounded-full shadow-2xl flex items-center gap-3 border-2 border-slate-200 hover:scale-105 transition-transform">
+                <span className="text-xs font-black text-slate-700 pl-2 uppercase tracking-wider">Couleur:</span>
+                <label className="w-10 h-10 rounded-full cursor-pointer shadow-inner border-[3px] border-white ring-2 ring-slate-100" style={{ backgroundColor: primaryColor }} title="Changer la couleur">
+                   <input type="color" className="opacity-0 w-0 h-0" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} />
+                </label>
+             </div>
+          </div>
+       )}
     </div>
   );
 }
