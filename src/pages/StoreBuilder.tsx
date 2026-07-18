@@ -35,8 +35,12 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [cartCount, setCartCount] = useState(0);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [storeProducts, setStoreProducts] = useState([
-    { id: 1, name: 'Premium Hoodie', price: '450.00', image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800' },
-    { id: 2, name: 'Essential T-Shirt', price: '150.00', image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=800' }
+    { id: 1, name: 'Premium Hoodie', price: '450.00', category: 'Outerwear', image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800' },
+    { id: 2, name: 'Essential T-Shirt', price: '150.00', category: 'Tops', image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=800' },
+    { id: 3, name: 'Cargo Pants', price: '350.00', category: 'Bottoms', image: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&q=80&w=800' },
+    { id: 4, name: 'Classic Sneakers', price: '550.00', category: 'Shoes', image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=800' },
+    { id: 5, name: 'Summer Dress', price: '290.00', category: 'Dresses', image: 'https://images.unsplash.com/photo-1515347619152-16b713b194d2?auto=format&fit=crop&q=80&w=800' },
+    { id: 6, name: 'Leather Jacket', price: '890.00', category: 'Outerwear', image: 'https://images.unsplash.com/photo-1551028719-0c124a1119ce?auto=format&fit=crop&q=80&w=800' }
   ]);
   const [newProduct, setNewProduct] = useState({ name: '', price: '' });
 
@@ -174,7 +178,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
      </footer>
   );
 
-  const LayoutHeroCenter = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode }: any) => {
+  const LayoutHeroCenter = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts }: any) => {
     const [selectedSize, setSelectedSize] = useState<string>('');
     const [selectedColor, setSelectedColor] = useState<string>('');
     const [quantity, setQuantity] = useState(1);
@@ -228,9 +232,20 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         )}
         {page === 'collections' && (
             <div className={`${isModal ? 'p-16 max-w-[1400px]' : 'p-8'} mx-auto w-full`}>
-               <h3 className="text-2xl font-black uppercase text-center mb-10">All Products</h3>
+               <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
+                  <h3 className="text-2xl font-black uppercase text-center md:text-left">All Products</h3>
+                  {categories && categories.length > 1 && (
+                     <div className="flex flex-wrap gap-2 justify-center">
+                        {categories.map((c: string) => (
+                           <button key={c} onClick={() => setActiveCategory(c)} className={`px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors ${activeCategory === c ? 'text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`} style={{ backgroundColor: activeCategory === c ? primaryColor : undefined }}>
+                              {c}
+                           </button>
+                        ))}
+                     </div>
+                  )}
+               </div>
                <div className={`grid gap-8 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3')}`}>
-                  {storeProducts.map((p: any) => (
+                  {filteredProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-[3/4] bg-slate-100 mb-4 overflow-hidden relative rounded-xl">
                            {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-12 h-12" /></div>}
@@ -364,7 +379,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   );
   };
 
-  const LayoutSplitScreen = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode }: any) => {
+  const LayoutSplitScreen = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts }: any) => {
     const [selectedSize, setSelectedSize] = useState<string>('');
     const [selectedColor, setSelectedColor] = useState<string>('');
     const [quantity, setQuantity] = useState(1);
@@ -419,11 +434,20 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         )}
         {page === 'collections' && (
             <div className={`${isModal ? 'p-20' : 'p-8'} mx-auto w-full`}>
-               <div className="flex justify-between items-end mb-12 border-b pb-4">
+               <div className="flex flex-col md:flex-row justify-between items-end mb-12 border-b pb-4 gap-6">
                   <h3 className="text-2xl font-light">All Products</h3>
+                  {categories && categories.length > 1 && (
+                     <div className="flex flex-wrap gap-4 text-sm">
+                        {categories.map((c: string) => (
+                           <button key={c} onClick={() => setActiveCategory(c)} className={`pb-1 border-b-2 transition-colors ${activeCategory === c ? 'border-current' : 'border-transparent text-gray-400 hover:text-black'}`} style={{ color: activeCategory === c ? primaryColor : undefined }}>
+                              {c}
+                           </button>
+                        ))}
+                     </div>
+                  )}
                </div>
                <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
-                  {storeProducts.map((p: any) => (
+                  {filteredProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-[4/5] bg-gray-100 mb-6 relative overflow-hidden flex items-center justify-center">
                            {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-10"><ImageIcon className="w-16 h-16" /></div>}
@@ -538,7 +562,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   );
   };
 
-  const LayoutElegant = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode }: any) => {
+  const LayoutElegant = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts }: any) => {
     const [selectedSize, setSelectedSize] = useState<string>('');
     const [selectedColor, setSelectedColor] = useState<string>('');
     const [quantity, setQuantity] = useState(1);
@@ -588,9 +612,18 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         )}
         {page === 'collections' && (
             <div className={`${isModal ? 'p-16' : 'p-8'} mx-auto w-full`}>
-               <h3 className="text-xl tracking-widest uppercase text-center mb-16" style={{ color: primaryColor }}>All Products</h3>
+               <h3 className="text-xl tracking-widest uppercase text-center mb-8" style={{ color: primaryColor }}>All Products</h3>
+               {categories && categories.length > 1 && (
+                  <div className="flex flex-wrap justify-center gap-8 mb-16 text-xs tracking-widest uppercase">
+                     {categories.map((c: string) => (
+                        <button key={c} onClick={() => setActiveCategory(c)} className="transition-colors" style={{ color: activeCategory === c ? '#fff' : '#555', borderBottom: activeCategory === c ? `1px solid ${primaryColor}` : '1px solid transparent', paddingBottom: '4px' }}>
+                           {c}
+                        </button>
+                     ))}
+                  </div>
+               )}
                <div className={`grid gap-4 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
-                  {storeProducts.map((p: any) => (
+                  {filteredProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer relative aspect-square bg-[#1a1a1a] border border-white/5 p-4 flex flex-col items-center justify-center" onClick={() => navigateToProduct(p.id)}>
                         {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover mb-8" alt={p.name} /> : <ImageIcon className="w-16 h-16 opacity-10 mb-8" />}
                         <h4 className="font-serif text-2xl mb-2 group-hover:text-white transition-colors" style={{ color: primaryColor }}>{p.name}</h4>
@@ -702,7 +735,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   );
   };
 
-  const LayoutPlayful = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode }: any) => {
+  const LayoutPlayful = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts }: any) => {
     const [selectedSize, setSelectedSize] = useState<string>('');
     const [selectedColor, setSelectedColor] = useState<string>('');
     const [quantity, setQuantity] = useState(1);
@@ -756,9 +789,18 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         )}
         {page === 'collections' && (
             <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-6'} mx-auto w-full`}>
-               <h3 className="text-3xl font-black text-center mb-10 text-slate-800">All Products ✨</h3>
+               <h3 className="text-3xl font-black text-center mb-6 text-slate-800">All Products ✨</h3>
+               {categories && categories.length > 1 && (
+                  <div className="flex flex-wrap gap-2 justify-center mb-10">
+                     {categories.map((c: string) => (
+                        <button key={c} onClick={() => setActiveCategory(c)} className="px-6 py-2 rounded-full text-sm font-black transition-transform hover:scale-105 border-2 border-transparent" style={{ backgroundColor: activeCategory === c ? primaryColor : '#f1f5f9', color: activeCategory === c ? '#fff' : '#64748b', borderColor: activeCategory === c ? 'transparent' : '#e2e8f0' }}>
+                           {c}
+                        </button>
+                     ))}
+                  </div>
+               )}
                <div className={`grid gap-6 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2')}`}>
-                  {storeProducts.map((p: any) => (
+                  {filteredProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer bg-slate-50 p-4 rounded-3xl hover:bg-slate-100 transition-colors border-2 border-transparent hover:border-current" style={{ borderColor: primaryColor }} onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-square bg-white mb-4 overflow-hidden relative rounded-2xl shadow-sm flex items-center justify-center">
                            {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-12 h-12 opacity-10" />}
@@ -879,13 +921,17 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const StorePreviewWrapper = ({ isModal = false }) => {
     const [page, setPage] = useState('home');
     const [activeProductId, setActiveProductId] = useState<any>(null);
+    const [activeCategory, setActiveCategory] = useState('All');
 
     const navigateToProduct = (id: any) => {
         setActiveProductId(id);
         setPage('product');
     };
 
-    const props = { isModal, page, setPage, activeProductId, navigateToProduct, buyMode };
+    const categories = ['All', ...Array.from(new Set(storeProducts.map(p => p.category).filter(Boolean)))];
+    const filteredProducts = activeCategory === 'All' ? storeProducts : storeProducts.filter(p => p.category === activeCategory);
+
+    const props = { isModal, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts };
 
     if (activeTheme.layout === 'hero-center') return <LayoutHeroCenter {...props} />;
     if (activeTheme.layout === 'split-screen') return <LayoutSplitScreen {...props} />;
