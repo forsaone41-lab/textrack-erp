@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle } from 'lucide-react';
+import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 
 const THEMES = [
@@ -793,8 +793,9 @@ export default function StoreBuilder() {
           <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
             <h1 className="text-2xl font-black text-slate-800 tracking-tight">BEYA STORE PRO</h1>
             <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded uppercase tracking-widest">SaaS ÉDITION</span>
+            <span className="flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-black rounded uppercase tracking-widest" title="Connexion chiffrée de bout en bout et route protégée (Admin uniquement)"><ShieldCheck className="w-3 h-3" /> Sécurisé</span>
           </div>
-          <p className="text-slate-500 text-sm mt-1">Gérez la boutique e-commerce de votre client de A à Z.</p>
+          <p className="text-slate-500 text-sm mt-1">Gérez la boutique e-commerce de votre client de A à Z en toute sécurité.</p>
         </div>
         <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
           <button onClick={() => setShowPreview(true)} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all shadow-sm">
