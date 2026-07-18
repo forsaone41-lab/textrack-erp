@@ -52,7 +52,7 @@ type ThemeId = keyof typeof THEMES;
 
 export default function StoreBuilder() {
   const { lang, isAr } = useLang();
-  const [activeTab, setActiveTab] = useState<'themes' | 'settings' | 'products'>('themes');
+  const [activeTab, setActiveTab] = useState<'themes' | 'settings' | 'products' | 'apps'>('themes');
   const [storeName, setStoreName] = useState('My Brand');
   const [showPreview, setShowPreview] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<'desktop'|'mobile'>('desktop');
@@ -145,19 +145,25 @@ export default function StoreBuilder() {
               </button>
               <button 
                 onClick={() => setActiveTab('products')}
-                className={`flex-1 py-3 text-xs font-bold flex items-center justify-center gap-2 transition-colors ${activeTab === 'products' ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50' : 'text-slate-500 hover:bg-slate-50'}`}
+                className={`flex-1 py-3 text-xs font-bold flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === 'products' ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50' : 'text-slate-500 hover:bg-slate-50'}`}
               >
                 <ShoppingBag className="w-4 h-4" /> Produits
               </button>
               <button 
-                onClick={() => setActiveTab('settings')}
-                className={`flex-1 py-3 text-xs font-bold flex items-center justify-center gap-2 transition-colors ${activeTab === 'settings' ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50' : 'text-slate-500 hover:bg-slate-50'}`}
+                onClick={() => setActiveTab('apps')}
+                className={`flex-1 py-3 text-xs font-bold flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === 'apps' ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50' : 'text-slate-500 hover:bg-slate-50'}`}
               >
-                <Settings className="w-4 h-4" /> Paramètres
+                <Box className="w-4 h-4" /> Apps
+              </button>
+              <button 
+                onClick={() => setActiveTab('settings')}
+                className={`flex-1 py-3 text-xs font-bold flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === 'settings' ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50' : 'text-slate-500 hover:bg-slate-50'}`}
+              >
+                <Settings className="w-4 h-4" /> Config
               </button>
             </div>
 
-            <div className="p-5">
+            <div className="p-4">
               {activeTab === 'themes' && (
                 <div className="space-y-4">
                   <div>
@@ -179,7 +185,7 @@ export default function StoreBuilder() {
                         <div 
                            key={id} 
                            onClick={() => setActiveThemeId(id)}
-                           className="border border-slate-200 rounded-xl p-1 cursor-pointer hover:border-indigo-300 transition-colors opacity-60 hover:opacity-100"
+                           className="border border-slate-200 rounded-xl p-1 cursor-pointer hover:border-indigo-300 transition-all opacity-70 hover:opacity-100 hover:scale-[1.02]"
                         >
                           <div className={`aspect-video ${t.heroBg} rounded-lg mb-1 flex items-center justify-center`}>
                              <span className={`${t.heroText} text-[8px] font-black tracking-widest`}>{t.name}</span>
@@ -239,6 +245,44 @@ export default function StoreBuilder() {
                      </div>
                   </div>
                 </div>
+              )}
+
+              {activeTab === 'apps' && (
+                 <div className="space-y-4">
+                    <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 mb-4">
+                       <h4 className="text-xs font-black text-indigo-800 mb-1">App Store BEYA</h4>
+                       <p className="text-[10px] text-indigo-600">Installez des plugins pour booster vos ventes (Pixel, WhatsApp, etc).</p>
+                    </div>
+                    
+                    <div className="space-y-3">
+                       <div className="p-3 border border-slate-200 rounded-xl flex items-center gap-3">
+                          <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center"><CheckCircle className="w-5 h-5 text-green-600" /></div>
+                          <div className="flex-1">
+                             <p className="text-xs font-bold text-slate-800">WhatsApp Chat</p>
+                             <p className="text-[9px] text-slate-500">Support client en direct</p>
+                          </div>
+                          <button className="px-3 py-1.5 bg-slate-900 text-white rounded text-[10px] font-bold">Ajouter</button>
+                       </div>
+
+                       <div className="p-3 border border-slate-200 rounded-xl flex items-center gap-3">
+                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center"><Globe className="w-5 h-5 text-blue-600" /></div>
+                          <div className="flex-1">
+                             <p className="text-xs font-bold text-slate-800">Meta Pixel (Facebook)</p>
+                             <p className="text-[9px] text-slate-500">Tracking publicitaire</p>
+                          </div>
+                          <button className="px-3 py-1.5 bg-slate-100 text-slate-600 rounded text-[10px] font-bold border border-slate-200">Installé</button>
+                       </div>
+
+                       <div className="p-3 border border-slate-200 rounded-xl flex items-center gap-3">
+                          <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center"><ShoppingBag className="w-5 h-5 text-amber-600" /></div>
+                          <div className="flex-1">
+                             <p className="text-xs font-bold text-slate-800">Abandoned Cart</p>
+                             <p className="text-[9px] text-slate-500">Récupération de paniers</p>
+                          </div>
+                          <button className="px-3 py-1.5 bg-slate-900 text-white rounded text-[10px] font-bold">Ajouter</button>
+                       </div>
+                    </div>
+                 </div>
               )}
             </div>
           </div>
