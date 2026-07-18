@@ -57,7 +57,12 @@ export default function StoreBuilder() {
 
   // --- DYNAMIC LAYOUT COMPONENTS ---
 
-  const LayoutHeroCenter = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode }: any) => (
+  const LayoutHeroCenter = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode }: any) => {
+    const [selectedSize, setSelectedSize] = useState<string>('');
+    const [selectedColor, setSelectedColor] = useState<string>('');
+    const [quantity, setQuantity] = useState(1);
+    
+    return (
     <div className={`w-full min-h-full bg-white text-slate-900 ${fontFamily} flex flex-col`}>
       <div className={`p-6 flex justify-between items-center border-b border-slate-100 ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4' : ''}`}>
          <h2 onClick={() => setPage('home')} className="text-2xl font-black uppercase tracking-tighter cursor-pointer">{storeName}</h2>
@@ -137,7 +142,42 @@ export default function StoreBuilder() {
                     <div className="flex-1 flex flex-col justify-center">
                        <h2 className="text-4xl font-black mb-4">{p.name}</h2>
                        <p className="text-2xl font-bold mb-8" style={{ color: primaryColor }}>{p.price} MAD</p>
-                       <p className="text-slate-500 mb-8 leading-relaxed">This is a premium quality product. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                       <p className="text-slate-500 mb-8 leading-relaxed">{p.description || 'This is a premium quality product. Lorem ipsum dolor sit amet, consectetur adipiscing elit.'}</p>
+                       
+                       {/* PRO SELECTORS */}
+                       <div className="mb-8 space-y-6">
+                          {p.colors?.length > 0 && (
+                             <div>
+                                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 block">Couleur</span>
+                                <div className="flex gap-3">
+                                   {p.colors.map((c: string) => (
+                                      <button key={c} onClick={() => setSelectedColor(c)} className={`w-8 h-8 rounded-full border-2 transition-all ${selectedColor === c ? 'border-slate-800 scale-125' : 'border-transparent hover:scale-110 shadow-sm'}`} style={{ backgroundColor: c }} />
+                                   ))}
+                                </div>
+                             </div>
+                          )}
+                          {p.sizes?.length > 0 && (
+                             <div>
+                                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 block">Taille</span>
+                                <div className="flex flex-wrap gap-2">
+                                   {p.sizes.map((s: string) => (
+                                      <button key={s} onClick={() => setSelectedSize(s)} className={`px-4 py-2 text-sm font-bold border rounded-lg transition-colors ${selectedSize === s ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-400'}`}>
+                                         {s}
+                                      </button>
+                                   ))}
+                                </div>
+                             </div>
+                          )}
+                          <div>
+                             <span className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 block">Quantité</span>
+                             <div className="flex items-center justify-between bg-slate-50 w-32 px-4 py-2 rounded-lg border border-slate-200">
+                                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="text-slate-500 hover:text-slate-800 font-bold text-lg">-</button>
+                                <span className="font-bold text-slate-800">{quantity}</span>
+                                <button onClick={() => setQuantity(quantity + 1)} className="text-slate-500 hover:text-slate-800 font-bold text-lg">+</button>
+                             </div>
+                          </div>
+                       </div>
+
                        {buyMode === 'form' ? (
                           <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-3">
                              <h4 className="font-black text-slate-800 mb-2">Express Checkout</h4>
@@ -187,8 +227,14 @@ export default function StoreBuilder() {
       </div>
     </div>
   );
+  };
 
-  const LayoutSplitScreen = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode }: any) => (
+  const LayoutSplitScreen = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode }: any) => {
+    const [selectedSize, setSelectedSize] = useState<string>('');
+    const [selectedColor, setSelectedColor] = useState<string>('');
+    const [quantity, setQuantity] = useState(1);
+
+    return (
     <div className={`w-full min-h-full bg-[#f8f9fa] text-[#212529] ${fontFamily} flex flex-col`}>
       <div className={`px-8 py-6 flex justify-between items-center bg-white ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4' : ''}`}>
          <div className={`flex gap-8 text-sm ${previewDevice === 'mobile' && !isModal ? 'hidden' : ''}`}>
@@ -273,7 +319,42 @@ export default function StoreBuilder() {
                     <div className="flex-1 flex flex-col justify-center">
                        <h2 className="text-5xl font-light mb-4">{p.name}</h2>
                        <p className="text-2xl font-light text-gray-500 mb-8">{p.price} MAD</p>
-                       <p className="text-gray-500 mb-12 leading-relaxed font-light">Experience true elegance with this meticulously designed piece. Perfect for every occasion.</p>
+                       <p className="text-gray-500 mb-12 leading-relaxed font-light">{p.description || 'Experience true elegance with this meticulously designed piece. Perfect for every occasion.'}</p>
+                       
+                       {/* PRO SELECTORS */}
+                       <div className="mb-12 space-y-8">
+                          {p.colors?.length > 0 && (
+                             <div>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 block">Color</span>
+                                <div className="flex gap-4">
+                                   {p.colors.map((c: string) => (
+                                      <button key={c} onClick={() => setSelectedColor(c)} className={`w-6 h-6 rounded-full border border-gray-200 transition-all ${selectedColor === c ? 'ring-1 ring-offset-4 ring-black' : 'hover:scale-110'}`} style={{ backgroundColor: c }} />
+                                   ))}
+                                </div>
+                             </div>
+                          )}
+                          {p.sizes?.length > 0 && (
+                             <div>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 block">Size</span>
+                                <div className="flex flex-wrap gap-3">
+                                   {p.sizes.map((s: string) => (
+                                      <button key={s} onClick={() => setSelectedSize(s)} className={`px-4 py-2 text-xs tracking-widest border transition-colors ${selectedSize === s ? 'bg-black border-black text-white' : 'bg-transparent border-gray-200 text-gray-600 hover:border-black'}`}>
+                                         {s}
+                                      </button>
+                                   ))}
+                                </div>
+                             </div>
+                          )}
+                          <div>
+                             <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 block">Quantity</span>
+                             <div className="flex items-center justify-between border-b border-gray-200 w-24 pb-2">
+                                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="text-gray-400 hover:text-black font-light text-lg">-</button>
+                                <span className="font-light text-black">{quantity}</span>
+                                <button onClick={() => setQuantity(quantity + 1)} className="text-gray-400 hover:text-black font-light text-lg">+</button>
+                             </div>
+                          </div>
+                       </div>
+
                        {buyMode === 'form' ? (
                           <div className="p-8 border border-gray-200 bg-white space-y-4">
                              <h4 className="text-xl font-light mb-4" style={{ color: primaryColor }}>Checkout</h4>
@@ -320,8 +401,14 @@ export default function StoreBuilder() {
       </div>
     </div>
   );
+  };
 
-  const LayoutElegant = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode }: any) => (
+  const LayoutElegant = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode }: any) => {
+    const [selectedSize, setSelectedSize] = useState<string>('');
+    const [selectedColor, setSelectedColor] = useState<string>('');
+    const [quantity, setQuantity] = useState(1);
+
+    return (
     <div className={`w-full min-h-full bg-[#111] text-[#f5f5f5] ${fontFamily} flex flex-col`}>
       <div className={`p-8 flex flex-col items-center gap-6 border-b border-white/10 ${previewDevice === 'mobile' && !isModal ? 'p-4' : ''}`}>
          <h2 onClick={() => setPage('home')} className="text-4xl font-serif tracking-widest cursor-pointer" style={{ color: primaryColor }}>{storeName}</h2>
@@ -396,7 +483,42 @@ export default function StoreBuilder() {
                        <h2 className="text-5xl font-serif mb-4 text-white">{p.name}</h2>
                        <p className="text-2xl tracking-widest mb-8" style={{ color: primaryColor }}>{p.price} MAD</p>
                        <div className="w-12 h-px bg-white/20 mb-8"></div>
-                       <p className="text-[#888] mb-12 tracking-wide leading-relaxed">Embrace luxury with this exclusive item. Crafted with precision for the modern elegant individual.</p>
+                       <p className="text-[#888] mb-12 tracking-wide leading-relaxed">{p.description || 'Embrace luxury with this exclusive item. Crafted with precision for the modern elegant individual.'}</p>
+                       
+                       {/* PRO SELECTORS */}
+                       <div className="mb-12 space-y-8">
+                          {p.colors?.length > 0 && (
+                             <div>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-4 block">Color</span>
+                                <div className="flex gap-4">
+                                   {p.colors.map((c: string) => (
+                                      <button key={c} onClick={() => setSelectedColor(c)} className={`w-6 h-6 rounded-full border border-white/20 transition-all ${selectedColor === c ? 'ring-1 ring-offset-4 ring-offset-[#111] ring-white scale-110' : 'hover:scale-110'}`} style={{ backgroundColor: c }} />
+                                   ))}
+                                </div>
+                             </div>
+                          )}
+                          {p.sizes?.length > 0 && (
+                             <div>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-4 block">Size</span>
+                                <div className="flex flex-wrap gap-3">
+                                   {p.sizes.map((s: string) => (
+                                      <button key={s} onClick={() => setSelectedSize(s)} className={`px-4 py-2 text-xs tracking-widest border transition-colors ${selectedSize === s ? 'bg-white border-white text-black' : 'bg-transparent border-white/20 text-white/70 hover:border-white'}`}>
+                                         {s}
+                                      </button>
+                                   ))}
+                                </div>
+                             </div>
+                          )}
+                          <div>
+                             <span className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-4 block">Quantity</span>
+                             <div className="flex items-center justify-between border-b border-white/20 w-24 pb-2">
+                                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="text-white/50 hover:text-white font-light text-lg">-</button>
+                                <span className="font-light text-white">{quantity}</span>
+                                <button onClick={() => setQuantity(quantity + 1)} className="text-white/50 hover:text-white font-light text-lg">+</button>
+                             </div>
+                          </div>
+                       </div>
+
                        {buyMode === 'form' ? (
                           <div className="p-8 border border-white/10 bg-[#151515] space-y-4">
                              <h4 className="text-xl font-serif mb-4 text-white">Secure Checkout</h4>
@@ -443,8 +565,14 @@ export default function StoreBuilder() {
       </div>
     </div>
   );
+  };
 
-  const LayoutPlayful = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode }: any) => (
+  const LayoutPlayful = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode }: any) => {
+    const [selectedSize, setSelectedSize] = useState<string>('');
+    const [selectedColor, setSelectedColor] = useState<string>('');
+    const [quantity, setQuantity] = useState(1);
+
+    return (
     <div className={`w-full min-h-full bg-white text-slate-900 ${fontFamily} flex flex-col`}>
       <div className={`p-4 mx-4 mt-4 bg-slate-100 rounded-full flex justify-between items-center ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4 rounded-3xl' : ''}`}>
          <h2 onClick={() => setPage('home')} className="text-2xl font-black tracking-tight cursor-pointer px-4" style={{ color: primaryColor }}>{storeName}</h2>
@@ -526,7 +654,42 @@ export default function StoreBuilder() {
                     <div className="flex-1 flex flex-col justify-center px-4">
                        <h2 className="text-5xl font-black mb-4 text-slate-800">{p.name}</h2>
                        <p className="text-3xl font-black mb-8" style={{ color: primaryColor }}>{p.price} MAD</p>
-                       <p className="text-slate-500 font-medium mb-8 text-lg">Fun, fresh, and perfectly designed for everyday adventures!</p>
+                       <p className="text-slate-500 font-medium mb-8 text-lg">{p.description || 'Fun, fresh, and perfectly designed for everyday adventures!'}</p>
+                       
+                       {/* PRO SELECTORS */}
+                       <div className="mb-8 space-y-6 bg-white p-6 rounded-[2rem] border-4 border-slate-100">
+                          {p.colors?.length > 0 && (
+                             <div>
+                                <span className="text-sm font-black uppercase tracking-wider text-slate-400 mb-3 block">Color</span>
+                                <div className="flex gap-3">
+                                   {p.colors.map((c: string) => (
+                                      <button key={c} onClick={() => setSelectedColor(c)} className={`w-10 h-10 rounded-full border-4 transition-transform ${selectedColor === c ? 'border-slate-800 scale-125' : 'border-transparent hover:scale-110 shadow-sm'}`} style={{ backgroundColor: c }} />
+                                   ))}
+                                </div>
+                             </div>
+                          )}
+                          {p.sizes?.length > 0 && (
+                             <div>
+                                <span className="text-sm font-black uppercase tracking-wider text-slate-400 mb-3 block">Size</span>
+                                <div className="flex flex-wrap gap-2">
+                                   {p.sizes.map((s: string) => (
+                                      <button key={s} onClick={() => setSelectedSize(s)} className={`px-5 py-3 text-sm font-black rounded-xl transition-transform border-4 ${selectedSize === s ? 'bg-slate-800 border-slate-800 text-white scale-105 shadow-xl' : 'bg-slate-50 border-transparent text-slate-500 hover:border-slate-200'}`}>
+                                         {s}
+                                      </button>
+                                   ))}
+                                </div>
+                             </div>
+                          )}
+                          <div>
+                             <span className="text-sm font-black uppercase tracking-wider text-slate-400 mb-3 block">Quantity</span>
+                             <div className="flex items-center justify-between bg-slate-50 w-40 px-4 py-2 rounded-xl border-4 border-slate-100">
+                                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="text-slate-400 hover:text-slate-800 font-black text-2xl">-</button>
+                                <span className="font-black text-xl text-slate-800">{quantity}</span>
+                                <button onClick={() => setQuantity(quantity + 1)} className="text-slate-400 hover:text-slate-800 font-black text-2xl">+</button>
+                             </div>
+                          </div>
+                       </div>
+
                        {buyMode === 'form' ? (
                           <div className="bg-white p-8 rounded-[2rem] border-4 border-slate-100 space-y-4">
                              <h4 className="text-xl font-black text-slate-800 mb-2">Yay! Checkout 🎁</h4>
@@ -576,6 +739,7 @@ export default function StoreBuilder() {
       </div>
     </div>
   );
+  };
 
   const StorePreviewWrapper = ({ isModal = false }) => {
     const [page, setPage] = useState('home');
