@@ -40,6 +40,7 @@ export default function StoreBuilder() {
   const [newPageTitle, setNewPageTitle] = useState('');
   
   const [buyMode, setBuyMode] = useState<'cart'|'direct'|'both'>('both');
+  const [editingProduct, setEditingProduct] = useState<any>(null);
 
   const applyTheme = (theme: typeof THEMES[0]) => {
      setActiveTheme(theme);
@@ -700,36 +701,68 @@ export default function StoreBuilder() {
               {/* PRODUCTS TAB */}
               {activeTab === 'products' && (
                 <div className="space-y-6">
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                    <h4 className="text-xs font-black text-slate-800 mb-3 uppercase tracking-wider">Ajouter un Produit</h4>
-                    <div className="space-y-3">
-                       <input 
-                         type="text" 
-                         placeholder="Nom du produit (ex: T-Shirt)" 
-                         value={newProduct.name}
-                         onChange={e => setNewProduct({...newProduct, name: e.target.value})}
-                         className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" 
-                       />
-                       <input 
-                         type="number" 
-                         placeholder="Prix (MAD)" 
-                         value={newProduct.price}
-                         onChange={e => setNewProduct({...newProduct, price: e.target.value})}
-                         className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" 
-                       />
-                       <button 
-                         onClick={() => {
-                            if(newProduct.name && newProduct.price) {
-                               setStoreProducts([{ id: Date.now(), ...newProduct }, ...storeProducts]);
-                               setNewProduct({ name: '', price: '' });
-                            }
-                         }}
-                         className="w-full py-2 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-indigo-600 transition-colors"
-                       >
-                         Ajouter
-                       </button>
-                    </div>
-                  </div>
+                  {editingProduct ? (
+                     <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-200">
+                        <div className="flex items-center justify-between mb-3">
+                           <h4 className="text-xs font-black text-indigo-800 uppercase tracking-wider">Modifier Produit</h4>
+                           <button onClick={() => setEditingProduct(null)} className="text-indigo-400 hover:text-indigo-600"><X className="w-4 h-4" /></button>
+                        </div>
+                        <div className="space-y-3">
+                           <input 
+                             type="text" 
+                             value={editingProduct.name}
+                             onChange={e => setEditingProduct({...editingProduct, name: e.target.value})}
+                             className="w-full px-3 py-2 border border-indigo-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 bg-white" 
+                           />
+                           <input 
+                             type="number" 
+                             value={editingProduct.price}
+                             onChange={e => setEditingProduct({...editingProduct, price: e.target.value})}
+                             className="w-full px-3 py-2 border border-indigo-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 bg-white" 
+                           />
+                           <button 
+                             onClick={() => {
+                                setStoreProducts(storeProducts.map(p => p.id === editingProduct.id ? editingProduct : p));
+                                setEditingProduct(null);
+                             }}
+                             className="w-full py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors"
+                           >
+                             Enregistrer
+                           </button>
+                        </div>
+                     </div>
+                  ) : (
+                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <h4 className="text-xs font-black text-slate-800 mb-3 uppercase tracking-wider">Ajouter un Produit</h4>
+                        <div className="space-y-3">
+                           <input 
+                             type="text" 
+                             placeholder="Nom du produit (ex: T-Shirt)" 
+                             value={newProduct.name}
+                             onChange={e => setNewProduct({...newProduct, name: e.target.value})}
+                             className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" 
+                           />
+                           <input 
+                             type="number" 
+                             placeholder="Prix (MAD)" 
+                             value={newProduct.price}
+                             onChange={e => setNewProduct({...newProduct, price: e.target.value})}
+                             className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" 
+                           />
+                           <button 
+                             onClick={() => {
+                                if(newProduct.name && newProduct.price) {
+                                   setStoreProducts([{ id: Date.now(), ...newProduct }, ...storeProducts]);
+                                   setNewProduct({ name: '', price: '' });
+                                }
+                             }}
+                             className="w-full py-2 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-indigo-600 transition-colors"
+                           >
+                             Ajouter
+                           </button>
+                        </div>
+                     </div>
+                  )}
 
                   <div className="flex items-center gap-2">
                      <div className="flex-1 h-px bg-slate-200"></div>
@@ -745,16 +778,20 @@ export default function StoreBuilder() {
                     <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Catalogue ({storeProducts.length})</h4>
                     <div className="space-y-2">
                        {storeProducts.map(p => (
-                          <div key={p.id} className="p-3 border border-slate-100 bg-white rounded-xl flex items-center gap-3 shadow-sm hover:border-indigo-200 transition-colors">
-                             <div className="w-10 h-10 bg-slate-50 rounded-lg flex items-center justify-center border border-slate-100">
-                                <Box className="w-5 h-5 text-slate-400" />
+                          <div key={p.id} onClick={() => setEditingProduct(p)} className="p-3 border border-slate-100 bg-white rounded-xl flex items-center gap-3 shadow-sm hover:border-indigo-500 cursor-pointer transition-colors group">
+                             <div className="w-10 h-10 bg-slate-50 rounded-lg flex items-center justify-center border border-slate-100 group-hover:bg-indigo-50 group-hover:text-indigo-600">
+                                <Box className="w-5 h-5 text-slate-400 group-hover:text-indigo-600" />
                              </div>
                              <div className="flex-1">
                                 <p className="text-xs font-bold text-slate-800">{p.name}</p>
                                 <p className="text-[10px] font-black text-indigo-600">{p.price} MAD</p>
                              </div>
                              <button 
-                               onClick={() => setStoreProducts(storeProducts.filter(x => x.id !== p.id))}
+                               onClick={(e) => { 
+                                  e.stopPropagation(); 
+                                  setStoreProducts(storeProducts.filter(x => x.id !== p.id));
+                                  if(editingProduct?.id === p.id) setEditingProduct(null);
+                               }}
                                className="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded"
                              >
                                 <X className="w-4 h-4" />
