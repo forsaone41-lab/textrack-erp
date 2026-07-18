@@ -7,6 +7,7 @@ export default function StoreBuilder() {
   const { lang, isAr } = useLang();
   const [activeTab, setActiveTab] = useState<'themes' | 'settings' | 'products'>('themes');
   const [storeName, setStoreName] = useState('My Brand');
+  const [showPreview, setShowPreview] = useState(false);
 
   return (
     <div className={`space-y-6 ${isAr ? 'text-right' : 'text-left'}`}>
@@ -19,7 +20,7 @@ export default function StoreBuilder() {
           <p className="text-slate-500 text-sm mt-1">Créez et gérez les boutiques E-commerce de vos clients</p>
         </div>
         <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
-          <button className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all shadow-sm">
+          <button onClick={() => setShowPreview(true)} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all shadow-sm">
             <ExternalLink className="w-4 h-4" /> Prévisualiser
           </button>
           <button className="flex items-center gap-2 bg-gradient-to-r from-slate-800 to-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold hover:shadow-lg transition-all shadow-sm">
@@ -195,6 +196,69 @@ export default function StoreBuilder() {
           </div>
         </div>
       </div>
+
+      {/* FULL SCREEN PREVIEW MODAL */}
+      {showPreview && (
+        <div className="fixed inset-0 z-[200] bg-slate-900 flex flex-col">
+          {/* Modal Header */}
+          <div className="bg-slate-800 text-white p-4 flex items-center justify-between shadow-xl z-10">
+            <div className="flex items-center gap-3">
+               <div className="px-3 py-1 bg-slate-700 rounded-md text-xs font-bold font-mono">
+                 {storeName.toLowerCase().replace(/\s+/g, '')}.beyastore.ma
+               </div>
+               <span className="text-xs text-slate-400">Mode Aperçu (Prévisualisation)</span>
+            </div>
+            <button onClick={() => setShowPreview(false)} className="flex items-center gap-2 bg-rose-500 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-rose-600 transition-colors">
+              Fermer l'aperçu
+            </button>
+          </div>
+          {/* Modal Content - The Store */}
+          <div className="flex-1 overflow-y-auto bg-white">
+             {/* Navbar */}
+             <div className="p-6 flex justify-between items-center border-b border-slate-100 max-w-[1400px] mx-auto w-full">
+                <h2 className="text-3xl font-black uppercase tracking-tighter">{storeName}</h2>
+                <div className="flex gap-8 text-sm font-bold text-slate-500">
+                   <span className="text-slate-900 cursor-pointer">Home</span>
+                   <span className="cursor-pointer hover:text-slate-900 transition-colors">Collections</span>
+                   <span className="cursor-pointer hover:text-slate-900 transition-colors">About</span>
+                </div>
+                <button className="relative">
+                   <ShoppingBag className="w-6 h-6" />
+                   <span className="absolute -top-1 -right-1 bg-indigo-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">0</span>
+                </button>
+             </div>
+             {/* Hero */}
+             <div className="h-[500px] bg-slate-900 text-white flex flex-col items-center justify-center text-center p-8 bg-[url('https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center relative">
+                <div className="absolute inset-0 bg-black/50"></div>
+                <div className="relative z-10">
+                   <h1 className="text-6xl font-black uppercase tracking-tighter mb-6">New Collection Drop</h1>
+                   <p className="text-xl text-slate-200 mb-10 max-w-2xl mx-auto">Discover our latest premium quality garments designed for the modern lifestyle. Exclusively manufactured by BEYA.</p>
+                   <button className="px-10 py-4 bg-white text-slate-900 font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform">Shop Now</button>
+                </div>
+             </div>
+             {/* Products */}
+             <div className="p-12 max-w-[1400px] mx-auto">
+                <h3 className="text-3xl font-black uppercase text-center mb-12">Trending Now</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                   {[1,2,3,4,5,6,7,8].map(i => (
+                      <div key={i} className="group cursor-pointer">
+                         <div className="aspect-[3/4] bg-slate-100 mb-4 rounded-xl overflow-hidden relative">
+                            <div className="absolute inset-0 flex items-center justify-center text-slate-300">
+                               <Box className="w-12 h-12" />
+                            </div>
+                            <div className="absolute bottom-4 left-0 right-0 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                               <button className="px-6 py-3 bg-slate-900 text-white text-xs font-bold uppercase tracking-wider rounded-full shadow-xl hover:bg-indigo-600 transition-colors">Add to cart</button>
+                            </div>
+                         </div>
+                         <h4 className="font-bold text-base group-hover:text-indigo-600 transition-colors">Premium Article {i}</h4>
+                         <p className="text-slate-500 text-sm mt-1">450.00 MAD</p>
+                      </div>
+                   ))}
+                </div>
+             </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
