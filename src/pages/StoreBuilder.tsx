@@ -1228,11 +1228,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
       {/* Top Navigation / Back Button */}
       <div className="flex items-center justify-between mb-4">
          <button onClick={() => window.location.href = '#/'} className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors font-bold text-sm bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-200">
-            ← Retour à BEYA ERP
+            {storeIsAr ? '→ العودة إلى BEYA ERP' : '← Retour à BEYA ERP'}
          </button>
          <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">SaaS Builder Active</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{storeIsAr ? 'المتجر نشط' : 'SaaS Builder Active'}</span>
          </div>
       </div>
 
@@ -1656,24 +1656,24 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               {activeTab === 'apps' && (
                  <div className="space-y-4">
                      <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-4">
-                        <h4 className="text-sm font-black text-indigo-800 mb-1">App Store BEYA</h4>
-                        <p className="text-xs text-indigo-600">Développez votre boutique avec nos plugins 1-clic (Similaires aux apps Shopify).</p>
+                        <h4 className="text-sm font-black text-indigo-800 mb-1">{storeIsAr ? 'متجر تطبيقات BEYA' : 'App Store BEYA'}</h4>
+                        <p className="text-xs text-indigo-600">{storeIsAr ? 'طوّر متجرك بإضافات بنقرة واحدة (مثل تطبيقات Shopify).' : 'Développez votre boutique avec nos plugins 1-clic (Similaires aux apps Shopify).'}</p>
                      </div>
                      <div className="space-y-3">
                         {[
-                           { name: 'WhatsApp Chat', desc: 'Discutez avec vos clients en direct', icon: '💬', color: 'bg-green-100 text-green-600' },
-                           { name: 'Facebook Pixel', desc: 'Suivez vos conversions Facebook Ads', icon: 'f', color: 'bg-blue-100 text-blue-600 font-serif' },
-                           { name: 'TikTok Pixel', desc: 'Optimisez vos campagnes TikTok', icon: '♪', color: 'bg-black text-white' },
-                           { name: 'Google Analytics 4', desc: 'Analysez votre trafic en temps réel', icon: 'G', color: 'bg-orange-100 text-orange-600 font-serif' },
-                           { name: 'Mailchimp Sync', desc: 'Synchronisez vos clients pour l\'emailing', icon: 'M', color: 'bg-yellow-100 text-yellow-600 font-serif' },
+                           { name: 'WhatsApp Chat', desc: 'Discutez avec vos clients en direct', descAr: 'تواصل مع عملائك مباشرة', icon: '💬', color: 'bg-green-100 text-green-600' },
+                           { name: 'Facebook Pixel', desc: 'Suivez vos conversions Facebook Ads', descAr: 'تتبع تحويلات إعلانات فيسبوك', icon: 'f', color: 'bg-blue-100 text-blue-600 font-serif' },
+                           { name: 'TikTok Pixel', desc: 'Optimisez vos campagnes TikTok', descAr: 'حسّن حملاتك الإعلانية على TikTok', icon: '♪', color: 'bg-black text-white' },
+                           { name: 'Google Analytics 4', desc: 'Analysez votre trafic en temps réel', descAr: 'حلّل زيارات موقعك في الوقت الحقيقي', icon: 'G', color: 'bg-orange-100 text-orange-600 font-serif' },
+                           { name: 'Mailchimp Sync', desc: "Synchronisez vos clients pour l'emailing", descAr: 'زامن قائمة عملائك للتسويق بالبريد', icon: 'M', color: 'bg-yellow-100 text-yellow-600 font-serif' },
                         ].map(app => (
                            <div key={app.name} className="p-3 border border-slate-200 rounded-xl flex items-center gap-4 hover:border-indigo-300 transition-colors">
                               <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl font-black ${app.color}`}>{app.icon}</div>
                               <div className="flex-1">
                                  <p className="text-sm font-bold text-slate-800">{app.name}</p>
-                                 <p className="text-[10px] text-slate-500 mt-1">{app.desc}</p>
+                                 <p className="text-[10px] text-slate-500 mt-1">{storeIsAr ? (app.descAr || app.desc) : app.desc}</p>
                               </div>
-                              <button className="px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-indigo-600 transition-colors shadow-sm">Ajouter</button>
+                              <button className="px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-indigo-600 transition-colors shadow-sm">{storeIsAr ? 'إضافة' : 'Ajouter'}</button>
                            </div>
                         ))}
                      </div>
@@ -1870,7 +1870,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        <div className="space-y-3">
                           <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors">
                              <input type="radio" name="buyMode" checked={buyMode === 'both'} onChange={() => setBuyMode('both')} className="accent-indigo-600" />
-                             Afficher 'Ajouter au panier' & 'Acheter direct'
+                             {storeIsAr ? "عرض 'أضف للسلة' و'اشتري الآن'" : "Afficher 'Ajouter au panier' & 'Acheter direct'"}
                           </label>
                           <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors">
                              <input type="radio" name="buyMode" checked={buyMode === 'direct'} onChange={() => setBuyMode('direct')} className="accent-indigo-600" />
@@ -1878,7 +1878,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                           </label>
                           <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors">
                              <input type="radio" name="buyMode" checked={buyMode === 'cart'} onChange={() => setBuyMode('cart')} className="accent-indigo-600" />
-                             Uniquement 'Ajouter au panier' (Classique)
+                             {storeIsAr ? "فقط 'أضف للسلة' (كلاسيكي)" : "Uniquement 'Ajouter au panier' (Classique)"}
                           </label>
                           <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors">
                              <input type="radio" name="buyMode" checked={buyMode === 'form'} onChange={() => setBuyMode('form')} className="accent-indigo-600" />
@@ -2082,7 +2082,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              ) : (
                                 <>
                                    <ImageIcon className="w-12 h-12 text-slate-300 group-hover:text-indigo-400 mb-2 transition-colors" />
-                                   <span className="text-xs font-bold text-slate-500 group-hover:text-indigo-600">Ajouter une image</span>
+                                   <span className="text-xs font-bold text-slate-500 group-hover:text-indigo-600">{storeIsAr ? 'إضافة صورة' : 'Ajouter une image'}</span>
                                 </>
                              )}
                              <input type="file" className="hidden" accept="image/*" onChange={(e) => {
