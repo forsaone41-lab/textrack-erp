@@ -912,6 +912,66 @@ export default function StoreBuilder() {
           </div>
         </div>
       )}
+
+      {/* ERP IMPORT MODAL */}
+      {isImportModalOpen && (
+        <div className="fixed inset-0 z-[300] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-8">
+           <div className="bg-white w-full max-w-6xl h-[85vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+              <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                 <div>
+                    <h2 className="text-3xl font-black text-slate-800">Importer depuis l'ERP</h2>
+                    <p className="text-slate-500 mt-2">Sélectionnez les produits que vous souhaitez synchroniser avec votre boutique en ligne.</p>
+                 </div>
+                 <button onClick={() => setIsImportModalOpen(false)} className="p-4 bg-white rounded-2xl shadow-sm text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all border border-slate-200">
+                    <X className="w-6 h-6" />
+                 </button>
+              </div>
+              <div className="p-6 border-b border-slate-100 bg-white flex gap-4">
+                 <div className="flex-1 relative">
+                    <Search className="w-6 h-6 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input type="text" placeholder="Rechercher un produit dans l'inventaire ERP..." className="w-full pl-14 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:border-indigo-500 font-medium text-lg" />
+                 </div>
+                 <button className="px-8 py-4 bg-slate-100 text-slate-700 font-bold rounded-2xl hover:bg-slate-200 transition-colors border border-slate-200">Filtrer</button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-8 bg-slate-50/50">
+                 <div className="grid grid-cols-4 gap-8">
+                    {[
+                       { id: 101, name: 'T-Shirt Oversize Black', price: '250.00', stock: 45 },
+                       { id: 102, name: 'Cargo Pants Beige', price: '399.00', stock: 12 },
+                       { id: 103, name: 'Sneakers Pro X', price: '850.00', stock: 8 },
+                       { id: 104, name: 'Cap Classic Navy', price: '120.00', stock: 150 },
+                       { id: 105, name: 'Hoodie Winter Essential', price: '550.00', stock: 34 },
+                       { id: 106, name: 'Socks Pack (3)', price: '90.00', stock: 200 },
+                       { id: 107, name: 'Jacket Denim Vintage', price: '650.00', stock: 5 },
+                       { id: 108, name: 'Sunglasses Retro', price: '199.00', stock: 22 },
+                    ].map(erpItem => (
+                       <div key={erpItem.id} className="bg-white p-5 rounded-3xl border-2 border-slate-100 hover:border-indigo-500 transition-colors group cursor-pointer shadow-sm hover:shadow-xl">
+                          <div className="aspect-square bg-slate-50 rounded-2xl mb-4 flex items-center justify-center relative overflow-hidden">
+                             <ImageIcon className="w-16 h-16 text-slate-300" />
+                             <div className="absolute inset-0 bg-indigo-600/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[1px]">
+                                <button 
+                                   onClick={() => {
+                                      setStoreProducts([{ id: Date.now(), name: erpItem.name, price: erpItem.price }, ...storeProducts]);
+                                      setIsImportModalOpen(false);
+                                   }}
+                                   className="px-8 py-3 bg-indigo-600 text-white text-sm font-bold uppercase tracking-widest rounded-xl shadow-lg hover:scale-105 transition-transform"
+                                >
+                                   Importer
+                                </button>
+                             </div>
+                          </div>
+                          <h4 className="font-bold text-slate-800 text-lg">{erpItem.name}</h4>
+                          <div className="flex items-center justify-between mt-3">
+                             <p className="text-indigo-600 font-black text-lg">{erpItem.price} MAD</p>
+                             <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">{erpItem.stock} en stock</span>
+                          </div>
+                       </div>
+                    ))}
+                 </div>
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 }
