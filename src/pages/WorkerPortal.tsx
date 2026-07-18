@@ -57,6 +57,7 @@ export default function WorkerPortal({ currentUser, onLogout }: WorkerPortalProp
     operations: OperationModele[];
     suivi: SuiviHoraire[];
     paiements: PaiementSalaire[];
+    reclamations: Reclamation[];
   }>({
     employes: [],
     commandes: [],
