@@ -34,6 +34,24 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [storeLang, setStoreLang] = useState<'fr'|'en'|'ar'>(config.storeLang || 'fr');
   const storeIsAr = storeLang === 'ar';
   
+  const tr = (t: string) => {
+     if (!storeIsAr) return t;
+     const dict: Record<string, string> = {
+        'New Collection': 'تشكيلة جديدة',
+        'Discover our latest premium quality garments.': 'اكتشف أحدث تشكيلاتنا ذات الجودة العالية.',
+        'Shop Now': 'تسوق الآن',
+        'Trending Now': 'الأكثر مبيعاً',
+        'All Products': 'جميع المنتجات',
+        'Home': 'الرئيسية',
+        'Collections': 'التشكيلات',
+        'About': 'من نحن',
+        '© 2026 My Brand. Tous droits réservés.': '© 2026 My Brand. جميع الحقوق محفوظة.',
+        'Accueil': 'الرئيسية',
+        'Produits': 'المنتجات'
+     };
+     return dict[t] || t;
+  };
+  
   // Customization States (The PRO way)
   const [activeTheme, setActiveTheme] = useState(config.activeTheme || THEMES[0]);
   const [primaryColor, setPrimaryColor] = useState(config.primaryColor || THEMES[0].defaultColor);
@@ -170,18 +188,17 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
   // --- DYNAMIC LAYOUT COMPONENTS ---
   const EditableText = ({ text, onTextChange, isLiveStore, className, as: Tag = 'span', ...props }: any) => {
-     if (isLiveStore) return <Tag className={className} {...props}>{text}</Tag>;
+     const displayText = tr(text);
+     if (isLiveStore) return <Tag className={className} {...props}>{displayText}</Tag>;
      return (
         <Tag 
-           className={`${className} cursor-text hover:outline hover:outline-2 hover:outline-indigo-500 hover:outline-dashed hover:bg-black/10 transition-all px-1 rounded min-w-[20px] inline-block empty:before:content-['Vide'] empty:before:text-slate-400`} 
+           className={`${className} cursor-text hover:outline hover:outline-2 hover:outline-indigo-500 hover:outline-dashed hover:bg-black/10 transition-all px-1 rounded min-w-[20px] inline-block empty:before:content-['${storeIsAr ? "فارغ" : "Vide"}'] empty:before:text-slate-400`} 
            contentEditable 
            suppressContentEditableWarning 
            onBlur={(e: any) => onTextChange(e.currentTarget.textContent)}
            onClick={(e: any) => e.stopPropagation()}
            {...props}
-        >
-           {text}
-        </Tag>
+        >{displayText}</Tag>
      );
   };
 
@@ -198,7 +215,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             <div onClick={onClick} className="hover:opacity-80 transition-opacity outline-dashed outline-2 outline-transparent hover:outline-indigo-500 rounded px-1">
                {storeLogo ? <img src={storeLogo} alt={storeName} className="h-10 object-contain" /> : storeName}
             </div>
-            <div className="absolute -top-3 -right-4 w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-50" title="Changer le logo">
+            <div className="absolute -top-3 -right-4 w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-50" title={storeIsAr ? 'تغيير الشعار' : 'Changer le logo'}>
                <ImageIcon className="w-3 h-3" />
                <input type="file" className="hidden" accept="image/*" onChange={(e) => {
                   const file = e.target.files?.[0];
@@ -215,7 +232,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
          <div className={`relative group ${className}`} style={style}>
             {children}
             <label className="absolute top-4 right-4 bg-white/90 backdrop-blur text-slate-800 px-4 py-2 rounded-full text-xs font-bold shadow-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center gap-2 z-50 hover:bg-white border border-slate-200">
-               <ImageIcon className="w-4 h-4" /> Changer l'image
+               <ImageIcon className="w-4 h-4" />{storeIsAr ? 'تغيير الصورة' : "Changer l'image"}
                <input type="file" className="hidden" accept="image/*" onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) setHeroImage(URL.createObjectURL(file));
@@ -232,9 +249,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         <div className="max-w-4xl mx-auto flex flex-col items-center text-center gap-6">
            <div className="text-xl font-bold" style={{ color: primaryColor }}>{storeLogo ? <img src={storeLogo} alt={storeName} className="h-10 object-contain" /> : storeName}</div>
            <div className="flex flex-wrap justify-center gap-6 text-sm font-medium" style={{ color: textColor }}>
-              {footerSettings.showPrivacy && <button onClick={() => setPage('privacy')} className="hover:opacity-70 transition-opacity">Politique de Confidentialité</button>}
-              {footerSettings.showTerms && <button onClick={() => setPage('terms')} className="hover:opacity-70 transition-opacity">Conditions Générales</button>}
-              {footerSettings.showCookies && <button onClick={() => setPage('cookies')} className="hover:opacity-70 transition-opacity">Politique des Cookies</button>}
+              {footerSettings.showPrivacy && <button onClick={() => setPage('privacy')} className="hover:opacity-70 transition-opacity">{storeIsAr ? 'سياسة الخصوصية' : 'Politique de Confidentialité'}</button>}
+              {footerSettings.showTerms && <button onClick={() => setPage('terms')} className="hover:opacity-70 transition-opacity">{storeIsAr ? 'الشروط والأحكام' : 'Conditions Générales'}</button>}
+              {footerSettings.showCookies && <button onClick={() => setPage('cookies')} className="hover:opacity-70 transition-opacity">{storeIsAr ? 'سياسة ملفات الارتباط' : 'Politique des Cookies'}</button>}
            </div>
            <EditableText as="p" text={footerSettings.copyright} onTextChange={(v: string) => setFooterSettings({...footerSettings, copyright: v})} isLiveStore={isLiveStore} className="text-xs opacity-70 mt-4" style={{ color: textColor }} />
         </div>
@@ -252,7 +269,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
          <LogoEditor onClick={() => setPage('home')} className="text-2xl font-black uppercase tracking-tighter" />
          <div className={`flex gap-6 text-sm font-bold ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
             {storePages.map(p => (
-               <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer capitalize hover:opacity-70 transition-opacity" style={{ color: page === p.id ? primaryColor : '#64748b' }}>{p.title}</span>
+               <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer capitalize hover:opacity-70 transition-opacity" style={{ color: page === p.id ? primaryColor : '#64748b' }}>{tr(p.title)}</span>
             ))}
          </div>
          <button className="relative hover:scale-110 transition-transform">
@@ -364,7 +381,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                           )}
                           {p.sizes?.length > 0 && (
                              <div>
-                                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 block">Taille</span>
+                                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 block">{storeIsAr ? 'المقاس' : 'Taille'}</span>
                                 <div className="flex flex-wrap gap-2">
                                    {p.sizes.map((s: string) => (
                                       <button key={s} onClick={() => setSelectedSize(s)} className={`px-4 py-2 text-sm font-bold border rounded-lg transition-colors ${selectedSize === s ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-400'}`}>
@@ -375,7 +392,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              </div>
                           )}
                           <div>
-                             <span className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 block">Quantité</span>
+                             <span className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 block">{storeIsAr ? 'الكمية' : 'Quantité'}</span>
                              <div className="flex items-center justify-between bg-slate-50 w-32 px-4 py-2 rounded-lg border border-slate-200">
                                 <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="text-slate-500 hover:text-slate-800 font-bold text-lg">-</button>
                                 <span className="font-bold text-slate-800">{quantity}</span>
@@ -465,11 +482,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
       <div className={`px-8 py-6 flex justify-between items-center bg-white ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4' : 'flex-col md:flex-row gap-4 md:gap-0'}`}>
          <div className={`flex gap-8 text-sm ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
             {storePages.map(p => (
-               <span key={p.id} onClick={() => setPage(p.id)} className={`cursor-pointer capitalize pb-1 border-b-2 ${page === p.id ? 'border-current' : 'border-transparent text-gray-400'}`}>{p.title}</span>
+               <span key={p.id} onClick={() => setPage(p.id)} className={`cursor-pointer capitalize pb-1 border-b-2 ${page === p.id ? 'border-current' : 'border-transparent text-gray-400'}`}>{tr(p.title)}</span>
             ))}
          </div>
          <LogoEditor onClick={() => setPage('home')} className="text-3xl font-normal tracking-wide" style={{ color: primaryColor }} />
-         <button className="relative" onClick={() => alert('Panier cliqué !')}>
+         <button className="relative" onClick={() => alert(storeIsAr ? 'تم النقر على السلة!' : 'Panier cliqué !')}>
             <ShoppingBag className="w-6 h-6 font-light" />
             {cartCount > 0 && <span className="absolute -top-2 -right-2 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: primaryColor }}>{cartCount}</span>}
          </button>
@@ -658,9 +675,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
          <LogoEditor onClick={() => setPage('home')} className="text-4xl font-serif tracking-widest" style={{ color: primaryColor }} />
          <div className={`flex gap-12 text-xs tracking-widest uppercase ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
             {storePages.map(p => (
-               <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer hover:text-white transition-colors" style={{ color: page === p.id ? primaryColor : '#888' }}>{p.title}</span>
+               <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer hover:text-white transition-colors" style={{ color: page === p.id ? primaryColor : '#888' }}>{tr(p.title)}</span>
             ))}
-            <span className="cursor-pointer hover:text-white flex items-center gap-2" onClick={() => alert('Panier cliqué !')}>
+            <span className="cursor-pointer hover:text-white flex items-center gap-2" onClick={() => alert(storeIsAr ? 'تم النقر على السلة!' : 'Panier cliqué !')}>
                CART ({cartCount})
             </span>
          </div>
@@ -840,10 +857,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
          <LogoEditor onClick={() => setPage('home')} className="text-2xl font-black tracking-tight px-4" style={{ color: primaryColor }} />
          <div className={`flex gap-2 text-sm font-bold ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
             {storePages.map(p => (
-               <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer capitalize px-4 py-2 rounded-full transition-colors" style={{ backgroundColor: page === p.id ? primaryColor : 'transparent', color: page === p.id ? '#fff' : '#64748b' }}>{p.title}</span>
+               <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer capitalize px-4 py-2 rounded-full transition-colors" style={{ backgroundColor: page === p.id ? primaryColor : 'transparent', color: page === p.id ? '#fff' : '#64748b' }}>{tr(p.title)}</span>
             ))}
          </div>
-         <button className="relative p-3 bg-white rounded-full shadow-sm hover:scale-105 transition-transform mr-1" onClick={() => alert('Panier cliqué !')}>
+         <button className="relative p-3 bg-white rounded-full shadow-sm hover:scale-105 transition-transform mr-1" onClick={() => alert(storeIsAr ? 'تم النقر على السلة!' : 'Panier cliqué !')}>
             <ShoppingBag className="w-5 h-5" style={{ color: primaryColor }} />
             {cartCount > 0 && <span className="absolute -top-1 -right-1 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm" style={{ backgroundColor: '#f43f5e' }}>{cartCount}</span>}
          </button>
@@ -1055,14 +1072,14 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
          <LogoEditor onClick={() => setPage('home')} className="text-2xl font-black uppercase tracking-widest text-[#1a1a1a]" style={{ color: primaryColor }} />
          <div className={`flex gap-8 text-sm font-medium text-[#4a4a4a] ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
             {storePages.map(p => (
-               <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer hover:text-black transition-colors" style={{ color: page === p.id ? primaryColor : undefined }}>{p.title}</span>
+               <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer hover:text-black transition-colors" style={{ color: page === p.id ? primaryColor : undefined }}>{tr(p.title)}</span>
             ))}
          </div>
          <div className="flex gap-4 items-center">
             <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1 cursor-pointer"><img src="https://flagcdn.com/w20/fr.png" alt="FR" className="w-4 h-3 rounded-sm object-cover" /> FR</span>
             <Search className="w-5 h-5 cursor-pointer hover:opacity-70 transition-opacity" />
             <Users className="w-5 h-5 cursor-pointer hover:opacity-70 transition-opacity" />
-            <button className="relative hover:opacity-70 transition-opacity" onClick={() => alert('Panier cliqué !')}>
+            <button className="relative hover:opacity-70 transition-opacity" onClick={() => alert(storeIsAr ? 'تم النقر على السلة!' : 'Panier cliqué !')}>
                <ShoppingBag className="w-5 h-5" />
                {cartCount > 0 && <span className="absolute -bottom-1 -right-1 text-white text-[9px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center bg-black">{cartCount}</span>}
             </button>
@@ -1099,14 +1116,14 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                      <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-[3/4] bg-[#f5f1e9] mb-4 relative overflow-hidden flex items-center justify-center">
                            <img src={getCoverImage(p)} alt={p.name} className="w-full h-full object-cover mix-blend-multiply transition-transform duration-500 group-hover:scale-105" />
-                           <button className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/50 transition-colors" onClick={(e) => { e.stopPropagation(); alert('Ajouté aux favoris'); }}>
+                           <button className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/50 transition-colors" onClick={(e) => { e.stopPropagation(); alert(storeIsAr ? 'تمت الإضافة للمفضلة' : 'Ajouté aux favoris'); }}>
                               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
                            </button>
                         </div>
                         <div className="text-left">
                            <h3 className="text-[13px] font-black uppercase tracking-widest text-[#1a1a1a] mb-1">{p.name}</h3>
                            <p className="text-[11px] text-[#666] mb-2">{p.category}</p>
-                           <p className="text-[13px] font-bold text-[#1a1a1a]">à partir de {p.price} MAD</p>
+                           <p className="text-[13px] font-bold text-[#1a1a1a]">{storeIsAr ? 'ابتداءً من' : 'à partir de'} {p.price} MAD</p>
                         </div>
                      </div>
                   ))}
@@ -1139,7 +1156,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                     )}
                     {storeProducts.find(p => p.id === activeProductId)?.sizes?.length > 0 && (
                        <div>
-                          <span className="text-[11px] font-bold uppercase tracking-widest text-[#666] mb-3 block">Taille</span>
+                          <span className="text-[11px] font-bold uppercase tracking-widest text-[#666] mb-3 block">{storeIsAr ? 'المقاس' : 'Taille'}</span>
                           <div className="flex flex-wrap gap-2">
                              {storeProducts.find(p => p.id === activeProductId)?.sizes.map((s: string) => (
                                 <button key={s} onClick={() => setSelectedSize(s)} className={`min-w-[40px] h-10 px-3 text-[11px] font-bold uppercase tracking-widest transition-colors border ${selectedSize === s ? 'bg-[#1a1a1a] text-white border-[#1a1a1a]' : 'bg-white text-[#444] border-[#ddd] hover:border-[#1a1a1a]'}`}>
@@ -1151,7 +1168,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                     )}
                     
                     <div>
-                       <span className="text-[11px] font-bold uppercase tracking-widest text-[#666] mb-3 block">Quantité</span>
+                       <span className="text-[11px] font-bold uppercase tracking-widest text-[#666] mb-3 block">{storeIsAr ? 'الكمية' : 'Quantité'}</span>
                        <div className="flex items-center gap-4">
                           <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-10 h-10 border border-[#ddd] flex items-center justify-center text-lg hover:border-[#1a1a1a] transition-colors">-</button>
                           <span className="text-sm font-bold w-4 text-center">{quantity}</span>
@@ -1161,10 +1178,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                  </div>
 
                  {(buyMode === 'both' || buyMode === 'cart') && (
-                    <button onClick={handleAddToCart} className="w-full h-14 bg-[#1a1a1a] text-white font-bold uppercase tracking-widest text-xs hover:bg-black transition-colors mb-4">Ajouter au panier</button>
+                    <button onClick={handleAddToCart} className="w-full h-14 bg-[#1a1a1a] text-white font-bold uppercase tracking-widest text-xs hover:bg-black transition-colors mb-4">{storeIsAr ? 'أضف للسلة' : 'Ajouter au panier'}</button>
                  )}
                  {(buyMode === 'both' || buyMode === 'direct') && (
-                    <button onClick={() => setPage('checkout')} className="w-full h-14 bg-[#f5f1e9] text-[#1a1a1a] font-bold uppercase tracking-widest text-xs hover:bg-[#e8e2d7] transition-colors">Acheter Maintenant</button>
+                    <button onClick={() => setPage('checkout')} className="w-full h-14 bg-[#f5f1e9] text-[#1a1a1a] font-bold uppercase tracking-widest text-xs hover:bg-[#e8e2d7] transition-colors">{storeIsAr ? 'اشتري الآن' : 'Acheter Maintenant'}</button>
                  )}
               </div>
            </div>
@@ -1172,13 +1189,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
         {page === 'checkout' && (
            <div className="p-8 max-w-2xl mx-auto my-8 bg-white border border-[#eee] rounded-sm">
-              <h2 className="text-2xl font-black uppercase tracking-widest text-[#1a1a1a] mb-8 text-center">Achat Express</h2>
+              <h2 className="text-2xl font-black uppercase tracking-widest text-[#1a1a1a] mb-8 text-center">{storeIsAr ? 'شراء سريع' : 'Achat Express'}</h2>
               <div className="space-y-4">
-                 <input type="text" placeholder="Nom Complet" className="w-full px-4 py-3 bg-white border border-[#ddd] text-sm focus:outline-none focus:border-[#1a1a1a]" />
-                 <input type="text" placeholder="Numéro de Téléphone" className="w-full px-4 py-3 bg-white border border-[#ddd] text-sm focus:outline-none focus:border-[#1a1a1a]" />
-                 <input type="text" placeholder="Ville" className="w-full px-4 py-3 bg-white border border-[#ddd] text-sm focus:outline-none focus:border-[#1a1a1a]" />
-                 <input type="text" placeholder="Adresse de Livraison" className="w-full px-4 py-3 bg-white border border-[#ddd] text-sm focus:outline-none focus:border-[#1a1a1a]" />
-                 <button onClick={() => setPage('success')} className="w-full py-4 bg-[#1a1a1a] text-white font-bold uppercase tracking-widest text-xs hover:bg-black transition-colors mt-8">Confirmer la Commande</button>
+                 <input type="text" placeholder={storeIsAr ? 'الاسم الكامل' : 'Nom Complet'} className="w-full px-4 py-3 bg-white border border-[#ddd] text-sm focus:outline-none focus:border-[#1a1a1a]" />
+                 <input type="text" placeholder={storeIsAr ? 'رقم الهاتف' : 'Numéro de Téléphone'} className="w-full px-4 py-3 bg-white border border-[#ddd] text-sm focus:outline-none focus:border-[#1a1a1a]" />
+                 <input type="text" placeholder={storeIsAr ? 'المدينة' : 'Ville'} className="w-full px-4 py-3 bg-white border border-[#ddd] text-sm focus:outline-none focus:border-[#1a1a1a]" />
+                 <input type="text" placeholder={storeIsAr ? 'عنوان التوصيل' : 'Adresse de Livraison'} className="w-full px-4 py-3 bg-white border border-[#ddd] text-sm focus:outline-none focus:border-[#1a1a1a]" />
+                 <button onClick={() => setPage('success')} className="w-full py-4 bg-[#1a1a1a] text-white font-bold uppercase tracking-widest text-xs hover:bg-black transition-colors mt-8">{storeIsAr ? 'تأكيد الطلب' : 'Confirmer la Commande'}</button>
               </div>
            </div>
         )}
@@ -1186,9 +1203,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         {page === 'success' && (
            <div className="p-16 max-w-2xl mx-auto my-8 bg-white border border-[#eee] text-center flex flex-col items-center justify-center">
               <CheckCircle className="w-16 h-16 text-green-500 mb-6" />
-              <h2 className="text-3xl font-black uppercase tracking-widest text-[#1a1a1a] mb-4">Commande Confirmée</h2>
-              <p className="text-[#666] mb-8">Merci de votre confiance. Nous vous contacterons bientôt.</p>
-              <button onClick={() => setPage('home')} className="px-8 py-3 bg-[#f5f1e9] text-[#1a1a1a] font-bold uppercase tracking-widest text-xs hover:bg-[#e8e2d7] transition-colors">Retour à l'accueil</button>
+              <h2 className="text-3xl font-black uppercase tracking-widest text-[#1a1a1a] mb-4">{storeIsAr ? 'تم تأكيد الطلب' : 'Commande Confirmée'}</h2>
+              <p className="text-[#666] mb-8">{storeIsAr ? 'شكرا لثقتك. سنتصل بك قريباً.' : 'Merci de votre confiance. Nous vous contacterons bientôt.'}</p>
+              <button onClick={() => setPage('home')} className="px-8 py-3 bg-[#f5f1e9] text-[#1a1a1a] font-bold uppercase tracking-widest text-xs hover:bg-[#e8e2d7] transition-colors">{storeIsAr ? 'العودة للرئيسية' : "Retour à l'accueil"}</button>
            </div>
         )}
 
