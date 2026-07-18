@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck } from 'lucide-react';
+import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 
 const THEMES = [
@@ -58,6 +58,17 @@ export default function StoreBuilder() {
   const [productForm, setProductForm] = useState<any>(null);
   const [newSizeInput, setNewSizeInput] = useState('');
   const [newColorInput, setNewColorInput] = useState('#000000');
+
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [showPublishModal, setShowPublishModal] = useState(false);
+
+  const handlePublish = () => {
+    setIsPublishing(true);
+    setTimeout(() => {
+      setIsPublishing(false);
+      setShowPublishModal(true);
+    }, 2000);
+  };
 
   const applyTheme = (theme: typeof THEMES[0]) => {
      setActiveTheme(theme);
@@ -801,8 +812,9 @@ export default function StoreBuilder() {
           <button onClick={() => setShowPreview(true)} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all shadow-sm">
             <ExternalLink className="w-4 h-4" /> Prévisualiser
           </button>
-          <button className="flex items-center gap-2 bg-gradient-to-r from-slate-800 to-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold hover:shadow-lg transition-all shadow-sm">
-            <Globe className="w-4 h-4" /> Publier
+          <button onClick={handlePublish} disabled={isPublishing} className="flex items-center gap-2 bg-gradient-to-r from-slate-800 to-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold hover:shadow-lg transition-all shadow-sm disabled:opacity-70 disabled:cursor-not-allowed">
+            {isPublishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />} 
+            {isPublishing ? 'Publication...' : 'Publier'}
           </button>
         </div>
       </div>
@@ -1584,6 +1596,44 @@ export default function StoreBuilder() {
            </div>
         </div>
       )}
+
+      {/* PUBLISH MODAL */}
+      {showPublishModal && (
+         <div className="fixed inset-0 z-[500] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+               <div className="p-8 text-center">
+                  <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                     <CheckCircle className="w-10 h-10 text-green-600" />
+                  </div>
+                  <h2 className="text-2xl font-black text-slate-800 mb-2">Boutique Publiée !</h2>
+                  <p className="text-slate-500 mb-8">Votre boutique est maintenant en ligne et prête à recevoir des commandes.</p>
+                  
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center gap-3 mb-8">
+                     <Globe className="w-5 h-5 text-indigo-600 shrink-0" />
+                     <div className="flex-1 text-left overflow-hidden">
+                        <p className="text-xs font-bold text-slate-400 uppercase mb-1">Lien de la boutique</p>
+                        <p className="text-sm font-medium text-slate-800 truncate">https://{storeName.toLowerCase().replace(/[^a-z0-9]/g, '')}.beyacreative.com</p>
+                     </div>
+                     <button 
+                        onClick={() => {
+                           navigator.clipboard.writeText(`https://${storeName.toLowerCase().replace(/[^a-z0-9]/g, '')}.beyacreative.com`);
+                        }} 
+                        className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 text-slate-600 transition-colors" 
+                        title="Copier le lien"
+                     >
+                        <Copy className="w-4 h-4" />
+                     </button>
+                  </div>
+
+                  <div className="flex gap-3">
+                     <button onClick={() => setShowPublishModal(false)} className="flex-1 py-3 px-4 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors">Fermer</button>
+                     <button onClick={() => { setShowPublishModal(false); setShowPreview(true); }} className="flex-1 py-3 px-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">Visiter la boutique</button>
+                  </div>
+               </div>
+            </div>
+         </div>
+      )}
+
     </div>
   );
 }
