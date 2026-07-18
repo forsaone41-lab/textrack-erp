@@ -21,6 +21,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [previewDevice, setPreviewDevice] = useState<'desktop'|'mobile'>('desktop');
   const [isControlsCollapsed, setIsControlsCollapsed] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [storeLang, setStoreLang] = useState<'fr'|'en'|'ar'>('fr');
   
   // Customization States (The PRO way)
   const [activeTheme, setActiveTheme] = useState(THEMES[0]);
