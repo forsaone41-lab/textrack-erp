@@ -53,7 +53,7 @@ export default function StoreBuilder() {
 
   // --- DYNAMIC LAYOUT COMPONENTS ---
 
-  const LayoutHeroCenter = ({ isModal = false, page, setPage }: any) => (
+  const LayoutHeroCenter = ({ isModal = false, page, setPage, activeProductId, navigateToProduct }: any) => (
     <div className={`w-full min-h-full bg-white text-slate-900 ${fontFamily} flex flex-col`}>
       <div className={`p-6 flex justify-between items-center border-b border-slate-100 ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4' : ''}`}>
          <h2 onClick={() => setPage('home')} className="text-2xl font-black uppercase tracking-tighter cursor-pointer">{storeName}</h2>
@@ -83,7 +83,7 @@ export default function StoreBuilder() {
                <h3 className="text-2xl font-black uppercase text-center mb-10">Trending Now</h3>
                <div className={`grid gap-8 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-4' : 'grid-cols-3')}`}>
                   {storeProducts.map((p: any) => (
-                     <div key={p.id} className="group cursor-pointer">
+                     <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-[3/4] bg-slate-100 mb-4 overflow-hidden relative rounded-xl">
                            <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-12 h-12" /></div>
                            <div className={`absolute bottom-4 left-0 right-0 flex justify-center transition-opacity ${(previewDevice === 'mobile' && !isModal) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
@@ -103,7 +103,7 @@ export default function StoreBuilder() {
                <h3 className="text-2xl font-black uppercase text-center mb-10">All Products</h3>
                <div className={`grid gap-8 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-4' : 'grid-cols-3')}`}>
                   {storeProducts.map((p: any) => (
-                     <div key={p.id} className="group cursor-pointer">
+                     <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-[3/4] bg-slate-100 mb-4 overflow-hidden relative rounded-xl">
                            <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-12 h-12" /></div>
                            <div className={`absolute bottom-4 left-0 right-0 flex justify-center transition-opacity ${(previewDevice === 'mobile' && !isModal) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
@@ -123,11 +123,28 @@ export default function StoreBuilder() {
               <p className="text-slate-500 text-lg leading-relaxed mb-6">Welcome to {storeName}. We are dedicated to providing the best quality products for our customers. Every piece is carefully crafted to ensure maximum comfort and style.</p>
            </div>
         )}
+        {page === 'product' && activeProductId && (
+           <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-8'} mx-auto w-full`}>
+              {storeProducts.filter(p => p.id === activeProductId).map(p => (
+                 <div key={p.id} className={`flex gap-12 ${previewDevice === 'mobile' && !isModal ? 'flex-col' : ''}`}>
+                    <div className="flex-1 aspect-[4/5] bg-slate-100 rounded-2xl flex items-center justify-center">
+                       <ImageIcon className="w-20 h-20 opacity-10" />
+                    </div>
+                    <div className="flex-1 flex flex-col justify-center">
+                       <h2 className="text-4xl font-black mb-4">{p.name}</h2>
+                       <p className="text-2xl font-bold mb-8" style={{ color: primaryColor }}>{p.price} MAD</p>
+                       <p className="text-slate-500 mb-8 leading-relaxed">This is a premium quality product. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                       <button onClick={handleAddToCart} className="w-max px-12 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg" style={{ backgroundColor: primaryColor }}>Add to cart</button>
+                    </div>
+                 </div>
+              ))}
+           </div>
+        )}
       </div>
     </div>
   );
 
-  const LayoutSplitScreen = ({ isModal = false, page, setPage }: any) => (
+  const LayoutSplitScreen = ({ isModal = false, page, setPage, activeProductId, navigateToProduct }: any) => (
     <div className={`w-full min-h-full bg-[#f8f9fa] text-[#212529] ${fontFamily} flex flex-col`}>
       <div className={`px-8 py-6 flex justify-between items-center bg-white ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4' : ''}`}>
          <div className={`flex gap-8 text-sm ${previewDevice === 'mobile' && !isModal ? 'hidden' : ''}`}>
@@ -160,7 +177,7 @@ export default function StoreBuilder() {
                </div>
                <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-3'}`}>
                   {storeProducts.map((p: any) => (
-                     <div key={p.id} className="group cursor-pointer">
+                     <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-[4/5] bg-gray-100 mb-6 overflow-hidden relative">
                            <div className="absolute inset-0 flex items-center justify-center opacity-10"><ImageIcon className="w-16 h-16" /></div>
                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -182,7 +199,7 @@ export default function StoreBuilder() {
                </div>
                <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-3'}`}>
                   {storeProducts.map((p: any) => (
-                     <div key={p.id} className="group cursor-pointer">
+                     <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-[4/5] bg-gray-100 mb-6 overflow-hidden relative">
                            <div className="absolute inset-0 flex items-center justify-center opacity-10"><ImageIcon className="w-16 h-16" /></div>
                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -202,11 +219,28 @@ export default function StoreBuilder() {
               <p className="text-gray-500 text-xl font-light leading-relaxed mb-6">Welcome to {storeName}. We are dedicated to providing the best quality products for our customers. Every piece is carefully crafted to ensure maximum comfort and style.</p>
            </div>
         )}
+        {page === 'product' && activeProductId && (
+           <div className={`${isModal ? 'p-20 max-w-5xl' : 'p-8'} mx-auto w-full`}>
+              {storeProducts.filter(p => p.id === activeProductId).map(p => (
+                 <div key={p.id} className={`flex gap-16 ${previewDevice === 'mobile' && !isModal ? 'flex-col' : ''}`}>
+                    <div className="flex-1 aspect-[3/4] bg-gray-100 relative">
+                       <ImageIcon className="w-20 h-20 opacity-10 absolute inset-0 m-auto" />
+                    </div>
+                    <div className="flex-1 flex flex-col justify-center">
+                       <h2 className="text-5xl font-light mb-4">{p.name}</h2>
+                       <p className="text-2xl font-light text-gray-500 mb-8">{p.price} MAD</p>
+                       <p className="text-gray-500 mb-12 leading-relaxed font-light">Experience true elegance with this meticulously designed piece. Perfect for every occasion.</p>
+                       <button onClick={handleAddToCart} className="w-max px-12 py-4 bg-black text-white text-xs tracking-widest hover:bg-gray-800 transition-colors">ADD TO CART</button>
+                    </div>
+                 </div>
+              ))}
+           </div>
+        )}
       </div>
     </div>
   );
 
-  const LayoutElegant = ({ isModal = false, page, setPage }: any) => (
+  const LayoutElegant = ({ isModal = false, page, setPage, activeProductId, navigateToProduct }: any) => (
     <div className={`w-full min-h-full bg-[#111] text-[#f5f5f5] ${fontFamily} flex flex-col`}>
       <div className={`p-8 flex flex-col items-center gap-6 border-b border-white/10 ${previewDevice === 'mobile' && !isModal ? 'p-4' : ''}`}>
          <h2 onClick={() => setPage('home')} className="text-4xl font-serif tracking-widest cursor-pointer" style={{ color: primaryColor }}>{storeName}</h2>
@@ -238,7 +272,7 @@ export default function StoreBuilder() {
                <h3 className="text-xl tracking-widest uppercase text-center mb-16" style={{ color: primaryColor }}>Curated Selection</h3>
                <div className={`grid gap-4 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-2'}`}>
                   {storeProducts.map((p: any) => (
-                     <div key={p.id} className="group cursor-pointer relative aspect-square bg-[#1a1a1a] border border-white/5 p-4 flex flex-col items-center justify-center">
+                     <div key={p.id} className="group cursor-pointer relative aspect-square bg-[#1a1a1a] border border-white/5 p-4 flex flex-col items-center justify-center" onClick={() => navigateToProduct(p.id)}>
                         <ImageIcon className="w-16 h-16 opacity-10 mb-8" />
                         <h4 className="font-serif text-2xl mb-2 group-hover:text-white transition-colors" style={{ color: primaryColor }}>{p.name}</h4>
                         <p className="text-white/50 tracking-widest text-sm mb-6">{p.price} MAD</p>
@@ -254,7 +288,7 @@ export default function StoreBuilder() {
                <h3 className="text-xl tracking-widest uppercase text-center mb-16" style={{ color: primaryColor }}>All Products</h3>
                <div className={`grid gap-4 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-2'}`}>
                   {storeProducts.map((p: any) => (
-                     <div key={p.id} className="group cursor-pointer relative aspect-square bg-[#1a1a1a] border border-white/5 p-4 flex flex-col items-center justify-center">
+                     <div key={p.id} className="group cursor-pointer relative aspect-square bg-[#1a1a1a] border border-white/5 p-4 flex flex-col items-center justify-center" onClick={() => navigateToProduct(p.id)}>
                         <ImageIcon className="w-16 h-16 opacity-10 mb-8" />
                         <h4 className="font-serif text-2xl mb-2 group-hover:text-white transition-colors" style={{ color: primaryColor }}>{p.name}</h4>
                         <p className="text-white/50 tracking-widest text-sm mb-6">{p.price} MAD</p>
@@ -270,11 +304,29 @@ export default function StoreBuilder() {
               <p className="text-[#888] text-lg tracking-wide leading-relaxed mb-6">Welcome to {storeName}. We are dedicated to providing the best quality products for our customers. Every piece is carefully crafted to ensure maximum comfort and style.</p>
            </div>
         )}
+        {page === 'product' && activeProductId && (
+           <div className={`${isModal ? 'p-16 max-w-5xl' : 'p-8'} mx-auto w-full`}>
+              {storeProducts.filter(p => p.id === activeProductId).map(p => (
+                 <div key={p.id} className={`flex gap-16 ${previewDevice === 'mobile' && !isModal ? 'flex-col' : ''}`}>
+                    <div className="flex-1 aspect-[3/4] bg-[#1a1a1a] border border-white/5 flex items-center justify-center">
+                       <ImageIcon className="w-20 h-20 opacity-10" />
+                    </div>
+                    <div className="flex-1 flex flex-col justify-center">
+                       <h2 className="text-5xl font-serif mb-4 text-white">{p.name}</h2>
+                       <p className="text-2xl tracking-widest mb-8" style={{ color: primaryColor }}>{p.price} MAD</p>
+                       <div className="w-12 h-px bg-white/20 mb-8"></div>
+                       <p className="text-[#888] mb-12 tracking-wide leading-relaxed">Embrace luxury with this exclusive item. Crafted with precision for the modern elegant individual.</p>
+                       <button onClick={handleAddToCart} className="w-max px-12 py-4 bg-white text-black text-xs tracking-widest hover:bg-gray-200 transition-colors">ADD TO CART</button>
+                    </div>
+                 </div>
+              ))}
+           </div>
+        )}
       </div>
     </div>
   );
 
-  const LayoutPlayful = ({ isModal = false, page, setPage }: any) => (
+  const LayoutPlayful = ({ isModal = false, page, setPage, activeProductId, navigateToProduct }: any) => (
     <div className={`w-full min-h-full bg-white text-slate-900 ${fontFamily} flex flex-col`}>
       <div className={`p-4 mx-4 mt-4 bg-slate-100 rounded-full flex justify-between items-center ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4 rounded-3xl' : ''}`}>
          <h2 onClick={() => setPage('home')} className="text-2xl font-black tracking-tight cursor-pointer px-4" style={{ color: primaryColor }}>{storeName}</h2>
@@ -306,7 +358,7 @@ export default function StoreBuilder() {
                <h3 className="text-3xl font-black text-center mb-10 text-slate-800">New Arrivals ✨</h3>
                <div className={`grid gap-6 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-4' : 'grid-cols-2')}`}>
                   {storeProducts.map((p: any) => (
-                     <div key={p.id} className="group cursor-pointer bg-slate-50 p-4 rounded-3xl hover:bg-slate-100 transition-colors border-2 border-transparent hover:border-current" style={{ borderColor: primaryColor }}>
+                     <div key={p.id} className="group cursor-pointer bg-slate-50 p-4 rounded-3xl hover:bg-slate-100 transition-colors border-2 border-transparent hover:border-current" style={{ borderColor: primaryColor }} onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-square bg-white mb-4 overflow-hidden relative rounded-2xl shadow-sm flex items-center justify-center">
                            <ImageIcon className="w-12 h-12 opacity-10" />
                            <div className={`absolute inset-0 bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center`}>
@@ -326,7 +378,7 @@ export default function StoreBuilder() {
                <h3 className="text-3xl font-black text-center mb-10 text-slate-800">All Products ✨</h3>
                <div className={`grid gap-6 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-4' : 'grid-cols-2')}`}>
                   {storeProducts.map((p: any) => (
-                     <div key={p.id} className="group cursor-pointer bg-slate-50 p-4 rounded-3xl hover:bg-slate-100 transition-colors border-2 border-transparent hover:border-current" style={{ borderColor: primaryColor }}>
+                     <div key={p.id} className="group cursor-pointer bg-slate-50 p-4 rounded-3xl hover:bg-slate-100 transition-colors border-2 border-transparent hover:border-current" style={{ borderColor: primaryColor }} onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-square bg-white mb-4 overflow-hidden relative rounded-2xl shadow-sm flex items-center justify-center">
                            <ImageIcon className="w-12 h-12 opacity-10" />
                            <div className={`absolute inset-0 bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center`}>
@@ -346,17 +398,43 @@ export default function StoreBuilder() {
               <p className="text-slate-600 text-xl font-bold leading-relaxed mb-6">Welcome to {storeName}. We are dedicated to providing the best quality products for our customers. Every piece is carefully crafted to ensure maximum comfort and style.</p>
            </div>
         )}
+        {page === 'product' && activeProductId && (
+           <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-8'} mx-auto w-full`}>
+              {storeProducts.filter(p => p.id === activeProductId).map(p => (
+                 <div key={p.id} className={`flex gap-12 bg-slate-50 p-8 rounded-[3rem] ${previewDevice === 'mobile' && !isModal ? 'flex-col' : ''}`}>
+                    <div className="flex-1 aspect-square bg-white rounded-[2rem] flex items-center justify-center shadow-sm">
+                       <ImageIcon className="w-20 h-20 opacity-10" />
+                    </div>
+                    <div className="flex-1 flex flex-col justify-center px-4">
+                       <h2 className="text-5xl font-black mb-4 text-slate-800">{p.name}</h2>
+                       <p className="text-3xl font-black mb-8" style={{ color: primaryColor }}>{p.price} MAD</p>
+                       <p className="text-slate-500 font-medium mb-8 text-lg">Fun, fresh, and perfectly designed for everyday adventures!</p>
+                       <button onClick={handleAddToCart} className="w-max px-12 py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl" style={{ backgroundColor: primaryColor }}>Buy Now 🎈</button>
+                    </div>
+                 </div>
+              ))}
+           </div>
+        )}
       </div>
     </div>
   );
 
   const StorePreviewWrapper = ({ isModal = false }) => {
     const [page, setPage] = useState('home');
-    if (activeTheme.layout === 'hero-center') return <LayoutHeroCenter isModal={isModal} page={page} setPage={setPage} />;
-    if (activeTheme.layout === 'split-screen') return <LayoutSplitScreen isModal={isModal} page={page} setPage={setPage} />;
-    if (activeTheme.layout === 'elegant') return <LayoutElegant isModal={isModal} page={page} setPage={setPage} />;
-    if (activeTheme.layout === 'playful') return <LayoutPlayful isModal={isModal} page={page} setPage={setPage} />;
-    return <LayoutHeroCenter isModal={isModal} page={page} setPage={setPage} />;
+    const [activeProductId, setActiveProductId] = useState<any>(null);
+
+    const navigateToProduct = (id: any) => {
+        setActiveProductId(id);
+        setPage('product');
+    };
+
+    const props = { isModal, page, setPage, activeProductId, navigateToProduct };
+
+    if (activeTheme.layout === 'hero-center') return <LayoutHeroCenter {...props} />;
+    if (activeTheme.layout === 'split-screen') return <LayoutSplitScreen {...props} />;
+    if (activeTheme.layout === 'elegant') return <LayoutElegant {...props} />;
+    if (activeTheme.layout === 'playful') return <LayoutPlayful {...props} />;
+    return <LayoutHeroCenter {...props} />;
   };
 
   return (
