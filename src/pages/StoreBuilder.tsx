@@ -8,7 +8,7 @@ const THEMES = [
   { id: 'abaya', name: 'Luxury Abaya', layout: 'elegant', defaultColor: '#b48a44', defaultFont: 'font-serif', previewImg: 'https://images.unsplash.com/photo-1589465885857-44edb59bbff2?q=80&w=800&auto=format&fit=crop' },
   { id: 'sportswear', name: 'Active Sport', layout: 'hero-center', defaultColor: '#84cc16', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop' },
   { id: 'eco', name: 'Eco Nature', layout: 'split-screen', defaultColor: '#4d7c0f', defaultFont: 'font-serif', previewImg: 'https://images.unsplash.com/photo-1523381294911-8d3cead13475?q=80&w=800&auto=format&fit=crop' },
-  { id: 'kids', name: 'Playful Kids', layout: 'elegant', defaultColor: '#0ea5e9', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=800&auto=format&fit=crop' }
+  { id: 'kids', name: 'Playful Kids', layout: 'playful', defaultColor: '#0ea5e9', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=800&auto=format&fit=crop' }
 ];
 
 export default function StoreBuilder() {
@@ -189,11 +189,63 @@ export default function StoreBuilder() {
     </div>
   );
 
+  const LayoutPlayful = ({ isModal = false, page, setPage }: any) => (
+    <div className={`w-full min-h-full bg-white text-slate-900 ${fontFamily} flex flex-col`}>
+      <div className={`p-4 mx-4 mt-4 bg-slate-100 rounded-full flex justify-between items-center ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4 rounded-3xl' : ''}`}>
+         <h2 onClick={() => setPage('home')} className="text-2xl font-black tracking-tight cursor-pointer px-4" style={{ color: primaryColor }}>{storeName}</h2>
+         <div className={`flex gap-2 text-sm font-bold ${previewDevice === 'mobile' && !isModal ? 'hidden' : ''}`}>
+            {['home', 'collections', 'about'].map(p => (
+               <span key={p} onClick={() => setPage(p)} className="cursor-pointer capitalize px-4 py-2 rounded-full transition-colors" style={{ backgroundColor: page === p ? primaryColor : 'transparent', color: page === p ? '#fff' : '#64748b' }}>{p}</span>
+            ))}
+         </div>
+         <button className="relative p-3 bg-white rounded-full shadow-sm hover:scale-105 transition-transform mr-1" onClick={() => alert('Panier cliqué !')}>
+            <ShoppingBag className="w-5 h-5" style={{ color: primaryColor }} />
+            {cartCount > 0 && <span className="absolute -top-1 -right-1 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm" style={{ backgroundColor: '#f43f5e' }}>{cartCount}</span>}
+         </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto pt-6">
+        {page === 'home' && (
+          <>
+            <div className="px-4">
+               <div className={`h-[${isModal ? '500px' : '300px'}] rounded-[2rem] flex flex-col items-center justify-center text-center p-8 bg-cover bg-center relative overflow-hidden`} style={{ backgroundImage: `url(${heroImage})` }}>
+                  <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px]"></div>
+                  <div className="relative z-10 flex flex-col items-center p-8 bg-white/90 rounded-[2rem] shadow-xl border-4 border-white">
+                     <h1 className={`${isModal ? 'text-6xl' : 'text-4xl'} font-black tracking-tight mb-2`} style={{ color: primaryColor }}>Fun & Fresh!</h1>
+                     <p className="text-slate-600 font-medium mb-6 max-w-sm">Colorful, comfortable, and made for play.</p>
+                     <button onClick={() => setPage('collections')} className="px-8 py-4 text-white font-black tracking-wide text-sm hover:scale-110 transition-transform rounded-full shadow-lg" style={{ backgroundColor: primaryColor }}>LET'S SHOP 🎈</button>
+                  </div>
+               </div>
+            </div>
+            <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-6'} mx-auto w-full`}>
+               <h3 className="text-3xl font-black text-center mb-10 text-slate-800">New Arrivals ✨</h3>
+               <div className={`grid gap-6 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-4' : 'grid-cols-2')}`}>
+                  {[1,2,3,4].map(i => (
+                     <div key={i} className="group cursor-pointer bg-slate-50 p-4 rounded-3xl hover:bg-slate-100 transition-colors border-2 border-transparent hover:border-current" style={{ borderColor: primaryColor }}>
+                        <div className="aspect-square bg-white mb-4 overflow-hidden relative rounded-2xl shadow-sm flex items-center justify-center">
+                           <ImageIcon className="w-12 h-12 opacity-10" />
+                           <div className={`absolute inset-0 bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center`}>
+                              <button onClick={handleAddToCart} className="px-6 py-3 text-white text-xs font-black uppercase tracking-wider rounded-full shadow-xl hover:scale-105 transition-transform" style={{ backgroundColor: primaryColor }}>Add to cart</button>
+                           </div>
+                        </div>
+                        <h4 className="font-bold text-base text-center text-slate-700">Cute Outfit {i}</h4>
+                        <p className="text-center font-black mt-1" style={{ color: primaryColor }}>450 MAD</p>
+                     </div>
+                  ))}
+               </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+
   const StorePreviewWrapper = ({ isModal = false }) => {
     const [page, setPage] = useState('home');
     if (activeTheme.layout === 'hero-center') return <LayoutHeroCenter isModal={isModal} page={page} setPage={setPage} />;
     if (activeTheme.layout === 'split-screen') return <LayoutSplitScreen isModal={isModal} page={page} setPage={setPage} />;
     if (activeTheme.layout === 'elegant') return <LayoutElegant isModal={isModal} page={page} setPage={setPage} />;
+    if (activeTheme.layout === 'playful') return <LayoutPlayful isModal={isModal} page={page} setPage={setPage} />;
     return <LayoutHeroCenter isModal={isModal} page={page} setPage={setPage} />;
   };
 
