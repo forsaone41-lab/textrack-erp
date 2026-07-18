@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check } from 'lucide-react';
+import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 
 const THEMES = [
@@ -13,7 +13,7 @@ const THEMES = [
 
 export default function StoreBuilder() {
   const { isAr } = useLang();
-  const [activeTab, setActiveTab] = useState<'themes' | 'design' | 'products' | 'apps' | 'settings'>('themes');
+  const [activeTab, setActiveTab] = useState<string>('orders');
   const [storeName, setStoreName] = useState('My Brand');
   const [showPreview, setShowPreview] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<'desktop'|'mobile'>('desktop');
@@ -801,18 +801,20 @@ export default function StoreBuilder() {
           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
             <div className={`flex border-b border-slate-200 flex-wrap ${isAr ? 'flex-row-reverse' : ''}`}>
               {[
+                 { id: 'orders', icon: ListOrdered, label: 'Commandes' },
                  { id: 'themes', icon: LayoutTemplate, label: 'Thèmes' },
                  { id: 'design', icon: Paintbrush, label: 'Design' },
                  { id: 'products', icon: ShoppingBag, label: 'Produits' },
+                 { id: 'payments', icon: CreditCard, label: 'Paiements' },
                  { id: 'apps', icon: Box, label: 'Apps' },
                  { id: 'settings', icon: Settings, label: 'Config' }
               ].map(tab => (
                  <button 
                    key={tab.id}
                    onClick={() => setActiveTab(tab.id as any)}
-                   className={`flex-1 py-3 px-1 text-[10px] font-bold flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === tab.id ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50' : 'text-slate-500 hover:bg-slate-50'}`}
+                   className={`w-[25%] py-3 px-1 text-[10px] font-bold flex flex-col items-center justify-center gap-1 transition-colors border-b-2 ${activeTab === tab.id ? 'text-indigo-600 border-indigo-600 bg-indigo-50/50' : 'border-transparent text-slate-500 hover:bg-slate-50'}`}
                  >
-                   <tab.icon className="w-4 h-4" /> {tab.label}
+                   <tab.icon className="w-4 h-4" /> <span className="truncate w-full text-center">{tab.label}</span>
                  </button>
               ))}
             </div>
@@ -853,6 +855,86 @@ export default function StoreBuilder() {
                     </div>
                   </div>
                 </div>
+              )}
+
+              {/* ORDERS TAB (NEW!) */}
+              {activeTab === 'orders' && (
+                 <div className="space-y-4">
+                    <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex items-center justify-between">
+                       <div>
+                          <h4 className="text-sm font-black text-indigo-800">12 Nouvelles</h4>
+                          <p className="text-[10px] text-indigo-600 font-bold uppercase tracking-wider">Commandes en attente</p>
+                       </div>
+                       <div className="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-black shadow-lg">12</div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                       {[
+                          { id: '#1042', customer: 'Youssef El Amrani', amount: '850.00 MAD', status: 'Nouveau', date: 'Il y a 10 min' },
+                          { id: '#1041', customer: 'Sara Bennani', amount: '450.00 MAD', status: 'Nouveau', date: 'Il y a 1h' },
+                          { id: '#1040', customer: 'Karim Tazi', amount: '1200.00 MAD', status: 'En cours', date: 'Hier' }
+                       ].map(order => (
+                          <div key={order.id} className="p-3 border border-slate-200 rounded-xl bg-white shadow-sm cursor-pointer hover:border-indigo-500 transition-colors">
+                             <div className="flex justify-between items-start mb-2">
+                                <span className="text-xs font-black text-slate-800">{order.id}</span>
+                                <span className="text-[9px] font-black uppercase px-2 py-1 bg-green-100 text-green-700 rounded-full">{order.status}</span>
+                             </div>
+                             <p className="text-sm font-bold text-slate-600 mb-1">{order.customer}</p>
+                             <div className="flex justify-between items-center text-[10px] text-slate-400 font-bold">
+                                <span>{order.date}</span>
+                                <span className="text-indigo-600 text-xs">{order.amount}</span>
+                             </div>
+                          </div>
+                       ))}
+                    </div>
+                    <button className="w-full py-3 bg-slate-100 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-200 transition-colors">Voir toutes les commandes</button>
+                 </div>
+              )}
+
+              {/* PAYMENTS TAB (NEW!) */}
+              {activeTab === 'payments' && (
+                 <div className="space-y-4">
+                    <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider mb-2">Méthodes de Paiement</h3>
+                    
+                    <div className="p-4 border-2 border-indigo-600 rounded-xl bg-indigo-50/30 shadow-sm relative overflow-hidden">
+                       <div className="absolute top-0 right-0 bg-indigo-600 text-white text-[8px] font-black uppercase px-2 py-1 rounded-bl-lg">Actif</div>
+                       <div className="flex items-center gap-3 mb-2">
+                          <div className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
+                             <CreditCard className="w-4 h-4" />
+                          </div>
+                          <div>
+                             <h4 className="text-sm font-black text-slate-800">Paiement à la Livraison (COD)</h4>
+                             <p className="text-[10px] text-slate-500">Le client paie à la réception.</p>
+                          </div>
+                       </div>
+                    </div>
+
+                    <div className="p-4 border border-slate-200 rounded-xl bg-white shadow-sm opacity-60 hover:opacity-100 transition-opacity cursor-pointer">
+                       <div className="flex items-center gap-3 mb-2">
+                          <div className="w-8 h-8 bg-slate-100 text-slate-500 rounded-lg flex items-center justify-center">
+                             <CreditCard className="w-4 h-4" />
+                          </div>
+                          <div>
+                             <h4 className="text-sm font-black text-slate-800">Carte Bancaire (Stripe)</h4>
+                             <p className="text-[10px] text-slate-500">Acceptez les paiements par carte.</p>
+                          </div>
+                       </div>
+                       <button className="mt-3 w-full py-2 bg-slate-900 text-white text-[10px] font-bold rounded-lg uppercase tracking-wider">Configurer</button>
+                    </div>
+
+                    <div className="p-4 border border-slate-200 rounded-xl bg-white shadow-sm opacity-60 hover:opacity-100 transition-opacity cursor-pointer">
+                       <div className="flex items-center gap-3 mb-2">
+                          <div className="w-8 h-8 bg-slate-100 text-slate-500 rounded-lg flex items-center justify-center">
+                             <CreditCard className="w-4 h-4" />
+                          </div>
+                          <div>
+                             <h4 className="text-sm font-black text-slate-800">PayPal</h4>
+                             <p className="text-[10px] text-slate-500">Paiement via compte PayPal.</p>
+                          </div>
+                       </div>
+                       <button className="mt-3 w-full py-2 bg-slate-900 text-white text-[10px] font-bold rounded-lg uppercase tracking-wider">Configurer</button>
+                    </div>
+                 </div>
               )}
 
               {/* DESIGN TAB (NEW!) */}
