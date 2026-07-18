@@ -47,7 +47,35 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         'About': 'من نحن',
         '© 2026 My Brand. Tous droits réservés.': '© 2026 My Brand. جميع الحقوق محفوظة.',
         'Accueil': 'الرئيسية',
-        'Produits': 'المنتجات'
+        'Produits': 'المنتجات',
+        'All Products ✨': 'جميع المنتجات ✨',
+        'ALL PRODUCTS': 'جميع المنتجات',
+        'All': 'الكل',
+        'ALL': 'الكل',
+        'Outerwear': 'ملابس خارجية',
+        'OUTERWEAR': 'ملابس خارجية',
+        'Tops': 'قمصان',
+        'TOPS': 'قمصان',
+        'Bottoms': 'بناطيل',
+        'BOTTOMS': 'بناطيل',
+        'Shoes': 'أحذية',
+        'SHOES': 'أحذية',
+        'Dresses': 'فساتين',
+        'DRESSES': 'فساتين',
+        'Recommandé': 'موصى به',
+        'Sort: Featured': 'موصى به',
+        'Featured': 'موصى به',
+        'Best Matches 🌟': 'موصى به 🌟',
+        'Prix: Croissant': 'السعر: من الأقل للأكثر',
+        'Price: Low to High': 'السعر: من الأقل للأكثر',
+        'Price: Low - High': 'السعر: من الأقل للأكثر',
+        'Price: Low to High 💸': 'السعر: من الأقل للأكثر 💸',
+        'Prix: Décroissant': 'السعر: من الأكثر للأقل',
+        'Price: High to Low': 'السعر: من الأكثر للأقل',
+        'Price: High - Low': 'السعر: من الأكثر للأقل',
+        'Price: High to Low 💎': 'السعر: من الأكثر للأقل 💎',
+        'De A à Z': 'أ - ي',
+        'De Z à A': 'ي - أ'
      };
      return dict[t] || t;
   };
@@ -313,23 +341,23 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         {page === 'collections' && (
             <div className={`${isModal ? 'p-16 max-w-[1400px]' : 'p-8'} mx-auto w-full`}>
                <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
-                  <h3 className="text-2xl font-black uppercase text-center md:text-left">All Products</h3>
+                  <h3 className="text-2xl font-black uppercase text-center md:text-left">{tr('All Products')}</h3>
                   <div className="flex flex-col sm:flex-row items-center gap-4">
                      {categories && categories.length > 1 && (
                         <div className="flex flex-wrap gap-2 justify-center">
                            {categories.map((c: string) => (
-                              <button key={c} onClick={() => setActiveCategory(c)} className={`px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors ${activeCategory === c ? 'text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`} style={{ backgroundColor: activeCategory === c ? primaryColor : undefined }}>
-                                 {c}
+                              <button key={tr(c)} onClick={() => setActiveCategory(c)} className={`px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors ${activeCategory === c ? 'text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`} style={{ backgroundColor: activeCategory === c ? primaryColor : undefined }}>
+                                 {tr(c)}
                               </button>
                            ))}
                         </div>
                      )}
                      <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-wider rounded-full focus:ring-slate-500 focus:border-slate-500 block px-4 py-2 outline-none cursor-pointer">
-                        <option value="featured">Recommandé</option>
-                        <option value="price-low-high">Prix: Croissant</option>
-                        <option value="price-high-low">Prix: Décroissant</option>
-                        <option value="az">De A à Z</option>
-                        <option value="za">De Z à A</option>
+                        <option value="featured">{tr('Recommandé')}</option>
+                        <option value="price-low-high">{tr('Prix: Croissant')}</option>
+                        <option value="price-high-low">{tr('Prix: Décroissant')}</option>
+                        <option value="az">{tr('De A à Z')}</option>
+                        <option value="za">{tr('De Z à A')}</option>
                      </select>
                   </div>
                </div>
@@ -374,7 +402,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                 <span className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 block">{storeIsAr ? 'لون' : 'Couleur'}</span>
                                 <div className="flex gap-3">
                                    {p.colors.map((c: string) => (
-                                      <button key={c} onClick={() => setSelectedColor(c)} className={`w-8 h-8 rounded-full border-2 transition-all ${selectedColor === c ? 'border-slate-800 scale-125' : 'border-transparent hover:scale-110 shadow-sm'}`} style={{ backgroundColor: c }} />
+                                      <button key={tr(c)} onClick={() => setSelectedColor(c)} className={`w-8 h-8 rounded-full border-2 transition-all ${selectedColor === c ? 'border-slate-800 scale-125' : 'border-transparent hover:scale-110 shadow-sm'}`} style={{ backgroundColor: c }} />
                                    ))}
                                 </div>
                              </div>
@@ -528,21 +556,21 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         {page === 'collections' && (
             <div className={`${isModal ? 'p-20' : 'p-8'} mx-auto w-full`}>
                <div className="flex flex-col md:flex-row justify-between items-end mb-12 border-b pb-4 gap-6">
-                  <h3 className="text-2xl font-light">All Products</h3>
+                  <h3 className="text-2xl font-light">{tr('All Products')}</h3>
                   <div className="flex flex-col sm:flex-row items-center gap-6">
                      {categories && categories.length > 1 && (
                         <div className="flex flex-wrap gap-4 text-sm">
                            {categories.map((c: string) => (
-                              <button key={c} onClick={() => setActiveCategory(c)} className={`pb-1 border-b-2 transition-colors ${activeCategory === c ? 'border-current' : 'border-transparent text-gray-400 hover:text-black'}`} style={{ color: activeCategory === c ? primaryColor : undefined }}>
-                                 {c}
+                              <button key={tr(c)} onClick={() => setActiveCategory(c)} className={`pb-1 border-b-2 transition-colors ${activeCategory === c ? 'border-current' : 'border-transparent text-gray-400 hover:text-black'}`} style={{ color: activeCategory === c ? primaryColor : undefined }}>
+                                 {tr(c)}
                               </button>
                            ))}
                         </div>
                      )}
                      <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="bg-transparent border-none text-gray-500 text-sm focus:ring-0 outline-none cursor-pointer">
-                        <option value="featured">Sort: Featured</option>
-                        <option value="price-low-high">Price: Low to High</option>
-                        <option value="price-high-low">Price: High to Low</option>
+                        <option value="featured">{tr('Sort: Featured')}</option>
+                        <option value="price-low-high">{tr('Price: Low to High')}</option>
+                        <option value="price-high-low">{tr('Price: High to Low')}</option>
                      </select>
                   </div>
                </div>
@@ -587,7 +615,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 block">Color</span>
                                 <div className="flex gap-4">
                                    {p.colors.map((c: string) => (
-                                      <button key={c} onClick={() => setSelectedColor(c)} className={`w-6 h-6 rounded-full border border-gray-200 transition-all ${selectedColor === c ? 'ring-1 ring-offset-4 ring-black' : 'hover:scale-110'}`} style={{ backgroundColor: c }} />
+                                      <button key={tr(c)} onClick={() => setSelectedColor(c)} className={`w-6 h-6 rounded-full border border-gray-200 transition-all ${selectedColor === c ? 'ring-1 ring-offset-4 ring-black' : 'hover:scale-110'}`} style={{ backgroundColor: c }} />
                                    ))}
                                 </div>
                              </div>
@@ -714,21 +742,21 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         )}
         {page === 'collections' && (
             <div className={`${isModal ? 'p-16' : 'p-8'} mx-auto w-full`}>
-               <h3 className="text-xl tracking-widest uppercase text-center mb-8" style={{ color: primaryColor }}>All Products</h3>
+               <h3 className="text-xl tracking-widest uppercase text-center mb-8" style={{ color: primaryColor }}>{tr('All Products')}</h3>
                <div className="flex flex-col items-center gap-6 mb-16">
                   {categories && categories.length > 1 && (
                      <div className="flex flex-wrap justify-center gap-8 text-xs tracking-widest uppercase">
                         {categories.map((c: string) => (
-                           <button key={c} onClick={() => setActiveCategory(c)} className="transition-colors" style={{ color: activeCategory === c ? '#fff' : '#555', borderBottom: activeCategory === c ? `1px solid ${primaryColor}` : '1px solid transparent', paddingBottom: '4px' }}>
-                              {c}
+                           <button key={tr(c)} onClick={() => setActiveCategory(c)} className="transition-colors" style={{ color: activeCategory === c ? '#fff' : '#555', borderBottom: activeCategory === c ? `1px solid ${primaryColor}` : '1px solid transparent', paddingBottom: '4px' }}>
+                              {tr(c)}
                            </button>
                         ))}
                      </div>
                   )}
                   <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="bg-transparent border border-white/20 text-[#888] text-xs tracking-widest uppercase focus:border-white focus:outline-none cursor-pointer py-2 px-4 rounded-sm">
-                     <option value="featured">Featured</option>
-                     <option value="price-low-high">Price: Low - High</option>
-                     <option value="price-high-low">Price: High - Low</option>
+                     <option value="featured">{tr('Featured')}</option>
+                     <option value="price-low-high">{tr('Price: Low - High')}</option>
+                     <option value="price-high-low">{tr('Price: High - Low')}</option>
                   </select>
                </div>
                <div className={`grid gap-4 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
@@ -769,7 +797,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-4 block">Color</span>
                                 <div className="flex gap-4">
                                    {p.colors.map((c: string) => (
-                                      <button key={c} onClick={() => setSelectedColor(c)} className={`w-6 h-6 rounded-full border border-white/20 transition-all ${selectedColor === c ? 'ring-1 ring-offset-4 ring-offset-[#111] ring-white scale-110' : 'hover:scale-110'}`} style={{ backgroundColor: c }} />
+                                      <button key={tr(c)} onClick={() => setSelectedColor(c)} className={`w-6 h-6 rounded-full border border-white/20 transition-all ${selectedColor === c ? 'ring-1 ring-offset-4 ring-offset-[#111] ring-white scale-110' : 'hover:scale-110'}`} style={{ backgroundColor: c }} />
                                    ))}
                                 </div>
                              </div>
@@ -901,18 +929,18 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         {page === 'collections' && (
             <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-6'} mx-auto w-full`}>
                <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                  <h3 className="text-3xl font-black text-center text-slate-800">All Products ✨</h3>
+                  <h3 className="text-3xl font-black text-center text-slate-800">{tr('All Products ✨')}</h3>
                   <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="bg-white border-2 border-slate-200 text-slate-700 text-sm font-black rounded-full focus:ring-slate-500 focus:border-slate-500 px-4 py-2 outline-none cursor-pointer shadow-sm">
-                     <option value="featured">Best Matches 🌟</option>
-                     <option value="price-low-high">Price: Low to High 💸</option>
-                     <option value="price-high-low">Price: High to Low 💎</option>
+                     <option value="featured">{tr('Best Matches 🌟')}</option>
+                     <option value="price-low-high">{tr('Price: Low to High 💸')}</option>
+                     <option value="price-high-low">{tr('Price: High to Low 💎')}</option>
                   </select>
                </div>
                {categories && categories.length > 1 && (
                   <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-10">
                      {categories.map((c: string) => (
-                        <button key={c} onClick={() => setActiveCategory(c)} className="px-6 py-2 rounded-full text-sm font-black transition-transform hover:scale-105 border-2 border-transparent" style={{ backgroundColor: activeCategory === c ? primaryColor : '#f1f5f9', color: activeCategory === c ? '#fff' : '#64748b', borderColor: activeCategory === c ? 'transparent' : '#e2e8f0' }}>
-                           {c}
+                        <button key={tr(c)} onClick={() => setActiveCategory(c)} className="px-6 py-2 rounded-full text-sm font-black transition-transform hover:scale-105 border-2 border-transparent" style={{ backgroundColor: activeCategory === c ? primaryColor : '#f1f5f9', color: activeCategory === c ? '#fff' : '#64748b', borderColor: activeCategory === c ? 'transparent' : '#e2e8f0' }}>
+                           {tr(c)}
                         </button>
                      ))}
                   </div>
@@ -958,7 +986,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                 <span className="text-sm font-black uppercase tracking-wider text-slate-400 mb-3 block">Color</span>
                                 <div className="flex gap-3">
                                    {p.colors.map((c: string) => (
-                                      <button key={c} onClick={() => setSelectedColor(c)} className={`w-10 h-10 rounded-full border-4 transition-transform ${selectedColor === c ? 'border-slate-800 scale-125' : 'border-transparent hover:scale-110 shadow-sm'}`} style={{ backgroundColor: c }} />
+                                      <button key={tr(c)} onClick={() => setSelectedColor(c)} className={`w-10 h-10 rounded-full border-4 transition-transform ${selectedColor === c ? 'border-slate-800 scale-125' : 'border-transparent hover:scale-110 shadow-sm'}`} style={{ backgroundColor: c }} />
                                    ))}
                                 </div>
                              </div>
@@ -1104,8 +1132,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                   {/* Categories */}
                   <div className="flex flex-wrap justify-center gap-8 text-sm font-medium text-[#4a4a4a]">
                      {categories.map((c: string) => (
-                        <button key={c} onClick={() => setActiveCategory(c)} className={`pb-1 border-b-2 transition-colors ${activeCategory === c ? 'border-[#1a1a1a] text-[#1a1a1a]' : 'border-transparent hover:border-slate-300'}`}>
-                           {c === 'All' ? allCollectionsTitle : c}
+                        <button key={tr(c)} onClick={() => setActiveCategory(c)} className={`pb-1 border-b-2 transition-colors ${activeCategory === c ? 'border-[#1a1a1a] text-[#1a1a1a]' : 'border-transparent hover:border-slate-300'}`}>
+                           {c === 'All' ? allCollectionsTitle : tr(c)}
                         </button>
                      ))}
                   </div>
@@ -1149,7 +1177,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                           <span className="text-[11px] font-bold uppercase tracking-widest text-[#666] mb-3 block">{storeIsAr ? 'لون' : 'Couleur'}</span>
                           <div className="flex gap-2">
                              {storeProducts.find(p => p.id === activeProductId)?.colors.map((c: string) => (
-                                <button key={c} onClick={() => setSelectedColor(c)} className={`w-8 h-8 rounded-full border-2 transition-transform ${selectedColor === c ? 'border-[#1a1a1a] scale-110' : 'border-transparent hover:scale-105 shadow-sm'}`} style={{ backgroundColor: c }} />
+                                <button key={tr(c)} onClick={() => setSelectedColor(c)} className={`w-8 h-8 rounded-full border-2 transition-transform ${selectedColor === c ? 'border-[#1a1a1a] scale-110' : 'border-transparent hover:scale-105 shadow-sm'}`} style={{ backgroundColor: c }} />
                              ))}
                           </div>
                        </div>
@@ -1527,7 +1555,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        </div>
                        <div className="flex gap-2">
                           {['#0f172a', '#171717', '#b48a44', '#84cc16', '#4d7c0f', '#0ea5e9', '#e11d48'].map(c => (
-                             <button key={c} onClick={() => setPrimaryColor(c)} className="w-6 h-6 rounded-full border border-black/10 shadow-sm hover:scale-110 transition-transform" style={{ backgroundColor: c }} />
+                             <button key={tr(c)} onClick={() => setPrimaryColor(c)} className="w-6 h-6 rounded-full border border-black/10 shadow-sm hover:scale-110 transition-transform" style={{ backgroundColor: c }} />
                           ))}
                        </div>
                     </div>
