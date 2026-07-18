@@ -820,7 +820,7 @@ export default function StoreBuilder() {
         {/* CONTROLS / CONTENT PANEL */}
         <div className={`${['themes', 'design'].includes(activeTab) ? 'w-[420px]' : 'flex-1'} bg-white rounded-3xl border border-slate-200 shadow-sm shrink-0 transition-all duration-300 overflow-hidden flex flex-col h-[calc(100vh-140px)]`}>
             <div className={`p-8 overflow-y-auto flex-1 flex justify-center`}>
-              <div className="w-full max-w-2xl">
+              <div className="w-full max-w-5xl">
               {/* THEMES TAB */}
               {activeTab === 'themes' && (
                 <div className="space-y-6">
