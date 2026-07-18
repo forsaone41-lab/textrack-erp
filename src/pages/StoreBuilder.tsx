@@ -136,14 +136,14 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
      );
   };
 
-  const ThemeFooter = ({ bgColor = '#f8f9fa', textColor = '#64748b' }) => (
+  const ThemeFooter = ({ bgColor = '#f8f9fa', textColor = '#64748b', setPage }: any) => (
      <footer className="mt-auto py-12 px-6 border-t" style={{ backgroundColor: bgColor, borderColor: 'rgba(0,0,0,0.05)' }}>
         <div className="max-w-4xl mx-auto flex flex-col items-center text-center gap-6">
            <h3 className="text-xl font-bold" style={{ color: primaryColor }}>{storeName}</h3>
            <div className="flex flex-wrap justify-center gap-6 text-sm font-medium" style={{ color: textColor }}>
-              {footerSettings.showPrivacy && <a href="#" className="hover:opacity-70 transition-opacity">Politique de Confidentialité</a>}
-              {footerSettings.showTerms && <a href="#" className="hover:opacity-70 transition-opacity">Conditions Générales</a>}
-              {footerSettings.showCookies && <a href="#" className="hover:opacity-70 transition-opacity">Politique des Cookies</a>}
+              {footerSettings.showPrivacy && <button onClick={() => setPage('privacy')} className="hover:opacity-70 transition-opacity">Politique de Confidentialité</button>}
+              {footerSettings.showTerms && <button onClick={() => setPage('terms')} className="hover:opacity-70 transition-opacity">Conditions Générales</button>}
+              {footerSettings.showCookies && <button onClick={() => setPage('cookies')} className="hover:opacity-70 transition-opacity">Politique des Cookies</button>}
            </div>
            <EditableText as="p" text={footerSettings.copyright} onTextChange={(v: string) => setFooterSettings({...footerSettings, copyright: v})} isLiveStore={isLiveStore} className="text-xs opacity-70 mt-4" style={{ color: textColor }} />
         </div>
@@ -319,7 +319,22 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               <button onClick={() => setPage('home')} className="mt-8 px-8 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-colors">Return to Home</button>
            </div>
         )}
-        <ThemeFooter />
+        {['privacy', 'terms', 'cookies'].includes(page) && (
+           <div className={`${isModal ? 'p-16 max-w-4xl' : 'p-8'} mx-auto w-full`}>
+              <h1 className="text-3xl font-black mb-6 text-slate-800">
+                {page === 'privacy' ? 'Politique de Confidentialité' : page === 'terms' ? 'Conditions Générales' : 'Politique des Cookies'}
+              </h1>
+              <div className="prose prose-slate max-w-none text-slate-600 space-y-4">
+                 <p>Dernière mise à jour : {new Date().toLocaleDateString()}</p>
+                 <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing nec, ultricies sed, dolor. Cras elementum ultrices diam. Maecenas ligula massa, varius a, semper congue, euismod non, mi.</p>
+                 <h3 className="text-xl font-bold text-slate-800 mt-6 mb-3">1. Collecte des données</h3>
+                 <p>Proin porttitor, orci nec nonummy molestie, enim est eleifend mi, non fermentum diam nisl sit amet erat. Duis semper. Duis arcu massa, scelerisque vitae, consequat in, pretium a, enim.</p>
+                 <h3 className="text-xl font-bold text-slate-800 mt-6 mb-3">2. Utilisation</h3>
+                 <p>Pellentesque congue. Ut in risus volutpat libero pharetra tempor. Cras vestibulum bibendum augue. Praesent egestas leo in pede.</p>
+              </div>
+           </div>
+        )}
+        <ThemeFooter setPage={setPage} />
       </div>
     </div>
   );
