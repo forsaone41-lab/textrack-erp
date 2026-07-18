@@ -1125,37 +1125,82 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                 </div>
               )}
 
-              {/* ORDERS TAB (NEW!) */}
+              {/* ORDERS TAB (NEW PRO DASHBOARD!) */}
               {activeTab === 'orders' && (
-                 <div className="space-y-4">
-                    <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex items-center justify-between">
-                       <div>
-                          <h4 className="text-sm font-black text-indigo-800">12 Nouvelles</h4>
-                          <p className="text-[10px] text-indigo-600 font-bold uppercase tracking-wider">Commandes en attente</p>
+                 <div className="space-y-6">
+                    {/* Dashboard KPIs */}
+                    <div className="grid grid-cols-2 gap-3">
+                       <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 p-4 rounded-2xl shadow-lg shadow-indigo-200 flex flex-col justify-between">
+                          <div className="flex items-center justify-between mb-2">
+                             <span className="text-[10px] font-black text-indigo-100 uppercase tracking-wider">Commandes</span>
+                             <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center"><ShoppingBag className="w-3 h-3 text-white" /></div>
+                          </div>
+                          <div>
+                             <h4 className="text-2xl font-black text-white">1,248</h4>
+                             <p className="text-[9px] text-indigo-200 font-bold mt-1">+12% ce mois</p>
+                          </div>
                        </div>
-                       <div className="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-black shadow-lg">12</div>
+                       
+                       <div className="bg-gradient-to-br from-emerald-400 to-emerald-500 p-4 rounded-2xl shadow-lg shadow-emerald-200 flex flex-col justify-between">
+                          <div className="flex items-center justify-between mb-2">
+                             <span className="text-[10px] font-black text-emerald-50 uppercase tracking-wider">Revenus</span>
+                             <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center"><CreditCard className="w-3 h-3 text-white" /></div>
+                          </div>
+                          <div>
+                             <h4 className="text-xl font-black text-white">45,200 <span className="text-[10px]">MAD</span></h4>
+                             <p className="text-[9px] text-emerald-100 font-bold mt-1">+18% ce mois</p>
+                          </div>
+                       </div>
+
+                       <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group cursor-pointer hover:border-green-300 transition-colors">
+                          <div>
+                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Confirmées</p>
+                             <h4 className="text-lg font-black text-slate-800">856</h4>
+                          </div>
+                          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center group-hover:bg-green-200 transition-colors"><CheckCircle className="w-4 h-4 text-green-600" /></div>
+                       </div>
+
+                       <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group cursor-pointer hover:border-rose-300 transition-colors">
+                          <div>
+                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Refusées</p>
+                             <h4 className="text-lg font-black text-slate-800">124</h4>
+                          </div>
+                          <div className="w-8 h-8 bg-rose-100 rounded-full flex items-center justify-center group-hover:bg-rose-200 transition-colors"><X className="w-4 h-4 text-rose-600" /></div>
+                       </div>
                     </div>
                     
-                    <div className="space-y-3">
-                       {[
-                          { id: '#1042', customer: 'Youssef El Amrani', amount: '850.00 MAD', status: 'Nouveau', date: 'Il y a 10 min' },
-                          { id: '#1041', customer: 'Sara Bennani', amount: '450.00 MAD', status: 'Nouveau', date: 'Il y a 1h' },
-                          { id: '#1040', customer: 'Karim Tazi', amount: '1200.00 MAD', status: 'En cours', date: 'Hier' }
-                       ].map(order => (
-                          <div key={order.id} className="p-3 border border-slate-200 rounded-xl bg-white shadow-sm cursor-pointer hover:border-indigo-500 transition-colors">
-                             <div className="flex justify-between items-start mb-2">
-                                <span className="text-xs font-black text-slate-800">{order.id}</span>
-                                <span className="text-[9px] font-black uppercase px-2 py-1 bg-green-100 text-green-700 rounded-full">{order.status}</span>
+                    {/* Recent Orders List */}
+                    <div>
+                       <div className="flex justify-between items-center mb-3">
+                          <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">Récentes</h3>
+                          <span className="text-[10px] text-indigo-600 font-bold cursor-pointer hover:underline">Voir tout</span>
+                       </div>
+                       <div className="space-y-3">
+                          {[
+                             { id: '#1042', customer: 'Youssef El Amrani', amount: '850.00 MAD', status: 'Nouveau', statusColor: 'bg-indigo-100 text-indigo-700', date: 'Il y a 10 min', items: '2 articles' },
+                             { id: '#1041', customer: 'Sara Bennani', amount: '450.00 MAD', status: 'Confirmé', statusColor: 'bg-emerald-100 text-emerald-700', date: 'Il y a 1h', items: '1 article' },
+                             { id: '#1040', customer: 'Karim Tazi', amount: '1200.00 MAD', status: 'En cours', statusColor: 'bg-amber-100 text-amber-700', date: 'Hier', items: '3 articles' },
+                             { id: '#1039', customer: 'Maha Alami', amount: '350.00 MAD', status: 'Refusé', statusColor: 'bg-rose-100 text-rose-700', date: 'Hier', items: '1 article' }
+                          ].map(order => (
+                             <div key={order.id} className="p-3 border border-slate-200 rounded-2xl bg-white shadow-sm cursor-pointer hover:border-indigo-500 transition-colors hover:shadow-md group">
+                                <div className="flex justify-between items-start mb-2">
+                                   <div className="flex items-center gap-2">
+                                      <span className="text-xs font-black text-slate-800 group-hover:text-indigo-600 transition-colors">{order.id}</span>
+                                      <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${order.statusColor}`}>{order.status}</span>
+                                   </div>
+                                   <span className="text-[10px] text-slate-400 font-bold">{order.date}</span>
+                                </div>
+                                <div className="flex justify-between items-end">
+                                   <div>
+                                      <p className="text-sm font-bold text-slate-700">{order.customer}</p>
+                                      <p className="text-[9px] text-slate-400 font-bold mt-0.5">{order.items}</p>
+                                   </div>
+                                   <span className="text-xs font-black text-slate-800">{order.amount}</span>
+                                </div>
                              </div>
-                             <p className="text-sm font-bold text-slate-600 mb-1">{order.customer}</p>
-                             <div className="flex justify-between items-center text-[10px] text-slate-400 font-bold">
-                                <span>{order.date}</span>
-                                <span className="text-indigo-600 text-xs">{order.amount}</span>
-                             </div>
-                          </div>
-                       ))}
+                          ))}
+                       </div>
                     </div>
-                    <button className="w-full py-3 bg-slate-100 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-200 transition-colors">Voir toutes les commandes</button>
                  </div>
               )}
 
