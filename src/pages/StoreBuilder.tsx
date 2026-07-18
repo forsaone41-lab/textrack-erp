@@ -902,13 +902,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         {/* VERTICAL SIDE NAVIGATION */}
         <div className="w-24 shrink-0 flex flex-col gap-3">
            {[
-                 { id: 'orders', icon: ListOrdered, label: 'Commandes' },
-                 { id: 'themes', icon: LayoutTemplate, label: 'Thèmes' },
-                 { id: 'design', icon: Paintbrush, label: 'Design' },
-                 { id: 'products', icon: ShoppingBag, label: 'Produits' },
-                 { id: 'payments', icon: CreditCard, label: 'Paiements' },
-                 { id: 'apps', icon: Box, label: 'Apps' },
-                 { id: 'settings', icon: Settings, label: 'Config' }
+                 { id: 'orders', icon: ListOrdered, label: isAr ? 'الطلبات' : 'Commandes' },
+                 { id: 'themes', icon: LayoutTemplate, label: isAr ? 'القوالب' : 'Thèmes' },
+                 { id: 'design', icon: Paintbrush, label: isAr ? 'التصميم' : 'Design' },
+                 { id: 'products', icon: ShoppingBag, label: isAr ? 'المنتجات' : 'Produits' },
+                 { id: 'payments', icon: CreditCard, label: isAr ? 'الأداء' : 'Paiements' },
+                 { id: 'apps', icon: Box, label: isAr ? 'تطبيقات' : 'Apps' },
+                 { id: 'settings', icon: Settings, label: isAr ? 'إعدادات' : 'Config' }
            ].map(tab => (
                  <button 
                    key={tab.id}
@@ -1161,18 +1161,27 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               {/* APPS TAB */}
               {activeTab === 'apps' && (
                  <div className="space-y-4">
-                     <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 mb-4">
-                        <h4 className="text-xs font-black text-indigo-800 mb-1">App Store BEYA</h4>
-                        <p className="text-[10px] text-indigo-600">Installez des plugins pour booster vos ventes.</p>
+                     <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-4">
+                        <h4 className="text-sm font-black text-indigo-800 mb-1">App Store BEYA</h4>
+                        <p className="text-xs text-indigo-600">Développez votre boutique avec nos plugins 1-clic (Similaires aux apps Shopify).</p>
                      </div>
                      <div className="space-y-3">
-                        <div className="p-3 border border-slate-200 rounded-xl flex items-center gap-3">
-                           <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center"><CheckCircle className="w-5 h-5 text-green-600" /></div>
-                           <div className="flex-1">
-                              <p className="text-xs font-bold text-slate-800">WhatsApp Chat</p>
+                        {[
+                           { name: 'WhatsApp Chat', desc: 'Discutez avec vos clients en direct', icon: '💬', color: 'bg-green-100 text-green-600' },
+                           { name: 'Facebook Pixel', desc: 'Suivez vos conversions Facebook Ads', icon: 'f', color: 'bg-blue-100 text-blue-600 font-serif' },
+                           { name: 'TikTok Pixel', desc: 'Optimisez vos campagnes TikTok', icon: '♪', color: 'bg-black text-white' },
+                           { name: 'Google Analytics 4', desc: 'Analysez votre trafic en temps réel', icon: 'G', color: 'bg-orange-100 text-orange-600 font-serif' },
+                           { name: 'Mailchimp Sync', desc: 'Synchronisez vos clients pour l\'emailing', icon: 'M', color: 'bg-yellow-100 text-yellow-600 font-serif' },
+                        ].map(app => (
+                           <div key={app.name} className="p-3 border border-slate-200 rounded-xl flex items-center gap-4 hover:border-indigo-300 transition-colors">
+                              <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl font-black ${app.color}`}>{app.icon}</div>
+                              <div className="flex-1">
+                                 <p className="text-sm font-bold text-slate-800">{app.name}</p>
+                                 <p className="text-[10px] text-slate-500 mt-1">{app.desc}</p>
+                              </div>
+                              <button className="px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-indigo-600 transition-colors shadow-sm">Ajouter</button>
                            </div>
-                           <button className="px-3 py-1.5 bg-slate-900 text-white rounded text-[10px] font-bold">Ajouter</button>
-                        </div>
+                        ))}
                      </div>
                   </div>
                )}
@@ -1180,14 +1189,35 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                {/* SETTINGS TAB */}
                {activeTab === 'settings' && (
                  <div className="space-y-6">
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                       <h4 className="text-xs font-black text-slate-800 mb-1 uppercase tracking-wider">Nom de la boutique</h4>
-                       <input 
-                         type="text" 
-                         value={storeName} 
-                         onChange={e => setStoreName(e.target.value)} 
-                         className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 mt-2"
-                       />
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                       <div>
+                          <h4 className="text-xs font-black text-slate-800 mb-1 uppercase tracking-wider">Nom de la boutique</h4>
+                          <input 
+                            type="text" 
+                            value={storeName} 
+                            onChange={e => setStoreName(e.target.value)} 
+                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 mt-2"
+                          />
+                       </div>
+                       
+                       <div className="pt-4 border-t border-slate-200">
+                          <h4 className="text-xs font-black text-slate-800 mb-2 uppercase tracking-wider">Logo de la boutique (Optionnel)</h4>
+                          <div className="flex items-center gap-4">
+                             <div className="w-16 h-16 bg-white border border-slate-200 rounded-xl flex items-center justify-center overflow-hidden shadow-sm shrink-0">
+                                {storeLogo ? <img src={storeLogo} className="w-full h-full object-contain p-1" alt="Logo" /> : <ImageIcon className="w-6 h-6 text-slate-300" />}
+                             </div>
+                             <label className="cursor-pointer px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm">
+                                Importer un logo
+                                <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                                   const file = e.target.files?.[0];
+                                   if (file) setStoreLogo(URL.createObjectURL(file));
+                                }} />
+                             </label>
+                             {storeLogo && (
+                                <button onClick={() => setStoreLogo('')} className="text-xs font-bold text-rose-500 hover:text-rose-600">Retirer</button>
+                             )}
+                          </div>
+                       </div>
                     </div>
 
                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
