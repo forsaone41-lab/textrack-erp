@@ -454,15 +454,15 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         {['privacy', 'terms', 'cookies'].includes(page) && (
            <div className={`${isModal ? 'p-16 max-w-4xl' : 'p-8'} mx-auto w-full`}>
               <h1 className="text-3xl font-black mb-6 text-slate-800">
-                {page === 'privacy' ? 'Politique de Confidentialité' : page === 'terms' ? 'Conditions Générales' : 'Politique des Cookies'}
+                {page === 'privacy' ? (storeIsAr ? 'سياسة الخصوصية' : 'Politique de Confidentialité') : page === 'terms' ? (storeIsAr ? 'الشروط والأحكام' : 'Conditions Générales') : (storeIsAr ? 'سياسة ملفات الارتباط' : 'Politique des Cookies')}
               </h1>
               <div className="prose prose-slate max-w-none text-slate-600 space-y-4">
-                 <p>Dernière mise à jour : {new Date().toLocaleDateString()}</p>
-                 <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing nec, ultricies sed, dolor. Cras elementum ultrices diam. Maecenas ligula massa, varius a, semper congue, euismod non, mi.</p>
-                 <h3 className="text-xl font-bold text-slate-800 mt-6 mb-3">1. Collecte des données</h3>
-                 <p>Proin porttitor, orci nec nonummy molestie, enim est eleifend mi, non fermentum diam nisl sit amet erat. Duis semper. Duis arcu massa, scelerisque vitae, consequat in, pretium a, enim.</p>
-                 <h3 className="text-xl font-bold text-slate-800 mt-6 mb-3">2. Utilisation</h3>
-                 <p>Pellentesque congue. Ut in risus volutpat libero pharetra tempor. Cras vestibulum bibendum augue. Praesent egestas leo in pede.</p>
+                 <p>{storeIsAr ? 'آخر تحديث : ' : 'Dernière mise à jour : '}{new Date().toLocaleDateString()}</p>
+                 <p>{storeIsAr ? 'هذا النص هو مثال لنص يمكن أن يستبدل في نفس المساحة، لقد تم توليد هذا النص من مولد النص العربى، حيث يمكنك أن تولد مثل هذا النص أو العديد من النصوص الأخرى إضافة إلى زيادة عدد الحروف التى يولدها التطبيق.' : 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing nec, ultricies sed, dolor. Cras elementum ultrices diam. Maecenas ligula massa, varius a, semper congue, euismod non, mi.'}</p>
+                 <h3 className="text-xl font-bold text-slate-800 mt-6 mb-3">{storeIsAr ? '1. جمع البيانات' : '1. Collecte des données'}</h3>
+                 <p>{storeIsAr ? 'إذا كنت تحتاج إلى عدد أكبر من الفقرات يتيح لك مولد النص العربى زيادة عدد الفقرات كما تريد، النص لن يبدو مقسما ولا يحوي أخطاء لغوية، مولد النص العربى مفيد لمصممي المواقع على وجه الخصوص.' : 'Proin porttitor, orci nec nonummy molestie, enim est eleifend mi, non fermentum diam nisl sit amet erat. Duis semper. Duis arcu massa, scelerisque vitae, consequat in, pretium a, enim.'}</p>
+                 <h3 className="text-xl font-bold text-slate-800 mt-6 mb-3">{storeIsAr ? '2. الاستخدام' : '2. Utilisation'}</h3>
+                 <p>{storeIsAr ? 'حيث يحتاج العميل فى كثير من الأحيان أن يطلع على صورة حقيقية لتصميم الموقع. ومن هنا وجب على المصمم أن يضع نصوصا مؤقتة على التصميم ليظهر للعميل الشكل كاملاً.' : 'Pellentesque congue. Ut in risus volutpat libero pharetra tempor. Cras vestibulum bibendum augue. Praesent egestas leo in pede.'}</p>
               </div>
            </div>
         )}
