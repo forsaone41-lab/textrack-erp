@@ -24,6 +24,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [fontFamily, setFontFamily] = useState(THEMES[0].defaultFont);
   const [heroImage, setHeroImage] = useState(THEMES[0].previewImg);
   
+  // Theme Inline Texts
+  const [heroTitle, setHeroTitle] = useState('New Collection');
+  const [heroSubtitle, setHeroSubtitle] = useState('Discover our latest premium quality garments.');
+  const [heroButtonText, setHeroButtonText] = useState('Shop Now');
+  const [homeCollectionsTitle, setHomeCollectionsTitle] = useState('Trending Now');
+  const [allCollectionsTitle, setAllCollectionsTitle] = useState('All Products');
+  
   const [cartCount, setCartCount] = useState(0);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [storeProducts, setStoreProducts] = useState([
@@ -112,6 +119,35 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   };
 
   // --- DYNAMIC LAYOUT COMPONENTS ---
+  const EditableText = ({ text, onTextChange, isLiveStore, className, as: Tag = 'span', ...props }: any) => {
+     if (isLiveStore) return <Tag className={className} {...props}>{text}</Tag>;
+     return (
+        <Tag 
+           className={`${className} cursor-text hover:outline hover:outline-2 hover:outline-indigo-500 hover:outline-dashed hover:bg-black/10 transition-all px-1 rounded min-w-[20px] inline-block empty:before:content-['Vide'] empty:before:text-slate-400`} 
+           contentEditable 
+           suppressContentEditableWarning 
+           onBlur={(e: any) => onTextChange(e.currentTarget.textContent)}
+           onClick={(e: any) => e.stopPropagation()}
+           {...props}
+        >
+           {text}
+        </Tag>
+     );
+  };
+
+  const ThemeFooter = ({ bgColor = '#f8f9fa', textColor = '#64748b' }) => (
+     <footer className="mt-auto py-12 px-6 border-t" style={{ backgroundColor: bgColor, borderColor: 'rgba(0,0,0,0.05)' }}>
+        <div className="max-w-4xl mx-auto flex flex-col items-center text-center gap-6">
+           <h3 className="text-xl font-bold" style={{ color: primaryColor }}>{storeName}</h3>
+           <div className="flex flex-wrap justify-center gap-6 text-sm font-medium" style={{ color: textColor }}>
+              {footerSettings.showPrivacy && <a href="#" className="hover:opacity-70 transition-opacity">Politique de Confidentialité</a>}
+              {footerSettings.showTerms && <a href="#" className="hover:opacity-70 transition-opacity">Conditions Générales</a>}
+              {footerSettings.showCookies && <a href="#" className="hover:opacity-70 transition-opacity">Politique des Cookies</a>}
+           </div>
+           <EditableText as="p" text={footerSettings.copyright} onTextChange={(v: string) => setFooterSettings({...footerSettings, copyright: v})} isLiveStore={isLiveStore} className="text-xs opacity-70 mt-4" style={{ color: textColor }} />
+        </div>
+     </footer>
+  );
 
   const LayoutHeroCenter = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode }: any) => {
     const [selectedSize, setSelectedSize] = useState<string>('');
@@ -139,9 +175,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             <div className={`h-[${isModal ? '600px' : '400px'}] flex flex-col items-center justify-center text-center p-8 bg-cover bg-center relative`} style={{ backgroundImage: `url(${heroImage})` }}>
                <div className="absolute inset-0 bg-black/60"></div>
                <div className="relative z-10 flex flex-col items-center">
-                  <h1 className={`${isModal ? 'text-7xl' : 'text-5xl'} font-black text-white uppercase tracking-tighter mb-4`}>New Collection</h1>
-                  <p className="text-white/90 text-lg mb-8 max-w-md">Discover our latest premium quality garments.</p>
-                  <button onClick={() => setPage('collections')} className="px-8 py-3 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded" style={{ backgroundColor: primaryColor }}>Shop Now</button>
+                  <EditableText as="h1" text={heroTitle} onTextChange={setHeroTitle} isLiveStore={isLiveStore} className={`${isModal ? 'text-7xl' : 'text-5xl'} font-black text-white uppercase tracking-tighter mb-4`} />
+                  <EditableText as="p" text={heroSubtitle} onTextChange={setHeroSubtitle} isLiveStore={isLiveStore} className="text-white/90 text-lg mb-8 max-w-md" />
+                  <button onClick={() => setPage('collections')} className="px-8 py-3 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded" style={{ backgroundColor: primaryColor }}>
+                     <EditableText text={heroButtonText} onTextChange={setHeroButtonText} isLiveStore={isLiveStore} />
+                  </button>
                </div>
             </div>
             <div className={`${isModal ? 'p-16 max-w-[1400px]' : 'p-8'} mx-auto w-full`}>
@@ -280,6 +318,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               <button onClick={() => setPage('home')} className="mt-8 px-8 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-colors">Return to Home</button>
            </div>
         )}
+        <ThemeFooter />
       </div>
     </div>
   );
