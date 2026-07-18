@@ -38,6 +38,8 @@ export default function StoreBuilder() {
     { id: 'about', title: 'About', isDefault: false }
   ]);
   const [newPageTitle, setNewPageTitle] = useState('');
+  
+  const [buyMode, setBuyMode] = useState<'cart'|'direct'|'both'>('both');
 
   const applyTheme = (theme: typeof THEMES[0]) => {
      setActiveTheme(theme);
@@ -53,7 +55,7 @@ export default function StoreBuilder() {
 
   // --- DYNAMIC LAYOUT COMPONENTS ---
 
-  const LayoutHeroCenter = ({ isModal = false, page, setPage, activeProductId, navigateToProduct }: any) => (
+  const LayoutHeroCenter = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode }: any) => (
     <div className={`w-full min-h-full bg-white text-slate-900 ${fontFamily} flex flex-col`}>
       <div className={`p-6 flex justify-between items-center border-b border-slate-100 ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4' : ''}`}>
          <h2 onClick={() => setPage('home')} className="text-2xl font-black uppercase tracking-tighter cursor-pointer">{storeName}</h2>
@@ -134,17 +136,47 @@ export default function StoreBuilder() {
                        <h2 className="text-4xl font-black mb-4">{p.name}</h2>
                        <p className="text-2xl font-bold mb-8" style={{ color: primaryColor }}>{p.price} MAD</p>
                        <p className="text-slate-500 mb-8 leading-relaxed">This is a premium quality product. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                       <button onClick={handleAddToCart} className="w-max px-12 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg" style={{ backgroundColor: primaryColor }}>Add to cart</button>
+                       <div className="flex gap-4">
+                          {(buyMode === 'cart' || buyMode === 'both') && (
+                             <button onClick={handleAddToCart} className="flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg" style={{ backgroundColor: '#1e293b' }}>Add to cart</button>
+                          )}
+                          {(buyMode === 'direct' || buyMode === 'both') && (
+                             <button onClick={() => setPage('checkout')} className="flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg" style={{ backgroundColor: primaryColor }}>Buy Now</button>
+                          )}
+                       </div>
                     </div>
                  </div>
               ))}
+           </div>
+        )}
+        {page === 'checkout' && (
+           <div className={`${isModal ? 'p-16 max-w-2xl' : 'p-8'} mx-auto w-full`}>
+              <div className="bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
+                 <h2 className="text-2xl font-black mb-6 text-center text-slate-800">Express Checkout</h2>
+                 <div className="space-y-4">
+                    <input type="text" placeholder="Full Name" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500" />
+                    <input type="text" placeholder="Phone Number" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500" />
+                    <input type="text" placeholder="Delivery Address" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500" />
+                    <button onClick={() => setPage('success')} className="w-full py-4 text-white font-black uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg mt-4" style={{ backgroundColor: primaryColor }}>Confirm Order (COD)</button>
+                 </div>
+              </div>
+           </div>
+        )}
+        {page === 'success' && (
+           <div className={`${isModal ? 'p-16 max-w-2xl' : 'p-8'} mx-auto w-full text-center flex flex-col items-center justify-center min-h-[400px]`}>
+              <div className="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-green-100/50">
+                 <CheckCircle className="w-10 h-10" />
+              </div>
+              <h2 className="text-4xl font-black mb-4 text-slate-800">Order Placed!</h2>
+              <p className="text-slate-500 text-lg">Thank you! Your order has been successfully sent to the BEYA ERP system.</p>
+              <button onClick={() => setPage('home')} className="mt-8 px-8 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-colors">Return to Home</button>
            </div>
         )}
       </div>
     </div>
   );
 
-  const LayoutSplitScreen = ({ isModal = false, page, setPage, activeProductId, navigateToProduct }: any) => (
+  const LayoutSplitScreen = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode }: any) => (
     <div className={`w-full min-h-full bg-[#f8f9fa] text-[#212529] ${fontFamily} flex flex-col`}>
       <div className={`px-8 py-6 flex justify-between items-center bg-white ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4' : ''}`}>
          <div className={`flex gap-8 text-sm ${previewDevice === 'mobile' && !isModal ? 'hidden' : ''}`}>
@@ -230,17 +262,44 @@ export default function StoreBuilder() {
                        <h2 className="text-5xl font-light mb-4">{p.name}</h2>
                        <p className="text-2xl font-light text-gray-500 mb-8">{p.price} MAD</p>
                        <p className="text-gray-500 mb-12 leading-relaxed font-light">Experience true elegance with this meticulously designed piece. Perfect for every occasion.</p>
-                       <button onClick={handleAddToCart} className="w-max px-12 py-4 bg-black text-white text-xs tracking-widest hover:bg-gray-800 transition-colors">ADD TO CART</button>
+                       <div className="flex gap-4">
+                          {(buyMode === 'cart' || buyMode === 'both') && (
+                             <button onClick={handleAddToCart} className="w-max px-12 py-4 bg-white border border-black text-black text-xs tracking-widest hover:bg-gray-100 transition-colors">ADD TO CART</button>
+                          )}
+                          {(buyMode === 'direct' || buyMode === 'both') && (
+                             <button onClick={() => setPage('checkout')} className="w-max px-12 py-4 text-white text-xs tracking-widest transition-opacity hover:opacity-90" style={{ backgroundColor: primaryColor }}>BUY NOW</button>
+                          )}
+                       </div>
                     </div>
                  </div>
               ))}
+           </div>
+        )}
+        {page === 'checkout' && (
+           <div className={`${isModal ? 'p-20 max-w-2xl' : 'p-8'} mx-auto w-full`}>
+              <div className="p-12 border border-gray-200 bg-white">
+                 <h2 className="text-3xl font-light mb-8 text-center" style={{ color: primaryColor }}>Checkout</h2>
+                 <div className="space-y-6">
+                    <input type="text" placeholder="Full Name" className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
+                    <input type="text" placeholder="Phone Number" className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
+                    <input type="text" placeholder="Delivery Address" className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
+                    <button onClick={() => setPage('success')} className="w-full py-5 text-white text-xs tracking-widest mt-8 transition-opacity hover:opacity-90" style={{ backgroundColor: primaryColor }}>CONFIRM ORDER</button>
+                 </div>
+              </div>
+           </div>
+        )}
+        {page === 'success' && (
+           <div className={`${isModal ? 'p-20 max-w-2xl' : 'p-8'} mx-auto w-full text-center py-20`}>
+              <h2 className="text-5xl font-light mb-6" style={{ color: primaryColor }}>Thank You.</h2>
+              <p className="text-gray-500 text-xl font-light mb-12">Your order has been successfully placed.</p>
+              <button onClick={() => setPage('home')} className="px-10 py-4 border border-black text-xs tracking-widest hover:bg-black hover:text-white transition-colors">CONTINUE SHOPPING</button>
            </div>
         )}
       </div>
     </div>
   );
 
-  const LayoutElegant = ({ isModal = false, page, setPage, activeProductId, navigateToProduct }: any) => (
+  const LayoutElegant = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode }: any) => (
     <div className={`w-full min-h-full bg-[#111] text-[#f5f5f5] ${fontFamily} flex flex-col`}>
       <div className={`p-8 flex flex-col items-center gap-6 border-b border-white/10 ${previewDevice === 'mobile' && !isModal ? 'p-4' : ''}`}>
          <h2 onClick={() => setPage('home')} className="text-4xl font-serif tracking-widest cursor-pointer" style={{ color: primaryColor }}>{storeName}</h2>
@@ -316,17 +375,44 @@ export default function StoreBuilder() {
                        <p className="text-2xl tracking-widest mb-8" style={{ color: primaryColor }}>{p.price} MAD</p>
                        <div className="w-12 h-px bg-white/20 mb-8"></div>
                        <p className="text-[#888] mb-12 tracking-wide leading-relaxed">Embrace luxury with this exclusive item. Crafted with precision for the modern elegant individual.</p>
-                       <button onClick={handleAddToCart} className="w-max px-12 py-4 bg-white text-black text-xs tracking-widest hover:bg-gray-200 transition-colors">ADD TO CART</button>
+                       <div className="flex gap-4">
+                          {(buyMode === 'cart' || buyMode === 'both') && (
+                             <button onClick={handleAddToCart} className="w-max px-12 py-4 border border-white/20 text-white text-xs tracking-widest hover:bg-white/5 transition-colors">ADD TO CART</button>
+                          )}
+                          {(buyMode === 'direct' || buyMode === 'both') && (
+                             <button onClick={() => setPage('checkout')} className="w-max px-12 py-4 bg-white text-black text-xs tracking-widest hover:bg-gray-200 transition-colors">BUY NOW</button>
+                          )}
+                       </div>
                     </div>
                  </div>
               ))}
+           </div>
+        )}
+        {page === 'checkout' && (
+           <div className={`${isModal ? 'p-16 max-w-2xl' : 'p-8'} mx-auto w-full`}>
+              <div className="p-12 border border-white/10 bg-[#151515]">
+                 <h2 className="text-3xl font-serif mb-8 text-center text-white">Secure Checkout</h2>
+                 <div className="space-y-6">
+                    <input type="text" placeholder="Full Name" className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
+                    <input type="text" placeholder="Phone Number" className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
+                    <input type="text" placeholder="Delivery Address" className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
+                    <button onClick={() => setPage('success')} className="w-full py-5 bg-white text-black text-xs tracking-widest mt-8 hover:bg-gray-200 transition-colors">PLACE ORDER</button>
+                 </div>
+              </div>
+           </div>
+        )}
+        {page === 'success' && (
+           <div className={`${isModal ? 'p-16 max-w-2xl' : 'p-8'} mx-auto w-full text-center py-20`}>
+              <h2 className="text-4xl font-serif mb-6 text-white">Order Confirmed</h2>
+              <p className="text-[#888] text-lg tracking-wide mb-12">An expression of elegance is on its way to you.</p>
+              <button onClick={() => setPage('home')} className="px-10 py-4 border border-white/20 text-white text-xs tracking-widest hover:bg-white/5 transition-colors">RETURN</button>
            </div>
         )}
       </div>
     </div>
   );
 
-  const LayoutPlayful = ({ isModal = false, page, setPage, activeProductId, navigateToProduct }: any) => (
+  const LayoutPlayful = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode }: any) => (
     <div className={`w-full min-h-full bg-white text-slate-900 ${fontFamily} flex flex-col`}>
       <div className={`p-4 mx-4 mt-4 bg-slate-100 rounded-full flex justify-between items-center ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4 rounded-3xl' : ''}`}>
          <h2 onClick={() => setPage('home')} className="text-2xl font-black tracking-tight cursor-pointer px-4" style={{ color: primaryColor }}>{storeName}</h2>
@@ -409,10 +495,40 @@ export default function StoreBuilder() {
                        <h2 className="text-5xl font-black mb-4 text-slate-800">{p.name}</h2>
                        <p className="text-3xl font-black mb-8" style={{ color: primaryColor }}>{p.price} MAD</p>
                        <p className="text-slate-500 font-medium mb-8 text-lg">Fun, fresh, and perfectly designed for everyday adventures!</p>
-                       <button onClick={handleAddToCart} className="w-max px-12 py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl" style={{ backgroundColor: primaryColor }}>Buy Now 🎈</button>
+                       <div className="flex gap-4">
+                          {(buyMode === 'cart' || buyMode === 'both') && (
+                             <button onClick={handleAddToCart} className="flex-1 px-8 py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl" style={{ backgroundColor: '#f43f5e' }}>Cart 🛒</button>
+                          )}
+                          {(buyMode === 'direct' || buyMode === 'both') && (
+                             <button onClick={() => setPage('checkout')} className="flex-1 px-8 py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl" style={{ backgroundColor: primaryColor }}>Buy Now 🎈</button>
+                          )}
+                       </div>
                     </div>
                  </div>
               ))}
+           </div>
+        )}
+        {page === 'checkout' && (
+           <div className={`${isModal ? 'p-16 max-w-2xl' : 'p-8'} mx-auto w-full`}>
+              <div className="bg-slate-50 p-10 rounded-[3rem] shadow-sm border-4 border-white">
+                 <h2 className="text-3xl font-black mb-6 text-center text-slate-800">Yay! Checkout 🎁</h2>
+                 <div className="space-y-4">
+                    <input type="text" placeholder="Your Name" className="w-full px-6 py-4 bg-white border-2 border-slate-100 rounded-full focus:outline-none focus:border-current text-lg font-bold" style={{ borderColor: 'transparent', '--tw-ring-color': primaryColor } as React.CSSProperties} />
+                    <input type="text" placeholder="Phone Number" className="w-full px-6 py-4 bg-white border-2 border-slate-100 rounded-full focus:outline-none focus:border-current text-lg font-bold" style={{ borderColor: 'transparent', '--tw-ring-color': primaryColor } as React.CSSProperties} />
+                    <input type="text" placeholder="Where to send?" className="w-full px-6 py-4 bg-white border-2 border-slate-100 rounded-full focus:outline-none focus:border-current text-lg font-bold" style={{ borderColor: 'transparent', '--tw-ring-color': primaryColor } as React.CSSProperties} />
+                    <button onClick={() => setPage('success')} className="w-full py-5 text-white font-black uppercase tracking-widest text-xl hover:scale-105 transition-transform rounded-full shadow-xl mt-6" style={{ backgroundColor: primaryColor }}>Send it to me! 🚀</button>
+                 </div>
+              </div>
+           </div>
+        )}
+        {page === 'success' && (
+           <div className={`${isModal ? 'p-16 max-w-2xl' : 'p-8'} mx-auto w-full text-center flex flex-col items-center justify-center min-h-[400px]`}>
+              <div className="w-24 h-24 bg-green-100 text-green-500 rounded-full flex items-center justify-center mb-6 shadow-xl border-4 border-white">
+                 <CheckCircle className="w-12 h-12" />
+              </div>
+              <h2 className="text-5xl font-black mb-4 text-slate-800" style={{ color: primaryColor }}>Woohoo! 🎉</h2>
+              <p className="text-slate-500 text-xl font-bold">Your order is on the way!</p>
+              <button onClick={() => setPage('home')} className="mt-8 px-10 py-4 bg-slate-900 text-white font-black uppercase tracking-widest rounded-full hover:scale-105 transition-transform shadow-lg">Back to fun 🎈</button>
            </div>
         )}
       </div>
@@ -428,7 +544,7 @@ export default function StoreBuilder() {
         setPage('product');
     };
 
-    const props = { isModal, page, setPage, activeProductId, navigateToProduct };
+    const props = { isModal, page, setPage, activeProductId, navigateToProduct, buyMode };
 
     if (activeTheme.layout === 'hero-center') return <LayoutHeroCenter {...props} />;
     if (activeTheme.layout === 'split-screen') return <LayoutSplitScreen {...props} />;
@@ -729,6 +845,26 @@ export default function StoreBuilder() {
                                 )}
                              </div>
                           ))}
+                       </div>
+                    </div>
+
+                    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mt-4">
+                       <h4 className="text-xs font-black text-slate-800 mb-4 uppercase tracking-wider flex items-center gap-2">
+                         <ShoppingBag className="w-4 h-4 text-indigo-600" /> Mode d'Achat (Boutons)
+                       </h4>
+                       <div className="space-y-3">
+                          <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors">
+                             <input type="radio" name="buyMode" checked={buyMode === 'both'} onChange={() => setBuyMode('both')} className="accent-indigo-600" />
+                             Afficher 'Ajouter au panier' & 'Acheter direct'
+                          </label>
+                          <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors">
+                             <input type="radio" name="buyMode" checked={buyMode === 'direct'} onChange={() => setBuyMode('direct')} className="accent-indigo-600" />
+                             Uniquement 'Acheter direct' (Express)
+                          </label>
+                          <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors">
+                             <input type="radio" name="buyMode" checked={buyMode === 'cart'} onChange={() => setBuyMode('cart')} className="accent-indigo-600" />
+                             Uniquement 'Ajouter au panier' (Classique)
+                          </label>
                        </div>
                     </div>
                  </div>
