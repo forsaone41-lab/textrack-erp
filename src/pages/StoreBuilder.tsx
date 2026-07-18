@@ -75,16 +75,16 @@ export default function StoreBuilder() {
             <div className={`${isModal ? 'p-16 max-w-[1400px]' : 'p-8'} mx-auto w-full`}>
                <h3 className="text-2xl font-black uppercase text-center mb-10">Trending Now</h3>
                <div className={`grid gap-8 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-4' : 'grid-cols-3')}`}>
-                  {[1,2,3,4,5,6].map(i => (
-                     <div key={i} className="group cursor-pointer">
+                  {storeProducts.map((p: any) => (
+                     <div key={p.id} className="group cursor-pointer">
                         <div className="aspect-[3/4] bg-slate-100 mb-4 overflow-hidden relative rounded-xl">
                            <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-12 h-12" /></div>
                            <div className={`absolute bottom-4 left-0 right-0 flex justify-center transition-opacity ${(previewDevice === 'mobile' && !isModal) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                               <button onClick={handleAddToCart} className="px-8 py-3 text-white text-xs font-bold uppercase tracking-wider shadow-2xl rounded-full" style={{ backgroundColor: primaryColor }}>Add to cart</button>
                            </div>
                         </div>
-                        <h4 className="font-bold text-sm">Product {i}</h4>
-                        <p className="text-slate-500 text-sm mt-1">450.00 MAD</p>
+                        <h4 className="font-bold text-sm">{p.name}</h4>
+                        <p className="text-slate-500 text-sm mt-1">{p.price} MAD</p>
                      </div>
                   ))}
                </div>
@@ -127,16 +127,16 @@ export default function StoreBuilder() {
                   <span className="text-sm cursor-pointer hover:underline" style={{ color: primaryColor }}>View all</span>
                </div>
                <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-3'}`}>
-                  {[1,2,3].map(i => (
-                     <div key={i} className="group cursor-pointer">
+                  {storeProducts.map((p: any) => (
+                     <div key={p.id} className="group cursor-pointer">
                         <div className="aspect-[4/5] bg-gray-100 mb-6 overflow-hidden relative">
                            <div className="absolute inset-0 flex items-center justify-center opacity-10"><ImageIcon className="w-16 h-16" /></div>
                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                               <button onClick={handleAddToCart} className="px-8 py-3 bg-white text-black text-xs tracking-widest hover:bg-black hover:text-white transition-colors">ADD TO CART</button>
                            </div>
                         </div>
-                        <h4 className="font-medium text-lg mb-2">Essential Item {i}</h4>
-                        <p className="text-gray-500">450.00 MAD</p>
+                        <h4 className="font-medium text-lg mb-2">{p.name}</h4>
+                        <p className="text-gray-500">{p.price} MAD</p>
                      </div>
                   ))}
                </div>
@@ -178,11 +178,11 @@ export default function StoreBuilder() {
             <div className={`${isModal ? 'p-16' : 'p-8'} mx-auto w-full`}>
                <h3 className="text-xl tracking-widest uppercase text-center mb-16" style={{ color: primaryColor }}>Curated Selection</h3>
                <div className={`grid gap-4 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                  {[1,2,3,4].map(i => (
-                     <div key={i} className="group cursor-pointer relative aspect-square bg-[#1a1a1a] border border-white/5 p-4 flex flex-col items-center justify-center">
+                  {storeProducts.map((p: any) => (
+                     <div key={p.id} className="group cursor-pointer relative aspect-square bg-[#1a1a1a] border border-white/5 p-4 flex flex-col items-center justify-center">
                         <ImageIcon className="w-16 h-16 opacity-10 mb-8" />
-                        <h4 className="font-serif text-2xl mb-2 group-hover:text-white transition-colors" style={{ color: primaryColor }}>Luxury Piece {i}</h4>
-                        <p className="text-white/50 tracking-widest text-sm mb-6">450.00 MAD</p>
+                        <h4 className="font-serif text-2xl mb-2 group-hover:text-white transition-colors" style={{ color: primaryColor }}>{p.name}</h4>
+                        <p className="text-white/50 tracking-widest text-sm mb-6">{p.price} MAD</p>
                         <button onClick={handleAddToCart} className="opacity-0 group-hover:opacity-100 transition-opacity px-6 py-2 bg-white text-black text-xs tracking-widest">ADD TO CART</button>
                      </div>
                   ))}
@@ -225,16 +225,16 @@ export default function StoreBuilder() {
             <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-6'} mx-auto w-full`}>
                <h3 className="text-3xl font-black text-center mb-10 text-slate-800">New Arrivals ✨</h3>
                <div className={`grid gap-6 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-4' : 'grid-cols-2')}`}>
-                  {[1,2,3,4].map(i => (
-                     <div key={i} className="group cursor-pointer bg-slate-50 p-4 rounded-3xl hover:bg-slate-100 transition-colors border-2 border-transparent hover:border-current" style={{ borderColor: primaryColor }}>
+                  {storeProducts.map((p: any) => (
+                     <div key={p.id} className="group cursor-pointer bg-slate-50 p-4 rounded-3xl hover:bg-slate-100 transition-colors border-2 border-transparent hover:border-current" style={{ borderColor: primaryColor }}>
                         <div className="aspect-square bg-white mb-4 overflow-hidden relative rounded-2xl shadow-sm flex items-center justify-center">
                            <ImageIcon className="w-12 h-12 opacity-10" />
                            <div className={`absolute inset-0 bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center`}>
                               <button onClick={handleAddToCart} className="px-6 py-3 text-white text-xs font-black uppercase tracking-wider rounded-full shadow-xl hover:scale-105 transition-transform" style={{ backgroundColor: primaryColor }}>Add to cart</button>
                            </div>
                         </div>
-                        <h4 className="font-bold text-base text-center text-slate-700">Cute Outfit {i}</h4>
-                        <p className="text-center font-black mt-1" style={{ color: primaryColor }}>450 MAD</p>
+                        <h4 className="font-bold text-base text-center text-slate-700">{p.name}</h4>
+                        <p className="text-center font-black mt-1" style={{ color: primaryColor }}>{p.price} MAD</p>
                      </div>
                   ))}
                </div>
