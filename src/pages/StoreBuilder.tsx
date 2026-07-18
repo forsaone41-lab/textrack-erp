@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard } from 'lucide-react';
+import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 
 const THEMES = [
@@ -41,6 +41,8 @@ export default function StoreBuilder() {
     { id: 'about', title: 'About', isDefault: false }
   ]);
   const [newPageTitle, setNewPageTitle] = useState('');
+  const [isPageModalOpen, setIsPageModalOpen] = useState(false);
+  const [pageForm, setPageForm] = useState<any>(null);
   
   const [buyMode, setBuyMode] = useState<'cart'|'direct'|'both'|'form'>('both');
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -1116,22 +1118,24 @@ export default function StoreBuilder() {
 
                        <div className="space-y-2">
                           {storePages.map(page => (
-                             <div key={page.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 group">
+                             <div key={page.id} onClick={() => { setPageForm(page); setIsPageModalOpen(true); }} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 group cursor-pointer hover:border-indigo-500 hover:bg-indigo-50/30 transition-colors">
                                 <div className="flex items-center gap-3">
                                    <div className={`w-2 h-2 rounded-full ${page.isDefault ? 'bg-indigo-400' : 'bg-green-400'}`}></div>
-                                   <span className="text-sm font-bold text-slate-700">{page.title}</span>
+                                   <span className="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition-colors">{page.title}</span>
                                 </div>
-                                {!page.isDefault && (
-                                   <button 
-                                     onClick={() => setStorePages(storePages.filter(p => p.id !== page.id))}
-                                     className="text-slate-400 hover:text-rose-500 transition-colors p-1"
-                                   >
-                                     <X className="w-4 h-4" />
-                                   </button>
-                                )}
-                                {page.isDefault && (
-                                   <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 px-2 py-1 bg-slate-200 rounded-md">Système</span>
-                                )}
+                                <div className="flex items-center gap-2">
+                                   {!page.isDefault && (
+                                      <button 
+                                        onClick={(e) => { e.stopPropagation(); setStorePages(storePages.filter(p => p.id !== page.id)); }}
+                                        className="text-slate-400 hover:text-rose-500 transition-colors p-1 rounded-md hover:bg-rose-50"
+                                      >
+                                        <X className="w-4 h-4" />
+                                      </button>
+                                   )}
+                                   {page.isDefault && (
+                                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 px-2 py-1 bg-slate-200 rounded-md">Système</span>
+                                   )}
+                                </div>
                              </div>
                           ))}
                        </div>
@@ -1207,6 +1211,54 @@ export default function StoreBuilder() {
           </div>
         </div>
       )}
+
+      {/* PAGE EDIT MODAL */}
+      {isPageModalOpen && pageForm && (
+         <div className="fixed inset-0 z-[200] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300">
+               <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                  <div>
+                     <h3 className="text-xl font-black text-slate-800">Éditer la page</h3>
+                     <p className="text-xs text-slate-500 font-bold mt-1">Gérez le contenu et le référencement (SEO).</p>
+                  </div>
+                  <button onClick={() => setIsPageModalOpen(false)} className="w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-400 hover:text-rose-500 hover:border-rose-200 shadow-sm transition-all"><X className="w-5 h-5" /></button>
+               </div>
+               
+               <div className="p-8 overflow-y-auto flex-1 space-y-6">
+                  <div>
+                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Titre de la page</label>
+                     <input type="text" value={pageForm.title} onChange={e => setPageForm({...pageForm, title: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:border-indigo-500 transition-colors" />
+                     {pageForm.isDefault && <p className="text-[10px] text-amber-600 mt-2 font-bold flex items-center gap-1"><AlertCircle className="w-3 h-3" /> C'est une page système. Son URL ne peut pas être modifiée.</p>}
+                  </div>
+
+                  {!pageForm.isDefault && (
+                     <div>
+                        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Contenu (Texte / HTML)</label>
+                        <textarea rows={8} value={pageForm.content || ''} onChange={e => setPageForm({...pageForm, content: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 transition-colors" placeholder="Rédigez le contenu de votre page ici..."></textarea>
+                     </div>
+                  )}
+
+                  <div className="p-4 border border-slate-200 rounded-xl bg-slate-50">
+                     <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-2"><Globe className="w-4 h-4 text-slate-400" /> Aperçu SEO</h4>
+                     <div className="space-y-1">
+                        <p className="text-lg text-blue-600 font-medium truncate hover:underline cursor-pointer">{pageForm.title} - {storeName}</p>
+                        <p className="text-sm text-green-700 truncate">https://{storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com/{pageForm.isDefault ? pageForm.id : pageForm.title.toLowerCase().replace(/\s+/g, '-')}</p>
+                        <p className="text-xs text-slate-600 line-clamp-2">{pageForm.content ? pageForm.content.substring(0, 150) : "Description automatique générée à partir du contenu de la page pour les moteurs de recherche..."}</p>
+                     </div>
+                  </div>
+               </div>
+
+               <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+                  <button onClick={() => setIsPageModalOpen(false)} className="px-6 py-3 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-colors">Annuler</button>
+                  <button onClick={() => {
+                     setStorePages(storePages.map(p => p.id === pageForm.id ? pageForm : p));
+                     setIsPageModalOpen(false);
+                  }} className="px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">Enregistrer</button>
+               </div>
+            </div>
+         </div>
+      )}
+
 
       {/* ERP IMPORT MODAL */}
       {isImportModalOpen && (
