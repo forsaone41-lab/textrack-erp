@@ -1151,16 +1151,22 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              </div>
                              <div className="p-4 space-y-4">
                                 <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
-                                   Pour que votre domaine fonctionne, changez les <b>Nameservers (DNS personnalisés)</b> chez votre fournisseur vers ceux-ci :
+                                   Pour que votre domaine fonctionne, ajoutez un <b>Enregistrement A (A Record)</b> chez votre fournisseur (Namecheap, Hostinger...) avec ces informations :
                                 </p>
                                 <div className="space-y-2">
                                    <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-100 rounded-lg group">
-                                      <code className="text-xs font-bold text-slate-800 tracking-wide">ns1.vercel-dns.com</code>
-                                      <button onClick={() => navigator.clipboard.writeText('ns1.vercel-dns.com')} className="p-1.5 text-slate-400 group-hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors" title="Copier"><Copy className="w-3.5 h-3.5" /></button>
+                                      <span className="text-xs text-slate-500 font-medium w-16">Type</span>
+                                      <code className="text-xs font-black text-slate-800 tracking-wide flex-1">A</code>
                                    </div>
                                    <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-100 rounded-lg group">
-                                      <code className="text-xs font-bold text-slate-800 tracking-wide">ns2.vercel-dns.com</code>
-                                      <button onClick={() => navigator.clipboard.writeText('ns2.vercel-dns.com')} className="p-1.5 text-slate-400 group-hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors" title="Copier"><Copy className="w-3.5 h-3.5" /></button>
+                                      <span className="text-xs text-slate-500 font-medium w-16">Nom/Hôte</span>
+                                      <code className="text-xs font-black text-slate-800 tracking-wide flex-1">@</code>
+                                      <button onClick={() => navigator.clipboard.writeText('@')} className="p-1 text-slate-400 group-hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors" title="Copier"><Copy className="w-3.5 h-3.5" /></button>
+                                   </div>
+                                   <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-100 rounded-lg group">
+                                      <span className="text-xs text-slate-500 font-medium w-16">Valeur/IP</span>
+                                      <code className="text-xs font-black text-slate-800 tracking-wide flex-1">76.76.21.21</code>
+                                      <button onClick={() => navigator.clipboard.writeText('76.76.21.21')} className="p-1 text-slate-400 group-hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors" title="Copier"><Copy className="w-3.5 h-3.5" /></button>
                                    </div>
                                 </div>
                                 <p className="text-[10px] text-slate-400 italic">La propagation DNS peut prendre entre 15 minutes et 24 heures.</p>
