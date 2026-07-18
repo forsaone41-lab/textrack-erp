@@ -63,10 +63,32 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [customDomain, setCustomDomain] = useState('');
+  const [isLinkingDomain, setIsLinkingDomain] = useState(false);
+  const [domainError, setDomainError] = useState('');
 
   const handleSave = () => {
     setIsSaving(true);
     setTimeout(() => setIsSaving(false), 1000);
+  };
+
+  const handleLinkDomain = async () => {
+    if (!customDomain) return;
+    setIsLinkingDomain(true);
+    setDomainError('');
+    try {
+      const res = await fetch('/api/add-domain', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain: customDomain })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur inconnue');
+      // Success!
+    } catch (err: any) {
+      setDomainError(err.message);
+    } finally {
+      setIsLinkingDomain(false);
+    }
   };
 
   const handlePublish = () => {
@@ -1140,8 +1162,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                            onChange={e => setCustomDomain(e.target.value)} 
                            className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 font-medium"
                          />
-                         <button onClick={handleSave} className="bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-800 transition-colors">Lier</button>
+                         <button onClick={handleLinkDomain} disabled={isLinkingDomain} className="bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-800 transition-colors disabled:opacity-50">
+                           {isLinkingDomain ? '...' : 'Lier'}
+                         </button>
                        </div>
+                       {domainError && <p className="text-xs text-rose-500 mt-2 font-bold flex items-center gap-1"><AlertCircle className="w-3 h-3"/> {domainError}</p>}
                        
                        {customDomain && (
                           <div className="mt-4 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
