@@ -67,50 +67,92 @@ export default function StoreBuilder() {
      setCartCount(c => c + 1);
   };
 
-  const StorePreview = ({ isModal = false }: { isModal?: boolean }) => (
-    <div className={`w-full min-h-full ${theme.bg} ${theme.text} ${theme.font} flex flex-col transition-colors duration-500`}>
-      {/* Navbar */}
-      <div className={`p-6 flex justify-between items-center border-b ${theme.navBg} border-current/10 ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4 p-4' : ''}`}>
-         <h2 className={`text-2xl font-black uppercase tracking-tighter ${theme.navText}`}>{storeName}</h2>
-         <div className={`flex gap-6 text-sm font-bold opacity-70 ${previewDevice === 'mobile' && !isModal ? 'hidden' : ''}`}>
-            <span className="hover:opacity-100 cursor-pointer transition-opacity">Home</span>
-            <span className="hover:opacity-100 cursor-pointer transition-opacity">Collections</span>
-            <span className="hover:opacity-100 cursor-pointer transition-opacity">About</span>
-         </div>
-         <button className="relative hover:scale-110 transition-transform" onClick={() => alert('Panier cliqué !')}>
-            <ShoppingBag className="w-6 h-6" />
-            {cartCount > 0 && <span className={`absolute -top-1 -right-1 ${theme.heroBtn} text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center`}>{cartCount}</span>}
-         </button>
-      </div>
-      {/* Hero */}
-      <div className={`h-[${isModal ? '500px' : '320px'}] ${theme.heroBg} ${theme.heroText} flex flex-col items-center justify-center text-center p-8 bg-[url('https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center relative`}>
-         <div className={`absolute inset-0 ${activeThemeId === 'abaya' ? 'bg-black/70' : activeThemeId === 'minimalist' ? 'bg-white/70' : 'bg-black/50'}`}></div>
-         <div className="relative z-10 flex flex-col items-center">
-            <h1 className={`${isModal ? 'text-6xl' : 'text-5xl'} font-black uppercase tracking-tighter mb-4`}>New Collection Drop</h1>
-            <p className={`${isModal ? 'text-xl mb-10 max-w-2xl' : 'text-lg mb-8 max-w-md'} opacity-90`}>Discover our latest premium quality garments designed for the modern lifestyle. Exclusively manufactured by BEYA.</p>
-            <button className={`px-8 py-3 ${theme.heroBtn} font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform`}>Shop Now</button>
-         </div>
-      </div>
-      {/* Products */}
-      <div className={`${isModal ? 'p-12 max-w-[1400px]' : 'p-12'} mx-auto w-full`}>
-         <h3 className="text-xl font-black uppercase text-center mb-8">Trending Now</h3>
-         <div className={`grid gap-6 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-4')}`}>
-            {[1,2,3,4, ...(isModal ? [5,6,7,8] : [])].map(i => (
-               <div key={i} className="group cursor-pointer">
-                  <div className={`aspect-[3/4] ${theme.productBg} mb-4 overflow-hidden relative ${activeThemeId === 'streetwear' ? 'rounded-lg' : ''}`}>
-                     <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-8 h-8" /></div>
-                     <div className={`absolute bottom-4 left-0 right-0 flex justify-center transition-opacity ${(previewDevice === 'mobile' && !isModal) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                        <button onClick={handleAddToCart} className={`px-6 py-2 text-xs font-bold uppercase tracking-wider shadow-xl ${theme.button}`}>Add to cart</button>
+  const StorePreview = ({ isModal = false }: { isModal?: boolean }) => {
+    const [page, setPage] = useState<'home' | 'collections' | 'about'>('home');
+
+    return (
+      <div className={`w-full min-h-full ${theme.bg} ${theme.text} ${theme.font} flex flex-col transition-colors duration-500`}>
+        {/* Navbar */}
+        <div className={`p-6 flex justify-between items-center border-b ${theme.navBg} border-current/10 ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4 p-4' : ''}`}>
+           <h2 onClick={() => setPage('home')} className={`text-2xl font-black uppercase tracking-tighter ${theme.navText} cursor-pointer`}>{storeName}</h2>
+           <div className={`flex gap-6 text-sm font-bold opacity-70 ${previewDevice === 'mobile' && !isModal ? 'hidden' : ''}`}>
+              <span onClick={() => setPage('home')} className={`hover:opacity-100 cursor-pointer transition-opacity ${page === 'home' ? 'opacity-100 border-b-2 border-current pb-1' : ''}`}>Home</span>
+              <span onClick={() => setPage('collections')} className={`hover:opacity-100 cursor-pointer transition-opacity ${page === 'collections' ? 'opacity-100 border-b-2 border-current pb-1' : ''}`}>Collections</span>
+              <span onClick={() => setPage('about')} className={`hover:opacity-100 cursor-pointer transition-opacity ${page === 'about' ? 'opacity-100 border-b-2 border-current pb-1' : ''}`}>About</span>
+           </div>
+           <button className="relative hover:scale-110 transition-transform" onClick={() => alert('Panier cliqué !')}>
+              <ShoppingBag className="w-6 h-6" />
+              {cartCount > 0 && <span className={`absolute -top-1 -right-1 ${theme.heroBtn} text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center`}>{cartCount}</span>}
+           </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          {page === 'home' && (
+            <>
+              {/* Hero */}
+              <div className={`h-[${isModal ? '500px' : '320px'}] ${theme.heroBg} ${theme.heroText} flex flex-col items-center justify-center text-center p-8 bg-[url('https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center relative`}>
+                 <div className={`absolute inset-0 ${activeThemeId === 'abaya' ? 'bg-black/70' : activeThemeId === 'minimalist' ? 'bg-white/70' : 'bg-black/50'}`}></div>
+                 <div className="relative z-10 flex flex-col items-center">
+                    <h1 className={`${isModal ? 'text-6xl' : 'text-5xl'} font-black uppercase tracking-tighter mb-4`}>New Collection Drop</h1>
+                    <p className={`${isModal ? 'text-xl mb-10 max-w-2xl' : 'text-lg mb-8 max-w-md'} opacity-90`}>Discover our latest premium quality garments designed for the modern lifestyle. Exclusively manufactured by BEYA.</p>
+                    <button onClick={() => setPage('collections')} className={`px-8 py-3 ${theme.heroBtn} font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform`}>Shop Now</button>
+                 </div>
+              </div>
+              {/* Products */}
+              <div className={`${isModal ? 'p-12 max-w-[1400px]' : 'p-8'} mx-auto w-full`}>
+                 <h3 className="text-xl font-black uppercase text-center mb-8">Trending Now</h3>
+                 <div className={`grid gap-6 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-4')}`}>
+                    {[1,2,3,4, ...(isModal ? [5,6,7,8] : [])].map(i => (
+                       <div key={i} className="group cursor-pointer">
+                          <div className={`aspect-[3/4] ${theme.productBg} mb-4 overflow-hidden relative ${activeThemeId === 'streetwear' ? 'rounded-lg' : ''}`}>
+                             <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-8 h-8" /></div>
+                             <div className={`absolute bottom-4 left-0 right-0 flex justify-center transition-opacity ${(previewDevice === 'mobile' && !isModal) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                                <button onClick={handleAddToCart} className={`px-6 py-2 text-xs font-bold uppercase tracking-wider shadow-xl ${theme.button}`}>Add to cart</button>
+                             </div>
+                          </div>
+                          <h4 className="font-bold text-sm">Premium Product {i}</h4>
+                          <p className="opacity-60 text-sm mt-1">450.00 MAD</p>
+                       </div>
+                    ))}
+                 </div>
+              </div>
+            </>
+          )}
+
+          {page === 'collections' && (
+            <div className={`${isModal ? 'p-12 max-w-[1400px]' : 'p-8'} mx-auto w-full min-h-[500px]`}>
+               <h3 className={`${isModal ? 'text-4xl' : 'text-2xl'} font-black uppercase mb-8`}>All Collections</h3>
+               <div className={`grid gap-6 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-1 sm:grid-cols-3 lg:grid-cols-4' : 'grid-cols-4')}`}>
+                  {[1,2,3,4,5,6,7,8,9,10,11,12].slice(0, isModal ? 12 : 8).map(i => (
+                     <div key={i} className="group cursor-pointer">
+                        <div className={`aspect-[3/4] ${theme.productBg} mb-4 overflow-hidden relative ${activeThemeId === 'streetwear' ? 'rounded-lg' : ''}`}>
+                           <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-8 h-8" /></div>
+                           <div className={`absolute bottom-4 left-0 right-0 flex justify-center transition-opacity ${(previewDevice === 'mobile' && !isModal) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                              <button onClick={handleAddToCart} className={`px-6 py-2 text-xs font-bold uppercase tracking-wider shadow-xl ${theme.button}`}>Add to cart</button>
+                           </div>
+                        </div>
+                        <h4 className="font-bold text-sm">Collection Item {i}</h4>
+                        <p className="opacity-60 text-sm mt-1">450.00 MAD</p>
                      </div>
-                  </div>
-                  <h4 className="font-bold text-sm">Premium Product {i}</h4>
-                  <p className="opacity-60 text-sm mt-1">450.00 MAD</p>
+                  ))}
                </div>
-            ))}
-         </div>
+            </div>
+          )}
+
+          {page === 'about' && (
+            <div className={`${isModal ? 'p-12 max-w-[800px]' : 'p-8'} mx-auto w-full text-center py-20 min-h-[500px]`}>
+               <h3 className={`${isModal ? 'text-5xl' : 'text-3xl'} font-black uppercase mb-8`}>About {storeName}</h3>
+               <p className={`${isModal ? 'text-xl' : 'text-base'} opacity-80 leading-relaxed`}>
+                 Welcome to {storeName}. We are an independent fashion brand committed to bringing you the highest quality apparel. 
+                 <br/><br/>
+                 All our pieces are exclusively manufactured by <strong>BEYA CREATIVE</strong>, ensuring premium craftsmanship, durable materials, and ethical production standards right here in Morocco.
+               </p>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className={`space-y-6 ${isAr ? 'text-right' : 'text-left'}`}>
