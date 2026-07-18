@@ -1910,6 +1910,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                               );
                            })()}
                         </div>
+                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                           <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Catégorie</label>
+                           <input type="text" placeholder="Ex: T-Shirt, Chemise, Robe..." value={productForm?.category || ''} onChange={e => setProductForm({...productForm, category: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 font-bold" />
+                           <p className="text-[10px] text-slate-400 mt-2 font-medium">Permet de classer le produit dans les filtres du magasin.</p>
+                        </div>
                     </div>
                  </div>
               </div>
