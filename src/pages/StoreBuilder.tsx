@@ -354,7 +354,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        <div className="mb-8 space-y-6">
                           {p.colors?.length > 0 && (
                              <div>
-                                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 block">Couleur</span>
+                                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 block">{storeIsAr ? 'لون' : 'Couleur'}</span>
                                 <div className="flex gap-3">
                                    {p.colors.map((c: string) => (
                                       <button key={c} onClick={() => setSelectedColor(c)} className={`w-8 h-8 rounded-full border-2 transition-all ${selectedColor === c ? 'border-slate-800 scale-125' : 'border-transparent hover:scale-110 shadow-sm'}`} style={{ backgroundColor: c }} />
@@ -1129,7 +1129,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                  <div className="space-y-6 mb-8">
                     {storeProducts.find(p => p.id === activeProductId)?.colors?.length > 0 && (
                        <div>
-                          <span className="text-[11px] font-bold uppercase tracking-widest text-[#666] mb-3 block">Couleur</span>
+                          <span className="text-[11px] font-bold uppercase tracking-widest text-[#666] mb-3 block">{storeIsAr ? 'لون' : 'Couleur'}</span>
                           <div className="flex gap-2">
                              {storeProducts.find(p => p.id === activeProductId)?.colors.map((c: string) => (
                                 <button key={c} onClick={() => setSelectedColor(c)} className={`w-8 h-8 rounded-full border-2 transition-transform ${selectedColor === c ? 'border-[#1a1a1a] scale-110' : 'border-transparent hover:scale-105 shadow-sm'}`} style={{ backgroundColor: c }} />
@@ -1993,7 +1993,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                </div>
 
                <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
-                  <button onClick={() => setIsPageModalOpen(false)} className="px-6 py-3 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-colors">Annuler</button>
+                  <button onClick={() => setIsPageModalOpen(false)} className="px-6 py-3 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-colors">{storeIsAr ? 'إلغاء' : 'Annuler'}</button>
                   <button onClick={() => {
                      setStorePages(storePages.map(p => p.id === pageForm.id ? pageForm : p));
                      setIsPageModalOpen(false);
@@ -2070,8 +2070,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
            <div className="bg-white w-full max-w-7xl max-h-[95vh] rounded-[2rem] shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
               <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50 sticky top-0 z-10">
                  <div>
-                    <h2 className="text-3xl font-black text-slate-800">{productForm?.id ? 'Modifier le Produit' : 'Créer un Produit'}</h2>
-                    <p className="text-slate-500 mt-2">Détails, inventaire, et variantes de votre article.</p>
+                    <h2 className="text-3xl font-black text-slate-800">{productForm?.id ? (storeIsAr ? 'تعديل المنتج' : 'Modifier le Produit') : (storeIsAr ? 'إضافة منتج جديد' : 'Créer un Produit')}</h2>
+                    <p className="text-slate-500 mt-2">{storeIsAr ? 'التفاصيل، المخزون، والمتغيرات.' : 'Détails, inventaire, et variantes de votre article.'}</p>
                  </div>
                  <button onClick={() => setIsProductModalOpen(false)} className="p-4 bg-white rounded-2xl shadow-sm text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all border border-slate-200">
                     <X className="w-6 h-6" />
@@ -2082,7 +2082,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                     {/* Left Column (Images & Basic) */}
                     <div className="col-span-3 space-y-6 flex flex-col">
                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                          <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-4">Image du Produit</label>
+                          <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-4">{storeIsAr ? 'صورة المنتج' : 'Image du Produit'}</label>
                           <label className="aspect-square bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-indigo-500 transition-colors group relative overflow-hidden">
                              {productForm?.image ? (
                                 <img src={productForm.image} alt="Preview" className="absolute inset-0 w-full h-full object-cover" />
@@ -2104,35 +2104,35 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                     {/* Middle Column (Details) */}
                     <div className="col-span-5 space-y-6 flex flex-col">
                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                          <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Informations Générales</label>
+                          <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">{storeIsAr ? 'المعلومات الأساسية' : 'Informations Générales'}</label>
                           <div>
-                             <input type="text" placeholder="Titre du produit (ex: Premium T-Shirt)" value={productForm?.name || ''} onChange={e => setProductForm({...productForm, name: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-lg font-bold" />
+                             <input type="text" placeholder={storeIsAr ? 'اسم المنتج (مثال: قميص فاخر)' : 'Titre du produit (ex: Premium T-Shirt)'} value={productForm?.name || ''} onChange={e => setProductForm({...productForm, name: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-lg font-bold" />
                           </div>
                           <div className="flex gap-4">
                              <div className="flex-1">
-                                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">Prix (MAD)</label>
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">{storeIsAr ? 'السعر (درهم)' : 'Prix (MAD)'}</label>
                                 <input type="number" placeholder="0.00" value={productForm?.price || ''} onChange={e => setProductForm({...productForm, price: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 font-bold" />
                              </div>
                              <div className="flex-1">
-                                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">Stock (Quantité)</label>
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">{storeIsAr ? 'المخزون (الكمية)' : 'Stock (Quantité)'}</label>
                                 <input type="number" placeholder="10" value={productForm?.stock || ''} onChange={e => setProductForm({...productForm, stock: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 font-bold" />
                              </div>
                           </div>
                           <div>
-                             <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">Description</label>
-                             <textarea rows={4} placeholder="Décrivez votre produit en détail..." value={productForm?.description || ''} onChange={e => setProductForm({...productForm, description: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 resize-none"></textarea>
+                             <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">{storeIsAr ? 'الوصف' : 'Description'}</label>
+                             <textarea rows={4} placeholder={storeIsAr ? 'اوصف منتجك بالتفصيل...' : 'Décrivez votre produit en détail...'} value={productForm?.description || ''} onChange={e => setProductForm({...productForm, description: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 resize-none"></textarea>
                           </div>
                        </div>
                     </div>
                     {/* Right Column (Variants) */}
                     <div className="col-span-4 space-y-6">
                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-                          <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Variantes (Tailles & Couleurs)</label>
+                          <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">{storeIsAr ? 'المتغيرات (المقاسات والألوان)' : 'Variantes (Tailles & Couleurs)'}</label>
                           <div>
-                             <label className="block text-[10px] font-bold text-slate-500 uppercase mb-3">Tailles Disponibles</label>
+                             <label className="block text-[10px] font-bold text-slate-500 uppercase mb-3">{storeIsAr ? 'المقاسات المتاحة' : 'Tailles Disponibles'}</label>
                              <div className="flex gap-2 mb-4">
-                                <input type="text" placeholder="Ex: XXL, 42, 6 Ans..." value={newSizeInput} onChange={e => setNewSizeInput(e.target.value)} onKeyDown={e => { if(e.key === 'Enter' && newSizeInput) { setProductForm({...productForm, sizes: [...(productForm.sizes||[]), newSizeInput]}); setNewSizeInput(''); e.preventDefault(); } }} className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" />
-                                <button onClick={() => { if(newSizeInput) { setProductForm({...productForm, sizes: [...(productForm.sizes||[]), newSizeInput]}); setNewSizeInput(''); } }} className="px-4 py-2 bg-slate-900 text-white font-bold text-xs rounded-lg hover:bg-slate-800 transition-colors">Ajouter</button>
+                                <input type="text" placeholder={storeIsAr ? 'مثال: XXL, 42, 6 سنوات...' : 'Ex: XXL, 42, 6 Ans...'} value={newSizeInput} onChange={e => setNewSizeInput(e.target.value)} onKeyDown={e => { if(e.key === 'Enter' && newSizeInput) { setProductForm({...productForm, sizes: [...(productForm.sizes||[]), newSizeInput]}); setNewSizeInput(''); e.preventDefault(); } }} className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" />
+                                <button onClick={() => { if(newSizeInput) { setProductForm({...productForm, sizes: [...(productForm.sizes||[]), newSizeInput]}); setNewSizeInput(''); } }} className="px-4 py-2 bg-slate-900 text-white font-bold text-xs rounded-lg hover:bg-slate-800 transition-colors">{storeIsAr ? 'إضافة' : 'Ajouter'}</button>
                              </div>
                              <div className="flex flex-wrap gap-2">
                                 {(productForm?.sizes || []).map((size: string) => (
@@ -2144,13 +2144,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              </div>
                           </div>
                           <div>
-                             <label className="block text-[10px] font-bold text-slate-500 uppercase mb-3">Couleurs Disponibles</label>
+                             <label className="block text-[10px] font-bold text-slate-500 uppercase mb-3">{storeIsAr ? 'الألوان المتاحة' : 'Couleurs Disponibles'}</label>
                              <div className="flex gap-2 mb-4">
                                 <div className="relative w-12 h-10 rounded-lg overflow-hidden border border-slate-200 shadow-sm shrink-0">
                                    <input type="color" value={newColorInput} onChange={e => setNewColorInput(e.target.value)} className="absolute -inset-4 w-[200%] h-[200%] cursor-pointer" />
                                 </div>
                                 <input type="text" value={newColorInput} readOnly className="w-24 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 focus:outline-none uppercase" />
-                                <button onClick={() => { if(!productForm?.colors?.includes(newColorInput)) { setProductForm({...productForm, colors: [...(productForm.colors||[]), newColorInput]}); } }} className="px-4 py-2 bg-slate-900 text-white font-bold text-xs rounded-lg hover:bg-slate-800 transition-colors">Ajouter</button>
+                                <button onClick={() => { if(!productForm?.colors?.includes(newColorInput)) { setProductForm({...productForm, colors: [...(productForm.colors||[]), newColorInput]}); } }} className="px-4 py-2 bg-slate-900 text-white font-bold text-xs rounded-lg hover:bg-slate-800 transition-colors">{storeIsAr ? 'إضافة' : 'Ajouter'}</button>
                              </div>
                              <div className="flex flex-wrap gap-3">
                                 {(productForm?.colors || []).map((color: string) => (
@@ -2169,13 +2169,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                            {/* VARIANT IMAGES UPLOAD */}
                            {productForm?.colors?.length > 0 && (
                               <div className="mt-6 border-t border-slate-100 pt-6">
-                                 <label className="block text-[10px] font-bold text-slate-500 uppercase mb-3">Images par Couleur (Optionnel)</label>
+                                 <label className="block text-[10px] font-bold text-slate-500 uppercase mb-3">{storeIsAr ? 'صور لكل لون (اختياري)' : 'Images par Couleur (Optionnel)'}</label>
                                  <div className="space-y-3">
                                     {productForm.colors.map((color: string) => (
                                        <div key={color} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
                                           <div className="flex items-center gap-3">
                                              <div className="w-6 h-6 rounded-full border shadow-sm" style={{ backgroundColor: color }}></div>
-                                             <span className="text-xs font-bold text-slate-600 capitalize">Image Variante</span>
+                                             <span className="text-xs font-bold text-slate-600 capitalize">{storeIsAr ? 'صورة المتغير' : 'Image Variante'}</span>
                                           </div>
                                           <div>
                                              <label className="cursor-pointer px-4 py-2 bg-white border border-slate-200 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-colors flex items-center gap-2 shadow-sm">
@@ -2184,7 +2184,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                                 ) : (
                                                    <ImageIcon className="w-4 h-4" />
                                                 )}
-                                                {productForm?.colorImages?.[color] ? 'Changer' : 'Lier une image'}
+                                                {productForm?.colorImages?.[color] ? (storeIsAr ? 'تغيير' : 'Changer') : (storeIsAr ? 'ربط صورة' : 'Lier une image')}
                                                 <input type="file" className="hidden" accept="image/*" onChange={(e) => {
                                                    const file = e.target.files?.[0];
                                                    if (file) {
@@ -2220,13 +2220,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
                               return (
                                   <div className="mt-8 pt-8 border-t border-slate-100">
-                                      <label className="block text-xs font-black text-slate-800 uppercase mb-4">Stock par Variante</label>
+                                      <label className="block text-xs font-black text-slate-800 uppercase mb-4">{storeIsAr ? 'المخزون لكل متغير' : 'Stock par Variante'}</label>
                                       <div className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
                                           <table className="w-full text-left text-sm">
                                               <thead className="bg-white border-b border-slate-200 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
                                                   <tr>
-                                                      <th className="px-6 py-4">Variante</th>
-                                                      <th className="px-6 py-4 w-40">Quantité (Stock)</th>
+                                                      <th className="px-6 py-4">{storeIsAr ? 'المتغير' : 'Variante'}</th>
+                                                      <th className="px-6 py-4 w-40">{storeIsAr ? 'الكمية (المخزون)' : 'Quantité (Stock)'}</th>
                                                   </tr>
                                               </thead>
                                               <tbody className="divide-y divide-slate-100 bg-white">
@@ -2238,7 +2238,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                                               <td className="px-6 py-4 font-bold text-slate-700 flex items-center gap-3">
                                                                   {comb.color && <div className="w-5 h-5 rounded-full border shadow-sm shrink-0" style={{ backgroundColor: comb.color }}></div>}
                                                                   {comb.size && <span className="bg-slate-100 px-2 py-1 rounded text-xs">{comb.size}</span>}
-                                                                  {(!comb.size && comb.color) && <span className="uppercase text-[10px] text-slate-400 font-bold">Couleur</span>}
+                                                                  {(!comb.size && comb.color) && <span className="uppercase text-[10px] text-slate-400 font-bold">{storeIsAr ? 'لون' : 'Couleur'}</span>}
                                                               </td>
                                                               <td className="px-6 py-3">
                                                                   <input type="number" placeholder="0" value={qty} onChange={(e) => {
@@ -2259,15 +2259,15 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                            })()}
                         </div>
                         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                           <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Catégorie</label>
-                           <input type="text" placeholder="Ex: T-Shirt, Chemise, Robe..." value={productForm?.category || ''} onChange={e => setProductForm({...productForm, category: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 font-bold" />
-                           <p className="text-[10px] text-slate-400 mt-2 font-medium">Permet de classer le produit dans les filtres du magasin.</p>
+                           <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">{storeIsAr ? 'الفئة' : 'Catégorie'}</label>
+                           <input type="text" placeholder={storeIsAr ? 'مثال: قميص, جاكيت, فستان...' : 'Ex: T-Shirt, Chemise, Robe...'} value={productForm?.category || ''} onChange={e => setProductForm({...productForm, category: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 font-bold" />
+                           <p className="text-[10px] text-slate-400 mt-2 font-medium">{storeIsAr ? 'لتصنيف المنتج في فلاتر المتجر.' : 'Permet de classer le produit dans les filtres du magasin.'}</p>
                         </div>
                     </div>
                  </div>
               </div>
               <div className="p-6 border-t border-slate-100 bg-white flex justify-end gap-4 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
-                 <button onClick={() => setIsProductModalOpen(false)} className="px-8 py-4 font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-colors">Annuler</button>
+                 <button onClick={() => setIsProductModalOpen(false)} className="px-8 py-4 font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-colors">{storeIsAr ? 'إلغاء' : 'Annuler'}</button>
                  <button onClick={() => {
                     if(productForm?.name && productForm?.price) {
                        if(productForm.id) {
@@ -2278,7 +2278,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        setIsProductModalOpen(false);
                     }
                  }} className="px-10 py-4 font-black uppercase tracking-widest bg-indigo-600 text-white rounded-xl shadow-lg shadow-indigo-600/30 hover:bg-indigo-700 hover:scale-105 transition-all">
-                    {productForm?.id ? 'Mettre à jour' : 'Enregistrer le produit'}
+                    {productForm?.id ? (storeIsAr ? 'تحديث المنتج' : 'Mettre à jour') : (storeIsAr ? 'حفظ المنتج' : 'Enregistrer le produit')}
                  </button>
               </div>
            </div>
