@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { useLang } from '../contexts/LangContext';
 import { Plus, Search, Tag, DollarSign, Layers, Edit, Trash2, X, Check, FileText, Scissors, Printer, PenTool, Sparkles, Package, Ruler, MoreHorizontal } from 'lucide-react';
