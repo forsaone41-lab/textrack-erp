@@ -1285,8 +1285,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         <div className={storeIsAr ? 'text-right' : 'text-left'}>
           <div className={`flex items-center gap-3 ${storeIsAr ? 'flex-row-reverse' : ''}`}>
             <h1 className="text-2xl font-black text-slate-800 tracking-tight">BEYA STORE PRO</h1>
-            <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded uppercase tracking-widest">SaaS ÉDITION</span>
-            <span className="flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-black rounded uppercase tracking-widest" title="Connexion chiffrée de bout en bout et route protégée (Admin uniquement)"><ShieldCheck className="w-3 h-3" /> Sécurisé</span>
+            <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded uppercase tracking-widest">{storeIsAr ? 'نسخة الساس' : 'SaaS ÉDITION'}</span>
+            <span className="flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-black rounded uppercase tracking-widest" title="Connexion chiffrée de bout en bout et route protégée (Admin uniquement)"><ShieldCheck className="w-3 h-3" /> {storeIsAr ? 'آمن' : 'Sécurisé'}</span>
           </div>
           <div className="flex bg-slate-100 p-1 rounded-xl w-max mt-4 shadow-inner">
              <button onClick={() => { setPlatformMode('gestion'); setActiveTab('orders'); }} className={`px-5 py-2 rounded-lg text-xs font-black transition-all ${platformMode === 'gestion' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>{storeIsAr ? 'إدارة المتجر' : 'Gestion Boutique'}</button>
@@ -1295,14 +1295,14 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         </div>
         <div className={`flex items-center gap-2 ${storeIsAr ? 'flex-row-reverse' : ''}`}>
           <button onClick={handleSave} disabled={isSaving} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${isSaving ? 'bg-green-500 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
-            {isSaving ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />} {isSaving ? (storeIsAr ? 'تم الحفظ' : 'Enregistré') : (isAr ? 'حفظ' : 'Enregistrer')}
+            {isSaving ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />} {isSaving ? (storeIsAr ? 'تم الحفظ' : 'Enregistré') : (storeIsAr ? 'حفظ' : 'Enregistrer')}
           </button>
           <button onClick={() => setShowPreview(true)} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all shadow-sm">
-            <ExternalLink className="w-4 h-4" /> Prévisualiser
+            <ExternalLink className="w-4 h-4" /> {storeIsAr ? 'معاينة' : 'Prévisualiser'}
           </button>
           <button onClick={handlePublish} disabled={isPublishing} className="flex items-center gap-2 bg-gradient-to-r from-slate-800 to-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold hover:shadow-lg transition-all shadow-sm disabled:opacity-70 disabled:cursor-not-allowed">
             {isPublishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />} 
-            {isPublishing ? (storeIsAr ? 'جاري النشر...' : 'Publication...') : (isAr ? 'نشر' : 'Publier')}
+            {isPublishing ? (storeIsAr ? 'جاري النشر...' : 'Publication...') : (storeIsAr ? 'نشر' : 'Publier')}
           </button>
         </div>
       </div>
@@ -1821,7 +1821,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
                     <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                        <h4 className="text-xs font-black text-slate-800 mb-4 uppercase tracking-wider flex items-center gap-2">
-                         <LayoutTemplate className="w-4 h-4 text-indigo-600" /> Gestion des Pages
+                         <LayoutTemplate className="w-4 h-4 text-indigo-600" /> {storeIsAr ? 'إدارة الصفحات' : 'Gestion des Pages'}
                        </h4>
                        
                        <div className="flex gap-2 mb-4">
@@ -1842,7 +1842,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                             }}
                             className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors"
                           >
-                            Ajouter
+                            {storeIsAr ? 'إضافة' : 'Ajouter'}
                           </button>
                        </div>
 
@@ -1851,7 +1851,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              <div key={page.id} onClick={() => { setPageForm(page); setIsPageModalOpen(true); }} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 group cursor-pointer hover:border-indigo-500 hover:bg-indigo-50/30 transition-colors">
                                 <div className="flex items-center gap-3">
                                    <div className={`w-2 h-2 rounded-full ${page.isDefault ? 'bg-indigo-400' : 'bg-green-400'}`}></div>
-                                   <span className="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition-colors">{page.title}</span>
+                                   <span className="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition-colors">{tr(page.title)}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                    {!page.isDefault && (
@@ -1863,7 +1863,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                       </button>
                                    )}
                                    {page.isDefault && (
-                                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 px-2 py-1 bg-slate-200 rounded-md">Système</span>
+                                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 px-2 py-1 bg-slate-200 rounded-md">{storeIsAr ? 'نظام' : 'Système'}</span>
                                    )}
                                 </div>
                              </div>
@@ -1878,7 +1878,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                         
                         <div className="space-y-4">
                            <div>
-                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Texte du Copyright</label>
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">{storeIsAr ? 'نص حقوق النشر' : 'Texte du Copyright'}</label>
                               <input 
                                 type="text" 
                                 value={footerSettings.copyright}
@@ -1892,7 +1892,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                               
                               <label className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
                                  <input type="checkbox" checked={footerSettings.showPrivacy} onChange={e => setFooterSettings({...footerSettings, showPrivacy: e.target.checked})} className="w-4 h-4 accent-indigo-600" />
-                                 <span className="text-sm font-bold text-slate-700">Politique de Confidentialité</span>
+                                 <span className="text-sm font-bold text-slate-700">{storeIsAr ? 'سياسة الخصوصية' : 'Politique de Confidentialité'}</span>
                               </label>
                               
                               <label className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
@@ -1902,7 +1902,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                               
                               <label className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
                                  <input type="checkbox" checked={footerSettings.showCookies} onChange={e => setFooterSettings({...footerSettings, showCookies: e.target.checked})} className="w-4 h-4 accent-indigo-600" />
-                                 <span className="text-sm font-bold text-slate-700">Politique des Cookies</span>
+                                 <span className="text-sm font-bold text-slate-700">{storeIsAr ? 'سياسة ملفات الارتباط' : 'Politique des Cookies'}</span>
                               </label>
                            </div>
                         </div>
@@ -2042,7 +2042,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                   <button onClick={() => {
                      setStorePages(storePages.map(p => p.id === pageForm.id ? pageForm : p));
                      setIsPageModalOpen(false);
-                  }} className="px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">Enregistrer</button>
+                  }} className="px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">{storeIsAr ? 'حفظ' : 'Enregistrer'}</button>
                </div>
             </div>
          </div>
