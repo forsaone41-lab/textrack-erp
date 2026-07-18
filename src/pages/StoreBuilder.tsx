@@ -1131,18 +1131,40 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                        <h4 className="text-xs font-black text-slate-800 mb-1 uppercase tracking-wider flex items-center gap-2"><Globe className="w-4 h-4 text-indigo-600" /> Domaine Personnalisé</h4>
-                       <p className="text-[10px] text-slate-500 mb-2">Connectez votre propre domaine (ex: www.khalid-shop.com). Assurez-vous d'ajouter un enregistrement DNS vers notre serveur avant d'enregistrer.</p>
-                       <input 
-                         type="text" 
-                         placeholder="ex: www.maboutique.com"
-                         value={customDomain} 
-                         onChange={e => setCustomDomain(e.target.value)} 
-                         className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500"
-                       />
+                       <p className="text-[10px] text-slate-500 mb-2">Connectez votre propre domaine (ex: www.maboutique.com).</p>
+                       <div className="flex gap-2">
+                         <input 
+                           type="text" 
+                           placeholder="ex: www.maboutique.com"
+                           value={customDomain} 
+                           onChange={e => setCustomDomain(e.target.value)} 
+                           className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 font-medium"
+                         />
+                         <button onClick={handleSave} className="bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-800 transition-colors">Lier</button>
+                       </div>
+                       
                        {customDomain && (
-                          <div className="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-start gap-2">
-                             <AlertCircle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-                             <p className="text-xs text-blue-800 font-medium">Pour activer <b>{customDomain}</b>, ajoutez un enregistrement DNS <b>A</b> pointant vers <b>76.76.21.21</b> ou un <b>CNAME</b> vers <b>cname.vercel-dns.com</b> chez votre fournisseur de domaine.</p>
+                          <div className="mt-4 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                             <div className="bg-indigo-50/50 p-3 border-b border-slate-100 flex items-center gap-2">
+                                <ShieldCheck className="w-4 h-4 text-indigo-600" />
+                                <span className="text-xs font-bold text-slate-700">Configuration requise (Namecheap, Hostinger...)</span>
+                             </div>
+                             <div className="p-4 space-y-4">
+                                <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
+                                   Pour que votre domaine fonctionne, changez les <b>Nameservers (DNS personnalisés)</b> chez votre fournisseur vers ceux-ci :
+                                </p>
+                                <div className="space-y-2">
+                                   <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-100 rounded-lg group">
+                                      <code className="text-xs font-bold text-slate-800 tracking-wide">ns1.vercel-dns.com</code>
+                                      <button onClick={() => navigator.clipboard.writeText('ns1.vercel-dns.com')} className="p-1.5 text-slate-400 group-hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors" title="Copier"><Copy className="w-3.5 h-3.5" /></button>
+                                   </div>
+                                   <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-100 rounded-lg group">
+                                      <code className="text-xs font-bold text-slate-800 tracking-wide">ns2.vercel-dns.com</code>
+                                      <button onClick={() => navigator.clipboard.writeText('ns2.vercel-dns.com')} className="p-1.5 text-slate-400 group-hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors" title="Copier"><Copy className="w-3.5 h-3.5" /></button>
+                                   </div>
+                                </div>
+                                <p className="text-[10px] text-slate-400 italic">La propagation DNS peut prendre entre 15 minutes et 24 heures.</p>
+                             </div>
                           </div>
                        )}
                     </div>
