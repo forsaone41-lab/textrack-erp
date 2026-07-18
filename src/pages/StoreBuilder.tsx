@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2 } from 'lucide-react';
+import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 
 const THEMES = [
@@ -13,6 +13,7 @@ const THEMES = [
 
 export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: boolean }) {
   const { isAr } = useLang();
+  const [platformMode, setPlatformMode] = useState<'gestion'|'builder'>('gestion');
   const [activeTab, setActiveTab] = useState<string>('orders');
   const [storeName, setStoreName] = useState('My Brand');
   const [showPreview, setShowPreview] = useState(false);
@@ -1046,7 +1047,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded uppercase tracking-widest">SaaS ÉDITION</span>
             <span className="flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-black rounded uppercase tracking-widest" title="Connexion chiffrée de bout en bout et route protégée (Admin uniquement)"><ShieldCheck className="w-3 h-3" /> Sécurisé</span>
           </div>
-          <p className="text-slate-500 text-sm mt-1">Gérez la boutique e-commerce de votre client de A à Z en toute sécurité.</p>
+          <div className="flex bg-slate-100 p-1 rounded-xl w-max mt-4 shadow-inner">
+             <button onClick={() => { setPlatformMode('gestion'); setActiveTab('orders'); }} className={`px-5 py-2 rounded-lg text-xs font-black transition-all ${platformMode === 'gestion' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>Gestion Boutique</button>
+             <button onClick={() => { setPlatformMode('builder'); setActiveTab('themes'); }} className={`px-5 py-2 rounded-lg text-xs font-black transition-all ${platformMode === 'builder' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>Développement Site</button>
+          </div>
         </div>
         <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
           <button onClick={handleSave} disabled={isSaving} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${isSaving ? 'bg-green-500 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
@@ -1065,15 +1069,18 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
       <div className={`flex gap-6 ${isAr ? 'flex-row-reverse' : ''}`}>
         {/* VERTICAL SIDE NAVIGATION */}
         <div className="w-24 shrink-0 flex flex-col gap-3">
-           {[
+           {(platformMode === 'gestion' ? [
                  { id: 'orders', icon: ListOrdered, label: isAr ? 'الطلبات' : 'Commandes' },
+                 { id: 'products', icon: ShoppingBag, label: isAr ? 'المنتجات' : 'Produits' },
+                 { id: 'customers', icon: Users, label: isAr ? 'الزبائن' : 'Clients' },
+                 { id: 'payments', icon: CreditCard, label: isAr ? 'الأداء' : 'Paiements' },
+                 { id: 'delivery', icon: Truck, label: isAr ? 'التوصيل' : 'Livraison' }
+           ] : [
                  { id: 'themes', icon: LayoutTemplate, label: isAr ? 'القوالب' : 'Thèmes' },
                  { id: 'design', icon: Paintbrush, label: isAr ? 'التصميم' : 'Design' },
-                 { id: 'products', icon: ShoppingBag, label: isAr ? 'المنتجات' : 'Produits' },
-                 { id: 'payments', icon: CreditCard, label: isAr ? 'الأداء' : 'Paiements' },
                  { id: 'apps', icon: Box, label: isAr ? 'تطبيقات' : 'Apps' },
                  { id: 'settings', icon: Settings, label: isAr ? 'إعدادات' : 'Config' }
-           ].map(tab => (
+           ]).map(tab => (
                  <button 
                    key={tab.id}
                    onClick={() => setActiveTab(tab.id as any)}
@@ -1199,6 +1206,52 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                 </div>
                              </div>
                           ))}
+                       </div>
+                    </div>
+                 </div>
+              )}
+
+              {/* CUSTOMERS TAB (NEW!) */}
+              {activeTab === 'customers' && (
+                 <div className="space-y-4">
+                    <h3 className="text-xl font-black text-slate-800 tracking-tight">Gestion des Clients</h3>
+                    <div className="p-12 text-center border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50">
+                       <Users className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                       <h4 className="text-lg font-bold text-slate-600">Aucun client pour le moment</h4>
+                       <p className="text-sm text-slate-400 mt-2">Les clients apparaîtront ici lorsqu'ils passeront des commandes.</p>
+                    </div>
+                 </div>
+              )}
+
+              {/* DELIVERY TAB (NEW!) */}
+              {activeTab === 'delivery' && (
+                 <div className="space-y-4">
+                    <div className="flex justify-between items-center mb-6">
+                       <div>
+                          <h3 className="text-xl font-black text-slate-800 tracking-tight">Livraison</h3>
+                          <p className="text-xs text-slate-500 font-bold mt-1">Gérez vos sociétés de livraison partenaires</p>
+                       </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                       <div className="p-4 border-2 border-indigo-600 bg-indigo-50/30 rounded-2xl flex items-center justify-between shadow-sm cursor-pointer hover:bg-indigo-50 transition-colors">
+                          <div className="flex items-center gap-3">
+                             <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm font-black text-indigo-600 text-xs">AM</div>
+                             <div>
+                                <h4 className="font-black text-slate-800">Amana</h4>
+                                <p className="text-[10px] text-slate-500 font-bold">Standard • National</p>
+                             </div>
+                          </div>
+                          <span className="text-[10px] bg-indigo-600 text-white px-2 py-1 rounded-lg font-black uppercase tracking-wider">Actif</span>
+                       </div>
+                       <div className="p-4 border border-slate-200 bg-white rounded-2xl flex items-center justify-between opacity-60 cursor-pointer hover:opacity-100 transition-opacity">
+                          <div className="flex items-center gap-3">
+                             <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center shadow-sm font-black text-slate-400 text-xs">GR</div>
+                             <div>
+                                <h4 className="font-black text-slate-600">Ghazal</h4>
+                                <p className="text-[10px] text-slate-400 font-bold">Express • National</p>
+                             </div>
+                          </div>
+                          <span className="text-[10px] bg-slate-200 text-slate-500 px-2 py-1 rounded-lg font-black uppercase tracking-wider">Inactif</span>
                        </div>
                     </div>
                  </div>
