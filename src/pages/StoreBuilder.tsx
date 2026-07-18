@@ -32,6 +32,13 @@ export default function StoreBuilder() {
   ]);
   const [newProduct, setNewProduct] = useState({ name: '', price: '' });
 
+  const [storePages, setStorePages] = useState([
+    { id: 'home', title: 'Home', isDefault: true },
+    { id: 'collections', title: 'Collections', isDefault: true },
+    { id: 'about', title: 'About', isDefault: false }
+  ]);
+  const [newPageTitle, setNewPageTitle] = useState('');
+
   const applyTheme = (theme: typeof THEMES[0]) => {
      setActiveTheme(theme);
      setPrimaryColor(theme.defaultColor);
@@ -51,8 +58,8 @@ export default function StoreBuilder() {
       <div className={`p-6 flex justify-between items-center border-b border-slate-100 ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4' : ''}`}>
          <h2 onClick={() => setPage('home')} className="text-2xl font-black uppercase tracking-tighter cursor-pointer">{storeName}</h2>
          <div className={`flex gap-6 text-sm font-bold ${previewDevice === 'mobile' && !isModal ? 'hidden' : ''}`}>
-            {['home', 'collections', 'about'].map(p => (
-               <span key={p} onClick={() => setPage(p)} className="cursor-pointer capitalize hover:opacity-70 transition-opacity" style={{ color: page === p ? primaryColor : '#64748b' }}>{p}</span>
+            {storePages.map(p => (
+               <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer capitalize hover:opacity-70 transition-opacity" style={{ color: page === p.id ? primaryColor : '#64748b' }}>{p.title}</span>
             ))}
          </div>
          <button className="relative hover:scale-110 transition-transform">
@@ -124,8 +131,8 @@ export default function StoreBuilder() {
     <div className={`w-full min-h-full bg-[#f8f9fa] text-[#212529] ${fontFamily} flex flex-col`}>
       <div className={`px-8 py-6 flex justify-between items-center bg-white ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4' : ''}`}>
          <div className={`flex gap-8 text-sm ${previewDevice === 'mobile' && !isModal ? 'hidden' : ''}`}>
-            {['home', 'collections', 'about'].map(p => (
-               <span key={p} onClick={() => setPage(p)} className={`cursor-pointer capitalize pb-1 border-b-2 ${page === p ? 'border-current' : 'border-transparent text-gray-400'}`}>{p}</span>
+            {storePages.map(p => (
+               <span key={p.id} onClick={() => setPage(p.id)} className={`cursor-pointer capitalize pb-1 border-b-2 ${page === p.id ? 'border-current' : 'border-transparent text-gray-400'}`}>{p.title}</span>
             ))}
          </div>
          <h2 onClick={() => setPage('home')} className="text-3xl font-normal tracking-wide cursor-pointer" style={{ color: primaryColor }}>{storeName}</h2>
@@ -204,8 +211,8 @@ export default function StoreBuilder() {
       <div className={`p-8 flex flex-col items-center gap-6 border-b border-white/10 ${previewDevice === 'mobile' && !isModal ? 'p-4' : ''}`}>
          <h2 onClick={() => setPage('home')} className="text-4xl font-serif tracking-widest cursor-pointer" style={{ color: primaryColor }}>{storeName}</h2>
          <div className={`flex gap-12 text-xs tracking-widest uppercase ${previewDevice === 'mobile' && !isModal ? 'hidden' : ''}`}>
-            {['home', 'collections', 'about'].map(p => (
-               <span key={p} onClick={() => setPage(p)} className="cursor-pointer hover:text-white transition-colors" style={{ color: page === p ? primaryColor : '#888' }}>{p}</span>
+            {storePages.map(p => (
+               <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer hover:text-white transition-colors" style={{ color: page === p.id ? primaryColor : '#888' }}>{p.title}</span>
             ))}
             <span className="cursor-pointer hover:text-white flex items-center gap-2" onClick={() => alert('Panier cliqué !')}>
                CART ({cartCount})
@@ -272,8 +279,8 @@ export default function StoreBuilder() {
       <div className={`p-4 mx-4 mt-4 bg-slate-100 rounded-full flex justify-between items-center ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4 rounded-3xl' : ''}`}>
          <h2 onClick={() => setPage('home')} className="text-2xl font-black tracking-tight cursor-pointer px-4" style={{ color: primaryColor }}>{storeName}</h2>
          <div className={`flex gap-2 text-sm font-bold ${previewDevice === 'mobile' && !isModal ? 'hidden' : ''}`}>
-            {['home', 'collections', 'about'].map(p => (
-               <span key={p} onClick={() => setPage(p)} className="cursor-pointer capitalize px-4 py-2 rounded-full transition-colors" style={{ backgroundColor: page === p ? primaryColor : 'transparent', color: page === p ? '#fff' : '#64748b' }}>{p}</span>
+            {storePages.map(p => (
+               <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer capitalize px-4 py-2 rounded-full transition-colors" style={{ backgroundColor: page === p.id ? primaryColor : 'transparent', color: page === p.id ? '#fff' : '#64748b' }}>{p.title}</span>
             ))}
          </div>
          <button className="relative p-3 bg-white rounded-full shadow-sm hover:scale-105 transition-transform mr-1" onClick={() => alert('Panier cliqué !')}>
@@ -568,21 +575,86 @@ export default function StoreBuilder() {
               {/* APPS TAB */}
               {activeTab === 'apps' && (
                  <div className="space-y-4">
-                    <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 mb-4">
-                       <h4 className="text-xs font-black text-indigo-800 mb-1">App Store BEYA</h4>
-                       <p className="text-[10px] text-indigo-600">Installez des plugins pour booster vos ventes.</p>
+                     <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 mb-4">
+                        <h4 className="text-xs font-black text-indigo-800 mb-1">App Store BEYA</h4>
+                        <p className="text-[10px] text-indigo-600">Installez des plugins pour booster vos ventes.</p>
+                     </div>
+                     <div className="space-y-3">
+                        <div className="p-3 border border-slate-200 rounded-xl flex items-center gap-3">
+                           <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center"><CheckCircle className="w-5 h-5 text-green-600" /></div>
+                           <div className="flex-1">
+                              <p className="text-xs font-bold text-slate-800">WhatsApp Chat</p>
+                           </div>
+                           <button className="px-3 py-1.5 bg-slate-900 text-white rounded text-[10px] font-bold">Ajouter</button>
+                        </div>
+                     </div>
+                  </div>
+               )}
+
+               {/* SETTINGS TAB */}
+               {activeTab === 'settings' && (
+                 <div className="space-y-6">
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                       <h4 className="text-xs font-black text-slate-800 mb-1 uppercase tracking-wider">Nom de la boutique</h4>
+                       <input 
+                         type="text" 
+                         value={storeName} 
+                         onChange={e => setStoreName(e.target.value)} 
+                         className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 mt-2"
+                       />
                     </div>
-                    <div className="space-y-3">
-                       <div className="p-3 border border-slate-200 rounded-xl flex items-center gap-3">
-                          <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center"><CheckCircle className="w-5 h-5 text-green-600" /></div>
-                          <div className="flex-1">
-                             <p className="text-xs font-bold text-slate-800">WhatsApp Chat</p>
-                          </div>
-                          <button className="px-3 py-1.5 bg-slate-900 text-white rounded text-[10px] font-bold">Ajouter</button>
+
+                    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                       <h4 className="text-xs font-black text-slate-800 mb-4 uppercase tracking-wider flex items-center gap-2">
+                         <LayoutTemplate className="w-4 h-4 text-indigo-600" /> Gestion des Pages
+                       </h4>
+                       
+                       <div className="flex gap-2 mb-4">
+                          <input 
+                            type="text" 
+                            placeholder="Titre (ex: Contact)" 
+                            value={newPageTitle}
+                            onChange={e => setNewPageTitle(e.target.value)}
+                            className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" 
+                          />
+                          <button 
+                            onClick={() => {
+                               if(newPageTitle) {
+                                  const id = newPageTitle.toLowerCase().replace(/\s+/g, '-');
+                                  setStorePages([...storePages, { id, title: newPageTitle, isDefault: false }]);
+                                  setNewPageTitle('');
+                               }
+                            }}
+                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors"
+                          >
+                            Ajouter
+                          </button>
+                       </div>
+
+                       <div className="space-y-2">
+                          {storePages.map(page => (
+                             <div key={page.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 group">
+                                <div className="flex items-center gap-3">
+                                   <div className={`w-2 h-2 rounded-full ${page.isDefault ? 'bg-indigo-400' : 'bg-green-400'}`}></div>
+                                   <span className="text-sm font-bold text-slate-700">{page.title}</span>
+                                </div>
+                                {!page.isDefault && (
+                                   <button 
+                                     onClick={() => setStorePages(storePages.filter(p => p.id !== page.id))}
+                                     className="text-slate-400 hover:text-rose-500 transition-colors p-1"
+                                   >
+                                     <X className="w-4 h-4" />
+                                   </button>
+                                )}
+                                {page.isDefault && (
+                                   <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 px-2 py-1 bg-slate-200 rounded-md">Système</span>
+                                )}
+                             </div>
+                          ))}
                        </div>
                     </div>
                  </div>
-              )}
+               )}
             </div>
           </div>
         </div>
