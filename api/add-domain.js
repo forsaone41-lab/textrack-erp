@@ -15,8 +15,11 @@ export default async function handler(req, res) {
   const token = process.env.VERCEL_API_TOKEN;
 
   if (!projectId || !token) {
+    let missingVars = [];
+    if (!projectId) missingVars.push('VERCEL_PROJECT_ID');
+    if (!token) missingVars.push('VERCEL_API_TOKEN');
     return res.status(500).json({ 
-      error: 'Erreur Serveur: VERCEL_PROJECT_ID ou VERCEL_API_TOKEN manquant.' 
+      error: `Erreur Serveur: Variables manquantes dans Vercel (${missingVars.join(', ')}). Vérifiez que vous les avez ajoutées au bon projet.` 
     });
   }
 
