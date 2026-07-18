@@ -164,6 +164,36 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
       );
    };
 
+   const HeroBackgroundEditor = ({ children, className, style }: any) => {
+      if (isLiveStore) return <div className={className} style={style}>{children}</div>;
+      return (
+         <div className={`relative group ${className}`} style={style}>
+            {children}
+            <label className="absolute top-4 right-4 bg-white/90 backdrop-blur text-slate-800 px-4 py-2 rounded-full text-xs font-bold shadow-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center gap-2 z-50 hover:bg-white border border-slate-200">
+               <ImageIcon className="w-4 h-4" /> Changer l'image
+               <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) setHeroImage(URL.createObjectURL(file));
+               }} />
+            </label>
+         </div>
+      );
+   };
+
+   const FloatingColorPicker = () => {
+      if (isLiveStore) return null;
+      return (
+         <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-2 animate-bounce">
+            <div className="bg-white p-2 rounded-full shadow-2xl flex items-center gap-3 border-2 border-slate-200 hover:scale-105 transition-transform">
+               <span className="text-xs font-black text-slate-700 pl-2 uppercase tracking-wider">Couleur:</span>
+               <label className="w-10 h-10 rounded-full cursor-pointer shadow-inner border-[3px] border-white ring-2 ring-slate-100" style={{ backgroundColor: primaryColor }} title="Changer la couleur">
+                  <input type="color" className="opacity-0 w-0 h-0" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} />
+               </label>
+            </div>
+         </div>
+      );
+   };
+
   const ThemeFooter = ({ bgColor = '#f8f9fa', textColor = '#64748b', setPage }: any) => (
      <footer className="mt-auto py-12 px-6 border-t" style={{ backgroundColor: bgColor, borderColor: 'rgba(0,0,0,0.05)' }}>
         <div className="max-w-4xl mx-auto flex flex-col items-center text-center gap-6">
@@ -201,7 +231,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
       <div className="flex-1 overflow-y-auto">
         {page === 'home' && (
           <>
-            <div className={`h-[${isModal ? '600px' : '400px'}] flex flex-col items-center justify-center text-center p-8 bg-cover bg-center relative`} style={{ backgroundImage: `url(${heroImage})` }}>
+            <HeroBackgroundEditor className={`h-[${isModal ? '600px' : '400px'}] flex flex-col items-center justify-center text-center p-8 bg-cover bg-center relative`} style={{ backgroundImage: `url(${heroImage})` }}>
                <div className="absolute inset-0 bg-black/60"></div>
                <div className="relative z-10 flex flex-col items-center">
                   <EditableText as="h1" text={heroTitle} onTextChange={setHeroTitle} isLiveStore={isLiveStore} className={`${isModal ? 'text-7xl' : 'text-5xl'} font-black text-white uppercase tracking-tighter mb-4`} />
@@ -210,7 +240,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                      <EditableText text={heroButtonText} onTextChange={setHeroButtonText} isLiveStore={isLiveStore} />
                   </button>
                </div>
-            </div>
+            </HeroBackgroundEditor>
             <div className={`${isModal ? 'p-16 max-w-[1400px]' : 'p-8'} mx-auto w-full`}>
                <h3 className="text-2xl font-black uppercase text-center mb-10">Trending Now</h3>
                <div className={`grid gap-8 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3')}`}>
@@ -417,7 +447,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                   <p className="text-gray-500 mb-8 max-w-sm leading-relaxed">Experience a collection defined by pure lines and organic materials.</p>
                   <button onClick={() => setPage('collections')} className="w-max px-10 py-4 text-white text-sm tracking-widest transition-opacity hover:opacity-90" style={{ backgroundColor: primaryColor }}>DISCOVER</button>
                </div>
-               <div className="flex-1 bg-cover bg-center" style={{ backgroundImage: `url(${heroImage})` }}></div>
+               <HeroBackgroundEditor className="flex-1 bg-cover bg-center" style={{ backgroundImage: `url(${heroImage})` }} />
             </div>
             <div className={`${isModal ? 'p-20' : 'p-8'} mx-auto w-full`}>
                <div className="flex justify-between items-end mb-12 border-b pb-4">
@@ -601,7 +631,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         {page === 'home' && (
           <>
             <div className="p-8">
-               <div className={`w-full h-[${isModal ? '700px' : '500px'}] bg-cover bg-center relative rounded-sm border`} style={{ backgroundImage: `url(${heroImage})`, borderColor: `${primaryColor}40` }}>
+               <HeroBackgroundEditor className={`w-full h-[${isModal ? '700px' : '500px'}] bg-cover bg-center relative rounded-sm border`} style={{ backgroundImage: `url(${heroImage})`, borderColor: `${primaryColor}40` }}>
                   <div className="absolute inset-0 bg-gradient-to-t from-[#111] via-transparent to-transparent"></div>
                   <div className="absolute bottom-12 left-12 right-12 flex justify-between items-end">
                      <div>
@@ -609,7 +639,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                         <button onClick={() => setPage('collections')} className="px-8 py-3 text-xs tracking-widest border transition-colors" style={{ borderColor: primaryColor, color: primaryColor }}>EXPLORE COLLECTION</button>
                      </div>
                   </div>
-               </div>
+               </HeroBackgroundEditor>
             </div>
             <div className={`${isModal ? 'p-16' : 'p-8'} mx-auto w-full`}>
                <h3 className="text-xl tracking-widest uppercase text-center mb-16" style={{ color: primaryColor }}>Curated Selection</h3>
@@ -782,14 +812,14 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         {page === 'home' && (
           <>
             <div className="px-4">
-               <div className={`h-[${isModal ? '500px' : '300px'}] rounded-[2rem] flex flex-col items-center justify-center text-center p-8 bg-cover bg-center relative overflow-hidden`} style={{ backgroundImage: `url(${heroImage})` }}>
+               <HeroBackgroundEditor className={`h-[${isModal ? '500px' : '300px'}] rounded-[2rem] flex flex-col items-center justify-center text-center p-8 bg-cover bg-center relative overflow-hidden`} style={{ backgroundImage: `url(${heroImage})` }}>
                   <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px]"></div>
                   <div className="relative z-10 flex flex-col items-center p-8 bg-white/90 rounded-[2rem] shadow-xl border-4 border-white">
                      <h1 className={`${isModal ? 'text-6xl' : 'text-4xl'} font-black tracking-tight mb-2`} style={{ color: primaryColor }}>Fun & Fresh!</h1>
                      <p className="text-slate-600 font-medium mb-6 max-w-sm">Colorful, comfortable, and made for play.</p>
                      <button onClick={() => setPage('collections')} className="px-8 py-4 text-white font-black tracking-wide text-sm hover:scale-110 transition-transform rounded-full shadow-lg" style={{ backgroundColor: primaryColor }}>LET'S SHOP 🎈</button>
                   </div>
-               </div>
+               </HeroBackgroundEditor>
             </div>
             <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-6'} mx-auto w-full`}>
                <h3 className="text-3xl font-black text-center mb-10 text-slate-800">New Arrivals ✨</h3>
@@ -972,11 +1002,20 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
     const props = { isModal, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy };
 
-    if (activeTheme.layout === 'hero-center') return <LayoutHeroCenter {...props} />;
-    if (activeTheme.layout === 'split-screen') return <LayoutSplitScreen {...props} />;
-    if (activeTheme.layout === 'elegant') return <LayoutElegant {...props} />;
-    if (activeTheme.layout === 'playful') return <LayoutPlayful {...props} />;
-    return <LayoutHeroCenter {...props} />;
+    const Layout = () => {
+       if (activeTheme.layout === 'hero-center') return <LayoutHeroCenter {...props} />;
+       if (activeTheme.layout === 'split-screen') return <LayoutSplitScreen {...props} />;
+       if (activeTheme.layout === 'elegant') return <LayoutElegant {...props} />;
+       if (activeTheme.layout === 'playful') return <LayoutPlayful {...props} />;
+       return <LayoutHeroCenter {...props} />;
+    };
+
+    return (
+       <>
+          <Layout />
+          <FloatingColorPicker />
+       </>
+    );
   };
 
   if (isLiveStore) {
