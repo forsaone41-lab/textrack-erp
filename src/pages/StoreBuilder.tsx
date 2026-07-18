@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck } from 'lucide-react';
+import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 
 const THEMES = [
@@ -14,6 +14,7 @@ const THEMES = [
 export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: boolean }) {
   const { isAr } = useLang();
   const [platformMode, setPlatformMode] = useState<'gestion'|'builder'>('gestion');
+  const [productsViewMode, setProductsViewMode] = useState<'list'|'grid'>('list');
   const [activeTab, setActiveTab] = useState<string>('orders');
   const [storeName, setStoreName] = useState('My Brand');
   const [showPreview, setShowPreview] = useState(false);
@@ -1380,42 +1381,78 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                   <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
                      <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
                         <h3 className="text-sm font-bold text-slate-700">Tous les produits ({storeProducts.length})</h3>
-                        <div className="relative">
-                           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                           <input type="text" placeholder="Rechercher..." className="pl-9 pr-4 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500 bg-white" />
+                        <div className="flex items-center gap-4">
+                           <div className="flex items-center bg-white border border-slate-200 rounded-lg p-0.5">
+                              <button onClick={() => setProductsViewMode('list')} className={`p-1.5 rounded-md transition-colors ${productsViewMode === 'list' ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}><ListIcon className="w-4 h-4" /></button>
+                              <button onClick={() => setProductsViewMode('grid')} className={`p-1.5 rounded-md transition-colors ${productsViewMode === 'grid' ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}><LayoutGrid className="w-4 h-4" /></button>
+                           </div>
+                           <div className="relative">
+                              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                              <input type="text" placeholder="Rechercher..." className="pl-9 pr-4 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500 bg-white" />
+                           </div>
                         </div>
                      </div>
-                     <div className="divide-y divide-slate-100">
-                        {storeProducts.map(p => (
-                           <div key={p.id} onClick={() => { setProductForm(p); setIsProductModalOpen(true); }} className="p-4 flex items-center gap-6 hover:bg-slate-50 cursor-pointer transition-colors group">
-                              <div className="w-16 h-16 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200 overflow-hidden shrink-0">
-                                 {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt="" /> : <Box className="w-6 h-6 text-slate-300 group-hover:text-indigo-400" />}
-                              </div>
-                              <div className="flex-1">
-                                 <h4 className="text-base font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">{p.name}</h4>
-                                 <div className="flex items-center gap-4 mt-1">
-                                    <span className="text-xs font-medium text-slate-500 flex items-center gap-1"><Box className="w-3 h-3" /> {Object.keys(p.variantQuantities || {}).length > 0 ? 'Stock par variante' : (p.stock || 0) + ' en stock'}</span>
-                                    {p.sizes?.length > 0 && <span className="text-xs font-medium text-slate-500 flex items-center gap-1"><LayoutTemplate className="w-3 h-3" /> {p.sizes.length} Tailles</span>}
+                     
+                     {productsViewMode === 'list' ? (
+                        <div className="divide-y divide-slate-100">
+                           {storeProducts.map(p => (
+                              <div key={p.id} onClick={() => { setProductForm(p); setIsProductModalOpen(true); }} className="p-4 flex items-center gap-6 hover:bg-slate-50 cursor-pointer transition-colors group">
+                                 <div className="w-16 h-16 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200 overflow-hidden shrink-0">
+                                    {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt="" /> : <Box className="w-6 h-6 text-slate-300 group-hover:text-indigo-400" />}
+                                 </div>
+                                 <div className="flex-1">
+                                    <h4 className="text-base font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">{p.name}</h4>
+                                    <div className="flex items-center gap-4 mt-1">
+                                       <span className="text-xs font-medium text-slate-500 flex items-center gap-1"><Box className="w-3 h-3" /> {Object.keys(p.variantQuantities || {}).length > 0 ? 'Stock par variante' : (p.stock || 0) + ' en stock'}</span>
+                                       {p.sizes?.length > 0 && <span className="text-xs font-medium text-slate-500 flex items-center gap-1"><LayoutTemplate className="w-3 h-3" /> {p.sizes.length} Tailles</span>}
+                                    </div>
+                                 </div>
+                                 <div className="text-right shrink-0">
+                                    <p className="text-base font-black text-slate-800">{p.price} MAD</p>
+                                    <span className="inline-block mt-1 px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold uppercase rounded">Actif</span>
+                                 </div>
+                                 <div className="pl-4 shrink-0 border-l border-slate-100 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button 
+                                      onClick={(e) => { 
+                                         e.stopPropagation(); 
+                                         setStoreProducts(storeProducts.filter(x => x.id !== p.id));
+                                      }}
+                                      className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                    >
+                                       <X className="w-4 h-4" />
+                                    </button>
                                  </div>
                               </div>
-                              <div className="text-right shrink-0">
-                                 <p className="text-base font-black text-slate-800">{p.price} MAD</p>
-                                 <span className="inline-block mt-1 px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold uppercase rounded">Actif</span>
+                           ))}
+                        </div>
+                     ) : (
+                        <div className="p-4 grid grid-cols-3 gap-4">
+                           {storeProducts.map(p => (
+                              <div key={p.id} onClick={() => { setProductForm(p); setIsProductModalOpen(true); }} className="border border-slate-200 rounded-xl bg-white hover:border-indigo-500 cursor-pointer transition-colors group overflow-hidden flex flex-col">
+                                 <div className="aspect-square bg-slate-50 relative border-b border-slate-100">
+                                    {getCoverImage(p) ? (
+                                       <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt="" />
+                                    ) : (
+                                       <div className="w-full h-full flex items-center justify-center"><Box className="w-10 h-10 text-slate-300 group-hover:text-indigo-400" /></div>
+                                    )}
+                                    <div className="absolute top-2 right-2 flex gap-1">
+                                       <span className="px-2 py-0.5 bg-green-500 text-white text-[9px] font-black uppercase rounded shadow-sm">Actif</span>
+                                    </div>
+                                 </div>
+                                 <div className="p-4 flex flex-col flex-1">
+                                    <h4 className="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors line-clamp-1">{p.name}</h4>
+                                    <p className="text-xs text-slate-400 mt-1 line-clamp-1">{p.category || 'Sans catégorie'}</p>
+                                    <div className="mt-auto pt-3 flex items-center justify-between">
+                                       <span className="text-sm font-black text-slate-800">{p.price} MAD</span>
+                                       <button onClick={(e) => { e.stopPropagation(); setStoreProducts(storeProducts.filter(x => x.id !== p.id)); }} className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors">
+                                          <X className="w-4 h-4" />
+                                       </button>
+                                    </div>
+                                 </div>
                               </div>
-                              <div className="pl-4 shrink-0 border-l border-slate-100 opacity-0 group-hover:opacity-100 transition-opacity">
-                                 <button 
-                                   onClick={(e) => { 
-                                      e.stopPropagation(); 
-                                      setStoreProducts(storeProducts.filter(x => x.id !== p.id));
-                                   }}
-                                   className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                                 >
-                                    <X className="w-4 h-4" />
-                                 </button>
-                              </div>
-                           </div>
-                        ))}
-                     </div>
+                           ))}
+                        </div>
+                     )}
                   </div>
                 </div>
               )}
