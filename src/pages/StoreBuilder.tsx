@@ -44,6 +44,15 @@ export default function StoreBuilder() {
   const [isPageModalOpen, setIsPageModalOpen] = useState(false);
   const [pageForm, setPageForm] = useState<any>(null);
   
+  const [storeLogo, setStoreLogo] = useState('');
+  const [storeFavicon, setStoreFavicon] = useState('');
+  const [footerSettings, setFooterSettings] = useState({
+    copyright: '© 2026 My Brand. Tous droits réservés.',
+    showPrivacy: true,
+    showTerms: true,
+    showCookies: true
+  });
+  
   const [buyMode, setBuyMode] = useState<'cart'|'direct'|'both'|'form'>('both');
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [productForm, setProductForm] = useState<any>(null);
@@ -1141,7 +1150,44 @@ export default function StoreBuilder() {
                        </div>
                     </div>
 
-                    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mt-4">
+                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mt-4 mb-4">
+                        <h4 className="text-xs font-black text-slate-800 mb-4 uppercase tracking-wider flex items-center gap-2">
+                          <LayoutTemplate className="w-4 h-4 text-indigo-600" /> Pied de page (Footer)
+                        </h4>
+                        
+                        <div className="space-y-4">
+                           <div>
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Texte du Copyright</label>
+                              <input 
+                                type="text" 
+                                value={footerSettings.copyright}
+                                onChange={e => setFooterSettings({...footerSettings, copyright: e.target.value})}
+                                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" 
+                              />
+                           </div>
+
+                           <div className="space-y-2 pt-2">
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Pages Légales (Générées Automatiquement)</label>
+                              
+                              <label className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
+                                 <input type="checkbox" checked={footerSettings.showPrivacy} onChange={e => setFooterSettings({...footerSettings, showPrivacy: e.target.checked})} className="w-4 h-4 accent-indigo-600" />
+                                 <span className="text-sm font-bold text-slate-700">Politique de Confidentialité</span>
+                              </label>
+                              
+                              <label className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
+                                 <input type="checkbox" checked={footerSettings.showTerms} onChange={e => setFooterSettings({...footerSettings, showTerms: e.target.checked})} className="w-4 h-4 accent-indigo-600" />
+                                 <span className="text-sm font-bold text-slate-700">Conditions Générales de Vente (CGV)</span>
+                              </label>
+                              
+                              <label className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
+                                 <input type="checkbox" checked={footerSettings.showCookies} onChange={e => setFooterSettings({...footerSettings, showCookies: e.target.checked})} className="w-4 h-4 accent-indigo-600" />
+                                 <span className="text-sm font-bold text-slate-700">Politique des Cookies</span>
+                              </label>
+                           </div>
+                        </div>
+                     </div>
+
+                     <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mt-4">
                        <h4 className="text-xs font-black text-slate-800 mb-4 uppercase tracking-wider flex items-center gap-2">
                          <ShoppingBag className="w-4 h-4 text-indigo-600" /> Mode d'Achat (Boutons)
                        </h4>
