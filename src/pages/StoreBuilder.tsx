@@ -819,7 +819,8 @@ export default function StoreBuilder() {
               ))}
             </div>
 
-            <div className="p-5 overflow-y-auto h-[calc(100vh-240px)]">
+            <div className={`p-5 overflow-y-auto h-[calc(100vh-240px)] flex justify-center`}>
+              <div className="w-full max-w-2xl">
               {/* THEMES TAB */}
               {activeTab === 'themes' && (
                 <div className="space-y-6">
@@ -1145,6 +1146,7 @@ export default function StoreBuilder() {
                     </div>
                  </div>
                )}
+              </div>
             </div>
           </div>
         </div>
