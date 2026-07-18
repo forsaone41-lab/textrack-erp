@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy } from 'lucide-react';
+import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 
 const THEMES = [
@@ -61,6 +61,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
   const [isPublishing, setIsPublishing] = useState(false);
   const [showPublishModal, setShowPublishModal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [customDomain, setCustomDomain] = useState('');
+
+  const handleSave = () => {
+    setIsSaving(true);
+    setTimeout(() => setIsSaving(false), 1000);
+  };
 
   const handlePublish = () => {
     setIsPublishing(true);
@@ -817,6 +824,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
           <p className="text-slate-500 text-sm mt-1">Gérez la boutique e-commerce de votre client de A à Z en toute sécurité.</p>
         </div>
         <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+          <button onClick={handleSave} disabled={isSaving} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${isSaving ? 'bg-green-500 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
+            {isSaving ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />} {isSaving ? 'Enregistré' : 'Enregistrer'}
+          </button>
           <button onClick={() => setShowPreview(true)} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all shadow-sm">
             <ExternalLink className="w-4 h-4" /> Prévisualiser
           </button>
@@ -1117,6 +1127,24 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                          onChange={e => setStoreName(e.target.value)} 
                          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 mt-2"
                        />
+                    </div>
+
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                       <h4 className="text-xs font-black text-slate-800 mb-1 uppercase tracking-wider flex items-center gap-2"><Globe className="w-4 h-4 text-indigo-600" /> Domaine Personnalisé</h4>
+                       <p className="text-[10px] text-slate-500 mb-2">Connectez votre propre domaine (ex: www.khalid-shop.com). Assurez-vous d'ajouter un enregistrement DNS vers notre serveur avant d'enregistrer.</p>
+                       <input 
+                         type="text" 
+                         placeholder="ex: www.maboutique.com"
+                         value={customDomain} 
+                         onChange={e => setCustomDomain(e.target.value)} 
+                         className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500"
+                       />
+                       {customDomain && (
+                          <div className="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-start gap-2">
+                             <AlertCircle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                             <p className="text-xs text-blue-800 font-medium">Pour activer <b>{customDomain}</b>, ajoutez un enregistrement DNS <b>A</b> pointant vers <b>76.76.21.21</b> ou un <b>CNAME</b> vers <b>cname.vercel-dns.com</b> chez votre fournisseur de domaine.</p>
+                          </div>
+                       )}
                     </div>
 
                     <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
