@@ -137,7 +137,7 @@ export default function StoreBuilder() {
               {storeProducts.filter(p => p.id === activeProductId).map(p => (
                  <div key={p.id} className={`flex gap-12 ${previewDevice === 'mobile' && !isModal ? 'flex-col' : ''}`}>
                     <div className="flex-1 aspect-[4/5] bg-slate-100 rounded-2xl flex items-center justify-center overflow-hidden">
-                       {p.image ? <img src={p.image} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-20 h-20 opacity-10" />}
+                       {(selectedColor && p.colorImages?.[selectedColor]) ? <img src={p.colorImages[selectedColor]} className="w-full h-full object-cover" alt={p.name} /> : (p.image ? <img src={p.image} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-20 h-20 opacity-10" />)}
                     </div>
                     <div className="flex-1 flex flex-col justify-center">
                        <h2 className="text-4xl font-black mb-4">{p.name}</h2>
@@ -314,7 +314,7 @@ export default function StoreBuilder() {
               {storeProducts.filter(p => p.id === activeProductId).map(p => (
                  <div key={p.id} className={`flex gap-16 ${previewDevice === 'mobile' && !isModal ? 'flex-col' : ''}`}>
                     <div className="flex-1 relative flex items-center justify-center bg-gray-50 overflow-hidden aspect-[3/4]">
-                       {p.image ? <img src={p.image} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-20 h-20 opacity-10 absolute inset-0 m-auto" />}
+                       {(selectedColor && p.colorImages?.[selectedColor]) ? <img src={p.colorImages[selectedColor]} className="w-full h-full object-cover" alt={p.name} /> : (p.image ? <img src={p.image} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-20 h-20 opacity-10 absolute inset-0 m-auto" />)}
                     </div>
                     <div className="flex-1 flex flex-col justify-center">
                        <h2 className="text-5xl font-light mb-4">{p.name}</h2>
@@ -477,7 +477,7 @@ export default function StoreBuilder() {
               {storeProducts.filter(p => p.id === activeProductId).map(p => (
                  <div key={p.id} className={`flex gap-16 ${previewDevice === 'mobile' && !isModal ? 'flex-col' : ''}`}>
                     <div className="flex-1 bg-white/5 border border-white/10 flex items-center justify-center aspect-[3/4] overflow-hidden relative">
-                       {p.image ? <img src={p.image} className="w-full h-full object-cover absolute inset-0" alt={p.name} /> : <ImageIcon className="w-20 h-20 opacity-10" />}
+                       {(selectedColor && p.colorImages?.[selectedColor]) ? <img src={p.colorImages[selectedColor]} className="w-full h-full object-cover absolute inset-0" alt={p.name} /> : (p.image ? <img src={p.image} className="w-full h-full object-cover absolute inset-0" alt={p.name} /> : <ImageIcon className="w-20 h-20 opacity-10" />)}
                     </div>
                     <div className="flex-1 flex flex-col justify-center">
                        <h2 className="text-5xl font-serif mb-4 text-white">{p.name}</h2>
@@ -649,7 +649,7 @@ export default function StoreBuilder() {
               {storeProducts.filter(p => p.id === activeProductId).map(p => (
                  <div key={p.id} className={`flex gap-12 bg-slate-50 p-8 rounded-[3rem] ${previewDevice === 'mobile' && !isModal ? 'flex-col' : ''}`}>
                     <div className="flex-1 bg-white rounded-[2rem] border-4 border-slate-100 flex items-center justify-center aspect-square shadow-xl overflow-hidden relative">
-                       {p.image ? <img src={p.image} className="w-full h-full object-cover absolute inset-0" alt={p.name} /> : <ImageIcon className="w-20 h-20 opacity-10" />}
+                       {(selectedColor && p.colorImages?.[selectedColor]) ? <img src={p.colorImages[selectedColor]} className="w-full h-full object-cover absolute inset-0" alt={p.name} /> : (p.image ? <img src={p.image} className="w-full h-full object-cover absolute inset-0" alt={p.name} /> : <ImageIcon className="w-20 h-20 opacity-10" />)}
                     </div>
                     <div className="flex-1 flex flex-col justify-center px-4">
                        <h2 className="text-5xl font-black mb-4 text-slate-800">{p.name}</h2>
@@ -1248,7 +1248,42 @@ export default function StoreBuilder() {
                                 ))}
                              </div>
                           </div>
-                       </div>
+                           {/* VARIANT IMAGES UPLOAD */}
+                           {productForm?.colors?.length > 0 && (
+                              <div className="mt-6 border-t border-slate-100 pt-6">
+                                 <label className="block text-[10px] font-bold text-slate-500 uppercase mb-3">Images par Couleur (Optionnel)</label>
+                                 <div className="space-y-3">
+                                    {productForm.colors.map((color: string) => (
+                                       <div key={color} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                                          <div className="flex items-center gap-3">
+                                             <div className="w-6 h-6 rounded-full border shadow-sm" style={{ backgroundColor: color }}></div>
+                                             <span className="text-xs font-bold text-slate-600 capitalize">Image Variante</span>
+                                          </div>
+                                          <div>
+                                             <label className="cursor-pointer px-4 py-2 bg-white border border-slate-200 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-colors flex items-center gap-2 shadow-sm">
+                                                {productForm?.colorImages?.[color] ? (
+                                                   <img src={productForm.colorImages[color]} className="w-5 h-5 rounded object-cover" alt="" />
+                                                ) : (
+                                                   <ImageIcon className="w-4 h-4" />
+                                                )}
+                                                {productForm?.colorImages?.[color] ? 'Changer' : 'Lier une image'}
+                                                <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                                                   const file = e.target.files?.[0];
+                                                   if (file) {
+                                                      setProductForm({
+                                                         ...productForm, 
+                                                         colorImages: { ...(productForm.colorImages || {}), [color]: URL.createObjectURL(file) }
+                                                      });
+                                                   }
+                                                }} />
+                                             </label>
+                                          </div>
+                                       </div>
+                                    ))}
+                                 </div>
+                              </div>
+                           )}
+                        </div>
                     </div>
                  </div>
               </div>
