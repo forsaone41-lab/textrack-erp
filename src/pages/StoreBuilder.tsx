@@ -178,7 +178,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
      </footer>
   );
 
-  const LayoutHeroCenter = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts }: any) => {
+  const LayoutHeroCenter = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy }: any) => {
     const [selectedSize, setSelectedSize] = useState<string>('');
     const [selectedColor, setSelectedColor] = useState<string>('');
     const [quantity, setQuantity] = useState(1);
@@ -234,15 +234,24 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             <div className={`${isModal ? 'p-16 max-w-[1400px]' : 'p-8'} mx-auto w-full`}>
                <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
                   <h3 className="text-2xl font-black uppercase text-center md:text-left">All Products</h3>
-                  {categories && categories.length > 1 && (
-                     <div className="flex flex-wrap gap-2 justify-center">
-                        {categories.map((c: string) => (
-                           <button key={c} onClick={() => setActiveCategory(c)} className={`px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors ${activeCategory === c ? 'text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`} style={{ backgroundColor: activeCategory === c ? primaryColor : undefined }}>
-                              {c}
-                           </button>
-                        ))}
-                     </div>
-                  )}
+                  <div className="flex flex-col sm:flex-row items-center gap-4">
+                     {categories && categories.length > 1 && (
+                        <div className="flex flex-wrap gap-2 justify-center">
+                           {categories.map((c: string) => (
+                              <button key={c} onClick={() => setActiveCategory(c)} className={`px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors ${activeCategory === c ? 'text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`} style={{ backgroundColor: activeCategory === c ? primaryColor : undefined }}>
+                                 {c}
+                              </button>
+                           ))}
+                        </div>
+                     )}
+                     <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-wider rounded-full focus:ring-slate-500 focus:border-slate-500 block px-4 py-2 outline-none cursor-pointer">
+                        <option value="featured">Recommandé</option>
+                        <option value="price-low-high">Prix: Croissant</option>
+                        <option value="price-high-low">Prix: Décroissant</option>
+                        <option value="az">De A à Z</option>
+                        <option value="za">De Z à A</option>
+                     </select>
+                  </div>
                </div>
                <div className={`grid gap-8 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3')}`}>
                   {filteredProducts.map((p: any) => (
@@ -379,7 +388,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   );
   };
 
-  const LayoutSplitScreen = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts }: any) => {
+  const LayoutSplitScreen = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy }: any) => {
     const [selectedSize, setSelectedSize] = useState<string>('');
     const [selectedColor, setSelectedColor] = useState<string>('');
     const [quantity, setQuantity] = useState(1);
@@ -436,15 +445,22 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             <div className={`${isModal ? 'p-20' : 'p-8'} mx-auto w-full`}>
                <div className="flex flex-col md:flex-row justify-between items-end mb-12 border-b pb-4 gap-6">
                   <h3 className="text-2xl font-light">All Products</h3>
-                  {categories && categories.length > 1 && (
-                     <div className="flex flex-wrap gap-4 text-sm">
-                        {categories.map((c: string) => (
-                           <button key={c} onClick={() => setActiveCategory(c)} className={`pb-1 border-b-2 transition-colors ${activeCategory === c ? 'border-current' : 'border-transparent text-gray-400 hover:text-black'}`} style={{ color: activeCategory === c ? primaryColor : undefined }}>
-                              {c}
-                           </button>
-                        ))}
-                     </div>
-                  )}
+                  <div className="flex flex-col sm:flex-row items-center gap-6">
+                     {categories && categories.length > 1 && (
+                        <div className="flex flex-wrap gap-4 text-sm">
+                           {categories.map((c: string) => (
+                              <button key={c} onClick={() => setActiveCategory(c)} className={`pb-1 border-b-2 transition-colors ${activeCategory === c ? 'border-current' : 'border-transparent text-gray-400 hover:text-black'}`} style={{ color: activeCategory === c ? primaryColor : undefined }}>
+                                 {c}
+                              </button>
+                           ))}
+                        </div>
+                     )}
+                     <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="bg-transparent border-none text-gray-500 text-sm focus:ring-0 outline-none cursor-pointer">
+                        <option value="featured">Sort: Featured</option>
+                        <option value="price-low-high">Price: Low to High</option>
+                        <option value="price-high-low">Price: High to Low</option>
+                     </select>
+                  </div>
                </div>
                <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
                   {filteredProducts.map((p: any) => (
@@ -562,7 +578,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   );
   };
 
-  const LayoutElegant = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts }: any) => {
+  const LayoutElegant = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy }: any) => {
     const [selectedSize, setSelectedSize] = useState<string>('');
     const [selectedColor, setSelectedColor] = useState<string>('');
     const [quantity, setQuantity] = useState(1);
@@ -613,15 +629,22 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         {page === 'collections' && (
             <div className={`${isModal ? 'p-16' : 'p-8'} mx-auto w-full`}>
                <h3 className="text-xl tracking-widest uppercase text-center mb-8" style={{ color: primaryColor }}>All Products</h3>
-               {categories && categories.length > 1 && (
-                  <div className="flex flex-wrap justify-center gap-8 mb-16 text-xs tracking-widest uppercase">
-                     {categories.map((c: string) => (
-                        <button key={c} onClick={() => setActiveCategory(c)} className="transition-colors" style={{ color: activeCategory === c ? '#fff' : '#555', borderBottom: activeCategory === c ? `1px solid ${primaryColor}` : '1px solid transparent', paddingBottom: '4px' }}>
-                           {c}
-                        </button>
-                     ))}
-                  </div>
-               )}
+               <div className="flex flex-col items-center gap-6 mb-16">
+                  {categories && categories.length > 1 && (
+                     <div className="flex flex-wrap justify-center gap-8 text-xs tracking-widest uppercase">
+                        {categories.map((c: string) => (
+                           <button key={c} onClick={() => setActiveCategory(c)} className="transition-colors" style={{ color: activeCategory === c ? '#fff' : '#555', borderBottom: activeCategory === c ? `1px solid ${primaryColor}` : '1px solid transparent', paddingBottom: '4px' }}>
+                              {c}
+                           </button>
+                        ))}
+                     </div>
+                  )}
+                  <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="bg-transparent border border-white/20 text-[#888] text-xs tracking-widest uppercase focus:border-white focus:outline-none cursor-pointer py-2 px-4 rounded-sm">
+                     <option value="featured">Featured</option>
+                     <option value="price-low-high">Price: Low - High</option>
+                     <option value="price-high-low">Price: High - Low</option>
+                  </select>
+               </div>
                <div className={`grid gap-4 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
                   {filteredProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer relative aspect-square bg-[#1a1a1a] border border-white/5 p-4 flex flex-col items-center justify-center" onClick={() => navigateToProduct(p.id)}>
@@ -735,7 +758,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   );
   };
 
-  const LayoutPlayful = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts }: any) => {
+  const LayoutPlayful = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy }: any) => {
     const [selectedSize, setSelectedSize] = useState<string>('');
     const [selectedColor, setSelectedColor] = useState<string>('');
     const [quantity, setQuantity] = useState(1);
@@ -789,9 +812,16 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         )}
         {page === 'collections' && (
             <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-6'} mx-auto w-full`}>
-               <h3 className="text-3xl font-black text-center mb-6 text-slate-800">All Products ✨</h3>
+               <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                  <h3 className="text-3xl font-black text-center text-slate-800">All Products ✨</h3>
+                  <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="bg-white border-2 border-slate-200 text-slate-700 text-sm font-black rounded-full focus:ring-slate-500 focus:border-slate-500 px-4 py-2 outline-none cursor-pointer shadow-sm">
+                     <option value="featured">Best Matches 🌟</option>
+                     <option value="price-low-high">Price: Low to High 💸</option>
+                     <option value="price-high-low">Price: High to Low 💎</option>
+                  </select>
+               </div>
                {categories && categories.length > 1 && (
-                  <div className="flex flex-wrap gap-2 justify-center mb-10">
+                  <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-10">
                      {categories.map((c: string) => (
                         <button key={c} onClick={() => setActiveCategory(c)} className="px-6 py-2 rounded-full text-sm font-black transition-transform hover:scale-105 border-2 border-transparent" style={{ backgroundColor: activeCategory === c ? primaryColor : '#f1f5f9', color: activeCategory === c ? '#fff' : '#64748b', borderColor: activeCategory === c ? 'transparent' : '#e2e8f0' }}>
                            {c}
@@ -922,6 +952,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     const [page, setPage] = useState('home');
     const [activeProductId, setActiveProductId] = useState<any>(null);
     const [activeCategory, setActiveCategory] = useState('All');
+    const [sortBy, setSortBy] = useState('featured');
 
     const navigateToProduct = (id: any) => {
         setActiveProductId(id);
@@ -929,9 +960,17 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     };
 
     const categories = ['All', ...Array.from(new Set(storeProducts.map(p => p.category).filter(Boolean)))];
-    const filteredProducts = activeCategory === 'All' ? storeProducts : storeProducts.filter(p => p.category === activeCategory);
+    let filteredProducts = activeCategory === 'All' ? storeProducts : storeProducts.filter(p => p.category === activeCategory);
 
-    const props = { isModal, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts };
+    filteredProducts = [...filteredProducts].sort((a, b) => {
+       if (sortBy === 'price-low-high') return parseFloat(a.price) - parseFloat(b.price);
+       if (sortBy === 'price-high-low') return parseFloat(b.price) - parseFloat(a.price);
+       if (sortBy === 'az') return a.name.localeCompare(b.name);
+       if (sortBy === 'za') return b.name.localeCompare(a.name);
+       return 0;
+    });
+
+    const props = { isModal, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy };
 
     if (activeTheme.layout === 'hero-center') return <LayoutHeroCenter {...props} />;
     if (activeTheme.layout === 'split-screen') return <LayoutSplitScreen {...props} />;
