@@ -1194,10 +1194,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        </div>
                        <div className="space-y-3">
                           {[
-                             { id: '#1042', customer: 'Youssef El Amrani', amount: '850.00 MAD', status: 'Nouveau', statusColor: 'bg-indigo-100 text-indigo-700', date: 'Il y a 10 min', items: '2 articles' },
-                             { id: '#1041', customer: 'Sara Bennani', amount: '450.00 MAD', status: 'Confirmé', statusColor: 'bg-emerald-100 text-emerald-700', date: 'Il y a 1h', items: '1 article' },
-                             { id: '#1040', customer: 'Karim Tazi', amount: '1200.00 MAD', status: 'En cours', statusColor: 'bg-amber-100 text-amber-700', date: 'Hier', items: '3 articles' },
-                             { id: '#1039', customer: 'Maha Alami', amount: '350.00 MAD', status: 'Refusé', statusColor: 'bg-rose-100 text-rose-700', date: 'Hier', items: '1 article' }
+                             { id: '#1042', customer: 'Youssef El Amrani', amount: '850.00 MAD', status: 'Nouveau', statusColor: 'bg-indigo-100 text-indigo-700', date: 'Il y a 10 min', items: '2 articles', products: [{ name: 'Premium Hoodie', photo: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop', qty: 1, price: '450.00 MAD', options: 'Taille: L, Couleur: Noir' }, { name: 'Cargo Pants', photo: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop', qty: 1, price: '400.00 MAD', options: 'Taille: M, Couleur: Kaki' }] },
+                             { id: '#1041', customer: 'Sara Bennani', amount: '450.00 MAD', status: 'Confirmé', statusColor: 'bg-emerald-100 text-emerald-700', date: 'Il y a 1h', items: '1 article', products: [{ name: 'Essential T-Shirt', photo: 'https://images.unsplash.com/photo-1489987707023-afc7f93c6508?q=80&w=800&auto=format&fit=crop', qty: 1, price: '450.00 MAD', options: 'Taille: S, Couleur: Blanc' }] },
+                             { id: '#1040', customer: 'Karim Tazi', amount: '1200.00 MAD', status: 'En cours', statusColor: 'bg-amber-100 text-amber-700', date: 'Hier', items: '3 articles', products: [{ name: 'Classic Sneakers', photo: 'https://images.unsplash.com/photo-1589465885857-44edb59bbff2?q=80&w=800&auto=format&fit=crop', qty: 2, price: '400.00 MAD', options: 'Pointure: 42, Couleur: Blanc' }, { name: 'Cargo Pants', photo: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop', qty: 1, price: '400.00 MAD', options: 'Taille: L, Couleur: Noir' }] },
+                             { id: '#1039', customer: 'Maha Alami', amount: '350.00 MAD', status: 'Refusé', statusColor: 'bg-rose-100 text-rose-700', date: 'Hier', items: '1 article', products: [{ name: 'Summer Dress', photo: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=800&auto=format&fit=crop', qty: 1, price: '350.00 MAD', options: 'Taille: M, Couleur: Rouge' }] }
                           ].map(order => (
                              <div key={order.id} onClick={() => setSelectedOrder(order)} className="p-3 border border-slate-200 rounded-2xl bg-white shadow-sm cursor-pointer hover:border-indigo-500 transition-colors hover:shadow-md group">
                                 <div className="flex justify-between items-start mb-2">
@@ -2141,6 +2141,28 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                   {/* Order Summary */}
                   <div>
                      <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-3">Détails de la Commande</h3>
+                     
+                     {/* Added Products Section */}
+                     {selectedOrder.products && (
+                        <div className="space-y-3 mb-4">
+                           {selectedOrder.products.map((prod: any, idx: number) => (
+                              <div key={idx} className="flex items-center gap-3 bg-white border border-slate-100 p-2 rounded-xl shadow-sm hover:border-indigo-200 transition-colors">
+                                 <div className="w-14 h-14 rounded-lg bg-slate-50 border border-slate-100 overflow-hidden shrink-0">
+                                    <img src={prod.photo} alt={prod.name} className="w-full h-full object-cover" />
+                                 </div>
+                                 <div className="flex-1">
+                                    <h4 className="text-sm font-bold text-slate-800 leading-tight">{prod.name}</h4>
+                                    <p className="text-[10px] text-slate-500 font-medium mt-0.5">{prod.options}</p>
+                                 </div>
+                                 <div className="text-right shrink-0 px-2">
+                                    <p className="text-xs font-black text-slate-800">{prod.price}</p>
+                                    <p className="text-[10px] text-slate-400 font-bold mt-0.5">Qté: {prod.qty}</p>
+                                 </div>
+                              </div>
+                           ))}
+                        </div>
+                     )}
+
                      <div className="bg-white border border-slate-200 rounded-2xl p-4">
                         <div className="flex justify-between items-center mb-3 pb-3 border-b border-slate-100">
                            <span className="text-sm font-bold text-slate-600">{selectedOrder.items}</span>
