@@ -39,7 +39,7 @@ export default function StoreBuilder() {
   ]);
   const [newPageTitle, setNewPageTitle] = useState('');
   
-  const [buyMode, setBuyMode] = useState<'cart'|'direct'|'both'>('both');
+  const [buyMode, setBuyMode] = useState<'cart'|'direct'|'both'|'form'>('both');
   const [editingProduct, setEditingProduct] = useState<any>(null);
 
   const applyTheme = (theme: typeof THEMES[0]) => {
@@ -137,14 +137,24 @@ export default function StoreBuilder() {
                        <h2 className="text-4xl font-black mb-4">{p.name}</h2>
                        <p className="text-2xl font-bold mb-8" style={{ color: primaryColor }}>{p.price} MAD</p>
                        <p className="text-slate-500 mb-8 leading-relaxed">This is a premium quality product. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                       <div className="flex gap-4">
-                          {(buyMode === 'cart' || buyMode === 'both') && (
-                             <button onClick={handleAddToCart} className="flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg" style={{ backgroundColor: '#1e293b' }}>Add to cart</button>
-                          )}
-                          {(buyMode === 'direct' || buyMode === 'both') && (
-                             <button onClick={() => setPage('checkout')} className="flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg" style={{ backgroundColor: primaryColor }}>Buy Now</button>
-                          )}
-                       </div>
+                       {buyMode === 'form' ? (
+                          <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-3">
+                             <h4 className="font-black text-slate-800 mb-2">Express Checkout</h4>
+                             <input type="text" placeholder="Full Name" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-sm" />
+                             <input type="text" placeholder="Phone Number" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-sm" />
+                             <input type="text" placeholder="Delivery Address" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-sm" />
+                             <button onClick={() => setPage('success')} className="w-full py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg mt-2" style={{ backgroundColor: primaryColor }}>Confirm Order (COD)</button>
+                          </div>
+                       ) : (
+                          <div className="flex gap-4">
+                             {(buyMode === 'cart' || buyMode === 'both') && (
+                                <button onClick={handleAddToCart} className="flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg" style={{ backgroundColor: '#1e293b' }}>Add to cart</button>
+                             )}
+                             {(buyMode === 'direct' || buyMode === 'both') && (
+                                <button onClick={() => setPage('checkout')} className="flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg" style={{ backgroundColor: primaryColor }}>Buy Now</button>
+                             )}
+                          </div>
+                       )}
                     </div>
                  </div>
               ))}
@@ -263,14 +273,24 @@ export default function StoreBuilder() {
                        <h2 className="text-5xl font-light mb-4">{p.name}</h2>
                        <p className="text-2xl font-light text-gray-500 mb-8">{p.price} MAD</p>
                        <p className="text-gray-500 mb-12 leading-relaxed font-light">Experience true elegance with this meticulously designed piece. Perfect for every occasion.</p>
-                       <div className="flex gap-4">
-                          {(buyMode === 'cart' || buyMode === 'both') && (
-                             <button onClick={handleAddToCart} className="w-max px-12 py-4 bg-white border border-black text-black text-xs tracking-widest hover:bg-gray-100 transition-colors">ADD TO CART</button>
-                          )}
-                          {(buyMode === 'direct' || buyMode === 'both') && (
-                             <button onClick={() => setPage('checkout')} className="w-max px-12 py-4 text-white text-xs tracking-widest transition-opacity hover:opacity-90" style={{ backgroundColor: primaryColor }}>BUY NOW</button>
-                          )}
-                       </div>
+                       {buyMode === 'form' ? (
+                          <div className="p-8 border border-gray-200 bg-white space-y-4">
+                             <h4 className="text-xl font-light mb-4" style={{ color: primaryColor }}>Checkout</h4>
+                             <input type="text" placeholder="Full Name" className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
+                             <input type="text" placeholder="Phone Number" className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
+                             <input type="text" placeholder="Delivery Address" className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
+                             <button onClick={() => setPage('success')} className="w-full py-5 text-white text-xs tracking-widest mt-4 transition-opacity hover:opacity-90" style={{ backgroundColor: primaryColor }}>CONFIRM ORDER</button>
+                          </div>
+                       ) : (
+                          <div className="flex gap-4">
+                             {(buyMode === 'cart' || buyMode === 'both') && (
+                                <button onClick={handleAddToCart} className="w-max px-12 py-4 bg-white border border-black text-black text-xs tracking-widest hover:bg-gray-100 transition-colors">ADD TO CART</button>
+                             )}
+                             {(buyMode === 'direct' || buyMode === 'both') && (
+                                <button onClick={() => setPage('checkout')} className="w-max px-12 py-4 text-white text-xs tracking-widest transition-opacity hover:opacity-90" style={{ backgroundColor: primaryColor }}>BUY NOW</button>
+                             )}
+                          </div>
+                       )}
                     </div>
                  </div>
               ))}
@@ -376,14 +396,24 @@ export default function StoreBuilder() {
                        <p className="text-2xl tracking-widest mb-8" style={{ color: primaryColor }}>{p.price} MAD</p>
                        <div className="w-12 h-px bg-white/20 mb-8"></div>
                        <p className="text-[#888] mb-12 tracking-wide leading-relaxed">Embrace luxury with this exclusive item. Crafted with precision for the modern elegant individual.</p>
-                       <div className="flex gap-4">
-                          {(buyMode === 'cart' || buyMode === 'both') && (
-                             <button onClick={handleAddToCart} className="w-max px-12 py-4 border border-white/20 text-white text-xs tracking-widest hover:bg-white/5 transition-colors">ADD TO CART</button>
-                          )}
-                          {(buyMode === 'direct' || buyMode === 'both') && (
-                             <button onClick={() => setPage('checkout')} className="w-max px-12 py-4 bg-white text-black text-xs tracking-widest hover:bg-gray-200 transition-colors">BUY NOW</button>
-                          )}
-                       </div>
+                       {buyMode === 'form' ? (
+                          <div className="p-8 border border-white/10 bg-[#151515] space-y-4">
+                             <h4 className="text-xl font-serif mb-4 text-white">Secure Checkout</h4>
+                             <input type="text" placeholder="Full Name" className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
+                             <input type="text" placeholder="Phone Number" className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
+                             <input type="text" placeholder="Delivery Address" className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
+                             <button onClick={() => setPage('success')} className="w-full py-5 bg-white text-black text-xs tracking-widest mt-4 hover:bg-gray-200 transition-colors">PLACE ORDER</button>
+                          </div>
+                       ) : (
+                          <div className="flex gap-4">
+                             {(buyMode === 'cart' || buyMode === 'both') && (
+                                <button onClick={handleAddToCart} className="w-max px-12 py-4 border border-white/20 text-white text-xs tracking-widest hover:bg-white/5 transition-colors">ADD TO CART</button>
+                             )}
+                             {(buyMode === 'direct' || buyMode === 'both') && (
+                                <button onClick={() => setPage('checkout')} className="w-max px-12 py-4 bg-white text-black text-xs tracking-widest hover:bg-gray-200 transition-colors">BUY NOW</button>
+                             )}
+                          </div>
+                       )}
                     </div>
                  </div>
               ))}
@@ -496,14 +526,24 @@ export default function StoreBuilder() {
                        <h2 className="text-5xl font-black mb-4 text-slate-800">{p.name}</h2>
                        <p className="text-3xl font-black mb-8" style={{ color: primaryColor }}>{p.price} MAD</p>
                        <p className="text-slate-500 font-medium mb-8 text-lg">Fun, fresh, and perfectly designed for everyday adventures!</p>
-                       <div className="flex gap-4">
-                          {(buyMode === 'cart' || buyMode === 'both') && (
-                             <button onClick={handleAddToCart} className="flex-1 px-8 py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl" style={{ backgroundColor: '#f43f5e' }}>Cart 🛒</button>
-                          )}
-                          {(buyMode === 'direct' || buyMode === 'both') && (
-                             <button onClick={() => setPage('checkout')} className="flex-1 px-8 py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl" style={{ backgroundColor: primaryColor }}>Buy Now 🎈</button>
-                          )}
-                       </div>
+                       {buyMode === 'form' ? (
+                          <div className="bg-white p-8 rounded-[2rem] border-4 border-slate-100 space-y-4">
+                             <h4 className="text-xl font-black text-slate-800 mb-2">Yay! Checkout 🎁</h4>
+                             <input type="text" placeholder="Your Name" className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-full focus:outline-none focus:border-current text-base font-bold" style={{ '--tw-ring-color': primaryColor } as React.CSSProperties} />
+                             <input type="text" placeholder="Phone Number" className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-full focus:outline-none focus:border-current text-base font-bold" style={{ '--tw-ring-color': primaryColor } as React.CSSProperties} />
+                             <input type="text" placeholder="Where to send?" className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-full focus:outline-none focus:border-current text-base font-bold" style={{ '--tw-ring-color': primaryColor } as React.CSSProperties} />
+                             <button onClick={() => setPage('success')} className="w-full py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl mt-4" style={{ backgroundColor: primaryColor }}>Send it to me! 🚀</button>
+                          </div>
+                       ) : (
+                          <div className="flex gap-4">
+                             {(buyMode === 'cart' || buyMode === 'both') && (
+                                <button onClick={handleAddToCart} className="flex-1 px-8 py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl" style={{ backgroundColor: '#f43f5e' }}>Cart 🛒</button>
+                             )}
+                             {(buyMode === 'direct' || buyMode === 'both') && (
+                                <button onClick={() => setPage('checkout')} className="flex-1 px-8 py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl" style={{ backgroundColor: primaryColor }}>Buy Now 🎈</button>
+                             )}
+                          </div>
+                       )}
                     </div>
                  </div>
               ))}
@@ -901,6 +941,10 @@ export default function StoreBuilder() {
                           <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors">
                              <input type="radio" name="buyMode" checked={buyMode === 'cart'} onChange={() => setBuyMode('cart')} className="accent-indigo-600" />
                              Uniquement 'Ajouter au panier' (Classique)
+                          </label>
+                          <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors">
+                             <input type="radio" name="buyMode" checked={buyMode === 'form'} onChange={() => setBuyMode('form')} className="accent-indigo-600" />
+                             Formulaire intégré (Express sur la page)
                           </label>
                        </div>
                     </div>
