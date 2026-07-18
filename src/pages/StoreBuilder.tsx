@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 
@@ -69,7 +69,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [isPageModalOpen, setIsPageModalOpen] = useState(false);
   const [pageForm, setPageForm] = useState<any>(null);
   
-  const [storeLogo, setStoreLogo] = useState('');
+  const [storeLogo, setStoreLogo] = useState(config.storeLogo || '');
   const [storeFavicon, setStoreFavicon] = useState('');
   const [footerSettings, setFooterSettings] = useState({
     copyright: '© 2026 My Brand. Tous droits réservés.',
@@ -77,6 +77,21 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     showTerms: true,
     showCookies: true
   });
+
+  useEffect(() => {
+     if (isLiveStore) {
+        document.title = storeName;
+        if (storeLogo) {
+           let link = document.querySelector("link[rel~='icon']");
+           if (!link) {
+               link = document.createElement('link');
+               link.rel = 'icon';
+               document.getElementsByTagName('head')[0].appendChild(link);
+           }
+           link.href = storeLogo;
+        }
+     }
+  }, [isLiveStore, storeName, storeLogo]);
   
   const [buyMode, setBuyMode] = useState<'cart'|'direct'|'both'|'form'>('both');
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -93,6 +108,21 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
   const handleSave = () => {
     setIsSaving(true);
+    const storeConfig = {
+       storeLang,
+       storeName,
+       storeLogo,
+       activeTheme,
+       primaryColor,
+       fontFamily,
+       heroImage,
+       heroTitle,
+       heroSubtitle,
+       heroButtonText,
+       homeCollectionsTitle,
+       allCollectionsTitle
+    };
+    localStorage.setItem('beya_store_config', JSON.stringify(storeConfig));
     setTimeout(() => setIsSaving(false), 1000);
   };
 
