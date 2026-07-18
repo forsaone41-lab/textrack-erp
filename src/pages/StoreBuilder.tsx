@@ -99,7 +99,7 @@ export default function StoreBuilder() {
                   {storeProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-[3/4] bg-slate-100 mb-4 overflow-hidden relative rounded-xl">
-                           <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-12 h-12" /></div>
+                           {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-12 h-12" /></div>}
                            <div className={`absolute bottom-4 left-0 right-0 flex justify-center transition-opacity ${(previewDevice === 'mobile' && !isModal) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                               <button onClick={handleAddToCart} className="px-8 py-3 text-white text-xs font-bold uppercase tracking-wider shadow-2xl rounded-full" style={{ backgroundColor: primaryColor }}>Add to cart</button>
                            </div>
@@ -119,7 +119,7 @@ export default function StoreBuilder() {
                   {storeProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-[3/4] bg-slate-100 mb-4 overflow-hidden relative rounded-xl">
-                           <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-12 h-12" /></div>
+                           {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-12 h-12" /></div>}
                            <div className={`absolute bottom-4 left-0 right-0 flex justify-center transition-opacity ${(previewDevice === 'mobile' && !isModal) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                               <button onClick={handleAddToCart} className="px-8 py-3 text-white text-xs font-bold uppercase tracking-wider shadow-2xl rounded-full" style={{ backgroundColor: primaryColor }}>Add to cart</button>
                            </div>
