@@ -67,6 +67,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   };
   const [storeName, setStoreName] = useState(config.storeName || '');
   const [showPreview, setShowPreview] = useState(false);
+  const [previewProductId, setPreviewProductId] = useState<number | null>(null);
   const [previewDevice, setPreviewDevice] = useState<'desktop'|'mobile'>('desktop');
   const [isControlsCollapsed, setIsControlsCollapsed] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
@@ -1373,9 +1374,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   );
   };
 
-  const StorePreviewWrapper = ({ isModal = false }) => {
-    const [page, setPage] = useState('home');
-    const [activeProductId, setActiveProductId] = useState<any>(null);
+  const StorePreviewWrapper = ({ isModal = false, initialProductId = null }: any) => {
+    const [page, setPage] = useState(initialProductId ? 'product' : 'home');
+    const [activeProductId, setActiveProductId] = useState<any>(initialProductId);
     const [activeCategory, setActiveCategory] = useState('All');
     const [sortBy, setSortBy] = useState('featured');
     const [isCartOpen, setIsCartOpen] = useState(false);
@@ -2001,7 +2002,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
           <button onClick={handleSave} disabled={isSaving} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${isSaving ? 'bg-green-500 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
             {isSaving ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />} {isSaving ? (storeIsAr ? 'تم الحفظ' : 'Enregistré') : (storeIsAr ? 'حفظ' : 'Enregistrer')}
           </button>
-          <button onClick={() => setShowPreview(true)} className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 px-4 py-2 rounded-xl text-sm font-black hover:bg-indigo-100 hover:scale-105 transition-all shadow-sm" title={storeIsAr ? 'محرر الموقع الاحترافي' : 'Éditeur Visuel PRO'}>
+          <button onClick={() => { setPreviewProductId(null); setShowPreview(true); }} className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 px-4 py-2 rounded-xl text-sm font-black hover:bg-indigo-100 hover:scale-105 transition-all shadow-sm" title={storeIsAr ? 'محرر الموقع الاحترافي' : 'Éditeur Visuel PRO'}>
             <LayoutTemplate className="w-4 h-4" /> {storeIsAr ? 'بناء الموقع' : 'Éditeur PRO'}
           </button>
           <button 
@@ -2399,6 +2400,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                     <button 
                                       onClick={(e) => { 
                                          e.stopPropagation(); 
+                                         setPreviewProductId(p.id);
                                          setShowPreview(true);
                                       }}
                                       className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
@@ -2440,7 +2442,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                     <div className="mt-auto pt-3 flex items-center justify-between">
                                        <span className="text-sm font-black text-slate-800">{p.price} MAD</span>
                                        <div className="flex items-center gap-1">
-                                          <button onClick={(e) => { e.stopPropagation(); setShowPreview(true); }} className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors" title={storeIsAr ? 'معاينة في المتجر' : 'Voir sur le site'}>
+                                          <button onClick={(e) => { e.stopPropagation(); setPreviewProductId(p.id); setShowPreview(true); }} className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors" title={storeIsAr ? 'معاينة في المتجر' : 'Voir sur le site'}>
                                              <ExternalLink className="w-4 h-4" />
                                           </button>
                                           <button onClick={(e) => { e.stopPropagation(); setStoreProducts(storeProducts.filter(x => x.id !== p.id)); }} className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors" title={storeIsAr ? 'حذف المنتج' : 'Supprimer'}>
@@ -2899,7 +2901,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
              
              <div className="flex-1 overflow-y-auto p-4 md:p-8 flex justify-center items-start">
                 <div className={`bg-white shadow-2xl rounded-b-2xl overflow-hidden transition-all duration-300 ring-1 ring-slate-900/5 ${previewDevice === 'mobile' ? 'w-[375px] rounded-t-3xl min-h-[812px]' : 'w-full max-w-5xl'}`}>
-                   <StorePreviewWrapper isModal={true} />
+                  <StorePreviewWrapper isModal={true} initialProductId={previewProductId} />
                 </div>
              </div>
           </div>
