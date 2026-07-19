@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2 } from 'lucide-react';
+import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import StoreManagerDashboard from '../components/Tools/StoreManagerDashboard';
 import ProAITools from '../components/Tools/ProAITools';
@@ -39,7 +39,15 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const config = getSavedConfig();
   const { isAr } = useLang();
   const [platformMode, setPlatformMode] = useState<'gestion'|'builder'>('gestion');
-  const [builderMode, setBuilderMode] = useState<'dashboard'|'editor'|'pro_ai'>('dashboard');
+  const [builderMode, setBuilderModeState] = useState<'dashboard'|'editor'|'pro_ai'>(
+    (localStorage.getItem('beya_builder_mode') as any) || 'dashboard'
+  );
+  
+  const setBuilderMode = (mode: 'dashboard'|'editor'|'pro_ai') => {
+    localStorage.setItem('beya_builder_mode', mode);
+    setBuilderModeState(mode);
+  };
+
   const [productsViewMode, setProductsViewMode] = useState<'list'|'grid'>('list');
   const [activeTab, setActiveTab] = useState<string>('orders');
   const [storeName, setStoreName] = useState(config.storeName || 'My Brand');
@@ -1658,6 +1666,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
           <button onClick={handleSave} disabled={isSaving} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${isSaving ? 'bg-green-500 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
             {isSaving ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />} {isSaving ? (storeIsAr ? 'تم الحفظ' : 'Enregistré') : (storeIsAr ? 'حفظ' : 'Enregistrer')}
           </button>
+          <button onClick={() => setShowPreview(true)} className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 px-4 py-2 rounded-xl text-sm font-black hover:bg-indigo-100 hover:scale-105 transition-all shadow-sm" title={storeIsAr ? 'محرر الموقع الاحترافي' : 'Éditeur Visuel PRO'}>
+            <LayoutTemplate className="w-4 h-4" /> {storeIsAr ? 'بناء الموقع' : 'Éditeur PRO'}
+          </button>
           <button onClick={() => {
              const url = customDomain ? `https://${customDomain}` : `${window.location.origin}${window.location.pathname}#/store/${storeName.toLowerCase().replace(/\s+/g, '')}`;
              window.open(url, '_blank');
@@ -1913,7 +1924,29 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               {/* DESIGN TAB (NEW!) */}
               {activeTab === 'design' && (
                  <div className="space-y-6">
-                    <div>
+                    {/* PRO BUILDER BANNER */}
+                    <div className="bg-gradient-to-br from-indigo-600 to-violet-600 rounded-2xl p-6 text-white shadow-xl shadow-indigo-500/30 relative overflow-hidden group animate-in fade-in slide-in-from-bottom-2 duration-500">
+                       <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
+                       <div className="absolute -right-10 -top-10 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+                       
+                       <div className="relative z-10 flex flex-col items-center text-center">
+                          <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center mb-3 border border-white/20 backdrop-blur-sm">
+                             <LayoutTemplate className="w-6 h-6 text-white" />
+                          </div>
+                          <h3 className="text-xl font-black tracking-tight mb-2">
+                             {storeIsAr ? 'محرر الموقع الاحترافي' : 'Éditeur Visuel PRO'}
+                          </h3>
+                          <p className="text-indigo-100 text-xs mb-5 leading-relaxed px-2 font-medium">
+                             {storeIsAr ? 'صمم موقعك بالكامل! أضف نصوصاً، صوراً، أقساماً، وتحكم بكل شيء بسهولة تامة.' : 'Concevez votre site de A à Z ! Gérez le design, le texte et les sections avec des outils pro.'}
+                          </p>
+                          <button onClick={() => setShowPreview(true)} className="w-full bg-white text-indigo-600 font-black py-3.5 rounded-xl shadow-[0_8px_16px_-6px_rgba(0,0,0,0.3)] hover:bg-slate-50 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2">
+                             <Paintbrush className="w-4 h-4" />
+                             {storeIsAr ? 'افتح المحرر المرئي' : 'Ouvrir l\'Éditeur PRO'}
+                          </button>
+                       </div>
+                    </div>
+
+                    <div className="pt-2">
                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Couleur Principale</label>
                        <div className="flex items-center gap-3 mb-3">
                           <input type="color" value={primaryColor} onChange={e => setPrimaryColor(e.target.value)} className="w-10 h-10 rounded cursor-pointer border-0 p-0" />
@@ -2373,30 +2406,106 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
       {/* FULL SCREEN PREVIEW MODAL */}
       {showPreview && (
-        <div className="fixed inset-0 z-[200] bg-slate-900 flex flex-col">
-          <div className="bg-slate-800 text-white p-4 flex items-center justify-between shadow-xl z-10">
-            <button onClick={() => setShowPreview(false)} className="flex items-center gap-2 bg-rose-500 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-rose-600 transition-colors shrink-0">
-              Fermer l'aperçu
-            </button>
-            <div className="flex-1 flex justify-center px-4">
-               <div className="w-full max-w-2xl bg-slate-900/80 rounded-xl px-4 py-2.5 flex items-center gap-3 text-slate-300 text-sm font-mono border border-slate-700/50 shadow-inner">
-                  <Globe className="w-4 h-4 text-slate-500" />
-                  <span className="opacity-50">https://</span>
-                  <span className="text-white">{customDomain || `${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`}</span>
-               </div>
-            </div>
-            <div className="w-[180px] shrink-0 flex justify-end">
-               <div className="bg-white/10 backdrop-blur-sm px-3 py-2 rounded-xl flex items-center gap-2 border border-white/20">
-                  <span className="text-xs font-black text-white/70 uppercase tracking-wider">{storeIsAr ? 'اللون:' : 'Couleur:'}</span>
-                  <label className="w-8 h-8 rounded-full cursor-pointer shadow-inner border-2 border-white/30" style={{ backgroundColor: primaryColor }} title="Changer la couleur">
-                     <input type="color" className="opacity-0 w-0 h-0" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} />
-                  </label>
-               </div>
-            </div>
+        <div className="fixed inset-0 z-[200] bg-slate-100 flex overflow-hidden">
+          {/* VISUAL BUILDER SIDEBAR (LEFT) */}
+          <div className="w-[320px] bg-white border-r border-slate-200 flex flex-col shrink-0 z-20 shadow-2xl">
+             <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                <div className="flex items-center gap-2 text-indigo-700">
+                   <LayoutTemplate className="w-5 h-5" />
+                   <span className="font-black tracking-tight">{storeIsAr ? 'المحرر المرئي' : 'Éditeur Visuel PRO'}</span>
+                </div>
+                <button onClick={() => setShowPreview(false)} className="w-8 h-8 flex items-center justify-center bg-white border border-slate-200 text-slate-400 rounded hover:text-rose-500 transition-colors">
+                   <X className="w-4 h-4" />
+                </button>
+             </div>
+             
+             <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
+                   <h4 className="text-xs font-bold text-indigo-900 uppercase tracking-wider mb-3">{storeIsAr ? 'العناصر الأساسية' : 'Éléments de Base'}</h4>
+                   <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-indigo-300 hover:shadow-md transition-all group">
+                         <div className="w-8 h-8 rounded bg-indigo-50 flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform"><Type className="w-4 h-4" /></div>
+                         <span className="text-[10px] font-bold text-slate-600">{storeIsAr ? 'عنوان' : 'Titre'}</span>
+                      </div>
+                      <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-indigo-300 hover:shadow-md transition-all group">
+                         <div className="w-8 h-8 rounded bg-emerald-50 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform"><ImageIcon className="w-4 h-4" /></div>
+                         <span className="text-[10px] font-bold text-slate-600">{storeIsAr ? 'صورة' : 'Image'}</span>
+                      </div>
+                      <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-indigo-300 hover:shadow-md transition-all group">
+                         <div className="w-8 h-8 rounded bg-amber-50 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform"><MousePointerClick className="w-4 h-4" /></div>
+                         <span className="text-[10px] font-bold text-slate-600">{storeIsAr ? 'زر' : 'Bouton'}</span>
+                      </div>
+                      <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-indigo-300 hover:shadow-md transition-all group">
+                         <div className="w-8 h-8 rounded bg-rose-50 flex items-center justify-center text-rose-500 group-hover:scale-110 transition-transform"><LayoutGrid className="w-4 h-4" /></div>
+                         <span className="text-[10px] font-bold text-slate-600">{storeIsAr ? 'منتجات' : 'Produits'}</span>
+                      </div>
+                   </div>
+                </div>
+
+                <div className="space-y-4">
+                   <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">{storeIsAr ? 'إعدادات القسم المحدد' : 'Paramètres de la Section'}</h4>
+                   
+                   <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{storeIsAr ? 'النص الرئيسي' : 'Texte Principal'}</label>
+                      <input type="text" value={heroTitle} onChange={(e) => setHeroTitle(e.target.value)} className="w-full text-sm font-medium bg-slate-50 border border-slate-200 rounded-lg px-3 py-2" />
+                   </div>
+                   
+                   <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{storeIsAr ? 'اللون الرئيسي' : 'Couleur Principale'}</label>
+                      <div className="flex items-center gap-2">
+                         <label className="w-8 h-8 rounded-full border border-slate-200 cursor-pointer flex-shrink-0" style={{ backgroundColor: primaryColor }}>
+                            <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="opacity-0 w-0 h-0" />
+                         </label>
+                         <input type="text" value={primaryColor} readOnly className="flex-1 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg px-2 py-1" />
+                      </div>
+                   </div>
+
+                   <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{storeIsAr ? 'صورة الغلاف' : 'Image de Couverture'}</label>
+                      <label className="w-full h-24 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors group relative overflow-hidden">
+                         {heroImage ? (
+                            <img src={heroImage} className="w-full h-full object-cover opacity-50 group-hover:opacity-30 transition-opacity" />
+                         ) : null}
+                         <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <ImageIcon className="w-5 h-5 text-slate-400 mb-1" />
+                            <span className="text-[10px] font-bold text-slate-500">{storeIsAr ? 'تغيير الصورة' : 'Changer l\'image'}</span>
+                         </div>
+                         <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) setHeroImage(await readFileAsBase64(file));
+                         }} />
+                      </label>
+                   </div>
+                </div>
+             </div>
+
+             <div className="p-4 border-t border-slate-100 bg-slate-50">
+                <button onClick={handleSave} className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 flex items-center justify-center gap-2">
+                   <Save className="w-4 h-4" /> {storeIsAr ? 'حفظ التغييرات' : 'Sauvegarder'}
+                </button>
+             </div>
           </div>
-          <div className="flex-1 overflow-y-auto bg-slate-100 flex justify-center">
-             <div className="w-full">
-                <StorePreviewWrapper isModal={true} />
+
+          {/* VISUAL BUILDER CANVAS (RIGHT) */}
+          <div className="flex-1 flex flex-col relative bg-slate-200/50">
+             <div className="h-12 bg-white border-b border-slate-200 flex items-center justify-center gap-4 px-4 shadow-sm z-10 shrink-0">
+                <button onClick={() => setPreviewDevice('desktop')} className={`p-1.5 rounded ${previewDevice === 'desktop' ? 'bg-slate-100 text-slate-800' : 'text-slate-400 hover:text-slate-600'}`}>
+                   <Monitor className="w-4 h-4" />
+                </button>
+                <button onClick={() => setPreviewDevice('mobile')} className={`p-1.5 rounded ${previewDevice === 'mobile' ? 'bg-slate-100 text-slate-800' : 'text-slate-400 hover:text-slate-600'}`}>
+                   <Smartphone className="w-4 h-4" />
+                </button>
+                <div className="w-px h-4 bg-slate-200 mx-2"></div>
+                <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
+                   <Globe className="w-3 h-3" />
+                   {customDomain || `${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`}
+                </div>
+             </div>
+             
+             <div className="flex-1 overflow-y-auto p-4 md:p-8 flex justify-center items-start">
+                <div className={`bg-white shadow-2xl rounded-b-2xl overflow-hidden transition-all duration-300 ring-1 ring-slate-900/5 ${previewDevice === 'mobile' ? 'w-[375px] rounded-t-3xl min-h-[812px]' : 'w-full max-w-5xl'}`}>
+                   <StorePreviewWrapper isModal={true} />
+                </div>
              </div>
           </div>
         </div>
