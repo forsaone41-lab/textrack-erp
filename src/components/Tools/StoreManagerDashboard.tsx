@@ -22,19 +22,19 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                   url: st.domain || `${st.id}.beyacreative.com`,
                   plan: 'PRO', // SaaS defaults to PRO for now
                   status: 'Active',
-                  visitors: Math.floor(Math.random() * 5000), // Mocked stats for demo
-                  revenue: `${Math.floor(Math.random() * 20000)} MAD`
+                  visitors: st.config_json?.stats?.visitors || 0,
+                  revenue: st.config_json?.stats?.revenue ? `${st.config_json.stats.revenue} MAD` : '0 MAD'
                }));
                // If no real stores, fallback to a mock one to show the UI
                setStores(realStores.length > 0 ? realStores : [
-                  { id: 'mock1', name: 'Fashlow Maroc', url: 'fashlow.store', plan: 'PRO', status: 'Active', visitors: 1240, revenue: '12,450 MAD' }
+                  { id: 'mock1', name: 'Fashlow Maroc', url: 'fashlow.store', plan: 'PRO', status: 'Active', visitors: 0, revenue: '0 MAD' }
                ]);
             } else {
-                setStores([{ id: 'mock1', name: 'Fashlow Maroc', url: 'fashlow.store', plan: 'PRO', status: 'Active', visitors: 1240, revenue: '12,450 MAD' }]);
+                setStores([{ id: 'mock1', name: 'Fashlow Maroc', url: 'fashlow.store', plan: 'PRO', status: 'Active', visitors: 0, revenue: '0 MAD' }]);
             }
          } catch (err) {
             console.warn("Supabase fetch failed", err);
-            setStores([{ id: 'mock1', name: 'Fashlow Maroc', url: 'fashlow.store', plan: 'PRO', status: 'Active', visitors: 1240, revenue: '12,450 MAD' }]);
+            setStores([{ id: 'mock1', name: 'Fashlow Maroc', url: 'fashlow.store', plan: 'PRO', status: 'Active', visitors: 0, revenue: '0 MAD' }]);
          } finally {
             setIsLoading(false);
          }
