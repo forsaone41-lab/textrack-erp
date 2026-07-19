@@ -219,6 +219,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     copyright: '© 2024 Mon Magasin. Tous droits réservés.',
     links: ['À Propos', 'Contact', 'Politique de Retour', 'Termes & Conditions']
   });
+  const [showReviews, setShowReviews] = useState(config.showReviews !== undefined ? config.showReviews : true);
   const [newsletterTitle, setNewsletterTitle] = useState(config.newsletterTitle || 'Rejoignez notre Newsletter');
   const [newsletterSubtitle, setNewsletterSubtitle] = useState(config.newsletterSubtitle || 'Recevez nos dernières offres et nouveautés directement dans votre boîte mail.');
   const [featuresData, setFeaturesData] = useState(config.featuresData || [
@@ -385,7 +386,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        appsConfig,
        deliveryCompanies,
        secondaryColor,
-       buttonStyle
+       buttonStyle,
+       showReviews
     };
     localStorage.setItem('beya_store_config', JSON.stringify(storeConfig));
     
@@ -1862,7 +1864,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             </div>
          );
       })()}
-\n            {/* Footer */}
+{/* Footer */}
       <div className="bg-[#f8f9fa] py-16 px-8 text-center text-slate-500 text-xs">
          <LogoEditor className={`text-3xl font-black tracking-tighter text-slate-900 mx-auto mb-8 opacity-20 ${fontFamily}`} style={{ color: primaryColor }} />
          <p>{tr(footerSettings.copyright)}</p>
@@ -2089,6 +2091,22 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                          <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center">
                             <span className="text-white font-black tracking-widest uppercase drop-shadow-md">{activeTheme.name}</span>
                          </div>
+                      </div>
+
+                      {/* Reviews Toggle */}
+                      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mt-4">
+                         <h4 className="text-xs font-black text-slate-800 mb-4 uppercase tracking-wider flex items-center gap-2">
+                           <Star className="w-4 h-4 text-amber-500" /> {storeIsAr ? 'تقييمات العملاء' : 'Avis Clients (Reviews)'}
+                         </h4>
+                         <label className="flex items-center justify-between gap-3 p-4 bg-slate-50 border border-slate-100 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
+                            <div>
+                               <span className="text-sm font-bold text-slate-700">{storeIsAr ? 'تفعيل قسم التقييمات' : 'Activer la section Avis'}</span>
+                               <p className="text-[10px] text-slate-400 mt-0.5">{storeIsAr ? 'السماح للعملاء بترك تقييماتهم' : 'Permettre aux clients de laisser des avis'}</p>
+                            </div>
+                            <div onClick={() => setShowReviews(!showReviews)} className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer flex-shrink-0 ${showReviews ? 'bg-indigo-600' : 'bg-slate-200'}`}>
+                               <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${showReviews ? 'translate-x-7' : 'translate-x-1'}`} />
+                            </div>
+                         </label>
                       </div>
                       <p className="text-xs font-bold text-slate-800 text-center py-1">Layout: {activeTheme.layout}</p>
                     </div>
