@@ -835,7 +835,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             ))}
          </div>
          <LogoEditor onClick={() => setPage('home')} className="text-3xl font-normal tracking-wide" style={{ color: primaryColor }} />
-         <button className="relative" onClick={() => alert(storeIsAr ? 'تم النقر على السلة!' : 'Panier cliqué !')}>
+         <button className="relative" onClick={() => setIsCartOpen(true)}>
             <ShoppingBag className="w-6 h-6 font-light" />
             {cartCount > 0 && <span className="absolute -top-2 -right-2 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: primaryColor }}>{cartCount}</span>}
          </button>
@@ -1026,7 +1026,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             {storePages.map(p => (
                <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer hover:text-white transition-colors" style={{ color: page === p.id ? primaryColor : '#888' }}>{tr(p.title)}</span>
             ))}
-            <span className="cursor-pointer hover:text-white flex items-center gap-2" onClick={() => alert(storeIsAr ? 'تم النقر على السلة!' : 'Panier cliqué !')}>
+            <span className="cursor-pointer hover:text-white flex items-center gap-2" onClick={() => setIsCartOpen(true)}>
                CART ({cartCount})
             </span>
          </div>
@@ -1209,7 +1209,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer capitalize px-4 py-2 rounded-full transition-colors" style={{ backgroundColor: page === p.id ? primaryColor : 'transparent', color: page === p.id ? '#fff' : '#64748b' }}>{tr(p.title)}</span>
             ))}
          </div>
-         <button className="relative p-3 bg-white rounded-full shadow-sm hover:scale-105 transition-transform mr-1" onClick={() => alert(storeIsAr ? 'تم النقر على السلة!' : 'Panier cliqué !')}>
+         <button className="relative p-3 bg-white rounded-full shadow-sm hover:scale-105 transition-transform mr-1" onClick={() => setIsCartOpen(true)}>
             <ShoppingBag className="w-5 h-5" style={{ color: primaryColor }} />
             {cartCount > 0 && <span className="absolute -top-1 -right-1 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm" style={{ backgroundColor: '#f43f5e' }}>{cartCount}</span>}
          </button>
@@ -1429,7 +1429,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1 cursor-pointer"><img src="https://flagcdn.com/w20/fr.png" alt="FR" className="w-4 h-3 rounded-sm object-cover" /> FR</span>
             <Search className="w-5 h-5 cursor-pointer hover:opacity-70 transition-opacity" />
             <Users className="w-5 h-5 cursor-pointer hover:opacity-70 transition-opacity" />
-            <button className="relative hover:opacity-70 transition-opacity" onClick={() => alert(storeIsAr ? 'تم النقر على السلة!' : 'Panier cliqué !')}>
+            <button className="relative hover:opacity-70 transition-opacity" onClick={() => setIsCartOpen(true)}>
                <ShoppingBag className="w-5 h-5" />
                {cartCount > 0 && <span className="absolute -bottom-1 -right-1 text-white text-[9px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center bg-black">{cartCount}</span>}
             </button>
@@ -1466,7 +1466,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                      <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-[3/4] bg-[#f5f1e9] mb-4 relative overflow-hidden flex items-center justify-center">
                            <img src={getCoverImage(p)} alt={p.name} className="w-full h-full object-cover mix-blend-multiply transition-transform duration-500 group-hover:scale-105" />
-                           <button className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/50 transition-colors" onClick={(e) => { e.stopPropagation(); alert(storeIsAr ? 'تمت الإضافة للمفضلة' : 'Ajouté aux favoris'); }}>
+                           <button className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/50 transition-colors" onClick={(e) => { e.stopPropagation(); }}>
                               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
                            </button>
                         </div>
