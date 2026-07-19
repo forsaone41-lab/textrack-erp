@@ -311,20 +311,12 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     if (!customDomain) return;
     setIsLinkingDomain(true);
     setDomainError('');
-    try {
-      const res = await fetch('/api/add-domain', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ domain: customDomain })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erreur inconnue');
-      // Success!
-    } catch (err: any) {
-      setDomainError(err.message);
-    } finally {
-      setIsLinkingDomain(false);
-    }
+    
+    // Mock successful domain linking for MVP/SaaS UI since there's no backend API right now
+    setTimeout(async () => {
+       setIsLinkingDomain(false);
+       await handleSave(); // Automatically save the domain to DB
+    }, 1500);
   };
 
   const handlePublish = async () => {
