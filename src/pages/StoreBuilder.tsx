@@ -404,7 +404,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer capitalize hover:opacity-70 transition-opacity" style={{ color: page === p.id ? primaryColor : '#64748b' }}>{tr(p.title)}</span>
             ))}
          </div>
-         <button className="relative hover:scale-110 transition-transform">
+         <button onClick={() => setIsCartOpen(true)} className="relative hover:scale-110 transition-transform">
             <ShoppingBag className="w-6 h-6" />
             {cartCount > 0 && <span className="absolute -top-1 -right-1 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: primaryColor }}>{cartCount}</span>}
          </button>
@@ -1173,6 +1173,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     const [activeProductId, setActiveProductId] = useState<any>(null);
     const [activeCategory, setActiveCategory] = useState('All');
     const [sortBy, setSortBy] = useState('featured');
+    const [isCartOpen, setIsCartOpen] = useState(false);
 
     const navigateToProduct = (id: any) => {
         setActiveProductId(id);
@@ -1190,7 +1191,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        return 0;
     });
 
-    const props = { isModal, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, storeLang };
+    const props = { isModal, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, storeLang, isCartOpen, setIsCartOpen };
 
   
   const LayoutClement = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy }: any) => {
@@ -1498,7 +1499,63 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     return (
        <>
           <Layout />
-          
+          {isCartOpen && (
+             <div className="fixed inset-0 z-[999] flex justify-end bg-black/50 backdrop-blur-sm transition-opacity" onClick={() => setIsCartOpen(false)}>
+                <div className="w-full max-w-md h-full bg-white shadow-2xl flex flex-col transform transition-transform" onClick={e => e.stopPropagation()}>
+                   <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                      <h2 className="text-xl font-black uppercase tracking-tight flex items-center gap-2">
+                         <ShoppingBag className="w-5 h-5" />
+                         {storeIsAr ? 'سلة المشتريات' : 'Votre Panier'}
+                      </h2>
+                      <button onClick={() => setIsCartOpen(false)} className="w-8 h-8 flex items-center justify-center bg-white rounded-full border border-slate-200 text-slate-500 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-all">
+                         <X className="w-4 h-4" />
+                      </button>
+                   </div>
+                   
+                   <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
+                      {cartCount === 0 ? (
+                         <div className="flex-1 flex flex-col items-center justify-center text-center opacity-50 space-y-4">
+                            <ShoppingBag className="w-16 h-16 text-slate-300" />
+                            <p className="text-lg font-bold text-slate-500">{storeIsAr ? 'السلة فارغة' : 'Votre panier est vide'}</p>
+                         </div>
+                      ) : (
+                         Array.from({ length: cartCount }).map((_, i) => (
+                            <div key={i} className="flex gap-4 p-4 border border-slate-100 rounded-2xl bg-white shadow-sm">
+                               <div className="w-20 h-20 bg-slate-100 rounded-xl overflow-hidden flex items-center justify-center">
+                                  <ImageIcon className="w-8 h-8 text-slate-300" />
+                               </div>
+                               <div className="flex-1 flex flex-col justify-center">
+                                  <h4 className="font-bold text-slate-800">{storeIsAr ? 'منتج تجريبي' : 'Produit Démo'}</h4>
+                                  <p className="text-sm font-black mt-1" style={{ color: primaryColor }}>299 MAD</p>
+                                  <div className="flex items-center gap-3 mt-2">
+                                     <span className="text-xs text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded">Qt: 1</span>
+                                     <button className="text-xs text-red-500 font-bold hover:underline">{storeIsAr ? 'حذف' : 'Retirer'}</button>
+                                  </div>
+                               </div>
+                            </div>
+                         ))
+                      )}
+                   </div>
+                   
+                   <div className="p-6 border-t border-slate-100 bg-slate-50">
+                      <div className="flex justify-between items-center mb-6">
+                         <span className="text-sm font-bold text-slate-500 uppercase">{storeIsAr ? 'المجموع' : 'Total'}</span>
+                         <span className="text-2xl font-black" style={{ color: primaryColor }}>
+                            {cartCount * 299} MAD
+                         </span>
+                      </div>
+                      <button 
+                         disabled={cartCount === 0}
+                         className="w-full py-4 text-white font-black uppercase tracking-widest text-sm hover:scale-[1.02] active:scale-[0.98] transition-transform rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2" 
+                         style={{ backgroundColor: primaryColor }}
+                      >
+                         <CheckCircle className="w-5 h-5" />
+                         {storeIsAr ? 'إتمام الطلب' : 'Valider la commande'}
+                      </button>
+                   </div>
+                </div>
+             </div>
+          )}
        </>
     );
   };
