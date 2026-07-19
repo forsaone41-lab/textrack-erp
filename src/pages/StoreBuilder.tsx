@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick } from 'lucide-react';
+import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import StoreManagerDashboard from '../components/Tools/StoreManagerDashboard';
 import ProAITools from '../components/Tools/ProAITools';
@@ -190,35 +190,40 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     { id: 'collections', title: 'Collections', isDefault: true },
     { id: 'about', title: 'About', isDefault: false }
   ]);
+  const [footerSettings, setFooterSettings] = useState(config.footerSettings || {
+    copyright: '© 2024 Mon Magasin. Tous droits réservés.',
+    links: ['À Propos', 'Contact', 'Politique de Retour', 'Termes & Conditions']
+  });
+  const [newsletterTitle, setNewsletterTitle] = useState(config.newsletterTitle || 'Rejoignez notre Newsletter');
+  const [newsletterSubtitle, setNewsletterSubtitle] = useState(config.newsletterSubtitle || 'Recevez nos dernières offres et nouveautés directement dans votre boîte mail.');
+  const [featuresData, setFeaturesData] = useState(config.featuresData || [
+    { icon: 'Truck', title: 'Livraison Rapide', subtitle: 'Partout au Maroc' },
+    { icon: 'ShieldCheck', title: 'Paiement Sécurisé', subtitle: '100% garanti' },
+    { icon: 'Star', title: 'Qualité Premium', subtitle: 'Produits certifiés' }
+  ]);
+  const [videoUrl, setVideoUrl] = useState(config.videoUrl || '');
   const [newPageTitle, setNewPageTitle] = useState('');
   const [isPageModalOpen, setIsPageModalOpen] = useState(false);
   const [pageForm, setPageForm] = useState<any>(null);
   
   const [storeLogo, setStoreLogo] = useState(config.storeLogo || '');
   const [storeFavicon, setStoreFavicon] = useState(config.storeFavicon || '');
-  const [footerSettings, setFooterSettings] = useState(config.footerSettings || {
-    copyright: '© 2026 My Brand. Tous droits réservés.',
-    showPrivacy: true,
-    showTerms: true,
-    showCookies: true
-  });
-
+  
   useEffect(() => {
      if (isLiveStore) {
         document.title = storeName;
-        const finalIcon = storeFavicon || storeLogo;
-        if (finalIcon) {
-           document.querySelectorAll("link[rel*='icon']").forEach(node => {
-               (node as HTMLLinkElement).href = finalIcon;
-           });
-           let appleLink = document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement;
-           if (!appleLink) {
-               appleLink = document.createElement('link');
-               appleLink.rel = 'apple-touch-icon';
-               document.getElementsByTagName('head')[0].appendChild(appleLink);
-           }
-           appleLink.href = finalIcon;
+        const finalIcon = storeFavicon || storeLogo || "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛍️</text></svg>";
+        
+        document.querySelectorAll("link[rel*='icon']").forEach(node => {
+            (node as HTMLLinkElement).href = finalIcon;
+        });
+        let appleLink = document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement;
+        if (!appleLink) {
+            appleLink = document.createElement('link');
+            appleLink.rel = 'apple-touch-icon';
+            document.getElementsByTagName('head')[0].appendChild(appleLink);
         }
+        appleLink.href = finalIcon;
      }
   }, [isLiveStore, storeName, storeLogo, storeFavicon]);
 
@@ -323,7 +328,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        buyMode,
        homeBlocks,
        sliderImages,
-       footerSettings
+       footerSettings,
+       newsletterTitle,
+       newsletterSubtitle,
+       featuresData,
+       videoUrl
     };
     localStorage.setItem('beya_store_config', JSON.stringify(storeConfig));
     
@@ -548,7 +557,51 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                     </div>
                 );
                 
-                return null;
+                 if (block === 'newsletter') return (
+                    <div key="newsletter" className="w-full py-16 px-4 bg-slate-50 border-t border-b border-slate-100 flex flex-col items-center justify-center text-center">
+                       <h3 className="text-2xl font-black text-slate-900 mb-2">{newsletterTitle}</h3>
+                       <p className="text-slate-500 mb-6 max-w-md text-sm">{newsletterSubtitle}</p>
+                       <div className="flex w-full max-w-md">
+                          <input type="email" placeholder="Votre email" className="flex-1 bg-white border border-slate-200 rounded-l-lg px-4 py-3 outline-none focus:border-slate-300" />
+                          <button className="px-6 py-3 text-white font-bold rounded-r-lg" style={{ backgroundColor: primaryColor }}>S'abonner</button>
+                       </div>
+                    </div>
+                 );
+                 
+                 if (block === 'features') return (
+                    <div key="features" className="w-full py-12 px-4 bg-white border-b border-slate-100">
+                       <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                          {featuresData.map((f: any, i: number) => (
+                             <div key={i} className="flex flex-col items-center">
+                                <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}>
+                                   {f.icon === 'Truck' && <Truck className="w-6 h-6" />}
+                                   {f.icon === 'ShieldCheck' && <ShieldCheck className="w-6 h-6" />}
+                                   {f.icon === 'Star' && <Star className="w-6 h-6" />}
+                                </div>
+                                <h4 className="font-bold text-slate-900">{f.title}</h4>
+                                <p className="text-slate-500 text-sm mt-1">{f.subtitle}</p>
+                             </div>
+                          ))}
+                       </div>
+                    </div>
+                 );
+                 
+                 if (block === 'video') return (
+                    <div key="video" className="w-full py-16 px-4 bg-white border-b border-slate-100 flex flex-col items-center justify-center">
+                       <div className="w-full max-w-4xl aspect-video bg-slate-100 rounded-2xl overflow-hidden shadow-xl">
+                          {videoUrl ? (
+                             <iframe src={videoUrl} className="w-full h-full" allowFullScreen allow="autoplay; encrypted-media"></iframe>
+                          ) : (
+                             <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                                <Video className="w-16 h-16 mb-4 opacity-50" />
+                                <p>Aucune vidéo sélectionnée</p>
+                             </div>
+                          )}
+                       </div>
+                    </div>
+                 );
+                 
+                 return null;
              })}
           </div>
           </>
@@ -1558,6 +1611,57 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                      </div>
                   ))}
                </div>
+            </div>
+            
+            {/* Dynamic Blocks */}
+            <div className="w-full flex flex-col items-center">
+              {homeBlocks.map((block: string) => {
+                 if (block === 'newsletter') return (
+                    <div key="newsletter" className="w-full py-20 px-4 bg-white border-t border-slate-100 flex flex-col items-center justify-center text-center">
+                       <h3 className="text-3xl font-black text-slate-900 mb-3 tracking-tighter uppercase">{newsletterTitle}</h3>
+                       <p className="text-slate-500 mb-8 max-w-md text-sm leading-relaxed">{newsletterSubtitle}</p>
+                       <div className="flex w-full max-w-md shadow-2xl shadow-slate-200/50 rounded-r-full rounded-l-full overflow-hidden">
+                          <input type="email" placeholder="Votre email" className="flex-1 bg-[#f8f9fa] border-none px-6 py-4 outline-none text-sm" />
+                          <button className="px-8 py-4 text-white text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-opacity" style={{ backgroundColor: primaryColor }}>Subscribe</button>
+                       </div>
+                    </div>
+                 );
+                 
+                 if (block === 'features') return (
+                    <div key="features" className="w-full py-16 px-4 bg-[#f8f9fa] border-t border-slate-100">
+                       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+                          {featuresData.map((f: any, i: number) => (
+                             <div key={i} className="flex flex-col items-center group">
+                                <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6 bg-white shadow-sm group-hover:-translate-y-2 transition-transform duration-300" style={{ color: primaryColor }}>
+                                   {f.icon === 'Truck' && <Truck className="w-6 h-6" />}
+                                   {f.icon === 'ShieldCheck' && <ShieldCheck className="w-6 h-6" />}
+                                   {f.icon === 'Star' && <Star className="w-6 h-6" />}
+                                </div>
+                                <h4 className="font-bold text-slate-900 uppercase tracking-widest text-xs mb-2">{f.title}</h4>
+                                <p className="text-slate-400 text-xs leading-relaxed max-w-[200px]">{f.subtitle}</p>
+                             </div>
+                          ))}
+                       </div>
+                    </div>
+                 );
+                 
+                 if (block === 'video') return (
+                    <div key="video" className="w-full py-24 px-4 bg-white flex flex-col items-center justify-center">
+                       <div className="w-full max-w-5xl aspect-video bg-slate-100 overflow-hidden relative group">
+                          {videoUrl ? (
+                             <iframe src={videoUrl} className="w-full h-full" allowFullScreen allow="autoplay; encrypted-media"></iframe>
+                          ) : (
+                             <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 bg-slate-50">
+                                <Video className="w-12 h-12 mb-4 opacity-30 group-hover:scale-110 transition-transform" />
+                                <p className="text-xs uppercase tracking-widest font-bold">Promotion Video Area</p>
+                             </div>
+                          )}
+                       </div>
+                    </div>
+                 );
+                 
+                 return null;
+              })}
             </div>
          </div>
       )}
