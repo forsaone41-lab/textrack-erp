@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2 } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
+import StoreManagerDashboard from '../components/Tools/StoreManagerDashboard';
+import ProAITools from '../components/Tools/ProAITools';
 
 const THEMES = [
   { id: 'streetwear', name: 'Streetwear Pro', layout: 'hero-center', defaultColor: '#0f172a', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop' },
@@ -29,6 +31,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const config = getSavedConfig();
   const { isAr } = useLang();
   const [platformMode, setPlatformMode] = useState<'gestion'|'builder'>('gestion');
+  const [builderMode, setBuilderMode] = useState<'dashboard'|'editor'|'pro_ai'>('dashboard');
   const [productsViewMode, setProductsViewMode] = useState<'list'|'grid'>('list');
   const [activeTab, setActiveTab] = useState<string>('orders');
   const [storeName, setStoreName] = useState(config.storeName || 'My Brand');
@@ -1445,12 +1448,28 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     );
   }
 
+  if (builderMode === 'dashboard') {
+     return (
+       <div className={`space-y-6 ${storeIsAr ? 'text-right' : 'text-left'} bg-slate-50 min-h-screen p-6 md:p-12`}>
+         <StoreManagerDashboard onSelectStore={() => setBuilderMode('editor')} onOpenAI={() => setBuilderMode('pro_ai')} storeIsAr={storeIsAr} />
+       </div>
+     );
+  }
+  
+  if (builderMode === 'pro_ai') {
+     return (
+       <div className={`space-y-6 ${storeIsAr ? 'text-right' : 'text-left'} bg-slate-50 min-h-screen p-6 md:p-12`}>
+         <ProAITools onBack={() => setBuilderMode('dashboard')} storeIsAr={storeIsAr} />
+       </div>
+     );
+  }
+
   return (
     <div className={`space-y-6 ${storeIsAr ? 'text-right' : 'text-left'} bg-slate-50 min-h-screen p-6`}>
       {/* Top Navigation / Back Button */}
       <div className="flex items-center justify-between mb-4">
-         <button onClick={() => window.location.href = '#/'} className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors font-bold text-sm bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-200">
-            {storeIsAr ? '→ العودة إلى BEYA ERP' : '← Retour à BEYA ERP'}
+         <button onClick={() => setBuilderMode('dashboard')} className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors font-bold text-sm bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-200">
+            {storeIsAr ? '→ العودة إلى لوحة المتاجر' : '← Retour aux Boutiques'}
          </button>
          <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
