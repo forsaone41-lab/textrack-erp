@@ -1281,8 +1281,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   );
   };
 
-  const LayoutMazia = ({ storeName, storeLogo, primaryColor, fontFamily, heroImage, heroTitle, heroSubtitle, heroButtonText, homeCollectionsTitle, allCollectionsTitle, previewDevice, isModal, onProductClick, onBuyNow, storePages, activeTheme }: any) => {
-    const [page, setPage] = useState('home');
+  const LayoutMazia = ({ isModal, page, setPage, activeProductId, navigateToProduct }: any) => {
     const [selectedSize, setSelectedSize] = useState<string>('');
     const [selectedColor, setSelectedColor] = useState<string>('');
     const [quantity, setQuantity] = useState(1);
@@ -1361,7 +1360,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                </div>
                <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-2' : 'grid-cols-4'}`}>
                   {storeProducts.slice(0, 8).map((p: any) => (
-                     <div key={p.id} className="group cursor-pointer" onClick={() => onProductClick(p)}>
+                     <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
                         <div className="relative aspect-[3/4] bg-[#f8f9fa] mb-4 overflow-hidden">
                            <img src={getCoverImage(p)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                            {p.id === 1 && <div className="absolute top-3 right-3 bg-red-600 text-white text-[9px] font-bold px-2 py-0.5 uppercase tracking-wider">Sale</div>}
@@ -1389,7 +1388,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             <h2 className="text-3xl font-black text-center mb-16 uppercase tracking-tight">{tr(allCollectionsTitle || 'ALL PRODUCTS')}</h2>
             <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-2' : 'grid-cols-4'}`}>
                {storeProducts.map((p: any) => (
-                  <div key={p.id} className="group cursor-pointer" onClick={() => onProductClick(p)}>
+                  <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
                      <div className="relative aspect-[3/4] bg-[#f8f9fa] mb-4 overflow-hidden">
                         <img src={getCoverImage(p)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white text-slate-900 text-[10px] font-bold uppercase tracking-widest px-6 py-2 shadow-lg whitespace-nowrap">
