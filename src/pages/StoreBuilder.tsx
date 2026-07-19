@@ -1277,6 +1277,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
       </div>
       <ThemeFooter bgColor="#1a1a1a" textColor="#fff" setPage={setPage} />
+    </div>
+  );
+  };
+
   const LayoutMazia = ({ storeName, storeLogo, primaryColor, fontFamily, heroImage, heroTitle, heroSubtitle, heroButtonText, homeCollectionsTitle, allCollectionsTitle, previewDevice, isModal, onProductClick, onBuyNow, storePages, activeTheme }: any) => {
     const [page, setPage] = useState('home');
     const [selectedSize, setSelectedSize] = useState<string>('');
