@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Settings, ExternalLink, Crown, ArrowRight, TrendingUp, Sparkles, LayoutDashboard, Loader2 } from 'lucide-react';
+import { Plus, Settings, ExternalLink, Crown, ArrowRight, TrendingUp, Sparkles, LayoutDashboard, Loader2, Trash2 } from 'lucide-react';
 import { supabase } from '../../supabase';
 
 export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIsAr }: any) {
