@@ -339,13 +339,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
           updated_at: new Date()
        }, { onConflict: 'domain' });
 
-       // Also update the 'latest' fallback record so empty-domain mockups work
-       await supabase.from('stores').upsert({
-          domain: 'latest_saved_store',
-          config_json: storeConfig,
-          name: storeName,
-          updated_at: new Date()
-       }, { onConflict: 'domain' });
+       
 
     } catch (err) {
        console.warn("Supabase sync failed (Table 'stores' might not exist yet):", err);
@@ -1465,10 +1459,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   );
   };
 
-  const LayoutMazia = ({ isModal, page, setPage, activeProductId, navigateToProduct, setIsCartOpen }: any) => {
+    const LayoutMazia = ({ isModal, page, setPage, activeProductId, navigateToProduct, setIsCartOpen }: any) => {
     const [selectedSize, setSelectedSize] = useState<string>('');
     const [selectedColor, setSelectedColor] = useState<string>('');
     const [quantity, setQuantity] = useState(1);
+    const [activePDPTab, setActivePDPTab] = useState('description');
     
     return (
     <div className={`w-full min-h-full bg-white text-slate-800 flex flex-col font-sans`}>
@@ -1860,7 +1855,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             <LayoutTemplate className="w-4 h-4" /> {storeIsAr ? 'بناء الموقع' : 'Éditeur PRO'}
           </button>
           <button onClick={() => {
-             const url = customDomain ? `https://${customDomain}` : `${window.location.origin}${window.location.pathname}#/store/${storeName.toLowerCase().replace(/\s+/g, '')}`;
+             const url = customDomain ? `https://${customDomain}` : `https://${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`;
              window.open(url, '_blank');
           }} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all shadow-sm" title={storeIsAr ? 'زيارة المتجر المباشر' : 'Visiter la boutique en ligne'}>
             <ExternalLink className="w-4 h-4" /> {storeIsAr ? 'زيارة المتجر' : 'Visiter'}
@@ -3229,11 +3224,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                      <Globe className="w-5 h-5 text-indigo-600 shrink-0" />
                      <div className="flex-1 text-left overflow-hidden">
                         <p className="text-xs font-bold text-slate-400 uppercase mb-1">Lien de démonstration (Provisoire)</p>
-                        <p className="text-sm font-medium text-slate-800 truncate">{window.location.origin}{window.location.pathname}#/store/{storeName.toLowerCase().replace(/\s+/g, '')}</p>
+                        <p className="text-sm font-medium text-slate-800 truncate">https://{storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com</p>
                      </div>
                      <button 
                         onClick={() => {
-                           navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}#/store/${storeName.toLowerCase().replace(/\s+/g, '')}`);
+                           navigator.clipboard.writeText(`https://${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`);
                         }} 
                         className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 text-slate-600 transition-colors" 
                         title="Copier le lien"

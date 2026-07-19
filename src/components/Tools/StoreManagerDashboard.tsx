@@ -16,7 +16,7 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
             
             if (data) {
                // Map real data or mix with mock stats if stats are missing
-               const realStores = data.map((st: any) => ({
+               const realStores = data.filter((st: any) => st.domain !== 'latest_saved_store').map((st: any) => ({
                   id: st.id,
                   name: st.name || 'Boutique Sans Nom',
                   url: st.domain || `${st.id}.beyacreative.com`,
