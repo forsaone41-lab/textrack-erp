@@ -17,7 +17,9 @@ export default function Calculator() {
 
   const calculate = () => {
     try {
-      const result = eval(equation + display);
+      // Sanitize input to only allow numbers and basic operators to mitigate eval/Function risks
+      const sanitized = (equation + display).replace(/[^-()\\d/*+.]/g, '');
+      const result = new Function('return ' + sanitized)();
       setDisplay(String(result));
       setEquation('');
     } catch (e) {

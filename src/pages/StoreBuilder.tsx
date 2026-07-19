@@ -4,6 +4,7 @@ import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, Check
 import { useLang } from '../contexts/LangContext';
 import StoreManagerDashboard from '../components/Tools/StoreManagerDashboard';
 import ProAITools from '../components/Tools/ProAITools';
+import { supabase } from '../supabase';
 
 const THEMES = [
   { id: 'streetwear', name: 'Streetwear Pro', layout: 'hero-center', defaultColor: '#0f172a', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop' },
@@ -181,6 +182,54 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         }
      }
   }, [isLiveStore, storeName, storeLogo]);
+
+  // Fetch from Supabase for live store to handle cross-domain loading
+  useEffect(() => {
+     const fetchLiveConfig = async () => {
+        try {
+           const currentDomain = window.location.hostname;
+           // Fetch the exact domain config first
+           let { data, error } = await supabase
+              .from('stores')
+              .select('config_json')
+              .eq('domain', currentDomain)
+              .single();
+           
+           // Fallback for SaaS mockup: if domain not found, grab the latest saved store
+           if (!data) {
+              const fallback = await supabase
+                 .from('stores')
+                 .select('config_json')
+                 .order('updated_at', { ascending: false })
+                 .limit(1)
+                 .single();
+              data = fallback.data;
+           }
+           
+           if (data && data.config_json) {
+              const conf = data.config_json;
+              if (conf.storeLang) setStoreLang(conf.storeLang);
+              if (conf.storeName) setStoreName(conf.storeName);
+              if (conf.storeLogo) setStoreLogo(conf.storeLogo);
+              if (conf.activeTheme) setActiveTheme(conf.activeTheme);
+              if (conf.primaryColor) setPrimaryColor(conf.primaryColor);
+              if (conf.fontFamily) setFontFamily(conf.fontFamily);
+              if (conf.heroImage) setHeroImage(conf.heroImage);
+              if (conf.heroTitle) setHeroTitle(conf.heroTitle);
+              if (conf.heroSubtitle) setHeroSubtitle(conf.heroSubtitle);
+              if (conf.heroButtonText) setHeroButtonText(conf.heroButtonText);
+              if (conf.homeCollectionsTitle) setHomeCollectionsTitle(conf.homeCollectionsTitle);
+              if (conf.allCollectionsTitle) setAllCollectionsTitle(conf.allCollectionsTitle);
+           }
+        } catch (err) {
+           console.warn('No live config found in Supabase or table missing:', err);
+        }
+     };
+
+     if (isLiveStore) {
+        fetchLiveConfig();
+     }
+  }, [isLiveStore]);
   
   const [buyMode, setBuyMode] = useState<'cart'|'direct'|'both'|'form'>('both');
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -195,7 +244,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [isLinkingDomain, setIsLinkingDomain] = useState(false);
   const [domainError, setDomainError] = useState('');
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsSaving(true);
     const storeConfig = {
        storeLang,
@@ -212,6 +261,20 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        allCollectionsTitle
     };
     localStorage.setItem('beya_store_config', JSON.stringify(storeConfig));
+    
+    // Sync to Supabase for cross-domain live preview (SaaS mode)
+    try {
+       const domain = customDomain || `${storeName.toLowerCase().replace(/\\s+/g, '')}.beyacreative.com`;
+       await supabase.from('stores').upsert({
+          domain: domain,
+          config_json: storeConfig,
+          name: storeName,
+          updated_at: new Date()
+       }, { onConflict: 'domain' });
+    } catch (err) {
+       console.warn("Supabase sync failed (Table 'stores' might not exist yet):", err);
+    }
+    
     setTimeout(() => setIsSaving(false), 1000);
   };
 
