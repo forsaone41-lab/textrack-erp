@@ -38,7 +38,7 @@ const getSavedConfig = () => {
 export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: boolean }) {
   const config = getSavedConfig();
   const { isAr } = useLang();
-  const [platformMode, setPlatformMode] = useState<'gestion'|'builder'>('gestion');
+  const [platformMode, setPlatformMode] = useState<'gestion'|'builder'>(config.storeName ? 'gestion' : 'builder');
   const [builderMode, setBuilderModeState] = useState<'dashboard'|'editor'|'pro_ai'>(
     (localStorage.getItem('beya_builder_mode') as any) || 'dashboard'
   );
@@ -49,19 +49,19 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   };
 
   const [productsViewMode, setProductsViewMode] = useState<'list'|'grid'>('list');
-  const [activeTab, setActiveTab] = useState<string>('orders');
-  const [storeName, setStoreName] = useState(config.storeName || 'My Brand');
+  const [activeTab, setActiveTab] = useState<string>(config.storeName ? 'orders' : 'settings');
+  const [storeName, setStoreName] = useState(config.storeName || '');
   const [showPreview, setShowPreview] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<'desktop'|'mobile'>('desktop');
   const [isControlsCollapsed, setIsControlsCollapsed] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [showTrash, setShowTrash] = useState(false);
-  const [storeOrders, setStoreOrders] = useState([
+  const [storeOrders, setStoreOrders] = useState(config.storeName ? [
      { id: '#1042', customer: 'Youssef El Amrani', amount: '850.00 MAD', status: 'Nouveau', statusColor: 'bg-indigo-100 text-indigo-700', date: 'Il y a 10 min', items: '2 articles', products: [{ name: 'Premium Hoodie', photo: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop', qty: 1, price: '450.00 MAD', options: 'Taille: L, Couleur: Noir' }, { name: 'Cargo Pants', photo: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop', qty: 1, price: '400.00 MAD', options: 'Taille: M, Couleur: Kaki' }] },
      { id: '#1041', customer: 'Sara Bennani', amount: '450.00 MAD', status: 'Confirmé', statusColor: 'bg-emerald-100 text-emerald-700', date: 'Il y a 1h', items: '1 article', products: [{ name: 'Essential T-Shirt', photo: 'https://images.unsplash.com/photo-1489987707023-afc7f93c6508?q=80&w=800&auto=format&fit=crop', qty: 1, price: '450.00 MAD', options: 'Taille: S, Couleur: Blanc' }] },
      { id: '#1040', customer: 'Karim Tazi', amount: '1200.00 MAD', status: 'En cours', statusColor: 'bg-amber-100 text-amber-700', date: 'Hier', items: '3 articles', products: [{ name: 'Classic Sneakers', photo: 'https://images.unsplash.com/photo-1589465885857-44edb59bbff2?q=80&w=800&auto=format&fit=crop', qty: 2, price: '400.00 MAD', options: 'Pointure: 42, Couleur: Blanc' }, { name: 'Cargo Pants', photo: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop', qty: 1, price: '400.00 MAD', options: 'Taille: L, Couleur: Noir' }] },
      { id: '#1039', customer: 'Maha Alami', amount: '350.00 MAD', status: 'Refusé', statusColor: 'bg-rose-100 text-rose-700', date: 'Hier', items: '1 article', products: [{ name: 'Summer Dress', photo: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=800&auto=format&fit=crop', qty: 1, price: '350.00 MAD', options: 'Taille: M, Couleur: Rouge' }] }
-  ]);
+  ] : []);
 
   const handleUpdateOrderStatus = (orderId: string, newStatus: string, newColor: string) => {
     setStoreOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus, statusColor: newColor } : o));
@@ -1767,7 +1767,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center"><ShoppingBag className="w-3 h-3 text-white" /></div>
                           </div>
                           <div>
-                             <h4 className="text-2xl font-black text-white">1,248</h4>
+                             <h4 className="text-2xl font-black text-white">{!config.storeName ? '0' : '1,248'}</h4>
                              <p className="text-[9px] text-indigo-200 font-bold mt-1">+12% ce mois</p>
                           </div>
                        </div>
@@ -1778,7 +1778,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center"><CreditCard className="w-3 h-3 text-white" /></div>
                           </div>
                           <div>
-                             <h4 className="text-xl font-black text-white">45,200 <span className="text-[10px]">MAD</span></h4>
+                             <h4 className="text-xl font-black text-white">{!config.storeName ? '0' : '45,200'} <span className="text-[10px]">MAD</span></h4>
                              <p className="text-[9px] text-emerald-100 font-bold mt-1">+18% ce mois</p>
                           </div>
                        </div>
@@ -1786,7 +1786,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group cursor-pointer hover:border-green-300 transition-colors">
                           <div>
                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Confirmées</p>
-                             <h4 className="text-lg font-black text-slate-800">856</h4>
+                             <h4 className="text-lg font-black text-slate-800">{!config.storeName ? '0' : '856'}</h4>
                           </div>
                           <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center group-hover:bg-green-200 transition-colors"><CheckCircle className="w-4 h-4 text-green-600" /></div>
                        </div>
@@ -1794,7 +1794,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group cursor-pointer hover:border-rose-300 transition-colors">
                           <div>
                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Refusées</p>
-                             <h4 className="text-lg font-black text-slate-800">124</h4>
+                             <h4 className="text-lg font-black text-slate-800">{!config.storeName ? '0' : '124'}</h4>
                           </div>
                           <div className="w-8 h-8 bg-rose-100 rounded-full flex items-center justify-center group-hover:bg-rose-200 transition-colors"><X className="w-4 h-4 text-rose-600" /></div>
                        </div>
