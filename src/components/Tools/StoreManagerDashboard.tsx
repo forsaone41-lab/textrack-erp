@@ -158,10 +158,10 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                         </div>
                         
                         <div className="flex gap-3">
-                           <button onClick={onSelectStore} className="flex-1 bg-indigo-50 text-indigo-700 font-bold py-3 rounded-xl hover:bg-indigo-600 hover:text-white transition-colors active:scale-95">
+                           <button onClick={() => onSelectStore(store)} className="flex-1 bg-indigo-50 text-indigo-700 font-bold py-3 rounded-xl hover:bg-indigo-600 hover:text-white transition-colors active:scale-95">
                               {storeIsAr ? 'إدارة المتجر' : 'Gérer la boutique'}
                            </button>
-                           <button onClick={onSelectStore} className="w-12 h-12 flex items-center justify-center bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors active:scale-95">
+                           <button onClick={() => onSelectStore(store)} className="w-12 h-12 flex items-center justify-center bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors active:scale-95">
                               <Settings className="w-5 h-5" />
                            </button>
                            <button onClick={() => handleDeleteStore(store.id)} className="w-12 h-12 flex items-center justify-center bg-white border border-rose-200 text-rose-500 rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-colors active:scale-95" title={storeIsAr ? 'حذف المتجر' : 'Supprimer la boutique'}>

@@ -1624,7 +1624,15 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   if (builderMode === 'dashboard') {
      return (
        <div className={`space-y-6 ${storeIsAr ? 'text-right' : 'text-left'} bg-slate-50 min-h-screen p-6 md:p-12`}>
-         <StoreManagerDashboard onSelectStore={() => setBuilderMode('editor')} onOpenAI={() => setBuilderMode('pro_ai')} storeIsAr={storeIsAr} />
+         <StoreManagerDashboard onSelectStore={(store?: any) => {
+             if (store && store.config_json) {
+                localStorage.setItem('beya_store_config', JSON.stringify(store.config_json));
+             } else {
+                localStorage.setItem('beya_store_config', JSON.stringify({})); // Empty config for new store
+             }
+             setBuilderMode('editor');
+             window.location.reload(); // Force all state to re-initialize with new config
+         }} onOpenAI={() => setBuilderMode('pro_ai')} storeIsAr={storeIsAr} />
        </div>
      );
   }
