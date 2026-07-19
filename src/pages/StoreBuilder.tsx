@@ -1658,8 +1658,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
           <button onClick={handleSave} disabled={isSaving} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${isSaving ? 'bg-green-500 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
             {isSaving ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />} {isSaving ? (storeIsAr ? 'تم الحفظ' : 'Enregistré') : (storeIsAr ? 'حفظ' : 'Enregistrer')}
           </button>
-          <button onClick={() => setShowPreview(true)} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all shadow-sm">
-            <ExternalLink className="w-4 h-4" /> {storeIsAr ? 'معاينة' : 'Prévisualiser'}
+          <button onClick={() => {
+             const url = customDomain ? `https://${customDomain}` : `${window.location.origin}${window.location.pathname}#/store/${storeName.toLowerCase().replace(/\s+/g, '')}`;
+             window.open(url, '_blank');
+          }} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all shadow-sm" title={storeIsAr ? 'زيارة المتجر المباشر' : 'Visiter la boutique en ligne'}>
+            <ExternalLink className="w-4 h-4" /> {storeIsAr ? 'زيارة المتجر' : 'Visiter'}
           </button>
           <button onClick={handlePublish} disabled={isPublishing} className="flex items-center gap-2 bg-gradient-to-r from-slate-800 to-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold hover:shadow-lg transition-all shadow-sm disabled:opacity-70 disabled:cursor-not-allowed">
             {isPublishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />} 
