@@ -43,6 +43,22 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
       fetchStores();
    }, []);
 
+   const handleDeleteStore = async (id: string) => {
+      const confirmMsg = storeIsAr ? 'هل أنت متأكد أنك تريد حذف هذا المتجر؟ هذا الإجراء لا يمكن التراجع عنه.' : 'Êtes-vous sûr de vouloir supprimer cette boutique ? Cette action est irréversible.';
+      if (!window.confirm(confirmMsg)) return;
+
+      try {
+         if (!id.startsWith('mock')) {
+            const { error } = await supabase.from('stores').delete().eq('id', id);
+            if (error) throw error;
+         }
+         setStores(stores.filter(s => s.id !== id));
+      } catch (err) {
+         console.error('Failed to delete store:', err);
+         alert(storeIsAr ? 'حدث خطأ أثناء حذف المتجر.' : 'Erreur lors de la suppression de la boutique.');
+      }
+   };
+
    return (
       <div className={`max-w-6xl mx-auto w-full space-y-8 ${storeIsAr ? 'text-right' : 'text-left'}`}>
          {/* Header */}
@@ -147,6 +163,9 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                            </button>
                            <button onClick={onSelectStore} className="w-12 h-12 flex items-center justify-center bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors active:scale-95">
                               <Settings className="w-5 h-5" />
+                           </button>
+                           <button onClick={() => handleDeleteStore(store.id)} className="w-12 h-12 flex items-center justify-center bg-white border border-rose-200 text-rose-500 rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-colors active:scale-95" title={storeIsAr ? 'حذف المتجر' : 'Supprimer la boutique'}>
+                              <Trash2 className="w-5 h-5" />
                            </button>
                         </div>
                      </div>
