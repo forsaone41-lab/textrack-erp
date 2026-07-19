@@ -187,6 +187,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
      }
   }, [isLiveStore, storeName, storeLogo, storeFavicon]);
 
+  const [isLoadingLiveConfig, setIsLoadingLiveConfig] = useState(isLiveStore);
+
   // Fetch from Supabase for live store to handle cross-domain loading
   useEffect(() => {
      const fetchLiveConfig = async () => {
@@ -241,6 +243,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
            }
         } catch (err) {
            console.warn('No live config found in Supabase or table missing:', err);
+        } finally {
+           setIsLoadingLiveConfig(false);
         }
      };
 
@@ -1587,6 +1591,14 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   };
 
   if (isLiveStore) {
+    if (isLoadingLiveConfig) {
+       return (
+          <div className="w-full h-screen bg-white flex flex-col items-center justify-center">
+             <div className="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
+          </div>
+       );
+    }
+    
     return (
       <div className="w-full min-h-screen bg-white">
         <StorePreviewWrapper isModal={false} />
