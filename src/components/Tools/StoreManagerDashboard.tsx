@@ -20,21 +20,22 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                   id: st.id,
                   name: st.name || 'Boutique Sans Nom',
                   url: st.domain || `${st.id}.beyacreative.com`,
-                  plan: 'PRO', // SaaS defaults to PRO for now
+                  plan: 'PRO',
                   status: 'Active',
                   visitors: st.config_json?.stats?.visitors || 0,
-                  revenue: st.config_json?.stats?.revenue ? `${st.config_json.stats.revenue} MAD` : '0 MAD'
+                  revenue: st.config_json?.stats?.revenue ? `${st.config_json.stats.revenue} MAD` : '0 MAD',
+                  config_json: st.config_json
                }));
                // If no real stores, fallback to a mock one to show the UI
                setStores(realStores.length > 0 ? realStores : [
-                  { id: 'mock1', name: 'Fashlow Maroc', url: 'fashlow.store', plan: 'PRO', status: 'Active', visitors: 0, revenue: '0 MAD' }
+                  { id: 'mock1', name: 'Fashlow Maroc', url: 'fashlow.store', plan: 'PRO', status: 'Active', visitors: 0, revenue: '0 MAD', config_json: JSON.parse(localStorage.getItem('beya_store_config') || '{}') }
                ]);
             } else {
-                setStores([{ id: 'mock1', name: 'Fashlow Maroc', url: 'fashlow.store', plan: 'PRO', status: 'Active', visitors: 0, revenue: '0 MAD' }]);
+                setStores([{ id: 'mock1', name: 'Fashlow Maroc', url: 'fashlow.store', plan: 'PRO', status: 'Active', visitors: 0, revenue: '0 MAD', config_json: JSON.parse(localStorage.getItem('beya_store_config') || '{}') }]);
             }
          } catch (err) {
             console.warn("Supabase fetch failed", err);
-            setStores([{ id: 'mock1', name: 'Fashlow Maroc', url: 'fashlow.store', plan: 'PRO', status: 'Active', visitors: 0, revenue: '0 MAD' }]);
+            setStores([{ id: 'mock1', name: 'Fashlow Maroc', url: 'fashlow.store', plan: 'PRO', status: 'Active', visitors: 0, revenue: '0 MAD', config_json: JSON.parse(localStorage.getItem('beya_store_config') || '{}') }]);
          } finally {
             setIsLoading(false);
          }
