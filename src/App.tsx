@@ -225,11 +225,19 @@ function AppContent() {
     }
   }, [location.pathname, company?.metaPixelId]);
 
+  const hostname = window.location.hostname;
+  const isSubdomain = hostname.includes('.beyacreative.com') && hostname !== 'www.beyacreative.com' && hostname !== 'app.beyacreative.com';
+  const isCustomDomain = !hostname.includes('beyacreative.com') && !hostname.includes('localhost') && !hostname.includes('vercel.app');
+  const isLiveStore = isSubdomain || isCustomDomain;
+
   // Heartbeat for presence & Sync settings
   useEffect(() => {
     const syncSettings = async () => {
       const remote = await syncCompanyProfile();
       setCompany(remote);
+
+      // Do NOT apply Beya Creative branding on tenant live stores
+      if (isLiveStore) return;
 
       // Dynamic Branding Update
       const finalIcon = remote.logoAppIcon || "/logo.png";
@@ -274,7 +282,7 @@ function AppContent() {
     };
 
     const updateActivity = async () => {
-      if (!currentUser) return;
+      if (!currentUser || isLiveStore) return;
       // Skip activity sync for backdoor or default users (not in DB)
       if (currentUser.id === 'master-admin' || currentUser.id.startsWith('default-')) return;
       
@@ -353,12 +361,7 @@ function AppContent() {
     window.location.hash = '#/'; // Force go to login
   }
 
-  // Handle SaaS Wildcard Subdomains and Custom Domains
-  const hostname = window.location.hostname;
-  const isSubdomain = hostname.includes('.beyacreative.com') && hostname !== 'www.beyacreative.com' && hostname !== 'app.beyacreative.com';
-  const isCustomDomain = !hostname.includes('beyacreative.com') && !hostname.includes('localhost') && !hostname.includes('vercel.app');
-  
-  if (isSubdomain || isCustomDomain) {
+  if (isLiveStore) {
      return (
         <Suspense fallback={<PageLoader />}>
            <StoreBuilder isLiveStore={true} />

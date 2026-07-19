@@ -171,17 +171,21 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   useEffect(() => {
      if (isLiveStore) {
         document.title = storeName;
-        if (storeLogo) {
-           let link = document.querySelector("link[rel~='icon']");
-           if (!link) {
-               link = document.createElement('link');
-               link.rel = 'icon';
-               document.getElementsByTagName('head')[0].appendChild(link);
+        const finalIcon = storeFavicon || storeLogo;
+        if (finalIcon) {
+           document.querySelectorAll("link[rel*='icon']").forEach(node => {
+               (node as HTMLLinkElement).href = finalIcon;
+           });
+           let appleLink = document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement;
+           if (!appleLink) {
+               appleLink = document.createElement('link');
+               appleLink.rel = 'apple-touch-icon';
+               document.getElementsByTagName('head')[0].appendChild(appleLink);
            }
-           link.href = storeLogo;
+           appleLink.href = finalIcon;
         }
      }
-  }, [isLiveStore, storeName, storeLogo]);
+  }, [isLiveStore, storeName, storeLogo, storeFavicon]);
 
   // Fetch from Supabase for live store to handle cross-domain loading
   useEffect(() => {
@@ -200,10 +204,21 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               const fallback = await supabase
                  .from('stores')
                  .select('config_json')
-                 .order('updated_at', { ascending: false })
-                 .limit(1)
+                 .eq('domain', 'latest_saved_store')
                  .single();
-              data = fallback.data;
+              
+              if (fallback.data) {
+                  data = fallback.data;
+              } else {
+                  // Final fallback
+                  const lastResort = await supabase
+                     .from('stores')
+                     .select('config_json')
+                     .order('updated_at', { ascending: false })
+                     .limit(1)
+                     .single();
+                  data = lastResort.data;
+              }
            }
            
            if (data && data.config_json) {
@@ -211,6 +226,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               if (conf.storeLang) setStoreLang(conf.storeLang);
               if (conf.storeName) setStoreName(conf.storeName);
               if (conf.storeLogo) setStoreLogo(conf.storeLogo);
+              if (conf.storeFavicon) setStoreFavicon(conf.storeFavicon);
               if (conf.activeTheme) setActiveTheme(conf.activeTheme);
               if (conf.primaryColor) setPrimaryColor(conf.primaryColor);
               if (conf.fontFamily) setFontFamily(conf.fontFamily);
@@ -240,7 +256,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [isPublishing, setIsPublishing] = useState(false);
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [customDomain, setCustomDomain] = useState('');
+  const [customDomain, setCustomDomain] = useState(config.customDomain || '');
   const [isLinkingDomain, setIsLinkingDomain] = useState(false);
   const [domainError, setDomainError] = useState('');
 
@@ -250,6 +266,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        storeLang,
        storeName,
        storeLogo,
+       storeFavicon,
+       customDomain,
        activeTheme,
        primaryColor,
        fontFamily,
@@ -265,12 +283,23 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     // Sync to Supabase for cross-domain live preview (SaaS mode)
     try {
        const domain = customDomain || `${storeName.toLowerCase().replace(/\\s+/g, '')}.beyacreative.com`;
+       
+       // Update both exact domain AND a fallback to ensure changes apply immediately
        await supabase.from('stores').upsert({
           domain: domain,
           config_json: storeConfig,
           name: storeName,
           updated_at: new Date()
        }, { onConflict: 'domain' });
+
+       // Also update the 'latest' fallback record so empty-domain mockups work
+       await supabase.from('stores').upsert({
+          domain: 'latest_saved_store',
+          config_json: storeConfig,
+          name: storeName,
+          updated_at: new Date()
+       }, { onConflict: 'domain' });
+
     } catch (err) {
        console.warn("Supabase sync failed (Table 'stores' might not exist yet):", err);
     }
@@ -298,12 +327,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     }
   };
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     setIsPublishing(true);
+    await handleSave();
     setTimeout(() => {
       setIsPublishing(false);
       setShowPublishModal(true);
-    }, 2000);
+    }, 1000);
   };
 
   const applyTheme = (theme: typeof THEMES[0]) => {
@@ -2099,6 +2129,25 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              </label>
                              {storeLogo && (
                                 <button onClick={() => setStoreLogo('')} className="text-xs font-bold text-rose-500 hover:text-rose-600">{storeIsAr ? 'إزالة' : 'Retirer'}</button>
+                             )}
+                          </div>
+                       </div>
+                       
+                       <div className="pt-4 border-t border-slate-200">
+                          <h4 className="text-xs font-black text-slate-800 mb-2 uppercase tracking-wider">{storeIsAr ? 'أيقونة المتجر (Favicon)' : 'Favicon de la boutique'}</h4>
+                          <div className="flex items-center gap-4">
+                             <div className="w-10 h-10 bg-white border border-slate-200 rounded-lg flex items-center justify-center overflow-hidden shadow-sm shrink-0">
+                                {storeFavicon ? <img src={storeFavicon} className="w-full h-full object-contain" alt="Favicon" /> : <ImageIcon className="w-4 h-4 text-slate-300" />}
+                             </div>
+                             <label className="cursor-pointer px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm">
+                                {storeIsAr ? 'رفع الأيقونة' : 'Importer un favicon'}
+                                <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                                   const file = e.target.files?.[0];
+                                   if (file) setStoreFavicon(URL.createObjectURL(file));
+                                }} />
+                             </label>
+                             {storeFavicon && (
+                                <button onClick={() => setStoreFavicon('')} className="text-xs font-bold text-rose-500 hover:text-rose-600">{storeIsAr ? 'إزالة' : 'Retirer'}</button>
                              )}
                           </div>
                        </div>
