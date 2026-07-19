@@ -194,6 +194,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     { id: 6, name: 'Leather Jacket', price: '890.00', category: 'Outerwear', image: 'https://images.unsplash.com/photo-1551028719-0c124a1119ce?auto=format&fit=crop&q=80&w=800' }
   ]);
   const [newProduct, setNewProduct] = useState({ name: '', price: '' });
+  const [appsConfig, setAppsConfig] = useState<Record<string, string>>(config.appsConfig || {});
+  const [activeAppModal, setActiveAppModal] = useState<string | null>(null);
+  const [appInputValue, setAppInputValue] = useState('');
 
   // Helper to get any available image for a product
   const getCoverImage = (p: any) => p.image || (p.colorImages ? Object.values(p.colorImages)[0] : null);
@@ -369,7 +372,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        newsletterSubtitle,
        featuresData,
        videoUrl,
-       storeProducts
+       storeProducts,
+       appsConfig
     };
     localStorage.setItem('beya_store_config', JSON.stringify(storeConfig));
     
@@ -1862,6 +1866,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     return (
        <>
           <Layout />
+          {appsConfig && appsConfig['WhatsApp Chat'] && (
+             <a href={'https://wa.me/' + appsConfig['WhatsApp Chat'].replace(/[^0-9]/g, '')} target="_blank" rel="noreferrer" className="fixed bottom-6 right-6 z-[998] w-14 h-14 bg-green-500 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform hover:bg-green-600">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.88-.788-1.472-1.761-1.645-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.347-.272.297-1.04 1.016-1.04 2.479 0 1.463 1.065 2.876 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+             </a>
+          )}
           {isCartOpen && (
              <div className="fixed inset-0 z-[999] flex justify-end bg-black/50 backdrop-blur-sm transition-opacity" onClick={() => setIsCartOpen(false)}>
                 <div className="w-full max-w-md h-full bg-white shadow-2xl flex flex-col transform transition-transform" onClick={e => e.stopPropagation()}>
@@ -2459,7 +2468,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                  <p className="text-sm font-bold text-slate-800">{app.name}</p>
                                  <p className="text-[10px] text-slate-500 mt-1">{storeIsAr ? (app.descAr || app.desc) : app.desc}</p>
                               </div>
-                              <button className="px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-indigo-600 transition-colors shadow-sm">{storeIsAr ? 'إضافة' : 'Ajouter'}</button>
+                              <button onClick={() => { setActiveAppModal(app.name); setAppInputValue(appsConfig[app.name] || ''); }} className={`px-4 py-2 text-white rounded-lg text-xs font-bold transition-colors shadow-sm ${appsConfig[app.name] ? 'bg-green-600 hover:bg-green-700' : 'bg-slate-900 hover:bg-indigo-600'}`}>{appsConfig[app.name] ? (storeIsAr ? 'تعديل' : 'Modifier') : (storeIsAr ? 'إضافة' : 'Ajouter')}</button>
                            </div>
                         ))}
                      </div>
@@ -2996,6 +3005,40 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
       )}
 
       {/* PRO PRODUCT FORM MODAL */}
+      {activeAppModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+               <h3 className="text-lg font-black text-slate-800">{storeIsAr ? 'إعداد' : 'Configurer'} {activeAppModal}</h3>
+               <button onClick={() => setActiveAppModal(null)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400"><X className="w-5 h-5"/></button>
+            </div>
+            <div className="p-6">
+               <label className="block text-sm font-bold text-slate-700 mb-2">
+                  {activeAppModal === 'WhatsApp Chat' ? (storeIsAr ? 'رقم الواتساب (مثال: +212600000000)' : 'Numéro WhatsApp (ex: +212600000000)') :
+                   activeAppModal === 'Facebook Pixel' ? (storeIsAr ? 'معرف بيكسل فيسبوك' : 'ID Pixel Facebook') :
+                   activeAppModal === 'TikTok Pixel' ? (storeIsAr ? 'معرف بيكسل تيك توك' : 'ID Pixel TikTok') :
+                   activeAppModal === 'Google Analytics 4' ? (storeIsAr ? 'معرف التتبع (G-XXXXXXX)' : 'ID de suivi (G-XXXXXXX)') :
+                   (storeIsAr ? 'رقم التعريف / المفتاح' : 'ID / Clé d\'API')}
+               </label>
+               <input 
+                  type="text" 
+                  value={appInputValue}
+                  onChange={(e) => setAppInputValue(e.target.value)}
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 font-medium"
+                  placeholder="..."
+               />
+            </div>
+            <div className="p-6 border-t border-slate-100 bg-slate-50 flex gap-3">
+               <button onClick={() => setActiveAppModal(null)} className="flex-1 py-3 font-bold text-slate-600 hover:bg-slate-200 bg-slate-100 rounded-xl transition-colors">{storeIsAr ? 'إلغاء' : 'Annuler'}</button>
+               <button onClick={() => {
+                  setAppsConfig(prev => ({ ...prev, [activeAppModal]: appInputValue }));
+                  setActiveAppModal(null);
+               }} className="flex-1 py-3 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md transition-colors">{storeIsAr ? 'حفظ التغييرات' : 'Enregistrer'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {isProductModalOpen && (
         <div className="fixed inset-0 z-[400] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8">
            <div className="bg-white w-full max-w-7xl max-h-[95vh] rounded-[2rem] shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
