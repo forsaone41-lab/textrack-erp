@@ -1827,13 +1827,24 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                     <p className="text-base font-black text-slate-800">{p.price} MAD</p>
                                     <span className="inline-block mt-1 px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold uppercase rounded">Actif</span>
                                  </div>
-                                 <div className="pl-4 shrink-0 border-l border-slate-100 opacity-0 group-hover:opacity-100 transition-opacity">
+                                 <div className="pl-4 shrink-0 border-l border-slate-100 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                                    <button 
+                                      onClick={(e) => { 
+                                         e.stopPropagation(); 
+                                         setShowPreview(true);
+                                      }}
+                                      className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                      title={storeIsAr ? 'معاينة في المتجر' : 'Voir sur le site'}
+                                    >
+                                       <ExternalLink className="w-4 h-4" />
+                                    </button>
                                     <button 
                                       onClick={(e) => { 
                                          e.stopPropagation(); 
                                          setStoreProducts(storeProducts.filter(x => x.id !== p.id));
                                       }}
                                       className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                      title={storeIsAr ? 'حذف المنتج' : 'Supprimer'}
                                     >
                                        <X className="w-4 h-4" />
                                     </button>
@@ -1844,7 +1855,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                      ) : (
                         <div className="p-4 grid grid-cols-3 gap-4">
                            {storeProducts.map(p => (
-                              <div key={p.id} onClick={() => { setProductForm(p); setIsProductModalOpen(true); }} className="border border-slate-200 rounded-xl bg-white hover:border-indigo-500 cursor-pointer transition-colors group overflow-hidden flex flex-col">
+                              <div key={p.id} onClick={() => { setProductForm(p); setIsProductModalOpen(true); }} className="border border-slate-200 rounded-xl bg-white hover:border-indigo-500 cursor-pointer transition-colors group overflow-hidden flex flex-col h-full">
                                  <div className="aspect-square bg-slate-50 relative border-b border-slate-100">
                                     {getCoverImage(p) ? (
                                        <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt="" />
@@ -1860,9 +1871,14 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                     <p className="text-xs text-slate-400 mt-1 line-clamp-1">{p.category || 'Sans catégorie'}</p>
                                     <div className="mt-auto pt-3 flex items-center justify-between">
                                        <span className="text-sm font-black text-slate-800">{p.price} MAD</span>
-                                       <button onClick={(e) => { e.stopPropagation(); setStoreProducts(storeProducts.filter(x => x.id !== p.id)); }} className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors">
-                                          <X className="w-4 h-4" />
-                                       </button>
+                                       <div className="flex items-center gap-1">
+                                          <button onClick={(e) => { e.stopPropagation(); setShowPreview(true); }} className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors" title={storeIsAr ? 'معاينة في المتجر' : 'Voir sur le site'}>
+                                             <ExternalLink className="w-4 h-4" />
+                                          </button>
+                                          <button onClick={(e) => { e.stopPropagation(); setStoreProducts(storeProducts.filter(x => x.id !== p.id)); }} className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors" title={storeIsAr ? 'حذف المنتج' : 'Supprimer'}>
+                                             <X className="w-4 h-4" />
+                                          </button>
+                                       </div>
                                     </div>
                                  </div>
                               </div>
