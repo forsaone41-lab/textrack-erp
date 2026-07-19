@@ -171,6 +171,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   // Customization States (The PRO way)
   const [activeTheme, setActiveTheme] = useState(config.activeTheme || THEMES[0]);
   const [primaryColor, setPrimaryColor] = useState(config.primaryColor || THEMES[0].defaultColor);
+  const [secondaryColor, setSecondaryColor] = useState(config.secondaryColor || '#ffffff');
+  const [buttonStyle, setButtonStyle] = useState<'rounded' | 'pill' | 'square'>(config.buttonStyle || 'rounded');
   const [fontFamily, setFontFamily] = useState(config.fontFamily || THEMES[0].defaultFont);
   const [heroImage, setHeroImage] = useState(config.heroImage || THEMES[0].previewImg);
   
@@ -381,7 +383,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        videoUrl,
        storeProducts,
        appsConfig,
-       deliveryCompanies
+       deliveryCompanies,
+       secondaryColor,
+       buttonStyle
     };
     localStorage.setItem('beya_store_config', JSON.stringify(storeConfig));
     
@@ -2298,197 +2302,120 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        </div>
                     </div>
 
-                    <div className="pt-2">
-                       <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Couleur Principale</label>
-                       <div className="flex items-center gap-3 mb-3">
-                          <input type="color" value={primaryColor} onChange={e => setPrimaryColor(e.target.value)} className="w-10 h-10 rounded cursor-pointer border-0 p-0" />
-                          <span className="text-sm font-mono text-slate-600">{primaryColor.toUpperCase()}</span>
-                       </div>
-                       <div className="flex gap-2">
-                          {['#0f172a', '#171717', '#b48a44', '#84cc16', '#4d7c0f', '#0ea5e9', '#e11d48'].map(c => (
-                             <button key={tr(c)} onClick={() => setPrimaryColor(c)} className="w-6 h-6 rounded-full border border-black/10 shadow-sm hover:scale-110 transition-transform" style={{ backgroundColor: c }} />
-                          ))}
-                       </div>
-                    </div>
-                    
-                    <div className="pt-4 border-t border-slate-100">
-                       <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Typographie</label>
-                       <div className="space-y-2">
-                          <button onClick={() => setFontFamily('font-sans')} className={`w-full p-3 rounded-lg border text-left flex justify-between items-center ${fontFamily === 'font-sans' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
-                             <span className="font-sans font-medium">Inter / Roboto (Sans-serif)</span>
-                             {fontFamily === 'font-sans' && <Check className="w-4 h-4" />}
-                          </button>
-                          <button onClick={() => setFontFamily('font-serif')} className={`w-full p-3 rounded-lg border text-left flex justify-between items-center ${fontFamily === 'font-serif' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
-                             <span className="font-serif font-medium">Playfair / Merriweather (Serif)</span>
-                             {fontFamily === 'font-serif' && <Check className="w-4 h-4" />}
-                          </button>
-                          <button onClick={() => setFontFamily('font-mono')} className={`w-full p-3 rounded-lg border text-left flex justify-between items-center ${fontFamily === 'font-mono' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
-                             <span className="font-mono font-medium">Space Mono (Monospace)</span>
-                             {fontFamily === 'font-mono' && <Check className="w-4 h-4" />}
-                          </button>
-                       </div>
-                    </div>
-                 </div>
-              )}
-
-              {/* SETTINGS TAB */}
-              {activeTab === 'settings' && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{storeIsAr ? 'اسم العلامة التجارية' : 'Nom de la marque'}</label>
-                    <input type="text" value={storeName} onChange={(e) => setStoreName(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-medium focus:outline-none focus:border-indigo-500" />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{storeIsAr ? 'النطاق (URL)' : 'Domaine (URL)'}</label>
-                    <div className="flex items-center">
-                      <input type="text" value={storeName.toLowerCase().replace(/\s+/g, '')} disabled className="w-full px-3 py-2 border border-slate-200 rounded-l-lg text-sm font-medium bg-slate-50 text-slate-500" />
-                      <span className="px-3 py-2 bg-slate-100 border border-l-0 border-slate-200 rounded-r-lg text-xs font-bold text-slate-500">.beyacreative.com</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* PRODUCTS TAB */}
-              {activeTab === 'products' && (
-                <div className="space-y-6 animate-in fade-in duration-300">
-                  <div className="flex items-center justify-between mb-8 pb-6 border-b border-slate-100">
-                     <div>
-                        <h2 className="text-2xl font-black text-slate-800">Produits</h2>
-                        <p className="text-sm text-slate-500 font-medium">Gérez votre catalogue et vos stocks.</p>
-                     </div>
-                     <div className="flex items-center gap-3">
-                        <button onClick={() => setIsImportModalOpen(true)} className="px-4 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-2 shadow-sm">
-                           <Search className="w-4 h-4" /> Importer de l'ERP
-                        </button>
-                        <button onClick={() => { 
-                           setProductForm({ name: '', price: '', stock: '', description: '', colors: [], sizes: [] }); 
-                           setIsProductModalOpen(true); 
-                        }} className="px-4 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-indigo-600 transition-colors flex items-center gap-2 shadow-md">
-                           <Plus className="w-4 h-4" /> Nouveau produit
-                        </button>
-                     </div>
-                  </div>
-
-                  <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                     <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                        <h3 className="text-sm font-bold text-slate-700">Tous les produits ({storeProducts.length})</h3>
-                        <div className="flex items-center gap-4">
-                           <div className="flex items-center bg-white border border-slate-200 rounded-lg p-0.5">
-                              <button onClick={() => setProductsViewMode('list')} className={`p-1.5 rounded-md transition-colors ${productsViewMode === 'list' ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}><ListIcon className="w-4 h-4" /></button>
-                              <button onClick={() => setProductsViewMode('grid')} className={`p-1.5 rounded-md transition-colors ${productsViewMode === 'grid' ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}><LayoutGrid className="w-4 h-4" /></button>
+                    {/* PRIMARY COLOR */}
+                     <div className="pt-2 space-y-5">
+                        <div>
+                           <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{storeIsAr ? 'اللون الرئيسي' : 'Couleur Principale'}</label>
+                           <div className="flex items-center gap-3 mb-3">
+                              <label className="relative cursor-pointer">
+                                 <div className="w-10 h-10 rounded-xl border-2 border-white shadow-md ring-1 ring-slate-200 hover:scale-105 transition-transform" style={{ backgroundColor: primaryColor }} />
+                                 <input type="color" value={primaryColor} onChange={e => setPrimaryColor(e.target.value)} className="opacity-0 w-0 h-0 absolute" />
+                              </label>
+                              <div className="flex-1">
+                                 <span className="text-sm font-mono font-bold text-slate-700">{primaryColor.toUpperCase()}</span>
+                                 <p className="text-[10px] text-slate-400 mt-0.5">{storeIsAr ? 'أزرار وروابط' : 'Boutons, liens & accents'}</p>
+                              </div>
                            </div>
-                           <div className="relative">
-                              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                              <input type="text" placeholder="Rechercher..." className="pl-9 pr-4 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500 bg-white" />
+                           <div className="flex gap-2 flex-wrap">
+                              {[
+                                 { color: '#0f172a', label: 'Noir' }, { color: '#1e3a8a', label: 'Marine' },
+                                 { color: '#7c3aed', label: 'Violet' }, { color: '#db2777', label: 'Rose' },
+                                 { color: '#dc2626', label: 'Rouge' }, { color: '#d97706', label: 'Ambre' },
+                                 { color: '#16a34a', label: 'Vert' }, { color: '#0891b2', label: 'Cyan' },
+                                 { color: '#b48a44', label: 'Or' }, { color: '#64748b', label: 'Ardoise' }
+                              ].map(({ color, label }) => (
+                                 <button key={color} onClick={() => setPrimaryColor(color)} title={label}
+                                    className={`w-7 h-7 rounded-full border-2 shadow-sm hover:scale-110 transition-transform ${primaryColor === color ? 'border-indigo-500 scale-110 ring-2 ring-indigo-300' : 'border-white'}`}
+                                    style={{ backgroundColor: color }} />
+                              ))}
                            </div>
+                        </div>
+
+                        {/* Secondary Color */}
+                        <div className="pt-3 border-t border-slate-100">
+                           <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{storeIsAr ? 'لون الخلفية / الثانوي' : 'Couleur de Fond / Secondaire'}</label>
+                           <div className="flex items-center gap-3 mb-3">
+                              <label className="relative cursor-pointer">
+                                 <div className="w-10 h-10 rounded-xl border-2 shadow-md ring-1 ring-slate-200 hover:scale-105 transition-transform" style={{ backgroundColor: secondaryColor, borderColor: '#e2e8f0' }} />
+                                 <input type="color" value={secondaryColor} onChange={e => setSecondaryColor(e.target.value)} className="opacity-0 w-0 h-0 absolute" />
+                              </label>
+                              <div className="flex-1">
+                                 <span className="text-sm font-mono font-bold text-slate-700">{secondaryColor.toUpperCase()}</span>
+                                 <p className="text-[10px] text-slate-400 mt-0.5">{storeIsAr ? 'خلفية البطاقات والأقسام' : 'Fond des cartes & sections'}</p>
+                              </div>
+                           </div>
+                           <div className="flex gap-2 flex-wrap">
+                              {[
+                                 { color: '#ffffff', label: 'Blanc' }, { color: '#f8fafc', label: 'Perle' },
+                                 { color: '#f1f5f9', label: 'Slate' }, { color: '#fef9f0', label: 'Crème' },
+                                 { color: '#f0fdf4', label: 'Menthe' }, { color: '#fdf4ff', label: 'Lilas' },
+                                 { color: '#111827', label: 'Nuit' }, { color: '#1a1a1a', label: 'Noir' }
+                              ].map(({ color, label }) => (
+                                 <button key={color} onClick={() => setSecondaryColor(color)} title={label}
+                                    className={`w-7 h-7 rounded-full border-2 shadow-sm hover:scale-110 transition-transform ${secondaryColor === color ? 'border-indigo-500 scale-110 ring-2 ring-indigo-300' : 'border-slate-200'}`}
+                                    style={{ backgroundColor: color }} />
+                              ))}
+                           </div>
+                        </div>
+
+                        {/* Live Preview Mini */}
+                        <div className="pt-3 border-t border-slate-100">
+                           <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">{storeIsAr ? 'معاينة فورية' : 'Aperçu Instantané'}</label>
+                           <div className="rounded-xl overflow-hidden shadow-sm border border-slate-200" style={{ backgroundColor: secondaryColor }}>
+                              <div className="px-4 py-2 flex items-center justify-between border-b border-slate-100">
+                                 <div className="text-xs font-black" style={{ color: primaryColor }}>STORE</div>
+                                 <div className="flex gap-1">
+                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: primaryColor }} />
+                                    <div className="w-2 h-2 rounded-full opacity-30" style={{ backgroundColor: primaryColor }} />
+                                 </div>
+                              </div>
+                              <div className="p-3 flex items-center gap-2">
+                                 <div className="flex-1 h-5 rounded opacity-20" style={{ backgroundColor: primaryColor }} />
+                                 <button className={`px-3 py-1 text-white text-[10px] font-bold ${buttonStyle === 'pill' ? 'rounded-full' : buttonStyle === 'square' ? 'rounded-none' : 'rounded-md'}`} style={{ backgroundColor: primaryColor }}>
+                                    {storeIsAr ? 'شراء' : 'Acheter'}
+                                 </button>
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+
+                     {/* BUTTON STYLE */}
+                     <div className="pt-4 border-t border-slate-100">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{storeIsAr ? 'شكل الأزرار' : 'Style des Boutons'}</label>
+                        <div className="grid grid-cols-3 gap-2">
+                           {([
+                              { key: 'rounded', labelFr: 'Arrondi', labelAr: 'مستدير', radius: 'rounded-lg' },
+                              { key: 'pill', labelFr: 'Capsule', labelAr: 'كبسولة', radius: 'rounded-full' },
+                              { key: 'square', labelFr: 'Carré', labelAr: 'مربع', radius: 'rounded-none' }
+                           ] as const).map(({ key, labelFr, labelAr, radius }) => (
+                              <button key={key} onClick={() => setButtonStyle(key)}
+                                 className={`flex flex-col items-center gap-2 p-3 border-2 rounded-xl transition-all ${buttonStyle === key ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                                 <div className={`px-3 py-1.5 text-white text-[10px] font-bold ${radius}`} style={{ backgroundColor: primaryColor }}>
+                                    {storeIsAr ? 'زر' : 'Btn'}
+                                 </div>
+                                 <span className={`text-[10px] font-bold ${buttonStyle === key ? 'text-indigo-600' : 'text-slate-500'}`}>{storeIsAr ? labelAr : labelFr}</span>
+                              </button>
+                           ))}
                         </div>
                      </div>
                      
-                     {productsViewMode === 'list' ? (
-                        <div className="divide-y divide-slate-100">
-                           {storeProducts.map(p => (
-                              <div key={p.id} onClick={() => { setProductForm(p); setIsProductModalOpen(true); }} className="p-4 flex items-center gap-6 hover:bg-slate-50 cursor-pointer transition-colors group">
-                                 <div className="w-16 h-16 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200 overflow-hidden shrink-0">
-                                    {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt="" /> : <Box className="w-6 h-6 text-slate-300 group-hover:text-indigo-400" />}
-                                 </div>
-                                 <div className="flex-1">
-                                    <h4 className="text-base font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">{p.name}</h4>
-                                    <div className="flex items-center gap-4 mt-1">
-                                       <span className="text-xs font-medium text-slate-500 flex items-center gap-1"><Box className="w-3 h-3" /> {Object.keys(p.variantQuantities || {}).length > 0 ? 'Stock par variante' : (p.stock || 0) + ' en stock'}</span>
-                                       {p.sizes?.length > 0 && <span className="text-xs font-medium text-slate-500 flex items-center gap-1"><LayoutTemplate className="w-3 h-3" /> {p.sizes.length} Tailles</span>}
-                                    </div>
-                                 </div>
-                                 <div className="text-right shrink-0">
-                                    <p className="text-base font-black text-slate-800">{p.price} MAD</p>
-                                    <span className="inline-block mt-1 px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold uppercase rounded">Actif</span>
-                                 </div>
-                                 <div className="pl-4 shrink-0 border-l border-slate-100 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                                    <button 
-                                      onClick={(e) => { 
-                                         e.stopPropagation(); 
-                                         setPreviewProductId(p.id);
-                                         setShowPreview(true);
-                                      }}
-                                      className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                                      title={storeIsAr ? 'معاينة في المتجر' : 'Voir sur le site'}
-                                    >
-                                       <ExternalLink className="w-4 h-4" />
-                                    </button>
-                                    <button 
-                                      onClick={(e) => { 
-                                         e.stopPropagation(); 
-                                         setStoreProducts(storeProducts.filter(x => x.id !== p.id));
-                                      }}
-                                      className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                                      title={storeIsAr ? 'حذف المنتج' : 'Supprimer'}
-                                    >
-                                       <X className="w-4 h-4" />
-                                    </button>
-                                 </div>
-                              </div>
-                           ))}
+                     {/* TYPOGRAPHY */}
+                     <div className="pt-4 border-t border-slate-100">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{storeIsAr ? 'الخط' : 'Typographie'}</label>
+                        <div className="space-y-2">
+                           <button onClick={() => setFontFamily('font-sans')} className={`w-full p-3 rounded-lg border text-left flex justify-between items-center ${fontFamily === 'font-sans' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
+                              <span className="font-sans font-medium">Inter / Roboto (Sans-serif)</span>
+                              {fontFamily === 'font-sans' && <Check className="w-4 h-4" />}
+                           </button>
+                           <button onClick={() => setFontFamily('font-serif')} className={`w-full p-3 rounded-lg border text-left flex justify-between items-center ${fontFamily === 'font-serif' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
+                              <span className="font-serif font-medium">Playfair / Merriweather (Serif)</span>
+                              {fontFamily === 'font-serif' && <Check className="w-4 h-4" />}
+                           </button>
+                           <button onClick={() => setFontFamily('font-mono')} className={`w-full p-3 rounded-lg border text-left flex justify-between items-center ${fontFamily === 'font-mono' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
+                              <span className="font-mono font-medium">Space Mono (Monospace)</span>
+                              {fontFamily === 'font-mono' && <Check className="w-4 h-4" />}
+                           </button>
                         </div>
-                     ) : (
-                        <div className="p-4 grid grid-cols-3 gap-4">
-                           {storeProducts.map(p => (
-                              <div key={p.id} onClick={() => { setProductForm(p); setIsProductModalOpen(true); }} className="border border-slate-200 rounded-xl bg-white hover:border-indigo-500 cursor-pointer transition-colors group overflow-hidden flex flex-col h-full">
-                                 <div className="aspect-square bg-slate-50 relative border-b border-slate-100">
-                                    {getCoverImage(p) ? (
-                                       <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt="" />
-                                    ) : (
-                                       <div className="w-full h-full flex items-center justify-center"><Box className="w-10 h-10 text-slate-300 group-hover:text-indigo-400" /></div>
-                                    )}
-                                    <div className="absolute top-2 right-2 flex gap-1">
-                                       <span className="px-2 py-0.5 bg-green-500 text-white text-[9px] font-black uppercase rounded shadow-sm">Actif</span>
-                                    </div>
-                                 </div>
-                                 <div className="p-4 flex flex-col flex-1">
-                                    <h4 className="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors line-clamp-1">{p.name}</h4>
-                                    <p className="text-xs text-slate-400 mt-1 line-clamp-1">{p.category || 'Sans catégorie'}</p>
-                                    <div className="mt-auto pt-3 flex items-center justify-between">
-                                       <span className="text-sm font-black text-slate-800">{p.price} MAD</span>
-                                       <div className="flex items-center gap-1">
-                                          <button onClick={(e) => { e.stopPropagation(); setPreviewProductId(p.id); setShowPreview(true); }} className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors" title={storeIsAr ? 'معاينة في المتجر' : 'Voir sur le site'}>
-                                             <ExternalLink className="w-4 h-4" />
-                                          </button>
-                                          <button onClick={(e) => { e.stopPropagation(); setStoreProducts(storeProducts.filter(x => x.id !== p.id)); }} className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors" title={storeIsAr ? 'حذف المنتج' : 'Supprimer'}>
-                                             <X className="w-4 h-4" />
-                                          </button>
-                                       </div>
-                                    </div>
-                                 </div>
-                              </div>
-                           ))}
-                        </div>
-                     )}
-                  </div>
-                </div>
-              )}
-
-              {/* APPS TAB */}
-              {activeTab === 'apps' && (
-                 <div className="space-y-4">
-                     <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-4">
-                        <h4 className="text-sm font-black text-indigo-800 mb-1">{storeIsAr ? 'متجر تطبيقات BEYA' : 'App Store BEYA'}</h4>
-                        <p className="text-xs text-indigo-600">{storeIsAr ? 'طوّر متجرك بإضافات بنقرة واحدة (مثل تطبيقات Shopify).' : 'Développez votre boutique avec nos plugins 1-clic (Similaires aux apps Shopify).'}</p>
-                     </div>
-                     <div className="space-y-3">
-                        {[
-                           { name: 'WhatsApp Chat', desc: 'Discutez avec vos clients en direct', descAr: 'تواصل مع عملائك مباشرة', icon: '💬', color: 'bg-green-100 text-green-600' },
-                           { name: 'Facebook Pixel', desc: 'Suivez vos conversions Facebook Ads', descAr: 'تتبع تحويلات إعلانات فيسبوك', icon: 'f', color: 'bg-blue-100 text-blue-600 font-serif' },
-                           { name: 'TikTok Pixel', desc: 'Optimisez vos campagnes TikTok', descAr: 'حسّن حملاتك الإعلانية على TikTok', icon: '♪', color: 'bg-black text-white' },
-                           { name: 'Google Analytics 4', desc: 'Analysez votre trafic en temps réel', descAr: 'حلّل زيارات موقعك في الوقت الحقيقي', icon: 'G', color: 'bg-orange-100 text-orange-600 font-serif' },
-                           { name: 'Mailchimp Sync', desc: "Synchronisez vos clients pour l'emailing", descAr: 'زامن قائمة عملائك للتسويق بالبريد', icon: 'M', color: 'bg-yellow-100 text-yellow-600 font-serif' },
-                        ].map(app => (
-                           <div key={app.name} className="p-3 border border-slate-200 rounded-xl flex items-center gap-4 hover:border-indigo-300 transition-colors">
-                              <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl font-black ${app.color}`}>{app.icon}</div>
-                              <div className="flex-1">
-                                 <p className="text-sm font-bold text-slate-800">{app.name}</p>
-                                 <p className="text-[10px] text-slate-500 mt-1">{storeIsAr ? (app.descAr || app.desc) : app.desc}</p>
-                              </div>
-                              <button onClick={() => { setActiveAppModal(app.name); setAppInputValue(appsConfig[app.name] || ''); }} className={`px-4 py-2 text-white rounded-lg text-xs font-bold transition-colors shadow-sm ${appsConfig[app.name] ? 'bg-green-600 hover:bg-green-700' : 'bg-slate-900 hover:bg-indigo-600'}`}>{appsConfig[app.name] ? (storeIsAr ? 'تعديل' : 'Modifier') : (storeIsAr ? 'إضافة' : 'Ajouter')}</button>
-                           </div>
-                        ))}
                      </div>
                   </div>
                )}
