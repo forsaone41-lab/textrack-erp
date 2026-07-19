@@ -5,7 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="google" content="notranslate" />
     <title>BEYA CREATIVE - Excellence en Confection Textile au Maroc</title>
-    
+    <script>
+      (function() {
+        var h = window.location.hostname;
+        var isMainDomain = h === 'beyacreative.com' || h === 'www.beyacreative.com' || h === 'app.beyacreative.com' || h === 'localhost' || h.includes('vercel.app');
+        if (!isMainDomain) {
+           var name = h.split('.')[0];
+           document.title = name.charAt(0).toUpperCase() + name.slice(1);
+           
+           // Remove meta description to avoid Beya's text showing up
+           var metaDesc = document.querySelector('meta[name="description"]');
+           if (metaDesc) metaDesc.remove();
+           
+           // Remove favicon to avoid flashing BEYA logo
+           window.addEventListener('DOMContentLoaded', function() {
+              document.querySelectorAll("link[rel*='icon']").forEach(function(link) {
+                 link.href = ''; 
+              });
+           });
+        }
+      })();
+    </script>
     <!-- SEO Meta Tags -->
     <meta name="description" content="BEYA CREATIVE : Leader de la confection textile au Maroc. Fabrication de vêtements de haute qualité : T-shirts, Polos, Hoodies, Djellabas et Uniformes. Production 100% Marocaine." />
     <meta name="keywords" content="confection textile maroc, fabrication vetements casablanca, usine textile maroc, t-shirt oversize maroc, grossiste vetement maroc, beya creative, textile morocco" />
