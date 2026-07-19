@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon } from 'lucide-react';
+import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2 } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 
 const THEMES = [
@@ -42,6 +42,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const handleUpdateOrderStatus = (orderId: string, newStatus: string, newColor: string) => {
     setStoreOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus, statusColor: newColor } : o));
     setSelectedOrder(null);
+  };
+
+  const handleDeleteOrder = (orderId: string) => {
+    if (window.confirm(storeIsAr ? 'هل أنت متأكد من حذف هذا الطلب؟' : 'Êtes-vous sûr de vouloir supprimer cette commande ?')) {
+      setStoreOrders(prev => prev.filter(o => o.id !== orderId));
+      setSelectedOrder(null);
+    }
   };
   const [storeLang, setStoreLang] = useState<'fr'|'en'|'ar'>(config.storeLang || 'fr');
   const storeIsAr = storeLang === 'ar';
@@ -2426,6 +2433,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                </div>
                
                <div className="p-6 border-t border-slate-100 bg-slate-50 flex gap-3">
+                  <button onClick={() => handleDeleteOrder(selectedOrder.id)} className="w-12 h-12 shrink-0 bg-white border border-rose-200 text-rose-600 rounded-xl flex items-center justify-center hover:bg-rose-50 hover:text-rose-700 transition-colors active:scale-95" title={storeIsAr ? 'حذف الطلب' : 'Supprimer'}>
+                     <Trash2 className="w-5 h-5" />
+                  </button>
                   <button onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'Refusé', 'bg-rose-100 text-rose-700')} className="flex-1 py-3 bg-white border border-rose-200 text-rose-600 font-bold rounded-xl hover:bg-rose-50 transition-colors text-sm active:scale-95">Refuser</button>
                   <button onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'Confirmé', 'bg-emerald-100 text-emerald-700')} className="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors text-sm shadow-md shadow-indigo-200 flex items-center justify-center gap-2 active:scale-95">
                      <CheckCircle className="w-4 h-4" /> Confirmer
