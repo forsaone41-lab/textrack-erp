@@ -40,7 +40,14 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const { storeNameUrl } = useParams<{storeNameUrl: string}>();
   const config = getSavedConfig();
   const { isAr } = useLang();
-  const [platformMode, setPlatformMode] = useState<'gestion'|'builder'>(config.storeName ? 'gestion' : 'builder');
+  const [platformMode, setPlatformModeState] = useState<'gestion'|'builder'>(
+     (localStorage.getItem('beya_platform_mode') as any) || (config.storeName ? 'gestion' : 'builder')
+  );
+  const setPlatformMode = (mode: 'gestion'|'builder') => {
+     localStorage.setItem('beya_platform_mode', mode);
+     setPlatformModeState(mode);
+  };
+  
   const [builderMode, setBuilderModeState] = useState<'dashboard'|'editor'|'pro_ai'>(
     (localStorage.getItem('beya_builder_mode') as any) || 'dashboard'
   );
@@ -51,7 +58,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   };
 
   const [productsViewMode, setProductsViewMode] = useState<'list'|'grid'>('list');
-  const [activeTab, setActiveTab] = useState<string>(config.storeName ? 'orders' : 'settings');
+  const [activeTab, setActiveTabState] = useState<string>(
+     localStorage.getItem('beya_active_tab') || (config.storeName ? 'orders' : 'settings')
+  );
+  const setActiveTab = (tab: string) => {
+     localStorage.setItem('beya_active_tab', tab);
+     setActiveTabState(tab);
+  };
   const [storeName, setStoreName] = useState(config.storeName || '');
   const [showPreview, setShowPreview] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<'desktop'|'mobile'>('desktop');
@@ -172,7 +185,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   
   const [cartCount, setCartCount] = useState(0);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [storeProducts, setStoreProducts] = useState([
+  const [storeProducts, setStoreProducts] = useState(config.storeProducts || [
     { id: 1, name: 'Premium Hoodie', price: '450.00', category: 'Outerwear', image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800' },
     { id: 2, name: 'Essential T-Shirt', price: '150.00', category: 'Tops', image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=800' },
     { id: 3, name: 'Cargo Pants', price: '350.00', category: 'Bottoms', image: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&q=80&w=800' },
@@ -355,7 +368,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        newsletterTitle,
        newsletterSubtitle,
        featuresData,
-       videoUrl
+       videoUrl,
+       storeProducts
     };
     localStorage.setItem('beya_store_config', JSON.stringify(storeConfig));
     
