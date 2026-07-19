@@ -1,5 +1,6 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import StoreManagerDashboard from '../components/Tools/StoreManagerDashboard';
@@ -36,6 +37,7 @@ const getSavedConfig = () => {
 };
 
 export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: boolean }) {
+  const { storeNameUrl } = useParams<{storeNameUrl: string}>();
   const config = getSavedConfig();
   const { isAr } = useLang();
   const [platformMode, setPlatformMode] = useState<'gestion'|'builder'>(config.storeName ? 'gestion' : 'builder');
@@ -56,6 +58,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [isControlsCollapsed, setIsControlsCollapsed] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [showTrash, setShowTrash] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<string|null>(null);
   const [storeOrders, setStoreOrders] = useState(config.storeName ? [
      { id: '#1042', customer: 'Youssef El Amrani', amount: '850.00 MAD', status: 'Nouveau', statusColor: 'bg-indigo-100 text-indigo-700', date: 'Il y a 10 min', items: '2 articles', products: [{ name: 'Premium Hoodie', photo: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop', qty: 1, price: '450.00 MAD', options: 'Taille: L, Couleur: Noir' }, { name: 'Cargo Pants', photo: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop', qty: 1, price: '400.00 MAD', options: 'Taille: M, Couleur: Kaki' }] },
      { id: '#1041', customer: 'Sara Bennani', amount: '450.00 MAD', status: 'Confirmé', statusColor: 'bg-emerald-100 text-emerald-700', date: 'Il y a 1h', items: '1 article', products: [{ name: 'Essential T-Shirt', photo: 'https://images.unsplash.com/photo-1489987707023-afc7f93c6508?q=80&w=800&auto=format&fit=crop', qty: 1, price: '450.00 MAD', options: 'Taille: S, Couleur: Blanc' }] },
@@ -69,13 +72,14 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   };
 
   const handleDeleteOrder = (orderId: string) => {
-    if (window.confirm(storeIsAr ? 'هل أنت متأكد من نقل هذا الطلب إلى سلة المهملات؟' : 'Êtes-vous sûr de vouloir déplacer cette commande vers la corbeille ?')) {
-      setStoreOrders(prev => prev.map(o => o.id === orderId ? { ...o, deleted: true } : o));
+    setOrderToDelete(orderId);
+  };
+
+  const confirmDeleteOrder = () => {
+    if (orderToDelete) {
+      setStoreOrders(prev => prev.map(o => o.id === orderToDelete ? { ...o, deleted: true } : o));
       setSelectedOrder(null);
-      // Auto-delete after 10 seconds
-      setTimeout(() => {
-        setStoreOrders(current => current.filter(o => !(o.id === orderId && o.deleted)));
-      }, 10000);
+      setOrderToDelete(null);
     }
   };
 
@@ -149,6 +153,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [heroButtonText, setHeroButtonText] = useState(config.heroButtonText || 'Shop Now');
   const [homeCollectionsTitle, setHomeCollectionsTitle] = useState(config.homeCollectionsTitle || 'Trending Now');
   const [allCollectionsTitle, setAllCollectionsTitle] = useState(config.allCollectionsTitle || 'All Products');
+  const [homeBlocks, setHomeBlocks] = useState<string[]>(config.homeBlocks || ['hero', 'collections', 'products']);
+  const [sliderImages, setSliderImages] = useState<string[]>(config.sliderImages || []);
+  const [activeSidebarSection, setActiveSidebarSection] = useState<string>('hero');
   
   const [cartCount, setCartCount] = useState(0);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -209,12 +216,14 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
      const fetchLiveConfig = async () => {
         try {
            const currentDomain = window.location.hostname;
-           // Fetch the exact domain config first
-           let { data, error } = await supabase
-              .from('stores')
-              .select('config_json')
-              .eq('domain', currentDomain)
-              .single();
+           // Fetch the exact domain config first, OR by storeName if provided via url parameter
+           let query = supabase.from('stores').select('config_json');
+           if (storeNameUrl) {
+              query = query.eq('domain', `${storeNameUrl}.beyacreative.com`);
+           } else {
+              query = query.eq('domain', currentDomain);
+           }
+           let { data, error } = await query.single();
            
            // Fallback for SaaS mockup: if domain not found, grab the latest saved store
            if (!data) {
@@ -299,6 +308,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        homeCollectionsTitle,
        allCollectionsTitle,
        buyMode,
+       homeBlocks,
+       sliderImages,
        footerSettings
     };
     localStorage.setItem('beya_store_config', JSON.stringify(storeConfig));
@@ -458,33 +469,80 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
       <div className="flex-1 overflow-y-auto">
         {page === 'home' && (
           <>
-            <HeroBackgroundEditor className={`h-[${isModal ? '600px' : '400px'}] flex flex-col items-center justify-center text-center p-8 bg-cover bg-center relative`} style={{ backgroundImage: `url(${heroImage})` }}>
-               <div className="absolute inset-0 bg-black/60"></div>
-               <div className="relative z-10 flex flex-col items-center">
-                  <EditableText as="h1" text={heroTitle} onTextChange={setHeroTitle} isLiveStore={isLiveStore} className={`${isModal ? 'text-7xl' : 'text-5xl'} font-black text-white uppercase tracking-tighter mb-4`} />
-                  <EditableText as="p" text={heroSubtitle} onTextChange={setHeroSubtitle} isLiveStore={isLiveStore} className="text-white/90 text-lg mb-8 max-w-md" />
-                  <button onClick={() => setPage('collections')} className="px-8 py-3 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded" style={{ backgroundColor: primaryColor }}>
-                     <EditableText text={heroButtonText} onTextChange={setHeroButtonText} isLiveStore={isLiveStore} />
-                  </button>
-               </div>
-            </HeroBackgroundEditor>
-            <div className={`${isModal ? 'p-16 max-w-[1400px]' : 'p-8'} mx-auto w-full`}>
-               <h3 className="text-2xl font-black uppercase text-center mb-10">Trending Now</h3>
-               <div className={`grid gap-8 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3')}`}>
-                  {storeProducts.map((p: any) => (
-                     <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
-                        <div className="aspect-[3/4] bg-slate-100 mb-4 overflow-hidden relative rounded-xl">
-                           {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-12 h-12" /></div>}
-                           <div className={`absolute bottom-4 left-0 right-0 flex justify-center transition-opacity ${(previewDevice === 'mobile' && !isModal) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                              <button onClick={handleAddToCart} className="px-8 py-3 text-white text-xs font-bold uppercase tracking-wider shadow-2xl rounded-full" style={{ backgroundColor: primaryColor }}>Add to cart</button>
-                           </div>
-                        </div>
-                        <h4 className="font-bold text-sm">{p.name}</h4>
-                        <p className="text-slate-500 text-sm mt-1">{p.price} MAD</p>
-                     </div>
-                  ))}
-               </div>
-            </div>
+            <div className="flex flex-col gap-0 w-full">
+             {homeBlocks.map((block: string) => {
+                if (block === 'hero') return (
+                    <HeroBackgroundEditor key="hero" className={`h-[${isModal ? '600px' : '400px'}] flex flex-col items-center justify-center text-center p-8 bg-cover bg-center relative`} style={{ backgroundImage: `url(${heroImage})` }}>
+                       <div className="absolute inset-0 bg-black/60"></div>
+                       <div className="relative z-10 flex flex-col items-center">
+                          <EditableText as="h1" text={heroTitle} onTextChange={setHeroTitle} isLiveStore={isLiveStore} className={`${isModal ? 'text-7xl' : 'text-5xl'} font-black text-white uppercase tracking-tighter mb-4`} />
+                          <EditableText as="p" text={heroSubtitle} onTextChange={setHeroSubtitle} isLiveStore={isLiveStore} className="text-white/90 text-lg mb-8 max-w-md" />
+                          <button onClick={() => setPage('collections')} className="px-8 py-3 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded" style={{ backgroundColor: primaryColor }}>
+                             <EditableText text={heroButtonText} onTextChange={setHeroButtonText} isLiveStore={isLiveStore} />
+                          </button>
+                       </div>
+                    </HeroBackgroundEditor>
+                );
+                
+                if (block === 'slider' && sliderImages.length > 0) return (
+                    <div key="slider" className="w-full relative overflow-hidden flex bg-slate-900" style={{ height: isModal ? '500px' : '300px' }}>
+                       <div className="flex w-full overflow-x-auto snap-x snap-mandatory no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                          {sliderImages.map((img:string, idx:number) => (
+                             <div key={idx} className="min-w-full h-full snap-center relative shrink-0">
+                                <img src={img} className="w-full h-full object-cover" />
+                             </div>
+                          ))}
+                       </div>
+                       {sliderImages.length > 1 && (
+                          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10">
+                             {sliderImages.map((_:any, idx:number) => (
+                                <div key={idx} className="w-2 h-2 rounded-full bg-white shadow-lg" />
+                             ))}
+                          </div>
+                       )}
+                    </div>
+                );
+
+                if (block === 'products') return (
+                    <div key="products" className={`${isModal ? 'p-16 max-w-[1400px]' : 'p-8'} mx-auto w-full`}>
+                       <h3 className="text-2xl font-black uppercase text-center mb-10">{homeCollectionsTitle}</h3>
+                       <div className={`grid gap-8 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3')}`}>
+                          {storeProducts.slice(0, 8).map((p: any) => (
+                             <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
+                                <div className="aspect-[3/4] bg-slate-100 mb-4 overflow-hidden relative rounded-xl">
+                                   {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-12 h-12" /></div>}
+                                   <div className={`absolute bottom-4 left-0 right-0 flex justify-center transition-opacity ${(previewDevice === 'mobile' && !isModal) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                                      <button onClick={handleAddToCart} className="px-8 py-3 text-white text-xs font-bold uppercase tracking-wider shadow-2xl rounded-full" style={{ backgroundColor: primaryColor }}>Add to cart</button>
+                                   </div>
+                                </div>
+                                <h4 className="font-bold text-sm">{p.name}</h4>
+                                <p className="text-slate-500 text-sm mt-1">{p.price} MAD</p>
+                             </div>
+                          ))}
+                       </div>
+                    </div>
+                );
+                
+                if (block === 'collections' && categories.length > 1) return (
+                    <div key="collections" className={`${isModal ? 'p-16 max-w-[1400px]' : 'p-8'} mx-auto w-full bg-slate-50`}>
+                       <h3 className="text-2xl font-black uppercase text-center mb-10">{allCollectionsTitle}</h3>
+                       <div className={`grid gap-4 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-2' : (isModal ? 'grid-cols-4' : 'grid-cols-3')}`}>
+                          {categories.filter((c:string) => c !== 'All').map((cat: string, idx: number) => (
+                             <div key={idx} onClick={() => { setActiveCategory(cat); setPage('collections'); }} className="cursor-pointer group aspect-square relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all">
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10 flex items-end p-6">
+                                   <span className="text-white font-bold text-lg">{cat}</span>
+                                </div>
+                                <div className="absolute inset-0 bg-indigo-900/20 group-hover:bg-transparent transition-colors z-0"></div>
+                                <img src={storeProducts.find((p:any)=>p.category===cat)?.image || 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&q=80&w=600'} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                             </div>
+                          ))}
+                       </div>
+                    </div>
+                );
+                
+                return null;
+             })}
+          </div>
           </>
         )}
         {page === 'collections' && (
@@ -2431,59 +2489,109 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                 <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
                    <h4 className="text-xs font-bold text-indigo-900 uppercase tracking-wider mb-3">{storeIsAr ? 'العناصر الأساسية' : 'Éléments de Base'}</h4>
                    <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-indigo-300 hover:shadow-md transition-all group">
-                         <div className="w-8 h-8 rounded bg-indigo-50 flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform"><Type className="w-4 h-4" /></div>
-                         <span className="text-[10px] font-bold text-slate-600">{storeIsAr ? 'عنوان' : 'Titre'}</span>
-                      </div>
-                      <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-indigo-300 hover:shadow-md transition-all group">
-                         <div className="w-8 h-8 rounded bg-emerald-50 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform"><ImageIcon className="w-4 h-4" /></div>
-                         <span className="text-[10px] font-bold text-slate-600">{storeIsAr ? 'صورة' : 'Image'}</span>
-                      </div>
-                      <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-indigo-300 hover:shadow-md transition-all group">
-                         <div className="w-8 h-8 rounded bg-amber-50 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform"><MousePointerClick className="w-4 h-4" /></div>
-                         <span className="text-[10px] font-bold text-slate-600">{storeIsAr ? 'زر' : 'Bouton'}</span>
-                      </div>
-                      <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-indigo-300 hover:shadow-md transition-all group">
-                         <div className="w-8 h-8 rounded bg-rose-50 flex items-center justify-center text-rose-500 group-hover:scale-110 transition-transform"><LayoutGrid className="w-4 h-4" /></div>
-                         <span className="text-[10px] font-bold text-slate-600">{storeIsAr ? 'منتجات' : 'Produits'}</span>
-                      </div>
-                   </div>
+                       <div onClick={() => { setActiveSidebarSection('hero'); if (!homeBlocks.includes('hero')) setHomeBlocks([...homeBlocks, 'hero']); }} className={`bg-white border ${activeSidebarSection === 'hero' ? 'border-indigo-500 shadow-md ring-2 ring-indigo-100' : 'border-slate-200'} rounded-lg p-3 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all group relative`}>
+                          {homeBlocks.includes('hero') && <div className="absolute top-1 right-1"><CheckCircle className="w-3 h-3 text-indigo-500" /></div>}
+                          <div className="w-8 h-8 rounded bg-indigo-50 flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform"><Type className="w-4 h-4" /></div>
+                          <span className="text-[10px] font-bold text-slate-600">{storeIsAr ? 'القسم الرئيسي' : 'Bannière (Hero)'}</span>
+                       </div>
+                       <div onClick={() => { setActiveSidebarSection('slider'); if (!homeBlocks.includes('slider')) setHomeBlocks([...homeBlocks, 'slider']); else setHomeBlocks(homeBlocks.filter(b => b !== 'slider')); }} className={`bg-white border ${activeSidebarSection === 'slider' ? 'border-emerald-500 shadow-md ring-2 ring-emerald-100' : 'border-slate-200'} rounded-lg p-3 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all group relative`}>
+                          {homeBlocks.includes('slider') && <div className="absolute top-1 right-1"><CheckCircle className="w-3 h-3 text-emerald-500" /></div>}
+                          <div className="w-8 h-8 rounded bg-emerald-50 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform"><ImageIcon className="w-4 h-4" /></div>
+                          <span className="text-[10px] font-bold text-slate-600">{storeIsAr ? 'معرض صور' : 'Slider'}</span>
+                       </div>
+                       <div onClick={() => { setActiveSidebarSection('collections'); if (!homeBlocks.includes('collections')) setHomeBlocks([...homeBlocks, 'collections']); else setHomeBlocks(homeBlocks.filter(b => b !== 'collections')); }} className={`bg-white border ${activeSidebarSection === 'collections' ? 'border-amber-500 shadow-md ring-2 ring-amber-100' : 'border-slate-200'} rounded-lg p-3 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all group relative`}>
+                          {homeBlocks.includes('collections') && <div className="absolute top-1 right-1"><CheckCircle className="w-3 h-3 text-amber-500" /></div>}
+                          <div className="w-8 h-8 rounded bg-amber-50 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform"><MousePointerClick className="w-4 h-4" /></div>
+                          <span className="text-[10px] font-bold text-slate-600">{storeIsAr ? 'تصنيفات' : 'Collections'}</span>
+                       </div>
+                       <div onClick={() => { setActiveSidebarSection('products'); if (!homeBlocks.includes('products')) setHomeBlocks([...homeBlocks, 'products']); else setHomeBlocks(homeBlocks.filter(b => b !== 'products')); }} className={`bg-white border ${activeSidebarSection === 'products' ? 'border-rose-500 shadow-md ring-2 ring-rose-100' : 'border-slate-200'} rounded-lg p-3 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all group relative`}>
+                          {homeBlocks.includes('products') && <div className="absolute top-1 right-1"><CheckCircle className="w-3 h-3 text-rose-500" /></div>}
+                          <div className="w-8 h-8 rounded bg-rose-50 flex items-center justify-center text-rose-500 group-hover:scale-110 transition-transform"><LayoutGrid className="w-4 h-4" /></div>
+                          <span className="text-[10px] font-bold text-slate-600">{storeIsAr ? 'منتجات' : 'Produits'}</span>
+                       </div>
+                    </div>
                 </div>
 
                 <div className="space-y-4">
                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">{storeIsAr ? 'إعدادات القسم المحدد' : 'Paramètres de la Section'}</h4>
                    
-                   <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{storeIsAr ? 'النص الرئيسي' : 'Texte Principal'}</label>
-                      <input type="text" value={heroTitle} onChange={(e) => setHeroTitle(e.target.value)} className="w-full text-sm font-medium bg-slate-50 border border-slate-200 rounded-lg px-3 py-2" />
-                   </div>
-                   
-                   <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{storeIsAr ? 'اللون الرئيسي' : 'Couleur Principale'}</label>
-                      <div className="flex items-center gap-2">
-                         <label className="w-8 h-8 rounded-full border border-slate-200 cursor-pointer flex-shrink-0" style={{ backgroundColor: primaryColor }}>
-                            <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="opacity-0 w-0 h-0" />
-                         </label>
-                         <input type="text" value={primaryColor} readOnly className="flex-1 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg px-2 py-1" />
-                      </div>
-                   </div>
+                    {activeSidebarSection === 'hero' && (
+                       <>
+                       <div>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{storeIsAr ? 'النص الرئيسي' : 'Texte Principal'}</label>
+                          <input type="text" value={heroTitle} onChange={(e) => setHeroTitle(e.target.value)} className="w-full text-sm font-medium bg-slate-50 border border-slate-200 rounded-lg px-3 py-2" />
+                       </div>
+                       <div>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{storeIsAr ? 'النص الفرعي' : 'Sous-titre'}</label>
+                          <input type="text" value={heroSubtitle} onChange={(e) => setHeroSubtitle(e.target.value)} className="w-full text-sm font-medium bg-slate-50 border border-slate-200 rounded-lg px-3 py-2" />
+                       </div>
+                       <div>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{storeIsAr ? 'نص الزر' : 'Texte du Bouton'}</label>
+                          <input type="text" value={heroButtonText} onChange={(e) => setHeroButtonText(e.target.value)} className="w-full text-sm font-medium bg-slate-50 border border-slate-200 rounded-lg px-3 py-2" />
+                       </div>
+                       <div>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{storeIsAr ? 'صورة الغلاف' : 'Image de Couverture'}</label>
+                          <label className="w-full h-24 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors group relative overflow-hidden">
+                             {heroImage ? (
+                                <img src={heroImage} className="w-full h-full object-cover opacity-50 group-hover:opacity-30 transition-opacity" />
+                             ) : null}
+                             <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                <ImageIcon className="w-5 h-5 text-slate-400 mb-1" />
+                                <span className="text-[10px] font-bold text-slate-500">{storeIsAr ? 'تغيير الصورة' : 'Changer l\'image'}</span>
+                             </div>
+                             <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (file) setHeroImage(await readFileAsBase64(file));
+                             }} />
+                          </label>
+                       </div>
+                       </>
+                    )}
 
-                   <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{storeIsAr ? 'صورة الغلاف' : 'Image de Couverture'}</label>
-                      <label className="w-full h-24 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors group relative overflow-hidden">
-                         {heroImage ? (
-                            <img src={heroImage} className="w-full h-full object-cover opacity-50 group-hover:opacity-30 transition-opacity" />
-                         ) : null}
-                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <ImageIcon className="w-5 h-5 text-slate-400 mb-1" />
-                            <span className="text-[10px] font-bold text-slate-500">{storeIsAr ? 'تغيير الصورة' : 'Changer l\'image'}</span>
-                         </div>
-                         <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (file) setHeroImage(await readFileAsBase64(file));
-                         }} />
-                      </label>
-                   </div>
+                    {activeSidebarSection === 'slider' && (
+                       <div>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{storeIsAr ? 'صور السلايدر' : 'Images du Slider'}</label>
+                          <div className="grid grid-cols-2 gap-2 mb-2">
+                             {sliderImages.map((img, idx) => (
+                                <div key={idx} className="relative aspect-video rounded border border-slate-200 overflow-hidden group">
+                                   <img src={img} className="w-full h-full object-cover" />
+                                   <button onClick={() => setSliderImages(sliderImages.filter((_, i) => i !== idx))} className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all shadow"><X className="w-3 h-3"/></button>
+                                </div>
+                             ))}
+                          </div>
+                          <label className="w-full h-12 border-2 border-dashed border-indigo-200 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-indigo-50 text-indigo-500 transition-colors">
+                             <span className="text-xs font-bold flex items-center gap-1"><Plus className="w-3 h-3"/> {storeIsAr ? 'إضافة صورة' : 'Ajouter une image'}</span>
+                             <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (file) setSliderImages([...sliderImages, await readFileAsBase64(file)]);
+                             }} />
+                          </label>
+                       </div>
+                    )}
+
+                    {activeSidebarSection === 'collections' && (
+                       <div>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{storeIsAr ? 'عنوان التصنيفات' : 'Titre des Collections'}</label>
+                          <input type="text" value={allCollectionsTitle} onChange={(e) => setAllCollectionsTitle(e.target.value)} className="w-full text-sm font-medium bg-slate-50 border border-slate-200 rounded-lg px-3 py-2" />
+                       </div>
+                    )}
+
+                    {activeSidebarSection === 'products' && (
+                       <div>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{storeIsAr ? 'عنوان المنتجات المميزة' : 'Titre des Produits'}</label>
+                          <input type="text" value={homeCollectionsTitle} onChange={(e) => setHomeCollectionsTitle(e.target.value)} className="w-full text-sm font-medium bg-slate-50 border border-slate-200 rounded-lg px-3 py-2" />
+                       </div>
+                    )}
+
+                    <div className="pt-4 mt-4 border-t border-slate-100">
+                       <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{storeIsAr ? 'اللون الرئيسي' : 'Couleur Principale'}</label>
+                       <div className="flex items-center gap-2">
+                          <label className="w-8 h-8 rounded-full border border-slate-200 cursor-pointer flex-shrink-0 shadow-inner" style={{ backgroundColor: primaryColor }}>
+                             <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="opacity-0 w-0 h-0" />
+                          </label>
+                          <input type="text" value={primaryColor} readOnly className="flex-1 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg px-2 py-1" />
+                       </div>
+                    </div>
                 </div>
              </div>
 
@@ -2962,6 +3070,27 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
       )}
 
       {/* PUBLISH MODAL */}
+      
+      {/* DELETE CONFIRMATION MODAL */}
+      {orderToDelete && (
+         <div className="fixed inset-0 z-[600] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+               <div className="p-6 text-center">
+                  <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
+                     <Trash2 className="w-8 h-8 text-rose-600" />
+                  </div>
+                  <h2 className="text-xl font-black text-slate-800 mb-2">{storeIsAr ? 'نقل إلى سلة المهملات؟' : 'Déplacer vers la corbeille ?'}</h2>
+                  <p className="text-slate-500 text-sm mb-6">{storeIsAr ? 'سيتم نقل هذا الطلب إلى سلة المهملات. يمكنك حذفه نهائياً من هناك.' : 'Cette commande sera déplacée vers la corbeille. Vous pourrez la supprimer définitivement par la suite.'}</p>
+                  
+                  <div className="flex gap-3">
+                     <button onClick={() => setOrderToDelete(null)} className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors text-sm">{storeIsAr ? 'إلغاء' : 'Annuler'}</button>
+                     <button onClick={confirmDeleteOrder} className="flex-1 py-3 bg-rose-600 text-white font-bold rounded-xl hover:bg-rose-700 shadow-md shadow-rose-200 transition-colors text-sm">{storeIsAr ? 'نقل' : 'Confirmer'}</button>
+                  </div>
+               </div>
+            </div>
+         </div>
+      )}
+
       {showPublishModal && (
          <div className="fixed inset-0 z-[500] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">

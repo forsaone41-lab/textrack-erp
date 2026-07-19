@@ -514,6 +514,7 @@ function AppContent() {
       </Route>
       {/* Standalone SaaS Route for BEYA STORE Builder */}
       <Route path="/store-builder" element={currentUser?.role === 'admin' ? <div className="min-h-screen bg-white"><StoreBuilder /></div> : <Navigate to="/" replace />} />
+      <Route path="/store/:storeNameUrl" element={<div className="min-h-screen bg-white"><StoreBuilder isLiveStore={true} /></div>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
