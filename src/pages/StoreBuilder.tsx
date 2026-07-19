@@ -308,6 +308,29 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [isLinkingDomain, setIsLinkingDomain] = useState(false);
   const [domainError, setDomainError] = useState('');
 
+  const submitGlobalOrder = (product: any, qty: number) => {
+    const inputs = Array.from(document.querySelectorAll('input[type="text"]')).slice(-4);
+    const nameInput = inputs[0] as HTMLInputElement;
+    const phoneInput = inputs[1] as HTMLInputElement;
+    const cityInput = inputs[2] as HTMLInputElement;
+
+    const newOrder = {
+        id: "ORD-" + Math.floor(10000 + Math.random() * 90000),
+        date: new Date().toLocaleDateString("fr-FR"),
+        customer: nameInput?.value || "Client Web",
+        city: cityInput?.value || "Non specifiee",
+        phone: phoneInput?.value || "Non specifie",
+        product: product ? product.name : "Produit inconnu",
+        quantity: qty || 1,
+        amount: product ? (parseFloat(product.price) * (qty || 1)).toFixed(2) : "0.00",
+        status: "En attente",
+        statusColor: "#f59e0b"
+    };
+    
+    setStoreOrders((prev: any) => [newOrder, ...prev]);
+    setPage("success");
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     const storeConfig = {
