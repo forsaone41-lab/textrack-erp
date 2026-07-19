@@ -32,6 +32,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [previewDevice, setPreviewDevice] = useState<'desktop'|'mobile'>('desktop');
   const [isControlsCollapsed, setIsControlsCollapsed] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [showTrash, setShowTrash] = useState(false);
   const [storeOrders, setStoreOrders] = useState([
      { id: '#1042', customer: 'Youssef El Amrani', amount: '850.00 MAD', status: 'Nouveau', statusColor: 'bg-indigo-100 text-indigo-700', date: 'Il y a 10 min', items: '2 articles', products: [{ name: 'Premium Hoodie', photo: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop', qty: 1, price: '450.00 MAD', options: 'Taille: L, Couleur: Noir' }, { name: 'Cargo Pants', photo: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop', qty: 1, price: '400.00 MAD', options: 'Taille: M, Couleur: Kaki' }] },
      { id: '#1041', customer: 'Sara Bennani', amount: '450.00 MAD', status: 'Confirmé', statusColor: 'bg-emerald-100 text-emerald-700', date: 'Il y a 1h', items: '1 article', products: [{ name: 'Essential T-Shirt', photo: 'https://images.unsplash.com/photo-1489987707023-afc7f93c6508?q=80&w=800&auto=format&fit=crop', qty: 1, price: '450.00 MAD', options: 'Taille: S, Couleur: Blanc' }] },
@@ -45,10 +46,24 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   };
 
   const handleDeleteOrder = (orderId: string) => {
-    if (window.confirm(storeIsAr ? 'هل أنت متأكد من حذف هذا الطلب؟' : 'Êtes-vous sûr de vouloir supprimer cette commande ?')) {
-      setStoreOrders(prev => prev.filter(o => o.id !== orderId));
+    if (window.confirm(storeIsAr ? 'هل أنت متأكد من نقل هذا الطلب إلى سلة المهملات؟' : 'Êtes-vous sûr de vouloir déplacer cette commande vers la corbeille ?')) {
+      setStoreOrders(prev => prev.map(o => o.id === orderId ? { ...o, deleted: true } : o));
       setSelectedOrder(null);
+      // Auto-delete after 10 seconds
+      setTimeout(() => {
+        setStoreOrders(current => current.filter(o => !(o.id === orderId && o.deleted)));
+      }, 10000);
     }
+  };
+
+  const handleRestoreOrder = (orderId: string) => {
+    setStoreOrders(prev => prev.map(o => o.id === orderId ? { ...o, deleted: false } : o));
+    setSelectedOrder(null);
+  };
+
+  const handlePermanentDelete = (orderId: string) => {
+    setStoreOrders(prev => prev.filter(o => o.id !== orderId));
+    setSelectedOrder(null);
   };
   const [storeLang, setStoreLang] = useState<'fr'|'en'|'ar'>(config.storeLang || 'fr');
   const storeIsAr = storeLang === 'ar';
@@ -1439,11 +1454,18 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                     {/* Recent Orders List */}
                     <div>
                        <div className="flex justify-between items-center mb-3">
-                          <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">Récentes</h3>
+                          <div className="flex gap-4 items-center">
+                            <h3 className={`text-xs font-black uppercase tracking-wider cursor-pointer transition-colors ${!showTrash ? 'text-slate-800' : 'text-slate-400 hover:text-slate-600'}`} onClick={() => setShowTrash(false)}>Récentes</h3>
+                            <h3 className={`text-xs font-black uppercase tracking-wider cursor-pointer flex items-center gap-1 transition-colors ${showTrash ? 'text-rose-600' : 'text-slate-400 hover:text-rose-400'}`} onClick={() => setShowTrash(true)}>
+                               <Trash2 className="w-3 h-3" /> Poubelle
+                            </h3>
+                          </div>
                           <span className="text-[10px] text-indigo-600 font-bold cursor-pointer hover:underline">Voir tout</span>
                        </div>
                        <div className="space-y-3">
-                          {storeOrders.map(order => (
+                          {storeOrders.filter(o => showTrash ? o.deleted : !o.deleted).length === 0 ? (
+                             <div className="text-center p-6 text-slate-400 text-sm font-bold border-2 border-dashed border-slate-200 rounded-2xl">{showTrash ? (storeIsAr ? 'سلة المهملات فارغة' : 'La corbeille est vide') : (storeIsAr ? 'لا توجد طلبات' : 'Aucune commande')}</div>
+                          ) : storeOrders.filter(o => showTrash ? o.deleted : !o.deleted).map(order => (
                              <div key={order.id} onClick={() => setSelectedOrder(order)} className="p-3 border border-slate-200 rounded-2xl bg-white shadow-sm cursor-pointer hover:border-indigo-500 transition-colors hover:shadow-md group">
                                 <div className="flex justify-between items-start mb-2">
                                    <div className="flex items-center gap-2">
@@ -2433,13 +2455,24 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                </div>
                
                <div className="p-6 border-t border-slate-100 bg-slate-50 flex gap-3">
-                  <button onClick={() => handleDeleteOrder(selectedOrder.id)} className="w-12 h-12 shrink-0 bg-white border border-rose-200 text-rose-600 rounded-xl flex items-center justify-center hover:bg-rose-50 hover:text-rose-700 transition-colors active:scale-95" title={storeIsAr ? 'حذف الطلب' : 'Supprimer'}>
-                     <Trash2 className="w-5 h-5" />
-                  </button>
-                  <button onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'Refusé', 'bg-rose-100 text-rose-700')} className="flex-1 py-3 bg-white border border-rose-200 text-rose-600 font-bold rounded-xl hover:bg-rose-50 transition-colors text-sm active:scale-95">Refuser</button>
-                  <button onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'Confirmé', 'bg-emerald-100 text-emerald-700')} className="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors text-sm shadow-md shadow-indigo-200 flex items-center justify-center gap-2 active:scale-95">
-                     <CheckCircle className="w-4 h-4" /> Confirmer
-                  </button>
+                  {selectedOrder.deleted ? (
+                     <>
+                        <button onClick={() => handleRestoreOrder(selectedOrder.id)} className="flex-1 py-3 bg-white border border-indigo-200 text-indigo-600 font-bold rounded-xl hover:bg-indigo-50 transition-colors text-sm active:scale-95">Restaurer</button>
+                        <button onClick={() => handlePermanentDelete(selectedOrder.id)} className="flex-1 py-3 bg-rose-600 text-white font-bold rounded-xl hover:bg-rose-700 transition-colors text-sm shadow-md shadow-rose-200 flex items-center justify-center gap-2 active:scale-95">
+                           <Trash2 className="w-4 h-4" /> Supprimer
+                        </button>
+                     </>
+                  ) : (
+                     <>
+                        <button onClick={() => handleDeleteOrder(selectedOrder.id)} className="w-12 h-12 shrink-0 bg-white border border-rose-200 text-rose-600 rounded-xl flex items-center justify-center hover:bg-rose-50 hover:text-rose-700 transition-colors active:scale-95" title={storeIsAr ? 'حذف الطلب' : 'Supprimer'}>
+                           <Trash2 className="w-5 h-5" />
+                        </button>
+                        <button onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'Refusé', 'bg-rose-100 text-rose-700')} className="flex-1 py-3 bg-white border border-rose-200 text-rose-600 font-bold rounded-xl hover:bg-rose-50 transition-colors text-sm active:scale-95">Refuser</button>
+                        <button onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'Confirmé', 'bg-emerald-100 text-emerald-700')} className="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors text-sm shadow-md shadow-indigo-200 flex items-center justify-center gap-2 active:scale-95">
+                           <CheckCircle className="w-4 h-4" /> Confirmer
+                        </button>
+                     </>
+                  )}
                </div>
             </div>
          </div>
