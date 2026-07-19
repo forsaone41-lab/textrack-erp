@@ -160,8 +160,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [pageForm, setPageForm] = useState<any>(null);
   
   const [storeLogo, setStoreLogo] = useState(config.storeLogo || '');
-  const [storeFavicon, setStoreFavicon] = useState('');
-  const [footerSettings, setFooterSettings] = useState({
+  const [storeFavicon, setStoreFavicon] = useState(config.storeFavicon || '');
+  const [footerSettings, setFooterSettings] = useState(config.footerSettings || {
     copyright: '© 2026 My Brand. Tous droits réservés.',
     showPrivacy: true,
     showTerms: true,
@@ -236,6 +236,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               if (conf.heroButtonText) setHeroButtonText(conf.heroButtonText);
               if (conf.homeCollectionsTitle) setHomeCollectionsTitle(conf.homeCollectionsTitle);
               if (conf.allCollectionsTitle) setAllCollectionsTitle(conf.allCollectionsTitle);
+              if (conf.buyMode) setBuyMode(conf.buyMode);
+              if (conf.footerSettings) setFooterSettings(conf.footerSettings);
            }
         } catch (err) {
            console.warn('No live config found in Supabase or table missing:', err);
@@ -247,7 +249,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
      }
   }, [isLiveStore]);
   
-  const [buyMode, setBuyMode] = useState<'cart'|'direct'|'both'|'form'>('both');
+  const [buyMode, setBuyMode] = useState<'cart'|'direct'|'both'|'form'>(config.buyMode || 'both');
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [productForm, setProductForm] = useState<any>(null);
   const [newSizeInput, setNewSizeInput] = useState('');
@@ -276,7 +278,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        heroSubtitle,
        heroButtonText,
        homeCollectionsTitle,
-       allCollectionsTitle
+       allCollectionsTitle,
+       buyMode,
+       footerSettings
     };
     localStorage.setItem('beya_store_config', JSON.stringify(storeConfig));
     
