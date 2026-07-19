@@ -20,6 +20,13 @@ const THEMES = [
   { id: 'mazia', name: 'Mazia', layout: 'mazia', defaultColor: '#ef4444', defaultFont: 'font-serif', previewImg: 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=800&auto=format&fit=crop' }
 ];
 
+const readFileAsBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target?.result as string);
+    reader.readAsDataURL(file);
+  });
+};
 
 const getSavedConfig = () => {
     try {
@@ -379,9 +386,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             </div>
             <div className="absolute -top-3 -right-4 w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-50" title={storeIsAr ? 'تغيير الشعار' : 'Changer le logo'}>
                <ImageIcon className="w-3 h-3" />
-               <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+               <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
                   const file = e.target.files?.[0];
-                  if (file) setStoreLogo(URL.createObjectURL(file));
+                  if (file) setStoreLogo(await readFileAsBase64(file));
                }} />
             </div>
          </label>
@@ -395,9 +402,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             {children}
             <label className="absolute top-4 right-4 bg-white/90 backdrop-blur text-slate-800 px-4 py-2 rounded-full text-xs font-bold shadow-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center gap-2 z-50 hover:bg-white border border-slate-200">
                <ImageIcon className="w-4 h-4" />{storeIsAr ? 'تغيير الصورة' : "Changer l'image"}
-               <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+               <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
                   const file = e.target.files?.[0];
-                  if (file) setHeroImage(URL.createObjectURL(file));
+                  if (file) setHeroImage(await readFileAsBase64(file));
                }} />
             </label>
          </div>
@@ -2130,9 +2137,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              </div>
                              <label className="cursor-pointer px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm">
                                 {storeIsAr ? 'رفع الشعار' : 'Importer un logo'}
-                                <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                                <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
                                    const file = e.target.files?.[0];
-                                   if (file) setStoreLogo(URL.createObjectURL(file));
+                                   if (file) setStoreLogo(await readFileAsBase64(file));
                                 }} />
                              </label>
                              {storeLogo && (
@@ -2149,9 +2156,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              </div>
                              <label className="cursor-pointer px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm">
                                 {storeIsAr ? 'رفع الأيقونة' : 'Importer un favicon'}
-                                <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                                <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
                                    const file = e.target.files?.[0];
-                                   if (file) setStoreFavicon(URL.createObjectURL(file));
+                                   if (file) setStoreFavicon(await readFileAsBase64(file));
                                 }} />
                              </label>
                              {storeFavicon && (
@@ -2528,10 +2535,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                    <span className="text-xs font-bold text-slate-500 group-hover:text-indigo-600">{storeIsAr ? 'إضافة صورة' : 'Ajouter une image'}</span>
                                 </>
                              )}
-                             <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                             <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
-                                   setProductForm({...productForm, image: URL.createObjectURL(file)});
+                                   setProductForm({...productForm, image: await readFileAsBase64(file)});
                                 }
                              }} />
                           </label>
@@ -2621,12 +2628,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                                    <ImageIcon className="w-4 h-4" />
                                                 )}
                                                 {productForm?.colorImages?.[color] ? (storeIsAr ? 'تغيير' : 'Changer') : (storeIsAr ? 'ربط صورة' : 'Lier une image')}
-                                                <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                                                <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
                                                    const file = e.target.files?.[0];
                                                    if (file) {
+                                                      const b64 = await readFileAsBase64(file);
                                                       setProductForm({
                                                          ...productForm, 
-                                                         colorImages: { ...(productForm.colorImages || {}), [color]: URL.createObjectURL(file) }
+                                                         colorImages: { ...(productForm.colorImages || {}), [color]: b64 }
                                                       });
                                                    }
                                                 }} />
@@ -2677,7 +2685,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                                                   {(!comb.size && comb.color) && <span className="uppercase text-[10px] text-slate-400 font-bold">{storeIsAr ? 'لون' : 'Couleur'}</span>}
                                                               </td>
                                                               <td className="px-6 py-3">
-                                                                  <input type="number" placeholder="0" value={qty} onChange={(e) => {
+                                                                  <input type="number" placeholder="0" value={qty} onChange={async (e) => {
                                                                       setProductForm({
                                                                           ...productForm, 
                                                                           variantQuantities: { ...(productForm.variantQuantities || {}), [key]: e.target.value }
