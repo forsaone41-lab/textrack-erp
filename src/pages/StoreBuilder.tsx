@@ -2004,13 +2004,23 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
           <button onClick={() => setShowPreview(true)} className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 px-4 py-2 rounded-xl text-sm font-black hover:bg-indigo-100 hover:scale-105 transition-all shadow-sm" title={storeIsAr ? 'محرر الموقع الاحترافي' : 'Éditeur Visuel PRO'}>
             <LayoutTemplate className="w-4 h-4" /> {storeIsAr ? 'بناء الموقع' : 'Éditeur PRO'}
           </button>
-          <button onClick={() => {
-             const url = customDomain ? `https://${customDomain}` : `https://${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`;
-             window.open(url, '_blank');
-          }} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all shadow-sm" title={storeIsAr ? 'زيارة المتجر المباشر' : 'Visiter la boutique en ligne'}>
+          <button 
+             onClick={() => {
+                const url = customDomain ? `https://${customDomain}` : `https://${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`;
+                window.open(url, '_blank');
+             }} 
+             disabled={!config.storeName}
+             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${!config.storeName ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-50' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`} 
+             title={!config.storeName ? (storeIsAr ? 'يرجى حفظ المتجر أولاً' : 'Veuillez enregistrer d\'abord') : (storeIsAr ? 'زيارة المتجر المباشر' : 'Visiter la boutique en ligne')}
+          >
             <ExternalLink className="w-4 h-4" /> {storeIsAr ? 'زيارة المتجر' : 'Visiter'}
           </button>
-          <button onClick={handlePublish} disabled={isPublishing} className="flex items-center gap-2 bg-gradient-to-r from-slate-800 to-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold hover:shadow-lg transition-all shadow-sm disabled:opacity-70 disabled:cursor-not-allowed">
+          <button 
+             onClick={handlePublish} 
+             disabled={isPublishing || !config.storeName} 
+             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${!config.storeName ? 'bg-slate-200 text-slate-400 cursor-not-allowed opacity-50' : 'bg-gradient-to-r from-slate-800 to-slate-900 text-white hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed'}`}
+             title={!config.storeName ? (storeIsAr ? 'يرجى حفظ المتجر أولاً' : 'Veuillez enregistrer d\'abord') : undefined}
+          >
             {isPublishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />} 
             {isPublishing ? (storeIsAr ? 'جاري النشر...' : 'Publication...') : (storeIsAr ? 'نشر' : 'Publier')}
           </button>
