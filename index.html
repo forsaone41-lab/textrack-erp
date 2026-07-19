@@ -16,12 +16,13 @@
            // Remove meta description to avoid Beya's text showing up
            var metaDesc = document.querySelector('meta[name="description"]');
            if (metaDesc) metaDesc.remove();
-           
-           // Remove favicon to avoid flashing BEYA logo
+        } else {
+           // It's the main domain, set the BEYA favicon
            window.addEventListener('DOMContentLoaded', function() {
-              document.querySelectorAll("link[rel*='icon']").forEach(function(link) {
-                 link.href = ''; 
-              });
+              var fav = document.getElementById('dynamic-favicon');
+              var apple = document.getElementById('dynamic-apple-icon');
+              if (fav) fav.href = '/logo.png';
+              if (apple) apple.href = '/logo.png';
            });
         }
       })();
@@ -45,10 +46,10 @@
     <meta property="twitter:description" content="Production de vêtements haute qualité au Maroc." />
     <meta property="twitter:image" content="https://beyacreative.com/logo.png" />
 
-    <link rel="icon" type="image/png" href="/logo.png" />
+    <link id="dynamic-favicon" rel="icon" type="image/png" href="data:," />
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#4f46e5" />
-    <link rel="apple-touch-icon" href="/logo.png" />
+    <link id="dynamic-apple-icon" rel="apple-touch-icon" href="data:," />
 
     <!-- Preconnect to external services for faster loading -->
     <link rel="preconnect" href="https://supabase.co" />
