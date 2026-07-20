@@ -88,7 +88,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   });
 
   useEffect(() => {
-    if (config.storeName && storeOrders.length > 0) {
+    if (config.storeName) {
       localStorage.setItem(`beya_orders_${config.storeName}`, JSON.stringify(storeOrders));
     }
   }, [storeOrders, config.storeName]);
@@ -158,22 +158,31 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     setOrderToDelete(orderId);
   };
 
-  const confirmDeleteOrder = () => {
+  const confirmDeleteOrder = async () => {
     if (orderToDelete) {
       setStoreOrders(prev => prev.map(o => o.id === orderToDelete ? { ...o, deleted: true } : o));
       setSelectedOrder(null);
+      if (orderToDelete.startsWith('ORD-')) {
+         await supabase.from('commandes').update({ statut: 'Annulée' }).eq('id', orderToDelete);
+      }
       setOrderToDelete(null);
     }
   };
 
-  const handleRestoreOrder = (orderId: string) => {
+  const handleRestoreOrder = async (orderId: string) => {
     setStoreOrders(prev => prev.map(o => o.id === orderId ? { ...o, deleted: false } : o));
     setSelectedOrder(null);
+    if (orderId.startsWith('ORD-')) {
+       await supabase.from('commandes').update({ statut: 'En attente' }).eq('id', orderId);
+    }
   };
 
-  const handlePermanentDelete = (orderId: string) => {
+  const handlePermanentDelete = async (orderId: string) => {
     setStoreOrders(prev => prev.filter(o => o.id !== orderId));
     setSelectedOrder(null);
+    if (orderId.startsWith('ORD-')) {
+       await supabase.from('commandes').delete().eq('id', orderId);
+    }
   };
   const [storeLang, setStoreLang] = useState<'fr'|'en'|'ar'>(config.storeLang || 'fr');
   const storeIsAr = storeLang === 'ar';
