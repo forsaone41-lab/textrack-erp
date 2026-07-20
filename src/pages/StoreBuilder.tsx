@@ -2258,14 +2258,17 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                  <div className="space-y-4">
                     <div className="flex items-center justify-between mb-2">
                        <h3 className="text-xl font-black text-slate-800 tracking-tight">{storeIsAr ? 'إدارة المنتجات' : 'Gestion des Produits'}</h3>
-                       <button className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 transition-colors shadow-sm">
+                       <button onClick={() => { setProductForm({ name: '', price: '', stock: '', description: '', category: '', sizes: [], colors: [], colorImages: {}, variantQuantities: {} }); setIsProductModalOpen(true); }} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 transition-colors shadow-sm">
                           <Plus className="w-4 h-4" /> {storeIsAr ? 'إضافة منتج' : 'Ajouter Produit'}
                        </button>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
-                       {storeProducts.map(p => (
-                          <div key={p.id} className="bg-white border border-slate-200 rounded-2xl p-3 flex gap-3 hover:border-indigo-300 transition-colors cursor-pointer group shadow-sm">
+                       {storeProducts.map((p: any) => (
+                          <div key={p.id} onClick={() => { setProductForm(p); setIsProductModalOpen(true); }} className="bg-white border border-slate-200 rounded-2xl p-3 flex gap-3 hover:border-indigo-300 transition-colors cursor-pointer group shadow-sm relative">
+                             <button onClick={(e) => { e.stopPropagation(); setStoreProducts(storeProducts.filter((prod: any) => prod.id !== p.id)); }} className={`absolute top-2 ${storeIsAr ? 'left-2' : 'right-2'} w-7 h-7 bg-white text-rose-500 rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 hover:bg-rose-500 hover:text-white transition-all z-10 border border-slate-100`} title={storeIsAr ? 'حذف المنتج' : 'Supprimer'}>
+                                <Trash2 className="w-3.5 h-3.5" />
+                             </button>
                              <div className="w-16 h-16 bg-slate-100 rounded-xl overflow-hidden shrink-0 flex items-center justify-center">
                                 {getCoverImage(p) ? <img src={getCoverImage(p)} className="w-full h-full object-cover group-hover:scale-105 transition-transform" /> : <ImageIcon className="w-6 h-6 text-slate-300" />}
                              </div>
