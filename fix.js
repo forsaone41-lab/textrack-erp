@@ -1,5 +1,6 @@
-const fs = require('fs'); 
-let c = fs.readFileSync('src/App.tsx', 'utf8'); 
-c = c.replace(/const Settings         = lazy\(\(\) => import\('\.\/pages\/Settings'\)\);\r?\nconst Login/, 'const Settings         = lazy(() => import(\'./pages/Settings\'));\nconst Profil           = lazy(() => import(\'./pages/Profil\'));\nconst Login'); 
-c = c.replace(/<Route path=\"parametres\" element=\{can\('parametres'\) \? <Settings \/> : <Navigate to=\"\/\" replace \/>\} \/>\r?\n\s*<Route path=\"reglement\"/, '<Route path=\"parametres\" element={can(\'parametres\') ? <Settings /> : <Navigate to=\"/\" replace />} />\n        <Route path=\"profil\" element={<Profil currentUser={currentUser} />} />\n        <Route path=\"reglement\"'); 
-fs.writeFileSync('src/App.tsx', c);
+const fs = require('fs');
+let c = fs.readFileSync('src/pages/StoreBuilder.tsx', 'utf-8');
+const search_str = "onClick={() => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1)}";
+const replace_str = "onClick={(e) => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1, e)}";
+c = c.split(search_str).join(replace_str);
+fs.writeFileSync('src/pages/StoreBuilder.tsx', c, 'utf-8');

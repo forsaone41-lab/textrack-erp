@@ -5,6 +5,7 @@ import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, Check
 import { useLang } from '../contexts/LangContext';
 import StoreManagerDashboard from '../components/Tools/StoreManagerDashboard';
 import ProAITools from '../components/Tools/ProAITools';
+import CheckoutForm from '../components/CheckoutForm';
 import { supabase } from '../supabase';
 
 const THEMES = [
@@ -479,9 +480,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     const generateUUID = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8); return v.toString(16); });
     const cmd = {
         id: generateUUID(),
-        client: (nameInput?.value || 'Client Web') + ' - ' + (phoneInput?.value || ''),
+        client: customerName + ' - ' + customerPhone,
         modele: product ? product.name : 'Commande E-commerce',
-        tissu: 'Store: ' + (storeName || config.storeName || 'Boutique') + ' - ' + (cityInput?.value || ''),
+        tissu: 'Store: ' + (storeName || config.storeName || 'Boutique') + ' - ' + customerCity + (customerAddress ? ' - ' + customerAddress : ''),
         couleurs: 'Standard',
         tailles: 'Standard',
         quantite: qty || 1,
@@ -903,12 +904,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        {buyMode === 'form' ? (
                           <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-3">
                              <h4 className="font-black text-slate-800 mb-2">{storeLang === 'ar' ? 'شراء سريع' : storeLang === 'en' ? 'Express Checkout' : 'Achat Express'}</h4>
-                             <input type="text" placeholder={storeLang === 'ar' ? 'الاسم الكامل' : storeLang === 'en' ? 'Full Name' : 'Nom Complet'} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-sm" />
-                             <input type="text" placeholder={storeLang === 'ar' ? 'رقم الهاتف' : storeLang === 'en' ? 'Phone Number' : 'Numéro de Téléphone'} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-sm" />
-                             <input type="text" placeholder={storeLang === 'ar' ? 'المدينة' : storeLang === 'en' ? 'City' : 'Ville'} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-sm" />
-                              <input type="text" placeholder={storeLang === 'ar' ? 'العنوان' : storeLang === 'en' ? 'Delivery Address' : 'Adresse de Livraison'} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-sm" />
-                             <button onClick={(e) => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1, e)} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-full py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg mt-2 ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: primaryColor }}>{storeLang === 'ar' ? 'تأكيد الطلب (الدفع عند الاستلام)' : storeLang === 'en' ? 'Confirm Order (COD)' : 'Confirmer la Commande'}</button>
-                              <p className="text-center text-xs font-bold text-green-600 mt-4 flex items-center justify-center gap-1"><CheckCircle className="w-3 h-3" /> {storeLang === 'ar' ? 'توصيل مجاني (الدفع عند الاستلام)' : storeLang === 'en' ? 'Free Delivery (Cash on Delivery)' : 'Livraison Gratuite (Paiement à la livraison)'}</p>
+                             <CheckoutForm
+                                 storeIsAr={typeof storeLang !== 'undefined' ? storeLang === 'ar' : storeIsAr}
+                                 onSubmit={submitGlobalOrder}
+                                 product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
+                                 quantity={typeof quantity !== 'undefined' ? quantity : 1}
+                                 disabled={false}
+                              />
                           </div>
                        ) : (
                           <div className="flex gap-4">
@@ -930,12 +932,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               <div className="bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
                  <h2 className="text-2xl font-black mb-6 text-center text-slate-800">{storeLang === 'ar' ? 'شراء سريع' : storeLang === 'en' ? 'Express Checkout' : 'Achat Express'}</h2>
                  <div className="space-y-4">
-                    <input type="text" placeholder={storeLang === 'ar' ? 'الاسم الكامل' : storeLang === 'en' ? 'Full Name' : 'Nom Complet'} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500" />
-                    <input type="text" placeholder={storeLang === 'ar' ? 'رقم الهاتف' : storeLang === 'en' ? 'Phone Number' : 'Numéro de Téléphone'} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500" />
-                    <input type="text" placeholder={storeLang === 'ar' ? 'المدينة' : storeLang === 'en' ? 'City' : 'Ville'} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500" />
-                              <input type="text" placeholder={storeLang === 'ar' ? 'العنوان' : storeLang === 'en' ? 'Delivery Address' : 'Adresse de Livraison'} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500" />
-                    <button onClick={(e) => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1, e)} className="w-full py-4 text-white font-black uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg mt-4" style={{ backgroundColor: primaryColor }}>{storeLang === 'ar' ? 'تأكيد الطلب (الدفع عند الاستلام)' : storeLang === 'en' ? 'Confirm Order (COD)' : 'Confirmer la Commande'}</button>
-                              <p className="text-center text-xs font-bold text-green-600 mt-4 flex items-center justify-center gap-1"><CheckCircle className="w-3 h-3" /> {storeLang === 'ar' ? 'توصيل مجاني (الدفع عند الاستلام)' : storeLang === 'en' ? 'Free Delivery (Cash on Delivery)' : 'Livraison Gratuite (Paiement à la livraison)'}</p>
+                    <CheckoutForm
+                                 storeIsAr={typeof storeLang !== 'undefined' ? storeLang === 'ar' : storeIsAr}
+                                 onSubmit={submitGlobalOrder}
+                                 product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
+                                 quantity={typeof quantity !== 'undefined' ? quantity : 1}
+                                 disabled={false}
+                              />
                  </div>
               </div>
            </div>
@@ -1116,11 +1119,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        {buyMode === 'form' ? (
                           <div className="p-8 border border-gray-200 bg-white space-y-4">
                              <h4 className="text-xl font-light mb-4" style={{ color: primaryColor }}>Checkout</h4>
-                             <input type="text" placeholder={storeLang === 'ar' ? 'الاسم الكامل' : storeLang === 'en' ? 'Full Name' : 'Nom Complet'} className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
-                             <input type="text" placeholder={storeLang === 'ar' ? 'رقم الهاتف' : storeLang === 'en' ? 'Phone Number' : 'Numéro de Téléphone'} className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
-                             <input type="text" placeholder={storeLang === 'ar' ? 'المدينة' : storeLang === 'en' ? 'City' : 'Ville'} className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
-                              <input type="text" placeholder={storeLang === 'ar' ? 'العنوان' : storeLang === 'en' ? 'Delivery Address' : 'Adresse de Livraison'} className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
-                             <button onClick={(e) => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1, e)} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-full py-5 text-white text-xs tracking-widest mt-4 transition-opacity hover:opacity-90 ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: primaryColor }}>CONFIRM ORDER</button>
+                             <CheckoutForm
+                                 storeIsAr={typeof storeLang !== 'undefined' ? storeLang === 'ar' : storeIsAr}
+                                 onSubmit={submitGlobalOrder}
+                                 product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
+                                 quantity={typeof quantity !== 'undefined' ? quantity : 1}
+                                 disabled={false}
+                              />
                           </div>
                        ) : (
                           <div className="flex gap-4">
@@ -1142,11 +1147,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               <div className="p-12 border border-gray-200 bg-white">
                  <h2 className="text-3xl font-light mb-8 text-center" style={{ color: primaryColor }}>Checkout</h2>
                  <div className="space-y-6">
-                    <input type="text" placeholder={storeLang === 'ar' ? 'الاسم الكامل' : storeLang === 'en' ? 'Full Name' : 'Nom Complet'} className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
-                    <input type="text" placeholder={storeLang === 'ar' ? 'رقم الهاتف' : storeLang === 'en' ? 'Phone Number' : 'Numéro de Téléphone'} className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
-                    <input type="text" placeholder={storeLang === 'ar' ? 'المدينة' : storeLang === 'en' ? 'City' : 'Ville'} className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
-                              <input type="text" placeholder={storeLang === 'ar' ? 'العنوان' : storeLang === 'en' ? 'Delivery Address' : 'Adresse de Livraison'} className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
-                    <button onClick={(e) => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1, e)} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-full py-5 text-white text-xs tracking-widest mt-8 transition-opacity hover:opacity-90 ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: primaryColor }}>CONFIRM ORDER</button>
+                    <CheckoutForm
+                                 storeIsAr={typeof storeLang !== 'undefined' ? storeLang === 'ar' : storeIsAr}
+                                 onSubmit={submitGlobalOrder}
+                                 product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
+                                 quantity={typeof quantity !== 'undefined' ? quantity : 1}
+                                 disabled={false}
+                              />
                  </div>
               </div>
            </div>
@@ -1298,11 +1305,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        {buyMode === 'form' ? (
                           <div className="p-8 border border-white/10 bg-[#151515] space-y-4">
                              <h4 className="text-xl font-serif mb-4 text-white">Secure Checkout</h4>
-                             <input type="text" placeholder={storeLang === 'ar' ? 'الاسم الكامل' : storeLang === 'en' ? 'Full Name' : 'Nom Complet'} className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
-                             <input type="text" placeholder={storeLang === 'ar' ? 'رقم الهاتف' : storeLang === 'en' ? 'Phone Number' : 'Numéro de Téléphone'} className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
-                             <input type="text" placeholder={storeLang === 'ar' ? 'المدينة' : storeLang === 'en' ? 'City' : 'Ville'} className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
-                              <input type="text" placeholder={storeLang === 'ar' ? 'العنوان' : storeLang === 'en' ? 'Delivery Address' : 'Adresse de Livraison'} className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
-                             <button onClick={(e) => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1, e)} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-full py-5 bg-white text-black text-xs tracking-widest mt-4 hover:bg-gray-200 transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>PLACE ORDER</button>
+                             <CheckoutForm
+                                 storeIsAr={typeof storeLang !== 'undefined' ? storeLang === 'ar' : storeIsAr}
+                                 onSubmit={submitGlobalOrder}
+                                 product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
+                                 quantity={typeof quantity !== 'undefined' ? quantity : 1}
+                                 disabled={false}
+                              />
                           </div>
                        ) : (
                           <div className="flex gap-4">
@@ -1324,11 +1333,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               <div className="p-12 border border-white/10 bg-[#151515]">
                  <h2 className="text-3xl font-serif mb-8 text-center text-white">Secure Checkout</h2>
                  <div className="space-y-6">
-                    <input type="text" placeholder={storeLang === 'ar' ? 'الاسم الكامل' : storeLang === 'en' ? 'Full Name' : 'Nom Complet'} className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
-                    <input type="text" placeholder={storeLang === 'ar' ? 'رقم الهاتف' : storeLang === 'en' ? 'Phone Number' : 'Numéro de Téléphone'} className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
-                    <input type="text" placeholder={storeLang === 'ar' ? 'المدينة' : storeLang === 'en' ? 'City' : 'Ville'} className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
-                              <input type="text" placeholder={storeLang === 'ar' ? 'العنوان' : storeLang === 'en' ? 'Delivery Address' : 'Adresse de Livraison'} className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
-                    <button onClick={(e) => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1, e)} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-full py-5 bg-white text-black text-xs tracking-widest mt-8 hover:bg-gray-200 transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>PLACE ORDER</button>
+                    <CheckoutForm
+                                 storeIsAr={typeof storeLang !== 'undefined' ? storeLang === 'ar' : storeIsAr}
+                                 onSubmit={submitGlobalOrder}
+                                 product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
+                                 quantity={typeof quantity !== 'undefined' ? quantity : 1}
+                                 disabled={false}
+                              />
                  </div>
               </div>
            </div>
@@ -1701,11 +1712,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
            <div className="p-8 max-w-2xl mx-auto my-8 bg-white border border-[#eee] rounded-sm">
               <h2 className="text-2xl font-black uppercase tracking-widest text-[#1a1a1a] mb-8 text-center">{storeIsAr ? 'شراء سريع' : 'Achat Express'}</h2>
               <div className="space-y-4">
-                 <input type="text" placeholder={storeIsAr ? 'الاسم الكامل' : 'Nom Complet'} className="w-full px-4 py-3 bg-white border border-[#ddd] text-sm focus:outline-none focus:border-[#1a1a1a]" />
-                 <input type="text" placeholder={storeIsAr ? 'رقم الهاتف' : 'Numéro de Téléphone'} className="w-full px-4 py-3 bg-white border border-[#ddd] text-sm focus:outline-none focus:border-[#1a1a1a]" />
-                 <input type="text" placeholder={storeIsAr ? 'المدينة' : 'Ville'} className="w-full px-4 py-3 bg-white border border-[#ddd] text-sm focus:outline-none focus:border-[#1a1a1a]" />
-                 <input type="text" placeholder={storeIsAr ? 'عنوان التوصيل' : 'Adresse de Livraison'} className="w-full px-4 py-3 bg-white border border-[#ddd] text-sm focus:outline-none focus:border-[#1a1a1a]" />
-                 <button onClick={(e) => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1, e)} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-full py-4 bg-[#1a1a1a] text-white font-bold uppercase tracking-widest text-xs hover:bg-black transition-colors mt-8 ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{storeIsAr ? 'تأكيد الطلب' : 'Confirmer la Commande'}</button>
+                 <CheckoutForm
+                                 storeIsAr={typeof storeLang !== 'undefined' ? storeLang === 'ar' : storeIsAr}
+                                 onSubmit={submitGlobalOrder}
+                                 product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
+                                 quantity={typeof quantity !== 'undefined' ? quantity : 1}
+                                 disabled={false}
+                              />
               </div>
            </div>
         )}
@@ -2383,7 +2396,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              <div key={order.id} onClick={() => setSelectedOrder(order)} className="p-3 border border-slate-200 rounded-2xl bg-white shadow-sm cursor-pointer hover:border-indigo-500 transition-colors hover:shadow-md group">
                                 <div className="flex justify-between items-start mb-2">
                                    <div className="flex items-center gap-2">
-                                      <span className="text-xs font-black text-slate-800 group-hover:text-indigo-600 transition-colors">{order.id}</span>
+                                      <span className="text-xs font-black text-slate-800 group-hover:text-indigo-600 transition-colors">#{order.id.substring(0, 8).toUpperCase()}</span>
                                       <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${order.statusColor}`}>{order.status}</span>
                                    </div>
                                    <span className="text-[10px] text-slate-400 font-bold">{order.date}</span>
@@ -3577,7 +3590,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                         <ListOrdered className="w-5 h-5" />
                      </div>
                      <div>
-                        <h2 className="text-lg font-black text-slate-800">Commande {selectedOrder.id}</h2>
+                        <h2 className="text-lg font-black text-slate-800">Commande #{selectedOrder.id.substring(0, 8).toUpperCase()}</h2>
                         <p className="text-xs font-bold text-slate-500">{selectedOrder.date}</p>
                      </div>
                   </div>

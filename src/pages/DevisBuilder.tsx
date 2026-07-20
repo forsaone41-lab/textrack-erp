@@ -50,15 +50,45 @@ export default function DevisBuilder({ embedded = false, onBack }: DevisBuilderP
     (currentName && l.name && l.name.toLowerCase() === currentName.toLowerCase())
   );
 
+  const parseAITable = (aiNotes: string | undefined) => {
+    if (!aiNotes) return null;
+    const lines = aiNotes.split('\n');
+    const tableLines = lines.filter(l => l.trim().startsWith('|') && l.trim().endsWith('|'));
+    if (tableLines.length < 3) return null;
+    
+    const dataLines = tableLines.slice(2);
+    let itemsText = [];
+    let total = 0;
+    
+    for (const line of dataLines) {
+      const cells = line.split('|').map(c => c.trim().replace(/\*\*/g, '')).filter((_, i, arr) => i > 0 && i < arr.length - 1);
+      if (cells.length >= 2) {
+        const priceStr = cells[cells.length - 1];
+        const priceMatch = priceStr.match(/\b\d+(\.\d+)?\b/);
+        const price = priceMatch ? parseFloat(priceMatch[0]) : 0;
+        
+        const component = cells[0];
+        if (price > 0 && !component.includes('التكلفة الإجمالية') && !component.includes('المجموع') && !component.includes('Total') && !component.includes('Prix de revient')) {
+          total += price;
+          itemsText.push(`• ${component}: ${price} DH`);
+        }
+      }
+    }
+    
+    if (itemsText.length === 0) return null;
+    return { text: itemsText.join(' | '), total };
+  };
+
   const importLeadAsModel = (lead: Lead) => {
+    const aiData = parseAITable(lead.aiNotes);
     const newModel: ModelItem = {
       id: genId(),
       name: lead.type || '',
       image: lead.photo || (lead.photos && lead.photos.length > 0 ? lead.photos[0] : ''),
       quantity: lead.quantity || 1,
-      matierePrice: 0,
+      matierePrice: aiData ? aiData.total : (lead.prixEchantillon || 0),
       laborPrice: 0,
-      fabricType: ''
+      fabricType: aiData ? aiData.text : ''
     };
     setModels(prev => [...prev, newModel]);
   };
@@ -303,15 +333,18 @@ export default function DevisBuilder({ embedded = false, onBack }: DevisBuilderP
                         );
 
                         if (clientLeadsToImport.length > 0) {
-                          const newModels = clientLeadsToImport.map(lead => ({
-                            id: genId(),
-                            name: lead.type || '',
-                            image: lead.photo || (lead.photos && lead.photos.length > 0 ? lead.photos[0] : ''),
-                            quantity: lead.quantity || 1,
-                            matierePrice: 0,
-                            laborPrice: 0,
-                            fabricType: ''
-                          }));
+                          const newModels = clientLeadsToImport.map(lead => {
+                            const aiData = parseAITable(lead.aiNotes);
+                            return {
+                              id: genId(),
+                              name: lead.type || '',
+                              image: lead.photo || (lead.photos && lead.photos.length > 0 ? lead.photos[0] : ''),
+                              quantity: lead.quantity || 1,
+                              matierePrice: aiData ? aiData.total : (lead.prixEchantillon || 0),
+                              laborPrice: 0,
+                              fabricType: aiData ? aiData.text : ''
+                            };
+                          });
                           setModels(newModels);
                         }
                       }
