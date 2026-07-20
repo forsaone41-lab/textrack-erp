@@ -339,7 +339,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [domainError, setDomainError] = useState('');
 
   const submitGlobalOrder = (product: any, qty: number) => {
-    const inputs = Array.from(document.querySelectorAll('input[type="text"]')).slice(-4);
+    // Safely get inputs ONLY from the active checkout form
+    const wrappers = document.querySelectorAll('.store-preview-wrapper');
+    const wrapper = Array.from(wrappers).reverse().find((w: any) => w.offsetParent !== null) || document.body;
+    const inputs = Array.from(wrapper.querySelectorAll('input[type="text"]')).slice(-4);
+    
     const nameInput = inputs[0] as HTMLInputElement;
     const phoneInput = inputs[1] as HTMLInputElement;
     const cityInput = inputs[2] as HTMLInputElement;
@@ -362,6 +366,22 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         status: "En attente",
         statusColor: "bg-amber-100 text-amber-700"
     };
+    
+    // Sync to BEYA ERP Commandes
+    const cmd = {
+        id: newOrder.id,
+        client: (nameInput?.value || 'Client Web') + ' - ' + (phoneInput?.value || ''),
+        modele: product ? product.name : 'Commande E-commerce',
+        tissu: 'Store: ' + (config.storeName || 'Boutique') + ' - ' + (cityInput?.value || ''),
+        couleurs: 'Standard',
+        tailles: 'Standard',
+        quantite: qty || 1,
+        statut: 'En attente',
+        prix: product ? parseFloat(product.price) : 0,
+        total: product ? (parseFloat(product.price) * (qty || 1)) : 0,
+        date: new Date().toISOString()
+    };
+    supabase.from('commandes').insert(cmd).catch(console.error);
     
     setStoreOrders((prev: any) => [newOrder, ...prev]);
   };
@@ -1907,7 +1927,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     };
 
     return (
-       <>
+       <div className="store-preview-wrapper min-h-screen w-full relative flex flex-col">
           <Layout />
           {appsConfig && appsConfig['WhatsApp Chat'] && (
              <a href={'https://wa.me/' + appsConfig['WhatsApp Chat'].replace(/[^0-9]/g, '')} target="_blank" rel="noreferrer" className="fixed bottom-6 right-6 z-[998] w-14 h-14 bg-green-500 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform hover:bg-green-600">
@@ -1971,7 +1991,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                 </div>
              </div>
           )}
-       </>
+       </div>
     );
   };
 
