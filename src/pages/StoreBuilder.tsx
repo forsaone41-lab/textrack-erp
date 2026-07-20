@@ -220,6 +220,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     links: ['À Propos', 'Contact', 'Politique de Retour', 'Termes & Conditions']
   });
   const [showReviews, setShowReviews] = useState(config.showReviews !== undefined ? config.showReviews : true);
+  // Computed design vars - available to all Layout components
+  const btnRadius = buttonStyle === 'pill' ? '9999px' : buttonStyle === 'square' ? '0px' : '10px';
+  const btnStyle = { backgroundColor: primaryColor, borderRadius: btnRadius };
+  const cardBg = secondaryColor || '#ffffff';
   const [newsletterTitle, setNewsletterTitle] = useState(config.newsletterTitle || 'Rejoignez notre Newsletter');
   const [newsletterSubtitle, setNewsletterSubtitle] = useState(config.newsletterSubtitle || 'Recevez nos dernières offres et nouveautés directement dans votre boîte mail.');
   const [featuresData, setFeaturesData] = useState(config.featuresData || [
@@ -584,7 +588,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                 <div className="aspect-[3/4] bg-slate-100 mb-4 overflow-hidden relative rounded-xl">
                                    {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-12 h-12" /></div>}
                                    <div className={`absolute bottom-4 left-0 right-0 flex justify-center transition-opacity ${(previewDevice === 'mobile' && !isModal) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                                      <button onClick={handleAddToCart} className="px-8 py-3 text-white text-xs font-bold uppercase tracking-wider shadow-2xl rounded-full" style={{ backgroundColor: primaryColor }}>Add to cart</button>
+                                      <button onClick={handleAddToCart} className="px-8 py-3 text-white text-xs font-bold uppercase tracking-wider shadow-2xl rounded-full" style={btnStyle}>Add to cart</button>
                                    </div>
                                 </div>
                                 <h4 className="font-bold text-sm">{p.name}</h4>
@@ -618,7 +622,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        <p className="text-slate-500 mb-6 max-w-md text-sm">{newsletterSubtitle}</p>
                        <div className="flex w-full max-w-md">
                           <input type="email" placeholder="Votre email" className="flex-1 bg-white border border-slate-200 rounded-l-lg px-4 py-3 outline-none focus:border-slate-300" />
-                          <button className="px-6 py-3 text-white font-bold rounded-r-lg" style={{ backgroundColor: primaryColor }}>S'abonner</button>
+                          <button className="px-6 py-3 text-white font-bold rounded-r-lg" style={btnStyle}>S'abonner</button>
                        </div>
                     </div>
                  );
@@ -690,7 +694,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                         <div className="aspect-[3/4] bg-slate-100 mb-4 overflow-hidden relative rounded-xl">
                            {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-12 h-12" /></div>}
                            <div className={`absolute bottom-4 left-0 right-0 flex justify-center transition-opacity ${(previewDevice === 'mobile' && !isModal) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                              <button onClick={handleAddToCart} className="px-8 py-3 text-white text-xs font-bold uppercase tracking-wider shadow-2xl rounded-full" style={{ backgroundColor: primaryColor }}>Add to cart</button>
+                              <button onClick={handleAddToCart} className="px-8 py-3 text-white text-xs font-bold uppercase tracking-wider shadow-2xl rounded-full" style={btnStyle}>Add to cart</button>
                            </div>
                         </div>
                         <h4 className="font-bold text-sm">{p.name}</h4>
@@ -1238,7 +1242,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                         <div className="aspect-square bg-white mb-4 overflow-hidden relative rounded-2xl shadow-sm flex items-center justify-center">
                            {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-12 h-12 opacity-10" />}
                            <div className={`absolute inset-0 bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center`}>
-                              <button onClick={handleAddToCart} className="px-6 py-3 text-white text-xs font-black uppercase tracking-wider rounded-full shadow-xl hover:scale-105 transition-transform" style={{ backgroundColor: primaryColor }}>Add to cart</button>
+                              <button onClick={handleAddToCart} className="px-6 py-3 text-white text-xs font-black uppercase tracking-wider rounded-full shadow-xl hover:scale-105 transition-transform" style={btnStyle}>Add to cart</button>
                            </div>
                         </div>
                         <h4 className="font-bold text-base text-center text-slate-700">{p.name}</h4>
@@ -1274,7 +1278,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                         <div className="aspect-square bg-white mb-4 overflow-hidden relative rounded-2xl shadow-sm flex items-center justify-center">
                            {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-12 h-12 opacity-10" />}
                            <div className={`absolute inset-0 bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center`}>
-                              <button onClick={handleAddToCart} className="px-6 py-3 text-white text-xs font-black uppercase tracking-wider rounded-full shadow-xl hover:scale-105 transition-transform" style={{ backgroundColor: primaryColor }}>Add to cart</button>
+                              <button onClick={handleAddToCart} className="px-6 py-3 text-white text-xs font-black uppercase tracking-wider rounded-full shadow-xl hover:scale-105 transition-transform" style={btnStyle}>Add to cart</button>
                            </div>
                         </div>
                         <h4 className="font-bold text-base text-center text-slate-700">{p.name}</h4>
@@ -1410,7 +1414,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        return 0;
     });
 
-    const props = { isModal, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, storeLang, isCartOpen, setIsCartOpen, submitGlobalOrder, storeProducts };
+    const props = { isModal, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, storeLang, isCartOpen, setIsCartOpen, submitGlobalOrder, storeProducts, primaryColor, secondaryColor, buttonStyle, fontFamily };
+
 
   
   const LayoutClement = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts }: any) => {
@@ -1605,7 +1610,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                <div className={`z-10 ${previewDevice === 'mobile' && !isModal ? 'px-8 pb-12 text-center' : 'pl-24 pr-8 py-16 w-1/2 text-left'}`}>
                   <h1 className={`text-5xl md:text-7xl font-black text-slate-900 tracking-tighter mb-4 uppercase`} style={{ color: primaryColor }}>{heroTitle || 'LOOKBOOK'}</h1>
                   <p className="text-sm text-slate-500 mb-8 max-w-md font-medium leading-relaxed">{heroSubtitle || 'New Spring drops from Over. Shop the Collection'}</p>
-                  <button className="px-8 py-3 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-slate-800 transition-colors rounded-full" style={{ backgroundColor: primaryColor }}>{heroButtonText || 'Shop Collection'}</button>
+                  <button className="px-8 py-3 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-slate-800 transition-colors rounded-full" style={btnStyle}>{heroButtonText || 'Shop Collection'}</button>
                </div>
                <div className={`absolute right-0 top-0 bottom-0 ${previewDevice === 'mobile' && !isModal ? 'w-full opacity-30 pointer-events-none' : 'w-1/2'} bg-cover bg-top`} style={{ backgroundImage: `url(${heroImage || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop'})` }}>
                </div>
@@ -1677,7 +1682,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        <p className="text-slate-500 mb-8 max-w-md text-sm leading-relaxed">{newsletterSubtitle}</p>
                        <div className="flex w-full max-w-md shadow-2xl shadow-slate-200/50 rounded-r-full rounded-l-full overflow-hidden">
                           <input type="email" placeholder="Votre email" className="flex-1 bg-[#f8f9fa] border-none px-6 py-4 outline-none text-sm" />
-                          <button className="px-8 py-4 text-white text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-opacity" style={{ backgroundColor: primaryColor }}>Subscribe</button>
+                          <button className="px-8 py-4 text-white text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-opacity" style={btnStyle}>Subscribe</button>
                        </div>
                     </div>
                  );
@@ -1766,7 +1771,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                               <button key={idx} className={`w-3 h-10 ${idx === 0 ? 'bg-slate-900' : 'bg-slate-200'} transition-colors`}></button>
                            ))}
                         </div>
-                        <div className="relative flex-1 aspect-[3/4] bg-[#f8f9fa]">
+                        <div className="relative flex-1 aspect-[3/4]" style={{ backgroundColor: cardBg }}>
                            <img src={images[0]} className="w-full h-full object-cover" />
                            {/* Tags - conditional on product data */}
                            {(product.isOnSale || product.isNew) && (
@@ -1943,7 +1948,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                       <button 
                          disabled={cartCount === 0}
                          className="w-full py-4 text-white font-black uppercase tracking-widest text-sm hover:scale-[1.02] active:scale-[0.98] transition-transform rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2" 
-                         style={{ backgroundColor: primaryColor }}
+                         style={btnStyle}
                       >
                          <CheckCircle className="w-5 h-5" />
                          {storeIsAr ? 'إتمام الطلب' : 'Valider la commande'}
@@ -2399,7 +2404,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                               </div>
                               <div className="p-3 flex items-center gap-2">
                                  <div className="flex-1 h-5 rounded opacity-20" style={{ backgroundColor: primaryColor }} />
-                                 <button className={`px-3 py-1 text-white text-[10px] font-bold ${buttonStyle === 'pill' ? 'rounded-full' : buttonStyle === 'square' ? 'rounded-none' : 'rounded-md'}`} style={{ backgroundColor: primaryColor }}>
+                                 <button className={`px-3 py-1 text-white text-[10px] font-bold ${buttonStyle === 'pill' ? 'rounded-full' : buttonStyle === 'square' ? 'rounded-none' : 'rounded-md'}`} style={btnStyle}>
                                     {storeIsAr ? 'شراء' : 'Acheter'}
                                  </button>
                               </div>
