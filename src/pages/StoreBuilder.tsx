@@ -2494,6 +2494,38 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                   </div>
                )}
 
+               {/* APPS TAB */}
+               {activeTab === 'apps' && (
+                 <div className="space-y-6">
+                    <div className="flex justify-between items-center mb-6">
+                       <h3 className="text-xl font-black text-slate-800">{storeIsAr ? 'تطبيقات المتجر' : 'Applications (Apps)'}</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                       {[
+                         { id: 'WhatsApp Chat', name: 'WhatsApp', desc: storeIsAr ? 'زر واتساب عائم للتواصل السريع' : 'Bouton flottant pour chat rapide', icon: Smartphone, color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+                         { id: 'Facebook Pixel', name: 'Facebook Pixel', desc: storeIsAr ? 'تتبع زوار المتجر وحملات فيسبوك' : 'Suivi des conversions Facebook', icon: Monitor, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
+                         { id: 'TikTok Pixel', name: 'TikTok Pixel', desc: storeIsAr ? 'تتبع تحويلات حملات تيك توك' : 'Suivi des conversions TikTok', icon: Video, color: 'text-slate-900', bg: 'bg-slate-100', border: 'border-slate-300' },
+                         { id: 'Google Analytics 4', name: 'Google Analytics 4', desc: storeIsAr ? 'إحصائيات دقيقة لزوار متجرك' : 'Statistiques détaillées des visiteurs', icon: Globe, color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200' }
+                       ].map(app => (
+                          <div key={app.id} className={`bg-white border ${appsConfig[app.id] ? app.border : 'border-slate-200'} rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group cursor-pointer`} onClick={() => { setAppInputValue(appsConfig[app.id] || ''); setActiveAppModal(app.id); }}>
+                             {appsConfig[app.id] && <div className="absolute top-3 right-3 bg-green-100 text-green-700 text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider">{storeIsAr ? 'نشط' : 'Actif'}</div>}
+                             <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${appsConfig[app.id] ? app.bg : 'bg-slate-50'}`}>
+                                <app.icon className={`w-6 h-6 ${appsConfig[app.id] ? app.color : 'text-slate-400'}`} />
+                             </div>
+                             <h4 className="font-black text-slate-800 mb-1">{app.name}</h4>
+                             <p className="text-xs font-bold text-slate-500 line-clamp-2">{app.desc}</p>
+                             <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
+                                <span className={`text-[10px] font-black uppercase tracking-wider ${appsConfig[app.id] ? 'text-indigo-600' : 'text-slate-400'}`}>{appsConfig[app.id] ? (storeIsAr ? 'تعديل الإعدادات' : 'Modifier Config') : (storeIsAr ? 'تثبيت التطبيق' : 'Installer l\'App')}</span>
+                                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${appsConfig[app.id] ? 'bg-indigo-50 group-hover:bg-indigo-100' : 'bg-slate-50 group-hover:bg-slate-200'} transition-colors`}>
+                                   <Plus className={`w-3 h-3 ${appsConfig[app.id] ? 'text-indigo-600' : 'text-slate-400'}`} />
+                                </div>
+                             </div>
+                          </div>
+                       ))}
+                    </div>
+                 </div>
+               )}
+
                {/* SETTINGS TAB */}
                {activeTab === 'settings' && (
                  <div className="space-y-6">
