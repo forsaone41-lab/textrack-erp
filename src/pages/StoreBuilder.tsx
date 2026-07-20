@@ -424,7 +424,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         total: product ? (parseFloat(product.price) * (qty || 1)) : 0,
         date: new Date().toISOString()
     };
-    supabase.from('commandes').insert(cmd).catch(console.error);
+    supabase.from('commandes').insert(cmd).then(({ error }: any) => {
+        if (error) console.error(error);
+    });
     
     setStoreOrders((prev: any) => [newOrder, ...prev]);
     } catch (err: any) {
