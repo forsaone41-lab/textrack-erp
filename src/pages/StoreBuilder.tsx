@@ -552,6 +552,14 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
           updated_at: new Date()
        }, { onConflict: 'domain' });
 
+       // Fallback for SaaS local previews
+       await supabase.from('stores').upsert({
+          domain: 'latest_saved_store',
+          config_json: storeConfig,
+          name: storeName,
+          updated_at: new Date()
+       }, { onConflict: 'domain' });
+
        
 
     } catch (err) {
