@@ -3158,6 +3158,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                    activeAppModal === 'Facebook Pixel' ? (storeIsAr ? 'معرف بيكسل فيسبوك' : 'ID Pixel Facebook') :
                    activeAppModal === 'TikTok Pixel' ? (storeIsAr ? 'معرف بيكسل تيك توك' : 'ID Pixel TikTok') :
                    activeAppModal === 'Google Analytics 4' ? (storeIsAr ? 'معرف التتبع (G-XXXXXXX)' : 'ID de suivi (G-XXXXXXX)') :
+                   activeAppModal === 'AI Auto-Builder' ? (storeIsAr ? 'اكتب "ACTIF" لتفعيل الميزة' : 'Tapez "ACTIF" pour activer cette option') :
                    (storeIsAr ? 'رقم التعريف / المفتاح' : 'ID / Clé d\'API')}
                </label>
                <input 
