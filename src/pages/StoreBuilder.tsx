@@ -484,7 +484,12 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         if (error) console.error(error);
     });
     
-    setStoreOrders((prev: any) => [newOrder, ...prev]);
+    if (!isLiveStore) {
+        // Delay the local state update in preview mode to allow the success page to show
+        setTimeout(() => {
+            setStoreOrders((prev: any) => [newOrder, ...prev]);
+        }, 3000);
+    }
     } catch (err: any) {
        console.error("Order submission failed:", err);
        alert("Erreur lors de la commande: " + err.message);
