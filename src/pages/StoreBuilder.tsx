@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video } from 'lucide-react';
+import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import StoreManagerDashboard from '../components/Tools/StoreManagerDashboard';
 import ProAITools from '../components/Tools/ProAITools';
@@ -342,6 +342,28 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [productForm, setProductForm] = useState<any>(null);
   const [newSizeInput, setNewSizeInput] = useState('');
   const [newColorInput, setNewColorInput] = useState('#000000');
+  const [newTagInput, setNewTagInput] = useState('');
+  const [isAIGenerating, setIsAIGenerating] = useState(false);
+
+  const handleAIGenerate = () => {
+     if (!productForm?.image) return;
+     setIsAIGenerating(true);
+     // Simulate AI Vision Analysis
+     setTimeout(() => {
+        setProductForm({
+           ...productForm,
+           name: storeIsAr ? "فستان صيفي أنيق" : "Manteau Premium Hiver",
+           price: storeIsAr ? "299" : "850",
+           stock: "50",
+           description: storeIsAr ? "تصميم عصري وخفيف، مثالي للأيام والمناسبات. قماش عالي الجودة." : "Manteau de haute qualité, parfait pour l'hiver. Design élégant et tissu chaud.",
+           category: storeIsAr ? "فساتين" : "Outerwear",
+           sizes: ["S", "M", "L", "XL"],
+           colors: ["#000000", "#FFC0CB", "#FFFFFF"],
+           tags: storeIsAr ? ["صيفي", "فستان", "موضة", "أنيق", "2026"] : ["manteau", "hiver", "premium", "fashion", "tendance2026", "outerwear"]
+        });
+        setIsAIGenerating(false);
+     }, 1500);
+  };
 
   const [isPublishing, setIsPublishing] = useState(false);
   const [showPublishModal, setShowPublishModal] = useState(false);
@@ -2540,7 +2562,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                          { id: 'WhatsApp Chat', name: 'WhatsApp', desc: storeIsAr ? 'زر واتساب عائم للتواصل السريع' : 'Bouton flottant pour chat rapide', icon: Smartphone, color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200' },
                          { id: 'Facebook Pixel', name: 'Facebook Pixel', desc: storeIsAr ? 'تتبع زوار المتجر وحملات فيسبوك' : 'Suivi des conversions Facebook', icon: Monitor, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
                          { id: 'TikTok Pixel', name: 'TikTok Pixel', desc: storeIsAr ? 'تتبع تحويلات حملات تيك توك' : 'Suivi des conversions TikTok', icon: Video, color: 'text-slate-900', bg: 'bg-slate-100', border: 'border-slate-300' },
-                         { id: 'Google Analytics 4', name: 'Google Analytics 4', desc: storeIsAr ? 'إحصائيات دقيقة لزوار متجرك' : 'Statistiques détaillées des visiteurs', icon: Globe, color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200' }
+                         { id: 'Google Analytics 4', name: 'Google Analytics 4', desc: storeIsAr ? 'إحصائيات دقيقة لزوار متجرك' : 'Statistiques détaillées des visiteurs', icon: Globe, color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200' },
+                         { id: 'AI Auto-Builder', name: 'AI Product Builder', desc: storeIsAr ? 'Premium: توليد تفاصيل المنتجات والـ SEO بالذكاء الاصطناعي من الصور' : 'Premium: Génération IA des détails et SEO via image', icon: Sparkles, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200' }
                        ].map(app => (
                           <div key={app.id} className={`bg-white border ${appsConfig[app.id] ? app.border : 'border-slate-200'} rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group cursor-pointer`} onClick={() => { setAppInputValue(appsConfig[app.id] || ''); setActiveAppModal(app.id); }}>
                              {appsConfig[app.id] && <div className="absolute top-3 right-3 bg-green-100 text-green-700 text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider">{storeIsAr ? 'نشط' : 'Actif'}</div>}
@@ -3190,6 +3213,12 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                 }
                              }} />
                           </label>
+                          {appsConfig['AI Auto-Builder'] && productForm?.image && (
+                             <button onClick={handleAIGenerate} disabled={isAIGenerating} className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 rounded-xl text-xs shadow-lg shadow-purple-600/30 hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:hover:scale-100">
+                                {isAIGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                                {storeIsAr ? 'تحليل بالذكاء الاصطناعي' : 'Analyser avec l\'IA ✨'}
+                             </button>
+                          )}
                        </div>
                     </div>
                     {/* Middle Column (Details) */}
@@ -3354,6 +3383,25 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                            <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">{storeIsAr ? 'الفئة' : 'Catégorie'}</label>
                            <input type="text" placeholder={storeIsAr ? 'مثال: قميص, جاكيت, فستان...' : 'Ex: T-Shirt, Chemise, Robe...'} value={productForm?.category || ''} onChange={e => setProductForm({...productForm, category: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 font-bold" />
                            <p className="text-[10px] text-slate-400 mt-2 font-medium">{storeIsAr ? 'لتصنيف المنتج في فلاتر المتجر.' : 'Permet de classer le produit dans les filtres du magasin.'}</p>
+                        </div>
+                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                           <div className="flex items-center gap-2 mb-2">
+                              <label className="block text-xs font-black text-slate-400 uppercase tracking-wider">{storeIsAr ? 'الكلمات الدلالية (SEO Tags)' : 'Mots-clés (SEO Tags)'}</label>
+                              {appsConfig['AI Auto-Builder'] && <Sparkles className="w-3 h-3 text-purple-500" />}
+                           </div>
+                           <div className="flex gap-2 mb-3">
+                              <input type="text" placeholder={storeIsAr ? 'مثال: صيفي, فستان...' : 'Ex: été, robe, premium...'} value={newTagInput} onChange={e => setNewTagInput(e.target.value)} onKeyDown={e => { if(e.key === 'Enter' && newTagInput) { setProductForm({...productForm, tags: [...(productForm.tags||[]), newTagInput]}); setNewTagInput(''); e.preventDefault(); } }} className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" />
+                              <button onClick={() => { if(newTagInput) { setProductForm({...productForm, tags: [...(productForm.tags||[]), newTagInput]}); setNewTagInput(''); } }} className="px-4 py-2 bg-slate-900 text-white font-bold text-xs rounded-lg hover:bg-slate-800 transition-colors">{storeIsAr ? 'إضافة' : 'Ajouter'}</button>
+                           </div>
+                           <div className="flex flex-wrap gap-2">
+                              {(productForm?.tags || []).map((tag: string) => (
+                                 <div key={tag} className="flex items-center gap-1 bg-slate-100 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700">
+                                    {tag}
+                                    <button onClick={() => setProductForm({...productForm, tags: productForm.tags.filter((t:string) => t !== tag)})} className="text-slate-400 hover:text-rose-500 ml-1"><X className="w-3 h-3" /></button>
+                                 </div>
+                              ))}
+                           </div>
+                           <p className="text-[10px] text-slate-400 mt-2 font-medium">{storeIsAr ? 'تساعد في ظهور المنتج في محركات البحث.' : 'Améliore le référencement (SEO) de votre produit.'}</p>
                         </div>
                     </div>
                  </div>
