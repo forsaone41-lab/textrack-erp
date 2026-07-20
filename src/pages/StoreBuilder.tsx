@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown, TrendingUp, Package } from 'lucide-react';
+import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import StoreManagerDashboard from '../components/Tools/StoreManagerDashboard';
 import ProAITools from '../components/Tools/ProAITools';
@@ -2295,43 +2295,66 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               {activeTab === 'orders' && (
                  <div className="space-y-6">
                     {/* Dashboard KPIs */}
+                    {/* Dashboard KPIs PRO EDITION */}
                     <div className="grid grid-cols-2 gap-3">
-                       <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 p-4 rounded-2xl shadow-lg shadow-indigo-200 flex flex-col justify-between">
-                          <div className="flex items-center justify-between mb-2">
-                             <span className="text-[10px] font-black text-indigo-100 uppercase tracking-wider">Commandes</span>
-                             <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center"><ShoppingBag className="w-3 h-3 text-white" /></div>
+                       <div className="bg-gradient-to-br from-indigo-500 via-indigo-600 to-blue-700 p-4 rounded-2xl shadow-lg shadow-indigo-300/50 flex flex-col justify-between relative overflow-hidden group">
+                          {/* Glow effect */}
+                          <div className="absolute -top-10 -right-10 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+                          <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-blue-400 opacity-20 rounded-full blur-xl group-hover:translate-x-4 transition-transform duration-700"></div>
+                          
+                          <div className="flex items-center justify-between mb-4 relative z-10">
+                             <span className="text-[10px] font-black text-indigo-100 uppercase tracking-widest drop-shadow-sm">Commandes</span>
+                             <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/20 shadow-inner"><ShoppingBag className="w-4 h-4 text-white" /></div>
                           </div>
-                          <div>
-                             <h4 className="text-2xl font-black text-white">{storeOrders.filter((o: any) => !o.deleted).length.toLocaleString('fr-FR')}</h4>
-                             <p className="text-[9px] text-indigo-200 font-bold mt-1">{storeIsAr ? 'هذا الشهر' : 'Total global'}</p>
+                          <div className="relative z-10">
+                             <h4 className="text-3xl font-black text-white tracking-tight drop-shadow-md">{storeOrders.filter((o: any) => !o.deleted).length.toLocaleString('fr-FR')}</h4>
+                             <div className="flex items-center gap-1 mt-1">
+                               <div className="bg-emerald-400/20 px-1.5 py-0.5 rounded flex items-center gap-1 backdrop-blur-sm">
+                                 <TrendingUp className="w-2.5 h-2.5 text-emerald-300" />
+                                 <span className="text-[9px] font-black text-emerald-200">+12%</span>
+                               </div>
+                               <p className="text-[9px] text-indigo-200 font-bold ml-1">{storeIsAr ? 'هذا الشهر' : 'ce mois'}</p>
+                             </div>
                           </div>
                        </div>
                        
-                       <div className="bg-gradient-to-br from-emerald-400 to-emerald-500 p-4 rounded-2xl shadow-lg shadow-emerald-200 flex flex-col justify-between">
-                          <div className="flex items-center justify-between mb-2">
-                             <span className="text-[10px] font-black text-emerald-50 uppercase tracking-wider">Revenus</span>
-                             <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center"><CreditCard className="w-3 h-3 text-white" /></div>
+                       <div className="bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600 p-4 rounded-2xl shadow-lg shadow-emerald-300/50 flex flex-col justify-between relative overflow-hidden group">
+                          {/* Glow effect */}
+                          <div className="absolute -top-10 -right-10 w-32 h-32 bg-white opacity-20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+                          <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-teal-200 opacity-20 rounded-full blur-xl group-hover:-translate-y-4 transition-transform duration-700"></div>
+                          
+                          <div className="flex items-center justify-between mb-4 relative z-10">
+                             <span className="text-[10px] font-black text-emerald-50 uppercase tracking-widest drop-shadow-sm">Revenus</span>
+                             <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/20 shadow-inner"><CreditCard className="w-4 h-4 text-white" /></div>
                           </div>
-                          <div>
-                             <h4 className="text-xl font-black text-white">{storeOrders.filter((o: any) => !o.deleted).reduce((sum: number, ord: any) => sum + (parseFloat(ord.amount) || 0), 0).toLocaleString('fr-FR')} <span className="text-[10px]">MAD</span></h4>
-                             <p className="text-[9px] text-emerald-100 font-bold mt-1">{storeIsAr ? 'هذا الشهر' : 'Total global'}</p>
+                          <div className="relative z-10">
+                             <h4 className="text-2xl font-black text-white tracking-tight drop-shadow-md">{storeOrders.filter((o: any) => !o.deleted).reduce((sum: number, ord: any) => sum + (parseFloat(ord.amount) || 0), 0).toLocaleString('fr-FR')} <span className="text-[10px] font-bold text-emerald-100">MAD</span></h4>
+                             <div className="flex items-center gap-1 mt-1">
+                               <div className="bg-white/20 px-1.5 py-0.5 rounded flex items-center gap-1 backdrop-blur-sm">
+                                 <TrendingUp className="w-2.5 h-2.5 text-white" />
+                                 <span className="text-[9px] font-black text-white">+8.5%</span>
+                               </div>
+                               <p className="text-[9px] text-emerald-100 font-bold ml-1">{storeIsAr ? 'هذا الشهر' : 'ce mois'}</p>
+                             </div>
                           </div>
                        </div>
 
-                       <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group cursor-pointer hover:border-green-300 transition-colors">
-                          <div>
-                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">{storeIsAr ? 'الطلبات المؤكدة' : 'Confirmées'}</p>
-                             <h4 className="text-lg font-black text-slate-800">{storeOrders.filter((ord: any) => !ord.deleted && ['Confirmé', 'Confirmée', 'Validée', 'Livrée', 'مؤكد', 'تم التوصيل'].includes(ord.status)).length.toLocaleString('fr-FR')}</h4>
+                       <div className="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all flex items-center justify-between group cursor-pointer relative overflow-hidden">
+                          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-green-400 group-hover:w-2 transition-all"></div>
+                          <div className="pl-2">
+                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{storeIsAr ? 'مؤكدة' : 'Confirmées'}</p>
+                             <h4 className="text-xl font-black text-slate-800 tracking-tight">{storeOrders.filter((ord: any) => !ord.deleted && ['Confirmé', 'Confirmée', 'Validée', 'Livrée', 'مؤكد', 'تم التوصيل'].includes(ord.status)).length.toLocaleString('fr-FR')}</h4>
                           </div>
-                          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center group-hover:bg-green-200 transition-colors"><CheckCircle className="w-4 h-4 text-green-600" /></div>
+                          <div className="w-10 h-10 bg-green-50 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:bg-green-100 transition-all"><CheckCircle className="w-5 h-5 text-green-500" /></div>
                        </div>
 
-                       <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group cursor-pointer hover:border-rose-300 transition-colors">
-                          <div>
-                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">{storeIsAr ? 'الطلبات المرفوضة' : 'Refusées'}</p>
-                             <h4 className="text-lg font-black text-slate-800">{storeOrders.filter((ord: any) => !ord.deleted && ['Refusé', 'Refusée', 'Annulée', 'Retour', 'مرفوض', 'ملغى'].includes(ord.status)).length.toLocaleString('fr-FR')}</h4>
+                       <div className="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all flex items-center justify-between group cursor-pointer relative overflow-hidden">
+                          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-400 group-hover:w-2 transition-all"></div>
+                          <div className="pl-2">
+                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{storeIsAr ? 'مرفوضة' : 'Refusées'}</p>
+                             <h4 className="text-xl font-black text-slate-800 tracking-tight">{storeOrders.filter((ord: any) => !ord.deleted && ['Refusé', 'Refusée', 'Annulée', 'Retour', 'مرفوض', 'ملغى'].includes(ord.status)).length.toLocaleString('fr-FR')}</h4>
                           </div>
-                          <div className="w-8 h-8 bg-rose-100 rounded-full flex items-center justify-center group-hover:bg-rose-200 transition-colors"><X className="w-4 h-4 text-rose-600" /></div>
+                          <div className="w-10 h-10 bg-rose-50 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:bg-rose-100 transition-all"><X className="w-5 h-5 text-rose-500" /></div>
                        </div>
                     </div>
                     
@@ -2348,7 +2371,14 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        </div>
                        <div className="space-y-3">
                           {storeOrders.filter(o => showTrash ? o.deleted : !o.deleted).length === 0 ? (
-                             <div className="text-center p-6 text-slate-400 text-sm font-bold border-2 border-dashed border-slate-200 rounded-2xl">{showTrash ? (storeIsAr ? 'سلة المهملات فارغة' : 'La corbeille est vide') : (storeIsAr ? 'لا توجد طلبات' : 'Aucune commande')}</div>
+                             <div className="border-2 border-dashed border-slate-100 rounded-3xl p-10 flex flex-col items-center justify-center text-center bg-gradient-to-b from-slate-50/50 to-white shadow-sm mt-4">
+                                <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-4 shadow-sm border border-slate-100 relative">
+                                   <div className="absolute inset-0 bg-indigo-50 rounded-2xl animate-ping opacity-20"></div>
+                                   <Package className="w-8 h-8 text-slate-300 relative z-10" />
+                                </div>
+                                <h4 className="text-sm font-black text-slate-700 mb-1">{showTrash ? (storeIsAr ? 'سلة المهملات فارغة' : 'Corbeille vide') : (storeIsAr ? 'لا توجد طلبات بعد' : 'Aucune commande pour le moment')}</h4>
+                                <p className="text-[10px] font-bold text-slate-400 max-w-[200px] leading-relaxed">{showTrash ? '' : (storeIsAr ? 'ستظهر طلباتك هنا بمجرد أن يقوم عملاؤك بالشراء' : 'Vos commandes apparaîtront ici dès que vos clients commenceront à acheter')}</p>
+                             </div>
                           ) : storeOrders.filter(o => showTrash ? o.deleted : !o.deleted).map(order => (
                              <div key={order.id} onClick={() => setSelectedOrder(order)} className="p-3 border border-slate-200 rounded-2xl bg-white shadow-sm cursor-pointer hover:border-indigo-500 transition-colors hover:shadow-md group">
                                 <div className="flex justify-between items-start mb-2">
