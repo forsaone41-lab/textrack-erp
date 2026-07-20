@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles } from 'lucide-react';
+import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import StoreManagerDashboard from '../components/Tools/StoreManagerDashboard';
 import ProAITools from '../components/Tools/ProAITools';
@@ -2951,28 +2951,51 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
              <div className="flex-1 overflow-y-auto p-4 space-y-6">
                 <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
                    <h4 className="text-xs font-bold text-indigo-900 uppercase tracking-wider mb-3">{storeIsAr ? 'العناصر الأساسية' : 'Éléments de Base'}</h4>
-                   <div className="grid grid-cols-2 gap-2">
-                       <div onClick={() => { setActiveSidebarSection('hero'); if (!homeBlocks.includes('hero')) setHomeBlocks([...homeBlocks, 'hero']); }} className={`bg-white border ${activeSidebarSection === 'hero' ? 'border-indigo-500 shadow-md ring-2 ring-indigo-100' : 'border-slate-200'} rounded-lg p-3 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all group relative`}>
-                          {homeBlocks.includes('hero') && <div className="absolute top-1 right-1"><CheckCircle className="w-3 h-3 text-indigo-500" /></div>}
-                          <div className="w-8 h-8 rounded bg-indigo-50 flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform"><Type className="w-4 h-4" /></div>
-                          <span className="text-[10px] font-bold text-slate-600">{storeIsAr ? 'القسم الرئيسي' : 'Bannière (Hero)'}</span>
-                       </div>
-                       <div onClick={() => { setActiveSidebarSection('slider'); if (!homeBlocks.includes('slider')) setHomeBlocks([...homeBlocks, 'slider']); else setHomeBlocks(homeBlocks.filter(b => b !== 'slider')); }} className={`bg-white border ${activeSidebarSection === 'slider' ? 'border-emerald-500 shadow-md ring-2 ring-emerald-100' : 'border-slate-200'} rounded-lg p-3 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all group relative`}>
-                          {homeBlocks.includes('slider') && <div className="absolute top-1 right-1"><CheckCircle className="w-3 h-3 text-emerald-500" /></div>}
-                          <div className="w-8 h-8 rounded bg-emerald-50 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform"><ImageIcon className="w-4 h-4" /></div>
-                          <span className="text-[10px] font-bold text-slate-600">{storeIsAr ? 'معرض صور' : 'Slider'}</span>
-                       </div>
-                       <div onClick={() => { setActiveSidebarSection('collections'); if (!homeBlocks.includes('collections')) setHomeBlocks([...homeBlocks, 'collections']); else setHomeBlocks(homeBlocks.filter(b => b !== 'collections')); }} className={`bg-white border ${activeSidebarSection === 'collections' ? 'border-amber-500 shadow-md ring-2 ring-amber-100' : 'border-slate-200'} rounded-lg p-3 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all group relative`}>
-                          {homeBlocks.includes('collections') && <div className="absolute top-1 right-1"><CheckCircle className="w-3 h-3 text-amber-500" /></div>}
-                          <div className="w-8 h-8 rounded bg-amber-50 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform"><MousePointerClick className="w-4 h-4" /></div>
-                          <span className="text-[10px] font-bold text-slate-600">{storeIsAr ? 'تصنيفات' : 'Collections'}</span>
-                       </div>
-                       <div onClick={() => { setActiveSidebarSection('products'); if (!homeBlocks.includes('products')) setHomeBlocks([...homeBlocks, 'products']); else setHomeBlocks(homeBlocks.filter(b => b !== 'products')); }} className={`bg-white border ${activeSidebarSection === 'products' ? 'border-rose-500 shadow-md ring-2 ring-rose-100' : 'border-slate-200'} rounded-lg p-3 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all group relative`}>
-                          {homeBlocks.includes('products') && <div className="absolute top-1 right-1"><CheckCircle className="w-3 h-3 text-rose-500" /></div>}
-                          <div className="w-8 h-8 rounded bg-rose-50 flex items-center justify-center text-rose-500 group-hover:scale-110 transition-transform"><LayoutGrid className="w-4 h-4" /></div>
-                          <span className="text-[10px] font-bold text-slate-600">{storeIsAr ? 'منتجات' : 'Produits'}</span>
-                       </div>
-                    </div>
+                   {(() => {
+                      const blockDefs = [
+                         { id: 'hero', name: storeIsAr ? 'القسم الرئيسي' : 'Bannière (Hero)', icon: Type, activeClasses: 'border-indigo-500 shadow-md ring-2 ring-indigo-100', bgClasses: 'bg-indigo-50 text-indigo-500', checkClass: 'text-indigo-500' },
+                         { id: 'slider', name: storeIsAr ? 'معرض صور' : 'Slider', icon: ImageIcon, activeClasses: 'border-emerald-500 shadow-md ring-2 ring-emerald-100', bgClasses: 'bg-emerald-50 text-emerald-500', checkClass: 'text-emerald-500' },
+                         { id: 'collections', name: storeIsAr ? 'تصنيفات' : 'Collections', icon: MousePointerClick, activeClasses: 'border-amber-500 shadow-md ring-2 ring-amber-100', bgClasses: 'bg-amber-50 text-amber-500', checkClass: 'text-amber-500' },
+                         { id: 'products', name: storeIsAr ? 'منتجات' : 'Produits', icon: LayoutGrid, activeClasses: 'border-rose-500 shadow-md ring-2 ring-rose-100', bgClasses: 'bg-rose-50 text-rose-500', checkClass: 'text-rose-500' }
+                      ];
+                      return (
+                         <div className="space-y-2">
+                            {/* ACTIVE BLOCKS (SORTABLE) */}
+                            {homeBlocks.map((blockId, index) => {
+                               const def = blockDefs.find(b => b.id === blockId);
+                               if (!def) return null;
+                               const Icon = def.icon;
+                               const isActive = activeSidebarSection === blockId;
+                               return (
+                                  <div key={blockId} className={`bg-white border ${isActive ? def.activeClasses : 'border-slate-200'} rounded-lg p-2.5 flex items-center gap-3 transition-all group relative`}>
+                                     <div onClick={() => setActiveSidebarSection(blockId)} className="flex-1 flex items-center gap-3 cursor-pointer">
+                                        <div className={`w-8 h-8 rounded ${def.bgClasses} flex items-center justify-center group-hover:scale-110 transition-transform`}><Icon className="w-4 h-4" /></div>
+                                        <span className="text-[11px] font-bold text-slate-700">{def.name}</span>
+                                        <CheckCircle className={`w-3.5 h-3.5 ${def.checkClass} ml-auto mr-2`} />
+                                     </div>
+                                     <div className="flex flex-col border-l border-slate-100 pl-2">
+                                        <button disabled={index === 0} onClick={() => { const newB = [...homeBlocks]; newB[index] = newB[index-1]; newB[index-1] = blockId; setHomeBlocks(newB); }} className="p-0.5 text-slate-400 hover:text-indigo-600 disabled:opacity-30"><ChevronUp className="w-3 h-3" /></button>
+                                        <button disabled={index === homeBlocks.length - 1} onClick={() => { const newB = [...homeBlocks]; newB[index] = newB[index+1]; newB[index+1] = blockId; setHomeBlocks(newB); }} className="p-0.5 text-slate-400 hover:text-indigo-600 disabled:opacity-30"><ChevronDown className="w-3 h-3" /></button>
+                                     </div>
+                                     <button onClick={() => setHomeBlocks(homeBlocks.filter(b => b !== blockId))} className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-md ml-1" title="Masquer"><X className="w-3.5 h-3.5" /></button>
+                                  </div>
+                               );
+                            })}
+                            
+                            {/* INACTIVE BLOCKS */}
+                            {blockDefs.filter(b => !homeBlocks.includes(b.id)).map(def => {
+                               const Icon = def.icon;
+                               return (
+                                  <div key={def.id} onClick={() => { setHomeBlocks([...homeBlocks, def.id]); setActiveSidebarSection(def.id); }} className={`bg-slate-50/50 border border-slate-200 border-dashed rounded-lg p-2.5 flex items-center gap-3 cursor-pointer hover:bg-white transition-all opacity-60 hover:opacity-100`}>
+                                     <div className="w-8 h-8 rounded bg-slate-100 text-slate-400 flex items-center justify-center"><Icon className="w-4 h-4" /></div>
+                                     <span className="text-[11px] font-bold text-slate-500 flex-1">{def.name}</span>
+                                     <Plus className="w-4 h-4 text-slate-400 mr-2" />
+                                  </div>
+                               );
+                            })}
+                         </div>
+                      );
+                   })()}
                 </div>
 
                 <div className="space-y-4">
