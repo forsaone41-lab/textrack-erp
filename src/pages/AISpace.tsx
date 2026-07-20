@@ -342,6 +342,56 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     }, 500);
   };
 
+  // Parse AI price table and send to DevisBuilder
+  const sendToDevis = (text: string) => {
+    try {
+      // Extract table rows from markdown table
+      const lines = text.split('\n');
+      const tableLines = lines.filter(l => l.trim().startsWith('|') && !l.includes('---'));
+      
+      const items: { designation: string; montant: number; detail: string }[] = [];
+      
+      for (let i = 1; i < tableLines.length; i++) { // skip header
+        const cells = tableLines[i].split('|').map(s => s.trim()).filter(Boolean);
+        if (cells.length >= 2) {
+          // Try to extract amount from cells
+          const amountCell = cells.find(c => /\d+[.,\d]*/.test(c.replace(/\*+/g, '')));
+          const nameCell = cells.find(c => !/^[\d.,]+/.test(c.replace(/\*+/g, '').trim()) && c.length > 1);
+          const amount = amountCell ? parseFloat(amountCell.replace(/\*+/g, '').replace(',', '.').match(/[\d.]+/)?.[0] || '0') : 0;
+          const name = nameCell?.replace(/\*+/g, '').trim() || '';
+          if (name && amount > 0 && !name.toLowerCase().includes('total') && !name.toLowerCase().includes('مجموع') && !name.toLowerCase().includes('revient')) {
+            items.push({ designation: name, montant: amount, detail: cells[cells.length-1]?.replace(/\*+/g, '') || '' });
+          }
+        }
+      }
+      
+      // Find total
+      const totalLine = tableLines.find(l => l.toLowerCase().includes('total') || l.includes('مجموع') || l.includes('revient'));
+      let total = 0;
+      if (totalLine) {
+        const m = totalLine.match(/[\d.]+/g);
+        if (m) total = Math.max(...m.map(Number));
+      }
+
+      // Store in localStorage for DevisBuilder to pick up
+      const devisData = {
+        fromAI: true,
+        timestamp: Date.now(),
+        items,
+        total,
+        rawText: text,
+        modelName: analysisResult?.category || (isAr ? 'نموذج من الذكاء الاصطناعي' : 'Modèle AI Expert')
+      };
+      localStorage.setItem('beya_ai_to_devis', JSON.stringify(devisData));
+      
+      // Navigate to DevisBuilder
+      navigate('/devis-builder');
+    } catch (err) {
+      console.error('sendToDevis error:', err);
+      navigate('/devis-builder');
+    }
+  };
+
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;

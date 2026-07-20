@@ -87,6 +87,30 @@ export default function DevisBuilder({ embedded = false, onBack }: DevisBuilderP
         .filter(n => !isNaN(n));
       const nextNum = existingNums.length > 0 ? Math.max(...existingNums) + 1 : 1;
       setDevisNum(`${prefix}${String(nextNum).padStart(3, '0')}`);
+
+      // 🤖 Auto-import from AI Expert (beya_ai_to_devis)
+      const aiData = localStorage.getItem('beya_ai_to_devis');
+      if (aiData) {
+        try {
+          const parsed = JSON.parse(aiData);
+          // Only import if recent (within 5 minutes)
+          if (Date.now() - parsed.timestamp < 5 * 60 * 1000 && parsed.items?.length > 0) {
+            const aiModels = parsed.items.map((item: any) => ({
+              id: Math.random().toString(36).slice(2),
+              name: item.designation || 'Désignation',
+              image: '',
+              quantity: 1,
+              matierePrice: item.montant || 0,
+              laborPrice: 0,
+              fabricType: item.detail || ''
+            }));
+            setModels(aiModels);
+            setNewClientName('AI Expert BEYA');
+          }
+          localStorage.removeItem('beya_ai_to_devis');
+        } catch (e) { /* ignore */ }
+      }
+
       setLoading(false);
     });
   }, []);
