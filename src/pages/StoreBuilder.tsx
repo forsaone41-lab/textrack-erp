@@ -2223,6 +2223,33 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                  </div>
               )}
 
+              {/* PRODUCTS TAB */}
+              {activeTab === 'products' && (
+                 <div className="space-y-4">
+                    <div className="flex items-center justify-between mb-2">
+                       <h3 className="text-xl font-black text-slate-800 tracking-tight">{storeIsAr ? 'إدارة المنتجات' : 'Gestion des Produits'}</h3>
+                       <button className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 transition-colors shadow-sm">
+                          <Plus className="w-4 h-4" /> {storeIsAr ? 'إضافة منتج' : 'Ajouter Produit'}
+                       </button>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                       {storeProducts.map(p => (
+                          <div key={p.id} className="bg-white border border-slate-200 rounded-2xl p-3 flex gap-3 hover:border-indigo-300 transition-colors cursor-pointer group shadow-sm">
+                             <div className="w-16 h-16 bg-slate-100 rounded-xl overflow-hidden shrink-0 flex items-center justify-center">
+                                {getCoverImage(p) ? <img src={getCoverImage(p)} className="w-full h-full object-cover group-hover:scale-105 transition-transform" /> : <ImageIcon className="w-6 h-6 text-slate-300" />}
+                             </div>
+                             <div className="flex flex-col justify-center overflow-hidden">
+                                <h4 className="text-sm font-bold text-slate-800 truncate">{p.name}</h4>
+                                <p className="text-[10px] text-slate-400 mt-0.5 truncate">{p.category}</p>
+                                <p className="text-xs font-black text-slate-900 mt-1">{p.price} MAD</p>
+                             </div>
+                          </div>
+                       ))}
+                    </div>
+                 </div>
+              )}
+
               {/* CUSTOMERS TAB (NEW!) */}
               {activeTab === 'customers' && (
                  <div className="space-y-4">
