@@ -2288,7 +2288,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center"><ShoppingBag className="w-3 h-3 text-white" /></div>
                           </div>
                           <div>
-                             <h4 className="text-2xl font-black text-white">{storeOrders.length.toLocaleString('fr-FR')}</h4>
+                             <h4 className="text-2xl font-black text-white">{storeOrders.filter((o: any) => !o.deleted).length.toLocaleString('fr-FR')}</h4>
                              <p className="text-[9px] text-indigo-200 font-bold mt-1">{storeIsAr ? 'هذا الشهر' : 'Total global'}</p>
                           </div>
                        </div>
@@ -2299,7 +2299,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center"><CreditCard className="w-3 h-3 text-white" /></div>
                           </div>
                           <div>
-                             <h4 className="text-xl font-black text-white">{storeOrders.reduce((sum: number, ord: any) => sum + (parseFloat(ord.amount) || 0), 0).toLocaleString('fr-FR')} <span className="text-[10px]">MAD</span></h4>
+                             <h4 className="text-xl font-black text-white">{storeOrders.filter((o: any) => !o.deleted).reduce((sum: number, ord: any) => sum + (parseFloat(ord.amount) || 0), 0).toLocaleString('fr-FR')} <span className="text-[10px]">MAD</span></h4>
                              <p className="text-[9px] text-emerald-100 font-bold mt-1">{storeIsAr ? 'هذا الشهر' : 'Total global'}</p>
                           </div>
                        </div>
@@ -2307,7 +2307,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group cursor-pointer hover:border-green-300 transition-colors">
                           <div>
                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">{storeIsAr ? 'الطلبات المؤكدة' : 'Confirmées'}</p>
-                             <h4 className="text-lg font-black text-slate-800">{storeOrders.filter((ord: any) => ['Confirmé', 'Confirmée', 'Validée', 'Livrée', 'مؤكد', 'تم التوصيل'].includes(ord.status)).length.toLocaleString('fr-FR')}</h4>
+                             <h4 className="text-lg font-black text-slate-800">{storeOrders.filter((ord: any) => !ord.deleted && ['Confirmé', 'Confirmée', 'Validée', 'Livrée', 'مؤكد', 'تم التوصيل'].includes(ord.status)).length.toLocaleString('fr-FR')}</h4>
                           </div>
                           <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center group-hover:bg-green-200 transition-colors"><CheckCircle className="w-4 h-4 text-green-600" /></div>
                        </div>
@@ -2315,7 +2315,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group cursor-pointer hover:border-rose-300 transition-colors">
                           <div>
                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">{storeIsAr ? 'الطلبات المرفوضة' : 'Refusées'}</p>
-                             <h4 className="text-lg font-black text-slate-800">{storeOrders.filter((ord: any) => ['Refusé', 'Refusée', 'Annulée', 'Retour', 'مرفوض', 'ملغى'].includes(ord.status)).length.toLocaleString('fr-FR')}</h4>
+                             <h4 className="text-lg font-black text-slate-800">{storeOrders.filter((ord: any) => !ord.deleted && ['Refusé', 'Refusée', 'Annulée', 'Retour', 'مرفوض', 'ملغى'].includes(ord.status)).length.toLocaleString('fr-FR')}</h4>
                           </div>
                           <div className="w-8 h-8 bg-rose-100 rounded-full flex items-center justify-center group-hover:bg-rose-200 transition-colors"><X className="w-4 h-4 text-rose-600" /></div>
                        </div>
