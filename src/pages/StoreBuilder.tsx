@@ -386,7 +386,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     setStoreOrders((prev: any) => [newOrder, ...prev]);
   };
 
-  const handleSave = async () => {
+  const handleSave = async (overrideProducts?: any[]) => {
     setIsSaving(true);
     const storeConfig = {
        storeLang,
@@ -411,7 +411,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        newsletterSubtitle,
        featuresData,
        videoUrl,
-       storeProducts,
+       storeProducts: overrideProducts || storeProducts,
        appsConfig,
        deliveryCompanies,
        secondaryColor,
@@ -2266,7 +2266,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                     <div className="grid grid-cols-2 gap-4">
                        {storeProducts.map((p: any) => (
                           <div key={p.id} onClick={() => { setProductForm(p); setIsProductModalOpen(true); }} className="bg-white border border-slate-200 rounded-2xl p-3 flex gap-3 hover:border-indigo-300 transition-colors cursor-pointer group shadow-sm relative">
-                             <button onClick={(e) => { e.stopPropagation(); setStoreProducts(storeProducts.filter((prod: any) => prod.id !== p.id)); }} className={`absolute top-2 ${storeIsAr ? 'left-2' : 'right-2'} w-7 h-7 bg-white text-rose-500 rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 hover:bg-rose-500 hover:text-white transition-all z-10 border border-slate-100`} title={storeIsAr ? 'حذف المنتج' : 'Supprimer'}>
+                             <button onClick={(e) => { e.stopPropagation(); const newProds = storeProducts.filter((prod: any) => prod.id !== p.id); setStoreProducts(newProds); handleSave(newProds); }} className={`absolute top-2 ${storeIsAr ? 'left-2' : 'right-2'} w-7 h-7 bg-white text-rose-500 rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 hover:bg-rose-500 hover:text-white transition-all z-10 border border-slate-100`} title={storeIsAr ? 'حذف المنتج' : 'Supprimer'}>
                                 <Trash2 className="w-3.5 h-3.5" />
                              </button>
                              <div className="w-16 h-16 bg-slate-100 rounded-xl overflow-hidden shrink-0 flex items-center justify-center">
@@ -3350,12 +3350,15 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                  <button onClick={() => setIsProductModalOpen(false)} className="px-8 py-4 font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-colors">{storeIsAr ? 'إلغاء' : 'Annuler'}</button>
                  <button onClick={() => {
                     if(productForm?.name && productForm?.price) {
+                       let newProds;
                        if(productForm.id) {
-                          setStoreProducts(storeProducts.map(p => p.id === productForm.id ? productForm : p));
+                          newProds = storeProducts.map(p => p.id === productForm.id ? productForm : p);
                        } else {
-                          setStoreProducts([{ id: Date.now(), ...productForm }, ...storeProducts]);
+                          newProds = [{ id: Date.now(), ...productForm }, ...storeProducts];
                        }
+                       setStoreProducts(newProds);
                        setIsProductModalOpen(false);
+                       handleSave(newProds);
                     }
                  }} className="px-10 py-4 font-black uppercase tracking-widest bg-indigo-600 text-white rounded-xl shadow-lg shadow-indigo-600/30 hover:bg-indigo-700 hover:scale-105 transition-all">
                     {productForm?.id ? (storeIsAr ? 'تحديث المنتج' : 'Mettre à jour') : (storeIsAr ? 'حفظ المنتج' : 'Enregistrer le produit')}
