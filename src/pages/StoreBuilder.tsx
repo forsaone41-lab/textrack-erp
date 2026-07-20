@@ -1489,11 +1489,2996 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
           </>
         )}
 
-        {page === 'product' && (
-           <div className="p-8 max-w-6xl mx-auto bg-white min-h-[600px] my-8 flex flex-col md:flex-row gap-12">
+        // @ts-nocheck
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video } from 'lucide-react';
+import { useLang } from '../contexts/LangContext';
+import StoreManagerDashboard from '../components/Tools/StoreManagerDashboard';
+import ProAITools from '../components/Tools/ProAITools';
+import { supabase } from '../supabase';
+
+const THEMES = [
+  { id: 'streetwear', name: 'Streetwear Pro', layout: 'hero-center', defaultColor: '#0f172a', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop' },
+  { id: 'minimalist', name: 'Minimalist', layout: 'split-screen', defaultColor: '#171717', defaultFont: 'font-serif', previewImg: 'https://images.unsplash.com/photo-1489987707023-afc7f93c6508?q=80&w=800&auto=format&fit=crop' },
+  { id: 'abaya', name: 'Luxury Abaya', layout: 'elegant', defaultColor: '#b48a44', defaultFont: 'font-serif', previewImg: 'https://images.unsplash.com/photo-1589465885857-44edb59bbff2?q=80&w=800&auto=format&fit=crop' },
+  { id: 'sportswear', name: 'Active Sport', layout: 'hero-center', defaultColor: '#84cc16', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop' },
+  { id: 'eco', name: 'Eco Nature', layout: 'split-screen', defaultColor: '#4d7c0f', defaultFont: 'font-serif', previewImg: 'https://images.unsplash.com/photo-1523381294911-8d3cead13475?q=80&w=800&auto=format&fit=crop' },
+  { id: 'kids', name: 'Playful Kids', layout: 'playful', defaultColor: '#0ea5e9', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=800&auto=format&fit=crop' },
+  { id: 'clement', name: 'Clement Design', layout: 'clement', defaultColor: '#1e293b', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1577221084712-45b0445d2b00?q=80&w=800&auto=format&fit=crop' },
+  { id: 'xton', name: 'Xton', layout: 'hero-center', defaultColor: '#f59e0b', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=800&auto=format&fit=crop' },
+  { id: 'amaza', name: 'Amaza', layout: 'sidebar-right', defaultColor: '#06b6d4', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop' },
+  { id: 'ochaka', name: 'Ochaka', layout: 'split-screen', defaultColor: '#9f1239', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=800&auto=format&fit=crop' },
+  { id: 'mazia', name: 'Mazia', layout: 'mazia', defaultColor: '#ef4444', defaultFont: 'font-serif', previewImg: 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=800&auto=format&fit=crop' }
+];
+
+const readFileAsBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target?.result as string);
+    reader.readAsDataURL(file);
+  });
+};
+
+const getSavedConfig = () => {
+    try {
+        const saved = localStorage.getItem('beya_store_config');
+        return saved ? JSON.parse(saved) : {};
+    } catch(e) { return {}; }
+};
+
+export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: boolean }) {
+  const { storeNameUrl } = useParams<{storeNameUrl: string}>();
+  const config = getSavedConfig();
+  const { isAr } = useLang();
+  const [platformMode, setPlatformModeState] = useState<'gestion'|'builder'>(
+     (localStorage.getItem('beya_platform_mode') as any) || (config.storeName ? 'gestion' : 'builder')
+  );
+  const setPlatformMode = (mode: 'gestion'|'builder') => {
+     localStorage.setItem('beya_platform_mode', mode);
+     setPlatformModeState(mode);
+  };
+  
+  const [builderMode, setBuilderModeState] = useState<'dashboard'|'editor'|'pro_ai'>(
+    (localStorage.getItem('beya_builder_mode') as any) || 'dashboard'
+  );
+  
+  const setBuilderMode = (mode: 'dashboard'|'editor'|'pro_ai') => {
+    localStorage.setItem('beya_builder_mode', mode);
+    setBuilderModeState(mode);
+  };
+
+  const [productsViewMode, setProductsViewMode] = useState<'list'|'grid'>('list');
+  const [activeTab, setActiveTabState] = useState<string>(
+     localStorage.getItem('beya_active_tab') || (config.storeName ? 'orders' : 'settings')
+  );
+  const setActiveTab = (tab: string) => {
+     localStorage.setItem('beya_active_tab', tab);
+     setActiveTabState(tab);
+  };
+  const [storeName, setStoreName] = useState(config.storeName || '');
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewProductId, setPreviewProductId] = useState<number | null>(null);
+  const [previewDevice, setPreviewDevice] = useState<'desktop'|'mobile'>('desktop');
+  const [isControlsCollapsed, setIsControlsCollapsed] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [showTrash, setShowTrash] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<string|null>(null);
+    const [storeOrders, setStoreOrders] = useState(() => {
+    if (!config.storeName) return [];
+    try {
+      const saved = localStorage.getItem(`beya_orders_${config.storeName}`);
+      if (saved) return JSON.parse(saved);
+    } catch (e) { console.error(e); }
+    return [
+      { id: '#1042', customer: 'Youssef El Amrani', amount: '850.00 MAD', status: 'Nouveau', statusColor: 'bg-indigo-100 text-indigo-700', date: 'Il y a 10 min', items: '2 articles', products: [{ name: 'Premium Hoodie', photo: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop', qty: 1, price: '450.00 MAD', options: 'Taille: L, Couleur: Noir' }, { name: 'Cargo Pants', photo: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop', qty: 1, price: '400.00 MAD', options: 'Taille: M, Couleur: Kaki' }] },
+      { id: '#1041', customer: 'Sara Bennani', amount: '450.00 MAD', status: 'Confirmé', statusColor: 'bg-emerald-100 text-emerald-700', date: 'Il y a 1h', items: '1 article', products: [{ name: 'Essential T-Shirt', photo: 'https://images.unsplash.com/photo-1489987707023-afc7f93c6508?q=80&w=800&auto=format&fit=crop', qty: 1, price: '450.00 MAD', options: 'Taille: S, Couleur: Blanc' }] },
+      { id: '#1040', customer: 'Karim Tazi', amount: '1200.00 MAD', status: 'En cours', statusColor: 'bg-amber-100 text-amber-700', date: 'Hier', items: '3 articles', products: [{ name: 'Classic Sneakers', photo: 'https://images.unsplash.com/photo-1589465885857-44edb59bbff2?q=80&w=800&auto=format&fit=crop', qty: 2, price: '400.00 MAD', options: 'Pointure: 42, Couleur: Blanc' }, { name: 'Cargo Pants', photo: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop', qty: 1, price: '400.00 MAD', options: 'Taille: L, Couleur: Noir' }] },
+      { id: '#1039', customer: 'Maha Alami', amount: '350.00 MAD', status: 'Refusé', statusColor: 'bg-rose-100 text-rose-700', date: 'Hier', items: '1 article', products: [{ name: 'Summer Dress', photo: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=800&auto=format&fit=crop', qty: 1, price: '350.00 MAD', options: 'Taille: M, Couleur: Rouge' }] }
+    ];
+  });
+
+  useEffect(() => {
+    if (config.storeName && storeOrders.length > 0) {
+      localStorage.setItem(`beya_orders_${config.storeName}`, JSON.stringify(storeOrders));
+    }
+  }, [storeOrders, config.storeName]);
+
+  const handleUpdateOrderStatus = (orderId: string, newStatus: string, newColor: string) => {
+    setStoreOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus, statusColor: newColor } : o));
+    setSelectedOrder(null);
+  };
+
+  const handleDeleteOrder = (orderId: string) => {
+    setOrderToDelete(orderId);
+  };
+
+  const confirmDeleteOrder = () => {
+    if (orderToDelete) {
+      setStoreOrders(prev => prev.map(o => o.id === orderToDelete ? { ...o, deleted: true } : o));
+      setSelectedOrder(null);
+      setOrderToDelete(null);
+    }
+  };
+
+  const handleRestoreOrder = (orderId: string) => {
+    setStoreOrders(prev => prev.map(o => o.id === orderId ? { ...o, deleted: false } : o));
+    setSelectedOrder(null);
+  };
+
+  const handlePermanentDelete = (orderId: string) => {
+    setStoreOrders(prev => prev.filter(o => o.id !== orderId));
+    setSelectedOrder(null);
+  };
+  const [storeLang, setStoreLang] = useState<'fr'|'en'|'ar'>(config.storeLang || 'fr');
+  const storeIsAr = storeLang === 'ar';
+  
+  const tr = (t: string) => {
+     if (!storeIsAr) return t;
+     const dict: Record<string, string> = {
+        'New Collection': 'تشكيلة جديدة',
+        'Discover our latest premium quality garments.': 'اكتشف أحدث تشكيلاتنا ذات الجودة العالية.',
+        'Shop Now': 'تسوق الآن',
+        'Trending Now': 'الأكثر مبيعاً',
+        'All Products': 'جميع المنتجات',
+        'Home': 'الرئيسية',
+        'Collections': 'التشكيلات',
+        'About': 'من نحن',
+        '© 2026 My Brand. Tous droits réservés.': '© 2026 My Brand. جميع الحقوق محفوظة.',
+        'Accueil': 'الرئيسية',
+        'Produits': 'المنتجات',
+        'All Products ✨': 'جميع المنتجات ✨',
+        'ALL PRODUCTS': 'جميع المنتجات',
+        'All': 'الكل',
+        'ALL': 'الكل',
+        'Outerwear': 'ملابس خارجية',
+        'OUTERWEAR': 'ملابس خارجية',
+        'Tops': 'قمصان',
+        'TOPS': 'قمصان',
+        'Bottoms': 'بناطيل',
+        'BOTTOMS': 'بناطيل',
+        'Shoes': 'أحذية',
+        'SHOES': 'أحذية',
+        'Dresses': 'فساتين',
+        'DRESSES': 'فساتين',
+        'Recommandé': 'موصى به',
+        'Sort: Featured': 'موصى به',
+        'Featured': 'موصى به',
+        'Best Matches 🌟': 'موصى به 🌟',
+        'Prix: Croissant': 'السعر: من الأقل للأكثر',
+        'Price: Low to High': 'السعر: من الأقل للأكثر',
+        'Price: Low - High': 'السعر: من الأقل للأكثر',
+        'Price: Low to High 💸': 'السعر: من الأقل للأكثر 💸',
+        'Prix: Décroissant': 'السعر: من الأكثر للأقل',
+        'Price: High to Low': 'السعر: من الأكثر للأقل',
+        'Price: High - Low': 'السعر: من الأكثر للأقل',
+        'Price: High to Low 💎': 'السعر: من الأكثر للأقل 💎',
+        'De A à Z': 'أ - ي',
+        'De Z à A': 'ي - أ'
+     };
+     return dict[t] || t;
+  };
+  
+  // Customization States (The PRO way)
+  const [activeTheme, setActiveTheme] = useState(config.activeTheme || THEMES[0]);
+  const [primaryColor, setPrimaryColor] = useState(config.primaryColor || THEMES[0].defaultColor);
+  const [secondaryColor, setSecondaryColor] = useState(config.secondaryColor || '#ffffff');
+  const [buttonStyle, setButtonStyle] = useState<'rounded' | 'pill' | 'square'>(config.buttonStyle || 'rounded');
+  const [fontFamily, setFontFamily] = useState(config.fontFamily || THEMES[0].defaultFont);
+  const [heroImage, setHeroImage] = useState(config.heroImage || THEMES[0].previewImg);
+  
+  // Theme Inline Texts
+  const [heroTitle, setHeroTitle] = useState(config.heroTitle || 'New Collection');
+  const [heroSubtitle, setHeroSubtitle] = useState(config.heroSubtitle || 'Discover our latest premium quality garments.');
+  const [heroButtonText, setHeroButtonText] = useState(config.heroButtonText || 'Shop Now');
+  const [homeCollectionsTitle, setHomeCollectionsTitle] = useState(config.homeCollectionsTitle || 'Trending Now');
+  const [allCollectionsTitle, setAllCollectionsTitle] = useState(config.allCollectionsTitle || 'All Products');
+  const [homeBlocks, setHomeBlocks] = useState<string[]>(config.homeBlocks || ['hero', 'collections', 'products']);
+  const [sliderImages, setSliderImages] = useState<string[]>(config.sliderImages || []);
+  const [activeSidebarSection, setActiveSidebarSection] = useState<string>('hero');
+  
+  const [cartCount, setCartCount] = useState(0);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [storeProducts, setStoreProducts] = useState(config.storeProducts || [
+    { id: 1, name: 'Premium Hoodie', price: '450.00', category: 'Outerwear', image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800' },
+    { id: 2, name: 'Essential T-Shirt', price: '150.00', category: 'Tops', image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=800' },
+    { id: 3, name: 'Cargo Pants', price: '350.00', category: 'Bottoms', image: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&q=80&w=800' },
+    { id: 4, name: 'Classic Sneakers', price: '550.00', category: 'Shoes', image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=800' },
+    { id: 5, name: 'Summer Dress', price: '290.00', category: 'Dresses', image: 'https://images.unsplash.com/photo-1515347619152-16b713b194d2?auto=format&fit=crop&q=80&w=800' },
+    { id: 6, name: 'Leather Jacket', price: '890.00', category: 'Outerwear', image: 'https://images.unsplash.com/photo-1551028719-0c124a1119ce?auto=format&fit=crop&q=80&w=800' }
+  ]);
+  const [newProduct, setNewProduct] = useState({ name: '', price: '' });
+  const [appsConfig, setAppsConfig] = useState<Record<string, string>>(config.appsConfig || {});
+  const [deliveryCompanies, setDeliveryCompanies] = useState<any[]>(config.deliveryCompanies || [
+     { id: 1, name: 'Amana', type: 'Standard • National', isActive: true, initial: 'AM' },
+     { id: 2, name: 'Ghazal', type: 'Express • National', isActive: false, initial: 'GR' }
+  ]);
+  const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
+  const [newDeliveryCompany, setNewDeliveryCompany] = useState({ name: '', type: 'Standard • National', isActive: true });
+  const [activeAppModal, setActiveAppModal] = useState<string | null>(null);
+  const [appInputValue, setAppInputValue] = useState('');
+
+  // Helper to get any available image for a product
+  const getCoverImage = (p: any) => p.image || (p.colorImages ? Object.values(p.colorImages)[0] : null);
+
+  const [storePages, setStorePages] = useState([
+    { id: 'home', title: 'Home', isDefault: true },
+    { id: 'collections', title: 'Collections', isDefault: true },
+    { id: 'about', title: 'About', isDefault: false }
+  ]);
+  const [footerSettings, setFooterSettings] = useState(config.footerSettings || {
+    copyright: '© 2024 Mon Magasin. Tous droits réservés.',
+    links: ['À Propos', 'Contact', 'Politique de Retour', 'Termes & Conditions']
+  });
+  const [showReviews, setShowReviews] = useState(config.showReviews !== undefined ? config.showReviews : true);
+  // Computed design vars - available to all Layout components
+  const btnRadius = buttonStyle === 'pill' ? '9999px' : buttonStyle === 'square' ? '0px' : '10px';
+  const btnStyle = { backgroundColor: primaryColor, borderRadius: btnRadius };
+  const cardBg = secondaryColor || '#ffffff';
+  const [newsletterTitle, setNewsletterTitle] = useState(config.newsletterTitle || 'Rejoignez notre Newsletter');
+  const [newsletterSubtitle, setNewsletterSubtitle] = useState(config.newsletterSubtitle || 'Recevez nos dernières offres et nouveautés directement dans votre boîte mail.');
+  const [featuresData, setFeaturesData] = useState(config.featuresData || [
+    { icon: 'Truck', title: 'Livraison Rapide', subtitle: 'Partout au Maroc' },
+    { icon: 'ShieldCheck', title: 'Paiement Sécurisé', subtitle: '100% garanti' },
+    { icon: 'Star', title: 'Qualité Premium', subtitle: 'Produits certifiés' }
+  ]);
+  const [videoUrl, setVideoUrl] = useState(config.videoUrl || '');
+  const [newPageTitle, setNewPageTitle] = useState('');
+  const [isPageModalOpen, setIsPageModalOpen] = useState(false);
+  const [pageForm, setPageForm] = useState<any>(null);
+  
+  const [storeLogo, setStoreLogo] = useState(config.storeLogo || '');
+  const [storeFavicon, setStoreFavicon] = useState(config.storeFavicon || '');
+  
+  useEffect(() => {
+     if (isLiveStore) {
+        document.title = storeName;
+        const finalIcon = storeFavicon || storeLogo || "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛍️</text></svg>";
+        
+        document.querySelectorAll("link[rel*='icon']").forEach(node => {
+            (node as HTMLLinkElement).href = finalIcon;
+        });
+        let appleLink = document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement;
+        if (!appleLink) {
+            appleLink = document.createElement('link');
+            appleLink.rel = 'apple-touch-icon';
+            document.getElementsByTagName('head')[0].appendChild(appleLink);
+        }
+        appleLink.href = finalIcon;
+     }
+  }, [isLiveStore, storeName, storeLogo, storeFavicon]);
+
+  const [isLoadingLiveConfig, setIsLoadingLiveConfig] = useState(isLiveStore);
+
+  // Fetch from Supabase for live store to handle cross-domain loading
+  useEffect(() => {
+     const fetchLiveConfig = async () => {
+        try {
+           const currentDomain = window.location.hostname;
+           // Fetch the exact domain config first, OR by storeName if provided via url parameter
+           let query = supabase.from('stores').select('config_json');
+           if (storeNameUrl) {
+              query = query.eq('domain', `${storeNameUrl}.beyacreative.com`);
+           } else {
+              query = query.eq('domain', currentDomain);
+           }
+           let { data, error } = await query.single();
+           
+           // Fallback for SaaS mockup: if domain not found, grab the latest saved store
+           if (!data) {
+              const fallback = await supabase
+                 .from('stores')
+                 .select('config_json')
+                 .eq('domain', 'latest_saved_store')
+                 .single();
+              
+              if (fallback.data) {
+                  data = fallback.data;
+              } else {
+                  // Final fallback
+                  const lastResort = await supabase
+                     .from('stores')
+                     .select('config_json')
+                     .order('updated_at', { ascending: false })
+                     .limit(1)
+                     .single();
+                  data = lastResort.data;
+              }
+           }
+           
+           if (data && data.config_json) {
+              const conf = data.config_json;
+              if (conf.storeLang) setStoreLang(conf.storeLang);
+              if (conf.storeName) setStoreName(conf.storeName);
+              if (conf.storeLogo) setStoreLogo(conf.storeLogo);
+              if (conf.storeFavicon) setStoreFavicon(conf.storeFavicon);
+              if (conf.activeTheme) setActiveTheme(conf.activeTheme);
+              if (conf.primaryColor) setPrimaryColor(conf.primaryColor);
+              if (conf.fontFamily) setFontFamily(conf.fontFamily);
+              if (conf.heroImage) setHeroImage(conf.heroImage);
+              if (conf.heroTitle) setHeroTitle(conf.heroTitle);
+              if (conf.heroSubtitle) setHeroSubtitle(conf.heroSubtitle);
+              if (conf.heroButtonText) setHeroButtonText(conf.heroButtonText);
+              if (conf.homeCollectionsTitle) setHomeCollectionsTitle(conf.homeCollectionsTitle);
+              if (conf.allCollectionsTitle) setAllCollectionsTitle(conf.allCollectionsTitle);
+              if (conf.buyMode) setBuyMode(conf.buyMode);
+              if (conf.footerSettings) setFooterSettings(conf.footerSettings);
+           }
+        } catch (err) {
+           console.warn('No live config found in Supabase or table missing:', err);
+        } finally {
+           setIsLoadingLiveConfig(false);
+        }
+     };
+
+     if (isLiveStore) {
+        fetchLiveConfig();
+     }
+  }, [isLiveStore]);
+  
+  const [buyMode, setBuyMode] = useState<'cart'|'direct'|'both'|'form'>(config.buyMode || 'both');
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [productForm, setProductForm] = useState<any>(null);
+  const [newSizeInput, setNewSizeInput] = useState('');
+  const [newColorInput, setNewColorInput] = useState('#000000');
+
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [showPublishModal, setShowPublishModal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [customDomain, setCustomDomain] = useState(config.customDomain || '');
+  const [isLinkingDomain, setIsLinkingDomain] = useState(false);
+  const [domainError, setDomainError] = useState('');
+
+  const submitGlobalOrder = (product: any, qty: number) => {
+    const inputs = Array.from(document.querySelectorAll('input[type="text"]')).slice(-4);
+    const nameInput = inputs[0] as HTMLInputElement;
+    const phoneInput = inputs[1] as HTMLInputElement;
+    const cityInput = inputs[2] as HTMLInputElement;
+
+    const newOrder = {
+        id: "ORD-" + Math.floor(10000 + Math.random() * 90000),
+        date: new Date().toLocaleDateString("fr-FR"),
+        customer: nameInput?.value || "Client Web",
+        city: cityInput?.value || "Non specifiee",
+        phone: phoneInput?.value || "Non specifie",
+        product: product ? product.name : "Produit inconnu",
+        quantity: qty || 1,
+        amount: product ? (parseFloat(product.price) * (qty || 1)).toFixed(2) : "0.00",
+        status: "En attente",
+        statusColor: "#f59e0b"
+    };
+    
+    setStoreOrders((prev: any) => [newOrder, ...prev]);
+    setPage("success");
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    const storeConfig = {
+       storeLang,
+       storeName,
+       storeLogo,
+       storeFavicon,
+       customDomain,
+       activeTheme,
+       primaryColor,
+       fontFamily,
+       heroImage,
+       heroTitle,
+       heroSubtitle,
+       heroButtonText,
+       homeCollectionsTitle,
+       allCollectionsTitle,
+       buyMode,
+       homeBlocks,
+       sliderImages,
+       footerSettings,
+       newsletterTitle,
+       newsletterSubtitle,
+       featuresData,
+       videoUrl,
+       storeProducts,
+       appsConfig,
+       deliveryCompanies,
+       secondaryColor,
+       buttonStyle,
+       showReviews
+    };
+    localStorage.setItem('beya_store_config', JSON.stringify(storeConfig));
+    
+    // Sync to Supabase for cross-domain live preview (SaaS mode)
+    try {
+       const domain = customDomain || `${storeName.toLowerCase().replace(/\\s+/g, '')}.beyacreative.com`;
+       
+       // Update both exact domain AND a fallback to ensure changes apply immediately
+       await supabase.from('stores').upsert({
+          domain: domain,
+          config_json: storeConfig,
+          name: storeName,
+          updated_at: new Date()
+       }, { onConflict: 'domain' });
+
+       
+
+    } catch (err) {
+       console.warn("Supabase sync failed (Table 'stores' might not exist yet):", err);
+    }
+    
+    setTimeout(() => setIsSaving(false), 1000);
+  };
+
+  const handleLinkDomain = async () => {
+    if (!customDomain) return;
+    setIsLinkingDomain(true);
+    setDomainError('');
+    
+    // Mock successful domain linking for MVP/SaaS UI since there's no backend API right now
+    setTimeout(async () => {
+       setIsLinkingDomain(false);
+       await handleSave(); // Automatically save the domain to DB
+    }, 1500);
+  };
+
+  const handlePublish = async () => {
+    setIsPublishing(true);
+    await handleSave();
+    setTimeout(() => {
+      setIsPublishing(false);
+      setShowPublishModal(true);
+    }, 1000);
+  };
+
+  const applyTheme = (theme: typeof THEMES[0]) => {
+     setActiveTheme(theme);
+     setPrimaryColor(theme.defaultColor);
+     setFontFamily(theme.defaultFont);
+     setHeroImage(theme.previewImg);
+  };
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+     e.stopPropagation();
+     setCartCount(c => c + 1);
+  };
+
+  // --- DYNAMIC LAYOUT COMPONENTS ---
+  const EditableText = ({ text, onTextChange, isLiveStore, className, as: Tag = 'span', ...props }: any) => {
+     const displayText = tr(text);
+     if (isLiveStore) return <Tag className={className} {...props}>{displayText}</Tag>;
+     return (
+        <Tag 
+           className={`${className} cursor-text hover:outline hover:outline-2 hover:outline-indigo-500 hover:outline-dashed hover:bg-black/10 transition-all px-1 rounded min-w-[20px] inline-block empty:before:content-['${storeIsAr ? "فارغ" : "Vide"}'] empty:before:text-slate-400`} 
+           contentEditable 
+           suppressContentEditableWarning 
+           onBlur={(e: any) => onTextChange(e.currentTarget.textContent)}
+           onClick={(e: any) => e.stopPropagation()}
+           {...props}
+        >{displayText}</Tag>
+     );
+  };
+
+   const LogoEditor = ({ className, style, onClick }: any) => {
+      if (isLiveStore) {
+         return (
+            <div onClick={onClick} className={`cursor-pointer ${className}`} style={style}>
+               {storeLogo ? <img src={storeLogo} alt={storeName} className="h-10 object-contain" /> : storeName}
+            </div>
+         );
+      }
+      return (
+         <label className={`cursor-pointer relative group inline-flex items-center ${className}`} style={style} onClick={(e) => e.stopPropagation()}>
+            <div onClick={onClick} className="hover:opacity-80 transition-opacity outline-dashed outline-2 outline-transparent hover:outline-indigo-500 rounded px-1">
+               {storeLogo ? <img src={storeLogo} alt={storeName} className="h-10 object-contain" /> : storeName}
+            </div>
+            <div className="absolute -top-3 -right-4 w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-50" title={storeIsAr ? 'تغيير الشعار' : 'Changer le logo'}>
+               <ImageIcon className="w-3 h-3" />
+               <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (file) setStoreLogo(await readFileAsBase64(file));
+               }} />
+            </div>
+         </label>
+      );
+   };
+
+   const HeroBackgroundEditor = ({ children, className, style }: any) => {
+      if (isLiveStore) return <div className={className} style={style}>{children}</div>;
+      return (
+         <div className={`relative group ${className}`} style={style}>
+            {children}
+            <label className="absolute top-4 right-4 bg-white/90 backdrop-blur text-slate-800 px-4 py-2 rounded-full text-xs font-bold shadow-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center gap-2 z-50 hover:bg-white border border-slate-200">
+               <ImageIcon className="w-4 h-4" />{storeIsAr ? 'تغيير الصورة' : "Changer l'image"}
+               <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (file) setHeroImage(await readFileAsBase64(file));
+               }} />
+            </label>
+         </div>
+      );
+   };
+
+
+
+  const ThemeFooter = ({ bgColor = '#f8f9fa', textColor = '#64748b', setPage }: any) => (
+     <footer className="mt-auto py-12 px-6 border-t" style={{ backgroundColor: bgColor, borderColor: 'rgba(0,0,0,0.05)' }}>
+        <div className="max-w-4xl mx-auto flex flex-col items-center text-center gap-6">
+           <div className="text-xl font-bold" style={{ color: primaryColor }}>{storeLogo ? <img src={storeLogo} alt={storeName} className="h-10 object-contain" /> : storeName}</div>
+           <div className="flex flex-wrap justify-center gap-6 text-sm font-medium" style={{ color: textColor }}>
+              {footerSettings.showPrivacy && <button onClick={() => setPage('privacy')} className="hover:opacity-70 transition-opacity">{storeIsAr ? 'سياسة الخصوصية' : 'Politique de Confidentialité'}</button>}
+              {footerSettings.showTerms && <button onClick={() => setPage('terms')} className="hover:opacity-70 transition-opacity">{storeIsAr ? 'الشروط والأحكام' : 'Conditions Générales'}</button>}
+              {footerSettings.showCookies && <button onClick={() => setPage('cookies')} className="hover:opacity-70 transition-opacity">{storeIsAr ? 'سياسة ملفات الارتباط' : 'Politique des Cookies'}</button>}
+           </div>
+           <EditableText as="p" text={footerSettings.copyright} onTextChange={(v: string) => setFooterSettings({...footerSettings, copyright: v})} isLiveStore={isLiveStore} className="text-xs opacity-70 mt-4" style={{ color: textColor }} />
+        </div>
+     </footer>
+  );
+
+  const LayoutHeroCenter = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts }: any) => {
+    const [selectedSize, setSelectedSize] = useState<string>('');
+    const [selectedColor, setSelectedColor] = useState<string>('');
+    const [quantity, setQuantity] = useState(1);
+    const [activePDPTab, setActivePDPTab] = useState('description');
+    
+    return (
+    <div className={`w-full min-h-full bg-white text-slate-900 ${fontFamily} flex flex-col`}>
+      <div className={`p-6 flex justify-between items-center border-b border-slate-100 ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4' : 'flex-col md:flex-row gap-4 md:gap-0'}`}>
+         <LogoEditor onClick={() => setPage('home')} className="text-2xl font-black uppercase tracking-tighter" />
+         <div className={`flex gap-6 text-sm font-bold ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
+            {storePages.map(p => (
+               <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer capitalize hover:opacity-70 transition-opacity" style={{ color: page === p.id ? primaryColor : '#64748b' }}>{tr(p.title)}</span>
+            ))}
+         </div>
+         <button onClick={() => setIsCartOpen(true)} className="relative hover:scale-110 transition-transform">
+            <ShoppingBag className="w-6 h-6" />
+            {cartCount > 0 && <span className="absolute -top-1 -right-1 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: primaryColor }}>{cartCount}</span>}
+         </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto">
+        {page === 'home' && (
+          <>
+            <div className="flex flex-col gap-0 w-full">
+             {homeBlocks.map((block: string) => {
+                if (block === 'hero') return (
+                    <HeroBackgroundEditor key="hero" className={`h-[${isModal ? '600px' : '400px'}] flex flex-col items-center justify-center text-center p-8 bg-cover bg-center relative`} style={{ backgroundImage: `url(${heroImage})` }}>
+                       <div className="absolute inset-0 bg-black/60"></div>
+                       <div className="relative z-10 flex flex-col items-center">
+                          <EditableText as="h1" text={heroTitle} onTextChange={setHeroTitle} isLiveStore={isLiveStore} className={`${isModal ? 'text-7xl' : 'text-5xl'} font-black text-white uppercase tracking-tighter mb-4`} />
+                          <EditableText as="p" text={heroSubtitle} onTextChange={setHeroSubtitle} isLiveStore={isLiveStore} className="text-white/90 text-lg mb-8 max-w-md" />
+                          <button onClick={() => setPage('collections')} className="px-8 py-3 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded" style={{ backgroundColor: primaryColor }}>
+                             <EditableText text={heroButtonText} onTextChange={setHeroButtonText} isLiveStore={isLiveStore} />
+                          </button>
+                       </div>
+                    </HeroBackgroundEditor>
+                );
+                
+                if (block === 'slider' && sliderImages.length > 0) return (
+                    <div key="slider" className="w-full relative overflow-hidden flex bg-slate-900" style={{ height: isModal ? '500px' : '300px' }}>
+                       <div className="flex w-full overflow-x-auto snap-x snap-mandatory no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                          {sliderImages.map((img:string, idx:number) => (
+                             <div key={idx} className="min-w-full h-full snap-center relative shrink-0">
+                                <img src={img} className="w-full h-full object-cover" />
+                             </div>
+                          ))}
+                       </div>
+                       {sliderImages.length > 1 && (
+                          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10">
+                             {sliderImages.map((_:any, idx:number) => (
+                                <div key={idx} className="w-2 h-2 rounded-full bg-white shadow-lg" />
+                             ))}
+                          </div>
+                       )}
+                    </div>
+                );
+
+                if (block === 'products') return (
+                    <div key="products" className={`${isModal ? 'p-16 max-w-[1400px]' : 'p-8'} mx-auto w-full`}>
+                       <h3 className="text-2xl font-black uppercase text-center mb-10">{homeCollectionsTitle}</h3>
+                       <div className={`grid gap-8 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3')}`}>
+                          {storeProducts.slice(0, 8).map((p: any) => (
+                             <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
+                                <div className="aspect-[3/4] bg-slate-100 mb-4 overflow-hidden relative rounded-xl">
+                                   {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-12 h-12" /></div>}
+                                   <div className={`absolute bottom-4 left-0 right-0 flex justify-center transition-opacity ${(previewDevice === 'mobile' && !isModal) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                                      <button onClick={handleAddToCart} className="px-8 py-3 text-white text-xs font-bold uppercase tracking-wider shadow-2xl rounded-full" style={btnStyle}>Add to cart</button>
+                                   </div>
+                                </div>
+                                <h4 className="font-bold text-sm">{p.name}</h4>
+                                <p className="text-slate-500 text-sm mt-1">{p.price} MAD</p>
+                             </div>
+                          ))}
+                       </div>
+                    </div>
+                );
+                
+                if (block === 'collections' && categories.length > 1) return (
+                    <div key="collections" className={`${isModal ? 'p-16 max-w-[1400px]' : 'p-8'} mx-auto w-full bg-slate-50`}>
+                       <h3 className="text-2xl font-black uppercase text-center mb-10">{allCollectionsTitle}</h3>
+                       <div className={`grid gap-4 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-2' : (isModal ? 'grid-cols-4' : 'grid-cols-3')}`}>
+                          {categories.filter((c:string) => c !== 'All').map((cat: string, idx: number) => (
+                             <div key={idx} onClick={() => { setActiveCategory(cat); setPage('collections'); }} className="cursor-pointer group aspect-square relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all">
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10 flex items-end p-6">
+                                   <span className="text-white font-bold text-lg">{cat}</span>
+                                </div>
+                                <div className="absolute inset-0 bg-indigo-900/20 group-hover:bg-transparent transition-colors z-0"></div>
+                                <img src={storeProducts.find((p:any)=>p.category===cat)?.image || 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&q=80&w=600'} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                             </div>
+                          ))}
+                       </div>
+                    </div>
+                );
+                
+                 if (block === 'newsletter') return (
+                    <div key="newsletter" className="w-full py-16 px-4 bg-slate-50 border-t border-b border-slate-100 flex flex-col items-center justify-center text-center">
+                       <h3 className="text-2xl font-black text-slate-900 mb-2">{newsletterTitle}</h3>
+                       <p className="text-slate-500 mb-6 max-w-md text-sm">{newsletterSubtitle}</p>
+                       <div className="flex w-full max-w-md">
+                          <input type="email" placeholder="Votre email" className="flex-1 bg-white border border-slate-200 rounded-l-lg px-4 py-3 outline-none focus:border-slate-300" />
+                          <button className="px-6 py-3 text-white font-bold rounded-r-lg" style={btnStyle}>S'abonner</button>
+                       </div>
+                    </div>
+                 );
+                 
+                 if (block === 'features') return (
+                    <div key="features" className="w-full py-12 px-4 bg-white border-b border-slate-100">
+                       <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                          {featuresData.map((f: any, i: number) => (
+                             <div key={i} className="flex flex-col items-center">
+                                <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}>
+                                   {f.icon === 'Truck' && <Truck className="w-6 h-6" />}
+                                   {f.icon === 'ShieldCheck' && <ShieldCheck className="w-6 h-6" />}
+                                   {f.icon === 'Star' && <Star className="w-6 h-6" />}
+                                </div>
+                                <h4 className="font-bold text-slate-900">{f.title}</h4>
+                                <p className="text-slate-500 text-sm mt-1">{f.subtitle}</p>
+                             </div>
+                          ))}
+                       </div>
+                    </div>
+                 );
+                 
+                 if (block === 'video') return (
+                    <div key="video" className="w-full py-16 px-4 bg-white border-b border-slate-100 flex flex-col items-center justify-center">
+                       <div className="w-full max-w-4xl aspect-video bg-slate-100 rounded-2xl overflow-hidden shadow-xl">
+                          {videoUrl ? (
+                             <iframe src={videoUrl} className="w-full h-full" allowFullScreen allow="autoplay; encrypted-media"></iframe>
+                          ) : (
+                             <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                                <Video className="w-16 h-16 mb-4 opacity-50" />
+                                <p>Aucune vidéo sélectionnée</p>
+                             </div>
+                          )}
+                       </div>
+                    </div>
+                 );
+                 
+                 return null;
+             })}
+          </div>
+          </>
+        )}
+        {page === 'collections' && (
+            <div className={`${isModal ? 'p-16 max-w-[1400px]' : 'p-8'} mx-auto w-full`}>
+               <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
+                  <h3 className="text-2xl font-black uppercase text-center md:text-left">{tr('All Products')}</h3>
+                  <div className="flex flex-col sm:flex-row items-center gap-4">
+                     {categories && categories.length > 1 && (
+                        <div className="flex flex-wrap gap-2 justify-center">
+                           {categories.map((c: string) => (
+                              <button key={tr(c)} onClick={() => setActiveCategory(c)} className={`px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors ${activeCategory === c ? 'text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`} style={{ backgroundColor: activeCategory === c ? primaryColor : undefined }}>
+                                 {tr(c)}
+                              </button>
+                           ))}
+                        </div>
+                     )}
+                     <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-wider rounded-full focus:ring-slate-500 focus:border-slate-500 block px-4 py-2 outline-none cursor-pointer">
+                        <option value="featured">{tr('Recommandé')}</option>
+                        <option value="price-low-high">{tr('Prix: Croissant')}</option>
+                        <option value="price-high-low">{tr('Prix: Décroissant')}</option>
+                        <option value="az">{tr('De A à Z')}</option>
+                        <option value="za">{tr('De Z à A')}</option>
+                     </select>
+                  </div>
+               </div>
+               <div className={`grid gap-8 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3')}`}>
+                  {filteredProducts.map((p: any) => (
+                     <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
+                        <div className="aspect-[3/4] bg-slate-100 mb-4 overflow-hidden relative rounded-xl">
+                           {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-12 h-12" /></div>}
+                           <div className={`absolute bottom-4 left-0 right-0 flex justify-center transition-opacity ${(previewDevice === 'mobile' && !isModal) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                              <button onClick={handleAddToCart} className="px-8 py-3 text-white text-xs font-bold uppercase tracking-wider shadow-2xl rounded-full" style={btnStyle}>Add to cart</button>
+                           </div>
+                        </div>
+                        <h4 className="font-bold text-sm">{p.name}</h4>
+                        <p className="text-slate-500 text-sm mt-1">{p.price} MAD</p>
+                     </div>
+                  ))}
+               </div>
+            </div>
+        )}
+        {page === 'about' && (
+           <div className={`${isModal ? 'p-16 max-w-3xl' : 'p-8'} mx-auto w-full text-center mt-10`}>
+              <h3 className="text-3xl font-black uppercase mb-6 text-slate-800">About {storeName}</h3>
+              <p className="text-slate-500 text-lg leading-relaxed mb-6">Welcome to {storeName}. We are dedicated to providing the best quality products for our customers. Every piece is carefully crafted to ensure maximum comfort and style.</p>
+           </div>
+        )}
+        {page === 'product' && activeProductId && (
+           <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-8'} mx-auto w-full`}>
+              {storeProducts.filter(p => p.id === activeProductId).map(p => (
+                 <div key={p.id} className={`flex gap-12 ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'}`}>
+                    <div className="flex-1 aspect-[4/5] bg-slate-100 rounded-2xl flex items-center justify-center overflow-hidden">
+                       {(selectedColor && p.colorImages?.[selectedColor]) ? <img src={p.colorImages[selectedColor]} className="w-full h-full object-cover" alt={p.name} /> : (p.image ? <img src={p.image} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-20 h-20 opacity-10" />)}
+                    </div>
+                    <div className="flex-1 flex flex-col justify-center">
+                       <h2 className="text-4xl font-black mb-4">{p.name}</h2>
+                       <p className="text-2xl font-bold mb-8" style={{ color: primaryColor }}>{p.price} MAD</p>
+                       <p className="text-slate-500 mb-8 leading-relaxed">{p.description || 'This is a premium quality product. Lorem ipsum dolor sit amet, consectetur adipiscing elit.'}</p>
+                       
+                       {/* PRO SELECTORS */}
+                       <div className="mb-8 space-y-6">
+                          {p.colors?.length > 0 && (
+                             <div>
+                                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 block">{storeIsAr ? 'لون' : 'Couleur'}</span>
+                                <div className="flex gap-3">
+                                   {p.colors.map((c: string) => (
+                                      <button key={tr(c)} onClick={() => setSelectedColor(c)} className={`w-8 h-8 rounded-full border-2 transition-all ${selectedColor === c ? 'border-slate-800 scale-125' : 'border-transparent hover:scale-110 shadow-sm'}`} style={{ backgroundColor: c }} />
+                                   ))}
+                                </div>
+                             </div>
+                          )}
+                          {p.sizes?.length > 0 && (
+                             <div>
+                                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 block">{storeIsAr ? 'المقاس' : 'Taille'}</span>
+                                <div className="flex flex-wrap gap-2">
+                                   {p.sizes.map((s: string) => (
+                                      <button key={s} onClick={() => setSelectedSize(s)} className={`px-4 py-2 text-sm font-bold border rounded-lg transition-colors ${selectedSize === s ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-400'}`}>
+                                         {s}
+                                      </button>
+                                   ))}
+                                </div>
+                             </div>
+                          )}
+                          <div>
+                             <span className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 block">{storeIsAr ? 'الكمية' : 'Quantité'}</span>
+                             <div className="flex items-center justify-between bg-slate-50 w-32 px-4 py-2 rounded-lg border border-slate-200">
+                                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="text-slate-500 hover:text-slate-800 font-bold text-lg">-</button>
+                                <span className="font-bold text-slate-800">{quantity}</span>
+                                <button onClick={() => setQuantity(quantity + 1)} className="text-slate-500 hover:text-slate-800 font-bold text-lg">+</button>
+                             </div>
+                          </div>
+                       </div>
+
+                       {buyMode === 'form' ? (
+                          <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-3">
+                             <h4 className="font-black text-slate-800 mb-2">{storeLang === 'ar' ? 'شراء سريع' : storeLang === 'en' ? 'Express Checkout' : 'Achat Express'}</h4>
+                             <input type="text" placeholder={storeLang === 'ar' ? 'الاسم الكامل' : storeLang === 'en' ? 'Full Name' : 'Nom Complet'} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-sm" />
+                             <input type="text" placeholder={storeLang === 'ar' ? 'رقم الهاتف' : storeLang === 'en' ? 'Phone Number' : 'Numéro de Téléphone'} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-sm" />
+                             <input type="text" placeholder={storeLang === 'ar' ? 'المدينة' : storeLang === 'en' ? 'City' : 'Ville'} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-sm" />
+                              <input type="text" placeholder={storeLang === 'ar' ? 'العنوان' : storeLang === 'en' ? 'Delivery Address' : 'Adresse de Livraison'} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-sm" />
+                             <button onClick={() => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1)} className="w-full py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg mt-2" style={{ backgroundColor: primaryColor }}>{storeLang === 'ar' ? 'تأكيد الطلب (الدفع عند الاستلام)' : storeLang === 'en' ? 'Confirm Order (COD)' : 'Confirmer la Commande'}</button>
+                              <p className="text-center text-xs font-bold text-green-600 mt-4 flex items-center justify-center gap-1"><CheckCircle className="w-3 h-3" /> {storeLang === 'ar' ? 'توصيل مجاني (الدفع عند الاستلام)' : storeLang === 'en' ? 'Free Delivery (Cash on Delivery)' : 'Livraison Gratuite (Paiement à la livraison)'}</p>
+                          </div>
+                       ) : (
+                          <div className="flex gap-4">
+                             {(buyMode === 'cart' || buyMode === 'both') && (
+                                <button onClick={handleAddToCart} className="flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg" style={{ backgroundColor: '#1e293b' }}>Add to cart</button>
+                             )}
+                             {(buyMode === 'direct' || buyMode === 'both') && (
+                                <button onClick={() => setPage('checkout')} className="flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg" style={{ backgroundColor: primaryColor }}>Buy Now</button>
+                             )}
+                          </div>
+                       )}
+                    </div>
+                 </div>
+              ))}
+           </div>
+        )}
+        {page === 'checkout' && (
+           <div className={`${isModal ? 'p-16 max-w-2xl' : 'p-8'} mx-auto w-full`}>
+              <div className="bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
+                 <h2 className="text-2xl font-black mb-6 text-center text-slate-800">{storeLang === 'ar' ? 'شراء سريع' : storeLang === 'en' ? 'Express Checkout' : 'Achat Express'}</h2>
+                 <div className="space-y-4">
+                    <input type="text" placeholder={storeLang === 'ar' ? 'الاسم الكامل' : storeLang === 'en' ? 'Full Name' : 'Nom Complet'} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500" />
+                    <input type="text" placeholder={storeLang === 'ar' ? 'رقم الهاتف' : storeLang === 'en' ? 'Phone Number' : 'Numéro de Téléphone'} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500" />
+                    <input type="text" placeholder={storeLang === 'ar' ? 'المدينة' : storeLang === 'en' ? 'City' : 'Ville'} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500" />
+                              <input type="text" placeholder={storeLang === 'ar' ? 'العنوان' : storeLang === 'en' ? 'Delivery Address' : 'Adresse de Livraison'} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500" />
+                    <button onClick={() => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1)} className="w-full py-4 text-white font-black uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg mt-4" style={{ backgroundColor: primaryColor }}>{storeLang === 'ar' ? 'تأكيد الطلب (الدفع عند الاستلام)' : storeLang === 'en' ? 'Confirm Order (COD)' : 'Confirmer la Commande'}</button>
+                              <p className="text-center text-xs font-bold text-green-600 mt-4 flex items-center justify-center gap-1"><CheckCircle className="w-3 h-3" /> {storeLang === 'ar' ? 'توصيل مجاني (الدفع عند الاستلام)' : storeLang === 'en' ? 'Free Delivery (Cash on Delivery)' : 'Livraison Gratuite (Paiement à la livraison)'}</p>
+                 </div>
+              </div>
+           </div>
+        )}
+        {page === 'success' && (
+           <div className={`${isModal ? 'p-16 max-w-2xl' : 'p-8'} mx-auto w-full text-center flex flex-col items-center justify-center min-h-[400px]`}>
+              <div className="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-green-100/50">
+                 <CheckCircle className="w-10 h-10" />
+              </div>
+              <h2 className="text-4xl font-black mb-4 text-slate-800">Order Placed!</h2>
+              <p className="text-slate-500 text-lg">Thank you! Your order has been successfully sent to the BEYA ERP system.</p>
+              <button onClick={() => setPage('home')} className="mt-8 px-8 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-colors">Return to Home</button>
+           </div>
+        )}
+        {['privacy', 'terms', 'cookies'].includes(page) && (
+           <div className={`${isModal ? 'p-16 max-w-4xl' : 'p-8'} mx-auto w-full`}>
+              <h1 className="text-3xl font-black mb-6 text-slate-800">
+                {page === 'privacy' ? (storeIsAr ? 'سياسة الخصوصية' : 'Politique de Confidentialité') : page === 'terms' ? (storeIsAr ? 'الشروط والأحكام' : 'Conditions Générales') : (storeIsAr ? 'سياسة ملفات الارتباط' : 'Politique des Cookies')}
+              </h1>
+              <div className="prose prose-slate max-w-none text-slate-600 space-y-4">
+                 <p>{storeIsAr ? 'آخر تحديث : ' : 'Dernière mise à jour : '}{new Date().toLocaleDateString()}</p>
+                 <p>{storeIsAr ? 'هذا النص هو مثال لنص يمكن أن يستبدل في نفس المساحة، لقد تم توليد هذا النص من مولد النص العربى، حيث يمكنك أن تولد مثل هذا النص أو العديد من النصوص الأخرى إضافة إلى زيادة عدد الحروف التى يولدها التطبيق.' : 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing nec, ultricies sed, dolor. Cras elementum ultrices diam. Maecenas ligula massa, varius a, semper congue, euismod non, mi.'}</p>
+                 <h3 className="text-xl font-bold text-slate-800 mt-6 mb-3">{storeIsAr ? '1. جمع البيانات' : '1. Collecte des données'}</h3>
+                 <p>{storeIsAr ? 'إذا كنت تحتاج إلى عدد أكبر من الفقرات يتيح لك مولد النص العربى زيادة عدد الفقرات كما تريد، النص لن يبدو مقسما ولا يحوي أخطاء لغوية، مولد النص العربى مفيد لمصممي المواقع على وجه الخصوص.' : 'Proin porttitor, orci nec nonummy molestie, enim est eleifend mi, non fermentum diam nisl sit amet erat. Duis semper. Duis arcu massa, scelerisque vitae, consequat in, pretium a, enim.'}</p>
+                 <h3 className="text-xl font-bold text-slate-800 mt-6 mb-3">{storeIsAr ? '2. الاستخدام' : '2. Utilisation'}</h3>
+                 <p>{storeIsAr ? 'حيث يحتاج العميل فى كثير من الأحيان أن يطلع على صورة حقيقية لتصميم الموقع. ومن هنا وجب على المصمم أن يضع نصوصا مؤقتة على التصميم ليظهر للعميل الشكل كاملاً.' : 'Pellentesque congue. Ut in risus volutpat libero pharetra tempor. Cras vestibulum bibendum augue. Praesent egestas leo in pede.'}</p>
+              </div>
+           </div>
+        )}
+        <ThemeFooter setPage={setPage} />
+      </div>
+    </div>
+  );
+  };
+
+  const LayoutSplitScreen = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts }: any) => {
+    const [selectedSize, setSelectedSize] = useState<string>('');
+    const [selectedColor, setSelectedColor] = useState<string>('');
+    const [quantity, setQuantity] = useState(1);
+
+    return (
+    <div className={`w-full min-h-full bg-[#f8f9fa] text-[#212529] ${fontFamily} flex flex-col`}>
+      <div className={`px-8 py-6 flex justify-between items-center bg-white ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4' : 'flex-col md:flex-row gap-4 md:gap-0'}`}>
+         <div className={`flex gap-8 text-sm ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
+            {storePages.map(p => (
+               <span key={p.id} onClick={() => setPage(p.id)} className={`cursor-pointer capitalize pb-1 border-b-2 ${page === p.id ? 'border-current' : 'border-transparent text-gray-400'}`}>{tr(p.title)}</span>
+            ))}
+         </div>
+         <LogoEditor onClick={() => setPage('home')} className="text-3xl font-normal tracking-wide" style={{ color: primaryColor }} />
+         <button className="relative" onClick={() => setIsCartOpen(true)}>
+            <ShoppingBag className="w-6 h-6 font-light" />
+            {cartCount > 0 && <span className="absolute -top-2 -right-2 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: primaryColor }}>{cartCount}</span>}
+         </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto">
+        {page === 'home' && (
+          <>
+            <div className={`flex ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'} h-auto md:h-[${isModal ? '600px' : '400px'}] bg-white`}>
+               <div className="flex-1 flex flex-col justify-center p-12">
+                  <h1 className="text-5xl font-light leading-tight mb-6" style={{ color: primaryColor }}>Elegance in <br/>Simplicity.</h1>
+                  <p className="text-gray-500 mb-8 max-w-sm leading-relaxed">Experience a collection defined by pure lines and organic materials.</p>
+                  <button onClick={() => setPage('collections')} className="w-max px-10 py-4 text-white text-sm tracking-widest transition-opacity hover:opacity-90" style={{ backgroundColor: primaryColor }}>DISCOVER</button>
+               </div>
+               <HeroBackgroundEditor className="flex-1 bg-cover bg-center" style={{ backgroundImage: `url(${heroImage})` }} />
+            </div>
+            <div className={`${isModal ? 'p-20' : 'p-8'} mx-auto w-full`}>
+               <div className="flex justify-between items-end mb-12 border-b pb-4">
+                  <h3 className="text-2xl font-light">New Arrivals</h3>
+                  <span className="text-sm cursor-pointer hover:underline" style={{ color: primaryColor }}>View all</span>
+               </div>
+               <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
+                  {storeProducts.map((p: any) => (
+                     <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
+                        <div className="aspect-[4/5] bg-gray-100 mb-6 relative overflow-hidden flex items-center justify-center">
+                           {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-10"><ImageIcon className="w-16 h-16" /></div>}
+                           <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <button onClick={handleAddToCart} className="px-8 py-3 bg-white text-black text-xs tracking-widest hover:bg-black hover:text-white transition-colors">ADD TO CART</button>
+                           </div>
+                        </div>
+                        <h4 className="font-medium text-lg mb-2">{p.name}</h4>
+                        <p className="text-gray-500">{p.price} MAD</p>
+                     </div>
+                  ))}
+               </div>
+            </div>
+          </>
+        )}
+        {page === 'collections' && (
+            <div className={`${isModal ? 'p-20' : 'p-8'} mx-auto w-full`}>
+               <div className="flex flex-col md:flex-row justify-between items-end mb-12 border-b pb-4 gap-6">
+                  <h3 className="text-2xl font-light">{tr('All Products')}</h3>
+                  <div className="flex flex-col sm:flex-row items-center gap-6">
+                     {categories && categories.length > 1 && (
+                        <div className="flex flex-wrap gap-4 text-sm">
+                           {categories.map((c: string) => (
+                              <button key={tr(c)} onClick={() => setActiveCategory(c)} className={`pb-1 border-b-2 transition-colors ${activeCategory === c ? 'border-current' : 'border-transparent text-gray-400 hover:text-black'}`} style={{ color: activeCategory === c ? primaryColor : undefined }}>
+                                 {tr(c)}
+                              </button>
+                           ))}
+                        </div>
+                     )}
+                     <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="bg-transparent border-none text-gray-500 text-sm focus:ring-0 outline-none cursor-pointer">
+                        <option value="featured">{tr('Sort: Featured')}</option>
+                        <option value="price-low-high">{tr('Price: Low to High')}</option>
+                        <option value="price-high-low">{tr('Price: High to Low')}</option>
+                     </select>
+                  </div>
+               </div>
+               <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
+                  {filteredProducts.map((p: any) => (
+                     <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
+                        <div className="aspect-[4/5] bg-gray-100 mb-6 relative overflow-hidden flex items-center justify-center">
+                           {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-10"><ImageIcon className="w-16 h-16" /></div>}
+                           <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <button onClick={handleAddToCart} className="px-8 py-3 bg-white text-black text-xs tracking-widest hover:bg-black hover:text-white transition-colors">ADD TO CART</button>
+                           </div>
+                        </div>
+                        <h4 className="font-medium text-lg mb-2">{p.name}</h4>
+                        <p className="text-gray-500">{p.price} MAD</p>
+                     </div>
+                  ))}
+               </div>
+            </div>
+        )}
+        {page === 'about' && (
+           <div className={`${isModal ? 'p-20 max-w-4xl' : 'p-8'} mx-auto w-full text-center mt-12`}>
+              <h3 className="text-4xl font-light mb-8">About {storeName}</h3>
+              <p className="text-gray-500 text-xl font-light leading-relaxed mb-6">Welcome to {storeName}. We are dedicated to providing the best quality products for our customers. Every piece is carefully crafted to ensure maximum comfort and style.</p>
+           </div>
+        )}
+        {page === 'product' && activeProductId && (
+           <div className={`${isModal ? 'p-20 max-w-5xl' : 'p-8'} mx-auto w-full`}>
+              {storeProducts.filter(p => p.id === activeProductId).map(p => (
+                 <div key={p.id} className={`flex gap-16 ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'}`}>
+                    <div className="flex-1 relative flex items-center justify-center bg-gray-50 overflow-hidden aspect-[3/4]">
+                       {(selectedColor && p.colorImages?.[selectedColor]) ? <img src={p.colorImages[selectedColor]} className="w-full h-full object-cover" alt={p.name} /> : (p.image ? <img src={p.image} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-20 h-20 opacity-10 absolute inset-0 m-auto" />)}
+                    </div>
+                    <div className="flex-1 flex flex-col justify-center">
+                       <h2 className="text-5xl font-light mb-4">{p.name}</h2>
+                       <p className="text-2xl font-light text-gray-500 mb-8">{p.price} MAD</p>
+                       <p className="text-gray-500 mb-12 leading-relaxed font-light">{p.description || 'Experience true elegance with this meticulously designed piece. Perfect for every occasion.'}</p>
+                       
+                       {/* PRO SELECTORS */}
+                       <div className="mb-12 space-y-8">
+                          {p.colors?.length > 0 && (
+                             <div>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 block">Color</span>
+                                <div className="flex gap-4">
+                                   {p.colors.map((c: string) => (
+                                      <button key={tr(c)} onClick={() => setSelectedColor(c)} className={`w-6 h-6 rounded-full border border-gray-200 transition-all ${selectedColor === c ? 'ring-1 ring-offset-4 ring-black' : 'hover:scale-110'}`} style={{ backgroundColor: c }} />
+                                   ))}
+                                </div>
+                             </div>
+                          )}
+                          {p.sizes?.length > 0 && (
+                             <div>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 block">Size</span>
+                                <div className="flex flex-wrap gap-3">
+                                   {p.sizes.map((s: string) => (
+                                      <button key={s} onClick={() => setSelectedSize(s)} className={`px-4 py-2 text-xs tracking-widest border transition-colors ${selectedSize === s ? 'bg-black border-black text-white' : 'bg-transparent border-gray-200 text-gray-600 hover:border-black'}`}>
+                                         {s}
+                                      </button>
+                                   ))}
+                                </div>
+                             </div>
+                          )}
+                          <div>
+                             <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 block">Quantity</span>
+                             <div className="flex items-center justify-between border-b border-gray-200 w-24 pb-2">
+                                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="text-gray-400 hover:text-black font-light text-lg">-</button>
+                                <span className="font-light text-black">{quantity}</span>
+                                <button onClick={() => setQuantity(quantity + 1)} className="text-gray-400 hover:text-black font-light text-lg">+</button>
+                             </div>
+                          </div>
+                       </div>
+
+                       {buyMode === 'form' ? (
+                          <div className="p-8 border border-gray-200 bg-white space-y-4">
+                             <h4 className="text-xl font-light mb-4" style={{ color: primaryColor }}>Checkout</h4>
+                             <input type="text" placeholder={storeLang === 'ar' ? 'الاسم الكامل' : storeLang === 'en' ? 'Full Name' : 'Nom Complet'} className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
+                             <input type="text" placeholder={storeLang === 'ar' ? 'رقم الهاتف' : storeLang === 'en' ? 'Phone Number' : 'Numéro de Téléphone'} className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
+                             <input type="text" placeholder={storeLang === 'ar' ? 'المدينة' : storeLang === 'en' ? 'City' : 'Ville'} className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
+                              <input type="text" placeholder={storeLang === 'ar' ? 'العنوان' : storeLang === 'en' ? 'Delivery Address' : 'Adresse de Livraison'} className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
+                             <button onClick={() => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1)} className="w-full py-5 text-white text-xs tracking-widest mt-4 transition-opacity hover:opacity-90" style={{ backgroundColor: primaryColor }}>CONFIRM ORDER</button>
+                          </div>
+                       ) : (
+                          <div className="flex gap-4">
+                             {(buyMode === 'cart' || buyMode === 'both') && (
+                                <button onClick={handleAddToCart} className="w-max px-12 py-4 bg-white border border-black text-black text-xs tracking-widest hover:bg-gray-100 transition-colors">ADD TO CART</button>
+                             )}
+                             {(buyMode === 'direct' || buyMode === 'both') && (
+                                <button onClick={() => setPage('checkout')} className="w-max px-12 py-4 text-white text-xs tracking-widest transition-opacity hover:opacity-90" style={{ backgroundColor: primaryColor }}>BUY NOW</button>
+                             )}
+                          </div>
+                       )}
+                    </div>
+                 </div>
+              ))}
+           </div>
+        )}
+        {page === 'checkout' && (
+           <div className={`${isModal ? 'p-20 max-w-2xl' : 'p-8'} mx-auto w-full`}>
+              <div className="p-12 border border-gray-200 bg-white">
+                 <h2 className="text-3xl font-light mb-8 text-center" style={{ color: primaryColor }}>Checkout</h2>
+                 <div className="space-y-6">
+                    <input type="text" placeholder={storeLang === 'ar' ? 'الاسم الكامل' : storeLang === 'en' ? 'Full Name' : 'Nom Complet'} className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
+                    <input type="text" placeholder={storeLang === 'ar' ? 'رقم الهاتف' : storeLang === 'en' ? 'Phone Number' : 'Numéro de Téléphone'} className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
+                    <input type="text" placeholder={storeLang === 'ar' ? 'المدينة' : storeLang === 'en' ? 'City' : 'Ville'} className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
+                              <input type="text" placeholder={storeLang === 'ar' ? 'العنوان' : storeLang === 'en' ? 'Delivery Address' : 'Adresse de Livraison'} className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
+                    <button onClick={() => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1)} className="w-full py-5 text-white text-xs tracking-widest mt-8 transition-opacity hover:opacity-90" style={{ backgroundColor: primaryColor }}>CONFIRM ORDER</button>
+                 </div>
+              </div>
+           </div>
+        )}
+        {page === 'success' && (
+           <div className={`${isModal ? 'p-20 max-w-2xl' : 'p-8'} mx-auto w-full text-center py-20`}>
+              <h2 className="text-5xl font-light mb-6" style={{ color: primaryColor }}>Thank You.</h2>
+              <p className="text-gray-500 text-xl font-light mb-12">Your order has been successfully placed.</p>
+              <button onClick={() => setPage('home')} className="px-10 py-4 border border-black text-xs tracking-widest hover:bg-black hover:text-white transition-colors">CONTINUE SHOPPING</button>
+           </div>
+        )}
+      </div>
+    </div>
+  );
+  };
+
+  const LayoutElegant = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts }: any) => {
+    const [selectedSize, setSelectedSize] = useState<string>('');
+    const [selectedColor, setSelectedColor] = useState<string>('');
+    const [quantity, setQuantity] = useState(1);
+
+    return (
+    <div className={`w-full min-h-full bg-[#111] text-[#f5f5f5] ${fontFamily} flex flex-col`}>
+      <div className={`p-8 flex flex-col items-center gap-6 border-b border-white/10 ${previewDevice === 'mobile' && !isModal ? 'p-4' : 'p-4 md:p-8'}`}>
+         <LogoEditor onClick={() => setPage('home')} className="text-4xl font-serif tracking-widest" style={{ color: primaryColor }} />
+         <div className={`flex gap-12 text-xs tracking-widest uppercase ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
+            {storePages.map(p => (
+               <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer hover:text-white transition-colors" style={{ color: page === p.id ? primaryColor : '#888' }}>{tr(p.title)}</span>
+            ))}
+            <span className="cursor-pointer hover:text-white flex items-center gap-2" onClick={() => setIsCartOpen(true)}>
+               CART ({cartCount})
+            </span>
+         </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto">
+        {page === 'home' && (
+          <>
+            <div className="p-8">
+               <HeroBackgroundEditor className={`w-full h-[${isModal ? '700px' : '500px'}] bg-cover bg-center relative rounded-sm border`} style={{ backgroundImage: `url(${heroImage})`, borderColor: `${primaryColor}40` }}>
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#111] via-transparent to-transparent"></div>
+                  <div className="absolute bottom-12 left-12 right-12 flex justify-between items-end">
+                     <div>
+                        <h1 className="text-5xl font-serif mb-4">The Royal Edit.</h1>
+                        <button onClick={() => setPage('collections')} className="px-8 py-3 text-xs tracking-widest border transition-colors" style={{ borderColor: primaryColor, color: primaryColor }}>EXPLORE COLLECTION</button>
+                     </div>
+                  </div>
+               </HeroBackgroundEditor>
+            </div>
+            <div className={`${isModal ? 'p-16' : 'p-8'} mx-auto w-full`}>
+               <h3 className="text-xl tracking-widest uppercase text-center mb-16" style={{ color: primaryColor }}>Curated Selection</h3>
+               <div className={`grid gap-4 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
+                  {storeProducts.map((p: any) => (
+                     <div key={p.id} className="group cursor-pointer relative aspect-square bg-[#1a1a1a] border border-white/5 p-4 flex flex-col items-center justify-center" onClick={() => navigateToProduct(p.id)}>
+                        {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover mb-8" alt={p.name} /> : <ImageIcon className="w-16 h-16 opacity-10 mb-8" />}
+                        <h4 className="font-serif text-2xl mb-2 group-hover:text-white transition-colors" style={{ color: primaryColor }}>{p.name}</h4>
+                        <p className="text-white/50 tracking-widest text-sm mb-6">{p.price} MAD</p>
+                        <button onClick={handleAddToCart} className="opacity-0 group-hover:opacity-100 transition-opacity px-6 py-2 bg-white text-black text-xs tracking-widest">ADD TO CART</button>
+                     </div>
+                  ))}
+               </div>
+            </div>
+          </>
+        )}
+        {page === 'collections' && (
+            <div className={`${isModal ? 'p-16' : 'p-8'} mx-auto w-full`}>
+               <h3 className="text-xl tracking-widest uppercase text-center mb-8" style={{ color: primaryColor }}>{tr('All Products')}</h3>
+               <div className="flex flex-col items-center gap-6 mb-16">
+                  {categories && categories.length > 1 && (
+                     <div className="flex flex-wrap justify-center gap-8 text-xs tracking-widest uppercase">
+                        {categories.map((c: string) => (
+                           <button key={tr(c)} onClick={() => setActiveCategory(c)} className="transition-colors" style={{ color: activeCategory === c ? '#fff' : '#555', borderBottom: activeCategory === c ? `1px solid ${primaryColor}` : '1px solid transparent', paddingBottom: '4px' }}>
+                              {tr(c)}
+                           </button>
+                        ))}
+                     </div>
+                  )}
+                  <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="bg-transparent border border-white/20 text-[#888] text-xs tracking-widest uppercase focus:border-white focus:outline-none cursor-pointer py-2 px-4 rounded-sm">
+                     <option value="featured">{tr('Featured')}</option>
+                     <option value="price-low-high">{tr('Price: Low - High')}</option>
+                     <option value="price-high-low">{tr('Price: High - Low')}</option>
+                  </select>
+               </div>
+               <div className={`grid gap-4 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
+                  {filteredProducts.map((p: any) => (
+                     <div key={p.id} className="group cursor-pointer relative aspect-square bg-[#1a1a1a] border border-white/5 p-4 flex flex-col items-center justify-center" onClick={() => navigateToProduct(p.id)}>
+                        {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover mb-8" alt={p.name} /> : <ImageIcon className="w-16 h-16 opacity-10 mb-8" />}
+                        <h4 className="font-serif text-2xl mb-2 group-hover:text-white transition-colors" style={{ color: primaryColor }}>{p.name}</h4>
+                        <p className="text-white/50 tracking-widest text-sm mb-6">{p.price} MAD</p>
+                        <button onClick={handleAddToCart} className="opacity-0 group-hover:opacity-100 transition-opacity px-6 py-2 bg-white text-black text-xs tracking-widest">ADD TO CART</button>
+                     </div>
+                  ))}
+               </div>
+            </div>
+        )}
+        {page === 'about' && (
+           <div className={`${isModal ? 'p-16 max-w-3xl' : 'p-8'} mx-auto w-full text-center mt-12`}>
+              <h3 className="text-3xl font-serif mb-8 text-white">About {storeName}</h3>
+              <p className="text-[#888] text-lg tracking-wide leading-relaxed mb-6">Welcome to {storeName}. We are dedicated to providing the best quality products for our customers. Every piece is carefully crafted to ensure maximum comfort and style.</p>
+           </div>
+        )}
+        {page === 'product' && activeProductId && (
+           <div className={`${isModal ? 'p-16 max-w-5xl' : 'p-8'} mx-auto w-full`}>
+              {storeProducts.filter(p => p.id === activeProductId).map(p => (
+                 <div key={p.id} className={`flex gap-16 ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'}`}>
+                    <div className="flex-1 bg-white/5 border border-white/10 flex items-center justify-center aspect-[3/4] overflow-hidden relative">
+                       {(selectedColor && p.colorImages?.[selectedColor]) ? <img src={p.colorImages[selectedColor]} className="w-full h-full object-cover absolute inset-0" alt={p.name} /> : (p.image ? <img src={p.image} className="w-full h-full object-cover absolute inset-0" alt={p.name} /> : <ImageIcon className="w-20 h-20 opacity-10" />)}
+                    </div>
+                    <div className="flex-1 flex flex-col justify-center">
+                       <h2 className="text-5xl font-serif mb-4 text-white">{p.name}</h2>
+                       <p className="text-2xl tracking-widest mb-8" style={{ color: primaryColor }}>{p.price} MAD</p>
+                       <div className="w-12 h-px bg-white/20 mb-8"></div>
+                       <p className="text-[#888] mb-12 tracking-wide leading-relaxed">{p.description || 'Embrace luxury with this exclusive item. Crafted with precision for the modern elegant individual.'}</p>
+                       
+                       {/* PRO SELECTORS */}
+                       <div className="mb-12 space-y-8">
+                          {p.colors?.length > 0 && (
+                             <div>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-4 block">Color</span>
+                                <div className="flex gap-4">
+                                   {p.colors.map((c: string) => (
+                                      <button key={tr(c)} onClick={() => setSelectedColor(c)} className={`w-6 h-6 rounded-full border border-white/20 transition-all ${selectedColor === c ? 'ring-1 ring-offset-4 ring-offset-[#111] ring-white scale-110' : 'hover:scale-110'}`} style={{ backgroundColor: c }} />
+                                   ))}
+                                </div>
+                             </div>
+                          )}
+                          {p.sizes?.length > 0 && (
+                             <div>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-4 block">Size</span>
+                                <div className="flex flex-wrap gap-3">
+                                   {p.sizes.map((s: string) => (
+                                      <button key={s} onClick={() => setSelectedSize(s)} className={`px-4 py-2 text-xs tracking-widest border transition-colors ${selectedSize === s ? 'bg-white border-white text-black' : 'bg-transparent border-white/20 text-white/70 hover:border-white'}`}>
+                                         {s}
+                                      </button>
+                                   ))}
+                                </div>
+                             </div>
+                          )}
+                          <div>
+                             <span className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-4 block">Quantity</span>
+                             <div className="flex items-center justify-between border-b border-white/20 w-24 pb-2">
+                                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="text-white/50 hover:text-white font-light text-lg">-</button>
+                                <span className="font-light text-white">{quantity}</span>
+                                <button onClick={() => setQuantity(quantity + 1)} className="text-white/50 hover:text-white font-light text-lg">+</button>
+                             </div>
+                          </div>
+                       </div>
+
+                       {buyMode === 'form' ? (
+                          <div className="p-8 border border-white/10 bg-[#151515] space-y-4">
+                             <h4 className="text-xl font-serif mb-4 text-white">Secure Checkout</h4>
+                             <input type="text" placeholder={storeLang === 'ar' ? 'الاسم الكامل' : storeLang === 'en' ? 'Full Name' : 'Nom Complet'} className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
+                             <input type="text" placeholder={storeLang === 'ar' ? 'رقم الهاتف' : storeLang === 'en' ? 'Phone Number' : 'Numéro de Téléphone'} className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
+                             <input type="text" placeholder={storeLang === 'ar' ? 'المدينة' : storeLang === 'en' ? 'City' : 'Ville'} className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
+                              <input type="text" placeholder={storeLang === 'ar' ? 'العنوان' : storeLang === 'en' ? 'Delivery Address' : 'Adresse de Livraison'} className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
+                             <button onClick={() => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1)} className="w-full py-5 bg-white text-black text-xs tracking-widest mt-4 hover:bg-gray-200 transition-colors">PLACE ORDER</button>
+                          </div>
+                       ) : (
+                          <div className="flex gap-4">
+                             {(buyMode === 'cart' || buyMode === 'both') && (
+                                <button onClick={handleAddToCart} className="w-max px-12 py-4 border border-white/20 text-white text-xs tracking-widest hover:bg-white/5 transition-colors">ADD TO CART</button>
+                             )}
+                             {(buyMode === 'direct' || buyMode === 'both') && (
+                                <button onClick={() => setPage('checkout')} className="w-max px-12 py-4 bg-white text-black text-xs tracking-widest hover:bg-gray-200 transition-colors">BUY NOW</button>
+                             )}
+                          </div>
+                       )}
+                    </div>
+                 </div>
+              ))}
+           </div>
+        )}
+        {page === 'checkout' && (
+           <div className={`${isModal ? 'p-16 max-w-2xl' : 'p-8'} mx-auto w-full`}>
+              <div className="p-12 border border-white/10 bg-[#151515]">
+                 <h2 className="text-3xl font-serif mb-8 text-center text-white">Secure Checkout</h2>
+                 <div className="space-y-6">
+                    <input type="text" placeholder={storeLang === 'ar' ? 'الاسم الكامل' : storeLang === 'en' ? 'Full Name' : 'Nom Complet'} className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
+                    <input type="text" placeholder={storeLang === 'ar' ? 'رقم الهاتف' : storeLang === 'en' ? 'Phone Number' : 'Numéro de Téléphone'} className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
+                    <input type="text" placeholder={storeLang === 'ar' ? 'المدينة' : storeLang === 'en' ? 'City' : 'Ville'} className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
+                              <input type="text" placeholder={storeLang === 'ar' ? 'العنوان' : storeLang === 'en' ? 'Delivery Address' : 'Adresse de Livraison'} className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
+                    <button onClick={() => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1)} className="w-full py-5 bg-white text-black text-xs tracking-widest mt-8 hover:bg-gray-200 transition-colors">PLACE ORDER</button>
+                 </div>
+              </div>
+           </div>
+        )}
+        {page === 'success' && (
+           <div className={`${isModal ? 'p-16 max-w-2xl' : 'p-8'} mx-auto w-full text-center py-20`}>
+              <h2 className="text-4xl font-serif mb-6 text-white">Order Confirmed</h2>
+              <p className="text-[#888] text-lg tracking-wide mb-12">An expression of elegance is on its way to you.</p>
+              <button onClick={() => setPage('home')} className="px-10 py-4 border border-white/20 text-white text-xs tracking-widest hover:bg-white/5 transition-colors">RETURN</button>
+           </div>
+        )}
+      </div>
+    </div>
+  );
+  };
+
+  const LayoutPlayful = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts }: any) => {
+    const [selectedSize, setSelectedSize] = useState<string>('');
+    const [selectedColor, setSelectedColor] = useState<string>('');
+    const [quantity, setQuantity] = useState(1);
+
+    return (
+    <div className={`w-full min-h-full bg-white text-slate-900 ${fontFamily} flex flex-col`}>
+      <div className={`p-4 mx-4 mt-4 bg-slate-100 rounded-full flex justify-between items-center ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4 rounded-3xl' : 'flex-col md:flex-row gap-4 rounded-3xl md:rounded-full'}`}>
+         <LogoEditor onClick={() => setPage('home')} className="text-2xl font-black tracking-tight px-4" style={{ color: primaryColor }} />
+         <div className={`flex gap-2 text-sm font-bold ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
+            {storePages.map(p => (
+               <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer capitalize px-4 py-2 rounded-full transition-colors" style={{ backgroundColor: page === p.id ? primaryColor : 'transparent', color: page === p.id ? '#fff' : '#64748b' }}>{tr(p.title)}</span>
+            ))}
+         </div>
+         <button className="relative p-3 bg-white rounded-full shadow-sm hover:scale-105 transition-transform mr-1" onClick={() => setIsCartOpen(true)}>
+            <ShoppingBag className="w-5 h-5" style={{ color: primaryColor }} />
+            {cartCount > 0 && <span className="absolute -top-1 -right-1 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm" style={{ backgroundColor: '#f43f5e' }}>{cartCount}</span>}
+         </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto pt-6">
+        {page === 'home' && (
+          <>
+            <div className="px-4">
+               <HeroBackgroundEditor className={`h-[${isModal ? '500px' : '300px'}] rounded-[2rem] flex flex-col items-center justify-center text-center p-8 bg-cover bg-center relative overflow-hidden`} style={{ backgroundImage: `url(${heroImage})` }}>
+                  <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px]"></div>
+                  <div className="relative z-10 flex flex-col items-center p-8 bg-white/90 rounded-[2rem] shadow-xl border-4 border-white">
+                     <h1 className={`${isModal ? 'text-6xl' : 'text-4xl'} font-black tracking-tight mb-2`} style={{ color: primaryColor }}>Fun & Fresh!</h1>
+                     <p className="text-slate-600 font-medium mb-6 max-w-sm">Colorful, comfortable, and made for play.</p>
+                     <button onClick={() => setPage('collections')} className="px-8 py-4 text-white font-black tracking-wide text-sm hover:scale-110 transition-transform rounded-full shadow-lg" style={{ backgroundColor: primaryColor }}>LET'S SHOP 🎈</button>
+                  </div>
+               </HeroBackgroundEditor>
+            </div>
+            <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-6'} mx-auto w-full`}>
+               <h3 className="text-3xl font-black text-center mb-10 text-slate-800">New Arrivals ✨</h3>
+               <div className={`grid gap-6 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2')}`}>
+                  {storeProducts.map((p: any) => (
+                     <div key={p.id} className="group cursor-pointer bg-slate-50 p-4 rounded-3xl hover:bg-slate-100 transition-colors border-2 border-transparent hover:border-current" style={{ borderColor: primaryColor }} onClick={() => navigateToProduct(p.id)}>
+                        <div className="aspect-square bg-white mb-4 overflow-hidden relative rounded-2xl shadow-sm flex items-center justify-center">
+                           {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-12 h-12 opacity-10" />}
+                           <div className={`absolute inset-0 bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center`}>
+                              <button onClick={handleAddToCart} className="px-6 py-3 text-white text-xs font-black uppercase tracking-wider rounded-full shadow-xl hover:scale-105 transition-transform" style={btnStyle}>Add to cart</button>
+                           </div>
+                        </div>
+                        <h4 className="font-bold text-base text-center text-slate-700">{p.name}</h4>
+                        <p className="text-center font-black mt-1" style={{ color: primaryColor }}>{p.price} MAD</p>
+                     </div>
+                  ))}
+               </div>
+            </div>
+          </>
+        )}
+        {page === 'collections' && (
+            <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-6'} mx-auto w-full`}>
+               <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                  <h3 className="text-3xl font-black text-center text-slate-800">{tr('All Products ✨')}</h3>
+                  <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="bg-white border-2 border-slate-200 text-slate-700 text-sm font-black rounded-full focus:ring-slate-500 focus:border-slate-500 px-4 py-2 outline-none cursor-pointer shadow-sm">
+                     <option value="featured">{tr('Best Matches 🌟')}</option>
+                     <option value="price-low-high">{tr('Price: Low to High 💸')}</option>
+                     <option value="price-high-low">{tr('Price: High to Low 💎')}</option>
+                  </select>
+               </div>
+               {categories && categories.length > 1 && (
+                  <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-10">
+                     {categories.map((c: string) => (
+                        <button key={tr(c)} onClick={() => setActiveCategory(c)} className="px-6 py-2 rounded-full text-sm font-black transition-transform hover:scale-105 border-2 border-transparent" style={{ backgroundColor: activeCategory === c ? primaryColor : '#f1f5f9', color: activeCategory === c ? '#fff' : '#64748b', borderColor: activeCategory === c ? 'transparent' : '#e2e8f0' }}>
+                           {tr(c)}
+                        </button>
+                     ))}
+                  </div>
+               )}
+               <div className={`grid gap-6 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2')}`}>
+                  {filteredProducts.map((p: any) => (
+                     <div key={p.id} className="group cursor-pointer bg-slate-50 p-4 rounded-3xl hover:bg-slate-100 transition-colors border-2 border-transparent hover:border-current" style={{ borderColor: primaryColor }} onClick={() => navigateToProduct(p.id)}>
+                        <div className="aspect-square bg-white mb-4 overflow-hidden relative rounded-2xl shadow-sm flex items-center justify-center">
+                           {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-12 h-12 opacity-10" />}
+                           <div className={`absolute inset-0 bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center`}>
+                              <button onClick={handleAddToCart} className="px-6 py-3 text-white text-xs font-black uppercase tracking-wider rounded-full shadow-xl hover:scale-105 transition-transform" style={btnStyle}>Add to cart</button>
+                           </div>
+                        </div>
+                        <h4 className="font-bold text-base text-center text-slate-700">{p.name}</h4>
+                        <p className="text-center font-black mt-1" style={{ color: primaryColor }}>{p.price} MAD</p>
+                     </div>
+                  ))}
+               </div>
+            </div>
+        )}
+        {page === 'about' && (
+           <div className={`${isModal ? 'p-16 max-w-3xl' : 'p-6'} mx-auto w-full text-center mt-10 bg-slate-100 rounded-[3rem] p-12`}>
+              <h3 className="text-4xl font-black mb-6 text-slate-800">About {storeName}</h3>
+              <p className="text-slate-600 text-xl font-bold leading-relaxed mb-6">Welcome to {storeName}. We are dedicated to providing the best quality products for our customers. Every piece is carefully crafted to ensure maximum comfort and style.</p>
+           </div>
+        )}
+        {page === 'product' && activeProductId && (
+           <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-8'} mx-auto w-full`}>
+              {storeProducts.filter(p => p.id === activeProductId).map(p => (
+                 <div key={p.id} className={`flex gap-12 bg-slate-50 p-8 rounded-[3rem] ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'}`}>
+                    <div className="flex-1 bg-white rounded-[2rem] border-4 border-slate-100 flex items-center justify-center aspect-square shadow-xl overflow-hidden relative">
+                       {(selectedColor && p.colorImages?.[selectedColor]) ? <img src={p.colorImages[selectedColor]} className="w-full h-full object-cover absolute inset-0" alt={p.name} /> : (p.image ? <img src={p.image} className="w-full h-full object-cover absolute inset-0" alt={p.name} /> : <ImageIcon className="w-20 h-20 opacity-10" />)}
+                    </div>
+                    <div className="flex-1 flex flex-col justify-center px-4">
+                       <h2 className="text-5xl font-black mb-4 text-slate-800">{p.name}</h2>
+                       <p className="text-3xl font-black mb-8" style={{ color: primaryColor }}>{p.price} MAD</p>
+                       <p className="text-slate-500 font-medium mb-8 text-lg">{p.description || 'Fun, fresh, and perfectly designed for everyday adventures!'}</p>
+                       
+                       {/* PRO SELECTORS */}
+                       <div className="mb-8 space-y-6 bg-white p-6 rounded-[2rem] border-4 border-slate-100">
+                          {p.colors?.length > 0 && (
+                             <div>
+                                <span className="text-sm font-black uppercase tracking-wider text-slate-400 mb-3 block">Color</span>
+                                <div className="flex gap-3">
+                                   {p.colors.map((c: string) => (
+                                      <button key={tr(c)} onClick={() => setSelectedColor(c)} className={`w-10 h-10 rounded-full border-4 transition-transform ${selectedColor === c ? 'border-slate-800 scale-125' : 'border-transparent hover:scale-110 shadow-sm'}`} style={{ backgroundColor: c }} />
+                                   ))}
+                                </div>
+                             </div>
+                          )}
+                          {p.sizes?.length > 0 && (
+                             <div>
+                                <span className="text-sm font-black uppercase tracking-wider text-slate-400 mb-3 block">Size</span>
+                                <div className="flex flex-wrap gap-2">
+                                   {p.sizes.map((s: string) => (
+                                      <button key={s} onClick={() => setSelectedSize(s)} className={`px-5 py-3 text-sm font-black rounded-xl transition-transform border-4 ${selectedSize === s ? 'bg-slate-800 border-slate-800 text-white scale-105 shadow-xl' : 'bg-slate-50 border-transparent text-slate-500 hover:border-slate-200'}`}>
+                                         {s}
+                                      </button>
+                                   ))}
+                                </div>
+                             </div>
+                          )}
+                          <div>
+                             <span className="text-sm font-black uppercase tracking-wider text-slate-400 mb-3 block">Quantity</span>
+                             <div className="flex items-center justify-between bg-slate-50 w-40 px-4 py-2 rounded-xl border-4 border-slate-100">
+                                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="text-slate-400 hover:text-slate-800 font-black text-2xl">-</button>
+                                <span className="font-black text-xl text-slate-800">{quantity}</span>
+                                <button onClick={() => setQuantity(quantity + 1)} className="text-slate-400 hover:text-slate-800 font-black text-2xl">+</button>
+                             </div>
+                          </div>
+                       </div>
+
+                       {buyMode === 'form' ? (
+                          <div className="bg-white p-8 rounded-[2rem] border-4 border-slate-100 space-y-4">
+                             <h4 className="text-xl font-black text-slate-800 mb-2">Yay! Checkout 🎁</h4>
+                             <input type="text" placeholder="Your Name" className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-full focus:outline-none focus:border-current text-base font-bold" style={{ '--tw-ring-color': primaryColor } as React.CSSProperties} />
+                             <input type="text" placeholder={storeLang === 'ar' ? 'رقم الهاتف' : storeLang === 'en' ? 'Phone Number' : 'Numéro de Téléphone'} className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-full focus:outline-none focus:border-current text-base font-bold" style={{ '--tw-ring-color': primaryColor } as React.CSSProperties} />
+                             <input type="text" placeholder="Where to send?" className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-full focus:outline-none focus:border-current text-base font-bold" style={{ '--tw-ring-color': primaryColor } as React.CSSProperties} />
+                             <button onClick={() => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1)} className="w-full py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl mt-4" style={{ backgroundColor: primaryColor }}>Send it to me! 🚀</button>
+                          </div>
+                       ) : (
+                          <div className="flex gap-4">
+                             {(buyMode === 'cart' || buyMode === 'both') && (
+                                <button onClick={handleAddToCart} className="flex-1 px-8 py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl" style={{ backgroundColor: '#f43f5e' }}>Cart 🛒</button>
+                             )}
+                             {(buyMode === 'direct' || buyMode === 'both') && (
+                                <button onClick={() => setPage('checkout')} className="flex-1 px-8 py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl" style={{ backgroundColor: primaryColor }}>Buy Now 🎈</button>
+                             )}
+                          </div>
+                       )}
+                    </div>
+                 </div>
+              ))}
+           </div>
+        )}
+        {page === 'checkout' && (
+           <div className={`${isModal ? 'p-16 max-w-2xl' : 'p-8'} mx-auto w-full`}>
+              <div className="bg-slate-50 p-10 rounded-[3rem] shadow-sm border-4 border-white">
+                 <h2 className="text-3xl font-black mb-6 text-center text-slate-800">Yay! Checkout 🎁</h2>
+                 <div className="space-y-4">
+                    <input type="text" placeholder="Your Name" className="w-full px-6 py-4 bg-white border-2 border-slate-100 rounded-full focus:outline-none focus:border-current text-lg font-bold" style={{ borderColor: 'transparent', '--tw-ring-color': primaryColor } as React.CSSProperties} />
+                    <input type="text" placeholder={storeLang === 'ar' ? 'رقم الهاتف' : storeLang === 'en' ? 'Phone Number' : 'Numéro de Téléphone'} className="w-full px-6 py-4 bg-white border-2 border-slate-100 rounded-full focus:outline-none focus:border-current text-lg font-bold" style={{ borderColor: 'transparent', '--tw-ring-color': primaryColor } as React.CSSProperties} />
+                    <input type="text" placeholder="Where to send?" className="w-full px-6 py-4 bg-white border-2 border-slate-100 rounded-full focus:outline-none focus:border-current text-lg font-bold" style={{ borderColor: 'transparent', '--tw-ring-color': primaryColor } as React.CSSProperties} />
+                    <button onClick={() => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1)} className="w-full py-5 text-white font-black uppercase tracking-widest text-xl hover:scale-105 transition-transform rounded-full shadow-xl mt-6" style={{ backgroundColor: primaryColor }}>Send it to me! 🚀</button>
+                 </div>
+              </div>
+           </div>
+        )}
+        {page === 'success' && (
+           <div className={`${isModal ? 'p-16 max-w-2xl' : 'p-8'} mx-auto w-full text-center flex flex-col items-center justify-center min-h-[400px]`}>
+              <div className="w-24 h-24 bg-green-100 text-green-500 rounded-full flex items-center justify-center mb-6 shadow-xl border-4 border-white">
+                 <CheckCircle className="w-12 h-12" />
+              </div>
+              <h2 className="text-5xl font-black mb-4 text-slate-800" style={{ color: primaryColor }}>Woohoo! 🎉</h2>
+              <p className="text-slate-500 text-xl font-bold">Your order is on the way!</p>
+              <button onClick={() => setPage('home')} className="mt-8 px-10 py-4 bg-slate-900 text-white font-black uppercase tracking-widest rounded-full hover:scale-105 transition-transform shadow-lg">Back to fun 🎈</button>
+           </div>
+        )}
+      </div>
+    </div>
+  );
+  };
+
+  const StorePreviewWrapper = ({ isModal = false, initialProductId = null }: any) => {
+    const [page, setPage] = useState(initialProductId ? 'product' : 'home');
+    const [activeProductId, setActiveProductId] = useState<any>(initialProductId);
+    const [activeCategory, setActiveCategory] = useState('All');
+    const [sortBy, setSortBy] = useState('featured');
+    const [isCartOpen, setIsCartOpen] = useState(false);
+
+    const navigateToProduct = (id: any) => {
+        setActiveProductId(id);
+        setPage('product');
+    };
+
+    const categories = ['All', ...Array.from(new Set(storeProducts.map(p => p.category).filter(Boolean)))];
+    let filteredProducts = activeCategory === 'All' ? storeProducts : storeProducts.filter(p => p.category === activeCategory);
+
+    filteredProducts = [...filteredProducts].sort((a, b) => {
+       if (sortBy === 'price-low-high') return parseFloat(a.price) - parseFloat(b.price);
+       if (sortBy === 'price-high-low') return parseFloat(b.price) - parseFloat(a.price);
+       if (sortBy === 'az') return a.name.localeCompare(b.name);
+       if (sortBy === 'za') return b.name.localeCompare(a.name);
+       return 0;
+    });
+
+    const props = { isModal, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, storeLang, isCartOpen, setIsCartOpen, submitGlobalOrder, storeProducts, primaryColor, secondaryColor, buttonStyle, fontFamily };
+
+
+  
+  const LayoutClement = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts }: any) => {
+    const [selectedSize, setSelectedSize] = useState<string>('');
+    const [selectedColor, setSelectedColor] = useState<string>('');
+    const [quantity, setQuantity] = useState(1);
+
+    return (
+    <div className={`w-full min-h-full bg-[#e8e2d7] text-[#1a1a1a] ${fontFamily} flex flex-col`}>
+      <div className={`px-8 py-6 flex justify-between items-center ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4' : 'flex-col md:flex-row gap-4 md:gap-0'}`}>
+         <LogoEditor onClick={() => setPage('home')} className="text-2xl font-black uppercase tracking-widest text-[#1a1a1a]" style={{ color: primaryColor }} />
+         <div className={`flex gap-8 text-sm font-medium text-[#4a4a4a] ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
+            {storePages.map(p => (
+               <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer hover:text-black transition-colors" style={{ color: page === p.id ? primaryColor : undefined }}>{tr(p.title)}</span>
+            ))}
+         </div>
+         <div className="flex gap-4 items-center">
+            <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1 cursor-pointer"><img src="https://flagcdn.com/w20/fr.png" alt="FR" className="w-4 h-3 rounded-sm object-cover" /> FR</span>
+            <Search className="w-5 h-5 cursor-pointer hover:opacity-70 transition-opacity" />
+            <Users className="w-5 h-5 cursor-pointer hover:opacity-70 transition-opacity" />
+            <button className="relative hover:opacity-70 transition-opacity" onClick={() => setIsCartOpen(true)}>
+               <ShoppingBag className="w-5 h-5" />
+               {cartCount > 0 && <span className="absolute -bottom-1 -right-1 text-white text-[9px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center bg-black">{cartCount}</span>}
+            </button>
+         </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto bg-white">
+        {page === 'home' && (
+          <>
+            <div className="w-full bg-[#e8e2d7]">
+               <HeroBackgroundEditor className={`w-full h-[${isModal ? '600px' : '400px'}] bg-cover bg-right-top relative flex items-center`} style={{ backgroundImage: `url(${heroImage})` }}>
+                  <div className="max-w-2xl px-12 md:px-24">
+                     <EditableText as="h1" text={heroTitle} onTextChange={setHeroTitle} isLiveStore={isLiveStore} className="text-5xl md:text-7xl font-serif italic tracking-wide text-[#2c2c2c] mb-6 leading-tight" style={{ fontFamily: 'Georgia, serif' }} />
+                  </div>
+               </HeroBackgroundEditor>
+            </div>
+
+            <div className="py-16 px-8 max-w-7xl mx-auto bg-white">
+               <div className="flex flex-col items-center mb-12">
+                  <EditableText as="h2" text={homeCollectionsTitle} onTextChange={setHomeCollectionsTitle} isLiveStore={isLiveStore} className="text-2xl font-black uppercase text-[#1a1a1a] mb-8 tracking-wider" />
+                  
+                  {/* Categories */}
+                  <div className="flex flex-wrap justify-center gap-8 text-sm font-medium text-[#4a4a4a]">
+                     {categories.map((c: string) => (
+                        <button key={tr(c)} onClick={() => setActiveCategory(c)} className={`pb-1 border-b-2 transition-colors ${activeCategory === c ? 'border-[#1a1a1a] text-[#1a1a1a]' : 'border-transparent hover:border-slate-300'}`}>
+                           {c === 'All' ? allCollectionsTitle : tr(c)}
+                        </button>
+                     ))}
+                  </div>
+               </div>
+
+               <div className={`grid ${previewDevice === 'mobile' && !isModal ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-4'} gap-6`}>
+                  {filteredProducts.map((p: any) => (
+                     <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
+                        <div className="aspect-[3/4] bg-[#f5f1e9] mb-4 relative overflow-hidden flex items-center justify-center">
+                           <img src={getCoverImage(p)} alt={p.name} className="w-full h-full object-cover mix-blend-multiply transition-transform duration-500 group-hover:scale-105" />
+                           <button className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/50 transition-colors" onClick={(e) => { e.stopPropagation(); }}>
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
+                           </button>
+                        </div>
+                        <div className="text-left">
+                           <h3 className="text-[13px] font-black uppercase tracking-widest text-[#1a1a1a] mb-1">{p.name}</h3>
+                           <p className="text-[11px] text-[#666] mb-2">{p.category}</p>
+                           <p className="text-[13px] font-bold text-[#1a1a1a]">{storeIsAr ? 'ابتداءً من' : 'à partir de'} {p.price} MAD</p>
+                        </div>
+                     </div>
+                  ))}
+               </div>
+            </div>
+          </>
+        )}
+
+        // @ts-nocheck
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video } from 'lucide-react';
+import { useLang } from '../contexts/LangContext';
+import StoreManagerDashboard from '../components/Tools/StoreManagerDashboard';
+import ProAITools from '../components/Tools/ProAITools';
+import { supabase } from '../supabase';
+
+const THEMES = [
+  { id: 'streetwear', name: 'Streetwear Pro', layout: 'hero-center', defaultColor: '#0f172a', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop' },
+  { id: 'minimalist', name: 'Minimalist', layout: 'split-screen', defaultColor: '#171717', defaultFont: 'font-serif', previewImg: 'https://images.unsplash.com/photo-1489987707023-afc7f93c6508?q=80&w=800&auto=format&fit=crop' },
+  { id: 'abaya', name: 'Luxury Abaya', layout: 'elegant', defaultColor: '#b48a44', defaultFont: 'font-serif', previewImg: 'https://images.unsplash.com/photo-1589465885857-44edb59bbff2?q=80&w=800&auto=format&fit=crop' },
+  { id: 'sportswear', name: 'Active Sport', layout: 'hero-center', defaultColor: '#84cc16', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop' },
+  { id: 'eco', name: 'Eco Nature', layout: 'split-screen', defaultColor: '#4d7c0f', defaultFont: 'font-serif', previewImg: 'https://images.unsplash.com/photo-1523381294911-8d3cead13475?q=80&w=800&auto=format&fit=crop' },
+  { id: 'kids', name: 'Playful Kids', layout: 'playful', defaultColor: '#0ea5e9', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=800&auto=format&fit=crop' },
+  { id: 'clement', name: 'Clement Design', layout: 'clement', defaultColor: '#1e293b', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1577221084712-45b0445d2b00?q=80&w=800&auto=format&fit=crop' },
+  { id: 'xton', name: 'Xton', layout: 'hero-center', defaultColor: '#f59e0b', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=800&auto=format&fit=crop' },
+  { id: 'amaza', name: 'Amaza', layout: 'sidebar-right', defaultColor: '#06b6d4', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop' },
+  { id: 'ochaka', name: 'Ochaka', layout: 'split-screen', defaultColor: '#9f1239', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=800&auto=format&fit=crop' },
+  { id: 'mazia', name: 'Mazia', layout: 'mazia', defaultColor: '#ef4444', defaultFont: 'font-serif', previewImg: 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=800&auto=format&fit=crop' }
+];
+
+const readFileAsBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target?.result as string);
+    reader.readAsDataURL(file);
+  });
+};
+
+const getSavedConfig = () => {
+    try {
+        const saved = localStorage.getItem('beya_store_config');
+        return saved ? JSON.parse(saved) : {};
+    } catch(e) { return {}; }
+};
+
+export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: boolean }) {
+  const { storeNameUrl } = useParams<{storeNameUrl: string}>();
+  const config = getSavedConfig();
+  const { isAr } = useLang();
+  const [platformMode, setPlatformModeState] = useState<'gestion'|'builder'>(
+     (localStorage.getItem('beya_platform_mode') as any) || (config.storeName ? 'gestion' : 'builder')
+  );
+  const setPlatformMode = (mode: 'gestion'|'builder') => {
+     localStorage.setItem('beya_platform_mode', mode);
+     setPlatformModeState(mode);
+  };
+  
+  const [builderMode, setBuilderModeState] = useState<'dashboard'|'editor'|'pro_ai'>(
+    (localStorage.getItem('beya_builder_mode') as any) || 'dashboard'
+  );
+  
+  const setBuilderMode = (mode: 'dashboard'|'editor'|'pro_ai') => {
+    localStorage.setItem('beya_builder_mode', mode);
+    setBuilderModeState(mode);
+  };
+
+  const [productsViewMode, setProductsViewMode] = useState<'list'|'grid'>('list');
+  const [activeTab, setActiveTabState] = useState<string>(
+     localStorage.getItem('beya_active_tab') || (config.storeName ? 'orders' : 'settings')
+  );
+  const setActiveTab = (tab: string) => {
+     localStorage.setItem('beya_active_tab', tab);
+     setActiveTabState(tab);
+  };
+  const [storeName, setStoreName] = useState(config.storeName || '');
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewProductId, setPreviewProductId] = useState<number | null>(null);
+  const [previewDevice, setPreviewDevice] = useState<'desktop'|'mobile'>('desktop');
+  const [isControlsCollapsed, setIsControlsCollapsed] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [showTrash, setShowTrash] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<string|null>(null);
+    const [storeOrders, setStoreOrders] = useState(() => {
+    if (!config.storeName) return [];
+    try {
+      const saved = localStorage.getItem(`beya_orders_${config.storeName}`);
+      if (saved) return JSON.parse(saved);
+    } catch (e) { console.error(e); }
+    return [
+      { id: '#1042', customer: 'Youssef El Amrani', amount: '850.00 MAD', status: 'Nouveau', statusColor: 'bg-indigo-100 text-indigo-700', date: 'Il y a 10 min', items: '2 articles', products: [{ name: 'Premium Hoodie', photo: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop', qty: 1, price: '450.00 MAD', options: 'Taille: L, Couleur: Noir' }, { name: 'Cargo Pants', photo: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop', qty: 1, price: '400.00 MAD', options: 'Taille: M, Couleur: Kaki' }] },
+      { id: '#1041', customer: 'Sara Bennani', amount: '450.00 MAD', status: 'Confirmé', statusColor: 'bg-emerald-100 text-emerald-700', date: 'Il y a 1h', items: '1 article', products: [{ name: 'Essential T-Shirt', photo: 'https://images.unsplash.com/photo-1489987707023-afc7f93c6508?q=80&w=800&auto=format&fit=crop', qty: 1, price: '450.00 MAD', options: 'Taille: S, Couleur: Blanc' }] },
+      { id: '#1040', customer: 'Karim Tazi', amount: '1200.00 MAD', status: 'En cours', statusColor: 'bg-amber-100 text-amber-700', date: 'Hier', items: '3 articles', products: [{ name: 'Classic Sneakers', photo: 'https://images.unsplash.com/photo-1589465885857-44edb59bbff2?q=80&w=800&auto=format&fit=crop', qty: 2, price: '400.00 MAD', options: 'Pointure: 42, Couleur: Blanc' }, { name: 'Cargo Pants', photo: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop', qty: 1, price: '400.00 MAD', options: 'Taille: L, Couleur: Noir' }] },
+      { id: '#1039', customer: 'Maha Alami', amount: '350.00 MAD', status: 'Refusé', statusColor: 'bg-rose-100 text-rose-700', date: 'Hier', items: '1 article', products: [{ name: 'Summer Dress', photo: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=800&auto=format&fit=crop', qty: 1, price: '350.00 MAD', options: 'Taille: M, Couleur: Rouge' }] }
+    ];
+  });
+
+  useEffect(() => {
+    if (config.storeName && storeOrders.length > 0) {
+      localStorage.setItem(`beya_orders_${config.storeName}`, JSON.stringify(storeOrders));
+    }
+  }, [storeOrders, config.storeName]);
+
+  const handleUpdateOrderStatus = (orderId: string, newStatus: string, newColor: string) => {
+    setStoreOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus, statusColor: newColor } : o));
+    setSelectedOrder(null);
+  };
+
+  const handleDeleteOrder = (orderId: string) => {
+    setOrderToDelete(orderId);
+  };
+
+  const confirmDeleteOrder = () => {
+    if (orderToDelete) {
+      setStoreOrders(prev => prev.map(o => o.id === orderToDelete ? { ...o, deleted: true } : o));
+      setSelectedOrder(null);
+      setOrderToDelete(null);
+    }
+  };
+
+  const handleRestoreOrder = (orderId: string) => {
+    setStoreOrders(prev => prev.map(o => o.id === orderId ? { ...o, deleted: false } : o));
+    setSelectedOrder(null);
+  };
+
+  const handlePermanentDelete = (orderId: string) => {
+    setStoreOrders(prev => prev.filter(o => o.id !== orderId));
+    setSelectedOrder(null);
+  };
+  const [storeLang, setStoreLang] = useState<'fr'|'en'|'ar'>(config.storeLang || 'fr');
+  const storeIsAr = storeLang === 'ar';
+  
+  const tr = (t: string) => {
+     if (!storeIsAr) return t;
+     const dict: Record<string, string> = {
+        'New Collection': 'تشكيلة جديدة',
+        'Discover our latest premium quality garments.': 'اكتشف أحدث تشكيلاتنا ذات الجودة العالية.',
+        'Shop Now': 'تسوق الآن',
+        'Trending Now': 'الأكثر مبيعاً',
+        'All Products': 'جميع المنتجات',
+        'Home': 'الرئيسية',
+        'Collections': 'التشكيلات',
+        'About': 'من نحن',
+        '© 2026 My Brand. Tous droits réservés.': '© 2026 My Brand. جميع الحقوق محفوظة.',
+        'Accueil': 'الرئيسية',
+        'Produits': 'المنتجات',
+        'All Products ✨': 'جميع المنتجات ✨',
+        'ALL PRODUCTS': 'جميع المنتجات',
+        'All': 'الكل',
+        'ALL': 'الكل',
+        'Outerwear': 'ملابس خارجية',
+        'OUTERWEAR': 'ملابس خارجية',
+        'Tops': 'قمصان',
+        'TOPS': 'قمصان',
+        'Bottoms': 'بناطيل',
+        'BOTTOMS': 'بناطيل',
+        'Shoes': 'أحذية',
+        'SHOES': 'أحذية',
+        'Dresses': 'فساتين',
+        'DRESSES': 'فساتين',
+        'Recommandé': 'موصى به',
+        'Sort: Featured': 'موصى به',
+        'Featured': 'موصى به',
+        'Best Matches 🌟': 'موصى به 🌟',
+        'Prix: Croissant': 'السعر: من الأقل للأكثر',
+        'Price: Low to High': 'السعر: من الأقل للأكثر',
+        'Price: Low - High': 'السعر: من الأقل للأكثر',
+        'Price: Low to High 💸': 'السعر: من الأقل للأكثر 💸',
+        'Prix: Décroissant': 'السعر: من الأكثر للأقل',
+        'Price: High to Low': 'السعر: من الأكثر للأقل',
+        'Price: High - Low': 'السعر: من الأكثر للأقل',
+        'Price: High to Low 💎': 'السعر: من الأكثر للأقل 💎',
+        'De A à Z': 'أ - ي',
+        'De Z à A': 'ي - أ'
+     };
+     return dict[t] || t;
+  };
+  
+  // Customization States (The PRO way)
+  const [activeTheme, setActiveTheme] = useState(config.activeTheme || THEMES[0]);
+  const [primaryColor, setPrimaryColor] = useState(config.primaryColor || THEMES[0].defaultColor);
+  const [secondaryColor, setSecondaryColor] = useState(config.secondaryColor || '#ffffff');
+  const [buttonStyle, setButtonStyle] = useState<'rounded' | 'pill' | 'square'>(config.buttonStyle || 'rounded');
+  const [fontFamily, setFontFamily] = useState(config.fontFamily || THEMES[0].defaultFont);
+  const [heroImage, setHeroImage] = useState(config.heroImage || THEMES[0].previewImg);
+  
+  // Theme Inline Texts
+  const [heroTitle, setHeroTitle] = useState(config.heroTitle || 'New Collection');
+  const [heroSubtitle, setHeroSubtitle] = useState(config.heroSubtitle || 'Discover our latest premium quality garments.');
+  const [heroButtonText, setHeroButtonText] = useState(config.heroButtonText || 'Shop Now');
+  const [homeCollectionsTitle, setHomeCollectionsTitle] = useState(config.homeCollectionsTitle || 'Trending Now');
+  const [allCollectionsTitle, setAllCollectionsTitle] = useState(config.allCollectionsTitle || 'All Products');
+  const [homeBlocks, setHomeBlocks] = useState<string[]>(config.homeBlocks || ['hero', 'collections', 'products']);
+  const [sliderImages, setSliderImages] = useState<string[]>(config.sliderImages || []);
+  const [activeSidebarSection, setActiveSidebarSection] = useState<string>('hero');
+  
+  const [cartCount, setCartCount] = useState(0);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [storeProducts, setStoreProducts] = useState(config.storeProducts || [
+    { id: 1, name: 'Premium Hoodie', price: '450.00', category: 'Outerwear', image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800' },
+    { id: 2, name: 'Essential T-Shirt', price: '150.00', category: 'Tops', image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=800' },
+    { id: 3, name: 'Cargo Pants', price: '350.00', category: 'Bottoms', image: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&q=80&w=800' },
+    { id: 4, name: 'Classic Sneakers', price: '550.00', category: 'Shoes', image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=800' },
+    { id: 5, name: 'Summer Dress', price: '290.00', category: 'Dresses', image: 'https://images.unsplash.com/photo-1515347619152-16b713b194d2?auto=format&fit=crop&q=80&w=800' },
+    { id: 6, name: 'Leather Jacket', price: '890.00', category: 'Outerwear', image: 'https://images.unsplash.com/photo-1551028719-0c124a1119ce?auto=format&fit=crop&q=80&w=800' }
+  ]);
+  const [newProduct, setNewProduct] = useState({ name: '', price: '' });
+  const [appsConfig, setAppsConfig] = useState<Record<string, string>>(config.appsConfig || {});
+  const [deliveryCompanies, setDeliveryCompanies] = useState<any[]>(config.deliveryCompanies || [
+     { id: 1, name: 'Amana', type: 'Standard • National', isActive: true, initial: 'AM' },
+     { id: 2, name: 'Ghazal', type: 'Express • National', isActive: false, initial: 'GR' }
+  ]);
+  const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
+  const [newDeliveryCompany, setNewDeliveryCompany] = useState({ name: '', type: 'Standard • National', isActive: true });
+  const [activeAppModal, setActiveAppModal] = useState<string | null>(null);
+  const [appInputValue, setAppInputValue] = useState('');
+
+  // Helper to get any available image for a product
+  const getCoverImage = (p: any) => p.image || (p.colorImages ? Object.values(p.colorImages)[0] : null);
+
+  const [storePages, setStorePages] = useState([
+    { id: 'home', title: 'Home', isDefault: true },
+    { id: 'collections', title: 'Collections', isDefault: true },
+    { id: 'about', title: 'About', isDefault: false }
+  ]);
+  const [footerSettings, setFooterSettings] = useState(config.footerSettings || {
+    copyright: '© 2024 Mon Magasin. Tous droits réservés.',
+    links: ['À Propos', 'Contact', 'Politique de Retour', 'Termes & Conditions']
+  });
+  const [showReviews, setShowReviews] = useState(config.showReviews !== undefined ? config.showReviews : true);
+  // Computed design vars - available to all Layout components
+  const btnRadius = buttonStyle === 'pill' ? '9999px' : buttonStyle === 'square' ? '0px' : '10px';
+  const btnStyle = { backgroundColor: primaryColor, borderRadius: btnRadius };
+  const cardBg = secondaryColor || '#ffffff';
+  const [newsletterTitle, setNewsletterTitle] = useState(config.newsletterTitle || 'Rejoignez notre Newsletter');
+  const [newsletterSubtitle, setNewsletterSubtitle] = useState(config.newsletterSubtitle || 'Recevez nos dernières offres et nouveautés directement dans votre boîte mail.');
+  const [featuresData, setFeaturesData] = useState(config.featuresData || [
+    { icon: 'Truck', title: 'Livraison Rapide', subtitle: 'Partout au Maroc' },
+    { icon: 'ShieldCheck', title: 'Paiement Sécurisé', subtitle: '100% garanti' },
+    { icon: 'Star', title: 'Qualité Premium', subtitle: 'Produits certifiés' }
+  ]);
+  const [videoUrl, setVideoUrl] = useState(config.videoUrl || '');
+  const [newPageTitle, setNewPageTitle] = useState('');
+  const [isPageModalOpen, setIsPageModalOpen] = useState(false);
+  const [pageForm, setPageForm] = useState<any>(null);
+  
+  const [storeLogo, setStoreLogo] = useState(config.storeLogo || '');
+  const [storeFavicon, setStoreFavicon] = useState(config.storeFavicon || '');
+  
+  useEffect(() => {
+     if (isLiveStore) {
+        document.title = storeName;
+        const finalIcon = storeFavicon || storeLogo || "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛍️</text></svg>";
+        
+        document.querySelectorAll("link[rel*='icon']").forEach(node => {
+            (node as HTMLLinkElement).href = finalIcon;
+        });
+        let appleLink = document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement;
+        if (!appleLink) {
+            appleLink = document.createElement('link');
+            appleLink.rel = 'apple-touch-icon';
+            document.getElementsByTagName('head')[0].appendChild(appleLink);
+        }
+        appleLink.href = finalIcon;
+     }
+  }, [isLiveStore, storeName, storeLogo, storeFavicon]);
+
+  const [isLoadingLiveConfig, setIsLoadingLiveConfig] = useState(isLiveStore);
+
+  // Fetch from Supabase for live store to handle cross-domain loading
+  useEffect(() => {
+     const fetchLiveConfig = async () => {
+        try {
+           const currentDomain = window.location.hostname;
+           // Fetch the exact domain config first, OR by storeName if provided via url parameter
+           let query = supabase.from('stores').select('config_json');
+           if (storeNameUrl) {
+              query = query.eq('domain', `${storeNameUrl}.beyacreative.com`);
+           } else {
+              query = query.eq('domain', currentDomain);
+           }
+           let { data, error } = await query.single();
+           
+           // Fallback for SaaS mockup: if domain not found, grab the latest saved store
+           if (!data) {
+              const fallback = await supabase
+                 .from('stores')
+                 .select('config_json')
+                 .eq('domain', 'latest_saved_store')
+                 .single();
+              
+              if (fallback.data) {
+                  data = fallback.data;
+              } else {
+                  // Final fallback
+                  const lastResort = await supabase
+                     .from('stores')
+                     .select('config_json')
+                     .order('updated_at', { ascending: false })
+                     .limit(1)
+                     .single();
+                  data = lastResort.data;
+              }
+           }
+           
+           if (data && data.config_json) {
+              const conf = data.config_json;
+              if (conf.storeLang) setStoreLang(conf.storeLang);
+              if (conf.storeName) setStoreName(conf.storeName);
+              if (conf.storeLogo) setStoreLogo(conf.storeLogo);
+              if (conf.storeFavicon) setStoreFavicon(conf.storeFavicon);
+              if (conf.activeTheme) setActiveTheme(conf.activeTheme);
+              if (conf.primaryColor) setPrimaryColor(conf.primaryColor);
+              if (conf.fontFamily) setFontFamily(conf.fontFamily);
+              if (conf.heroImage) setHeroImage(conf.heroImage);
+              if (conf.heroTitle) setHeroTitle(conf.heroTitle);
+              if (conf.heroSubtitle) setHeroSubtitle(conf.heroSubtitle);
+              if (conf.heroButtonText) setHeroButtonText(conf.heroButtonText);
+              if (conf.homeCollectionsTitle) setHomeCollectionsTitle(conf.homeCollectionsTitle);
+              if (conf.allCollectionsTitle) setAllCollectionsTitle(conf.allCollectionsTitle);
+              if (conf.buyMode) setBuyMode(conf.buyMode);
+              if (conf.footerSettings) setFooterSettings(conf.footerSettings);
+           }
+        } catch (err) {
+           console.warn('No live config found in Supabase or table missing:', err);
+        } finally {
+           setIsLoadingLiveConfig(false);
+        }
+     };
+
+     if (isLiveStore) {
+        fetchLiveConfig();
+     }
+  }, [isLiveStore]);
+  
+  const [buyMode, setBuyMode] = useState<'cart'|'direct'|'both'|'form'>(config.buyMode || 'both');
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [productForm, setProductForm] = useState<any>(null);
+  const [newSizeInput, setNewSizeInput] = useState('');
+  const [newColorInput, setNewColorInput] = useState('#000000');
+
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [showPublishModal, setShowPublishModal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [customDomain, setCustomDomain] = useState(config.customDomain || '');
+  const [isLinkingDomain, setIsLinkingDomain] = useState(false);
+  const [domainError, setDomainError] = useState('');
+
+  const submitGlobalOrder = (product: any, qty: number) => {
+    const inputs = Array.from(document.querySelectorAll('input[type="text"]')).slice(-4);
+    const nameInput = inputs[0] as HTMLInputElement;
+    const phoneInput = inputs[1] as HTMLInputElement;
+    const cityInput = inputs[2] as HTMLInputElement;
+
+    const newOrder = {
+        id: "ORD-" + Math.floor(10000 + Math.random() * 90000),
+        date: new Date().toLocaleDateString("fr-FR"),
+        customer: nameInput?.value || "Client Web",
+        city: cityInput?.value || "Non specifiee",
+        phone: phoneInput?.value || "Non specifie",
+        product: product ? product.name : "Produit inconnu",
+        quantity: qty || 1,
+        amount: product ? (parseFloat(product.price) * (qty || 1)).toFixed(2) : "0.00",
+        status: "En attente",
+        statusColor: "#f59e0b"
+    };
+    
+    setStoreOrders((prev: any) => [newOrder, ...prev]);
+    setPage("success");
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    const storeConfig = {
+       storeLang,
+       storeName,
+       storeLogo,
+       storeFavicon,
+       customDomain,
+       activeTheme,
+       primaryColor,
+       fontFamily,
+       heroImage,
+       heroTitle,
+       heroSubtitle,
+       heroButtonText,
+       homeCollectionsTitle,
+       allCollectionsTitle,
+       buyMode,
+       homeBlocks,
+       sliderImages,
+       footerSettings,
+       newsletterTitle,
+       newsletterSubtitle,
+       featuresData,
+       videoUrl,
+       storeProducts,
+       appsConfig,
+       deliveryCompanies,
+       secondaryColor,
+       buttonStyle,
+       showReviews
+    };
+    localStorage.setItem('beya_store_config', JSON.stringify(storeConfig));
+    
+    // Sync to Supabase for cross-domain live preview (SaaS mode)
+    try {
+       const domain = customDomain || `${storeName.toLowerCase().replace(/\\s+/g, '')}.beyacreative.com`;
+       
+       // Update both exact domain AND a fallback to ensure changes apply immediately
+       await supabase.from('stores').upsert({
+          domain: domain,
+          config_json: storeConfig,
+          name: storeName,
+          updated_at: new Date()
+       }, { onConflict: 'domain' });
+
+       
+
+    } catch (err) {
+       console.warn("Supabase sync failed (Table 'stores' might not exist yet):", err);
+    }
+    
+    setTimeout(() => setIsSaving(false), 1000);
+  };
+
+  const handleLinkDomain = async () => {
+    if (!customDomain) return;
+    setIsLinkingDomain(true);
+    setDomainError('');
+    
+    // Mock successful domain linking for MVP/SaaS UI since there's no backend API right now
+    setTimeout(async () => {
+       setIsLinkingDomain(false);
+       await handleSave(); // Automatically save the domain to DB
+    }, 1500);
+  };
+
+  const handlePublish = async () => {
+    setIsPublishing(true);
+    await handleSave();
+    setTimeout(() => {
+      setIsPublishing(false);
+      setShowPublishModal(true);
+    }, 1000);
+  };
+
+  const applyTheme = (theme: typeof THEMES[0]) => {
+     setActiveTheme(theme);
+     setPrimaryColor(theme.defaultColor);
+     setFontFamily(theme.defaultFont);
+     setHeroImage(theme.previewImg);
+  };
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+     e.stopPropagation();
+     setCartCount(c => c + 1);
+  };
+
+  // --- DYNAMIC LAYOUT COMPONENTS ---
+  const EditableText = ({ text, onTextChange, isLiveStore, className, as: Tag = 'span', ...props }: any) => {
+     const displayText = tr(text);
+     if (isLiveStore) return <Tag className={className} {...props}>{displayText}</Tag>;
+     return (
+        <Tag 
+           className={`${className} cursor-text hover:outline hover:outline-2 hover:outline-indigo-500 hover:outline-dashed hover:bg-black/10 transition-all px-1 rounded min-w-[20px] inline-block empty:before:content-['${storeIsAr ? "فارغ" : "Vide"}'] empty:before:text-slate-400`} 
+           contentEditable 
+           suppressContentEditableWarning 
+           onBlur={(e: any) => onTextChange(e.currentTarget.textContent)}
+           onClick={(e: any) => e.stopPropagation()}
+           {...props}
+        >{displayText}</Tag>
+     );
+  };
+
+   const LogoEditor = ({ className, style, onClick }: any) => {
+      if (isLiveStore) {
+         return (
+            <div onClick={onClick} className={`cursor-pointer ${className}`} style={style}>
+               {storeLogo ? <img src={storeLogo} alt={storeName} className="h-10 object-contain" /> : storeName}
+            </div>
+         );
+      }
+      return (
+         <label className={`cursor-pointer relative group inline-flex items-center ${className}`} style={style} onClick={(e) => e.stopPropagation()}>
+            <div onClick={onClick} className="hover:opacity-80 transition-opacity outline-dashed outline-2 outline-transparent hover:outline-indigo-500 rounded px-1">
+               {storeLogo ? <img src={storeLogo} alt={storeName} className="h-10 object-contain" /> : storeName}
+            </div>
+            <div className="absolute -top-3 -right-4 w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-50" title={storeIsAr ? 'تغيير الشعار' : 'Changer le logo'}>
+               <ImageIcon className="w-3 h-3" />
+               <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (file) setStoreLogo(await readFileAsBase64(file));
+               }} />
+            </div>
+         </label>
+      );
+   };
+
+   const HeroBackgroundEditor = ({ children, className, style }: any) => {
+      if (isLiveStore) return <div className={className} style={style}>{children}</div>;
+      return (
+         <div className={`relative group ${className}`} style={style}>
+            {children}
+            <label className="absolute top-4 right-4 bg-white/90 backdrop-blur text-slate-800 px-4 py-2 rounded-full text-xs font-bold shadow-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center gap-2 z-50 hover:bg-white border border-slate-200">
+               <ImageIcon className="w-4 h-4" />{storeIsAr ? 'تغيير الصورة' : "Changer l'image"}
+               <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (file) setHeroImage(await readFileAsBase64(file));
+               }} />
+            </label>
+         </div>
+      );
+   };
+
+
+
+  const ThemeFooter = ({ bgColor = '#f8f9fa', textColor = '#64748b', setPage }: any) => (
+     <footer className="mt-auto py-12 px-6 border-t" style={{ backgroundColor: bgColor, borderColor: 'rgba(0,0,0,0.05)' }}>
+        <div className="max-w-4xl mx-auto flex flex-col items-center text-center gap-6">
+           <div className="text-xl font-bold" style={{ color: primaryColor }}>{storeLogo ? <img src={storeLogo} alt={storeName} className="h-10 object-contain" /> : storeName}</div>
+           <div className="flex flex-wrap justify-center gap-6 text-sm font-medium" style={{ color: textColor }}>
+              {footerSettings.showPrivacy && <button onClick={() => setPage('privacy')} className="hover:opacity-70 transition-opacity">{storeIsAr ? 'سياسة الخصوصية' : 'Politique de Confidentialité'}</button>}
+              {footerSettings.showTerms && <button onClick={() => setPage('terms')} className="hover:opacity-70 transition-opacity">{storeIsAr ? 'الشروط والأحكام' : 'Conditions Générales'}</button>}
+              {footerSettings.showCookies && <button onClick={() => setPage('cookies')} className="hover:opacity-70 transition-opacity">{storeIsAr ? 'سياسة ملفات الارتباط' : 'Politique des Cookies'}</button>}
+           </div>
+           <EditableText as="p" text={footerSettings.copyright} onTextChange={(v: string) => setFooterSettings({...footerSettings, copyright: v})} isLiveStore={isLiveStore} className="text-xs opacity-70 mt-4" style={{ color: textColor }} />
+        </div>
+     </footer>
+  );
+
+  const LayoutHeroCenter = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts }: any) => {
+    const [selectedSize, setSelectedSize] = useState<string>('');
+    const [selectedColor, setSelectedColor] = useState<string>('');
+    const [quantity, setQuantity] = useState(1);
+    const [activePDPTab, setActivePDPTab] = useState('description');
+    
+    return (
+    <div className={`w-full min-h-full bg-white text-slate-900 ${fontFamily} flex flex-col`}>
+      <div className={`p-6 flex justify-between items-center border-b border-slate-100 ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4' : 'flex-col md:flex-row gap-4 md:gap-0'}`}>
+         <LogoEditor onClick={() => setPage('home')} className="text-2xl font-black uppercase tracking-tighter" />
+         <div className={`flex gap-6 text-sm font-bold ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
+            {storePages.map(p => (
+               <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer capitalize hover:opacity-70 transition-opacity" style={{ color: page === p.id ? primaryColor : '#64748b' }}>{tr(p.title)}</span>
+            ))}
+         </div>
+         <button onClick={() => setIsCartOpen(true)} className="relative hover:scale-110 transition-transform">
+            <ShoppingBag className="w-6 h-6" />
+            {cartCount > 0 && <span className="absolute -top-1 -right-1 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: primaryColor }}>{cartCount}</span>}
+         </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto">
+        {page === 'home' && (
+          <>
+            <div className="flex flex-col gap-0 w-full">
+             {homeBlocks.map((block: string) => {
+                if (block === 'hero') return (
+                    <HeroBackgroundEditor key="hero" className={`h-[${isModal ? '600px' : '400px'}] flex flex-col items-center justify-center text-center p-8 bg-cover bg-center relative`} style={{ backgroundImage: `url(${heroImage})` }}>
+                       <div className="absolute inset-0 bg-black/60"></div>
+                       <div className="relative z-10 flex flex-col items-center">
+                          <EditableText as="h1" text={heroTitle} onTextChange={setHeroTitle} isLiveStore={isLiveStore} className={`${isModal ? 'text-7xl' : 'text-5xl'} font-black text-white uppercase tracking-tighter mb-4`} />
+                          <EditableText as="p" text={heroSubtitle} onTextChange={setHeroSubtitle} isLiveStore={isLiveStore} className="text-white/90 text-lg mb-8 max-w-md" />
+                          <button onClick={() => setPage('collections')} className="px-8 py-3 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded" style={{ backgroundColor: primaryColor }}>
+                             <EditableText text={heroButtonText} onTextChange={setHeroButtonText} isLiveStore={isLiveStore} />
+                          </button>
+                       </div>
+                    </HeroBackgroundEditor>
+                );
+                
+                if (block === 'slider' && sliderImages.length > 0) return (
+                    <div key="slider" className="w-full relative overflow-hidden flex bg-slate-900" style={{ height: isModal ? '500px' : '300px' }}>
+                       <div className="flex w-full overflow-x-auto snap-x snap-mandatory no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                          {sliderImages.map((img:string, idx:number) => (
+                             <div key={idx} className="min-w-full h-full snap-center relative shrink-0">
+                                <img src={img} className="w-full h-full object-cover" />
+                             </div>
+                          ))}
+                       </div>
+                       {sliderImages.length > 1 && (
+                          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10">
+                             {sliderImages.map((_:any, idx:number) => (
+                                <div key={idx} className="w-2 h-2 rounded-full bg-white shadow-lg" />
+                             ))}
+                          </div>
+                       )}
+                    </div>
+                );
+
+                if (block === 'products') return (
+                    <div key="products" className={`${isModal ? 'p-16 max-w-[1400px]' : 'p-8'} mx-auto w-full`}>
+                       <h3 className="text-2xl font-black uppercase text-center mb-10">{homeCollectionsTitle}</h3>
+                       <div className={`grid gap-8 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3')}`}>
+                          {storeProducts.slice(0, 8).map((p: any) => (
+                             <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
+                                <div className="aspect-[3/4] bg-slate-100 mb-4 overflow-hidden relative rounded-xl">
+                                   {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-12 h-12" /></div>}
+                                   <div className={`absolute bottom-4 left-0 right-0 flex justify-center transition-opacity ${(previewDevice === 'mobile' && !isModal) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                                      <button onClick={handleAddToCart} className="px-8 py-3 text-white text-xs font-bold uppercase tracking-wider shadow-2xl rounded-full" style={btnStyle}>Add to cart</button>
+                                   </div>
+                                </div>
+                                <h4 className="font-bold text-sm">{p.name}</h4>
+                                <p className="text-slate-500 text-sm mt-1">{p.price} MAD</p>
+                             </div>
+                          ))}
+                       </div>
+                    </div>
+                );
+                
+                if (block === 'collections' && categories.length > 1) return (
+                    <div key="collections" className={`${isModal ? 'p-16 max-w-[1400px]' : 'p-8'} mx-auto w-full bg-slate-50`}>
+                       <h3 className="text-2xl font-black uppercase text-center mb-10">{allCollectionsTitle}</h3>
+                       <div className={`grid gap-4 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-2' : (isModal ? 'grid-cols-4' : 'grid-cols-3')}`}>
+                          {categories.filter((c:string) => c !== 'All').map((cat: string, idx: number) => (
+                             <div key={idx} onClick={() => { setActiveCategory(cat); setPage('collections'); }} className="cursor-pointer group aspect-square relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all">
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10 flex items-end p-6">
+                                   <span className="text-white font-bold text-lg">{cat}</span>
+                                </div>
+                                <div className="absolute inset-0 bg-indigo-900/20 group-hover:bg-transparent transition-colors z-0"></div>
+                                <img src={storeProducts.find((p:any)=>p.category===cat)?.image || 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&q=80&w=600'} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                             </div>
+                          ))}
+                       </div>
+                    </div>
+                );
+                
+                 if (block === 'newsletter') return (
+                    <div key="newsletter" className="w-full py-16 px-4 bg-slate-50 border-t border-b border-slate-100 flex flex-col items-center justify-center text-center">
+                       <h3 className="text-2xl font-black text-slate-900 mb-2">{newsletterTitle}</h3>
+                       <p className="text-slate-500 mb-6 max-w-md text-sm">{newsletterSubtitle}</p>
+                       <div className="flex w-full max-w-md">
+                          <input type="email" placeholder="Votre email" className="flex-1 bg-white border border-slate-200 rounded-l-lg px-4 py-3 outline-none focus:border-slate-300" />
+                          <button className="px-6 py-3 text-white font-bold rounded-r-lg" style={btnStyle}>S'abonner</button>
+                       </div>
+                    </div>
+                 );
+                 
+                 if (block === 'features') return (
+                    <div key="features" className="w-full py-12 px-4 bg-white border-b border-slate-100">
+                       <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                          {featuresData.map((f: any, i: number) => (
+                             <div key={i} className="flex flex-col items-center">
+                                <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}>
+                                   {f.icon === 'Truck' && <Truck className="w-6 h-6" />}
+                                   {f.icon === 'ShieldCheck' && <ShieldCheck className="w-6 h-6" />}
+                                   {f.icon === 'Star' && <Star className="w-6 h-6" />}
+                                </div>
+                                <h4 className="font-bold text-slate-900">{f.title}</h4>
+                                <p className="text-slate-500 text-sm mt-1">{f.subtitle}</p>
+                             </div>
+                          ))}
+                       </div>
+                    </div>
+                 );
+                 
+                 if (block === 'video') return (
+                    <div key="video" className="w-full py-16 px-4 bg-white border-b border-slate-100 flex flex-col items-center justify-center">
+                       <div className="w-full max-w-4xl aspect-video bg-slate-100 rounded-2xl overflow-hidden shadow-xl">
+                          {videoUrl ? (
+                             <iframe src={videoUrl} className="w-full h-full" allowFullScreen allow="autoplay; encrypted-media"></iframe>
+                          ) : (
+                             <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                                <Video className="w-16 h-16 mb-4 opacity-50" />
+                                <p>Aucune vidéo sélectionnée</p>
+                             </div>
+                          )}
+                       </div>
+                    </div>
+                 );
+                 
+                 return null;
+             })}
+          </div>
+          </>
+        )}
+        {page === 'collections' && (
+            <div className={`${isModal ? 'p-16 max-w-[1400px]' : 'p-8'} mx-auto w-full`}>
+               <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
+                  <h3 className="text-2xl font-black uppercase text-center md:text-left">{tr('All Products')}</h3>
+                  <div className="flex flex-col sm:flex-row items-center gap-4">
+                     {categories && categories.length > 1 && (
+                        <div className="flex flex-wrap gap-2 justify-center">
+                           {categories.map((c: string) => (
+                              <button key={tr(c)} onClick={() => setActiveCategory(c)} className={`px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors ${activeCategory === c ? 'text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`} style={{ backgroundColor: activeCategory === c ? primaryColor : undefined }}>
+                                 {tr(c)}
+                              </button>
+                           ))}
+                        </div>
+                     )}
+                     <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-wider rounded-full focus:ring-slate-500 focus:border-slate-500 block px-4 py-2 outline-none cursor-pointer">
+                        <option value="featured">{tr('Recommandé')}</option>
+                        <option value="price-low-high">{tr('Prix: Croissant')}</option>
+                        <option value="price-high-low">{tr('Prix: Décroissant')}</option>
+                        <option value="az">{tr('De A à Z')}</option>
+                        <option value="za">{tr('De Z à A')}</option>
+                     </select>
+                  </div>
+               </div>
+               <div className={`grid gap-8 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3')}`}>
+                  {filteredProducts.map((p: any) => (
+                     <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
+                        <div className="aspect-[3/4] bg-slate-100 mb-4 overflow-hidden relative rounded-xl">
+                           {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-12 h-12" /></div>}
+                           <div className={`absolute bottom-4 left-0 right-0 flex justify-center transition-opacity ${(previewDevice === 'mobile' && !isModal) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                              <button onClick={handleAddToCart} className="px-8 py-3 text-white text-xs font-bold uppercase tracking-wider shadow-2xl rounded-full" style={btnStyle}>Add to cart</button>
+                           </div>
+                        </div>
+                        <h4 className="font-bold text-sm">{p.name}</h4>
+                        <p className="text-slate-500 text-sm mt-1">{p.price} MAD</p>
+                     </div>
+                  ))}
+               </div>
+            </div>
+        )}
+        {page === 'about' && (
+           <div className={`${isModal ? 'p-16 max-w-3xl' : 'p-8'} mx-auto w-full text-center mt-10`}>
+              <h3 className="text-3xl font-black uppercase mb-6 text-slate-800">About {storeName}</h3>
+              <p className="text-slate-500 text-lg leading-relaxed mb-6">Welcome to {storeName}. We are dedicated to providing the best quality products for our customers. Every piece is carefully crafted to ensure maximum comfort and style.</p>
+           </div>
+        )}
+        {page === 'product' && activeProductId && (
+           <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-8'} mx-auto w-full`}>
+              {storeProducts.filter(p => p.id === activeProductId).map(p => (
+                 <div key={p.id} className={`flex gap-12 ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'}`}>
+                    <div className="flex-1 aspect-[4/5] bg-slate-100 rounded-2xl flex items-center justify-center overflow-hidden">
+                       {(selectedColor && p.colorImages?.[selectedColor]) ? <img src={p.colorImages[selectedColor]} className="w-full h-full object-cover" alt={p.name} /> : (p.image ? <img src={p.image} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-20 h-20 opacity-10" />)}
+                    </div>
+                    <div className="flex-1 flex flex-col justify-center">
+                       <h2 className="text-4xl font-black mb-4">{p.name}</h2>
+                       <p className="text-2xl font-bold mb-8" style={{ color: primaryColor }}>{p.price} MAD</p>
+                       <p className="text-slate-500 mb-8 leading-relaxed">{p.description || 'This is a premium quality product. Lorem ipsum dolor sit amet, consectetur adipiscing elit.'}</p>
+                       
+                       {/* PRO SELECTORS */}
+                       <div className="mb-8 space-y-6">
+                          {p.colors?.length > 0 && (
+                             <div>
+                                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 block">{storeIsAr ? 'لون' : 'Couleur'}</span>
+                                <div className="flex gap-3">
+                                   {p.colors.map((c: string) => (
+                                      <button key={tr(c)} onClick={() => setSelectedColor(c)} className={`w-8 h-8 rounded-full border-2 transition-all ${selectedColor === c ? 'border-slate-800 scale-125' : 'border-transparent hover:scale-110 shadow-sm'}`} style={{ backgroundColor: c }} />
+                                   ))}
+                                </div>
+                             </div>
+                          )}
+                          {p.sizes?.length > 0 && (
+                             <div>
+                                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 block">{storeIsAr ? 'المقاس' : 'Taille'}</span>
+                                <div className="flex flex-wrap gap-2">
+                                   {p.sizes.map((s: string) => (
+                                      <button key={s} onClick={() => setSelectedSize(s)} className={`px-4 py-2 text-sm font-bold border rounded-lg transition-colors ${selectedSize === s ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-400'}`}>
+                                         {s}
+                                      </button>
+                                   ))}
+                                </div>
+                             </div>
+                          )}
+                          <div>
+                             <span className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 block">{storeIsAr ? 'الكمية' : 'Quantité'}</span>
+                             <div className="flex items-center justify-between bg-slate-50 w-32 px-4 py-2 rounded-lg border border-slate-200">
+                                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="text-slate-500 hover:text-slate-800 font-bold text-lg">-</button>
+                                <span className="font-bold text-slate-800">{quantity}</span>
+                                <button onClick={() => setQuantity(quantity + 1)} className="text-slate-500 hover:text-slate-800 font-bold text-lg">+</button>
+                             </div>
+                          </div>
+                       </div>
+
+                       {buyMode === 'form' ? (
+                          <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-3">
+                             <h4 className="font-black text-slate-800 mb-2">{storeLang === 'ar' ? 'شراء سريع' : storeLang === 'en' ? 'Express Checkout' : 'Achat Express'}</h4>
+                             <input type="text" placeholder={storeLang === 'ar' ? 'الاسم الكامل' : storeLang === 'en' ? 'Full Name' : 'Nom Complet'} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-sm" />
+                             <input type="text" placeholder={storeLang === 'ar' ? 'رقم الهاتف' : storeLang === 'en' ? 'Phone Number' : 'Numéro de Téléphone'} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-sm" />
+                             <input type="text" placeholder={storeLang === 'ar' ? 'المدينة' : storeLang === 'en' ? 'City' : 'Ville'} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-sm" />
+                              <input type="text" placeholder={storeLang === 'ar' ? 'العنوان' : storeLang === 'en' ? 'Delivery Address' : 'Adresse de Livraison'} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-sm" />
+                             <button onClick={() => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1)} className="w-full py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg mt-2" style={{ backgroundColor: primaryColor }}>{storeLang === 'ar' ? 'تأكيد الطلب (الدفع عند الاستلام)' : storeLang === 'en' ? 'Confirm Order (COD)' : 'Confirmer la Commande'}</button>
+                              <p className="text-center text-xs font-bold text-green-600 mt-4 flex items-center justify-center gap-1"><CheckCircle className="w-3 h-3" /> {storeLang === 'ar' ? 'توصيل مجاني (الدفع عند الاستلام)' : storeLang === 'en' ? 'Free Delivery (Cash on Delivery)' : 'Livraison Gratuite (Paiement à la livraison)'}</p>
+                          </div>
+                       ) : (
+                          <div className="flex gap-4">
+                             {(buyMode === 'cart' || buyMode === 'both') && (
+                                <button onClick={handleAddToCart} className="flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg" style={{ backgroundColor: '#1e293b' }}>Add to cart</button>
+                             )}
+                             {(buyMode === 'direct' || buyMode === 'both') && (
+                                <button onClick={() => setPage('checkout')} className="flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg" style={{ backgroundColor: primaryColor }}>Buy Now</button>
+                             )}
+                          </div>
+                       )}
+                    </div>
+                 </div>
+              ))}
+           </div>
+        )}
+        {page === 'checkout' && (
+           <div className={`${isModal ? 'p-16 max-w-2xl' : 'p-8'} mx-auto w-full`}>
+              <div className="bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
+                 <h2 className="text-2xl font-black mb-6 text-center text-slate-800">{storeLang === 'ar' ? 'شراء سريع' : storeLang === 'en' ? 'Express Checkout' : 'Achat Express'}</h2>
+                 <div className="space-y-4">
+                    <input type="text" placeholder={storeLang === 'ar' ? 'الاسم الكامل' : storeLang === 'en' ? 'Full Name' : 'Nom Complet'} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500" />
+                    <input type="text" placeholder={storeLang === 'ar' ? 'رقم الهاتف' : storeLang === 'en' ? 'Phone Number' : 'Numéro de Téléphone'} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500" />
+                    <input type="text" placeholder={storeLang === 'ar' ? 'المدينة' : storeLang === 'en' ? 'City' : 'Ville'} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500" />
+                              <input type="text" placeholder={storeLang === 'ar' ? 'العنوان' : storeLang === 'en' ? 'Delivery Address' : 'Adresse de Livraison'} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500" />
+                    <button onClick={() => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1)} className="w-full py-4 text-white font-black uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg mt-4" style={{ backgroundColor: primaryColor }}>{storeLang === 'ar' ? 'تأكيد الطلب (الدفع عند الاستلام)' : storeLang === 'en' ? 'Confirm Order (COD)' : 'Confirmer la Commande'}</button>
+                              <p className="text-center text-xs font-bold text-green-600 mt-4 flex items-center justify-center gap-1"><CheckCircle className="w-3 h-3" /> {storeLang === 'ar' ? 'توصيل مجاني (الدفع عند الاستلام)' : storeLang === 'en' ? 'Free Delivery (Cash on Delivery)' : 'Livraison Gratuite (Paiement à la livraison)'}</p>
+                 </div>
+              </div>
+           </div>
+        )}
+        {page === 'success' && (
+           <div className={`${isModal ? 'p-16 max-w-2xl' : 'p-8'} mx-auto w-full text-center flex flex-col items-center justify-center min-h-[400px]`}>
+              <div className="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-green-100/50">
+                 <CheckCircle className="w-10 h-10" />
+              </div>
+              <h2 className="text-4xl font-black mb-4 text-slate-800">Order Placed!</h2>
+              <p className="text-slate-500 text-lg">Thank you! Your order has been successfully sent to the BEYA ERP system.</p>
+              <button onClick={() => setPage('home')} className="mt-8 px-8 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-colors">Return to Home</button>
+           </div>
+        )}
+        {['privacy', 'terms', 'cookies'].includes(page) && (
+           <div className={`${isModal ? 'p-16 max-w-4xl' : 'p-8'} mx-auto w-full`}>
+              <h1 className="text-3xl font-black mb-6 text-slate-800">
+                {page === 'privacy' ? (storeIsAr ? 'سياسة الخصوصية' : 'Politique de Confidentialité') : page === 'terms' ? (storeIsAr ? 'الشروط والأحكام' : 'Conditions Générales') : (storeIsAr ? 'سياسة ملفات الارتباط' : 'Politique des Cookies')}
+              </h1>
+              <div className="prose prose-slate max-w-none text-slate-600 space-y-4">
+                 <p>{storeIsAr ? 'آخر تحديث : ' : 'Dernière mise à jour : '}{new Date().toLocaleDateString()}</p>
+                 <p>{storeIsAr ? 'هذا النص هو مثال لنص يمكن أن يستبدل في نفس المساحة، لقد تم توليد هذا النص من مولد النص العربى، حيث يمكنك أن تولد مثل هذا النص أو العديد من النصوص الأخرى إضافة إلى زيادة عدد الحروف التى يولدها التطبيق.' : 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing nec, ultricies sed, dolor. Cras elementum ultrices diam. Maecenas ligula massa, varius a, semper congue, euismod non, mi.'}</p>
+                 <h3 className="text-xl font-bold text-slate-800 mt-6 mb-3">{storeIsAr ? '1. جمع البيانات' : '1. Collecte des données'}</h3>
+                 <p>{storeIsAr ? 'إذا كنت تحتاج إلى عدد أكبر من الفقرات يتيح لك مولد النص العربى زيادة عدد الفقرات كما تريد، النص لن يبدو مقسما ولا يحوي أخطاء لغوية، مولد النص العربى مفيد لمصممي المواقع على وجه الخصوص.' : 'Proin porttitor, orci nec nonummy molestie, enim est eleifend mi, non fermentum diam nisl sit amet erat. Duis semper. Duis arcu massa, scelerisque vitae, consequat in, pretium a, enim.'}</p>
+                 <h3 className="text-xl font-bold text-slate-800 mt-6 mb-3">{storeIsAr ? '2. الاستخدام' : '2. Utilisation'}</h3>
+                 <p>{storeIsAr ? 'حيث يحتاج العميل فى كثير من الأحيان أن يطلع على صورة حقيقية لتصميم الموقع. ومن هنا وجب على المصمم أن يضع نصوصا مؤقتة على التصميم ليظهر للعميل الشكل كاملاً.' : 'Pellentesque congue. Ut in risus volutpat libero pharetra tempor. Cras vestibulum bibendum augue. Praesent egestas leo in pede.'}</p>
+              </div>
+           </div>
+        )}
+        <ThemeFooter setPage={setPage} />
+      </div>
+    </div>
+  );
+  };
+
+  const LayoutSplitScreen = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts }: any) => {
+    const [selectedSize, setSelectedSize] = useState<string>('');
+    const [selectedColor, setSelectedColor] = useState<string>('');
+    const [quantity, setQuantity] = useState(1);
+
+    return (
+    <div className={`w-full min-h-full bg-[#f8f9fa] text-[#212529] ${fontFamily} flex flex-col`}>
+      <div className={`px-8 py-6 flex justify-between items-center bg-white ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4' : 'flex-col md:flex-row gap-4 md:gap-0'}`}>
+         <div className={`flex gap-8 text-sm ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
+            {storePages.map(p => (
+               <span key={p.id} onClick={() => setPage(p.id)} className={`cursor-pointer capitalize pb-1 border-b-2 ${page === p.id ? 'border-current' : 'border-transparent text-gray-400'}`}>{tr(p.title)}</span>
+            ))}
+         </div>
+         <LogoEditor onClick={() => setPage('home')} className="text-3xl font-normal tracking-wide" style={{ color: primaryColor }} />
+         <button className="relative" onClick={() => setIsCartOpen(true)}>
+            <ShoppingBag className="w-6 h-6 font-light" />
+            {cartCount > 0 && <span className="absolute -top-2 -right-2 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: primaryColor }}>{cartCount}</span>}
+         </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto">
+        {page === 'home' && (
+          <>
+            <div className={`flex ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'} h-auto md:h-[${isModal ? '600px' : '400px'}] bg-white`}>
+               <div className="flex-1 flex flex-col justify-center p-12">
+                  <h1 className="text-5xl font-light leading-tight mb-6" style={{ color: primaryColor }}>Elegance in <br/>Simplicity.</h1>
+                  <p className="text-gray-500 mb-8 max-w-sm leading-relaxed">Experience a collection defined by pure lines and organic materials.</p>
+                  <button onClick={() => setPage('collections')} className="w-max px-10 py-4 text-white text-sm tracking-widest transition-opacity hover:opacity-90" style={{ backgroundColor: primaryColor }}>DISCOVER</button>
+               </div>
+               <HeroBackgroundEditor className="flex-1 bg-cover bg-center" style={{ backgroundImage: `url(${heroImage})` }} />
+            </div>
+            <div className={`${isModal ? 'p-20' : 'p-8'} mx-auto w-full`}>
+               <div className="flex justify-between items-end mb-12 border-b pb-4">
+                  <h3 className="text-2xl font-light">New Arrivals</h3>
+                  <span className="text-sm cursor-pointer hover:underline" style={{ color: primaryColor }}>View all</span>
+               </div>
+               <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
+                  {storeProducts.map((p: any) => (
+                     <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
+                        <div className="aspect-[4/5] bg-gray-100 mb-6 relative overflow-hidden flex items-center justify-center">
+                           {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-10"><ImageIcon className="w-16 h-16" /></div>}
+                           <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <button onClick={handleAddToCart} className="px-8 py-3 bg-white text-black text-xs tracking-widest hover:bg-black hover:text-white transition-colors">ADD TO CART</button>
+                           </div>
+                        </div>
+                        <h4 className="font-medium text-lg mb-2">{p.name}</h4>
+                        <p className="text-gray-500">{p.price} MAD</p>
+                     </div>
+                  ))}
+               </div>
+            </div>
+          </>
+        )}
+        {page === 'collections' && (
+            <div className={`${isModal ? 'p-20' : 'p-8'} mx-auto w-full`}>
+               <div className="flex flex-col md:flex-row justify-between items-end mb-12 border-b pb-4 gap-6">
+                  <h3 className="text-2xl font-light">{tr('All Products')}</h3>
+                  <div className="flex flex-col sm:flex-row items-center gap-6">
+                     {categories && categories.length > 1 && (
+                        <div className="flex flex-wrap gap-4 text-sm">
+                           {categories.map((c: string) => (
+                              <button key={tr(c)} onClick={() => setActiveCategory(c)} className={`pb-1 border-b-2 transition-colors ${activeCategory === c ? 'border-current' : 'border-transparent text-gray-400 hover:text-black'}`} style={{ color: activeCategory === c ? primaryColor : undefined }}>
+                                 {tr(c)}
+                              </button>
+                           ))}
+                        </div>
+                     )}
+                     <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="bg-transparent border-none text-gray-500 text-sm focus:ring-0 outline-none cursor-pointer">
+                        <option value="featured">{tr('Sort: Featured')}</option>
+                        <option value="price-low-high">{tr('Price: Low to High')}</option>
+                        <option value="price-high-low">{tr('Price: High to Low')}</option>
+                     </select>
+                  </div>
+               </div>
+               <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
+                  {filteredProducts.map((p: any) => (
+                     <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
+                        <div className="aspect-[4/5] bg-gray-100 mb-6 relative overflow-hidden flex items-center justify-center">
+                           {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-10"><ImageIcon className="w-16 h-16" /></div>}
+                           <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <button onClick={handleAddToCart} className="px-8 py-3 bg-white text-black text-xs tracking-widest hover:bg-black hover:text-white transition-colors">ADD TO CART</button>
+                           </div>
+                        </div>
+                        <h4 className="font-medium text-lg mb-2">{p.name}</h4>
+                        <p className="text-gray-500">{p.price} MAD</p>
+                     </div>
+                  ))}
+               </div>
+            </div>
+        )}
+        {page === 'about' && (
+           <div className={`${isModal ? 'p-20 max-w-4xl' : 'p-8'} mx-auto w-full text-center mt-12`}>
+              <h3 className="text-4xl font-light mb-8">About {storeName}</h3>
+              <p className="text-gray-500 text-xl font-light leading-relaxed mb-6">Welcome to {storeName}. We are dedicated to providing the best quality products for our customers. Every piece is carefully crafted to ensure maximum comfort and style.</p>
+           </div>
+        )}
+        {page === 'product' && activeProductId && (
+           <div className={`${isModal ? 'p-20 max-w-5xl' : 'p-8'} mx-auto w-full`}>
+              {storeProducts.filter(p => p.id === activeProductId).map(p => (
+                 <div key={p.id} className={`flex gap-16 ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'}`}>
+                    <div className="flex-1 relative flex items-center justify-center bg-gray-50 overflow-hidden aspect-[3/4]">
+                       {(selectedColor && p.colorImages?.[selectedColor]) ? <img src={p.colorImages[selectedColor]} className="w-full h-full object-cover" alt={p.name} /> : (p.image ? <img src={p.image} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-20 h-20 opacity-10 absolute inset-0 m-auto" />)}
+                    </div>
+                    <div className="flex-1 flex flex-col justify-center">
+                       <h2 className="text-5xl font-light mb-4">{p.name}</h2>
+                       <p className="text-2xl font-light text-gray-500 mb-8">{p.price} MAD</p>
+                       <p className="text-gray-500 mb-12 leading-relaxed font-light">{p.description || 'Experience true elegance with this meticulously designed piece. Perfect for every occasion.'}</p>
+                       
+                       {/* PRO SELECTORS */}
+                       <div className="mb-12 space-y-8">
+                          {p.colors?.length > 0 && (
+                             <div>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 block">Color</span>
+                                <div className="flex gap-4">
+                                   {p.colors.map((c: string) => (
+                                      <button key={tr(c)} onClick={() => setSelectedColor(c)} className={`w-6 h-6 rounded-full border border-gray-200 transition-all ${selectedColor === c ? 'ring-1 ring-offset-4 ring-black' : 'hover:scale-110'}`} style={{ backgroundColor: c }} />
+                                   ))}
+                                </div>
+                             </div>
+                          )}
+                          {p.sizes?.length > 0 && (
+                             <div>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 block">Size</span>
+                                <div className="flex flex-wrap gap-3">
+                                   {p.sizes.map((s: string) => (
+                                      <button key={s} onClick={() => setSelectedSize(s)} className={`px-4 py-2 text-xs tracking-widest border transition-colors ${selectedSize === s ? 'bg-black border-black text-white' : 'bg-transparent border-gray-200 text-gray-600 hover:border-black'}`}>
+                                         {s}
+                                      </button>
+                                   ))}
+                                </div>
+                             </div>
+                          )}
+                          <div>
+                             <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 block">Quantity</span>
+                             <div className="flex items-center justify-between border-b border-gray-200 w-24 pb-2">
+                                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="text-gray-400 hover:text-black font-light text-lg">-</button>
+                                <span className="font-light text-black">{quantity}</span>
+                                <button onClick={() => setQuantity(quantity + 1)} className="text-gray-400 hover:text-black font-light text-lg">+</button>
+                             </div>
+                          </div>
+                       </div>
+
+                       {buyMode === 'form' ? (
+                          <div className="p-8 border border-gray-200 bg-white space-y-4">
+                             <h4 className="text-xl font-light mb-4" style={{ color: primaryColor }}>Checkout</h4>
+                             <input type="text" placeholder={storeLang === 'ar' ? 'الاسم الكامل' : storeLang === 'en' ? 'Full Name' : 'Nom Complet'} className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
+                             <input type="text" placeholder={storeLang === 'ar' ? 'رقم الهاتف' : storeLang === 'en' ? 'Phone Number' : 'Numéro de Téléphone'} className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
+                             <input type="text" placeholder={storeLang === 'ar' ? 'المدينة' : storeLang === 'en' ? 'City' : 'Ville'} className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
+                              <input type="text" placeholder={storeLang === 'ar' ? 'العنوان' : storeLang === 'en' ? 'Delivery Address' : 'Adresse de Livraison'} className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
+                             <button onClick={() => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1)} className="w-full py-5 text-white text-xs tracking-widest mt-4 transition-opacity hover:opacity-90" style={{ backgroundColor: primaryColor }}>CONFIRM ORDER</button>
+                          </div>
+                       ) : (
+                          <div className="flex gap-4">
+                             {(buyMode === 'cart' || buyMode === 'both') && (
+                                <button onClick={handleAddToCart} className="w-max px-12 py-4 bg-white border border-black text-black text-xs tracking-widest hover:bg-gray-100 transition-colors">ADD TO CART</button>
+                             )}
+                             {(buyMode === 'direct' || buyMode === 'both') && (
+                                <button onClick={() => setPage('checkout')} className="w-max px-12 py-4 text-white text-xs tracking-widest transition-opacity hover:opacity-90" style={{ backgroundColor: primaryColor }}>BUY NOW</button>
+                             )}
+                          </div>
+                       )}
+                    </div>
+                 </div>
+              ))}
+           </div>
+        )}
+        {page === 'checkout' && (
+           <div className={`${isModal ? 'p-20 max-w-2xl' : 'p-8'} mx-auto w-full`}>
+              <div className="p-12 border border-gray-200 bg-white">
+                 <h2 className="text-3xl font-light mb-8 text-center" style={{ color: primaryColor }}>Checkout</h2>
+                 <div className="space-y-6">
+                    <input type="text" placeholder={storeLang === 'ar' ? 'الاسم الكامل' : storeLang === 'en' ? 'Full Name' : 'Nom Complet'} className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
+                    <input type="text" placeholder={storeLang === 'ar' ? 'رقم الهاتف' : storeLang === 'en' ? 'Phone Number' : 'Numéro de Téléphone'} className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
+                    <input type="text" placeholder={storeLang === 'ar' ? 'المدينة' : storeLang === 'en' ? 'City' : 'Ville'} className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
+                              <input type="text" placeholder={storeLang === 'ar' ? 'العنوان' : storeLang === 'en' ? 'Delivery Address' : 'Adresse de Livraison'} className="w-full px-0 py-3 border-b border-gray-300 focus:border-black focus:outline-none rounded-none bg-transparent" />
+                    <button onClick={() => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1)} className="w-full py-5 text-white text-xs tracking-widest mt-8 transition-opacity hover:opacity-90" style={{ backgroundColor: primaryColor }}>CONFIRM ORDER</button>
+                 </div>
+              </div>
+           </div>
+        )}
+        {page === 'success' && (
+           <div className={`${isModal ? 'p-20 max-w-2xl' : 'p-8'} mx-auto w-full text-center py-20`}>
+              <h2 className="text-5xl font-light mb-6" style={{ color: primaryColor }}>Thank You.</h2>
+              <p className="text-gray-500 text-xl font-light mb-12">Your order has been successfully placed.</p>
+              <button onClick={() => setPage('home')} className="px-10 py-4 border border-black text-xs tracking-widest hover:bg-black hover:text-white transition-colors">CONTINUE SHOPPING</button>
+           </div>
+        )}
+      </div>
+    </div>
+  );
+  };
+
+  const LayoutElegant = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts }: any) => {
+    const [selectedSize, setSelectedSize] = useState<string>('');
+    const [selectedColor, setSelectedColor] = useState<string>('');
+    const [quantity, setQuantity] = useState(1);
+
+    return (
+    <div className={`w-full min-h-full bg-[#111] text-[#f5f5f5] ${fontFamily} flex flex-col`}>
+      <div className={`p-8 flex flex-col items-center gap-6 border-b border-white/10 ${previewDevice === 'mobile' && !isModal ? 'p-4' : 'p-4 md:p-8'}`}>
+         <LogoEditor onClick={() => setPage('home')} className="text-4xl font-serif tracking-widest" style={{ color: primaryColor }} />
+         <div className={`flex gap-12 text-xs tracking-widest uppercase ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
+            {storePages.map(p => (
+               <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer hover:text-white transition-colors" style={{ color: page === p.id ? primaryColor : '#888' }}>{tr(p.title)}</span>
+            ))}
+            <span className="cursor-pointer hover:text-white flex items-center gap-2" onClick={() => setIsCartOpen(true)}>
+               CART ({cartCount})
+            </span>
+         </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto">
+        {page === 'home' && (
+          <>
+            <div className="p-8">
+               <HeroBackgroundEditor className={`w-full h-[${isModal ? '700px' : '500px'}] bg-cover bg-center relative rounded-sm border`} style={{ backgroundImage: `url(${heroImage})`, borderColor: `${primaryColor}40` }}>
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#111] via-transparent to-transparent"></div>
+                  <div className="absolute bottom-12 left-12 right-12 flex justify-between items-end">
+                     <div>
+                        <h1 className="text-5xl font-serif mb-4">The Royal Edit.</h1>
+                        <button onClick={() => setPage('collections')} className="px-8 py-3 text-xs tracking-widest border transition-colors" style={{ borderColor: primaryColor, color: primaryColor }}>EXPLORE COLLECTION</button>
+                     </div>
+                  </div>
+               </HeroBackgroundEditor>
+            </div>
+            <div className={`${isModal ? 'p-16' : 'p-8'} mx-auto w-full`}>
+               <h3 className="text-xl tracking-widest uppercase text-center mb-16" style={{ color: primaryColor }}>Curated Selection</h3>
+               <div className={`grid gap-4 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
+                  {storeProducts.map((p: any) => (
+                     <div key={p.id} className="group cursor-pointer relative aspect-square bg-[#1a1a1a] border border-white/5 p-4 flex flex-col items-center justify-center" onClick={() => navigateToProduct(p.id)}>
+                        {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover mb-8" alt={p.name} /> : <ImageIcon className="w-16 h-16 opacity-10 mb-8" />}
+                        <h4 className="font-serif text-2xl mb-2 group-hover:text-white transition-colors" style={{ color: primaryColor }}>{p.name}</h4>
+                        <p className="text-white/50 tracking-widest text-sm mb-6">{p.price} MAD</p>
+                        <button onClick={handleAddToCart} className="opacity-0 group-hover:opacity-100 transition-opacity px-6 py-2 bg-white text-black text-xs tracking-widest">ADD TO CART</button>
+                     </div>
+                  ))}
+               </div>
+            </div>
+          </>
+        )}
+        {page === 'collections' && (
+            <div className={`${isModal ? 'p-16' : 'p-8'} mx-auto w-full`}>
+               <h3 className="text-xl tracking-widest uppercase text-center mb-8" style={{ color: primaryColor }}>{tr('All Products')}</h3>
+               <div className="flex flex-col items-center gap-6 mb-16">
+                  {categories && categories.length > 1 && (
+                     <div className="flex flex-wrap justify-center gap-8 text-xs tracking-widest uppercase">
+                        {categories.map((c: string) => (
+                           <button key={tr(c)} onClick={() => setActiveCategory(c)} className="transition-colors" style={{ color: activeCategory === c ? '#fff' : '#555', borderBottom: activeCategory === c ? `1px solid ${primaryColor}` : '1px solid transparent', paddingBottom: '4px' }}>
+                              {tr(c)}
+                           </button>
+                        ))}
+                     </div>
+                  )}
+                  <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="bg-transparent border border-white/20 text-[#888] text-xs tracking-widest uppercase focus:border-white focus:outline-none cursor-pointer py-2 px-4 rounded-sm">
+                     <option value="featured">{tr('Featured')}</option>
+                     <option value="price-low-high">{tr('Price: Low - High')}</option>
+                     <option value="price-high-low">{tr('Price: High - Low')}</option>
+                  </select>
+               </div>
+               <div className={`grid gap-4 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
+                  {filteredProducts.map((p: any) => (
+                     <div key={p.id} className="group cursor-pointer relative aspect-square bg-[#1a1a1a] border border-white/5 p-4 flex flex-col items-center justify-center" onClick={() => navigateToProduct(p.id)}>
+                        {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover mb-8" alt={p.name} /> : <ImageIcon className="w-16 h-16 opacity-10 mb-8" />}
+                        <h4 className="font-serif text-2xl mb-2 group-hover:text-white transition-colors" style={{ color: primaryColor }}>{p.name}</h4>
+                        <p className="text-white/50 tracking-widest text-sm mb-6">{p.price} MAD</p>
+                        <button onClick={handleAddToCart} className="opacity-0 group-hover:opacity-100 transition-opacity px-6 py-2 bg-white text-black text-xs tracking-widest">ADD TO CART</button>
+                     </div>
+                  ))}
+               </div>
+            </div>
+        )}
+        {page === 'about' && (
+           <div className={`${isModal ? 'p-16 max-w-3xl' : 'p-8'} mx-auto w-full text-center mt-12`}>
+              <h3 className="text-3xl font-serif mb-8 text-white">About {storeName}</h3>
+              <p className="text-[#888] text-lg tracking-wide leading-relaxed mb-6">Welcome to {storeName}. We are dedicated to providing the best quality products for our customers. Every piece is carefully crafted to ensure maximum comfort and style.</p>
+           </div>
+        )}
+        {page === 'product' && activeProductId && (
+           <div className={`${isModal ? 'p-16 max-w-5xl' : 'p-8'} mx-auto w-full`}>
+              {storeProducts.filter(p => p.id === activeProductId).map(p => (
+                 <div key={p.id} className={`flex gap-16 ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'}`}>
+                    <div className="flex-1 bg-white/5 border border-white/10 flex items-center justify-center aspect-[3/4] overflow-hidden relative">
+                       {(selectedColor && p.colorImages?.[selectedColor]) ? <img src={p.colorImages[selectedColor]} className="w-full h-full object-cover absolute inset-0" alt={p.name} /> : (p.image ? <img src={p.image} className="w-full h-full object-cover absolute inset-0" alt={p.name} /> : <ImageIcon className="w-20 h-20 opacity-10" />)}
+                    </div>
+                    <div className="flex-1 flex flex-col justify-center">
+                       <h2 className="text-5xl font-serif mb-4 text-white">{p.name}</h2>
+                       <p className="text-2xl tracking-widest mb-8" style={{ color: primaryColor }}>{p.price} MAD</p>
+                       <div className="w-12 h-px bg-white/20 mb-8"></div>
+                       <p className="text-[#888] mb-12 tracking-wide leading-relaxed">{p.description || 'Embrace luxury with this exclusive item. Crafted with precision for the modern elegant individual.'}</p>
+                       
+                       {/* PRO SELECTORS */}
+                       <div className="mb-12 space-y-8">
+                          {p.colors?.length > 0 && (
+                             <div>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-4 block">Color</span>
+                                <div className="flex gap-4">
+                                   {p.colors.map((c: string) => (
+                                      <button key={tr(c)} onClick={() => setSelectedColor(c)} className={`w-6 h-6 rounded-full border border-white/20 transition-all ${selectedColor === c ? 'ring-1 ring-offset-4 ring-offset-[#111] ring-white scale-110' : 'hover:scale-110'}`} style={{ backgroundColor: c }} />
+                                   ))}
+                                </div>
+                             </div>
+                          )}
+                          {p.sizes?.length > 0 && (
+                             <div>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-4 block">Size</span>
+                                <div className="flex flex-wrap gap-3">
+                                   {p.sizes.map((s: string) => (
+                                      <button key={s} onClick={() => setSelectedSize(s)} className={`px-4 py-2 text-xs tracking-widest border transition-colors ${selectedSize === s ? 'bg-white border-white text-black' : 'bg-transparent border-white/20 text-white/70 hover:border-white'}`}>
+                                         {s}
+                                      </button>
+                                   ))}
+                                </div>
+                             </div>
+                          )}
+                          <div>
+                             <span className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-4 block">Quantity</span>
+                             <div className="flex items-center justify-between border-b border-white/20 w-24 pb-2">
+                                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="text-white/50 hover:text-white font-light text-lg">-</button>
+                                <span className="font-light text-white">{quantity}</span>
+                                <button onClick={() => setQuantity(quantity + 1)} className="text-white/50 hover:text-white font-light text-lg">+</button>
+                             </div>
+                          </div>
+                       </div>
+
+                       {buyMode === 'form' ? (
+                          <div className="p-8 border border-white/10 bg-[#151515] space-y-4">
+                             <h4 className="text-xl font-serif mb-4 text-white">Secure Checkout</h4>
+                             <input type="text" placeholder={storeLang === 'ar' ? 'الاسم الكامل' : storeLang === 'en' ? 'Full Name' : 'Nom Complet'} className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
+                             <input type="text" placeholder={storeLang === 'ar' ? 'رقم الهاتف' : storeLang === 'en' ? 'Phone Number' : 'Numéro de Téléphone'} className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
+                             <input type="text" placeholder={storeLang === 'ar' ? 'المدينة' : storeLang === 'en' ? 'City' : 'Ville'} className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
+                              <input type="text" placeholder={storeLang === 'ar' ? 'العنوان' : storeLang === 'en' ? 'Delivery Address' : 'Adresse de Livraison'} className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
+                             <button onClick={() => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1)} className="w-full py-5 bg-white text-black text-xs tracking-widest mt-4 hover:bg-gray-200 transition-colors">PLACE ORDER</button>
+                          </div>
+                       ) : (
+                          <div className="flex gap-4">
+                             {(buyMode === 'cart' || buyMode === 'both') && (
+                                <button onClick={handleAddToCart} className="w-max px-12 py-4 border border-white/20 text-white text-xs tracking-widest hover:bg-white/5 transition-colors">ADD TO CART</button>
+                             )}
+                             {(buyMode === 'direct' || buyMode === 'both') && (
+                                <button onClick={() => setPage('checkout')} className="w-max px-12 py-4 bg-white text-black text-xs tracking-widest hover:bg-gray-200 transition-colors">BUY NOW</button>
+                             )}
+                          </div>
+                       )}
+                    </div>
+                 </div>
+              ))}
+           </div>
+        )}
+        {page === 'checkout' && (
+           <div className={`${isModal ? 'p-16 max-w-2xl' : 'p-8'} mx-auto w-full`}>
+              <div className="p-12 border border-white/10 bg-[#151515]">
+                 <h2 className="text-3xl font-serif mb-8 text-center text-white">Secure Checkout</h2>
+                 <div className="space-y-6">
+                    <input type="text" placeholder={storeLang === 'ar' ? 'الاسم الكامل' : storeLang === 'en' ? 'Full Name' : 'Nom Complet'} className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
+                    <input type="text" placeholder={storeLang === 'ar' ? 'رقم الهاتف' : storeLang === 'en' ? 'Phone Number' : 'Numéro de Téléphone'} className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
+                    <input type="text" placeholder={storeLang === 'ar' ? 'المدينة' : storeLang === 'en' ? 'City' : 'Ville'} className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
+                              <input type="text" placeholder={storeLang === 'ar' ? 'العنوان' : storeLang === 'en' ? 'Delivery Address' : 'Adresse de Livraison'} className="w-full px-4 py-3 bg-[#111] border border-white/10 text-white focus:border-white/50 focus:outline-none rounded-none" />
+                    <button onClick={() => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1)} className="w-full py-5 bg-white text-black text-xs tracking-widest mt-8 hover:bg-gray-200 transition-colors">PLACE ORDER</button>
+                 </div>
+              </div>
+           </div>
+        )}
+        {page === 'success' && (
+           <div className={`${isModal ? 'p-16 max-w-2xl' : 'p-8'} mx-auto w-full text-center py-20`}>
+              <h2 className="text-4xl font-serif mb-6 text-white">Order Confirmed</h2>
+              <p className="text-[#888] text-lg tracking-wide mb-12">An expression of elegance is on its way to you.</p>
+              <button onClick={() => setPage('home')} className="px-10 py-4 border border-white/20 text-white text-xs tracking-widest hover:bg-white/5 transition-colors">RETURN</button>
+           </div>
+        )}
+      </div>
+    </div>
+  );
+  };
+
+  const LayoutPlayful = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts }: any) => {
+    const [selectedSize, setSelectedSize] = useState<string>('');
+    const [selectedColor, setSelectedColor] = useState<string>('');
+    const [quantity, setQuantity] = useState(1);
+
+    return (
+    <div className={`w-full min-h-full bg-white text-slate-900 ${fontFamily} flex flex-col`}>
+      <div className={`p-4 mx-4 mt-4 bg-slate-100 rounded-full flex justify-between items-center ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4 rounded-3xl' : 'flex-col md:flex-row gap-4 rounded-3xl md:rounded-full'}`}>
+         <LogoEditor onClick={() => setPage('home')} className="text-2xl font-black tracking-tight px-4" style={{ color: primaryColor }} />
+         <div className={`flex gap-2 text-sm font-bold ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
+            {storePages.map(p => (
+               <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer capitalize px-4 py-2 rounded-full transition-colors" style={{ backgroundColor: page === p.id ? primaryColor : 'transparent', color: page === p.id ? '#fff' : '#64748b' }}>{tr(p.title)}</span>
+            ))}
+         </div>
+         <button className="relative p-3 bg-white rounded-full shadow-sm hover:scale-105 transition-transform mr-1" onClick={() => setIsCartOpen(true)}>
+            <ShoppingBag className="w-5 h-5" style={{ color: primaryColor }} />
+            {cartCount > 0 && <span className="absolute -top-1 -right-1 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm" style={{ backgroundColor: '#f43f5e' }}>{cartCount}</span>}
+         </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto pt-6">
+        {page === 'home' && (
+          <>
+            <div className="px-4">
+               <HeroBackgroundEditor className={`h-[${isModal ? '500px' : '300px'}] rounded-[2rem] flex flex-col items-center justify-center text-center p-8 bg-cover bg-center relative overflow-hidden`} style={{ backgroundImage: `url(${heroImage})` }}>
+                  <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px]"></div>
+                  <div className="relative z-10 flex flex-col items-center p-8 bg-white/90 rounded-[2rem] shadow-xl border-4 border-white">
+                     <h1 className={`${isModal ? 'text-6xl' : 'text-4xl'} font-black tracking-tight mb-2`} style={{ color: primaryColor }}>Fun & Fresh!</h1>
+                     <p className="text-slate-600 font-medium mb-6 max-w-sm">Colorful, comfortable, and made for play.</p>
+                     <button onClick={() => setPage('collections')} className="px-8 py-4 text-white font-black tracking-wide text-sm hover:scale-110 transition-transform rounded-full shadow-lg" style={{ backgroundColor: primaryColor }}>LET'S SHOP 🎈</button>
+                  </div>
+               </HeroBackgroundEditor>
+            </div>
+            <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-6'} mx-auto w-full`}>
+               <h3 className="text-3xl font-black text-center mb-10 text-slate-800">New Arrivals ✨</h3>
+               <div className={`grid gap-6 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2')}`}>
+                  {storeProducts.map((p: any) => (
+                     <div key={p.id} className="group cursor-pointer bg-slate-50 p-4 rounded-3xl hover:bg-slate-100 transition-colors border-2 border-transparent hover:border-current" style={{ borderColor: primaryColor }} onClick={() => navigateToProduct(p.id)}>
+                        <div className="aspect-square bg-white mb-4 overflow-hidden relative rounded-2xl shadow-sm flex items-center justify-center">
+                           {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-12 h-12 opacity-10" />}
+                           <div className={`absolute inset-0 bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center`}>
+                              <button onClick={handleAddToCart} className="px-6 py-3 text-white text-xs font-black uppercase tracking-wider rounded-full shadow-xl hover:scale-105 transition-transform" style={btnStyle}>Add to cart</button>
+                           </div>
+                        </div>
+                        <h4 className="font-bold text-base text-center text-slate-700">{p.name}</h4>
+                        <p className="text-center font-black mt-1" style={{ color: primaryColor }}>{p.price} MAD</p>
+                     </div>
+                  ))}
+               </div>
+            </div>
+          </>
+        )}
+        {page === 'collections' && (
+            <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-6'} mx-auto w-full`}>
+               <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                  <h3 className="text-3xl font-black text-center text-slate-800">{tr('All Products ✨')}</h3>
+                  <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="bg-white border-2 border-slate-200 text-slate-700 text-sm font-black rounded-full focus:ring-slate-500 focus:border-slate-500 px-4 py-2 outline-none cursor-pointer shadow-sm">
+                     <option value="featured">{tr('Best Matches 🌟')}</option>
+                     <option value="price-low-high">{tr('Price: Low to High 💸')}</option>
+                     <option value="price-high-low">{tr('Price: High to Low 💎')}</option>
+                  </select>
+               </div>
+               {categories && categories.length > 1 && (
+                  <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-10">
+                     {categories.map((c: string) => (
+                        <button key={tr(c)} onClick={() => setActiveCategory(c)} className="px-6 py-2 rounded-full text-sm font-black transition-transform hover:scale-105 border-2 border-transparent" style={{ backgroundColor: activeCategory === c ? primaryColor : '#f1f5f9', color: activeCategory === c ? '#fff' : '#64748b', borderColor: activeCategory === c ? 'transparent' : '#e2e8f0' }}>
+                           {tr(c)}
+                        </button>
+                     ))}
+                  </div>
+               )}
+               <div className={`grid gap-6 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2')}`}>
+                  {filteredProducts.map((p: any) => (
+                     <div key={p.id} className="group cursor-pointer bg-slate-50 p-4 rounded-3xl hover:bg-slate-100 transition-colors border-2 border-transparent hover:border-current" style={{ borderColor: primaryColor }} onClick={() => navigateToProduct(p.id)}>
+                        <div className="aspect-square bg-white mb-4 overflow-hidden relative rounded-2xl shadow-sm flex items-center justify-center">
+                           {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-12 h-12 opacity-10" />}
+                           <div className={`absolute inset-0 bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center`}>
+                              <button onClick={handleAddToCart} className="px-6 py-3 text-white text-xs font-black uppercase tracking-wider rounded-full shadow-xl hover:scale-105 transition-transform" style={btnStyle}>Add to cart</button>
+                           </div>
+                        </div>
+                        <h4 className="font-bold text-base text-center text-slate-700">{p.name}</h4>
+                        <p className="text-center font-black mt-1" style={{ color: primaryColor }}>{p.price} MAD</p>
+                     </div>
+                  ))}
+               </div>
+            </div>
+        )}
+        {page === 'about' && (
+           <div className={`${isModal ? 'p-16 max-w-3xl' : 'p-6'} mx-auto w-full text-center mt-10 bg-slate-100 rounded-[3rem] p-12`}>
+              <h3 className="text-4xl font-black mb-6 text-slate-800">About {storeName}</h3>
+              <p className="text-slate-600 text-xl font-bold leading-relaxed mb-6">Welcome to {storeName}. We are dedicated to providing the best quality products for our customers. Every piece is carefully crafted to ensure maximum comfort and style.</p>
+           </div>
+        )}
+        {page === 'product' && activeProductId && (
+           <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-8'} mx-auto w-full`}>
+              {storeProducts.filter(p => p.id === activeProductId).map(p => (
+                 <div key={p.id} className={`flex gap-12 bg-slate-50 p-8 rounded-[3rem] ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'}`}>
+                    <div className="flex-1 bg-white rounded-[2rem] border-4 border-slate-100 flex items-center justify-center aspect-square shadow-xl overflow-hidden relative">
+                       {(selectedColor && p.colorImages?.[selectedColor]) ? <img src={p.colorImages[selectedColor]} className="w-full h-full object-cover absolute inset-0" alt={p.name} /> : (p.image ? <img src={p.image} className="w-full h-full object-cover absolute inset-0" alt={p.name} /> : <ImageIcon className="w-20 h-20 opacity-10" />)}
+                    </div>
+                    <div className="flex-1 flex flex-col justify-center px-4">
+                       <h2 className="text-5xl font-black mb-4 text-slate-800">{p.name}</h2>
+                       <p className="text-3xl font-black mb-8" style={{ color: primaryColor }}>{p.price} MAD</p>
+                       <p className="text-slate-500 font-medium mb-8 text-lg">{p.description || 'Fun, fresh, and perfectly designed for everyday adventures!'}</p>
+                       
+                       {/* PRO SELECTORS */}
+                       <div className="mb-8 space-y-6 bg-white p-6 rounded-[2rem] border-4 border-slate-100">
+                          {p.colors?.length > 0 && (
+                             <div>
+                                <span className="text-sm font-black uppercase tracking-wider text-slate-400 mb-3 block">Color</span>
+                                <div className="flex gap-3">
+                                   {p.colors.map((c: string) => (
+                                      <button key={tr(c)} onClick={() => setSelectedColor(c)} className={`w-10 h-10 rounded-full border-4 transition-transform ${selectedColor === c ? 'border-slate-800 scale-125' : 'border-transparent hover:scale-110 shadow-sm'}`} style={{ backgroundColor: c }} />
+                                   ))}
+                                </div>
+                             </div>
+                          )}
+                          {p.sizes?.length > 0 && (
+                             <div>
+                                <span className="text-sm font-black uppercase tracking-wider text-slate-400 mb-3 block">Size</span>
+                                <div className="flex flex-wrap gap-2">
+                                   {p.sizes.map((s: string) => (
+                                      <button key={s} onClick={() => setSelectedSize(s)} className={`px-5 py-3 text-sm font-black rounded-xl transition-transform border-4 ${selectedSize === s ? 'bg-slate-800 border-slate-800 text-white scale-105 shadow-xl' : 'bg-slate-50 border-transparent text-slate-500 hover:border-slate-200'}`}>
+                                         {s}
+                                      </button>
+                                   ))}
+                                </div>
+                             </div>
+                          )}
+                          <div>
+                             <span className="text-sm font-black uppercase tracking-wider text-slate-400 mb-3 block">Quantity</span>
+                             <div className="flex items-center justify-between bg-slate-50 w-40 px-4 py-2 rounded-xl border-4 border-slate-100">
+                                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="text-slate-400 hover:text-slate-800 font-black text-2xl">-</button>
+                                <span className="font-black text-xl text-slate-800">{quantity}</span>
+                                <button onClick={() => setQuantity(quantity + 1)} className="text-slate-400 hover:text-slate-800 font-black text-2xl">+</button>
+                             </div>
+                          </div>
+                       </div>
+
+                       {buyMode === 'form' ? (
+                          <div className="bg-white p-8 rounded-[2rem] border-4 border-slate-100 space-y-4">
+                             <h4 className="text-xl font-black text-slate-800 mb-2">Yay! Checkout 🎁</h4>
+                             <input type="text" placeholder="Your Name" className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-full focus:outline-none focus:border-current text-base font-bold" style={{ '--tw-ring-color': primaryColor } as React.CSSProperties} />
+                             <input type="text" placeholder={storeLang === 'ar' ? 'رقم الهاتف' : storeLang === 'en' ? 'Phone Number' : 'Numéro de Téléphone'} className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-full focus:outline-none focus:border-current text-base font-bold" style={{ '--tw-ring-color': primaryColor } as React.CSSProperties} />
+                             <input type="text" placeholder="Where to send?" className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-full focus:outline-none focus:border-current text-base font-bold" style={{ '--tw-ring-color': primaryColor } as React.CSSProperties} />
+                             <button onClick={() => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1)} className="w-full py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl mt-4" style={{ backgroundColor: primaryColor }}>Send it to me! 🚀</button>
+                          </div>
+                       ) : (
+                          <div className="flex gap-4">
+                             {(buyMode === 'cart' || buyMode === 'both') && (
+                                <button onClick={handleAddToCart} className="flex-1 px-8 py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl" style={{ backgroundColor: '#f43f5e' }}>Cart 🛒</button>
+                             )}
+                             {(buyMode === 'direct' || buyMode === 'both') && (
+                                <button onClick={() => setPage('checkout')} className="flex-1 px-8 py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl" style={{ backgroundColor: primaryColor }}>Buy Now 🎈</button>
+                             )}
+                          </div>
+                       )}
+                    </div>
+                 </div>
+              ))}
+           </div>
+        )}
+        {page === 'checkout' && (
+           <div className={`${isModal ? 'p-16 max-w-2xl' : 'p-8'} mx-auto w-full`}>
+              <div className="bg-slate-50 p-10 rounded-[3rem] shadow-sm border-4 border-white">
+                 <h2 className="text-3xl font-black mb-6 text-center text-slate-800">Yay! Checkout 🎁</h2>
+                 <div className="space-y-4">
+                    <input type="text" placeholder="Your Name" className="w-full px-6 py-4 bg-white border-2 border-slate-100 rounded-full focus:outline-none focus:border-current text-lg font-bold" style={{ borderColor: 'transparent', '--tw-ring-color': primaryColor } as React.CSSProperties} />
+                    <input type="text" placeholder={storeLang === 'ar' ? 'رقم الهاتف' : storeLang === 'en' ? 'Phone Number' : 'Numéro de Téléphone'} className="w-full px-6 py-4 bg-white border-2 border-slate-100 rounded-full focus:outline-none focus:border-current text-lg font-bold" style={{ borderColor: 'transparent', '--tw-ring-color': primaryColor } as React.CSSProperties} />
+                    <input type="text" placeholder="Where to send?" className="w-full px-6 py-4 bg-white border-2 border-slate-100 rounded-full focus:outline-none focus:border-current text-lg font-bold" style={{ borderColor: 'transparent', '--tw-ring-color': primaryColor } as React.CSSProperties} />
+                    <button onClick={() => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1)} className="w-full py-5 text-white font-black uppercase tracking-widest text-xl hover:scale-105 transition-transform rounded-full shadow-xl mt-6" style={{ backgroundColor: primaryColor }}>Send it to me! 🚀</button>
+                 </div>
+              </div>
+           </div>
+        )}
+        {page === 'success' && (
+           <div className={`${isModal ? 'p-16 max-w-2xl' : 'p-8'} mx-auto w-full text-center flex flex-col items-center justify-center min-h-[400px]`}>
+              <div className="w-24 h-24 bg-green-100 text-green-500 rounded-full flex items-center justify-center mb-6 shadow-xl border-4 border-white">
+                 <CheckCircle className="w-12 h-12" />
+              </div>
+              <h2 className="text-5xl font-black mb-4 text-slate-800" style={{ color: primaryColor }}>Woohoo! 🎉</h2>
+              <p className="text-slate-500 text-xl font-bold">Your order is on the way!</p>
+              <button onClick={() => setPage('home')} className="mt-8 px-10 py-4 bg-slate-900 text-white font-black uppercase tracking-widest rounded-full hover:scale-105 transition-transform shadow-lg">Back to fun 🎈</button>
+           </div>
+        )}
+      </div>
+    </div>
+  );
+  };
+
+  const StorePreviewWrapper = ({ isModal = false, initialProductId = null }: any) => {
+    const [page, setPage] = useState(initialProductId ? 'product' : 'home');
+    const [activeProductId, setActiveProductId] = useState<any>(initialProductId);
+    const [activeCategory, setActiveCategory] = useState('All');
+    const [sortBy, setSortBy] = useState('featured');
+    const [isCartOpen, setIsCartOpen] = useState(false);
+
+    const navigateToProduct = (id: any) => {
+        setActiveProductId(id);
+        setPage('product');
+    };
+
+    const categories = ['All', ...Array.from(new Set(storeProducts.map(p => p.category).filter(Boolean)))];
+    let filteredProducts = activeCategory === 'All' ? storeProducts : storeProducts.filter(p => p.category === activeCategory);
+
+    filteredProducts = [...filteredProducts].sort((a, b) => {
+       if (sortBy === 'price-low-high') return parseFloat(a.price) - parseFloat(b.price);
+       if (sortBy === 'price-high-low') return parseFloat(b.price) - parseFloat(a.price);
+       if (sortBy === 'az') return a.name.localeCompare(b.name);
+       if (sortBy === 'za') return b.name.localeCompare(a.name);
+       return 0;
+    });
+
+    const props = { isModal, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, storeLang, isCartOpen, setIsCartOpen, submitGlobalOrder, storeProducts, primaryColor, secondaryColor, buttonStyle, fontFamily };
+
+
+  
+  const LayoutClement = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts }: any) => {
+    const [selectedSize, setSelectedSize] = useState<string>('');
+    const [selectedColor, setSelectedColor] = useState<string>('');
+    const [quantity, setQuantity] = useState(1);
+
+    return (
+    <div className={`w-full min-h-full bg-[#e8e2d7] text-[#1a1a1a] ${fontFamily} flex flex-col`}>
+      <div className={`px-8 py-6 flex justify-between items-center ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4' : 'flex-col md:flex-row gap-4 md:gap-0'}`}>
+         <LogoEditor onClick={() => setPage('home')} className="text-2xl font-black uppercase tracking-widest text-[#1a1a1a]" style={{ color: primaryColor }} />
+         <div className={`flex gap-8 text-sm font-medium text-[#4a4a4a] ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
+            {storePages.map(p => (
+               <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer hover:text-black transition-colors" style={{ color: page === p.id ? primaryColor : undefined }}>{tr(p.title)}</span>
+            ))}
+         </div>
+         <div className="flex gap-4 items-center">
+            <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1 cursor-pointer"><img src="https://flagcdn.com/w20/fr.png" alt="FR" className="w-4 h-3 rounded-sm object-cover" /> FR</span>
+            <Search className="w-5 h-5 cursor-pointer hover:opacity-70 transition-opacity" />
+            <Users className="w-5 h-5 cursor-pointer hover:opacity-70 transition-opacity" />
+            <button className="relative hover:opacity-70 transition-opacity" onClick={() => setIsCartOpen(true)}>
+               <ShoppingBag className="w-5 h-5" />
+               {cartCount > 0 && <span className="absolute -bottom-1 -right-1 text-white text-[9px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center bg-black">{cartCount}</span>}
+            </button>
+         </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto bg-white">
+        {page === 'home' && (
+          <>
+            <div className="w-full bg-[#e8e2d7]">
+               <HeroBackgroundEditor className={`w-full h-[${isModal ? '600px' : '400px'}] bg-cover bg-right-top relative flex items-center`} style={{ backgroundImage: `url(${heroImage})` }}>
+                  <div className="max-w-2xl px-12 md:px-24">
+                     <EditableText as="h1" text={heroTitle} onTextChange={setHeroTitle} isLiveStore={isLiveStore} className="text-5xl md:text-7xl font-serif italic tracking-wide text-[#2c2c2c] mb-6 leading-tight" style={{ fontFamily: 'Georgia, serif' }} />
+                  </div>
+               </HeroBackgroundEditor>
+            </div>
+
+            <div className="py-16 px-8 max-w-7xl mx-auto bg-white">
+               <div className="flex flex-col items-center mb-12">
+                  <EditableText as="h2" text={homeCollectionsTitle} onTextChange={setHomeCollectionsTitle} isLiveStore={isLiveStore} className="text-2xl font-black uppercase text-[#1a1a1a] mb-8 tracking-wider" />
+                  
+                  {/* Categories */}
+                  <div className="flex flex-wrap justify-center gap-8 text-sm font-medium text-[#4a4a4a]">
+                     {categories.map((c: string) => (
+                        <button key={tr(c)} onClick={() => setActiveCategory(c)} className={`pb-1 border-b-2 transition-colors ${activeCategory === c ? 'border-[#1a1a1a] text-[#1a1a1a]' : 'border-transparent hover:border-slate-300'}`}>
+                           {c === 'All' ? allCollectionsTitle : tr(c)}
+                        </button>
+                     ))}
+                  </div>
+               </div>
+
+               <div className={`grid ${previewDevice === 'mobile' && !isModal ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-4'} gap-6`}>
+                  {filteredProducts.map((p: any) => (
+                     <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
+                        <div className="aspect-[3/4] bg-[#f5f1e9] mb-4 relative overflow-hidden flex items-center justify-center">
+                           <img src={getCoverImage(p)} alt={p.name} className="w-full h-full object-cover mix-blend-multiply transition-transform duration-500 group-hover:scale-105" />
+                           <button className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/50 transition-colors" onClick={(e) => { e.stopPropagation(); }}>
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
+                           </button>
+                        </div>
+                        <div className="text-left">
+                           <h3 className="text-[13px] font-black uppercase tracking-widest text-[#1a1a1a] mb-1">{p.name}</h3>
+                           <p className="text-[11px] text-[#666] mb-2">{p.category}</p>
+                           <p className="text-[13px] font-bold text-[#1a1a1a]">{storeIsAr ? 'ابتداءً من' : 'à partir de'} {p.price} MAD</p>
+                        </div>
+                     </div>
+                  ))}
+               </div>
+            </div>
+          </>
+        )}
+
+        {page === 'product' && activeProductId && (() => {
+           const product = storeProducts.find((p: any) => p.id === activeProductId);
+           if (!product) return null;
+           return (
+           <div className="p-8 max-w-6xl mx-auto min-h-[600px] my-8 flex flex-col md:flex-row gap-12" style={{ backgroundColor: cardBg }}>
               <div className="w-full md:w-1/2 flex gap-4">
                  <div className="w-full aspect-[3/4] bg-[#f5f1e9] rounded-sm overflow-hidden flex items-center justify-center">
-                    <img src={getCoverImage(storeProducts.find(p => p.id === activeProductId))} className="w-full h-full object-cover mix-blend-multiply" alt="Product" />
+                    <img src={getCoverImage(product)} className="w-full h-full object-cover mix-blend-multiply" alt="Product" />
                  </div>
               </div>
               <div className="w-full md:w-1/2 pt-4">
@@ -1757,7 +4742,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
          const sizes = ['S', 'M', 'XL', 'XXL'];
          
          return (
-            <div className="flex-1 w-full bg-white relative">
+            <div className="flex-1 w-full relative" style={{ backgroundColor: cardBg }}>
                {/* Decorative Dotted Grid on Right */}
                <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #000 1.5px, transparent 1.5px)', backgroundSize: '24px 24px' }}></div>
                
