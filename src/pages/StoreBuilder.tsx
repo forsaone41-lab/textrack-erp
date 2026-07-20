@@ -476,8 +476,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     };
     
     // Sync to BEYA ERP Commandes
+    const generateUUID = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8); return v.toString(16); });
     const cmd = {
-        id: newOrder.id,
+        id: generateUUID(),
         client: (nameInput?.value || 'Client Web') + ' - ' + (phoneInput?.value || ''),
         modele: product ? product.name : 'Commande E-commerce',
         tissu: 'Store: ' + (storeName || config.storeName || 'Boutique') + ' - ' + (cityInput?.value || ''),
@@ -486,8 +487,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         quantite: qty || 1,
         statut: 'En attente',
         prix: product ? parseFloat(product.price) : 0,
-        total: product ? (parseFloat(product.price) * (qty || 1)) : 0,
-        date: new Date().toISOString()
+        dateCommande: new Date().toISOString().split('T')[0]
     };
     supabase.from('commandes').insert(cmd).then(({ error }: any) => {
         if (error) console.error(error);
