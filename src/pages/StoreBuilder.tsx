@@ -350,15 +350,20 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         customer: nameInput?.value || "Client Web",
         city: cityInput?.value || "Non specifiee",
         phone: phoneInput?.value || "Non specifie",
-        product: product ? product.name : "Produit inconnu",
-        quantity: qty || 1,
-        amount: product ? (parseFloat(product.price) * (qty || 1)).toFixed(2) : "0.00",
+        items: `${qty || 1} article${(qty || 1) > 1 ? 's' : ''}`,
+        products: product ? [{ 
+             name: product.name, 
+             photo: product.photo || product.image || 'https://via.placeholder.com/150', 
+             qty: qty || 1, 
+             price: parseFloat(product.price).toFixed(2) + ' MAD', 
+             options: 'Standard' 
+        }] : [],
+        amount: product ? (parseFloat(product.price) * (qty || 1)).toFixed(2) + ' MAD' : "0.00 MAD",
         status: "En attente",
-        statusColor: "#f59e0b"
+        statusColor: "bg-amber-100 text-amber-700"
     };
     
     setStoreOrders((prev: any) => [newOrder, ...prev]);
-    setPage("success");
   };
 
   const handleSave = async () => {
@@ -1414,7 +1419,12 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        return 0;
     });
 
-    const props = { isModal, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, storeLang, isCartOpen, setIsCartOpen, submitGlobalOrder, storeProducts, primaryColor, secondaryColor, buttonStyle, fontFamily };
+    const handleGlobalSubmit = (p: any, q: any) => {
+       submitGlobalOrder(p, q);
+       setPage('success');
+    };
+
+    const props = { isModal, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, storeLang, isCartOpen, setIsCartOpen, submitGlobalOrder: handleGlobalSubmit, storeProducts, primaryColor, secondaryColor, buttonStyle, fontFamily };
 
 
   
