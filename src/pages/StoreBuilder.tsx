@@ -312,6 +312,18 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               if (conf.allCollectionsTitle) setAllCollectionsTitle(conf.allCollectionsTitle);
               if (conf.buyMode) setBuyMode(conf.buyMode);
               if (conf.footerSettings) setFooterSettings(conf.footerSettings);
+              if (conf.storeProducts) setStoreProducts(conf.storeProducts);
+              if (conf.appsConfig) setAppsConfig(conf.appsConfig);
+              if (conf.deliveryCompanies) setDeliveryCompanies(conf.deliveryCompanies);
+              if (conf.secondaryColor) setSecondaryColor(conf.secondaryColor);
+              if (conf.buttonStyle) setButtonStyle(conf.buttonStyle);
+              if (conf.showReviews !== undefined) setShowReviews(conf.showReviews);
+              if (conf.homeBlocks) setHomeBlocks(conf.homeBlocks);
+              if (conf.sliderImages) setSliderImages(conf.sliderImages);
+              if (conf.newsletterTitle) setNewsletterTitle(conf.newsletterTitle);
+              if (conf.newsletterSubtitle) setNewsletterSubtitle(conf.newsletterSubtitle);
+              if (conf.featuresData) setFeaturesData(conf.featuresData);
+              if (conf.videoUrl) setVideoUrl(conf.videoUrl);
            }
         } catch (err) {
            console.warn('No live config found in Supabase or table missing:', err);
