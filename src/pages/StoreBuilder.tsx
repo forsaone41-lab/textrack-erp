@@ -438,31 +438,19 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [isLinkingDomain, setIsLinkingDomain] = useState(false);
   const [domainError, setDomainError] = useState('');
 
-  const submitGlobalOrder = (product: any, qty: number, e?: any) => {
+  const submitGlobalOrder = (product: any, qty: number, formData?: any) => {
     try {
-      // Safely get inputs ONLY from the active checkout form
-      let wrapper;
-      if (e && e.currentTarget) {
-          wrapper = e.currentTarget.closest('.space-y-4') || e.currentTarget.closest('.p-8');
-      }
-      
-      if (!wrapper) {
-          const wrappers = document.querySelectorAll('.store-preview-wrapper');
-          wrapper = Array.from(wrappers).reverse().find((w: any) => w.offsetParent !== null) || document.body;
-      }
-      
-      const inputs = Array.from(wrapper.querySelectorAll('input[type="text"], input[type="tel"]'));
-      
-      const nameInput = inputs[0] as HTMLInputElement;
-    const phoneInput = inputs[1] as HTMLInputElement;
-    const cityInput = inputs[2] as HTMLInputElement;
+      const customerName = formData?.name || "Client Web";
+      const customerPhone = formData?.phone || "Non specifie";
+      const customerCity = formData?.city || "Non specifiee";
+      const customerAddress = formData?.address || "";
 
     const newOrder = {
         id: "ORD-" + Math.floor(10000 + Math.random() * 90000),
         date: new Date().toLocaleDateString("fr-FR"),
-        customer: nameInput?.value || "Client Web",
-        city: cityInput?.value || "Non specifiee",
-        phone: phoneInput?.value || "Non specifie",
+        customer: customerName,
+        city: customerCity,
+        phone: customerPhone,
         items: `${qty || 1} article${(qty || 1) > 1 ? 's' : ''}`,
         products: product ? [{ 
              name: product.name, 
