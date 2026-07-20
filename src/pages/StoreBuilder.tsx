@@ -471,7 +471,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         id: newOrder.id,
         client: (nameInput?.value || 'Client Web') + ' - ' + (phoneInput?.value || ''),
         modele: product ? product.name : 'Commande E-commerce',
-        tissu: 'Store: ' + (config.storeName || 'Boutique') + ' - ' + (cityInput?.value || ''),
+        tissu: 'Store: ' + (storeName || config.storeName || 'Boutique') + ' - ' + (cityInput?.value || ''),
         couleurs: 'Standard',
         tailles: 'Standard',
         quantite: qty || 1,
