@@ -102,7 +102,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             .from('commandes')
             .select('*')
             .ilike('tissu', `%Store: ${config.storeName}%`)
-            .order('dateCreation', { ascending: false });
+            .order('dateCommande', { ascending: false });
             
           if (data && !error && data.length > 0) {
             const mappedOrders = data.map(cmd => {
@@ -120,7 +120,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                 amount: `${price.toFixed(2)} MAD`,
                 status: cmd.statut || 'Nouveau',
                 statusColor,
-                date: cmd.dateCreation ? new Date(cmd.dateCreation).toLocaleDateString('fr-FR') : new Date().toLocaleDateString('fr-FR'),
+                date: cmd.dateCommande ? new Date(cmd.dateCommande).toLocaleDateString('fr-FR') : new Date().toLocaleDateString('fr-FR'),
                 items: `${qtyMatch} article${qtyMatch > 1 ? 's' : ''}`,
                 products: [{
                   name: cmd.modele,
