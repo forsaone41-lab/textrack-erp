@@ -162,7 +162,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                   price: `${price.toFixed(2)} MAD`,
                   options: `Couleurs: ${cmd.couleurs} - Tailles: ${cmd.tailles}`
                 }],
-                deleted: false // live orders are not considered deleted in dashboard unless marked in DB
+                deleted: cmd.statut === 'Annulée'
               };
             });
             
@@ -187,6 +187,26 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     setSelectedOrder(null);
   };
 
+  // 'ORD-' ids are local preview-only orders that were never inserted into Supabase.
+  // Anything else is a real row in the `commandes` table and must be persisted there too.
+  const isRealOrderId = (id: string) => !id.startsWith('ORD-');
+
+  const persistOrderDeleted = async (id: string) => {
+    if (isRealOrderId(id)) {
+      await supabase.from('commandes').update({ statut: 'Annulée' }).eq('id', id);
+    }
+  };
+  const persistOrderRestored = async (id: string) => {
+    if (isRealOrderId(id)) {
+      await supabase.from('commandes').update({ statut: 'En attente' }).eq('id', id);
+    }
+  };
+  const persistOrderPermanentDelete = async (id: string) => {
+    if (isRealOrderId(id)) {
+      await supabase.from('commandes').delete().eq('id', id);
+    }
+  };
+
   const handleDeleteOrder = (orderId: string) => {
     setOrderToDelete(orderId);
   };
@@ -195,9 +215,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     if (orderToDelete) {
       setStoreOrders(prev => prev.map(o => o.id === orderToDelete ? { ...o, deleted: true } : o));
       setSelectedOrder(null);
-      if (orderToDelete.startsWith('ORD-')) {
-         await supabase.from('commandes').update({ statut: 'Annulée' }).eq('id', orderToDelete);
-      }
+      await persistOrderDeleted(orderToDelete);
       setOrderToDelete(null);
     }
   };
@@ -205,17 +223,32 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const handleRestoreOrder = async (orderId: string) => {
     setStoreOrders(prev => prev.map(o => o.id === orderId ? { ...o, deleted: false } : o));
     setSelectedOrder(null);
-    if (orderId.startsWith('ORD-')) {
-       await supabase.from('commandes').update({ statut: 'En attente' }).eq('id', orderId);
-    }
+    await persistOrderRestored(orderId);
   };
 
   const handlePermanentDelete = async (orderId: string) => {
     setStoreOrders(prev => prev.filter(o => o.id !== orderId));
     setSelectedOrder(null);
-    if (orderId.startsWith('ORD-')) {
-       await supabase.from('commandes').delete().eq('id', orderId);
+    await persistOrderPermanentDelete(orderId);
+  };
+
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+  const toggleOrderSelected = (orderId: string) => {
+    setSelectedOrderIds(prev => prev.includes(orderId) ? prev.filter(id => id !== orderId) : [...prev, orderId]);
+  };
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+
+  const confirmBulkDelete = async () => {
+    const ids = selectedOrderIds;
+    if (showTrash) {
+      setStoreOrders(prev => prev.filter(o => !ids.includes(o.id)));
+      await Promise.all(ids.map(persistOrderPermanentDelete));
+    } else {
+      setStoreOrders(prev => prev.map(o => ids.includes(o.id) ? { ...o, deleted: true } : o));
+      await Promise.all(ids.map(persistOrderDeleted));
     }
+    setSelectedOrderIds([]);
+    setIsBulkDeleteOpen(false);
   };
   const [storeLang, setStoreLang] = useState<'fr'|'en'|'ar'>(config.storeLang || 'fr');
   const storeIsAr = storeLang === 'ar';
@@ -2718,12 +2751,22 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                     <div>
                        <div className="flex justify-between items-center mb-3">
                           <div className="flex gap-4 items-center">
-                            <h3 className={`text-xs font-black uppercase tracking-wider cursor-pointer transition-colors ${!showTrash ? 'text-slate-800' : 'text-slate-400 hover:text-slate-600'}`} onClick={() => setShowTrash(false)}>Récentes</h3>
-                            <h3 className={`text-xs font-black uppercase tracking-wider cursor-pointer flex items-center gap-1 transition-colors ${showTrash ? 'text-rose-600' : 'text-slate-400 hover:text-rose-400'}`} onClick={() => setShowTrash(true)}>
+                            <h3 className={`text-xs font-black uppercase tracking-wider cursor-pointer transition-colors ${!showTrash ? 'text-slate-800' : 'text-slate-400 hover:text-slate-600'}`} onClick={() => { setShowTrash(false); setSelectedOrderIds([]); }}>Récentes</h3>
+                            <h3 className={`text-xs font-black uppercase tracking-wider cursor-pointer flex items-center gap-1 transition-colors ${showTrash ? 'text-rose-600' : 'text-slate-400 hover:text-rose-400'}`} onClick={() => { setShowTrash(true); setSelectedOrderIds([]); }}>
                                <Trash2 className="w-3 h-3" /> Poubelle
                             </h3>
                           </div>
-                          <span className="text-[10px] text-indigo-600 font-bold cursor-pointer hover:underline">Voir tout</span>
+                          {selectedOrderIds.length > 0 ? (
+                             <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-bold text-slate-500">{selectedOrderIds.length} {storeIsAr ? 'محدد' : 'sélectionné(s)'}</span>
+                                <button onClick={() => setSelectedOrderIds([])} className="text-[10px] font-bold text-slate-400 hover:text-slate-600 transition-colors">{storeIsAr ? 'إلغاء' : 'Annuler'}</button>
+                                <button onClick={() => setIsBulkDeleteOpen(true)} className="flex items-center gap-1 text-[10px] font-black text-rose-600 bg-rose-50 px-2.5 py-1.5 rounded-lg hover:bg-rose-100 transition-colors">
+                                   <Trash2 className="w-3 h-3" /> {showTrash ? (storeIsAr ? 'حذف نهائي' : 'Supprimer définitivement') : (storeIsAr ? 'حذف' : 'Supprimer')}
+                                </button>
+                             </div>
+                          ) : (
+                             <span className="text-[10px] text-indigo-600 font-bold cursor-pointer hover:underline">Voir tout</span>
+                          )}
                        </div>
                        <div className="space-y-3">
                           {storeOrders.filter(o => showTrash ? o.deleted : !o.deleted).length === 0 ? (
@@ -2736,20 +2779,28 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                 <p className="text-[10px] font-bold text-slate-400 max-w-[200px] leading-relaxed">{showTrash ? '' : (storeIsAr ? 'ستظهر طلباتك هنا بمجرد أن يقوم عملاؤك بالشراء' : 'Vos commandes apparaîtront ici dès que vos clients commenceront à acheter')}</p>
                              </div>
                           ) : storeOrders.filter(o => showTrash ? o.deleted : !o.deleted).map(order => (
-                             <div key={order.id} onClick={() => setSelectedOrder(order)} className="p-3 border border-slate-200 rounded-2xl bg-white shadow-sm cursor-pointer hover:border-indigo-500 transition-colors hover:shadow-md group">
-                                <div className="flex justify-between items-start mb-2">
-                                   <div className="flex items-center gap-2">
-                                      <span className="text-xs font-black text-slate-800 group-hover:text-indigo-600 transition-colors">#{order.id.substring(0, 8).toUpperCase()}</span>
-                                      <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${order.statusColor}`}>{order.status}</span>
+                             <div key={order.id} onClick={() => setSelectedOrder(order)} className={`p-3 border rounded-2xl bg-white shadow-sm cursor-pointer transition-colors hover:shadow-md group flex gap-3 items-start ${selectedOrderIds.includes(order.id) ? 'border-indigo-500 ring-2 ring-indigo-100' : 'border-slate-200 hover:border-indigo-500'}`}>
+                                <button
+                                   onClick={(e) => { e.stopPropagation(); toggleOrderSelected(order.id); }}
+                                   className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${selectedOrderIds.includes(order.id) ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300 hover:border-indigo-400'}`}
+                                >
+                                   {selectedOrderIds.includes(order.id) && <Check className="w-3 h-3 text-white" />}
+                                </button>
+                                <div className="flex-1 min-w-0">
+                                   <div className="flex justify-between items-start mb-2">
+                                      <div className="flex items-center gap-2">
+                                         <span className="text-xs font-black text-slate-800 group-hover:text-indigo-600 transition-colors">#{order.id.substring(0, 8).toUpperCase()}</span>
+                                         <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${order.statusColor}`}>{order.status}</span>
+                                      </div>
+                                      <span className="text-[10px] text-slate-400 font-bold">{order.date}</span>
                                    </div>
-                                   <span className="text-[10px] text-slate-400 font-bold">{order.date}</span>
-                                </div>
-                                <div className="flex justify-between items-end">
-                                   <div>
-                                      <p className="text-sm font-bold text-slate-700">{order.customer}</p>
-                                      <p className="text-[9px] text-slate-400 font-bold mt-0.5">{order.items}</p>
+                                   <div className="flex justify-between items-end">
+                                      <div>
+                                         <p className="text-sm font-bold text-slate-700">{order.customer}</p>
+                                         <p className="text-[9px] text-slate-400 font-bold mt-0.5">{order.items}</p>
+                                      </div>
+                                      <span className="text-xs font-black text-slate-800">{order.amount}</span>
                                    </div>
-                                   <span className="text-xs font-black text-slate-800">{order.amount}</span>
                                 </div>
                              </div>
                           ))}
@@ -4069,6 +4120,33 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                   <div className="flex gap-3">
                      <button onClick={() => setOrderToDelete(null)} className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors text-sm">{storeIsAr ? 'إلغاء' : 'Annuler'}</button>
                      <button onClick={confirmDeleteOrder} className="flex-1 py-3 bg-rose-600 text-white font-bold rounded-xl hover:bg-rose-700 shadow-md shadow-rose-200 transition-colors text-sm">{storeIsAr ? 'نقل' : 'Confirmer'}</button>
+                  </div>
+               </div>
+            </div>
+         </div>
+      )}
+
+      {/* BULK DELETE CONFIRMATION MODAL */}
+      {isBulkDeleteOpen && (
+         <div className="fixed inset-0 z-[600] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+               <div className="p-6 text-center">
+                  <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
+                     <Trash2 className="w-8 h-8 text-rose-600" />
+                  </div>
+                  <h2 className="text-xl font-black text-slate-800 mb-2">
+                     {showTrash
+                        ? (storeIsAr ? `حذف ${selectedOrderIds.length} طلب نهائياً؟` : `Supprimer définitivement ${selectedOrderIds.length} commande(s) ?`)
+                        : (storeIsAr ? `نقل ${selectedOrderIds.length} طلب إلى سلة المهملات؟` : `Déplacer ${selectedOrderIds.length} commande(s) vers la corbeille ?`)}
+                  </h2>
+                  <p className="text-slate-500 text-sm mb-6">
+                     {showTrash
+                        ? (storeIsAr ? 'لا يمكن التراجع عن هذا الإجراء.' : 'Cette action est irréversible.')
+                        : (storeIsAr ? 'يمكنك استعادتها لاحقاً من سلة المهملات.' : 'Vous pourrez les restaurer depuis la corbeille.')}
+                  </p>
+                  <div className="flex gap-3">
+                     <button onClick={() => setIsBulkDeleteOpen(false)} className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors text-sm">{storeIsAr ? 'إلغاء' : 'Annuler'}</button>
+                     <button onClick={confirmBulkDelete} className="flex-1 py-3 bg-rose-600 text-white font-bold rounded-xl hover:bg-rose-700 shadow-md shadow-rose-200 transition-colors text-sm">{storeIsAr ? 'تأكيد' : 'Confirmer'}</button>
                   </div>
                </div>
             </div>
