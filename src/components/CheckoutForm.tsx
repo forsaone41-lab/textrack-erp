@@ -7,9 +7,24 @@ const moroccanCities = [
   "El Jadida", "Béni Mellal", "Nador", "Taza", "Settat", "Laayoune", "Dakhla"
 ];
 
-export default function CheckoutForm({ storeIsAr, onSubmit, product, quantity, disabled }: any) {
+export default function CheckoutForm({ storeIsAr, onSubmit, product, quantity, disabled, requireAccount, isAuthenticated, onRequestLogin, selectedColor, selectedSize }: any) {
   const [formData, setFormData] = useState({ name: '', phone: '', city: '', address: '' });
   const [phoneError, setPhoneError] = useState('');
+
+  if (requireAccount && !isAuthenticated) {
+    return (
+      <div className="w-full text-center py-10 space-y-4">
+        <p className="text-sm font-bold text-slate-600">{storeIsAr ? 'يجب تسجيل الدخول لإتمام الطلب' : 'Un compte est requis pour passer commande'}</p>
+        <button
+          type="button"
+          onClick={onRequestLogin}
+          className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-black uppercase tracking-widest text-xs hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200"
+        >
+          {storeIsAr ? 'تسجيل الدخول / إنشاء حساب' : 'Se connecter / Créer un compte'}
+        </button>
+      </div>
+    );
+  }
 
   const validatePhone = (phone: string) => {
     // Basic Moroccan phone validation: starts with 05, 06, or 07 and is exactly 10 digits
@@ -27,8 +42,8 @@ export default function CheckoutForm({ storeIsAr, onSubmit, product, quantity, d
     if (disabled) return;
     if (!validatePhone(formData.phone)) return;
     if (!formData.name || !formData.city || !formData.address) return;
-    
-    onSubmit(product, quantity, formData);
+
+    onSubmit(product, quantity, { ...formData, color: selectedColor, size: selectedSize });
   };
 
   return (

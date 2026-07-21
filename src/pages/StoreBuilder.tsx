@@ -6,6 +6,7 @@ import { useLang } from '../contexts/LangContext';
 import StoreManagerDashboard from '../components/Tools/StoreManagerDashboard';
 import ProAITools from '../components/Tools/ProAITools';
 import CheckoutForm from '../components/CheckoutForm';
+import AuthForm from '../components/AuthForm';
 import { supabase } from '../supabase';
 
 const THEMES = [
@@ -114,10 +115,28 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               
               const qtyMatch = cmd.quantite ? parseInt(cmd.quantite.toString()) : 1;
               const price = cmd.prix ? parseFloat(cmd.prix.toString()) : 0;
-              
+
+              // "client" is stored as "Name - Phone" (see submitGlobalOrder) - split the trailing phone back out
+              const clientRaw = cmd.client || '';
+              const clientPhoneMatch = clientRaw.match(/ - (\S+)$/);
+              const clientPhone = clientPhoneMatch ? clientPhoneMatch[1] : '';
+              const clientName = clientPhoneMatch ? clientRaw.slice(0, clientPhoneMatch.index) : clientRaw;
+
+              // "tissu" is stored as "Store: <name> - <city> - <address>" (see submitGlobalOrder)
+              const tissuRaw = cmd.tissu || '';
+              const afterStore = tissuRaw.replace(/^Store:\s*[^-]*-\s*/, '');
+              const [tissuCity, ...tissuAddressParts] = afterStore.split(' - ');
+              const tissuAddress = tissuAddressParts.join(' - ');
+
+              const matchingProduct = storeProducts.find((p: any) => p.name === cmd.modele);
+              const realPhoto = matchingProduct ? (matchingProduct.photo || matchingProduct.image || getCoverImage(matchingProduct)) : '';
+
               return {
                 id: cmd.id,
-                customer: cmd.client,
+                customer: clientName || clientRaw,
+                phone: clientPhone,
+                city: tissuCity || '',
+                address: tissuAddress || '',
                 amount: `${price.toFixed(2)} MAD`,
                 status: cmd.statut || 'Nouveau',
                 statusColor,
@@ -125,7 +144,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                 items: `${qtyMatch} article${qtyMatch > 1 ? 's' : ''}`,
                 products: [{
                   name: cmd.modele,
-                  photo: 'https://via.placeholder.com/150',
+                  photo: realPhoto,
                   qty: qtyMatch,
                   price: `${price.toFixed(2)} MAD`,
                   options: `Couleurs: ${cmd.couleurs} - Tailles: ${cmd.tailles}`
@@ -253,6 +272,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [activeSidebarSection, setActiveSidebarSection] = useState<string>('hero');
   
   const [cartCount, setCartCount] = useState(0);
+  const [customerUser, setCustomerUser] = useState<any>(null);
+  const [customerProfile, setCustomerProfile] = useState<any>(null);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [requireAccountToOrder, setRequireAccountToOrder] = useState(config.requireAccountToOrder ?? false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [storeProducts, setStoreProducts] = useState(config.storeProducts || [
     { id: 1, name: 'Premium Hoodie', price: '450.00', category: 'Outerwear', image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800' },
@@ -390,6 +414,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               if (conf.newsletterSubtitle) setNewsletterSubtitle(conf.newsletterSubtitle);
               if (conf.featuresData) setFeaturesData(conf.featuresData);
               if (conf.videoUrl) setVideoUrl(conf.videoUrl);
+              if (conf.requireAccountToOrder !== undefined) setRequireAccountToOrder(conf.requireAccountToOrder);
            }
         } catch (err) {
            console.warn('No live config found in Supabase or table missing:', err);
@@ -402,6 +427,30 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         fetchLiveConfig();
      }
   }, [isLiveStore]);
+
+  // Customer auth session bootstrap (live store only, to avoid swapping the admin's own session in the builder preview)
+  useEffect(() => {
+     if (!isLiveStore) return;
+     const hydrateCustomer = async (user: any) => {
+        setCustomerUser(user);
+        const { data } = await supabase.from('store_customers').select('*').eq('id', user.id).single();
+        setCustomerProfile(data || null);
+     };
+     supabase.auth.getSession().then(({ data }) => {
+        if (data.session?.user) hydrateCustomer(data.session.user);
+     });
+     const { data: authSub } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (session?.user) hydrateCustomer(session.user);
+        else { setCustomerUser(null); setCustomerProfile(null); }
+     });
+     return () => authSub.subscription.unsubscribe();
+  }, [isLiveStore]);
+
+  const handleCustomerLogout = async () => {
+     await supabase.auth.signOut();
+     setCustomerUser(null);
+     setCustomerProfile(null);
+  };
   
   const [buyMode, setBuyMode] = useState<'cart'|'direct'|'both'|'form'>(config.buyMode || 'both');
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -444,26 +493,29 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
       const customerPhone = formData?.phone || "Non specifie";
       const customerCity = formData?.city || "Non specifiee";
       const customerAddress = formData?.address || "";
+      const orderColor = formData?.color || product?.selectedColor || "Standard";
+      const orderSize = formData?.size || product?.selectedSize || "Standard";
 
     const newOrder = {
         id: "ORD-" + Math.floor(10000 + Math.random() * 90000),
         date: new Date().toLocaleDateString("fr-FR"),
         customer: customerName,
         city: customerCity,
+        address: customerAddress,
         phone: customerPhone,
         items: `${qty || 1} article${(qty || 1) > 1 ? 's' : ''}`,
-        products: product ? [{ 
-             name: product.name, 
-             photo: product.photo || product.image || 'https://via.placeholder.com/150', 
-             qty: qty || 1, 
-             price: parseFloat(product.price).toFixed(2) + ' MAD', 
-             options: 'Standard' 
+        products: product ? [{
+             name: product.name,
+             photo: product.photo || product.image || getCoverImage(product) || '',
+             qty: qty || 1,
+             price: parseFloat(product.price).toFixed(2) + ' MAD',
+             options: `Couleurs: ${orderColor} - Tailles: ${orderSize}`
         }] : [],
         amount: product ? (parseFloat(product.price) * (qty || 1)).toFixed(2) + ' MAD' : "0.00 MAD",
         status: "En attente",
         statusColor: "bg-amber-100 text-amber-700"
     };
-    
+
     // Sync to BEYA ERP Commandes
     const generateUUID = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8); return v.toString(16); });
     const cmd = {
@@ -471,12 +523,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         client: customerName + ' - ' + customerPhone,
         modele: product ? product.name : 'Commande E-commerce',
         tissu: 'Store: ' + (storeName || config.storeName || 'Boutique') + ' - ' + customerCity + (customerAddress ? ' - ' + customerAddress : ''),
-        couleurs: 'Standard',
-        tailles: 'Standard',
+        couleurs: orderColor,
+        tailles: orderSize,
         quantite: qty || 1,
         statut: 'En attente',
         prix: product ? parseFloat(product.price) : 0,
-        dateCommande: new Date().toISOString().split('T')[0]
+        dateCommande: new Date().toISOString().split('T')[0],
+        customer_id: customerUser?.id || null
     };
     supabase.from('commandes').insert(cmd).then(({ error }: any) => {
         if (error) console.error(error);
@@ -524,7 +577,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        deliveryCompanies,
        secondaryColor,
        buttonStyle,
-       showReviews
+       showReviews,
+       requireAccountToOrder
     };
     localStorage.setItem('beya_store_config', JSON.stringify(storeConfig));
     
@@ -906,6 +960,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                  product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
                                  quantity={typeof quantity !== 'undefined' ? quantity : 1}
                                  disabled={false}
+                                 requireAccount={requireAccountToOrder}
+                                 isAuthenticated={!!customerUser}
+                                 onRequestLogin={() => { setAuthMode('login'); setIsAuthOpen(true); }}
+                                 selectedColor={selectedColor}
+                                 selectedSize={selectedSize}
                               />
                           </div>
                        ) : (
@@ -934,6 +993,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                  product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
                                  quantity={typeof quantity !== 'undefined' ? quantity : 1}
                                  disabled={false}
+                                 requireAccount={requireAccountToOrder}
+                                 isAuthenticated={!!customerUser}
+                                 onRequestLogin={() => { setAuthMode('login'); setIsAuthOpen(true); }}
+                                 selectedColor={selectedColor}
+                                 selectedSize={selectedSize}
                               />
                  </div>
               </div>
@@ -1137,6 +1201,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                  product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
                                  quantity={typeof quantity !== 'undefined' ? quantity : 1}
                                  disabled={false}
+                                 requireAccount={requireAccountToOrder}
+                                 isAuthenticated={!!customerUser}
+                                 onRequestLogin={() => { setAuthMode('login'); setIsAuthOpen(true); }}
+                                 selectedColor={selectedColor}
+                                 selectedSize={selectedSize}
                               />
                           </div>
                        ) : (
@@ -1165,6 +1234,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                  product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
                                  quantity={typeof quantity !== 'undefined' ? quantity : 1}
                                  disabled={false}
+                                 requireAccount={requireAccountToOrder}
+                                 isAuthenticated={!!customerUser}
+                                 onRequestLogin={() => { setAuthMode('login'); setIsAuthOpen(true); }}
+                                 selectedColor={selectedColor}
+                                 selectedSize={selectedSize}
                               />
                  </div>
               </div>
@@ -1342,6 +1416,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                  product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
                                  quantity={typeof quantity !== 'undefined' ? quantity : 1}
                                  disabled={false}
+                                 requireAccount={requireAccountToOrder}
+                                 isAuthenticated={!!customerUser}
+                                 onRequestLogin={() => { setAuthMode('login'); setIsAuthOpen(true); }}
+                                 selectedColor={selectedColor}
+                                 selectedSize={selectedSize}
                               />
                           </div>
                        ) : (
@@ -1370,6 +1449,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                  product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
                                  quantity={typeof quantity !== 'undefined' ? quantity : 1}
                                  disabled={false}
+                                 requireAccount={requireAccountToOrder}
+                                 isAuthenticated={!!customerUser}
+                                 onRequestLogin={() => { setAuthMode('login'); setIsAuthOpen(true); }}
+                                 selectedColor={selectedColor}
+                                 selectedSize={selectedSize}
                               />
                  </div>
               </div>
@@ -1580,6 +1664,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                  quantity={typeof quantity !== 'undefined' ? quantity : 1}
                                  disabled={((typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId))?.colors?.length > 0 && !selectedColor) || ((typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId))?.sizes?.length > 0 && !selectedSize)}
                                  customSubmitText={storeIsAr ? "أرسل الطلب! 🚀" : "Send it to me! 🚀"}
+                                 requireAccount={requireAccountToOrder}
+                                 isAuthenticated={!!customerUser}
+                                 onRequestLogin={() => { setAuthMode('login'); setIsAuthOpen(true); }}
+                                 selectedColor={selectedColor}
+                                 selectedSize={selectedSize}
                               />
                  </div>
               </div>
@@ -1716,14 +1805,27 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                 </div>
               )}
             </div>
-            <div className="relative">
+            <div className="relative flex items-center gap-2">
+              {customerUser && (
+                <span className="text-xs font-bold hidden md:inline">
+                  {storeLang === 'ar' ? 'مرحباً' : storeLang === 'en' ? 'Hi' : 'Bonjour'} {(customerProfile?.name || '').split(' ')[0]}
+                </span>
+              )}
               <Users
                 className="w-5 h-5 cursor-pointer hover:opacity-70 transition-opacity"
-                onClick={() => { setAccountToast(true); setTimeout(() => setAccountToast(false), 2000); }}
+                onClick={() => {
+                  if (customerUser) { setAccountToast(o => !o); }
+                  else { setAuthMode('login'); setIsAuthOpen(true); }
+                }}
               />
-              {accountToast && (
-                <div className="absolute right-0 top-8 z-50 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold px-3 py-2 rounded-lg shadow-xl">
-                  {storeLang === 'ar' ? 'قريباً' : storeLang === 'en' ? 'Coming soon' : 'Bientôt disponible'}
+              {accountToast && customerUser && (
+                <div className="absolute right-0 top-8 z-50 whitespace-nowrap bg-white border border-slate-200 rounded-lg shadow-xl py-2 w-36">
+                  <button
+                    onClick={() => { handleCustomerLogout(); setAccountToast(false); }}
+                    className="w-full text-left px-3 py-2 text-xs font-bold text-rose-600 hover:bg-slate-50"
+                  >
+                    {storeLang === 'ar' ? 'تسجيل الخروج' : storeLang === 'en' ? 'Log out' : 'Déconnexion'}
+                  </button>
                 </div>
               )}
             </div>
@@ -1849,6 +1951,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                  product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
                                  quantity={typeof quantity !== 'undefined' ? quantity : 1}
                                  disabled={false}
+                                 requireAccount={requireAccountToOrder}
+                                 isAuthenticated={!!customerUser}
+                                 onRequestLogin={() => { setAuthMode('login'); setIsAuthOpen(true); }}
+                                 selectedColor={selectedColor}
+                                 selectedSize={selectedSize}
                               />
               </div>
            </div>
@@ -1892,7 +1999,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     const [selectedColor, setSelectedColor] = useState<string>('');
     const [quantity, setQuantity] = useState(1);
     const [activePDPTab, setActivePDPTab] = useState('description');
-    
+    const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+
     return (
     <div className={`w-full min-h-full bg-white text-slate-800 flex flex-col font-sans`}>
       {/* Header */}
@@ -1909,11 +2017,31 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
          </div>
          {/* Icons - Right */}
          <div className="flex items-center gap-4 text-slate-400">
-            <div className="text-[10px] uppercase font-bold tracking-widest hidden md:block">Login / Sign up</div>
+            <div className="relative">
+               <button
+                 onClick={() => {
+                    if (customerUser) setIsAccountMenuOpen(o => !o);
+                    else { setAuthMode('login'); setIsAuthOpen(true); }
+                 }}
+                 className="text-[10px] uppercase font-bold tracking-widest hidden md:block hover:text-slate-900 transition-colors"
+               >
+                  {customerUser ? `${storeIsAr ? 'مرحباً' : 'Bonjour'} ${(customerProfile?.name || '').split(' ')[0]}` : 'Login / Sign up'}
+               </button>
+               {isAccountMenuOpen && customerUser && (
+                  <div className="absolute right-0 top-6 z-50 whitespace-nowrap bg-white border border-slate-200 rounded-lg shadow-xl py-2 w-36">
+                     <button
+                        onClick={() => { handleCustomerLogout(); setIsAccountMenuOpen(false); }}
+                        className="w-full text-left px-3 py-2 text-xs font-bold text-rose-600 hover:bg-slate-50"
+                     >
+                        {storeIsAr ? 'تسجيل الخروج' : 'Déconnexion'}
+                     </button>
+                  </div>
+               )}
+            </div>
             <Search className="w-4 h-4 cursor-pointer hover:text-slate-900" />
-            <div className="relative cursor-pointer hover:text-slate-900">
+            <div className="relative cursor-pointer hover:text-slate-900" onClick={() => setIsCartOpen(true)}>
                <ShoppingBag className="w-4 h-4" />
-               <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 text-white text-[8px] flex items-center justify-center rounded-full font-bold">2</span>
+               {cartCount > 0 && <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 text-white text-[8px] flex items-center justify-center rounded-full font-bold">{cartCount}</span>}
             </div>
          </div>
       </div>
@@ -2298,6 +2426,29 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                          <CheckCircle className="w-5 h-5" />
                          {storeIsAr ? 'إتمام الطلب' : 'Valider la commande'}
                       </button>
+                   </div>
+                </div>
+             </div>
+          )}
+          {isAuthOpen && (
+             <div className="fixed inset-0 z-[999] flex justify-end bg-black/50 backdrop-blur-sm transition-opacity" onClick={() => setIsAuthOpen(false)}>
+                <div className="w-full max-w-md h-full bg-white shadow-2xl flex flex-col transform transition-transform" onClick={e => e.stopPropagation()}>
+                   <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                      <h2 className="text-xl font-black uppercase tracking-tight">
+                         {authMode === 'login' ? (storeIsAr ? 'تسجيل الدخول' : 'Se connecter') : (storeIsAr ? 'إنشاء حساب' : 'Créer un compte')}
+                      </h2>
+                      <button onClick={() => setIsAuthOpen(false)} className="w-8 h-8 flex items-center justify-center bg-white rounded-full border border-slate-200 text-slate-500 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-all">
+                         <X className="w-4 h-4" />
+                      </button>
+                   </div>
+                   <div className="flex-1 overflow-y-auto p-6">
+                      <AuthForm
+                         storeIsAr={storeIsAr}
+                         mode={authMode}
+                         onModeChange={setAuthMode}
+                         storeDomain={customDomain || `${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`}
+                         onAuthed={(user: any, profile: any) => { setCustomerUser(user); setCustomerProfile(profile); setIsAuthOpen(false); }}
+                      />
                    </div>
                 </div>
              </div>
@@ -2902,6 +3053,21 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                               <button onClick={() => setStoreLang('en')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${storeLang === 'en' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}`}>English</button>
                               <button onClick={() => setStoreLang('ar')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${storeLang === 'ar' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}`}>العربية</button>
                            </div>
+                        </div>
+                     </div>
+
+                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                        <div className="flex items-center justify-between">
+                           <div>
+                              <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{storeIsAr ? 'يتطلب حساب لإتمام الطلب' : 'Compte requis pour commander'}</h4>
+                              <p className="text-[11px] text-slate-500 font-semibold mt-1">{storeIsAr ? 'إذا تم التفعيل، يجب على الزبناء إنشاء حساب قبل إتمام الطلب' : "Si activé, les clients doivent créer un compte avant de finaliser une commande."}</p>
+                           </div>
+                           <button
+                              onClick={() => setRequireAccountToOrder((v: boolean) => !v)}
+                              className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${requireAccountToOrder ? 'bg-indigo-600' : 'bg-slate-300'}`}
+                           >
+                              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${requireAccountToOrder ? 'translate-x-5' : ''}`} />
+                           </button>
                         </div>
                      </div>
 
@@ -3792,14 +3958,14 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                            <div className="w-8 h-8 bg-white rounded-full border border-slate-200 flex items-center justify-center"><Smartphone className="w-4 h-4 text-slate-400" /></div>
                            <div>
                               <p className="text-[10px] font-bold text-slate-500">Téléphone</p>
-                              <p className="text-sm font-black text-slate-800">06 12 34 56 78</p>
+                              <p className="text-sm font-black text-slate-800">{selectedOrder.phone || '-'}</p>
                            </div>
                         </div>
                         <div className="flex items-center gap-3">
                            <div className="w-8 h-8 bg-white rounded-full border border-slate-200 flex items-center justify-center"><Globe className="w-4 h-4 text-slate-400" /></div>
                            <div>
                               <p className="text-[10px] font-bold text-slate-500">Ville / Adresse</p>
-                              <p className="text-sm font-black text-slate-800">Casablanca, Maarif</p>
+                              <p className="text-sm font-black text-slate-800">{[selectedOrder.city, selectedOrder.address].filter(Boolean).join(', ') || '-'}</p>
                            </div>
                         </div>
                      </div>
@@ -3814,8 +3980,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                         <div className="space-y-3 mb-4">
                            {selectedOrder.products.map((prod: any, idx: number) => (
                               <div key={idx} className="flex items-center gap-3 bg-white border border-slate-100 p-2 rounded-xl shadow-sm hover:border-indigo-200 transition-colors">
-                                 <div className="w-14 h-14 rounded-lg bg-slate-50 border border-slate-100 overflow-hidden shrink-0">
-                                    <img src={prod.photo} alt={prod.name} className="w-full h-full object-cover" />
+                                 <div className="w-14 h-14 rounded-lg bg-slate-50 border border-slate-100 overflow-hidden shrink-0 flex items-center justify-center">
+                                    {prod.photo ? (
+                                       <img src={prod.photo} alt={prod.name} className="w-full h-full object-cover" onError={(e: any) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+                                    ) : null}
+                                    <ImageIcon className={`w-6 h-6 text-slate-300 ${prod.photo ? 'hidden' : ''}`} />
                                  </div>
                                  <div className="flex-1">
                                     <h4 className="text-sm font-bold text-slate-800 leading-tight">{prod.name}</h4>
