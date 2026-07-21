@@ -91,7 +91,20 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
   useEffect(() => {
     if (config.storeName) {
-      localStorage.setItem(`beya_orders_${config.storeName}`, JSON.stringify(storeOrders));
+      try {
+        // Strip large base64 product photos before caching locally - they can blow past the localStorage quota.
+        // The real photo still lives in Supabase/storeProducts and is re-derived on next fetch.
+        const lightOrders = storeOrders.slice(0, 100).map((o: any) => ({
+          ...o,
+          products: (o.products || []).map((p: any) => ({
+            ...p,
+            photo: typeof p.photo === 'string' && p.photo.startsWith('data:') ? '' : p.photo
+          }))
+        }));
+        localStorage.setItem(`beya_orders_${config.storeName}`, JSON.stringify(lightOrders));
+      } catch (e) {
+        console.warn('Could not cache store orders locally (quota exceeded):', e);
+      }
     }
   }, [storeOrders, config.storeName]);
 
