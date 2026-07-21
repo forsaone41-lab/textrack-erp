@@ -104,8 +104,8 @@ export default function CheckoutForm({ storeIsAr, onSubmit, product, quantity, d
 
       {/* Trust Badges */}
       <div className={`mt-8 grid grid-cols-1 md:grid-cols-3 gap-3 ${storeIsAr ? 'text-right' : 'text-left'}`}>
-        <div className={`flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100 ${storeIsAr ? 'flex-row-reverse' : ''}`}>
-          <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+        <div className={`group flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100 hover:border-emerald-200 transition-colors cursor-default ${storeIsAr ? 'flex-row-reverse' : ''}`}>
+          <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
             <ShieldCheck className="w-5 h-5 text-emerald-600" />
           </div>
           <div>
@@ -114,8 +114,8 @@ export default function CheckoutForm({ storeIsAr, onSubmit, product, quantity, d
           </div>
         </div>
         
-        <div className={`flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100 ${storeIsAr ? 'flex-row-reverse' : ''}`}>
-          <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+        <div className={`group flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100 hover:border-amber-200 transition-colors cursor-default ${storeIsAr ? 'flex-row-reverse' : ''}`}>
+          <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
             <Truck className="w-5 h-5 text-amber-600" />
           </div>
           <div>
@@ -124,8 +124,8 @@ export default function CheckoutForm({ storeIsAr, onSubmit, product, quantity, d
           </div>
         </div>
         
-        <div className={`flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100 ${storeIsAr ? 'flex-row-reverse' : ''}`}>
-          <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
+        <div className={`group flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100 hover:border-indigo-200 transition-colors cursor-default ${storeIsAr ? 'flex-row-reverse' : ''}`}>
+          <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
             <Banknote className="w-5 h-5 text-indigo-600" />
           </div>
           <div>

@@ -1171,10 +1171,29 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
            </div>
         )}
         {page === 'success' && (
-           <div className={`${isModal ? 'p-20 max-w-2xl' : 'p-8'} mx-auto w-full text-center py-20`}>
-              <h2 className="text-5xl font-light mb-6" style={{ color: primaryColor }}>Thank You.</h2>
-              <p className="text-gray-500 text-xl font-light mb-12">Your order has been successfully placed.</p>
-              <button onClick={() => setPage('home')} className="px-10 py-4 border border-black text-xs tracking-widest hover:bg-black hover:text-white transition-colors">CONTINUE SHOPPING</button>
+           <div className={`${isModal ? 'p-16 max-w-2xl' : 'p-8'} mx-auto w-full text-center flex flex-col items-center justify-center min-h-[400px] py-20`}>
+              <div className="w-24 h-24 bg-gradient-to-tr from-emerald-400 to-green-500 text-white rounded-full flex items-center justify-center mb-8 shadow-2xl shadow-green-200/50 relative">
+                 <div className="absolute inset-0 bg-white rounded-full animate-ping opacity-20" style={{ animationDuration: '3s' }}></div>
+                 <CheckCircle className="w-12 h-12 relative z-10" />
+              </div>
+              <h2 className="text-4xl font-light mb-3 tracking-tight flex items-center gap-2 justify-center" style={{ color: primaryColor }}>
+                  {storeIsAr ? 'تم تأكيد طلبك بنجاح' : 'Commande Confirmée !'} <Sparkles className="w-8 h-8 text-amber-400" />
+              </h2>
+              <p className="text-slate-500 text-lg max-w-md mx-auto leading-relaxed mb-8">
+                 {storeIsAr 
+                   ? "تهانينا! لقد تلقينا طلبك بنجاح. فريقنا يقوم الآن بتجهيزه بعناية فائقة. سيتم التواصل معك قريباً لتأكيد تفاصيل الشحن."
+                   : "Félicitations ! Nous avons bien reçu votre commande. Notre équipe la prépare avec soin et vous contactera très prochainement pour l'expédition."}
+              </p>
+              
+              <div className="flex items-center justify-center gap-6 mb-10 text-slate-400 text-sm font-semibold">
+                 <div className="flex flex-col items-center gap-2"><Package className="w-6 h-6 text-indigo-400" /> <span>{storeIsAr ? 'تجهيز الطلب' : 'Préparation'}</span></div>
+                 <div className="w-12 h-px bg-slate-200"></div>
+                 <div className="flex flex-col items-center gap-2"><Truck className="w-6 h-6 text-emerald-400" /> <span>{storeIsAr ? 'شحن سريع' : 'Expédition'}</span></div>
+              </div>
+
+              <button onClick={() => setPage('home')} className="px-10 py-4 border border-black text-xs tracking-widest hover:bg-black hover:text-white transition-colors">
+                 {storeIsAr ? "العودة للصفحة الرئيسية" : "RETOUR À L'ACCUEIL"}
+              </button>
            </div>
         )}
       </div>
@@ -1357,10 +1376,29 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
            </div>
         )}
         {page === 'success' && (
-           <div className={`${isModal ? 'p-16 max-w-2xl' : 'p-8'} mx-auto w-full text-center py-20`}>
-              <h2 className="text-4xl font-serif mb-6 text-white">Order Confirmed</h2>
-              <p className="text-[#888] text-lg tracking-wide mb-12">An expression of elegance is on its way to you.</p>
-              <button onClick={() => setPage('home')} className="px-10 py-4 border border-white/20 text-white text-xs tracking-widest hover:bg-white/5 transition-colors">RETURN</button>
+           <div className={`${isModal ? 'p-16 max-w-2xl' : 'p-8'} mx-auto w-full text-center flex flex-col items-center justify-center min-h-[400px] py-20`}>
+              <div className="w-24 h-24 bg-gradient-to-tr from-emerald-500 to-green-600 text-white rounded-full flex items-center justify-center mb-8 shadow-2xl shadow-green-900/50 relative">
+                 <div className="absolute inset-0 bg-white rounded-full animate-ping opacity-10" style={{ animationDuration: '3s' }}></div>
+                 <CheckCircle className="w-12 h-12 relative z-10" />
+              </div>
+              <h2 className="text-4xl font-serif mb-3 text-white tracking-wide flex items-center gap-2 justify-center">
+                  {storeIsAr ? 'تم تأكيد طلبك بنجاح' : 'Commande Confirmée !'} <Sparkles className="w-8 h-8 text-amber-500" />
+              </h2>
+              <p className="text-[#888] text-lg max-w-md mx-auto leading-relaxed mb-8 font-light">
+                 {storeIsAr 
+                   ? "تهانينا! لقد تلقينا طلبك بنجاح. فريقنا يقوم الآن بتجهيزه بعناية. سيتم التواصل معك قريباً لتأكيد تفاصيل الشحن."
+                   : "Félicitations ! Nous avons bien reçu votre commande. Notre équipe la prépare avec soin et vous contactera très prochainement."}
+              </p>
+              
+              <div className="flex items-center justify-center gap-6 mb-10 text-[#666] text-sm font-medium tracking-wider">
+                 <div className="flex flex-col items-center gap-2"><Package className="w-6 h-6 text-[#b48a44]" /> <span>{storeIsAr ? 'تجهيز الطلب' : 'PRÉPARATION'}</span></div>
+                 <div className="w-12 h-px bg-[#333]"></div>
+                 <div className="flex flex-col items-center gap-2"><Truck className="w-6 h-6 text-[#b48a44]" /> <span>{storeIsAr ? 'شحن سريع' : 'EXPÉDITION'}</span></div>
+              </div>
+
+              <button onClick={() => setPage('home')} className="px-10 py-4 border border-white/20 text-white text-xs tracking-widest hover:bg-white/5 transition-colors">
+                 {storeIsAr ? "العودة للرئيسية" : "RETOUR"}
+              </button>
            </div>
         )}
       </div>
@@ -1535,22 +1573,42 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               <div className="bg-slate-50 p-10 rounded-[3rem] shadow-sm border-4 border-white">
                  <h2 className="text-3xl font-black mb-6 text-center text-slate-800">Yay! Checkout 🎁</h2>
                  <div className="space-y-4">
-                    <input type="text" placeholder="Your Name" className="w-full px-6 py-4 bg-white border-2 border-slate-100 rounded-full focus:outline-none focus:border-current text-lg font-bold" style={{ borderColor: 'transparent', '--tw-ring-color': primaryColor } as React.CSSProperties} />
-                    <input type="text" placeholder={storeLang === 'ar' ? 'رقم الهاتف' : storeLang === 'en' ? 'Phone Number' : 'Numéro de Téléphone'} className="w-full px-6 py-4 bg-white border-2 border-slate-100 rounded-full focus:outline-none focus:border-current text-lg font-bold" style={{ borderColor: 'transparent', '--tw-ring-color': primaryColor } as React.CSSProperties} />
-                    <input type="text" placeholder="Where to send?" className="w-full px-6 py-4 bg-white border-2 border-slate-100 rounded-full focus:outline-none focus:border-current text-lg font-bold" style={{ borderColor: 'transparent', '--tw-ring-color': primaryColor } as React.CSSProperties} />
-                    <button onClick={(e) => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1, e)} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-full py-5 text-white font-black uppercase tracking-widest text-xl hover:scale-105 transition-transform rounded-full shadow-xl mt-6 ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: primaryColor }}>Send it to me! 🚀</button>
+                    <CheckoutForm
+                                 storeIsAr={typeof storeLang !== 'undefined' ? storeLang === 'ar' : storeIsAr}
+                                 onSubmit={submitGlobalOrder}
+                                 product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
+                                 quantity={typeof quantity !== 'undefined' ? quantity : 1}
+                                 disabled={((typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId))?.colors?.length > 0 && !selectedColor) || ((typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId))?.sizes?.length > 0 && !selectedSize)}
+                                 customSubmitText={storeIsAr ? "أرسل الطلب! 🚀" : "Send it to me! 🚀"}
+                              />
                  </div>
               </div>
            </div>
         )}
         {page === 'success' && (
            <div className={`${isModal ? 'p-16 max-w-2xl' : 'p-8'} mx-auto w-full text-center flex flex-col items-center justify-center min-h-[400px]`}>
-              <div className="w-24 h-24 bg-green-100 text-green-500 rounded-full flex items-center justify-center mb-6 shadow-xl border-4 border-white">
-                 <CheckCircle className="w-12 h-12" />
+              <div className="w-24 h-24 bg-gradient-to-tr from-emerald-400 to-green-500 text-white rounded-full flex items-center justify-center mb-8 shadow-2xl shadow-green-200/50 relative border-4 border-white">
+                 <div className="absolute inset-0 bg-white rounded-full animate-ping opacity-30" style={{ animationDuration: '3s' }}></div>
+                 <CheckCircle className="w-12 h-12 relative z-10" />
               </div>
-              <h2 className="text-5xl font-black mb-4 text-slate-800" style={{ color: primaryColor }}>Woohoo! 🎉</h2>
-              <p className="text-slate-500 text-xl font-bold">Your order is on the way!</p>
-              <button onClick={() => setPage('home')} className="mt-8 px-10 py-4 bg-slate-900 text-white font-black uppercase tracking-widest rounded-full hover:scale-105 transition-transform shadow-lg">Back to fun 🎈</button>
+              <h2 className="text-5xl font-black mb-3 text-slate-800 tracking-tight flex items-center gap-2 justify-center" style={{ color: primaryColor }}>
+                  {storeIsAr ? 'تم تأكيد طلبك بنجاح' : 'Commande Confirmée !'} <Sparkles className="w-10 h-10 text-amber-400" />
+              </h2>
+              <p className="text-slate-500 text-xl font-bold max-w-md mx-auto leading-relaxed mb-8">
+                 {storeIsAr 
+                   ? "تهانينا! لقد تلقينا طلبك بنجاح. فريقنا يقوم الآن بتجهيزه بعناية فائقة. سيتم التواصل معك قريباً لتأكيد تفاصيل الشحن."
+                   : "Félicitations ! Nous avons bien reçu votre commande. Notre équipe la prépare avec soin et vous contactera très prochainement pour l'expédition."}
+              </p>
+              
+              <div className="flex items-center justify-center gap-6 mb-10 text-slate-400 text-sm font-bold">
+                 <div className="flex flex-col items-center gap-2"><Package className="w-8 h-8 text-indigo-400" /> <span>{storeIsAr ? 'تجهيز الطلب' : 'Préparation'}</span></div>
+                 <div className="w-12 h-2 rounded-full bg-slate-100"></div>
+                 <div className="flex flex-col items-center gap-2"><Truck className="w-8 h-8 text-emerald-400" /> <span>{storeIsAr ? 'شحن سريع' : 'Expédition'}</span></div>
+              </div>
+
+              <button onClick={() => setPage('home')} className="mt-8 px-10 py-4 bg-slate-900 text-white font-black uppercase tracking-widest rounded-full hover:scale-105 transition-transform shadow-lg">
+                 {storeIsAr ? "العودة للمرح" : "Retour au magasin"}
+              </button>
            </div>
         )}
       </div>
@@ -1594,6 +1652,21 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     const [selectedSize, setSelectedSize] = useState<string>('');
     const [selectedColor, setSelectedColor] = useState<string>('');
     const [quantity, setQuantity] = useState(1);
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [accountToast, setAccountToast] = useState(false);
+
+    const langFlags: Record<string, { code: string; label: string }> = {
+      fr: { code: 'fr', label: 'FR' },
+      en: { code: 'gb', label: 'EN' },
+      ar: { code: 'sa', label: 'AR' },
+    };
+    const nextLang: Record<string, 'fr' | 'en' | 'ar'> = { fr: 'en', en: 'ar', ar: 'fr' };
+    const currentLang = langFlags[storeLang] || langFlags.fr;
+
+    const searchResults = searchQuery.trim()
+      ? (storeProducts || []).filter((p: any) => p.name?.toLowerCase().includes(searchQuery.trim().toLowerCase())).slice(0, 6)
+      : [];
 
     return (
     <div className={`w-full min-h-full bg-[#e8e2d7] text-[#1a1a1a] ${fontFamily} flex flex-col`}>
@@ -1604,10 +1677,56 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer hover:text-black transition-colors" style={{ color: page === p.id ? primaryColor : undefined }}>{tr(p.title)}</span>
             ))}
          </div>
-         <div className="flex gap-4 items-center">
-            <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1 cursor-pointer"><img src="https://flagcdn.com/w20/fr.png" alt="FR" className="w-4 h-3 rounded-sm object-cover" /> FR</span>
-            <Search className="w-5 h-5 cursor-pointer hover:opacity-70 transition-opacity" />
-            <Users className="w-5 h-5 cursor-pointer hover:opacity-70 transition-opacity" />
+         <div className="flex gap-4 items-center relative">
+            <span
+              className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1 cursor-pointer hover:opacity-70 transition-opacity"
+              onClick={() => setStoreLang(nextLang[storeLang] || 'fr')}
+              title={storeLang === 'ar' ? 'تغيير اللغة' : storeLang === 'en' ? 'Change language' : 'Changer de langue'}
+            >
+              <img src={`https://flagcdn.com/w20/${currentLang.code}.png`} alt={currentLang.label} className="w-4 h-3 rounded-sm object-cover" /> {currentLang.label}
+            </span>
+            <div className="relative">
+              <Search className="w-5 h-5 cursor-pointer hover:opacity-70 transition-opacity" onClick={() => setIsSearchOpen(o => !o)} />
+              {isSearchOpen && (
+                <div className="absolute right-0 top-8 z-50 w-72 bg-white rounded-xl shadow-2xl border border-slate-200 p-3">
+                  <input
+                    autoFocus
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={storeLang === 'ar' ? 'ابحث عن منتج...' : storeLang === 'en' ? 'Search a product...' : 'Rechercher un produit...'}
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:outline-none focus:border-slate-400 text-slate-800"
+                  />
+                  {searchQuery.trim() && (
+                    <div className="mt-2 max-h-64 overflow-y-auto">
+                      {searchResults.length > 0 ? searchResults.map((p: any) => (
+                        <div
+                          key={p.id}
+                          onClick={() => { navigateToProduct(p.id); setIsSearchOpen(false); setSearchQuery(''); }}
+                          className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer"
+                        >
+                          <img src={p.images?.[0] || p.image} alt={p.name} className="w-9 h-9 object-cover rounded-md bg-slate-100" />
+                          <span className="text-xs font-semibold text-slate-700 truncate">{p.name}</span>
+                        </div>
+                      )) : (
+                        <p className="text-xs text-slate-400 text-center py-3">{storeLang === 'ar' ? 'لا توجد نتائج' : storeLang === 'en' ? 'No results' : 'Aucun résultat'}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="relative">
+              <Users
+                className="w-5 h-5 cursor-pointer hover:opacity-70 transition-opacity"
+                onClick={() => { setAccountToast(true); setTimeout(() => setAccountToast(false), 2000); }}
+              />
+              {accountToast && (
+                <div className="absolute right-0 top-8 z-50 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold px-3 py-2 rounded-lg shadow-xl">
+                  {storeLang === 'ar' ? 'قريباً' : storeLang === 'en' ? 'Coming soon' : 'Bientôt disponible'}
+                </div>
+              )}
+            </div>
             <button className="relative hover:opacity-70 transition-opacity" onClick={() => setIsCartOpen(true)}>
                <ShoppingBag className="w-5 h-5" />
                {cartCount > 0 && <span className="absolute -bottom-1 -right-1 text-white text-[9px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center bg-black">{cartCount}</span>}
@@ -1736,11 +1855,29 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         )}
 
         {page === 'success' && (
-           <div className="p-16 max-w-2xl mx-auto my-8 bg-white border border-[#eee] text-center flex flex-col items-center justify-center">
-              <CheckCircle className="w-16 h-16 text-green-500 mb-6" />
-              <h2 className="text-3xl font-black uppercase tracking-widest text-[#1a1a1a] mb-4">{storeIsAr ? 'تم تأكيد الطلب' : 'Commande Confirmée'}</h2>
-              <p className="text-[#666] mb-8">{storeIsAr ? 'شكرا لثقتك. سنتصل بك قريباً.' : 'Merci de votre confiance. Nous vous contacterons bientôt.'}</p>
-              <button onClick={() => setPage('home')} className="px-8 py-3 bg-[#f5f1e9] text-[#1a1a1a] font-bold uppercase tracking-widest text-xs hover:bg-[#e8e2d7] transition-colors">{storeIsAr ? 'العودة للرئيسية' : "Retour à l'accueil"}</button>
+           <div className="p-16 max-w-2xl mx-auto my-8 bg-white border border-[#eee] text-center flex flex-col items-center justify-center shadow-sm min-h-[400px]">
+              <div className="w-24 h-24 bg-gradient-to-tr from-emerald-400 to-green-500 text-white rounded-full flex items-center justify-center mb-8 shadow-2xl shadow-green-200/50 relative">
+                 <div className="absolute inset-0 bg-white rounded-full animate-ping opacity-20" style={{ animationDuration: '3s' }}></div>
+                 <CheckCircle className="w-12 h-12 relative z-10" />
+              </div>
+              <h2 className="text-3xl font-black uppercase tracking-widest text-[#1a1a1a] mb-4 flex items-center gap-2 justify-center">
+                  {storeIsAr ? 'تم تأكيد طلبك' : 'Commande Confirmée !'} <Sparkles className="w-6 h-6 text-amber-400" />
+              </h2>
+              <p className="text-[#666] text-lg max-w-md mx-auto leading-relaxed mb-8">
+                 {storeIsAr 
+                   ? "تهانينا! لقد تلقينا طلبك بنجاح. فريقنا يقوم الآن بتجهيزه بعناية. سيتم التواصل معك قريباً لتأكيد تفاصيل الشحن."
+                   : "Félicitations ! Nous avons bien reçu votre commande. Notre équipe la prépare avec soin et vous contactera très prochainement pour l'expédition."}
+              </p>
+              
+              <div className="flex items-center justify-center gap-6 mb-10 text-[#888] text-sm font-semibold uppercase tracking-wider">
+                 <div className="flex flex-col items-center gap-2"><Package className="w-6 h-6 text-[#1a1a1a]" /> <span>{storeIsAr ? 'تجهيز الطلب' : 'Préparation'}</span></div>
+                 <div className="w-12 h-px bg-[#eee]"></div>
+                 <div className="flex flex-col items-center gap-2"><Truck className="w-6 h-6 text-[#1a1a1a]" /> <span>{storeIsAr ? 'شحن سريع' : 'Expédition'}</span></div>
+              </div>
+
+              <button onClick={() => setPage('home')} className="px-8 py-3 bg-[#f5f1e9] text-[#1a1a1a] font-bold uppercase tracking-widest text-xs hover:bg-[#e8e2d7] transition-colors">
+                 {storeIsAr ? "العودة للرئيسية" : "Retour à l'accueil"}
+              </button>
            </div>
         )}
 
@@ -2047,6 +2184,36 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             </div>
          );
       })()}
+
+      {page === 'success' && (
+         <div className="flex-1 w-full relative bg-white py-24">
+           <div className={`${isModal ? 'p-16 max-w-2xl' : 'p-8'} mx-auto w-full text-center flex flex-col items-center justify-center min-h-[400px]`}>
+              <div className="w-24 h-24 bg-gradient-to-tr from-emerald-400 to-green-500 text-white rounded-full flex items-center justify-center mb-8 shadow-2xl shadow-green-200/50 relative">
+                 <div className="absolute inset-0 bg-white rounded-full animate-ping opacity-20" style={{ animationDuration: '3s' }}></div>
+                 <CheckCircle className="w-12 h-12 relative z-10" />
+              </div>
+              <h2 className="text-4xl font-black mb-3 text-slate-900 tracking-tight flex items-center gap-2 justify-center">
+                  {storeIsAr ? 'تم تأكيد طلبك بنجاح' : 'Commande Confirmée !'} <Sparkles className="w-8 h-8 text-amber-400" />
+              </h2>
+              <p className="text-slate-500 text-lg max-w-md mx-auto leading-relaxed mb-8">
+                 {storeIsAr 
+                   ? "تهانينا! لقد تلقينا طلبك بنجاح. فريقنا يقوم الآن بتجهيزه بعناية. سيتم التواصل معك قريباً لتأكيد تفاصيل الشحن."
+                   : "Félicitations ! Nous avons bien reçu votre commande. Notre équipe la prépare avec soin et vous contactera très prochainement."}
+              </p>
+              
+              <div className="flex items-center justify-center gap-6 mb-10 text-slate-400 text-sm font-bold uppercase tracking-wider">
+                 <div className="flex flex-col items-center gap-2"><Package className="w-6 h-6 text-slate-900" /> <span>{storeIsAr ? 'تجهيز الطلب' : 'PRÉPARATION'}</span></div>
+                 <div className="w-12 h-px bg-slate-200"></div>
+                 <div className="flex flex-col items-center gap-2"><Truck className="w-6 h-6 text-slate-900" /> <span>{storeIsAr ? 'شحن سريع' : 'EXPÉDITION'}</span></div>
+              </div>
+
+              <button onClick={() => setPage('home')} className="px-10 py-5 bg-slate-900 text-white font-black uppercase tracking-widest text-xs hover:bg-black transition-colors">
+                 {storeIsAr ? "العودة للرئيسية" : "RETOUR À L'ACCUEIL"}
+              </button>
+           </div>
+         </div>
+      )}
+
 {/* Footer */}
       <div className="bg-[#f8f9fa] py-16 px-8 text-center text-slate-500 text-xs">
          <LogoEditor className={`text-3xl font-black tracking-tighter text-slate-900 mx-auto mb-8 opacity-20 ${fontFamily}`} style={{ color: primaryColor }} />
