@@ -1355,17 +1355,30 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                 );
                 
                 if (block === 'collections' && categories.length > 1) return (
-                    <div key="collections" className={`${isModal ? 'p-16 max-w-[1400px]' : 'p-8'} mx-auto w-full bg-slate-50`}>
+                    <div key="collections" className={`${isModal ? 'p-16' : 'p-8'} mx-auto w-full bg-slate-50`} style={{ maxWidth: `${siteMaxWidth}px` }}>
                        <h3 className="text-2xl font-black uppercase text-center mb-10">{allCollectionsTitle}</h3>
                        <div className={`grid gap-4 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-2' : (isModal ? 'grid-cols-4' : 'grid-cols-3')}`}>
                           {categories.filter((c:string) => c !== 'All').map((cat: string, idx: number) => (
-                             <div key={idx} onClick={() => { setActiveCategory(cat); setPage('collections'); }} className="cursor-pointer group aspect-square relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all">
+                             cardStyle === 'trend' ? (
+                                <div key={idx} onClick={() => { setActiveCategory(cat); setPage('collections'); }} className="cursor-pointer group relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all bg-white border border-slate-100">
+                                   <div className="aspect-square relative overflow-hidden" style={{ backgroundColor: trendCardAccents[idx % trendCardAccents.length] }}>
+                                      <img src={storeProducts.find((p:any)=>p.category===cat)?.image || 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&q=80&w=600'} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                      <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider text-white shadow-sm" style={{ backgroundColor: primaryColor }}>{isAr ? 'مجموعة' : 'Collection'}</span>
+                                   </div>
+                                   <div className="p-3 flex items-center justify-between">
+                                      <span className="text-xs font-bold text-slate-800">{cat}</span>
+                                      <ChevronDown className="w-3.5 h-3.5 -rotate-90 text-slate-400" />
+                                   </div>
+                                </div>
+                             ) : (
+                             <div key={idx} onClick={() => { setActiveCategory(cat); setPage('collections'); }} className="cursor-pointer group aspect-square relative overflow-hidden shadow-sm hover:shadow-xl transition-all" style={{ borderRadius: getCardRadius() ?? '16px' }}>
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10 flex items-end p-6">
                                    <span className="text-white font-bold text-lg">{cat}</span>
                                 </div>
                                 <div className="absolute inset-0 bg-indigo-900/20 group-hover:bg-transparent transition-colors z-0"></div>
                                 <img src={storeProducts.find((p:any)=>p.category===cat)?.image || 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&q=80&w=600'} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                              </div>
+                             )
                           ))}
                        </div>
                     </div>
