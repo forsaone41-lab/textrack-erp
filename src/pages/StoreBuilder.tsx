@@ -364,6 +364,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [proUpsellTheme, setProUpsellTheme] = useState<any>(null);
   const [quickBuyContext, setQuickBuyContext] = useState<any>(null);
   const [buyNowAsPopup, setBuyNowAsPopup] = useState<boolean>(config.buyNowAsPopup ?? true);
+  const [pdpImageWidth, setPdpImageWidth] = useState<number>(config.pdpImageWidth ?? 50);
   const [textStyles, setTextStyles] = useState<Record<string, { fontSize?: number; color?: string; fontFamily?: string }>>(config.textStyles || {});
   const [activeStyleKey, setActiveStyleKey] = useState<string | null>(null);
   const [toolbarPos, setToolbarPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
@@ -581,6 +582,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               if (conf.menuStyle) setMenuStyle(conf.menuStyle);
               if (conf.proThemesUnlocked !== undefined) setProThemesUnlocked(conf.proThemesUnlocked);
               if (conf.buyNowAsPopup !== undefined) setBuyNowAsPopup(conf.buyNowAsPopup);
+              if (conf.pdpImageWidth !== undefined) setPdpImageWidth(conf.pdpImageWidth);
               if (conf.buttonStyle) setButtonStyle(conf.buttonStyle);
               if (conf.showReviews !== undefined) setShowReviews(conf.showReviews);
               if (conf.homeBlocks) setHomeBlocks(conf.homeBlocks);
@@ -777,6 +779,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        menuStyle,
        proThemesUnlocked,
        buyNowAsPopup,
+       pdpImageWidth,
        buttonStyle,
        showReviews,
        requireAccountToOrder,
