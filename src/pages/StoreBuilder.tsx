@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown, TrendingUp, Package, RefreshCw, Undo2, Menu, Home } from 'lucide-react';
+import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown, TrendingUp, Package, RefreshCw, Undo2, Menu, Home, Heart, SlidersHorizontal } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import StoreManagerDashboard from '../components/Tools/StoreManagerDashboard';
 import ProAITools from '../components/Tools/ProAITools';
@@ -1138,7 +1138,26 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     const [selectedColor, setSelectedColor] = useState<string>('');
     const [quantity, setQuantity] = useState(1);
     const [activePDPTab, setActivePDPTab] = useState('description');
-    
+    const [likedProducts, setLikedProducts] = useState<Set<any>>(new Set());
+
+    const toggleLike = (id: any, e: React.MouseEvent) => {
+       e.stopPropagation();
+       setLikedProducts(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
+    };
+
+    const MobileProductCard = ({ p }: any) => (
+       <div className="cursor-pointer" onClick={() => navigateToProduct(p.id)}>
+          <div className="relative aspect-square rounded-2xl overflow-hidden mb-2 border" style={{ backgroundColor: cardBg, borderColor, borderRadius: cardStyle === 'square' ? '0px' : undefined }}>
+             {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="w-full h-full flex items-center justify-center opacity-20"><Box className="w-10 h-10" /></div>}
+             <button onClick={(e) => toggleLike(p.id, e)} className="absolute top-2.5 right-2.5 w-7 h-7 bg-white/90 rounded-full shadow-sm flex items-center justify-center">
+                <Heart className={`w-3.5 h-3.5 ${likedProducts.has(p.id) ? 'fill-rose-500 text-rose-500' : 'text-slate-400'}`} />
+             </button>
+          </div>
+          <h4 className="font-bold text-xs text-slate-800 truncate">{p.name}</h4>
+          <p className="text-xs font-black mt-0.5" style={{ color: primaryColor }}>{p.price} MAD</p>
+       </div>
+    );
+
     return (
     <div className={`w-full min-h-full bg-white text-slate-900 ${fontFamily} flex flex-col`}>
       <div className={`p-6 flex justify-between items-center border-b border-slate-100 ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4' : 'flex-col md:flex-row gap-4 md:gap-0'}`}>
@@ -1194,13 +1213,21 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
                 if (block === 'products') return (
                     <div key="products" className={`${isModal ? 'p-16 max-w-[1400px]' : 'p-8'} mx-auto w-full`}>
-                       <h3 className="text-2xl font-black uppercase text-center mb-10">{homeCollectionsTitle}</h3>
-                       <div className={`grid gap-8 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3')}`}>
+                       <div className="flex items-center justify-between mb-6 md:justify-center md:mb-10">
+                          <h3 className="text-lg md:text-2xl font-black uppercase">{homeCollectionsTitle}</h3>
+                          <span className="md:hidden text-xs font-bold text-slate-400" onClick={() => setPage('collections')}>{isAr ? 'الكل' : 'Voir tout'}</span>
+                       </div>
+                       <div className="md:hidden grid grid-cols-2 gap-4">
+                          {storeProducts.slice(0, 8).map((p: any) => (
+                             <MobileProductCard key={p.id} p={p} />
+                          ))}
+                       </div>
+                       <div className={`hidden md:grid gap-8 ${isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
                           {storeProducts.slice(0, 8).map((p: any) => (
                              <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
                                 <div className="aspect-[3/4] bg-slate-100 mb-4 overflow-hidden relative rounded-xl">
                                    {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-12 h-12" /></div>}
-                                   <div className={`absolute bottom-4 left-0 right-0 flex justify-center transition-opacity ${(previewDevice === 'mobile' && !isModal) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                                   <div className="absolute bottom-4 left-0 right-0 flex justify-center transition-opacity opacity-0 group-hover:opacity-100">
                                       <button onClick={handleAddToCart} className="px-8 py-3 text-white text-xs font-bold uppercase tracking-wider shadow-2xl rounded-full" style={btnStyle}>{tr('Add to cart')}</button>
                                    </div>
                                 </div>
@@ -1279,10 +1306,22 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
           </>
         )}
         {page === 'collections' && (
-            <div className={`${isModal ? 'p-16 max-w-[1400px]' : 'p-8'} mx-auto w-full`}>
+            <div className={`${isModal ? 'p-16 max-w-[1400px]' : 'p-4 md:p-8'} mx-auto w-full`}>
+               <div className="md:hidden flex items-center gap-2 mb-4 bg-slate-50 rounded-full px-4 py-2.5">
+                  <Search className="w-4 h-4 text-slate-400" />
+                  <input readOnly placeholder={isAr ? 'بحث...' : 'Rechercher...'} className="bg-transparent text-sm flex-1 outline-none text-slate-600" />
+               </div>
+               <div className="md:hidden flex items-center gap-2 mb-6 overflow-x-auto no-scrollbar">
+                  <span className="flex items-center gap-1 shrink-0 px-3 py-1.5 rounded-full border border-slate-200 text-[11px] font-bold text-slate-600"><SlidersHorizontal className="w-3 h-3" /> {isAr ? 'فلترة' : 'Filtrer'}</span>
+                  {categories && categories.filter((c: string) => c !== 'All').map((c: string) => (
+                     <button key={tr(c)} onClick={() => setActiveCategory(c)} className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition-colors ${activeCategory === c ? 'text-white' : 'bg-slate-100 text-slate-600'}`} style={{ backgroundColor: activeCategory === c ? primaryColor : undefined }}>
+                        {tr(c)}
+                     </button>
+                  ))}
+               </div>
                <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
-                  <h3 className="text-2xl font-black uppercase text-center md:text-left">{tr('All Products')}</h3>
-                  <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <h3 className="text-2xl font-black uppercase text-center md:text-left hidden md:block">{tr('All Products')}</h3>
+                  <div className="hidden md:flex flex-col sm:flex-row items-center gap-4">
                      {categories && categories.length > 1 && (
                         <div className="flex flex-wrap gap-2 justify-center">
                            {categories.map((c: string) => (
@@ -1301,12 +1340,17 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                      </select>
                   </div>
                </div>
-               <div className={`grid gap-8 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3')}`}>
+               <div className="md:hidden grid grid-cols-2 gap-4">
+                  {filteredProducts.map((p: any) => (
+                     <MobileProductCard key={p.id} p={p} />
+                  ))}
+               </div>
+               <div className={`hidden md:grid gap-8 ${isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
                   {filteredProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-[3/4] mb-4 overflow-hidden relative rounded-xl border" style={{ backgroundColor: cardBg, borderColor, borderRadius: cardStyle === 'square' ? '0px' : undefined }}>
                            {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-12 h-12" /></div>}
-                           <div className={`absolute bottom-4 left-0 right-0 flex justify-center transition-opacity ${(previewDevice === 'mobile' && !isModal) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                           <div className="absolute bottom-4 left-0 right-0 flex justify-center transition-opacity opacity-0 group-hover:opacity-100">
                               <button onClick={handleAddToCart} className="px-8 py-3 text-white text-xs font-bold uppercase tracking-wider shadow-2xl rounded-full" style={btnStyle}>{tr('Add to cart')}</button>
                            </div>
                         </div>
@@ -1324,7 +1368,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
            </div>
         )}
         {page === 'product' && activeProductId && (
-           <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-8'} mx-auto w-full`}>
+           <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-8 pb-24 md:pb-8'} mx-auto w-full`}>
               {storeProducts.filter(p => p.id === activeProductId).map(p => (
                  <div key={p.id} className={`flex gap-12 ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'}`} style={{ '--pdp-img-pct': `${pdpImageWidth}%` } as any}>
                     <div className="pdp-img-col flex-1 aspect-[4/5] bg-slate-100 rounded-2xl flex items-center justify-center overflow-hidden">
@@ -1387,7 +1431,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                               />
                           </div>
                        ) : (
-                          <div className="flex gap-4">
+                          <>
+                          <div className="hidden md:flex gap-4">
                              {(buyMode === 'cart' || buyMode === 'both') && (
                                 <button onClick={handleAddToCart} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: '#1e293b' }}>{tr('Add to cart')}</button>
                              )}
@@ -1395,6 +1440,19 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                 <button onClick={() => buyNowAsPopup ? setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage }) : setPage('checkout')} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: primaryColor }}>Buy Now</button>
                              )}
                           </div>
+                          <div className="md:hidden fixed bottom-16 left-0 right-0 z-30 bg-white border-t border-slate-100 p-4 flex gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+                             {(buyMode === 'cart' || buyMode === 'both') && (
+                                <button onClick={handleAddToCart} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`flex-1 py-3.5 border-2 border-slate-800 text-slate-800 font-bold uppercase tracking-wider text-xs rounded-xl flex items-center justify-center gap-2 ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>
+                                   <ShoppingBag className="w-4 h-4" /> {isAr ? 'أضف للسلة' : 'Add to Cart'}
+                                </button>
+                             )}
+                             {(buyMode === 'direct' || buyMode === 'both') && (
+                                <button onClick={() => buyNowAsPopup ? setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage }) : setPage('checkout')} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`flex-1 py-3.5 bg-slate-900 text-white font-bold uppercase tracking-wider text-xs rounded-xl ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>
+                                   {isAr ? 'اشتري الآن' : 'Buy Now'}
+                                </button>
+                             )}
+                          </div>
+                          </>
                        )}
                     </div>
                  </div>
