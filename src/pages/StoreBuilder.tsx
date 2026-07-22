@@ -3863,24 +3863,45 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                     <div className="pt-4 mt-4 border-t border-slate-100 space-y-4">
                        <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">{isAr ? 'التصميم والألوان' : 'Design & Couleurs'}</h4>
 
-                       <div className="grid grid-cols-3 gap-2">
+                       <div className="space-y-3">
                           <div>
-                             <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block truncate">{isAr ? 'أساسي' : 'Principale'}</label>
-                             <label className="w-full h-8 rounded-lg border border-slate-200 cursor-pointer block shadow-inner" style={{ backgroundColor: primaryColor }}>
-                                <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="opacity-0 w-0 h-0" />
-                             </label>
+                             <div className="flex items-center gap-2 mb-1.5">
+                                <label className="w-7 h-7 rounded-lg border border-slate-200 cursor-pointer shrink-0 shadow-inner" style={{ backgroundColor: primaryColor }}>
+                                   <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="opacity-0 w-0 h-0" />
+                                </label>
+                                <span className="text-[9px] font-bold text-slate-500 uppercase">{isAr ? 'أساسي' : 'Principale'}</span>
+                             </div>
+                             <div className="flex gap-1 flex-wrap">
+                                {['#0f172a', '#1e3a8a', '#7c3aed', '#db2777', '#dc2626', '#d97706', '#16a34a', '#0891b2', '#b48a44', '#64748b'].map(color => (
+                                   <button key={color} onClick={() => setPrimaryColor(color)} className={`w-5 h-5 rounded-full border-2 ${primaryColor === color ? 'border-indigo-500 scale-110' : 'border-white'} shadow-sm`} style={{ backgroundColor: color }} />
+                                ))}
+                             </div>
                           </div>
                           <div>
-                             <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block truncate">{isAr ? 'ثانوي' : 'Secondaire'}</label>
-                             <label className="w-full h-8 rounded-lg border border-slate-200 cursor-pointer block shadow-inner" style={{ backgroundColor: secondaryColor }}>
-                                <input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="opacity-0 w-0 h-0" />
-                             </label>
+                             <div className="flex items-center gap-2 mb-1.5">
+                                <label className="w-7 h-7 rounded-lg border border-slate-200 cursor-pointer shrink-0 shadow-inner" style={{ backgroundColor: secondaryColor }}>
+                                   <input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="opacity-0 w-0 h-0" />
+                                </label>
+                                <span className="text-[9px] font-bold text-slate-500 uppercase">{isAr ? 'ثانوي' : 'Secondaire'}</span>
+                             </div>
+                             <div className="flex gap-1 flex-wrap">
+                                {['#ffffff', '#f8fafc', '#f1f5f9', '#fef9f0', '#f0fdf4', '#fdf4ff', '#111827', '#1a1a1a'].map(color => (
+                                   <button key={color} onClick={() => setSecondaryColor(color)} className={`w-5 h-5 rounded-full border-2 ${secondaryColor === color ? 'border-indigo-500 scale-110' : 'border-slate-200'} shadow-sm`} style={{ backgroundColor: color }} />
+                                ))}
+                             </div>
                           </div>
                           <div>
-                             <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block truncate">{isAr ? 'حدود' : 'Bordures'}</label>
-                             <label className="w-full h-8 rounded-lg border border-slate-200 cursor-pointer block shadow-inner" style={{ backgroundColor: borderColor }}>
-                                <input type="color" value={borderColor} onChange={(e) => setBorderColor(e.target.value)} className="opacity-0 w-0 h-0" />
-                             </label>
+                             <div className="flex items-center gap-2 mb-1.5">
+                                <label className="w-7 h-7 rounded-lg border border-slate-200 cursor-pointer shrink-0 shadow-inner" style={{ backgroundColor: borderColor }}>
+                                   <input type="color" value={borderColor} onChange={(e) => setBorderColor(e.target.value)} className="opacity-0 w-0 h-0" />
+                                </label>
+                                <span className="text-[9px] font-bold text-slate-500 uppercase">{isAr ? 'حدود' : 'Bordures'}</span>
+                             </div>
+                             <div className="flex gap-1 flex-wrap">
+                                {['#e2e8f0', '#f1f5f9', '#e5e7eb', '#fde68a', '#000000', '#ffffff'].map(color => (
+                                   <button key={color} onClick={() => setBorderColor(color)} className={`w-5 h-5 rounded-full border-2 ${borderColor === color ? 'border-indigo-500 scale-110' : 'border-slate-200'} shadow-sm`} style={{ backgroundColor: color }} />
+                                ))}
+                             </div>
                           </div>
                        </div>
 
