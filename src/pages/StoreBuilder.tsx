@@ -74,6 +74,16 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [isControlsCollapsed, setIsControlsCollapsed] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [showTrash, setShowTrash] = useState(false);
+  const [orderStatusFilter, setOrderStatusFilter] = useState<'all' | 'confirmed' | 'refused'>('all');
+  const CONFIRMED_STATUSES = ['Confirmé', 'Confirmée', 'Validée', 'Livrée', 'مؤكد', 'تم التوصيل'];
+  const REFUSED_STATUSES = ['Refusé', 'Refusée', 'Annulée', 'Retour', 'مرفوض', 'ملغى'];
+  const matchesOrderFilter = (o: any) => {
+    const trashMatch = showTrash ? o.deleted : !o.deleted;
+    if (!trashMatch) return false;
+    if (orderStatusFilter === 'confirmed') return CONFIRMED_STATUSES.includes(o.status);
+    if (orderStatusFilter === 'refused') return REFUSED_STATUSES.includes(o.status);
+    return true;
+  };
   const [orderToDelete, setOrderToDelete] = useState<string|null>(null);
     const [storeOrders, setStoreOrders] = useState(() => {
     if (!config.storeName) return [];
@@ -2728,20 +2738,26 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                           </div>
                        </div>
 
-                       <div className="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all flex items-center justify-between group cursor-pointer relative overflow-hidden">
+                       <div
+                          onClick={() => { setShowTrash(false); setSelectedOrderIds([]); setOrderStatusFilter(prev => prev === 'confirmed' ? 'all' : 'confirmed'); }}
+                          className={`bg-white p-3.5 rounded-2xl border shadow-sm hover:shadow-md transition-all flex items-center justify-between group cursor-pointer relative overflow-hidden ${orderStatusFilter === 'confirmed' ? 'border-green-400 ring-2 ring-green-100' : 'border-slate-100'}`}
+                       >
                           <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-green-400 group-hover:w-2 transition-all"></div>
                           <div className="pl-2">
                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{storeIsAr ? 'مؤكدة' : 'Confirmées'}</p>
-                             <h4 className="text-xl font-black text-slate-800 tracking-tight">{storeOrders.filter((ord: any) => !ord.deleted && ['Confirmé', 'Confirmée', 'Validée', 'Livrée', 'مؤكد', 'تم التوصيل'].includes(ord.status)).length.toLocaleString('fr-FR')}</h4>
+                             <h4 className="text-xl font-black text-slate-800 tracking-tight">{storeOrders.filter((ord: any) => !ord.deleted && CONFIRMED_STATUSES.includes(ord.status)).length.toLocaleString('fr-FR')}</h4>
                           </div>
                           <div className="w-10 h-10 bg-green-50 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:bg-green-100 transition-all"><CheckCircle className="w-5 h-5 text-green-500" /></div>
                        </div>
 
-                       <div className="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all flex items-center justify-between group cursor-pointer relative overflow-hidden">
+                       <div
+                          onClick={() => { setShowTrash(false); setSelectedOrderIds([]); setOrderStatusFilter(prev => prev === 'refused' ? 'all' : 'refused'); }}
+                          className={`bg-white p-3.5 rounded-2xl border shadow-sm hover:shadow-md transition-all flex items-center justify-between group cursor-pointer relative overflow-hidden ${orderStatusFilter === 'refused' ? 'border-rose-400 ring-2 ring-rose-100' : 'border-slate-100'}`}
+                       >
                           <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-400 group-hover:w-2 transition-all"></div>
                           <div className="pl-2">
                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{storeIsAr ? 'مرفوضة' : 'Refusées'}</p>
-                             <h4 className="text-xl font-black text-slate-800 tracking-tight">{storeOrders.filter((ord: any) => !ord.deleted && ['Refusé', 'Refusée', 'Annulée', 'Retour', 'مرفوض', 'ملغى'].includes(ord.status)).length.toLocaleString('fr-FR')}</h4>
+                             <h4 className="text-xl font-black text-slate-800 tracking-tight">{storeOrders.filter((ord: any) => !ord.deleted && REFUSED_STATUSES.includes(ord.status)).length.toLocaleString('fr-FR')}</h4>
                           </div>
                           <div className="w-10 h-10 bg-rose-50 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:bg-rose-100 transition-all"><X className="w-5 h-5 text-rose-500" /></div>
                        </div>
@@ -2764,12 +2780,16 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                    <Trash2 className="w-3 h-3" /> {showTrash ? (storeIsAr ? 'حذف نهائي' : 'Supprimer définitivement') : (storeIsAr ? 'حذف' : 'Supprimer')}
                                 </button>
                              </div>
+                          ) : orderStatusFilter !== 'all' ? (
+                             <button onClick={() => setOrderStatusFilter('all')} className={`flex items-center gap-1 text-[10px] font-black px-2.5 py-1.5 rounded-lg transition-colors ${orderStatusFilter === 'confirmed' ? 'text-green-700 bg-green-50 hover:bg-green-100' : 'text-rose-700 bg-rose-50 hover:bg-rose-100'}`}>
+                                {orderStatusFilter === 'confirmed' ? (storeIsAr ? 'مؤكدة' : 'Confirmées') : (storeIsAr ? 'مرفوضة' : 'Refusées')} <X className="w-3 h-3" />
+                             </button>
                           ) : (
                              <span className="text-[10px] text-indigo-600 font-bold cursor-pointer hover:underline">Voir tout</span>
                           )}
                        </div>
                        <div className="space-y-3">
-                          {storeOrders.filter(o => showTrash ? o.deleted : !o.deleted).length === 0 ? (
+                          {storeOrders.filter(matchesOrderFilter).length === 0 ? (
                              <div className="border-2 border-dashed border-slate-100 rounded-3xl p-10 flex flex-col items-center justify-center text-center bg-gradient-to-b from-slate-50/50 to-white shadow-sm mt-4">
                                 <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-4 shadow-sm border border-slate-100 relative">
                                    <div className="absolute inset-0 bg-indigo-50 rounded-2xl animate-ping opacity-20"></div>
@@ -2778,7 +2798,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                 <h4 className="text-sm font-black text-slate-700 mb-1">{showTrash ? (storeIsAr ? 'سلة المهملات فارغة' : 'Corbeille vide') : (storeIsAr ? 'لا توجد طلبات بعد' : 'Aucune commande pour le moment')}</h4>
                                 <p className="text-[10px] font-bold text-slate-400 max-w-[200px] leading-relaxed">{showTrash ? '' : (storeIsAr ? 'ستظهر طلباتك هنا بمجرد أن يقوم عملاؤك بالشراء' : 'Vos commandes apparaîtront ici dès que vos clients commenceront à acheter')}</p>
                              </div>
-                          ) : storeOrders.filter(o => showTrash ? o.deleted : !o.deleted).map(order => (
+                          ) : storeOrders.filter(matchesOrderFilter).map(order => (
                              <div key={order.id} onClick={() => setSelectedOrder(order)} className={`p-3 border rounded-2xl bg-white shadow-sm cursor-pointer transition-colors hover:shadow-md group flex gap-3 items-start ${selectedOrderIds.includes(order.id) ? 'border-indigo-500 ring-2 ring-indigo-100' : 'border-slate-200 hover:border-indigo-500'}`}>
                                 <button
                                    onClick={(e) => { e.stopPropagation(); toggleOrderSelected(order.id); }}
