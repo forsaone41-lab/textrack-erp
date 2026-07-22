@@ -353,7 +353,22 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [borderColor, setBorderColor] = useState(config.borderColor || '#e2e8f0');
   const [footerBgColor, setFooterBgColor] = useState(config.footerBgColor || '#f8f9fa');
   const [footerTextColor, setFooterTextColor] = useState(config.footerTextColor || '#64748b');
-  const [cardStyle, setCardStyle] = useState<'rounded' | 'square'>(config.cardStyle || 'rounded');
+  const [cardStyle, setCardStyle] = useState<'rounded' | 'square' | 'arch' | 'pill'>(config.cardStyle || 'rounded');
+  const [showCardBadge, setShowCardBadge] = useState<boolean>(config.showCardBadge ?? false);
+  const getCardRadius = (): string | undefined => {
+     if (cardStyle === 'square') return '0px';
+     if (cardStyle === 'arch') return '40px 40px 10px 10px';
+     if (cardStyle === 'pill') return '999px';
+     return undefined;
+  };
+  const CardBadge = ({ text }: { text: string }) => {
+     if (!showCardBadge || !text) return null;
+     return (
+        <span className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider text-white shadow-sm" style={{ backgroundColor: primaryColor }}>
+           {text}
+        </span>
+     );
+  };
   const [heroHeight, setHeroHeight] = useState<number>(config.heroHeight || 450);
   const [heroImagePosX, setHeroImagePosX] = useState<number>(config.heroImagePosX ?? 50);
   const [heroImagePosY, setHeroImagePosY] = useState<number>(config.heroImagePosY ?? 50);
@@ -597,6 +612,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               if (conf.footerBgColor) setFooterBgColor(conf.footerBgColor);
               if (conf.footerTextColor) setFooterTextColor(conf.footerTextColor);
               if (conf.cardStyle) setCardStyle(conf.cardStyle);
+              if (conf.showCardBadge !== undefined) setShowCardBadge(conf.showCardBadge);
               if (conf.heroHeight) setHeroHeight(conf.heroHeight);
               if (conf.heroImagePosX !== undefined) setHeroImagePosX(conf.heroImagePosX);
               if (conf.heroImagePosY !== undefined) setHeroImagePosY(conf.heroImagePosY);
@@ -803,6 +819,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        footerBgColor,
        footerTextColor,
        cardStyle,
+       showCardBadge,
        heroHeight,
        heroImagePosX,
        heroImagePosY,
@@ -1221,7 +1238,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
     const MobileProductCard = ({ p }: any) => (
        <div className="cursor-pointer" onClick={() => navigateToProduct(p.id)}>
-          <div className="relative aspect-square rounded-2xl overflow-hidden mb-2 border" style={{ backgroundColor: cardBg, borderColor, borderRadius: cardStyle === 'square' ? '0px' : undefined }}>
+          <div className="relative aspect-square rounded-2xl overflow-hidden mb-2 border" style={{ backgroundColor: cardBg, borderColor, borderRadius: getCardRadius() }}>
+                           <CardBadge text={p.category} />
              {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="w-full h-full flex items-center justify-center opacity-20"><Box className="w-10 h-10" /></div>}
              <button onClick={(e) => toggleLike(p.id, e)} className="absolute top-2.5 right-2.5 w-7 h-7 bg-white/90 rounded-full shadow-sm flex items-center justify-center">
                 <Heart className={`w-3.5 h-3.5 ${likedProducts.has(p.id) ? 'fill-rose-500 text-rose-500' : 'text-slate-400'}`} />
@@ -1422,7 +1440,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                <div className={`hidden md:grid gap-8 ${isModal ? gridColsClass('lg4') : gridColsClass('lg3')}`}>
                   {filteredProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
-                        <div className="aspect-[3/4] mb-4 overflow-hidden relative rounded-xl border" style={{ backgroundColor: cardBg, borderColor, borderRadius: cardStyle === 'square' ? '0px' : undefined }}>
+                        <div className="aspect-[3/4] mb-4 overflow-hidden relative rounded-xl border" style={{ backgroundColor: cardBg, borderColor, borderRadius: getCardRadius() }}>
+                           <CardBadge text={p.category} />
                            {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-12 h-12" /></div>}
                            <div className="absolute bottom-4 left-0 right-0 flex justify-center transition-opacity opacity-0 group-hover:opacity-100">
                               <button onClick={handleAddToCart} className="px-8 py-3 text-white text-xs font-bold uppercase tracking-wider shadow-2xl rounded-full" style={btnStyle}>{tr('Add to cart')}</button>
@@ -1646,7 +1665,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : gridColsClass('lg3')}`}>
                   {storeProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
-                        <div className="aspect-[4/5] mb-6 relative overflow-hidden flex items-center justify-center border" style={{ backgroundColor: cardBg, borderColor, borderRadius: cardStyle === 'square' ? '0px' : undefined }}>
+                        <div className="aspect-[4/5] mb-6 relative overflow-hidden flex items-center justify-center border" style={{ backgroundColor: cardBg, borderColor, borderRadius: getCardRadius() }}>
+                           <CardBadge text={p.category} />
                            {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-10"><ImageIcon className="w-16 h-16" /></div>}
                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                               <button onClick={handleAddToCart} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`px-8 py-3 bg-white text-black text-xs tracking-widest hover:bg-black hover:text-white transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{tr('ADD TO CART')}</button>
@@ -1684,7 +1704,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : gridColsClass('lg3')}`}>
                   {filteredProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
-                        <div className="aspect-[4/5] mb-6 relative overflow-hidden flex items-center justify-center border" style={{ backgroundColor: cardBg, borderColor, borderRadius: cardStyle === 'square' ? '0px' : undefined }}>
+                        <div className="aspect-[4/5] mb-6 relative overflow-hidden flex items-center justify-center border" style={{ backgroundColor: cardBg, borderColor, borderRadius: getCardRadius() }}>
+                           <CardBadge text={p.category} />
                            {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-10"><ImageIcon className="w-16 h-16" /></div>}
                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                               <button onClick={handleAddToCart} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`px-8 py-3 bg-white text-black text-xs tracking-widest hover:bg-black hover:text-white transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{tr('ADD TO CART')}</button>
@@ -2122,7 +2143,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                <div className={`hidden md:grid gap-6 ${isModal ? gridColsClass('lg4') : gridColsClass('sm2')}`}>
                   {storeProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer bg-slate-50 p-4 rounded-3xl hover:bg-slate-100 transition-colors border-2 border-transparent hover:border-current" style={{ borderColor: primaryColor }} onClick={() => navigateToProduct(p.id)}>
-                        <div className="aspect-square mb-4 overflow-hidden relative rounded-2xl shadow-sm border flex items-center justify-center" style={{ backgroundColor: cardBg, borderColor, borderRadius: cardStyle === 'square' ? '0px' : undefined }}>
+                        <div className="aspect-square mb-4 overflow-hidden relative rounded-2xl shadow-sm border flex items-center justify-center" style={{ backgroundColor: cardBg, borderColor, borderRadius: getCardRadius() }}>
+                           <CardBadge text={p.category} />
                            {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-12 h-12 opacity-10" />}
                            <div className={`absolute inset-0 bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center`}>
                               <button onClick={handleAddToCart} className="px-6 py-3 text-white text-xs font-black uppercase tracking-wider rounded-full shadow-xl hover:scale-105 transition-transform" style={btnStyle}>{tr('Add to cart')}</button>
@@ -2163,7 +2185,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                <div className={`hidden md:grid gap-6 ${isModal ? gridColsClass('lg4') : gridColsClass('sm2')}`}>
                   {filteredProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer bg-slate-50 p-4 rounded-3xl hover:bg-slate-100 transition-colors border-2 border-transparent hover:border-current" style={{ borderColor: primaryColor }} onClick={() => navigateToProduct(p.id)}>
-                        <div className="aspect-square mb-4 overflow-hidden relative rounded-2xl shadow-sm border flex items-center justify-center" style={{ backgroundColor: cardBg, borderColor, borderRadius: cardStyle === 'square' ? '0px' : undefined }}>
+                        <div className="aspect-square mb-4 overflow-hidden relative rounded-2xl shadow-sm border flex items-center justify-center" style={{ backgroundColor: cardBg, borderColor, borderRadius: getCardRadius() }}>
+                           <CardBadge text={p.category} />
                            {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-12 h-12 opacity-10" />}
                            <div className={`absolute inset-0 bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center`}>
                               <button onClick={handleAddToCart} className="px-6 py-3 text-white text-xs font-black uppercase tracking-wider rounded-full shadow-xl hover:scale-105 transition-transform" style={btnStyle}>{tr('Add to cart')}</button>
@@ -2399,7 +2422,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                <div className={`grid ${previewDevice === 'mobile' && !isModal ? 'grid-cols-2' : gridColsClass('md4')} gap-6`}>
                   {filteredProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
-                        <div className="aspect-[3/4] mb-4 relative overflow-hidden flex items-center justify-center border" style={{ backgroundColor: cardBg, borderColor, borderRadius: cardStyle === 'square' ? '0px' : undefined }}>
+                        <div className="aspect-[3/4] mb-4 relative overflow-hidden flex items-center justify-center border" style={{ backgroundColor: cardBg, borderColor, borderRadius: getCardRadius() }}>
+                           <CardBadge text={p.category} />
                            <img src={getCoverImage(p)} alt={p.name} className="w-full h-full object-cover mix-blend-multiply transition-transform duration-500 group-hover:scale-105" />
                            <button className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/50 transition-colors" onClick={(e) => { e.stopPropagation(); }}>
                               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
@@ -3755,15 +3779,23 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                         <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'شكل بطاقات المنتجات' : 'Style des Cartes Produits'}</label>
                         <div className="grid grid-cols-2 gap-2">
                            {([
-                              { key: 'rounded', labelFr: 'Arrondi', labelAr: 'مستدير', radius: 'rounded-xl' },
-                              { key: 'square', labelFr: 'Carré', labelAr: 'مربع', radius: 'rounded-none' }
+                              { key: 'rounded', labelFr: 'Arrondi', labelAr: 'مستدير', radius: '12px' },
+                              { key: 'square', labelFr: 'Carré', labelAr: 'مربع', radius: '0px' },
+                              { key: 'arch', labelFr: 'Arche', labelAr: 'قوس', radius: '30px 30px 6px 6px' },
+                              { key: 'pill', labelFr: 'Pilule', labelAr: 'كبسولة', radius: '999px' }
                            ] as const).map(({ key, labelFr, labelAr, radius }) => (
                               <button key={key} onClick={() => setCardStyle(key)}
                                  className={`flex flex-col items-center gap-2 p-3 border-2 rounded-xl transition-all ${cardStyle === key ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 hover:border-slate-300'}`}>
-                                 <div className={`w-12 h-12 border ${radius}`} style={{ backgroundColor: secondaryColor, borderColor }} />
+                                 <div className="w-12 h-12 border" style={{ backgroundColor: secondaryColor, borderColor, borderRadius: radius }} />
                                  <span className={`text-[10px] font-bold ${cardStyle === key ? 'text-indigo-600' : 'text-slate-500'}`}>{isAr ? labelAr : labelFr}</span>
                               </button>
                            ))}
+                        </div>
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
+                           <span className="text-[10px] font-bold text-slate-500">{isAr ? 'إظهار شارة الفئة على الصورة' : 'Afficher un badge catégorie sur l\'image'}</span>
+                           <button onClick={() => setShowCardBadge(v => !v)} className={`relative w-9 h-5 rounded-full transition-colors shrink-0 ${showCardBadge ? 'bg-indigo-600' : 'bg-slate-300'}`}>
+                              <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${showCardBadge ? 'translate-x-4' : ''}`} />
+                           </button>
                         </div>
                      </div>
 
@@ -4511,9 +4543,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        <div>
                           <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'شكل بطاقات المنتجات' : 'Cartes produits'}</label>
                           <div className="grid grid-cols-2 gap-1.5">
-                             {(['rounded', 'square'] as const).map(key => (
+                             {(['rounded', 'square', 'arch', 'pill'] as const).map(key => (
                                 <button key={key} onClick={() => setCardStyle(key)} className={`py-1.5 text-[9px] font-bold rounded-lg border ${cardStyle === key ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-slate-200 text-slate-500'}`}>
-                                   {key === 'rounded' ? (isAr ? 'مستدير' : 'Arrondi') : (isAr ? 'مربع' : 'Carré')}
+                                   {key === 'rounded' ? (isAr ? 'مستدير' : 'Arrondi') : key === 'square' ? (isAr ? 'مربع' : 'Carré') : key === 'arch' ? (isAr ? 'قوس' : 'Arche') : (isAr ? 'كبسولة' : 'Pilule')}
                                 </button>
                              ))}
                           </div>
