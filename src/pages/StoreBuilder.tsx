@@ -351,6 +351,28 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [heroHeight, setHeroHeight] = useState<number>(config.heroHeight || 450);
   const [heroImagePosX, setHeroImagePosX] = useState<number>(config.heroImagePosX ?? 50);
   const [heroImagePosY, setHeroImagePosY] = useState<number>(config.heroImagePosY ?? 50);
+  const [textStyles, setTextStyles] = useState<Record<string, { fontSize?: number; color?: string; fontFamily?: string }>>(config.textStyles || {});
+  const [activeStyleKey, setActiveStyleKey] = useState<string | null>(null);
+  const [toolbarPos, setToolbarPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const [toolbarBaseline, setToolbarBaseline] = useState<{ fontSize: number; color: string }>({ fontSize: 16, color: '#000000' });
+  const updateTextStyle = (key: string, patch: any) => {
+     setTextStyles(prev => ({ ...prev, [key]: { ...prev[key], ...patch } }));
+  };
+  const resetTextStyle = (key: string) => {
+     setTextStyles(prev => { const next = { ...prev }; delete next[key]; return next; });
+  };
+  const FONT_STACKS: Record<string, string> = {
+     sans: 'ui-sans-serif, system-ui, -apple-system, sans-serif',
+     serif: 'ui-serif, Georgia, Cambria, serif',
+     mono: 'ui-monospace, SFMono-Regular, monospace'
+  };
+  const rgbToHex = (rgb: string) => {
+     const m = rgb.match(/\d+/g);
+     if (!m) return '#000000';
+     return '#' + m.slice(0, 3).map(n => parseInt(n).toString(16).padStart(2, '0')).join('');
+  };
+  const [buttonStyle, setButtonStyle] = useState<'rounded' | 'pill' | 'square'>(config.buttonStyle || 'rounded');
+  const [fontFamily, setFontFamily] = useState(config.fontFamily || THEMES[0].defaultFont);
 
   // Undo history for Design tab changes
   const [designHistory, setDesignHistory] = useState<any[]>([]);
@@ -380,28 +402,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         return prev.slice(0, -1);
      });
   };
-  const [textStyles, setTextStyles] = useState<Record<string, { fontSize?: number; color?: string; fontFamily?: string }>>(config.textStyles || {});
-  const [activeStyleKey, setActiveStyleKey] = useState<string | null>(null);
-  const [toolbarPos, setToolbarPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
-  const [toolbarBaseline, setToolbarBaseline] = useState<{ fontSize: number; color: string }>({ fontSize: 16, color: '#000000' });
-  const updateTextStyle = (key: string, patch: any) => {
-     setTextStyles(prev => ({ ...prev, [key]: { ...prev[key], ...patch } }));
-  };
-  const resetTextStyle = (key: string) => {
-     setTextStyles(prev => { const next = { ...prev }; delete next[key]; return next; });
-  };
-  const FONT_STACKS: Record<string, string> = {
-     sans: 'ui-sans-serif, system-ui, -apple-system, sans-serif',
-     serif: 'ui-serif, Georgia, Cambria, serif',
-     mono: 'ui-monospace, SFMono-Regular, monospace'
-  };
-  const rgbToHex = (rgb: string) => {
-     const m = rgb.match(/\d+/g);
-     if (!m) return '#000000';
-     return '#' + m.slice(0, 3).map(n => parseInt(n).toString(16).padStart(2, '0')).join('');
-  };
-  const [buttonStyle, setButtonStyle] = useState<'rounded' | 'pill' | 'square'>(config.buttonStyle || 'rounded');
-  const [fontFamily, setFontFamily] = useState(config.fontFamily || THEMES[0].defaultFont);
+
   const [heroImage, setHeroImage] = useState(config.heroImage || THEMES[0].previewImg);
   
   // Theme Inline Texts
