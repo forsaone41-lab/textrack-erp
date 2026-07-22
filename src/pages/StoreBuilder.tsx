@@ -345,6 +345,26 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [primaryColor, setPrimaryColor] = useState(config.primaryColor || THEMES[0].defaultColor);
   const [secondaryColor, setSecondaryColor] = useState(config.secondaryColor || '#ffffff');
   const [borderColor, setBorderColor] = useState(config.borderColor || '#e2e8f0');
+  const [textStyles, setTextStyles] = useState<Record<string, { fontSize?: number; color?: string; fontFamily?: string }>>(config.textStyles || {});
+  const [activeStyleKey, setActiveStyleKey] = useState<string | null>(null);
+  const [toolbarPos, setToolbarPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const [toolbarBaseline, setToolbarBaseline] = useState<{ fontSize: number; color: string }>({ fontSize: 16, color: '#000000' });
+  const updateTextStyle = (key: string, patch: any) => {
+     setTextStyles(prev => ({ ...prev, [key]: { ...prev[key], ...patch } }));
+  };
+  const resetTextStyle = (key: string) => {
+     setTextStyles(prev => { const next = { ...prev }; delete next[key]; return next; });
+  };
+  const FONT_STACKS: Record<string, string> = {
+     sans: 'ui-sans-serif, system-ui, -apple-system, sans-serif',
+     serif: 'ui-serif, Georgia, Cambria, serif',
+     mono: 'ui-monospace, SFMono-Regular, monospace'
+  };
+  const rgbToHex = (rgb: string) => {
+     const m = rgb.match(/\d+/g);
+     if (!m) return '#000000';
+     return '#' + m.slice(0, 3).map(n => parseInt(n).toString(16).padStart(2, '0')).join('');
+  };
   const [buttonStyle, setButtonStyle] = useState<'rounded' | 'pill' | 'square'>(config.buttonStyle || 'rounded');
   const [fontFamily, setFontFamily] = useState(config.fontFamily || THEMES[0].defaultFont);
   const [heroImage, setHeroImage] = useState(config.heroImage || THEMES[0].previewImg);
@@ -498,6 +518,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               if (conf.deliveryCompanies) setDeliveryCompanies(conf.deliveryCompanies);
               if (conf.secondaryColor) setSecondaryColor(conf.secondaryColor);
               if (conf.borderColor) setBorderColor(conf.borderColor);
+              if (conf.textStyles) setTextStyles(conf.textStyles);
               if (conf.buttonStyle) setButtonStyle(conf.buttonStyle);
               if (conf.showReviews !== undefined) setShowReviews(conf.showReviews);
               if (conf.homeBlocks) setHomeBlocks(conf.homeBlocks);
@@ -682,6 +703,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        deliveryCompanies,
        secondaryColor,
        borderColor,
+       textStyles,
        buttonStyle,
        showReviews,
        requireAccountToOrder,
@@ -754,16 +776,32 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   };
 
   // --- DYNAMIC LAYOUT COMPONENTS ---
-  const EditableText = ({ text, onTextChange, isLiveStore, className, as: Tag = 'span', ...props }: any) => {
+  const EditableText = ({ text, onTextChange, isLiveStore, className, style, as: Tag = 'span', styleKey, ...props }: any) => {
      const displayText = tr(text);
-     if (isLiveStore) return <Tag className={className} {...props}>{displayText}</Tag>;
+     const override = (styleKey && textStyles[styleKey]) || {};
+     const mergedStyle = {
+        ...style,
+        ...(override.fontSize ? { fontSize: override.fontSize } : {}),
+        ...(override.color ? { color: override.color } : {}),
+        ...(override.fontFamily ? { fontFamily: FONT_STACKS[override.fontFamily] } : {})
+     };
+     if (isLiveStore) return <Tag className={className} style={mergedStyle} {...props}>{displayText}</Tag>;
      return (
-        <Tag 
-           className={`${className} cursor-text hover:outline hover:outline-2 hover:outline-indigo-500 hover:outline-dashed hover:bg-black/10 transition-all px-1 rounded min-w-[20px] inline-block empty:before:content-['${storeIsAr ? "فارغ" : "Vide"}'] empty:before:text-slate-400`} 
-           contentEditable 
-           suppressContentEditableWarning 
+        <Tag
+           className={`${className} cursor-text hover:outline hover:outline-2 hover:outline-indigo-500 hover:outline-dashed hover:bg-black/10 transition-all px-1 rounded min-w-[20px] inline-block empty:before:content-['${storeIsAr ? "فارغ" : "Vide"}'] empty:before:text-slate-400`}
+           style={mergedStyle}
+           contentEditable
+           suppressContentEditableWarning
            onBlur={(e: any) => onTextChange(e.currentTarget.textContent)}
-           onClick={(e: any) => e.stopPropagation()}
+           onClick={(e: any) => {
+              e.stopPropagation();
+              if (!styleKey) return;
+              const rect = e.currentTarget.getBoundingClientRect();
+              const computed = window.getComputedStyle(e.currentTarget);
+              setToolbarBaseline({ fontSize: override.fontSize || parseFloat(computed.fontSize), color: override.color || rgbToHex(computed.color) });
+              setToolbarPos({ top: Math.max(8, rect.top - 56), left: rect.left });
+              setActiveStyleKey(styleKey);
+           }}
            {...props}
         >{displayText}</Tag>
      );
@@ -820,7 +858,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               {footerSettings.showTerms && <button onClick={() => setPage('terms')} className="hover:opacity-70 transition-opacity">{storeIsAr ? 'الشروط والأحكام' : 'Conditions Générales'}</button>}
               {footerSettings.showCookies && <button onClick={() => setPage('cookies')} className="hover:opacity-70 transition-opacity">{storeIsAr ? 'سياسة ملفات الارتباط' : 'Politique des Cookies'}</button>}
            </div>
-           <EditableText as="p" text={footerSettings.copyright} onTextChange={(v: string) => setFooterSettings({...footerSettings, copyright: v})} isLiveStore={isLiveStore} className="text-xs opacity-70 mt-4" style={{ color: textColor }} />
+           <EditableText as="p" text={footerSettings.copyright} onTextChange={(v: string) => setFooterSettings({...footerSettings, copyright: v})} isLiveStore={isLiveStore} className="text-xs opacity-70 mt-4" style={{ color: textColor }} styleKey="footerCopyright" />
         </div>
      </footer>
   );
@@ -955,10 +993,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                     <HeroBackgroundEditor key="hero" className={`h-[${isModal ? '600px' : '400px'}] flex flex-col items-center justify-center text-center p-8 bg-cover bg-center relative`} style={{ backgroundImage: `url(${heroImage})` }}>
                        <div className="absolute inset-0 bg-black/60"></div>
                        <div className="relative z-10 flex flex-col items-center">
-                          <EditableText as="h1" text={heroTitle} onTextChange={setHeroTitle} isLiveStore={isLiveStore} className={`${isModal ? 'text-7xl' : 'text-5xl'} font-black text-white uppercase tracking-tighter mb-4`} />
-                          <EditableText as="p" text={heroSubtitle} onTextChange={setHeroSubtitle} isLiveStore={isLiveStore} className="text-white/90 text-lg mb-8 max-w-md" />
+                          <EditableText as="h1" text={heroTitle} onTextChange={setHeroTitle} isLiveStore={isLiveStore} className={`${isModal ? 'text-7xl' : 'text-5xl'} font-black text-white uppercase tracking-tighter mb-4`} styleKey="heroTitle" />
+                          <EditableText as="p" text={heroSubtitle} onTextChange={setHeroSubtitle} isLiveStore={isLiveStore} className="text-white/90 text-lg mb-8 max-w-md" styleKey="heroSubtitle" />
                           <button onClick={() => setPage('collections')} className="px-8 py-3 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded" style={{ backgroundColor: primaryColor }}>
-                             <EditableText text={heroButtonText} onTextChange={setHeroButtonText} isLiveStore={isLiveStore} />
+                             <EditableText text={heroButtonText} onTextChange={setHeroButtonText} isLiveStore={isLiveStore} styleKey="heroButtonText" />
                           </button>
                        </div>
                     </HeroBackgroundEditor>
@@ -1972,14 +2010,14 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             <div className="w-full bg-[#e8e2d7]">
                <HeroBackgroundEditor className={`w-full h-[${isModal ? '600px' : '400px'}] bg-cover bg-right-top relative flex items-center`} style={{ backgroundImage: `url(${heroImage})` }}>
                   <div className="max-w-2xl px-12 md:px-24">
-                     <EditableText as="h1" text={heroTitle} onTextChange={setHeroTitle} isLiveStore={isLiveStore} className="text-5xl md:text-7xl font-serif italic tracking-wide text-[#2c2c2c] mb-6 leading-tight" style={{ fontFamily: 'Georgia, serif' }} />
+                     <EditableText as="h1" text={heroTitle} onTextChange={setHeroTitle} isLiveStore={isLiveStore} className="text-5xl md:text-7xl font-serif italic tracking-wide text-[#2c2c2c] mb-6 leading-tight" style={{ fontFamily: 'Georgia, serif' }} styleKey="heroTitle" />
                   </div>
                </HeroBackgroundEditor>
             </div>
 
             <div className="py-16 px-8 max-w-7xl mx-auto bg-white">
                <div className="flex flex-col items-center mb-12">
-                  <EditableText as="h2" text={homeCollectionsTitle} onTextChange={setHomeCollectionsTitle} isLiveStore={isLiveStore} className="text-2xl font-black uppercase text-[#1a1a1a] mb-8 tracking-wider" />
+                  <EditableText as="h2" text={homeCollectionsTitle} onTextChange={setHomeCollectionsTitle} isLiveStore={isLiveStore} className="text-2xl font-black uppercase text-[#1a1a1a] mb-8 tracking-wider" styleKey="homeCollectionsTitle" />
                   
                   {/* Categories */}
                   <div className="flex flex-wrap justify-center gap-8 text-sm font-medium text-[#4a4a4a]">
@@ -2469,7 +2507,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     };
 
     return (
-       <div className="store-preview-wrapper min-h-screen w-full relative flex flex-col">
+       <div className="store-preview-wrapper min-h-screen w-full relative flex flex-col" onClick={() => setActiveStyleKey(null)}>
           <Layout />
           {appsConfig && appsConfig['WhatsApp Chat'] && (
              <a href={'https://wa.me/' + appsConfig['WhatsApp Chat'].replace(/[^0-9]/g, '')} target="_blank" rel="noreferrer" className="fixed bottom-6 right-6 z-[998] w-14 h-14 bg-green-500 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform hover:bg-green-600">
@@ -2557,6 +2595,41 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                 </div>
              </div>
           )}
+          {!isLiveStore && activeStyleKey && (() => {
+             const current = { ...toolbarBaseline, ...textStyles[activeStyleKey] };
+             return (
+                <div
+                   className="fixed z-[1000] bg-white rounded-xl shadow-2xl border border-slate-200 p-2 flex items-center gap-1"
+                   style={{ top: toolbarPos.top, left: toolbarPos.left }}
+                   onClick={(e) => e.stopPropagation()}
+                >
+                   <div className="flex items-center gap-1 bg-slate-50 rounded-lg px-1">
+                      <button onClick={() => updateTextStyle(activeStyleKey, { fontSize: Math.max(8, (current.fontSize || 16) - 2) })} className="w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-white rounded-md font-black">-</button>
+                      <span className="text-[11px] font-bold text-slate-600 w-9 text-center">{Math.round(current.fontSize || 16)}px</span>
+                      <button onClick={() => updateTextStyle(activeStyleKey, { fontSize: (current.fontSize || 16) + 2 })} className="w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-white rounded-md font-black">+</button>
+                   </div>
+                   <label className="relative cursor-pointer w-8 h-8 rounded-lg border border-slate-200 overflow-hidden shrink-0" style={{ backgroundColor: current.color || '#000000' }}>
+                      <input type="color" value={current.color || '#000000'} onChange={(e) => updateTextStyle(activeStyleKey, { color: e.target.value })} className="opacity-0 w-full h-full cursor-pointer" />
+                   </label>
+                   <select
+                      value={textStyles[activeStyleKey]?.fontFamily || ''}
+                      onChange={(e) => updateTextStyle(activeStyleKey, { fontFamily: e.target.value || undefined })}
+                      className="text-[11px] font-bold text-slate-600 bg-slate-50 rounded-lg px-2 py-1.5 border-none focus:outline-none"
+                   >
+                      <option value="">{isAr ? 'الخط' : 'Thème'}</option>
+                      <option value="sans">Sans</option>
+                      <option value="serif">Serif</option>
+                      <option value="mono">Mono</option>
+                   </select>
+                   <button onClick={() => resetTextStyle(activeStyleKey)} title={isAr ? 'إعادة تعيين' : 'Réinitialiser'} className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-rose-500 rounded-md hover:bg-rose-50">
+                      <RefreshCw className="w-3.5 h-3.5" />
+                   </button>
+                   <button onClick={() => setActiveStyleKey(null)} className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-100">
+                      <X className="w-3.5 h-3.5" />
+                   </button>
+                </div>
+             );
+          })()}
        </div>
     );
   };
