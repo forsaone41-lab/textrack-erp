@@ -351,6 +351,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [heroHeight, setHeroHeight] = useState<number>(config.heroHeight || 450);
   const [heroImagePosX, setHeroImagePosX] = useState<number>(config.heroImagePosX ?? 50);
   const [heroImagePosY, setHeroImagePosY] = useState<number>(config.heroImagePosY ?? 50);
+  const [menuTextColor, setMenuTextColor] = useState(config.menuTextColor || '#64748b');
+  const [menuActiveColor, setMenuActiveColor] = useState(config.menuActiveColor || '');
+  const [menuStyle, setMenuStyle] = useState<'underline' | 'pill' | 'bold'>(config.menuStyle || 'underline');
   const [textStyles, setTextStyles] = useState<Record<string, { fontSize?: number; color?: string; fontFamily?: string }>>(config.textStyles || {});
   const [activeStyleKey, setActiveStyleKey] = useState<string | null>(null);
   const [toolbarPos, setToolbarPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
@@ -561,6 +564,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               if (conf.heroHeight) setHeroHeight(conf.heroHeight);
               if (conf.heroImagePosX !== undefined) setHeroImagePosX(conf.heroImagePosX);
               if (conf.heroImagePosY !== undefined) setHeroImagePosY(conf.heroImagePosY);
+              if (conf.menuTextColor) setMenuTextColor(conf.menuTextColor);
+              if (conf.menuActiveColor !== undefined) setMenuActiveColor(conf.menuActiveColor);
+              if (conf.menuStyle) setMenuStyle(conf.menuStyle);
               if (conf.buttonStyle) setButtonStyle(conf.buttonStyle);
               if (conf.showReviews !== undefined) setShowReviews(conf.showReviews);
               if (conf.homeBlocks) setHomeBlocks(conf.homeBlocks);
@@ -752,6 +758,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        heroHeight,
        heroImagePosX,
        heroImagePosY,
+       menuTextColor,
+       menuActiveColor,
+       menuStyle,
        buttonStyle,
        showReviews,
        requireAccountToOrder,
@@ -915,6 +924,32 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
      );
   };
 
+  // Shared nav menu link used by every theme's header, so the menu color/style
+  // controls in Design apply consistently everywhere.
+  const NavLink = ({ p, currentPage, setPage: setPageFn }: any) => {
+     const isActive = currentPage === p.id;
+     const activeColor = menuActiveColor || primaryColor;
+     if (menuStyle === 'pill') {
+        return (
+           <button onClick={() => setPageFn(p.id)} className="cursor-pointer capitalize px-4 py-2 rounded-full transition-colors" style={{ backgroundColor: isActive ? activeColor : 'transparent', color: isActive ? '#fff' : menuTextColor }}>
+              {tr(p.title)}
+           </button>
+        );
+     }
+     if (menuStyle === 'bold') {
+        return (
+           <span onClick={() => setPageFn(p.id)} className="cursor-pointer capitalize transition-colors" style={{ color: isActive ? activeColor : menuTextColor, fontWeight: isActive ? 800 : 500 }}>
+              {tr(p.title)}
+           </span>
+        );
+     }
+     return (
+        <span onClick={() => setPageFn(p.id)} className="cursor-pointer capitalize pb-1 border-b-2 transition-colors" style={{ color: isActive ? activeColor : menuTextColor, borderColor: isActive ? activeColor : 'transparent' }}>
+           {tr(p.title)}
+        </span>
+     );
+  };
+
   // Shared header icon cluster (language / search / account / cart) used by every theme,
   // so they all stay wired the same way and respect the show/hide toggles from Settings.
   const HeaderIconsCluster = ({ variant = 'light' }: any) => {
@@ -1030,7 +1065,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
          <LogoEditor onClick={() => setPage('home')} className="text-2xl font-black uppercase tracking-tighter" />
          <div className={`flex gap-6 text-sm font-bold ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
             {storePages.map(p => (
-               <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer capitalize hover:opacity-70 transition-opacity" style={{ color: page === p.id ? primaryColor : '#64748b' }}>{tr(p.title)}</span>
+               <NavLink key={p.id} p={p} currentPage={page} setPage={setPage} />
             ))}
          </div>
          <HeaderIconsCluster variant="light" />
@@ -1361,7 +1396,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
       <div className={`px-8 py-6 flex justify-between items-center bg-white ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4' : 'flex-col md:flex-row gap-4 md:gap-0'}`}>
          <div className={`flex gap-8 text-sm ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
             {storePages.map(p => (
-               <span key={p.id} onClick={() => setPage(p.id)} className={`cursor-pointer capitalize pb-1 border-b-2 ${page === p.id ? 'border-current' : 'border-transparent text-gray-400'}`}>{tr(p.title)}</span>
+               <NavLink key={p.id} p={p} currentPage={page} setPage={setPage} />
             ))}
          </div>
          <LogoEditor onClick={() => setPage('home')} className="text-3xl font-normal tracking-wide" style={{ color: primaryColor }} />
@@ -1588,7 +1623,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
          <LogoEditor onClick={() => setPage('home')} className="text-4xl font-serif tracking-widest" style={{ color: primaryColor }} />
          <div className={`flex gap-12 text-xs tracking-widest uppercase ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
             {storePages.map(p => (
-               <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer hover:text-white transition-colors" style={{ color: page === p.id ? primaryColor : '#888' }}>{tr(p.title)}</span>
+               <NavLink key={p.id} p={p} currentPage={page} setPage={setPage} />
             ))}
             <HeaderIconsCluster variant="dark" />
          </div>
@@ -1803,7 +1838,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
          <LogoEditor onClick={() => setPage('home')} className="text-2xl font-black tracking-tight px-4" style={{ color: primaryColor }} />
          <div className={`flex gap-2 text-sm font-bold ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
             {storePages.map(p => (
-               <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer capitalize px-4 py-2 rounded-full transition-colors" style={{ backgroundColor: page === p.id ? primaryColor : 'transparent', color: page === p.id ? '#fff' : '#64748b' }}>{tr(p.title)}</span>
+               <NavLink key={p.id} p={p} currentPage={page} setPage={setPage} />
             ))}
          </div>
          <div className="p-2 bg-white rounded-full shadow-sm mr-1">
@@ -2050,7 +2085,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
          <LogoEditor onClick={() => setPage('home')} className="text-2xl font-black uppercase tracking-widest text-[#1a1a1a]" style={{ color: primaryColor }} />
          <div className={`flex gap-8 text-sm font-medium text-[#4a4a4a] ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
             {storePages.map(p => (
-               <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer hover:text-black transition-colors" style={{ color: page === p.id ? primaryColor : undefined }}>{tr(p.title)}</span>
+               <NavLink key={p.id} p={p} currentPage={page} setPage={setPage} />
             ))}
          </div>
          <HeaderIconsCluster variant="light" />
@@ -2228,7 +2263,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
          {/* Navigation - Left on desktop */}
          <div className={`hidden md:flex items-center gap-6 text-[11px] font-bold uppercase tracking-wider text-slate-500`}>
             {storePages.map(p => (
-               <button key={p.id} onClick={() => setPage(p.id)} className={`hover:text-[${primaryColor}] transition-colors ${page === p.id ? `text-[${primaryColor}]` : ''}`}>{tr(p.title)}</button>
+               <NavLink key={p.id} p={p} currentPage={page} setPage={setPage} />
             ))}
          </div>
          {/* Logo - Center */}
@@ -3364,6 +3399,51 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                         </div>
                      </div>
 
+                     {/* MENU STYLE */}
+                     <div className="pt-4 border-t border-slate-100">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'قائمة التنقل (Menu)' : 'Menu de Navigation'}</label>
+                        <div className="grid grid-cols-2 gap-3 mb-4">
+                           <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                 <label className="relative cursor-pointer">
+                                    <div className="w-8 h-8 rounded-lg border-2 shadow-sm ring-1 ring-slate-200" style={{ backgroundColor: menuTextColor, borderColor: '#e2e8f0' }} />
+                                    <input type="color" value={menuTextColor} onChange={e => setMenuTextColor(e.target.value)} className="opacity-0 w-0 h-0 absolute" />
+                                 </label>
+                                 <span className="text-[10px] font-mono font-bold text-slate-600">{menuTextColor.toUpperCase()}</span>
+                              </div>
+                              <p className="text-[9px] text-slate-400">{isAr ? 'لون غير نشط' : 'Lien inactif'}</p>
+                           </div>
+                           <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                 <label className="relative cursor-pointer">
+                                    <div className="w-8 h-8 rounded-lg border-2 shadow-sm ring-1 ring-slate-200" style={{ backgroundColor: menuActiveColor || primaryColor, borderColor: '#e2e8f0' }} />
+                                    <input type="color" value={menuActiveColor || primaryColor} onChange={e => setMenuActiveColor(e.target.value)} className="opacity-0 w-0 h-0 absolute" />
+                                 </label>
+                                 <span className="text-[10px] font-mono font-bold text-slate-600">{(menuActiveColor || primaryColor).toUpperCase()}</span>
+                              </div>
+                              <p className="text-[9px] text-slate-400">{isAr ? 'لون نشط' : 'Lien actif'}</p>
+                           </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                           {([
+                              { key: 'underline', labelFr: 'Soulignement', labelAr: 'تسطير' },
+                              { key: 'pill', labelFr: 'Capsule', labelAr: 'كبسولة' },
+                              { key: 'bold', labelFr: 'Gras', labelAr: 'عريض' }
+                           ] as const).map(({ key, labelFr, labelAr }) => (
+                              <button key={key} onClick={() => setMenuStyle(key)}
+                                 className={`flex flex-col items-center gap-2 p-3 border-2 rounded-xl transition-all ${menuStyle === key ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                                 <span
+                                    className={`text-[11px] font-bold ${key === 'pill' ? 'px-3 py-1 rounded-full text-white' : key === 'bold' ? 'font-black' : 'border-b-2'}`}
+                                    style={key === 'pill' ? { backgroundColor: primaryColor } : key === 'bold' ? { color: primaryColor } : { color: primaryColor, borderColor: primaryColor }}
+                                 >
+                                    {isAr ? 'قسم' : 'Item'}
+                                 </span>
+                                 <span className={`text-[10px] font-bold ${menuStyle === key ? 'text-indigo-600' : 'text-slate-500'}`}>{isAr ? labelAr : labelFr}</span>
+                              </button>
+                           ))}
+                        </div>
+                     </div>
+
                      {/* TYPOGRAPHY */}
                      <div className="pt-4 border-t border-slate-100">
                         <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'الخط' : 'Typographie'}</label>
@@ -3939,6 +4019,25 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              <label className="w-full h-8 rounded-lg border border-slate-200 cursor-pointer block shadow-inner" style={{ backgroundColor: footerTextColor }}>
                                 <input type="color" value={footerTextColor} onChange={(e) => setFooterTextColor(e.target.value)} className="opacity-0 w-0 h-0" />
                              </label>
+                          </div>
+                       </div>
+
+                       <div>
+                          <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'قائمة التنقل' : 'Menu de navigation'}</label>
+                          <div className="grid grid-cols-2 gap-2 mb-2">
+                             <label className="w-full h-8 rounded-lg border border-slate-200 cursor-pointer block shadow-inner" style={{ backgroundColor: menuTextColor }} title={isAr ? 'لون غير نشط' : 'Inactif'}>
+                                <input type="color" value={menuTextColor} onChange={(e) => setMenuTextColor(e.target.value)} className="opacity-0 w-0 h-0" />
+                             </label>
+                             <label className="w-full h-8 rounded-lg border border-slate-200 cursor-pointer block shadow-inner" style={{ backgroundColor: menuActiveColor || primaryColor }} title={isAr ? 'لون نشط' : 'Actif'}>
+                                <input type="color" value={menuActiveColor || primaryColor} onChange={(e) => setMenuActiveColor(e.target.value)} className="opacity-0 w-0 h-0" />
+                             </label>
+                          </div>
+                          <div className="grid grid-cols-3 gap-1.5">
+                             {(['underline', 'pill', 'bold'] as const).map(key => (
+                                <button key={key} onClick={() => setMenuStyle(key)} className={`py-1.5 text-[9px] font-bold rounded-lg border ${menuStyle === key ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-slate-200 text-slate-500'}`}>
+                                   {key === 'underline' ? (isAr ? 'تسطير' : 'Souligné') : key === 'pill' ? (isAr ? 'كبسولة' : 'Capsule') : (isAr ? 'عريض' : 'Gras')}
+                                </button>
+                             ))}
                           </div>
                        </div>
 
