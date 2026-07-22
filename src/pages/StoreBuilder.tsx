@@ -419,6 +419,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [activeSidebarSection, setActiveSidebarSection] = useState<string>('hero');
   
   const [cartCount, setCartCount] = useState(0);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [customerUser, setCustomerUser] = useState<any>(null);
   const [customerProfile, setCustomerProfile] = useState<any>(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -959,13 +961,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
      </button>
   );
 
-  const MobileNavPanel = ({ bgClass = 'bg-white', textClass = 'text-slate-800' }: any) => {
+  const MobileNavPanel = ({ bgClass = 'bg-white', textClass = 'text-slate-800', page: currentPage, setPage: setPageFn }: any) => {
      if (!isMobileNavOpen) return null;
      return (
         <div className={`md:hidden w-full ${bgClass} ${textClass} border-b border-black/5 px-8 py-4 flex flex-col gap-4`}>
            {storePages.map(p => (
               <div key={p.id} onClick={() => setIsMobileNavOpen(false)}>
-                 <NavLink p={p} currentPage={page} setPage={setPage} />
+                 <NavLink p={p} currentPage={currentPage} setPage={setPageFn} />
               </div>
            ))}
         </div>
@@ -1095,7 +1097,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
          </div>
          <HeaderIconsCluster variant="light" />
       </div>
-      <MobileNavPanel />
+      <MobileNavPanel page={page} setPage={setPage} />
 
       <div className="flex-1 overflow-y-auto">
         {page === 'home' && (
@@ -1431,7 +1433,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
          </div>
          <HeaderIconsCluster variant="light" />
       </div>
-      <MobileNavPanel />
+      <MobileNavPanel page={page} setPage={setPage} />
 
       <div className="flex-1 overflow-y-auto">
         {page === 'home' && (
@@ -1665,7 +1667,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             <HeaderIconsCluster variant="dark" />
          </div>
       </div>
-      <MobileNavPanel bgClass="bg-[#111]" textClass="text-[#f5f5f5]" />
+      <MobileNavPanel bgClass="bg-[#111]" textClass="text-[#f5f5f5]" page={page} setPage={setPage} />
 
       <div className="flex-1 overflow-y-auto">
         {page === 'home' && (
@@ -1886,7 +1888,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             <HeaderIconsCluster variant="light" />
          </div>
       </div>
-      <MobileNavPanel />
+      <MobileNavPanel page={page} setPage={setPage} />
 
       <div className="flex-1 overflow-y-auto pt-6">
         {page === 'home' && (
@@ -2089,8 +2091,6 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     const [activeProductId, setActiveProductId] = useState<any>(initialProductId);
     const [activeCategory, setActiveCategory] = useState('All');
     const [sortBy, setSortBy] = useState('featured');
-    const [isCartOpen, setIsCartOpen] = useState(false);
-    const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
     const navigateToProduct = (id: any) => {
         setActiveProductId(id);
@@ -2136,7 +2136,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
          </div>
          <HeaderIconsCluster variant="light" />
       </div>
-      <MobileNavPanel bgClass="bg-[#e8e2d7]" textClass="text-[#1a1a1a]" />
+      <MobileNavPanel bgClass="bg-[#e8e2d7]" textClass="text-[#1a1a1a]" page={page} setPage={setPage} />
 
       <div className="flex-1 overflow-y-auto bg-white">
         {page === 'home' && (
@@ -2321,7 +2321,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
          {/* Icons - Right */}
          <HeaderIconsCluster variant="light" />
       </div>
-      <MobileNavPanel />
+      <MobileNavPanel page={page} setPage={setPage} />
 
       {page === 'home' && (
          <div className="flex-1 flex flex-col pb-20">
