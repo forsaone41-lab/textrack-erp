@@ -1326,11 +1326,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         {page === 'product' && activeProductId && (
            <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-8'} mx-auto w-full`}>
               {storeProducts.filter(p => p.id === activeProductId).map(p => (
-                 <div key={p.id} className={`flex gap-12 ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'}`}>
-                    <div className="flex-1 aspect-[4/5] bg-slate-100 rounded-2xl flex items-center justify-center overflow-hidden">
+                 <div key={p.id} className={`flex gap-12 ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'}`} style={{ '--pdp-img-pct': `${pdpImageWidth}%` } as any}>
+                    <div className="pdp-img-col flex-1 aspect-[4/5] bg-slate-100 rounded-2xl flex items-center justify-center overflow-hidden">
                        {(selectedColor && p.colorImages?.[selectedColor]) ? <img src={p.colorImages[selectedColor]} className="w-full h-full object-cover" alt={p.name} /> : (p.image ? <img src={p.image} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-20 h-20 opacity-10" />)}
                     </div>
-                    <div className="flex-1 flex flex-col justify-center">
+                    <div className="pdp-details-col flex-1 flex flex-col justify-center">
                        <h2 className="text-4xl font-black mb-4">{p.name}</h2>
                        <p className="text-2xl font-bold mb-8" style={{ color: primaryColor }}>{p.price} MAD</p>
                        <p className="text-slate-500 mb-8 leading-relaxed">{p.description || 'This is a premium quality product. Lorem ipsum dolor sit amet, consectetur adipiscing elit.'}</p>
@@ -1573,11 +1573,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         {page === 'product' && activeProductId && (
            <div className={`${isModal ? 'p-20 max-w-5xl' : 'p-8'} mx-auto w-full`}>
               {storeProducts.filter(p => p.id === activeProductId).map(p => (
-                 <div key={p.id} className={`flex gap-16 ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'}`}>
-                    <div className="flex-1 relative flex items-center justify-center bg-gray-50 overflow-hidden aspect-[3/4]">
+                 <div key={p.id} className={`flex gap-16 ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'}`} style={{ '--pdp-img-pct': `${pdpImageWidth}%` } as any}>
+                    <div className="pdp-img-col flex-1 relative flex items-center justify-center bg-gray-50 overflow-hidden aspect-[3/4]">
                        {(selectedColor && p.colorImages?.[selectedColor]) ? <img src={p.colorImages[selectedColor]} className="w-full h-full object-cover" alt={p.name} /> : (p.image ? <img src={p.image} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-20 h-20 opacity-10 absolute inset-0 m-auto" />)}
                     </div>
-                    <div className="flex-1 flex flex-col justify-center">
+                    <div className="pdp-details-col flex-1 flex flex-col justify-center">
                        <h2 className="text-5xl font-light mb-4">{p.name}</h2>
                        <p className="text-2xl font-light text-gray-500 mb-8">{p.price} MAD</p>
                        <p className="text-gray-500 mb-12 leading-relaxed font-light">{p.description || 'Experience true elegance with this meticulously designed piece. Perfect for every occasion.'}</p>
@@ -1796,11 +1796,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         {page === 'product' && activeProductId && (
            <div className={`${isModal ? 'p-16 max-w-5xl' : 'p-8'} mx-auto w-full`}>
               {storeProducts.filter(p => p.id === activeProductId).map(p => (
-                 <div key={p.id} className={`flex gap-16 ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'}`}>
-                    <div className="flex-1 bg-white/5 border border-white/10 flex items-center justify-center aspect-[3/4] overflow-hidden relative">
+                 <div key={p.id} className={`flex gap-16 ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'}`} style={{ '--pdp-img-pct': `${pdpImageWidth}%` } as any}>
+                    <div className="pdp-img-col flex-1 bg-white/5 border border-white/10 flex items-center justify-center aspect-[3/4] overflow-hidden relative">
                        {(selectedColor && p.colorImages?.[selectedColor]) ? <img src={p.colorImages[selectedColor]} className="w-full h-full object-cover absolute inset-0" alt={p.name} /> : (p.image ? <img src={p.image} className="w-full h-full object-cover absolute inset-0" alt={p.name} /> : <ImageIcon className="w-20 h-20 opacity-10" />)}
                     </div>
-                    <div className="flex-1 flex flex-col justify-center">
+                    <div className="pdp-details-col flex-1 flex flex-col justify-center">
                        <h2 className="text-5xl font-serif mb-4 text-white">{p.name}</h2>
                        <p className="text-2xl tracking-widest mb-8" style={{ color: primaryColor }}>{p.price} MAD</p>
                        <div className="w-12 h-px bg-white/20 mb-8"></div>
@@ -2050,11 +2050,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         {page === 'product' && activeProductId && (
            <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-8'} mx-auto w-full`}>
               {storeProducts.filter(p => p.id === activeProductId).map(p => (
-                 <div key={p.id} className={`flex gap-12 bg-slate-50 p-8 rounded-[3rem] ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'}`}>
-                    <div className="flex-1 bg-white rounded-[2rem] border-4 border-slate-100 flex items-center justify-center aspect-square shadow-xl overflow-hidden relative">
+                 <div key={p.id} className={`flex gap-12 bg-slate-50 p-8 rounded-[3rem] ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'}`} style={{ '--pdp-img-pct': `${pdpImageWidth}%` } as any}>
+                    <div className="pdp-img-col flex-1 bg-white rounded-[2rem] border-4 border-slate-100 flex items-center justify-center aspect-square shadow-xl overflow-hidden relative">
                        {(selectedColor && p.colorImages?.[selectedColor]) ? <img src={p.colorImages[selectedColor]} className="w-full h-full object-cover absolute inset-0" alt={p.name} /> : (p.image ? <img src={p.image} className="w-full h-full object-cover absolute inset-0" alt={p.name} /> : <ImageIcon className="w-20 h-20 opacity-10" />)}
                     </div>
-                    <div className="flex-1 flex flex-col justify-center px-4">
+                    <div className="pdp-details-col flex-1 flex flex-col justify-center px-4">
                        <h2 className="text-5xl font-black mb-4 text-slate-800">{p.name}</h2>
                        <p className="text-3xl font-black mb-8" style={{ color: primaryColor }}>{p.price} MAD</p>
                        <p className="text-slate-500 font-medium mb-8 text-lg">{p.description || 'Fun, fresh, and perfectly designed for everyday adventures!'}</p>
@@ -2273,13 +2273,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
            const product = storeProducts.find((p: any) => p.id === activeProductId);
            if (!product) return null;
            return (
-           <div className="p-8 max-w-6xl mx-auto min-h-[600px] my-8 flex flex-col md:flex-row gap-12" style={{ backgroundColor: cardBg }}>
-              <div className="w-full md:w-1/2 flex gap-4">
+           <div className="p-8 max-w-6xl mx-auto min-h-[600px] my-8 flex flex-col md:flex-row gap-12" style={{ backgroundColor: cardBg, '--pdp-img-pct': `${pdpImageWidth}%` } as any}>
+              <div className="pdp-img-col w-full md:w-1/2 flex gap-4">
                  <div className="w-full aspect-[3/4] bg-[#f5f1e9] rounded-sm overflow-hidden flex items-center justify-center">
                     <img src={getCoverImage(product)} className="w-full h-full object-cover mix-blend-multiply" alt="Product" />
                  </div>
               </div>
-              <div className="w-full md:w-1/2 pt-4">
+              <div className="pdp-details-col w-full md:w-1/2 pt-4">
                  <h2 className="text-3xl font-black uppercase tracking-widest text-[#1a1a1a] mb-2">{product.name}</h2>
                  <p className="text-xl font-bold text-[#444] mb-8">{product.price} MAD</p>
                  
@@ -2731,6 +2731,12 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
     return (
        <div className="store-preview-wrapper min-h-screen w-full relative flex flex-col" onClick={() => setActiveStyleKey(null)}>
+          <style>{`
+             @media (min-width: 768px) {
+                .pdp-img-col { flex: 0 0 var(--pdp-img-pct, 50%) !important; max-width: var(--pdp-img-pct, 50%); }
+                .pdp-details-col { flex: 0 0 calc(100% - var(--pdp-img-pct, 50%)) !important; max-width: calc(100% - var(--pdp-img-pct, 50%)); }
+             }
+          `}</style>
           <Layout />
           {appsConfig && appsConfig['WhatsApp Chat'] && (
              <a href={'https://wa.me/' + appsConfig['WhatsApp Chat'].replace(/[^0-9]/g, '')} target="_blank" rel="noreferrer" className="fixed bottom-6 right-6 z-[998] w-14 h-14 bg-green-500 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform hover:bg-green-600">
@@ -3540,6 +3546,23 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                  </button>
                               ))
                            ))}
+                        </div>
+                     </div>
+
+                     {/* PDP IMAGE / DETAILS RATIO */}
+                     <div className="pt-4 border-t border-slate-100">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'نسبة الصورة/التفاصيل في صفحة المنتج' : 'Ratio Image / Détails (page produit)'}</label>
+                        <div className="flex items-center gap-3">
+                           <input
+                              type="range"
+                              min={30}
+                              max={70}
+                              step={5}
+                              value={pdpImageWidth}
+                              onChange={e => setPdpImageWidth(parseInt(e.target.value))}
+                              className="flex-1 accent-indigo-600"
+                           />
+                           <span className="text-[10px] font-mono font-bold text-slate-600 w-16 text-right">{pdpImageWidth}% / {100 - pdpImageWidth}%</span>
                         </div>
                      </div>
 
