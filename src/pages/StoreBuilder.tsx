@@ -1146,7 +1146,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                  onSubmit={submitGlobalOrder}
                                  product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
                                  quantity={typeof quantity !== 'undefined' ? quantity : 1}
-                                 disabled={false}
+                                 disabled={((typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId))?.colors?.length > 0 && !selectedColor) || ((typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId))?.sizes?.length > 0 && !selectedSize)}
                                  requireAccount={requireAccountToOrder}
                                  isAuthenticated={!!customerUser}
                                  onRequestLogin={() => { setAuthMode('login'); setIsAuthOpen(true); }}
@@ -1180,7 +1180,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                  onSubmit={submitGlobalOrder}
                                  product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
                                  quantity={typeof quantity !== 'undefined' ? quantity : 1}
-                                 disabled={false}
+                                 disabled={((typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId))?.colors?.length > 0 && !selectedColor) || ((typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId))?.sizes?.length > 0 && !selectedSize)}
                                  requireAccount={requireAccountToOrder}
                                  isAuthenticated={!!customerUser}
                                  onRequestLogin={() => { setAuthMode('login'); setIsAuthOpen(true); }}
@@ -1388,7 +1388,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                  onSubmit={submitGlobalOrder}
                                  product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
                                  quantity={typeof quantity !== 'undefined' ? quantity : 1}
-                                 disabled={false}
+                                 disabled={((typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId))?.colors?.length > 0 && !selectedColor) || ((typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId))?.sizes?.length > 0 && !selectedSize)}
                                  requireAccount={requireAccountToOrder}
                                  isAuthenticated={!!customerUser}
                                  onRequestLogin={() => { setAuthMode('login'); setIsAuthOpen(true); }}
@@ -1422,7 +1422,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                  onSubmit={submitGlobalOrder}
                                  product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
                                  quantity={typeof quantity !== 'undefined' ? quantity : 1}
-                                 disabled={false}
+                                 disabled={((typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId))?.colors?.length > 0 && !selectedColor) || ((typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId))?.sizes?.length > 0 && !selectedSize)}
                                  requireAccount={requireAccountToOrder}
                                  isAuthenticated={!!customerUser}
                                  onRequestLogin={() => { setAuthMode('login'); setIsAuthOpen(true); }}
@@ -1603,7 +1603,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                  onSubmit={submitGlobalOrder}
                                  product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
                                  quantity={typeof quantity !== 'undefined' ? quantity : 1}
-                                 disabled={false}
+                                 disabled={((typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId))?.colors?.length > 0 && !selectedColor) || ((typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId))?.sizes?.length > 0 && !selectedSize)}
                                  requireAccount={requireAccountToOrder}
                                  isAuthenticated={!!customerUser}
                                  onRequestLogin={() => { setAuthMode('login'); setIsAuthOpen(true); }}
@@ -1637,7 +1637,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                  onSubmit={submitGlobalOrder}
                                  product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
                                  quantity={typeof quantity !== 'undefined' ? quantity : 1}
-                                 disabled={false}
+                                 disabled={((typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId))?.colors?.length > 0 && !selectedColor) || ((typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId))?.sizes?.length > 0 && !selectedSize)}
                                  requireAccount={requireAccountToOrder}
                                  isAuthenticated={!!customerUser}
                                  onRequestLogin={() => { setAuthMode('login'); setIsAuthOpen(true); }}
@@ -2058,7 +2058,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                  onSubmit={submitGlobalOrder}
                                  product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
                                  quantity={typeof quantity !== 'undefined' ? quantity : 1}
-                                 disabled={false}
+                                 disabled={((typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId))?.colors?.length > 0 && !selectedColor) || ((typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId))?.sizes?.length > 0 && !selectedSize)}
                                  requireAccount={requireAccountToOrder}
                                  isAuthenticated={!!customerUser}
                                  onRequestLogin={() => { setAuthMode('login'); setIsAuthOpen(true); }}
