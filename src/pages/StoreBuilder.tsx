@@ -362,6 +362,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [menuStyle, setMenuStyle] = useState<'underline' | 'pill' | 'bold'>(config.menuStyle || 'underline');
   const [proThemesUnlocked, setProThemesUnlocked] = useState<boolean>(config.proThemesUnlocked ?? false);
   const [proUpsellTheme, setProUpsellTheme] = useState<any>(null);
+  const [quickBuyContext, setQuickBuyContext] = useState<any>(null);
   const [textStyles, setTextStyles] = useState<Record<string, { fontSize?: number; color?: string; fontFamily?: string }>>(config.textStyles || {});
   const [activeStyleKey, setActiveStyleKey] = useState<string | null>(null);
   const [toolbarPos, setToolbarPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
@@ -2801,6 +2802,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                          mode={authMode}
                          onModeChange={setAuthMode}
                          storeDomain={customDomain || `${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`}
+                         storeName={storeName}
                          onAuthed={(user: any, profile: any) => { setCustomerUser(user); setCustomerProfile(profile); setIsAuthOpen(false); }}
                       />
                    </div>

@@ -1,0 +1,50 @@
+<!--
+  Supabase Auth email template — "Confirm signup"
+  Paste this into: Supabase Dashboard -> Authentication -> Email Templates -> Confirm signup
+
+  This template is SHARED by every store built with this SaaS. It shows the
+  correct store name automatically for each signup, using {{ .Data.store_name }} -
+  the value comes from the "store_name" field passed in supabase.auth.signUp()'s
+  options.data (see src/components/AuthForm.tsx). Do NOT hardcode a store name
+  here, or every store's customers would see the same brand in their emails.
+-->
+<div style="background-color:#f4f4f7; padding:40px 20px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px; margin:0 auto; background:#ffffff; border-radius:16px; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+    <tr>
+      <td style="background:#171717; padding:32px 40px; text-align:center;">
+        <span style="color:#ffffff; font-size:22px; font-weight:800; letter-spacing:2px; text-transform:uppercase;">{{ .Data.store_name }}</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:40px 40px 24px 40px; text-align:center;">
+        <h1 style="margin:0 0 12px 0; font-size:22px; font-weight:800; color:#171717;">Bienvenue ! 👋</h1>
+        <p style="margin:0; font-size:15px; line-height:1.6; color:#555555;">
+          Merci de vous être inscrit(e) sur <strong>{{ .Data.store_name }}</strong>. Confirmez votre adresse email pour activer votre compte et commencer vos achats.
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 40px 32px 40px; text-align:center;">
+        <a href="{{ .ConfirmationURL }}" style="display:inline-block; background:#171717; color:#ffffff; text-decoration:none; font-weight:700; font-size:14px; letter-spacing:0.5px; text-transform:uppercase; padding:16px 40px; border-radius:999px;">
+          Confirmer mon email
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 40px 32px 40px; text-align:center;">
+        <p style="margin:0; font-size:12px; line-height:1.6; color:#999999;">
+          Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br/>
+          <a href="{{ .ConfirmationURL }}" style="color:#6366f1; word-break:break-all;">{{ .ConfirmationURL }}</a>
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:24px 40px; background:#fafafa; text-align:center; border-top:1px solid #eeeeee;">
+        <p style="margin:0; font-size:11px; color:#aaaaaa;">
+          Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet email.<br/>
+          © 2026 {{ .Data.store_name }}. Tous droits réservés.
+        </p>
+      </td>
+    </tr>
+  </table>
+</div>

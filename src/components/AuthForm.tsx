@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AlertCircle, CheckCircle, Mail } from 'lucide-react';
 import { supabase } from '../supabase';
 
-export default function AuthForm({ storeIsAr, storeLang, mode, onModeChange, storeDomain, onAuthed }: any) {
+export default function AuthForm({ storeIsAr, storeLang, mode, onModeChange, storeDomain, storeName, onAuthed }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -24,7 +24,7 @@ export default function AuthForm({ storeIsAr, storeLang, mode, onModeChange, sto
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { name, phone } }
+          options: { data: { name, phone, store_name: storeName || storeDomain } }
         });
         if (signUpError) throw signUpError;
 
