@@ -1245,16 +1245,18 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
           <>
             <div className={`flex ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'} h-auto md:h-[${isModal ? '600px' : '400px'}] bg-white`}>
                <div className="flex-1 flex flex-col justify-center p-12">
-                  <h1 className="text-5xl font-light leading-tight mb-6" style={{ color: primaryColor }}>Elegance in <br/>Simplicity.</h1>
-                  <p className="text-gray-500 mb-8 max-w-sm leading-relaxed">Experience a collection defined by pure lines and organic materials.</p>
+                  <h1 className="text-5xl font-light leading-tight mb-6" style={{ color: primaryColor }}>
+                     {storeLang === 'ar' ? <>أناقة في<br/>البساطة.</> : storeLang === 'en' ? <>Elegance in <br/>Simplicity.</> : <>Élégance et<br/>Simplicité.</>}
+                  </h1>
+                  <p className="text-gray-500 mb-8 max-w-sm leading-relaxed">{storeLang === 'ar' ? 'اكتشف تشكيلة تتميز بخطوط نقية ومواد طبيعية.' : storeLang === 'en' ? 'Experience a collection defined by pure lines and organic materials.' : 'Découvrez une collection définie par des lignes pures et des matériaux naturels.'}</p>
                   <button onClick={() => setPage('collections')} className="w-max px-10 py-4 text-white text-sm tracking-widest transition-opacity hover:opacity-90" style={{ backgroundColor: primaryColor }}>{tr('DISCOVER')}</button>
                </div>
                <HeroBackgroundEditor className="flex-1 bg-cover bg-center" style={{ backgroundImage: `url(${heroImage})` }} />
             </div>
             <div className={`${isModal ? 'p-20' : 'p-8'} mx-auto w-full`}>
                <div className="flex justify-between items-end mb-12 border-b pb-4">
-                  <h3 className="text-2xl font-light">New Arrivals</h3>
-                  <span className="text-sm cursor-pointer hover:underline" style={{ color: primaryColor }}>View all</span>
+                  <h3 className="text-2xl font-light">{storeLang === 'ar' ? 'وصل حديثاً' : storeLang === 'en' ? 'New Arrivals' : 'Nouveautés'}</h3>
+                  <span className="text-sm cursor-pointer hover:underline" style={{ color: primaryColor }}>{storeLang === 'ar' ? 'عرض الكل' : storeLang === 'en' ? 'View all' : 'Voir tout'}</span>
                </div>
                <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
                   {storeProducts.map((p: any) => (
@@ -1472,8 +1474,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                   <div className="absolute inset-0 bg-gradient-to-t from-[#111] via-transparent to-transparent"></div>
                   <div className="absolute bottom-12 left-12 right-12 flex justify-between items-end">
                      <div>
-                        <h1 className="text-5xl font-serif mb-4">The Royal Edit.</h1>
-                        <button onClick={() => setPage('collections')} className="px-8 py-3 text-xs tracking-widest border transition-colors" style={{ borderColor: primaryColor, color: primaryColor }}>EXPLORE COLLECTION</button>
+                        <h1 className="text-5xl font-serif mb-4">{storeLang === 'ar' ? 'التشكيلة الملكية.' : storeLang === 'en' ? 'The Royal Edit.' : 'La Sélection Royale.'}</h1>
+                        <button onClick={() => setPage('collections')} className="px-8 py-3 text-xs tracking-widest border transition-colors" style={{ borderColor: primaryColor, color: primaryColor }}>{storeLang === 'ar' ? 'استكشف التشكيلة' : storeLang === 'en' ? 'EXPLORE COLLECTION' : 'EXPLORER LA COLLECTION'}</button>
                      </div>
                   </div>
                </HeroBackgroundEditor>
@@ -1688,14 +1690,14 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                <HeroBackgroundEditor className={`h-[${isModal ? '500px' : '300px'}] rounded-[2rem] flex flex-col items-center justify-center text-center p-8 bg-cover bg-center relative overflow-hidden`} style={{ backgroundImage: `url(${heroImage})` }}>
                   <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px]"></div>
                   <div className="relative z-10 flex flex-col items-center p-8 bg-white/90 rounded-[2rem] shadow-xl border-4 border-white">
-                     <h1 className={`${isModal ? 'text-6xl' : 'text-4xl'} font-black tracking-tight mb-2`} style={{ color: primaryColor }}>Fun & Fresh!</h1>
-                     <p className="text-slate-600 font-medium mb-6 max-w-sm">Colorful, comfortable, and made for play.</p>
+                     <h1 className={`${isModal ? 'text-6xl' : 'text-4xl'} font-black tracking-tight mb-2`} style={{ color: primaryColor }}>{storeLang === 'ar' ? 'مرح وحيوية!' : storeLang === 'en' ? 'Fun & Fresh!' : 'Fun & Frais !'}</h1>
+                     <p className="text-slate-600 font-medium mb-6 max-w-sm">{storeLang === 'ar' ? 'ملونة ومريحة وصُنعت للمرح.' : storeLang === 'en' ? 'Colorful, comfortable, and made for play.' : 'Coloré, confortable, et fait pour jouer.'}</p>
                      <button onClick={() => setPage('collections')} className="px-8 py-4 text-white font-black tracking-wide text-sm hover:scale-110 transition-transform rounded-full shadow-lg" style={{ backgroundColor: primaryColor }}>{storeLang === 'ar' ? 'تسوق الآن 🎈' : storeLang === 'en' ? "LET'S SHOP 🎈" : 'ON Y VA 🎈'}</button>
                   </div>
                </HeroBackgroundEditor>
             </div>
             <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-6'} mx-auto w-full`}>
-               <h3 className="text-3xl font-black text-center mb-10 text-slate-800">New Arrivals ✨</h3>
+               <h3 className="text-3xl font-black text-center mb-10 text-slate-800">{storeLang === 'ar' ? 'وصل حديثاً ✨' : storeLang === 'en' ? 'New Arrivals ✨' : 'Nouveautés ✨'}</h3>
                <div className={`grid gap-6 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2')}`}>
                   {storeProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer bg-slate-50 p-4 rounded-3xl hover:bg-slate-100 transition-colors border-2 border-transparent hover:border-current" style={{ borderColor: primaryColor }} onClick={() => navigateToProduct(p.id)}>
@@ -2114,9 +2116,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             {/* Lookbook Hero */}
             <div className={`w-full bg-[#f8f9fa] flex ${previewDevice === 'mobile' && !isModal ? 'flex-col pt-12' : 'flex-row items-center'} min-h-[500px] relative overflow-hidden`}>
                <div className={`z-10 ${previewDevice === 'mobile' && !isModal ? 'px-8 pb-12 text-center' : 'pl-24 pr-8 py-16 w-1/2 text-left'}`}>
-                  <h1 className={`text-5xl md:text-7xl font-black text-slate-900 tracking-tighter mb-4 uppercase`} style={{ color: primaryColor }}>{heroTitle || 'LOOKBOOK'}</h1>
-                  <p className="text-sm text-slate-500 mb-8 max-w-md font-medium leading-relaxed">{heroSubtitle || 'New Spring drops from Over. Shop the Collection'}</p>
-                  <button className="px-8 py-3 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-slate-800 transition-colors rounded-full" style={btnStyle}>{heroButtonText || 'Shop Collection'}</button>
+                  <h1 className={`text-5xl md:text-7xl font-black text-slate-900 tracking-tighter mb-4 uppercase`} style={{ color: primaryColor }}>{heroTitle || (storeLang === 'ar' ? 'لوك بوك' : storeLang === 'en' ? 'LOOKBOOK' : 'LOOKBOOK')}</h1>
+                  <p className="text-sm text-slate-500 mb-8 max-w-md font-medium leading-relaxed">{heroSubtitle || (storeLang === 'ar' ? 'أحدث إطلالات الربيع. تسوق التشكيلة' : storeLang === 'en' ? 'New Spring drops from Over. Shop the Collection' : 'Nouvelles pièces de printemps. Découvrez la collection')}</p>
+                  <button className="px-8 py-3 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-slate-800 transition-colors rounded-full" style={btnStyle}>{heroButtonText || (storeLang === 'ar' ? 'تسوق التشكيلة' : storeLang === 'en' ? 'Shop Collection' : 'Découvrir la collection')}</button>
                </div>
                <div className={`absolute right-0 top-0 bottom-0 ${previewDevice === 'mobile' && !isModal ? 'w-full opacity-30 pointer-events-none' : 'w-1/2'} bg-cover bg-top`} style={{ backgroundImage: `url(${heroImage || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop'})` }}>
                </div>
@@ -2148,7 +2150,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             {/* Products Grid */}
             <div className="max-w-6xl mx-auto w-full px-4 py-8">
                <div className="flex items-center justify-between mb-12">
-                  <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">#New Arrivals</h3>
+                  <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{storeLang === 'ar' ? '#وصل_حديثاً' : storeLang === 'en' ? '#New Arrivals' : '#Nouveautés'}</h3>
                   <div className="flex gap-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden md:flex">
                      <span className="text-slate-900 border-b-2 border-slate-900 pb-1">All</span>
                      <span className="hover:text-slate-900 cursor-pointer">Men</span>
@@ -2351,12 +2353,12 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                   {/* Tabs */}
                   <div className="mt-24 max-w-4xl">
                      <div className="flex gap-8 border-b border-slate-200 mb-8">
-                        <button onClick={() => setActivePDPTab('description')} className={`pb-4 text-sm tracking-wider font-bold transition-all ${activePDPTab === 'description' ? 'text-slate-900 border-b-2 border-slate-900' : 'text-slate-400 hover:text-slate-600'}`}>Description</button>
-                        <button onClick={() => setActivePDPTab('reviews')} className={`pb-4 text-sm tracking-wider font-bold transition-all ${activePDPTab === 'reviews' ? 'text-slate-900 border-b-2 border-slate-900' : 'text-slate-400 hover:text-slate-600'}`}>Reviews</button>
+                        <button onClick={() => setActivePDPTab('description')} className={`pb-4 text-sm tracking-wider font-bold transition-all ${activePDPTab === 'description' ? 'text-slate-900 border-b-2 border-slate-900' : 'text-slate-400 hover:text-slate-600'}`}>{storeLang === 'ar' ? 'الوصف' : storeLang === 'en' ? 'Description' : 'Description'}</button>
+                        <button onClick={() => setActivePDPTab('reviews')} className={`pb-4 text-sm tracking-wider font-bold transition-all ${activePDPTab === 'reviews' ? 'text-slate-900 border-b-2 border-slate-900' : 'text-slate-400 hover:text-slate-600'}`}>{storeLang === 'ar' ? 'التقييمات' : storeLang === 'en' ? 'Reviews' : 'Avis'}</button>
                      </div>
                      <div className="text-sm text-slate-500 leading-relaxed max-w-3xl">
                         {activePDPTab === 'description' ? (
-                           <p>Detailed description about the {product.name}. This item is crafted from premium materials, ensuring both comfort and durability. Perfect for any occasion, its versatile design makes it a wardrobe essential.</p>
+                           <p>{storeLang === 'ar' ? `وصف تفصيلي لـ ${product.name}. هذا المنتج مصنوع من مواد فاخرة تضمن الراحة والمتانة. تصميمه العملي يجعله أساسياً في خزانتك.` : storeLang === 'en' ? `Detailed description about the ${product.name}. This item is crafted from premium materials, ensuring both comfort and durability. Perfect for any occasion, its versatile design makes it a wardrobe essential.` : `Description détaillée de ${product.name}. Cet article est fabriqué à partir de matériaux premium, garantissant confort et durabilité. Parfait pour toute occasion, son design polyvalent en fait un essentiel de la garde-robe.`}</p>
                         ) : (
                            <div className="space-y-6">
                               <div className="flex gap-4">
@@ -2364,7 +2366,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                  <div>
                                     <h5 className="font-bold text-slate-900 text-[11px] uppercase tracking-wider mb-1">Jane Doe</h5>
                                     <div className="flex text-amber-400 mb-2 w-3 h-3">{'★'.repeat(5)}</div>
-                                    <p>Absolutely love this! Fits perfectly and looks great.</p>
+                                    <p>{storeLang === 'ar' ? 'أحب هذا المنتج جداً! المقاس مثالي والمظهر رائع.' : storeLang === 'en' ? 'Absolutely love this! Fits perfectly and looks great.' : "J'adore ! La taille est parfaite et le rendu est magnifique."}</p>
                                  </div>
                               </div>
                            </div>
