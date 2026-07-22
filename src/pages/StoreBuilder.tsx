@@ -10,17 +10,23 @@ import AuthForm from '../components/AuthForm';
 import { supabase } from '../supabase';
 
 const THEMES = [
-  { id: 'streetwear', name: 'Streetwear Pro', layout: 'hero-center', defaultColor: '#0f172a', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop' },
-  { id: 'minimalist', name: 'Minimalist', layout: 'split-screen', defaultColor: '#171717', defaultFont: 'font-serif', previewImg: 'https://images.unsplash.com/photo-1489987707023-afc7f93c6508?q=80&w=800&auto=format&fit=crop' },
-  { id: 'abaya', name: 'Luxury Abaya', layout: 'elegant', defaultColor: '#b48a44', defaultFont: 'font-serif', previewImg: 'https://images.unsplash.com/photo-1589465885857-44edb59bbff2?q=80&w=800&auto=format&fit=crop' },
-  { id: 'sportswear', name: 'Active Sport', layout: 'hero-center', defaultColor: '#84cc16', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop' },
-  { id: 'eco', name: 'Eco Nature', layout: 'split-screen', defaultColor: '#4d7c0f', defaultFont: 'font-serif', previewImg: 'https://images.unsplash.com/photo-1523381294911-8d3cead13475?q=80&w=800&auto=format&fit=crop' },
-  { id: 'kids', name: 'Playful Kids', layout: 'playful', defaultColor: '#0ea5e9', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=800&auto=format&fit=crop' },
-  { id: 'clement', name: 'Clement Design', layout: 'clement', defaultColor: '#1e293b', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1577221084712-45b0445d2b00?q=80&w=800&auto=format&fit=crop' },
-  { id: 'xton', name: 'Xton', layout: 'hero-center', defaultColor: '#f59e0b', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=800&auto=format&fit=crop' },
-  { id: 'amaza', name: 'Amaza', layout: 'sidebar-right', defaultColor: '#06b6d4', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop' },
-  { id: 'ochaka', name: 'Ochaka', layout: 'split-screen', defaultColor: '#9f1239', defaultFont: 'font-sans', previewImg: 'https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=800&auto=format&fit=crop' },
-  { id: 'mazia', name: 'Mazia', layout: 'mazia', defaultColor: '#ef4444', defaultFont: 'font-serif', previewImg: 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=800&auto=format&fit=crop' }
+  { id: 'streetwear', name: 'Streetwear Pro', layout: 'hero-center', defaultColor: '#0f172a', defaultFont: 'font-sans', tier: 'free', previewImg: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop' },
+  { id: 'minimalist', name: 'Minimalist', layout: 'split-screen', defaultColor: '#171717', defaultFont: 'font-serif', tier: 'free', previewImg: 'https://images.unsplash.com/photo-1489987707023-afc7f93c6508?q=80&w=800&auto=format&fit=crop' },
+  { id: 'abaya', name: 'Luxury Abaya', layout: 'elegant', defaultColor: '#b48a44', defaultFont: 'font-serif', tier: 'free', previewImg: 'https://images.unsplash.com/photo-1589465885857-44edb59bbff2?q=80&w=800&auto=format&fit=crop' },
+  { id: 'sportswear', name: 'Active Sport', layout: 'hero-center', defaultColor: '#84cc16', defaultFont: 'font-sans', tier: 'free', previewImg: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop' },
+  { id: 'eco', name: 'Eco Nature', layout: 'split-screen', defaultColor: '#4d7c0f', defaultFont: 'font-serif', tier: 'free', previewImg: 'https://images.unsplash.com/photo-1523381294911-8d3cead13475?q=80&w=800&auto=format&fit=crop' },
+  { id: 'kids', name: 'Playful Kids', layout: 'playful', defaultColor: '#0ea5e9', defaultFont: 'font-sans', tier: 'free', previewImg: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=800&auto=format&fit=crop' },
+  { id: 'clement', name: 'Clement Design', layout: 'clement', defaultColor: '#1e293b', defaultFont: 'font-sans', tier: 'free', previewImg: 'https://images.unsplash.com/photo-1577221084712-45b0445d2b00?q=80&w=800&auto=format&fit=crop' },
+  { id: 'xton', name: 'Xton', layout: 'hero-center', defaultColor: '#f59e0b', defaultFont: 'font-sans', tier: 'free', previewImg: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=800&auto=format&fit=crop' },
+  { id: 'amaza', name: 'Amaza', layout: 'sidebar-right', defaultColor: '#06b6d4', defaultFont: 'font-sans', tier: 'free', previewImg: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop' },
+  { id: 'ochaka', name: 'Ochaka', layout: 'split-screen', defaultColor: '#9f1239', defaultFont: 'font-sans', tier: 'free', previewImg: 'https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=800&auto=format&fit=crop' },
+  { id: 'mazia', name: 'Mazia', layout: 'mazia', defaultColor: '#ef4444', defaultFont: 'font-serif', tier: 'free', previewImg: 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=800&auto=format&fit=crop' },
+  // PRO themes - locked behind the Pro plan (Settings > Plan Pro)
+  { id: 'blush-studio', name: 'Blush Studio', layout: 'hero-center', defaultColor: '#e8a5b5', defaultFont: 'font-serif', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1567016432779-094069958ea5?q=80&w=800&auto=format&fit=crop' },
+  { id: 'pop-fashion', name: 'Pop Fashion', layout: 'playful', defaultColor: '#e11d48', defaultFont: 'font-sans', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=800&auto=format&fit=crop' },
+  { id: 'fitness-pulse', name: 'Fitness Pulse', layout: 'hero-center', defaultColor: '#7c3aed', defaultFont: 'font-sans', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop' },
+  { id: 'editorial-noir', name: 'Editorial Noir', layout: 'split-screen', defaultColor: '#dc2626', defaultFont: 'font-sans', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=800&auto=format&fit=crop' },
+  { id: 'emerald-market', name: 'Emerald Market', layout: 'mazia', defaultColor: '#0d9488', defaultFont: 'font-sans', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=800&auto=format&fit=crop' }
 ];
 
 const readFileAsBase64 = (file: File): Promise<string> => {
@@ -354,6 +360,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [menuTextColor, setMenuTextColor] = useState(config.menuTextColor || '#64748b');
   const [menuActiveColor, setMenuActiveColor] = useState(config.menuActiveColor || '');
   const [menuStyle, setMenuStyle] = useState<'underline' | 'pill' | 'bold'>(config.menuStyle || 'underline');
+  const [proThemesUnlocked, setProThemesUnlocked] = useState<boolean>(config.proThemesUnlocked ?? false);
+  const [proUpsellTheme, setProUpsellTheme] = useState<any>(null);
   const [textStyles, setTextStyles] = useState<Record<string, { fontSize?: number; color?: string; fontFamily?: string }>>(config.textStyles || {});
   const [activeStyleKey, setActiveStyleKey] = useState<string | null>(null);
   const [toolbarPos, setToolbarPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
@@ -569,6 +577,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               if (conf.menuTextColor) setMenuTextColor(conf.menuTextColor);
               if (conf.menuActiveColor !== undefined) setMenuActiveColor(conf.menuActiveColor);
               if (conf.menuStyle) setMenuStyle(conf.menuStyle);
+              if (conf.proThemesUnlocked !== undefined) setProThemesUnlocked(conf.proThemesUnlocked);
               if (conf.buttonStyle) setButtonStyle(conf.buttonStyle);
               if (conf.showReviews !== undefined) setShowReviews(conf.showReviews);
               if (conf.homeBlocks) setHomeBlocks(conf.homeBlocks);
@@ -763,6 +772,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        menuTextColor,
        menuActiveColor,
        menuStyle,
+       proThemesUnlocked,
        buttonStyle,
        showReviews,
        requireAccountToOrder,
@@ -3006,20 +3016,31 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                   <div className="pt-4 border-t border-slate-100">
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Catalogue de Thèmes</label>
                     <div className="grid grid-cols-2 gap-3">
-                      {THEMES.filter(t => t.id !== activeTheme.id).map(t => (
-                        <div 
-                           key={t.id} 
-                           onClick={() => applyTheme(t)}
-                           className="border border-slate-200 rounded-xl p-1 cursor-pointer hover:border-indigo-500 transition-all opacity-80 hover:opacity-100 group"
+                      {THEMES.filter(t => t.id !== activeTheme.id).map(t => {
+                         const isLocked = t.tier === 'pro' && !proThemesUnlocked;
+                         return (
+                        <div
+                           key={t.id}
+                           onClick={() => isLocked ? setProUpsellTheme(t) : applyTheme(t)}
+                           className={`border rounded-xl p-1 cursor-pointer transition-all group relative ${isLocked ? 'border-amber-200 opacity-90 hover:opacity-100' : 'border-slate-200 hover:border-indigo-500 opacity-80 hover:opacity-100'}`}
                         >
                           <div className="aspect-video bg-cover bg-center rounded-lg mb-1 relative" style={{ backgroundImage: `url(${t.previewImg})` }}>
-                             <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors rounded-lg flex items-center justify-center">
+                             <div className={`absolute inset-0 rounded-lg flex items-center justify-center transition-colors ${isLocked ? 'bg-black/55' : 'bg-black/40 group-hover:bg-black/20'}`}>
                                 <span className="text-white text-[8px] font-black tracking-widest uppercase text-center px-1">{t.name}</span>
                              </div>
+                             {isLocked && (
+                                <div className="absolute top-1.5 right-1.5 bg-amber-400 text-slate-900 rounded-full p-1 shadow-md">
+                                   <ShieldCheck className="w-3 h-3" />
+                                </div>
+                             )}
+                             {t.tier === 'pro' && (
+                                <span className="absolute bottom-1.5 left-1.5 bg-amber-400 text-slate-900 text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded">PRO</span>
+                             )}
                           </div>
                           <p className="text-[9px] font-bold text-slate-500 text-center">{t.layout}</p>
                         </div>
-                      ))}
+                         );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -3616,6 +3637,26 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                {/* SETTINGS TAB */}
                {activeTab === 'settings' && (
                  <div className="space-y-6">
+                     <div className={`p-4 rounded-xl border space-y-3 ${proThemesUnlocked ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-200'}`}>
+                        <div className="flex items-center justify-between">
+                           <div className="flex items-center gap-2">
+                              <ShieldCheck className={`w-4 h-4 ${proThemesUnlocked ? 'text-amber-500' : 'text-slate-400'}`} />
+                              <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{isAr ? 'باقة Pro' : 'Plan Pro'}</h4>
+                           </div>
+                           <button
+                              onClick={() => setProThemesUnlocked((v: boolean) => !v)}
+                              className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${proThemesUnlocked ? 'bg-amber-400' : 'bg-slate-300'}`}
+                           >
+                              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${proThemesUnlocked ? 'translate-x-5' : ''}`} />
+                           </button>
+                        </div>
+                        <p className="text-[11px] text-slate-500 font-semibold">
+                           {isAr
+                              ? 'إذا فُعّلت، تُفتح جميع التصاميم المميزة (Pro). يتم التفعيل يدويًا حاليًا (بدون نظام دفع إلكتروني مربوط بعد).'
+                              : "Une fois activé, tous les thèmes Pro sont débloqués. Activation manuelle pour l'instant (pas encore de paiement en ligne branché)."}
+                        </p>
+                     </div>
+
                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
                         <div>
                            <h4 className="text-xs font-black text-slate-800 mb-2 uppercase tracking-wider">{isAr ? 'لغة المتجر' : 'Langue de la boutique'}</h4>
@@ -4803,6 +4844,34 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                   <div className="flex gap-3">
                      <button onClick={() => setIsBulkDeleteOpen(false)} className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors text-sm">{isAr ? 'إلغاء' : 'Annuler'}</button>
                      <button onClick={confirmBulkDelete} className="flex-1 py-3 bg-rose-600 text-white font-bold rounded-xl hover:bg-rose-700 shadow-md shadow-rose-200 transition-colors text-sm">{isAr ? 'تأكيد' : 'Confirmer'}</button>
+                  </div>
+               </div>
+            </div>
+         </div>
+      )}
+
+      {/* PRO THEME UPSELL MODAL */}
+      {proUpsellTheme && (
+         <div className="fixed inset-0 z-[600] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setProUpsellTheme(null)}>
+            <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
+               <div className="aspect-video bg-cover bg-center relative" style={{ backgroundImage: `url(${proUpsellTheme.previewImg})` }}>
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-slate-900/10 flex items-end p-4">
+                     <span className="text-white font-black tracking-widest uppercase">{proUpsellTheme.name}</span>
+                  </div>
+               </div>
+               <div className="p-6 text-center">
+                  <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
+                     <ShieldCheck className="w-7 h-7 text-amber-500" />
+                  </div>
+                  <h2 className="text-xl font-black text-slate-800 mb-2">{isAr ? 'تصميم Pro' : 'Thème Pro'}</h2>
+                  <p className="text-slate-500 text-sm mb-6">
+                     {isAr ? 'هذا التصميم متاح فقط لأصحاب باقة Pro. تواصل معنا لترقية باقتك وفتح جميع التصاميم المميزة.' : "Ce thème fait partie du Pack Pro. Contactez-nous pour passer au plan Pro et débloquer tous les thèmes premium."}
+                  </p>
+                  <div className="flex gap-3">
+                     <button onClick={() => setProUpsellTheme(null)} className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors text-sm">{isAr ? 'إغلاق' : 'Fermer'}</button>
+                     <button onClick={() => { setProUpsellTheme(null); setActiveTab('settings'); }} className="flex-1 py-3 bg-amber-400 text-slate-900 font-bold rounded-xl hover:bg-amber-500 transition-colors text-sm flex items-center justify-center gap-2">
+                        <ShieldCheck className="w-4 h-4" /> {isAr ? 'ترقية' : 'Upgrade'}
+                     </button>
                   </div>
                </div>
             </div>
