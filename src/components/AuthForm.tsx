@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AlertCircle, CheckCircle, Mail } from 'lucide-react';
 import { supabase } from '../supabase';
 
-export default function AuthForm({ storeIsAr, mode, onModeChange, storeDomain, onAuthed }: any) {
+export default function AuthForm({ storeIsAr, storeLang, mode, onModeChange, storeDomain, onAuthed }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -10,6 +10,9 @@ export default function AuthForm({ storeIsAr, mode, onModeChange, storeDomain, o
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [infoMessage, setInfoMessage] = useState('');
+
+  const lang = storeLang || (storeIsAr ? 'ar' : 'fr');
+  const t = (fr: string, en: string, ar: string) => lang === 'ar' ? ar : lang === 'en' ? en : fr;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +38,7 @@ export default function AuthForm({ storeIsAr, mode, onModeChange, storeDomain, o
           });
           onAuthed(data.user, { name, phone, email });
         } else {
-          setInfoMessage(storeIsAr ? 'تحقق من بريدك الإلكتروني لتأكيد حسابك.' : 'Vérifiez votre email pour confirmer votre compte.');
+          setInfoMessage(t('Vérifiez votre email pour confirmer votre compte.', 'Check your email to confirm your account.', 'تحقق من بريدك الإلكتروني لتأكيد حسابك.'));
         }
       } else {
         const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
@@ -58,7 +61,7 @@ export default function AuthForm({ storeIsAr, mode, onModeChange, storeDomain, o
         }
       }
     } catch (err: any) {
-      setError(err.message || (storeIsAr ? 'حدث خطأ ما.' : 'Une erreur est survenue.'));
+      setError(err.message || t('Une erreur est survenue.', 'Something went wrong.', 'حدث خطأ ما.'));
     } finally {
       setLoading(false);
     }
@@ -69,13 +72,13 @@ export default function AuthForm({ storeIsAr, mode, onModeChange, storeDomain, o
       <form onSubmit={handleSubmit} className="space-y-4">
         {mode === 'signup' && (
           <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1">{storeIsAr ? 'الاسم الكامل' : 'Nom Complet'}</label>
+            <label className="block text-xs font-bold text-slate-600 mb-1">{t('Nom Complet', 'Full Name', 'الاسم الكامل')}</label>
             <input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder={storeIsAr ? 'الاسم الكامل' : 'Ex: Mohammed Alaoui'}
+              placeholder={t('Ex: Mohammed Alaoui', 'Ex: Mohammed Alaoui', 'الاسم الكامل')}
               className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
             />
           </div>
@@ -95,7 +98,7 @@ export default function AuthForm({ storeIsAr, mode, onModeChange, storeDomain, o
 
         {mode === 'signup' && (
           <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1">{storeIsAr ? 'رقم الهاتف' : 'Numéro de Téléphone'}</label>
+            <label className="block text-xs font-bold text-slate-600 mb-1">{t('Numéro de Téléphone', 'Phone Number', 'رقم الهاتف')}</label>
             <input
               type="tel"
               value={phone}
@@ -107,7 +110,7 @@ export default function AuthForm({ storeIsAr, mode, onModeChange, storeDomain, o
         )}
 
         <div>
-          <label className="block text-xs font-bold text-slate-600 mb-1">{storeIsAr ? 'كلمة المرور' : 'Mot de passe'}</label>
+          <label className="block text-xs font-bold text-slate-600 mb-1">{t('Mot de passe', 'Password', 'كلمة المرور')}</label>
           <input
             type="password"
             required
@@ -138,23 +141,23 @@ export default function AuthForm({ storeIsAr, mode, onModeChange, storeDomain, o
         >
           <CheckCircle className="w-4 h-4" />
           {loading
-            ? (storeIsAr ? 'جاري التحميل...' : 'Chargement...')
+            ? t('Chargement...', 'Loading...', 'جاري التحميل...')
             : mode === 'signup'
-              ? (storeIsAr ? 'إنشاء الحساب' : 'Créer mon compte')
-              : (storeIsAr ? 'تسجيل الدخول' : 'Se connecter')}
+              ? t('Créer mon compte', 'Create my account', 'إنشاء الحساب')
+              : t('Se connecter', 'Sign in', 'تسجيل الدخول')}
         </button>
       </form>
 
       <p className="text-center text-xs font-semibold text-slate-500 mt-6">
         {mode === 'signup'
-          ? (storeIsAr ? 'لديك حساب بالفعل؟' : 'Vous avez déjà un compte ?')
-          : (storeIsAr ? 'ليس لديك حساب؟' : "Vous n'avez pas de compte ?")}{' '}
+          ? t('Vous avez déjà un compte ?', 'Already have an account?', 'لديك حساب بالفعل؟')
+          : t("Vous n'avez pas de compte ?", "Don't have an account?", 'ليس لديك حساب؟')}{' '}
         <button
           type="button"
           onClick={() => { setError(''); setInfoMessage(''); onModeChange(mode === 'signup' ? 'login' : 'signup'); }}
           className="text-indigo-600 font-bold hover:underline"
         >
-          {mode === 'signup' ? (storeIsAr ? 'تسجيل الدخول' : 'Se connecter') : (storeIsAr ? 'إنشاء حساب' : 'Créer un compte')}
+          {mode === 'signup' ? t('Se connecter', 'Sign in', 'تسجيل الدخول') : t('Créer un compte', 'Create an account', 'إنشاء حساب')}
         </button>
       </p>
     </div>

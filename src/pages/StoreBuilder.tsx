@@ -264,49 +264,52 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const storeIsAr = storeLang === 'ar';
   
   const tr = (t: string) => {
-     if (!storeIsAr) return t;
-     const dict: Record<string, string> = {
-        'New Collection': 'تشكيلة جديدة',
-        'Discover our latest premium quality garments.': 'اكتشف أحدث تشكيلاتنا ذات الجودة العالية.',
-        'Shop Now': 'تسوق الآن',
-        'Trending Now': 'الأكثر مبيعاً',
-        'All Products': 'جميع المنتجات',
-        'Home': 'الرئيسية',
-        'Collections': 'التشكيلات',
-        'About': 'من نحن',
-        '© 2026 My Brand. Tous droits réservés.': '© 2026 My Brand. جميع الحقوق محفوظة.',
-        'Accueil': 'الرئيسية',
-        'Produits': 'المنتجات',
-        'All Products ✨': 'جميع المنتجات ✨',
-        'ALL PRODUCTS': 'جميع المنتجات',
-        'All': 'الكل',
-        'ALL': 'الكل',
-        'Outerwear': 'ملابس خارجية',
-        'OUTERWEAR': 'ملابس خارجية',
-        'Tops': 'قمصان',
-        'TOPS': 'قمصان',
-        'Bottoms': 'بناطيل',
-        'BOTTOMS': 'بناطيل',
-        'Shoes': 'أحذية',
-        'SHOES': 'أحذية',
-        'Dresses': 'فساتين',
-        'DRESSES': 'فساتين',
-        'Recommandé': 'موصى به',
-        'Sort: Featured': 'موصى به',
-        'Featured': 'موصى به',
-        'Best Matches 🌟': 'موصى به 🌟',
-        'Prix: Croissant': 'السعر: من الأقل للأكثر',
-        'Price: Low to High': 'السعر: من الأقل للأكثر',
-        'Price: Low - High': 'السعر: من الأقل للأكثر',
-        'Price: Low to High 💸': 'السعر: من الأقل للأكثر 💸',
-        'Prix: Décroissant': 'السعر: من الأكثر للأقل',
-        'Price: High to Low': 'السعر: من الأكثر للأقل',
-        'Price: High - Low': 'السعر: من الأكثر للأقل',
-        'Price: High to Low 💎': 'السعر: من الأكثر للأقل 💎',
-        'De A à Z': 'أ - ي',
-        'De Z à A': 'ي - أ'
+     const dict: Record<string, { fr: string; en: string; ar: string }> = {
+        'New Collection': { en: 'New Collection', fr: 'Nouvelle Collection', ar: 'تشكيلة جديدة' },
+        'Discover our latest premium quality garments.': { en: 'Discover our latest premium quality garments.', fr: 'Découvrez nos dernières pièces de qualité premium.', ar: 'اكتشف أحدث تشكيلاتنا ذات الجودة العالية.' },
+        'Shop Now': { en: 'Shop Now', fr: 'Achetez maintenant', ar: 'تسوق الآن' },
+        'Trending Now': { en: 'Trending Now', fr: 'Tendances', ar: 'الأكثر مبيعاً' },
+        'All Products': { en: 'All Products', fr: 'Tous les produits', ar: 'جميع المنتجات' },
+        'Home': { en: 'Home', fr: 'Accueil', ar: 'الرئيسية' },
+        'Collections': { en: 'Collections', fr: 'Collections', ar: 'التشكيلات' },
+        'About': { en: 'About', fr: 'À propos', ar: 'من نحن' },
+        '© 2026 My Brand. Tous droits réservés.': { en: '© 2026 My Brand. All rights reserved.', fr: '© 2026 My Brand. Tous droits réservés.', ar: '© 2026 My Brand. جميع الحقوق محفوظة.' },
+        'Accueil': { en: 'Home', fr: 'Accueil', ar: 'الرئيسية' },
+        'Produits': { en: 'Products', fr: 'Produits', ar: 'المنتجات' },
+        'All Products ✨': { en: 'All Products ✨', fr: 'Tous les produits ✨', ar: 'جميع المنتجات ✨' },
+        'ALL PRODUCTS': { en: 'ALL PRODUCTS', fr: 'TOUS LES PRODUITS', ar: 'جميع المنتجات' },
+        'All': { en: 'All', fr: 'Tout', ar: 'الكل' },
+        'ALL': { en: 'ALL', fr: 'TOUT', ar: 'الكل' },
+        'Outerwear': { en: 'Outerwear', fr: 'Vestes', ar: 'ملابس خارجية' },
+        'OUTERWEAR': { en: 'OUTERWEAR', fr: 'VESTES', ar: 'ملابس خارجية' },
+        'Tops': { en: 'Tops', fr: 'Hauts', ar: 'قمصان' },
+        'TOPS': { en: 'TOPS', fr: 'HAUTS', ar: 'قمصان' },
+        'Bottoms': { en: 'Bottoms', fr: 'Bas', ar: 'بناطيل' },
+        'BOTTOMS': { en: 'BOTTOMS', fr: 'BAS', ar: 'بناطيل' },
+        'Shoes': { en: 'Shoes', fr: 'Chaussures', ar: 'أحذية' },
+        'SHOES': { en: 'SHOES', fr: 'CHAUSSURES', ar: 'أحذية' },
+        'Dresses': { en: 'Dresses', fr: 'Robes', ar: 'فساتين' },
+        'DRESSES': { en: 'DRESSES', fr: 'ROBES', ar: 'فساتين' },
+        'Recommandé': { en: 'Recommended', fr: 'Recommandé', ar: 'موصى به' },
+        'Sort: Featured': { en: 'Sort: Featured', fr: 'Trier: Recommandé', ar: 'موصى به' },
+        'Featured': { en: 'Featured', fr: 'Recommandé', ar: 'موصى به' },
+        'Best Matches 🌟': { en: 'Best Matches 🌟', fr: 'Meilleurs choix 🌟', ar: 'موصى به 🌟' },
+        'Prix: Croissant': { en: 'Price: Low to High', fr: 'Prix: Croissant', ar: 'السعر: من الأقل للأكثر' },
+        'Price: Low to High': { en: 'Price: Low to High', fr: 'Prix: Croissant', ar: 'السعر: من الأقل للأكثر' },
+        'Price: Low - High': { en: 'Price: Low - High', fr: 'Prix: Croissant', ar: 'السعر: من الأقل للأكثر' },
+        'Price: Low to High 💸': { en: 'Price: Low to High 💸', fr: 'Prix: Croissant 💸', ar: 'السعر: من الأقل للأكثر 💸' },
+        'Prix: Décroissant': { en: 'Price: High to Low', fr: 'Prix: Décroissant', ar: 'السعر: من الأكثر للأقل' },
+        'Price: High to Low': { en: 'Price: High to Low', fr: 'Prix: Décroissant', ar: 'السعر: من الأكثر للأقل' },
+        'Price: High - Low': { en: 'Price: High - Low', fr: 'Prix: Décroissant', ar: 'السعر: من الأكثر للأقل' },
+        'Price: High to Low 💎': { en: 'Price: High to Low 💎', fr: 'Prix: Décroissant 💎', ar: 'السعر: من الأكثر للأقل 💎' },
+        'De A à Z': { en: 'A to Z', fr: 'De A à Z', ar: 'أ - ي' },
+        'De Z à A': { en: 'Z to A', fr: 'De Z à A', ar: 'ي - أ' },
+        'Add to cart': { en: 'Add to cart', fr: 'Ajouter au panier', ar: 'أضف للسلة' },
+        'ADD TO CART': { en: 'ADD TO CART', fr: 'AJOUTER AU PANIER', ar: 'أضف للسلة' },
+        'BUY NOW': { en: 'BUY NOW', fr: 'ACHETER', ar: 'اشتري الآن' },
+        'DISCOVER': { en: 'DISCOVER', fr: 'DÉCOUVRIR', ar: 'اكتشف' }
      };
-     return dict[t] || t;
+     return dict[t]?.[storeLang] || t;
   };
   
   // Customization States (The PRO way)
@@ -951,7 +954,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                 <div className="aspect-[3/4] bg-slate-100 mb-4 overflow-hidden relative rounded-xl">
                                    {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-12 h-12" /></div>}
                                    <div className={`absolute bottom-4 left-0 right-0 flex justify-center transition-opacity ${(previewDevice === 'mobile' && !isModal) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                                      <button onClick={handleAddToCart} className="px-8 py-3 text-white text-xs font-bold uppercase tracking-wider shadow-2xl rounded-full" style={btnStyle}>Add to cart</button>
+                                      <button onClick={handleAddToCart} className="px-8 py-3 text-white text-xs font-bold uppercase tracking-wider shadow-2xl rounded-full" style={btnStyle}>{tr('Add to cart')}</button>
                                    </div>
                                 </div>
                                 <h4 className="font-bold text-sm">{p.name}</h4>
@@ -1057,7 +1060,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                         <div className="aspect-[3/4] mb-4 overflow-hidden relative rounded-xl border" style={{ backgroundColor: cardBg, borderColor }}>
                            {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-12 h-12" /></div>}
                            <div className={`absolute bottom-4 left-0 right-0 flex justify-center transition-opacity ${(previewDevice === 'mobile' && !isModal) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                              <button onClick={handleAddToCart} className="px-8 py-3 text-white text-xs font-bold uppercase tracking-wider shadow-2xl rounded-full" style={btnStyle}>Add to cart</button>
+                              <button onClick={handleAddToCart} className="px-8 py-3 text-white text-xs font-bold uppercase tracking-wider shadow-2xl rounded-full" style={btnStyle}>{tr('Add to cart')}</button>
                            </div>
                         </div>
                         <h4 className="font-bold text-sm">{p.name}</h4>
@@ -1124,6 +1127,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              <h4 className="font-black text-slate-800 mb-2">{storeLang === 'ar' ? 'شراء سريع' : storeLang === 'en' ? 'Express Checkout' : 'Achat Express'}</h4>
                              <CheckoutForm
                                  storeIsAr={typeof storeLang !== 'undefined' ? storeLang === 'ar' : storeIsAr}
+                                 storeLang={storeLang}
                                  onSubmit={submitGlobalOrder}
                                  product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
                                  quantity={typeof quantity !== 'undefined' ? quantity : 1}
@@ -1138,7 +1142,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        ) : (
                           <div className="flex gap-4">
                              {(buyMode === 'cart' || buyMode === 'both') && (
-                                <button onClick={handleAddToCart} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: '#1e293b' }}>Add to cart</button>
+                                <button onClick={handleAddToCart} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: '#1e293b' }}>{tr('Add to cart')}</button>
                              )}
                              {(buyMode === 'direct' || buyMode === 'both') && (
                                 <button onClick={() => setPage('checkout')} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: primaryColor }}>Buy Now</button>
@@ -1157,6 +1161,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                  <div className="space-y-4">
                     <CheckoutForm
                                  storeIsAr={typeof storeLang !== 'undefined' ? storeLang === 'ar' : storeIsAr}
+                                 storeLang={storeLang}
                                  onSubmit={submitGlobalOrder}
                                  product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
                                  quantity={typeof quantity !== 'undefined' ? quantity : 1}
@@ -1242,7 +1247,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                <div className="flex-1 flex flex-col justify-center p-12">
                   <h1 className="text-5xl font-light leading-tight mb-6" style={{ color: primaryColor }}>Elegance in <br/>Simplicity.</h1>
                   <p className="text-gray-500 mb-8 max-w-sm leading-relaxed">Experience a collection defined by pure lines and organic materials.</p>
-                  <button onClick={() => setPage('collections')} className="w-max px-10 py-4 text-white text-sm tracking-widest transition-opacity hover:opacity-90" style={{ backgroundColor: primaryColor }}>DISCOVER</button>
+                  <button onClick={() => setPage('collections')} className="w-max px-10 py-4 text-white text-sm tracking-widest transition-opacity hover:opacity-90" style={{ backgroundColor: primaryColor }}>{tr('DISCOVER')}</button>
                </div>
                <HeroBackgroundEditor className="flex-1 bg-cover bg-center" style={{ backgroundImage: `url(${heroImage})` }} />
             </div>
@@ -1257,7 +1262,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                         <div className="aspect-[4/5] mb-6 relative overflow-hidden flex items-center justify-center border" style={{ backgroundColor: cardBg, borderColor }}>
                            {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-10"><ImageIcon className="w-16 h-16" /></div>}
                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <button onClick={handleAddToCart} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`px-8 py-3 bg-white text-black text-xs tracking-widest hover:bg-black hover:text-white transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>ADD TO CART</button>
+                              <button onClick={handleAddToCart} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`px-8 py-3 bg-white text-black text-xs tracking-widest hover:bg-black hover:text-white transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{tr('ADD TO CART')}</button>
                            </div>
                         </div>
                         <h4 className="font-medium text-lg mb-2">{p.name}</h4>
@@ -1295,7 +1300,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                         <div className="aspect-[4/5] mb-6 relative overflow-hidden flex items-center justify-center border" style={{ backgroundColor: cardBg, borderColor }}>
                            {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-10"><ImageIcon className="w-16 h-16" /></div>}
                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <button onClick={handleAddToCart} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`px-8 py-3 bg-white text-black text-xs tracking-widest hover:bg-black hover:text-white transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>ADD TO CART</button>
+                              <button onClick={handleAddToCart} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`px-8 py-3 bg-white text-black text-xs tracking-widest hover:bg-black hover:text-white transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{tr('ADD TO CART')}</button>
                            </div>
                         </div>
                         <h4 className="font-medium text-lg mb-2">{p.name}</h4>
@@ -1362,6 +1367,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              <h4 className="text-xl font-light mb-4" style={{ color: primaryColor }}>Checkout</h4>
                              <CheckoutForm
                                  storeIsAr={typeof storeLang !== 'undefined' ? storeLang === 'ar' : storeIsAr}
+                                 storeLang={storeLang}
                                  onSubmit={submitGlobalOrder}
                                  product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
                                  quantity={typeof quantity !== 'undefined' ? quantity : 1}
@@ -1376,10 +1382,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        ) : (
                           <div className="flex gap-4">
                              {(buyMode === 'cart' || buyMode === 'both') && (
-                                <button onClick={handleAddToCart} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-max px-12 py-4 bg-white border border-black text-black text-xs tracking-widest hover:bg-gray-100 transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>ADD TO CART</button>
+                                <button onClick={handleAddToCart} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-max px-12 py-4 bg-white border border-black text-black text-xs tracking-widest hover:bg-gray-100 transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{tr('ADD TO CART')}</button>
                              )}
                              {(buyMode === 'direct' || buyMode === 'both') && (
-                                <button onClick={() => setPage('checkout')} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-max px-12 py-4 text-white text-xs tracking-widest transition-opacity hover:opacity-90 ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: primaryColor }}>BUY NOW</button>
+                                <button onClick={() => setPage('checkout')} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-max px-12 py-4 text-white text-xs tracking-widest transition-opacity hover:opacity-90 ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: primaryColor }}>{tr('BUY NOW')}</button>
                              )}
                           </div>
                        )}
@@ -1395,6 +1401,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                  <div className="space-y-6">
                     <CheckoutForm
                                  storeIsAr={typeof storeLang !== 'undefined' ? storeLang === 'ar' : storeIsAr}
+                                 storeLang={storeLang}
                                  onSubmit={submitGlobalOrder}
                                  product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
                                  quantity={typeof quantity !== 'undefined' ? quantity : 1}
@@ -1479,7 +1486,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                         {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover mb-8" alt={p.name} /> : <ImageIcon className="w-16 h-16 opacity-10 mb-8" />}
                         <h4 className="font-serif text-2xl mb-2 group-hover:text-white transition-colors" style={{ color: primaryColor }}>{p.name}</h4>
                         <p className="text-white/50 tracking-widest text-sm mb-6">{p.price} MAD</p>
-                        <button onClick={handleAddToCart} className="opacity-0 group-hover:opacity-100 transition-opacity px-6 py-2 bg-white text-black text-xs tracking-widest">ADD TO CART</button>
+                        <button onClick={handleAddToCart} className="opacity-0 group-hover:opacity-100 transition-opacity px-6 py-2 bg-white text-black text-xs tracking-widest">{tr('ADD TO CART')}</button>
                      </div>
                   ))}
                </div>
@@ -1511,7 +1518,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                         {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover mb-8" alt={p.name} /> : <ImageIcon className="w-16 h-16 opacity-10 mb-8" />}
                         <h4 className="font-serif text-2xl mb-2 group-hover:text-white transition-colors" style={{ color: primaryColor }}>{p.name}</h4>
                         <p className="text-white/50 tracking-widest text-sm mb-6">{p.price} MAD</p>
-                        <button onClick={handleAddToCart} className="opacity-0 group-hover:opacity-100 transition-opacity px-6 py-2 bg-white text-black text-xs tracking-widest">ADD TO CART</button>
+                        <button onClick={handleAddToCart} className="opacity-0 group-hover:opacity-100 transition-opacity px-6 py-2 bg-white text-black text-xs tracking-widest">{tr('ADD TO CART')}</button>
                      </div>
                   ))}
                </div>
@@ -1575,6 +1582,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              <h4 className="text-xl font-serif mb-4 text-white">Secure Checkout</h4>
                              <CheckoutForm
                                  storeIsAr={typeof storeLang !== 'undefined' ? storeLang === 'ar' : storeIsAr}
+                                 storeLang={storeLang}
                                  onSubmit={submitGlobalOrder}
                                  product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
                                  quantity={typeof quantity !== 'undefined' ? quantity : 1}
@@ -1589,10 +1597,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        ) : (
                           <div className="flex gap-4">
                              {(buyMode === 'cart' || buyMode === 'both') && (
-                                <button onClick={handleAddToCart} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-max px-12 py-4 border border-white/20 text-white text-xs tracking-widest hover:bg-white/5 transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>ADD TO CART</button>
+                                <button onClick={handleAddToCart} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-max px-12 py-4 border border-white/20 text-white text-xs tracking-widest hover:bg-white/5 transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{tr('ADD TO CART')}</button>
                              )}
                              {(buyMode === 'direct' || buyMode === 'both') && (
-                                <button onClick={() => setPage('checkout')} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-max px-12 py-4 bg-white text-black text-xs tracking-widest hover:bg-gray-200 transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>BUY NOW</button>
+                                <button onClick={() => setPage('checkout')} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-max px-12 py-4 bg-white text-black text-xs tracking-widest hover:bg-gray-200 transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{tr('BUY NOW')}</button>
                              )}
                           </div>
                        )}
@@ -1608,6 +1616,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                  <div className="space-y-6">
                     <CheckoutForm
                                  storeIsAr={typeof storeLang !== 'undefined' ? storeLang === 'ar' : storeIsAr}
+                                 storeLang={storeLang}
                                  onSubmit={submitGlobalOrder}
                                  product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
                                  quantity={typeof quantity !== 'undefined' ? quantity : 1}
@@ -1681,7 +1690,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                   <div className="relative z-10 flex flex-col items-center p-8 bg-white/90 rounded-[2rem] shadow-xl border-4 border-white">
                      <h1 className={`${isModal ? 'text-6xl' : 'text-4xl'} font-black tracking-tight mb-2`} style={{ color: primaryColor }}>Fun & Fresh!</h1>
                      <p className="text-slate-600 font-medium mb-6 max-w-sm">Colorful, comfortable, and made for play.</p>
-                     <button onClick={() => setPage('collections')} className="px-8 py-4 text-white font-black tracking-wide text-sm hover:scale-110 transition-transform rounded-full shadow-lg" style={{ backgroundColor: primaryColor }}>LET'S SHOP 🎈</button>
+                     <button onClick={() => setPage('collections')} className="px-8 py-4 text-white font-black tracking-wide text-sm hover:scale-110 transition-transform rounded-full shadow-lg" style={{ backgroundColor: primaryColor }}>{storeLang === 'ar' ? 'تسوق الآن 🎈' : storeLang === 'en' ? "LET'S SHOP 🎈" : 'ON Y VA 🎈'}</button>
                   </div>
                </HeroBackgroundEditor>
             </div>
@@ -1693,7 +1702,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                         <div className="aspect-square mb-4 overflow-hidden relative rounded-2xl shadow-sm border flex items-center justify-center" style={{ backgroundColor: cardBg, borderColor }}>
                            {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-12 h-12 opacity-10" />}
                            <div className={`absolute inset-0 bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center`}>
-                              <button onClick={handleAddToCart} className="px-6 py-3 text-white text-xs font-black uppercase tracking-wider rounded-full shadow-xl hover:scale-105 transition-transform" style={btnStyle}>Add to cart</button>
+                              <button onClick={handleAddToCart} className="px-6 py-3 text-white text-xs font-black uppercase tracking-wider rounded-full shadow-xl hover:scale-105 transition-transform" style={btnStyle}>{tr('Add to cart')}</button>
                            </div>
                         </div>
                         <h4 className="font-bold text-base text-center text-slate-700">{p.name}</h4>
@@ -1729,7 +1738,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                         <div className="aspect-square mb-4 overflow-hidden relative rounded-2xl shadow-sm border flex items-center justify-center" style={{ backgroundColor: cardBg, borderColor }}>
                            {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-12 h-12 opacity-10" />}
                            <div className={`absolute inset-0 bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center`}>
-                              <button onClick={handleAddToCart} className="px-6 py-3 text-white text-xs font-black uppercase tracking-wider rounded-full shadow-xl hover:scale-105 transition-transform" style={btnStyle}>Add to cart</button>
+                              <button onClick={handleAddToCart} className="px-6 py-3 text-white text-xs font-black uppercase tracking-wider rounded-full shadow-xl hover:scale-105 transition-transform" style={btnStyle}>{tr('Add to cart')}</button>
                            </div>
                         </div>
                         <h4 className="font-bold text-base text-center text-slate-700">{p.name}</h4>
@@ -1793,19 +1802,19 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
                        {buyMode === 'form' ? (
                           <div className="bg-white p-8 rounded-[2rem] border-4 border-slate-100 space-y-4">
-                             <h4 className="text-xl font-black text-slate-800 mb-2">Yay! Checkout 🎁</h4>
-                             <input type="text" placeholder="Your Name" className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-full focus:outline-none focus:border-current text-base font-bold" style={{ '--tw-ring-color': primaryColor } as React.CSSProperties} />
+                             <h4 className="text-xl font-black text-slate-800 mb-2">{storeLang === 'ar' ? 'الدفع 🎁' : storeLang === 'en' ? 'Yay! Checkout 🎁' : 'Youpi ! Commande 🎁'}</h4>
+                             <input type="text" placeholder={storeLang === 'ar' ? 'الاسم الكامل' : storeLang === 'en' ? 'Your Name' : 'Votre nom'} className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-full focus:outline-none focus:border-current text-base font-bold" style={{ '--tw-ring-color': primaryColor } as React.CSSProperties} />
                              <input type="text" placeholder={storeLang === 'ar' ? 'رقم الهاتف' : storeLang === 'en' ? 'Phone Number' : 'Numéro de Téléphone'} className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-full focus:outline-none focus:border-current text-base font-bold" style={{ '--tw-ring-color': primaryColor } as React.CSSProperties} />
-                             <input type="text" placeholder="Where to send?" className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-full focus:outline-none focus:border-current text-base font-bold" style={{ '--tw-ring-color': primaryColor } as React.CSSProperties} />
-                             <button onClick={(e) => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1, e)} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-full py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl mt-4 ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: primaryColor }}>Send it to me! 🚀</button>
+                             <input type="text" placeholder={storeLang === 'ar' ? 'عنوان التوصيل' : storeLang === 'en' ? 'Where to send?' : 'Adresse de livraison ?'} className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-full focus:outline-none focus:border-current text-base font-bold" style={{ '--tw-ring-color': primaryColor } as React.CSSProperties} />
+                             <button onClick={(e) => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1, e)} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-full py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl mt-4 ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: primaryColor }}>{storeLang === 'ar' ? 'أرسل الطلب! 🚀' : storeLang === 'en' ? 'Send it to me! 🚀' : 'Envoyez-le moi ! 🚀'}</button>
                           </div>
                        ) : (
                           <div className="flex gap-4">
                              {(buyMode === 'cart' || buyMode === 'both') && (
-                                <button onClick={handleAddToCart} className="flex-1 px-8 py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl" style={{ backgroundColor: '#f43f5e' }}>Cart 🛒</button>
+                                <button onClick={handleAddToCart} className="flex-1 px-8 py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl" style={{ backgroundColor: '#f43f5e' }}>{storeLang === 'ar' ? 'السلة 🛒' : storeLang === 'en' ? 'Cart 🛒' : 'Panier 🛒'}</button>
                              )}
                              {(buyMode === 'direct' || buyMode === 'both') && (
-                                <button onClick={() => setPage('checkout')} className="flex-1 px-8 py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl" style={{ backgroundColor: primaryColor }}>Buy Now 🎈</button>
+                                <button onClick={() => setPage('checkout')} className="flex-1 px-8 py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl" style={{ backgroundColor: primaryColor }}>{storeLang === 'ar' ? 'اشتري الآن 🎈' : storeLang === 'en' ? 'Buy Now 🎈' : 'Achetez maintenant 🎈'}</button>
                              )}
                           </div>
                        )}
@@ -1817,10 +1826,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         {page === 'checkout' && (
            <div className={`${isModal ? 'p-16 max-w-2xl' : 'p-8'} mx-auto w-full`}>
               <div className="bg-slate-50 p-10 rounded-[3rem] shadow-sm border-4 border-white">
-                 <h2 className="text-3xl font-black mb-6 text-center text-slate-800">Yay! Checkout 🎁</h2>
+                 <h2 className="text-3xl font-black mb-6 text-center text-slate-800">{storeLang === 'ar' ? 'الدفع 🎁' : storeLang === 'en' ? 'Yay! Checkout 🎁' : 'Youpi ! Commande 🎁'}</h2>
                  <div className="space-y-4">
                     <CheckoutForm
                                  storeIsAr={typeof storeLang !== 'undefined' ? storeLang === 'ar' : storeIsAr}
+                                 storeLang={storeLang}
                                  onSubmit={submitGlobalOrder}
                                  product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
                                  quantity={typeof quantity !== 'undefined' ? quantity : 1}
@@ -2027,6 +2037,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               <div className="space-y-4">
                  <CheckoutForm
                                  storeIsAr={typeof storeLang !== 'undefined' ? storeLang === 'ar' : storeIsAr}
+                                 storeLang={storeLang}
                                  onSubmit={submitGlobalOrder}
                                  product={typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId)}
                                  quantity={typeof quantity !== 'undefined' ? quantity : 1}
@@ -2487,7 +2498,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                 <div className="w-full max-w-md h-full bg-white shadow-2xl flex flex-col transform transition-transform" onClick={e => e.stopPropagation()}>
                    <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
                       <h2 className="text-xl font-black uppercase tracking-tight">
-                         {authMode === 'login' ? (storeIsAr ? 'تسجيل الدخول' : 'Se connecter') : (storeIsAr ? 'إنشاء حساب' : 'Créer un compte')}
+                         {authMode === 'login' ? (storeLang === 'ar' ? 'تسجيل الدخول' : storeLang === 'en' ? 'Sign In' : 'Se connecter') : (storeLang === 'ar' ? 'إنشاء حساب' : storeLang === 'en' ? 'Create Account' : 'Créer un compte')}
                       </h2>
                       <button onClick={() => setIsAuthOpen(false)} className="w-8 h-8 flex items-center justify-center bg-white rounded-full border border-slate-200 text-slate-500 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-all">
                          <X className="w-4 h-4" />
@@ -2496,6 +2507,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                    <div className="flex-1 overflow-y-auto p-6">
                       <AuthForm
                          storeIsAr={storeIsAr}
+                         storeLang={storeLang}
                          mode={authMode}
                          onModeChange={setAuthMode}
                          storeDomain={customDomain || `${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`}
