@@ -368,6 +368,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [pdpMaxWidth, setPdpMaxWidth] = useState<number>(config.pdpMaxWidth ?? 1200);
   const [pdpImageAspect, setPdpImageAspect] = useState<string>(config.pdpImageAspect || '4/5');
   const [productCardSize, setProductCardSize] = useState<'small' | 'medium' | 'large'>(config.productCardSize || 'medium');
+  const [siteMaxWidth, setSiteMaxWidth] = useState<number>(config.siteMaxWidth ?? 1400);
   const gridColsClass = (variant: 'lg4' | 'lg3' | 'sm2' | 'md4' | 'plain4') => {
      if (variant === 'lg4') return productCardSize === 'small' ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5' : productCardSize === 'large' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4';
      if (variant === 'lg3') return productCardSize === 'small' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : productCardSize === 'large' ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
@@ -608,6 +609,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               if (conf.pdpMaxWidth !== undefined) setPdpMaxWidth(conf.pdpMaxWidth);
               if (conf.pdpImageAspect) setPdpImageAspect(conf.pdpImageAspect);
               if (conf.productCardSize) setProductCardSize(conf.productCardSize);
+              if (conf.siteMaxWidth !== undefined) setSiteMaxWidth(conf.siteMaxWidth);
               if (conf.showPdpTrustBadges !== undefined) setShowPdpTrustBadges(conf.showPdpTrustBadges);
               if (conf.deliveryScope) setDeliveryScope(conf.deliveryScope);
               if (conf.deliveryText) setDeliveryText(conf.deliveryText);
@@ -813,6 +815,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        pdpMaxWidth,
        pdpImageAspect,
        productCardSize,
+       siteMaxWidth,
        showPdpTrustBadges,
        deliveryScope,
        deliveryText,
@@ -1283,7 +1286,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                 );
 
                 if (block === 'products') return (
-                    <div key="products" className={`${isModal ? 'p-16 max-w-[1400px]' : 'p-8'} mx-auto w-full`}>
+                    <div key="products" className={`${isModal ? 'p-16' : 'p-8'} mx-auto w-full`} style={{ maxWidth: `${siteMaxWidth}px` }}>
                        <div className="flex items-center justify-between mb-6 md:justify-center md:mb-10">
                           <h3 className="text-lg md:text-2xl font-black uppercase">{homeCollectionsTitle}</h3>
                           <span className="md:hidden text-xs font-bold text-slate-400" onClick={() => setPage('collections')}>{isAr ? 'الكل' : 'Voir tout'}</span>
@@ -1377,7 +1380,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
           </>
         )}
         {page === 'collections' && (
-            <div className={`${isModal ? 'p-16 max-w-[1400px]' : 'p-4 md:p-8'} mx-auto w-full`}>
+            <div className={`${isModal ? 'p-16' : 'p-4 md:p-8'} mx-auto w-full`} style={{ maxWidth: `${siteMaxWidth}px` }}>
                <div className="md:hidden flex items-center gap-2 mb-4 bg-slate-50 rounded-full px-4 py-2.5">
                   <Search className="w-4 h-4 text-slate-400" />
                   <input readOnly placeholder={isAr ? 'بحث...' : 'Rechercher...'} className="bg-transparent text-sm flex-1 outline-none text-slate-600" />
@@ -1635,7 +1638,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                </div>
                <HeroBackgroundEditor className="flex-1 bg-cover" style={{ backgroundImage: `url(${heroImage})`, backgroundPosition: `${heroImagePosX}% ${heroImagePosY}%` }} />
             </div>
-            <div className={`${isModal ? 'p-20' : 'p-8'} mx-auto w-full`}>
+            <div className={`${isModal ? 'p-20' : 'p-8'} mx-auto w-full`} style={{ maxWidth: `${siteMaxWidth}px` }}>
                <div className="flex justify-between items-end mb-12 border-b pb-4">
                   <h3 className="text-2xl font-light">{storeLang === 'ar' ? 'وصل حديثاً' : storeLang === 'en' ? 'New Arrivals' : 'Nouveautés'}</h3>
                   <span className="text-sm cursor-pointer hover:underline" style={{ color: primaryColor }}>{storeLang === 'ar' ? 'عرض الكل' : storeLang === 'en' ? 'View all' : 'Voir tout'}</span>
@@ -1658,7 +1661,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
           </>
         )}
         {page === 'collections' && (
-            <div className={`${isModal ? 'p-20' : 'p-8'} mx-auto w-full`}>
+            <div className={`${isModal ? 'p-20' : 'p-8'} mx-auto w-full`} style={{ maxWidth: `${siteMaxWidth}px` }}>
                <div className="flex flex-col md:flex-row justify-between items-end mb-12 border-b pb-4 gap-6">
                   <h3 className="text-2xl font-light">{tr('All Products')}</h3>
                   <div className="flex flex-col sm:flex-row items-center gap-6">
@@ -1872,7 +1875,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                   </div>
                </HeroBackgroundEditor>
             </div>
-            <div className={`${isModal ? 'p-16' : 'p-8'} mx-auto w-full`}>
+            <div className={`${isModal ? 'p-16' : 'p-8'} mx-auto w-full`} style={{ maxWidth: `${siteMaxWidth}px` }}>
                <h3 className="text-xl tracking-widest uppercase text-center mb-16" style={{ color: primaryColor }}>Curated Selection</h3>
                <div className={`grid gap-4 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : gridColsClass('sm2')}`}>
                   {storeProducts.map((p: any) => (
@@ -1888,7 +1891,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
           </>
         )}
         {page === 'collections' && (
-            <div className={`${isModal ? 'p-16' : 'p-8'} mx-auto w-full`}>
+            <div className={`${isModal ? 'p-16' : 'p-8'} mx-auto w-full`} style={{ maxWidth: `${siteMaxWidth}px` }}>
                <h3 className="text-xl tracking-widest uppercase text-center mb-8" style={{ color: primaryColor }}>{tr('All Products')}</h3>
                <div className="flex flex-col items-center gap-6 mb-16">
                   {categories && categories.length > 1 && (
@@ -2109,7 +2112,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                   </div>
                </HeroBackgroundEditor>
             </div>
-            <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-6'} mx-auto w-full`}>
+            <div className={`${isModal ? 'p-16' : 'p-6'} mx-auto w-full`} style={{ maxWidth: `${siteMaxWidth}px` }}>
                <h3 className="text-2xl md:text-3xl font-black text-center mb-6 md:mb-10 text-slate-800">{storeLang === 'ar' ? 'وصل حديثاً ✨' : storeLang === 'en' ? 'New Arrivals ✨' : 'Nouveautés ✨'}</h3>
                <div className="md:hidden grid grid-cols-2 gap-3">
                   {storeProducts.map((p: any, idx: number) => (
@@ -2134,7 +2137,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
           </>
         )}
         {page === 'collections' && (
-            <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-6'} mx-auto w-full`}>
+            <div className={`${isModal ? 'p-16' : 'p-6'} mx-auto w-full`} style={{ maxWidth: `${siteMaxWidth}px` }}>
                <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                   <h3 className="text-3xl font-black text-center text-slate-800">{tr('All Products ✨')}</h3>
                   <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="bg-white border-2 border-slate-200 text-slate-700 text-sm font-black rounded-full focus:ring-slate-500 focus:border-slate-500 px-4 py-2 outline-none cursor-pointer shadow-sm">
@@ -2379,7 +2382,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                </HeroBackgroundEditor>
             </div>
 
-            <div className="py-16 px-8 max-w-7xl mx-auto bg-white">
+            <div className="py-16 px-8 mx-auto bg-white" style={{ maxWidth: `${siteMaxWidth}px` }}>
                <div className="flex flex-col items-center mb-12">
                   <EditableText as="h2" text={homeCollectionsTitle} onTextChange={setHomeCollectionsTitle} isLiveStore={isLiveStore} className="text-2xl font-black uppercase text-[#1a1a1a] mb-8 tracking-wider" styleKey="homeCollectionsTitle" />
                   
@@ -2592,7 +2595,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             </div>
 
             {/* Products Grid */}
-            <div className="max-w-6xl mx-auto w-full px-4 py-8">
+            <div className="mx-auto w-full px-4 py-8" style={{ maxWidth: `${siteMaxWidth}px` }}>
                <div className="flex items-center justify-between mb-12">
                   <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{storeLang === 'ar' ? '#وصل_حديثاً' : storeLang === 'en' ? '#New Arrivals' : '#Nouveautés'}</h3>
                   <div className="flex gap-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden md:flex">
@@ -2679,7 +2682,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
       )}
 
       {page === 'collections' && (
-         <div className="flex-1 max-w-6xl mx-auto w-full px-4 py-16">
+         <div className="flex-1 mx-auto w-full px-4 py-16" style={{ maxWidth: `${siteMaxWidth}px` }}>
             <h2 className="text-3xl font-black text-center mb-16 uppercase tracking-tight">{tr(allCollectionsTitle || 'ALL PRODUCTS')}</h2>
             <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-2' : gridColsClass('plain4')}`}>
                {storeProducts.map((p: any) => (
@@ -3783,6 +3786,23 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                  <span className={`text-[10px] font-bold ${productCardSize === key ? 'text-indigo-600' : 'text-slate-500'}`}>{isAr ? labelAr : labelFr}</span>
                               </button>
                            ))}
+                        </div>
+                     </div>
+
+                     {/* SITE WIDTH */}
+                     <div className="pt-4 border-t border-slate-100">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'عرض الموقع' : 'Largeur du Site'}</label>
+                        <div className="flex items-center gap-3">
+                           <input
+                              type="range"
+                              min={1000}
+                              max={1920}
+                              step={20}
+                              value={siteMaxWidth}
+                              onChange={e => setSiteMaxWidth(parseInt(e.target.value))}
+                              className="flex-1 accent-indigo-600"
+                           />
+                           <span className="text-[10px] font-mono font-bold text-slate-600 w-14 text-right">{siteMaxWidth}px</span>
                         </div>
                      </div>
 
