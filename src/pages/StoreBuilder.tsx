@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown, TrendingUp, Package } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
@@ -74,6 +74,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [isControlsCollapsed, setIsControlsCollapsed] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [showTrash, setShowTrash] = useState(false);
+  const [newOrderToast, setNewOrderToast] = useState<string | null>(null);
+  const knownOrderIdsRef = useRef<Set<string> | null>(null);
   const [orderStatusFilter, setOrderStatusFilter] = useState<'all' | 'confirmed' | 'refused'>('all');
   const CONFIRMED_STATUSES = ['Confirmé', 'Confirmée', 'Validée', 'Livrée', 'مؤكد', 'تم التوصيل'];
   const REFUSED_STATUSES = ['Refusé', 'Refusée', 'Annulée', 'Retour', 'مرفوض', 'ملغى'];
@@ -182,13 +184,26 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               const localKept = prev.filter(o => !liveIds.has(o.id));
               return [...mappedOrders, ...localKept];
             });
+
+            // Detect newly-arrived orders (skip the very first fetch on page load)
+            const currentIds = new Set(mappedOrders.map(o => o.id));
+            if (knownOrderIdsRef.current) {
+              const freshOrder = mappedOrders.find(o => !knownOrderIdsRef.current!.has(o.id));
+              if (freshOrder) {
+                setNewOrderToast(freshOrder.customer);
+                setTimeout(() => setNewOrderToast(null), 6000);
+              }
+            }
+            knownOrderIdsRef.current = currentIds;
           }
         } catch (err) {
           console.error("Error fetching live store orders:", err);
         }
       };
-      
+
       fetchStoreOrders();
+      const pollInterval = setInterval(fetchStoreOrders, 20000);
+      return () => clearInterval(pollInterval);
     }
   }, [isLiveStore, config.storeName]);
 
@@ -2565,6 +2580,18 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
   return (
     <div className={`space-y-6 ${isAr ? 'text-right' : 'text-left'} bg-slate-50 min-h-screen p-6`}>
+      {newOrderToast && (
+         <div className="fixed top-6 right-6 z-[700] bg-white border border-emerald-200 shadow-2xl rounded-2xl p-4 flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300 max-w-sm">
+            <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0">
+               <ShoppingBag className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+               <p className="text-sm font-black text-slate-800">{isAr ? '🎉 طلب جديد!' : '🎉 Nouvelle commande !'}</p>
+               <p className="text-xs font-bold text-slate-500 truncate">{newOrderToast}</p>
+            </div>
+            <button onClick={() => setNewOrderToast(null)} className="text-slate-400 hover:text-slate-600 shrink-0"><X className="w-4 h-4" /></button>
+         </div>
+      )}
       {/* Top Navigation / Back Button */}
       <div className="flex items-center justify-between mb-4">
          <button onClick={() => setBuilderMode('dashboard')} className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors font-bold text-sm bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-200">
