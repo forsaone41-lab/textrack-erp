@@ -333,6 +333,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [requireAccountToOrder, setRequireAccountToOrder] = useState(config.requireAccountToOrder ?? false);
+  const [showHeaderLang, setShowHeaderLang] = useState(config.showHeaderLang ?? true);
+  const [showHeaderSearch, setShowHeaderSearch] = useState(config.showHeaderSearch ?? true);
+  const [showHeaderAccount, setShowHeaderAccount] = useState(config.showHeaderAccount ?? true);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [storeProducts, setStoreProducts] = useState(config.storeProducts || [
     { id: 1, name: 'Premium Hoodie', price: '450.00', category: 'Outerwear', image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800' },
@@ -471,6 +474,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               if (conf.featuresData) setFeaturesData(conf.featuresData);
               if (conf.videoUrl) setVideoUrl(conf.videoUrl);
               if (conf.requireAccountToOrder !== undefined) setRequireAccountToOrder(conf.requireAccountToOrder);
+              if (conf.showHeaderLang !== undefined) setShowHeaderLang(conf.showHeaderLang);
+              if (conf.showHeaderSearch !== undefined) setShowHeaderSearch(conf.showHeaderSearch);
+              if (conf.showHeaderAccount !== undefined) setShowHeaderAccount(conf.showHeaderAccount);
            }
         } catch (err) {
            console.warn('No live config found in Supabase or table missing:', err);
@@ -634,7 +640,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        secondaryColor,
        buttonStyle,
        showReviews,
-       requireAccountToOrder
+       requireAccountToOrder,
+       showHeaderLang,
+       showHeaderSearch,
+       showHeaderAccount
     };
     localStorage.setItem('beya_store_config', JSON.stringify(storeConfig));
     
@@ -772,6 +781,109 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
      </footer>
   );
 
+  // Shared header icon cluster (language / search / account / cart) used by every theme,
+  // so they all stay wired the same way and respect the show/hide toggles from Settings.
+  const HeaderIconsCluster = ({ variant = 'light' }: any) => {
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+
+    const langFlags: Record<string, { code: string; label: string }> = {
+      fr: { code: 'fr', label: 'FR' },
+      en: { code: 'gb', label: 'EN' },
+      ar: { code: 'sa', label: 'AR' },
+    };
+    const nextLang: Record<string, 'fr' | 'en' | 'ar'> = { fr: 'en', en: 'ar', ar: 'fr' };
+    const currentLang = langFlags[storeLang] || langFlags.fr;
+
+    const searchResults = searchQuery.trim()
+      ? (storeProducts || []).filter((p: any) => p.name?.toLowerCase().includes(searchQuery.trim().toLowerCase())).slice(0, 6)
+      : [];
+
+    const isDark = variant === 'dark';
+    const iconClass = isDark ? 'text-white' : 'text-slate-700';
+
+    return (
+      <div className={`flex gap-4 items-center relative ${iconClass}`}>
+        {showHeaderLang && (
+          <span
+            className="text-xs font-bold uppercase flex items-center gap-1 cursor-pointer hover:opacity-70 transition-opacity"
+            onClick={() => setStoreLang(nextLang[storeLang] || 'fr')}
+            title={storeLang === 'ar' ? 'تغيير اللغة' : storeLang === 'en' ? 'Change language' : 'Changer de langue'}
+          >
+            <img src={`https://flagcdn.com/w20/${currentLang.code}.png`} alt={currentLang.label} className="w-4 h-3 rounded-sm object-cover" /> {currentLang.label}
+          </span>
+        )}
+
+        {showHeaderSearch && (
+          <div className="relative">
+            <Search className="w-5 h-5 cursor-pointer hover:opacity-70 transition-opacity" onClick={() => setIsSearchOpen(o => !o)} />
+            {isSearchOpen && (
+              <div className="absolute right-0 top-8 z-50 w-72 bg-white rounded-xl shadow-2xl border border-slate-200 p-3 text-slate-800">
+                <input
+                  autoFocus
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={storeLang === 'ar' ? 'ابحث عن منتج...' : storeLang === 'en' ? 'Search a product...' : 'Rechercher un produit...'}
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:outline-none focus:border-slate-400"
+                />
+                {searchQuery.trim() && (
+                  <div className="mt-2 max-h-64 overflow-y-auto">
+                    {searchResults.length > 0 ? searchResults.map((p: any) => (
+                      <div
+                        key={p.id}
+                        onClick={() => { navigateToProduct(p.id); setIsSearchOpen(false); setSearchQuery(''); }}
+                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer"
+                      >
+                        <img src={p.images?.[0] || p.image} alt={p.name} className="w-9 h-9 object-cover rounded-md bg-slate-100" />
+                        <span className="text-xs font-semibold text-slate-700 truncate">{p.name}</span>
+                      </div>
+                    )) : (
+                      <p className="text-xs text-slate-400 text-center py-3">{storeLang === 'ar' ? 'لا توجد نتائج' : storeLang === 'en' ? 'No results' : 'Aucun résultat'}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {showHeaderAccount && (
+          <div className="relative flex items-center gap-2">
+            {customerUser && (
+              <span className="text-xs font-bold hidden md:inline">
+                {storeLang === 'ar' ? 'مرحباً' : storeLang === 'en' ? 'Hi' : 'Bonjour'} {(customerProfile?.name || '').split(' ')[0]}
+              </span>
+            )}
+            <Users
+              className="w-5 h-5 cursor-pointer hover:opacity-70 transition-opacity"
+              onClick={() => {
+                if (customerUser) { setIsAccountMenuOpen(o => !o); }
+                else { setAuthMode('login'); setIsAuthOpen(true); }
+              }}
+            />
+            {isAccountMenuOpen && customerUser && (
+              <div className="absolute right-0 top-8 z-50 whitespace-nowrap bg-white border border-slate-200 rounded-lg shadow-xl py-2 w-36 text-slate-800">
+                <button
+                  onClick={() => { handleCustomerLogout(); setIsAccountMenuOpen(false); }}
+                  className="w-full text-left px-3 py-2 text-xs font-bold text-rose-600 hover:bg-slate-50"
+                >
+                  {storeIsAr ? 'تسجيل الخروج' : storeLang === 'en' ? 'Log out' : 'Déconnexion'}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        <button className="relative hover:opacity-70 transition-opacity" onClick={() => setIsCartOpen(true)}>
+          <ShoppingBag className="w-5 h-5" />
+          {cartCount > 0 && <span className="absolute -bottom-1 -right-1 text-white text-[9px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center bg-black">{cartCount}</span>}
+        </button>
+      </div>
+    );
+  };
+
   const LayoutHeroCenter = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts }: any) => {
     const [selectedSize, setSelectedSize] = useState<string>('');
     const [selectedColor, setSelectedColor] = useState<string>('');
@@ -787,10 +899,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer capitalize hover:opacity-70 transition-opacity" style={{ color: page === p.id ? primaryColor : '#64748b' }}>{tr(p.title)}</span>
             ))}
          </div>
-         <button onClick={() => setIsCartOpen(true)} className="relative hover:scale-110 transition-transform">
-            <ShoppingBag className="w-6 h-6" />
-            {cartCount > 0 && <span className="absolute -top-1 -right-1 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: primaryColor }}>{cartCount}</span>}
-         </button>
+         <HeaderIconsCluster variant="light" />
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -1120,10 +1229,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             ))}
          </div>
          <LogoEditor onClick={() => setPage('home')} className="text-3xl font-normal tracking-wide" style={{ color: primaryColor }} />
-         <button className="relative" onClick={() => setIsCartOpen(true)}>
-            <ShoppingBag className="w-6 h-6 font-light" />
-            {cartCount > 0 && <span className="absolute -top-2 -right-2 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: primaryColor }}>{cartCount}</span>}
-         </button>
+         <HeaderIconsCluster variant="light" />
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -1344,9 +1450,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             {storePages.map(p => (
                <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer hover:text-white transition-colors" style={{ color: page === p.id ? primaryColor : '#888' }}>{tr(p.title)}</span>
             ))}
-            <span className="cursor-pointer hover:text-white flex items-center gap-2" onClick={() => setIsCartOpen(true)}>
-               CART ({cartCount})
-            </span>
+            <HeaderIconsCluster variant="dark" />
          </div>
       </div>
 
@@ -1560,10 +1664,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer capitalize px-4 py-2 rounded-full transition-colors" style={{ backgroundColor: page === p.id ? primaryColor : 'transparent', color: page === p.id ? '#fff' : '#64748b' }}>{tr(p.title)}</span>
             ))}
          </div>
-         <button className="relative p-3 bg-white rounded-full shadow-sm hover:scale-105 transition-transform mr-1" onClick={() => setIsCartOpen(true)}>
-            <ShoppingBag className="w-5 h-5" style={{ color: primaryColor }} />
-            {cartCount > 0 && <span className="absolute -top-1 -right-1 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm" style={{ backgroundColor: '#f43f5e' }}>{cartCount}</span>}
-         </button>
+         <div className="p-2 bg-white rounded-full shadow-sm mr-1">
+            <HeaderIconsCluster variant="light" />
+         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto pt-6">
@@ -1797,21 +1900,6 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     const [selectedSize, setSelectedSize] = useState<string>('');
     const [selectedColor, setSelectedColor] = useState<string>('');
     const [quantity, setQuantity] = useState(1);
-    const [isSearchOpen, setIsSearchOpen] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [accountToast, setAccountToast] = useState(false);
-
-    const langFlags: Record<string, { code: string; label: string }> = {
-      fr: { code: 'fr', label: 'FR' },
-      en: { code: 'gb', label: 'EN' },
-      ar: { code: 'sa', label: 'AR' },
-    };
-    const nextLang: Record<string, 'fr' | 'en' | 'ar'> = { fr: 'en', en: 'ar', ar: 'fr' };
-    const currentLang = langFlags[storeLang] || langFlags.fr;
-
-    const searchResults = searchQuery.trim()
-      ? (storeProducts || []).filter((p: any) => p.name?.toLowerCase().includes(searchQuery.trim().toLowerCase())).slice(0, 6)
-      : [];
 
     return (
     <div className={`w-full min-h-full bg-[#e8e2d7] text-[#1a1a1a] ${fontFamily} flex flex-col`}>
@@ -1822,74 +1910,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                <span key={p.id} onClick={() => setPage(p.id)} className="cursor-pointer hover:text-black transition-colors" style={{ color: page === p.id ? primaryColor : undefined }}>{tr(p.title)}</span>
             ))}
          </div>
-         <div className="flex gap-4 items-center relative">
-            <span
-              className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1 cursor-pointer hover:opacity-70 transition-opacity"
-              onClick={() => setStoreLang(nextLang[storeLang] || 'fr')}
-              title={storeLang === 'ar' ? 'تغيير اللغة' : storeLang === 'en' ? 'Change language' : 'Changer de langue'}
-            >
-              <img src={`https://flagcdn.com/w20/${currentLang.code}.png`} alt={currentLang.label} className="w-4 h-3 rounded-sm object-cover" /> {currentLang.label}
-            </span>
-            <div className="relative">
-              <Search className="w-5 h-5 cursor-pointer hover:opacity-70 transition-opacity" onClick={() => setIsSearchOpen(o => !o)} />
-              {isSearchOpen && (
-                <div className="absolute right-0 top-8 z-50 w-72 bg-white rounded-xl shadow-2xl border border-slate-200 p-3">
-                  <input
-                    autoFocus
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={storeLang === 'ar' ? 'ابحث عن منتج...' : storeLang === 'en' ? 'Search a product...' : 'Rechercher un produit...'}
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:outline-none focus:border-slate-400 text-slate-800"
-                  />
-                  {searchQuery.trim() && (
-                    <div className="mt-2 max-h-64 overflow-y-auto">
-                      {searchResults.length > 0 ? searchResults.map((p: any) => (
-                        <div
-                          key={p.id}
-                          onClick={() => { navigateToProduct(p.id); setIsSearchOpen(false); setSearchQuery(''); }}
-                          className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer"
-                        >
-                          <img src={p.images?.[0] || p.image} alt={p.name} className="w-9 h-9 object-cover rounded-md bg-slate-100" />
-                          <span className="text-xs font-semibold text-slate-700 truncate">{p.name}</span>
-                        </div>
-                      )) : (
-                        <p className="text-xs text-slate-400 text-center py-3">{storeLang === 'ar' ? 'لا توجد نتائج' : storeLang === 'en' ? 'No results' : 'Aucun résultat'}</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-            <div className="relative flex items-center gap-2">
-              {customerUser && (
-                <span className="text-xs font-bold hidden md:inline">
-                  {storeLang === 'ar' ? 'مرحباً' : storeLang === 'en' ? 'Hi' : 'Bonjour'} {(customerProfile?.name || '').split(' ')[0]}
-                </span>
-              )}
-              <Users
-                className="w-5 h-5 cursor-pointer hover:opacity-70 transition-opacity"
-                onClick={() => {
-                  if (customerUser) { setAccountToast(o => !o); }
-                  else { setAuthMode('login'); setIsAuthOpen(true); }
-                }}
-              />
-              {accountToast && customerUser && (
-                <div className="absolute right-0 top-8 z-50 whitespace-nowrap bg-white border border-slate-200 rounded-lg shadow-xl py-2 w-36">
-                  <button
-                    onClick={() => { handleCustomerLogout(); setAccountToast(false); }}
-                    className="w-full text-left px-3 py-2 text-xs font-bold text-rose-600 hover:bg-slate-50"
-                  >
-                    {storeLang === 'ar' ? 'تسجيل الخروج' : storeLang === 'en' ? 'Log out' : 'Déconnexion'}
-                  </button>
-                </div>
-              )}
-            </div>
-            <button className="relative hover:opacity-70 transition-opacity" onClick={() => setIsCartOpen(true)}>
-               <ShoppingBag className="w-5 h-5" />
-               {cartCount > 0 && <span className="absolute -bottom-1 -right-1 text-white text-[9px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center bg-black">{cartCount}</span>}
-            </button>
-         </div>
+         <HeaderIconsCluster variant="light" />
       </div>
 
       <div className="flex-1 overflow-y-auto bg-white">
@@ -2055,7 +2076,6 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     const [selectedColor, setSelectedColor] = useState<string>('');
     const [quantity, setQuantity] = useState(1);
     const [activePDPTab, setActivePDPTab] = useState('description');
-    const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
 
     return (
     <div className={`w-full min-h-full bg-white text-slate-800 flex flex-col font-sans`}>
@@ -2072,34 +2092,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             <LogoEditor onClick={() => setPage('home')} className={`text-2xl font-black tracking-tighter text-slate-900 ${fontFamily}`} style={{ color: primaryColor }} />
          </div>
          {/* Icons - Right */}
-         <div className="flex items-center gap-4 text-slate-400">
-            <div className="relative">
-               <button
-                 onClick={() => {
-                    if (customerUser) setIsAccountMenuOpen(o => !o);
-                    else { setAuthMode('login'); setIsAuthOpen(true); }
-                 }}
-                 className="text-[10px] uppercase font-bold tracking-widest hidden md:block hover:text-slate-900 transition-colors"
-               >
-                  {customerUser ? `${storeIsAr ? 'مرحباً' : 'Bonjour'} ${(customerProfile?.name || '').split(' ')[0]}` : 'Login / Sign up'}
-               </button>
-               {isAccountMenuOpen && customerUser && (
-                  <div className="absolute right-0 top-6 z-50 whitespace-nowrap bg-white border border-slate-200 rounded-lg shadow-xl py-2 w-36">
-                     <button
-                        onClick={() => { handleCustomerLogout(); setIsAccountMenuOpen(false); }}
-                        className="w-full text-left px-3 py-2 text-xs font-bold text-rose-600 hover:bg-slate-50"
-                     >
-                        {storeIsAr ? 'تسجيل الخروج' : 'Déconnexion'}
-                     </button>
-                  </div>
-               )}
-            </div>
-            <Search className="w-4 h-4 cursor-pointer hover:text-slate-900" />
-            <div className="relative cursor-pointer hover:text-slate-900" onClick={() => setIsCartOpen(true)}>
-               <ShoppingBag className="w-4 h-4" />
-               {cartCount > 0 && <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 text-white text-[8px] flex items-center justify-center rounded-full font-bold">{cartCount}</span>}
-            </div>
-         </div>
+         <HeaderIconsCluster variant="light" />
       </div>
 
       {page === 'home' && (
@@ -3151,6 +3144,28 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                               className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${requireAccountToOrder ? 'bg-indigo-600' : 'bg-slate-300'}`}
                            >
                               <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${requireAccountToOrder ? 'translate-x-5' : ''}`} />
+                           </button>
+                        </div>
+                     </div>
+
+                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                        <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{storeIsAr ? 'أيقونات رأس المتجر' : "Icônes de l'en-tête"}</h4>
+                        <div className="flex items-center justify-between">
+                           <p className="text-xs font-bold text-slate-600">{storeIsAr ? 'اختيار اللغة' : 'Sélecteur de langue'}</p>
+                           <button onClick={() => setShowHeaderLang((v: boolean) => !v)} className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${showHeaderLang ? 'bg-indigo-600' : 'bg-slate-300'}`}>
+                              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${showHeaderLang ? 'translate-x-5' : ''}`} />
+                           </button>
+                        </div>
+                        <div className="flex items-center justify-between">
+                           <p className="text-xs font-bold text-slate-600">{storeIsAr ? 'البحث' : 'Recherche'}</p>
+                           <button onClick={() => setShowHeaderSearch((v: boolean) => !v)} className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${showHeaderSearch ? 'bg-indigo-600' : 'bg-slate-300'}`}>
+                              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${showHeaderSearch ? 'translate-x-5' : ''}`} />
+                           </button>
+                        </div>
+                        <div className="flex items-center justify-between">
+                           <p className="text-xs font-bold text-slate-600">{storeIsAr ? 'حساب الزبون (تسجيل الدخول)' : 'Compte client (connexion)'}</p>
+                           <button onClick={() => setShowHeaderAccount((v: boolean) => !v)} className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${showHeaderAccount ? 'bg-indigo-600' : 'bg-slate-300'}`}>
+                              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${showHeaderAccount ? 'translate-x-5' : ''}`} />
                            </button>
                         </div>
                      </div>
