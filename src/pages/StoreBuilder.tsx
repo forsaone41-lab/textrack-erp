@@ -2568,11 +2568,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
       {/* Top Navigation / Back Button */}
       <div className="flex items-center justify-between mb-4">
          <button onClick={() => setBuilderMode('dashboard')} className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors font-bold text-sm bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-200">
-            {storeIsAr ? '→ العودة إلى لوحة المتاجر' : '← Retour aux Boutiques'}
+            {storeLang === 'ar' ? '→ العودة إلى لوحة المتاجر' : storeLang === 'en' ? '← Back to Stores' : '← Retour aux Boutiques'}
          </button>
          <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{storeIsAr ? 'المتجر نشط' : 'SaaS Builder Active'}</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{storeLang === 'ar' ? 'المتجر نشط' : storeLang === 'en' ? 'SaaS Builder Active' : 'SaaS Builder Actif'}</span>
          </div>
       </div>
 
@@ -2580,40 +2580,40 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         <div className={storeIsAr ? 'text-right' : 'text-left'}>
           <div className={`flex items-center gap-3 ${storeIsAr ? 'flex-row-reverse' : ''}`}>
             <h1 className="text-2xl font-black text-slate-800 tracking-tight">BEYA STORE PRO</h1>
-            <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded uppercase tracking-widest">{storeIsAr ? 'نسخة الساس' : 'SaaS ÉDITION'}</span>
-            <span className="flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-black rounded uppercase tracking-widest" title="Connexion chiffrée de bout en bout et route protégée (Admin uniquement)"><ShieldCheck className="w-3 h-3" /> {storeIsAr ? 'آمن' : 'Sécurisé'}</span>
+            <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded uppercase tracking-widest">{storeLang === 'ar' ? 'نسخة الساس' : storeLang === 'en' ? 'SaaS EDITION' : 'SaaS ÉDITION'}</span>
+            <span className="flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-black rounded uppercase tracking-widest" title="Connexion chiffrée de bout en bout et route protégée (Admin uniquement)"><ShieldCheck className="w-3 h-3" /> {storeLang === 'ar' ? 'آمن' : storeLang === 'en' ? 'Secured' : 'Sécurisé'}</span>
           </div>
           <div className="flex bg-slate-100 p-1 rounded-xl w-max mt-4 shadow-inner">
-             <button onClick={() => { setPlatformMode('gestion'); setActiveTab('orders'); }} className={`px-5 py-2 rounded-lg text-xs font-black transition-all ${platformMode === 'gestion' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>{storeIsAr ? 'إدارة المتجر' : 'Gestion Boutique'}</button>
-             <button onClick={() => { setPlatformMode('builder'); setActiveTab('themes'); }} className={`px-5 py-2 rounded-lg text-xs font-black transition-all ${platformMode === 'builder' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>{storeIsAr ? 'تطوير الموقع' : 'Développement Site'}</button>
+             <button onClick={() => { setPlatformMode('gestion'); setActiveTab('orders'); }} className={`px-5 py-2 rounded-lg text-xs font-black transition-all ${platformMode === 'gestion' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>{storeLang === 'ar' ? 'إدارة المتجر' : storeLang === 'en' ? 'Store Management' : 'Gestion Boutique'}</button>
+             <button onClick={() => { setPlatformMode('builder'); setActiveTab('themes'); }} className={`px-5 py-2 rounded-lg text-xs font-black transition-all ${platformMode === 'builder' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>{storeLang === 'ar' ? 'تطوير الموقع' : storeLang === 'en' ? 'Site Development' : 'Développement Site'}</button>
           </div>
         </div>
         <div className={`flex items-center gap-2 ${storeIsAr ? 'flex-row-reverse' : ''}`}>
           <button onClick={handleSave} disabled={isSaving} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${isSaving ? 'bg-green-500 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
-            {isSaving ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />} {isSaving ? (storeIsAr ? 'تم الحفظ' : 'Enregistré') : (storeIsAr ? 'حفظ' : 'Enregistrer')}
+            {isSaving ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />} {isSaving ? (storeLang === 'ar' ? 'تم الحفظ' : storeLang === 'en' ? 'Saved' : 'Enregistré') : (storeLang === 'ar' ? 'حفظ' : storeLang === 'en' ? 'Save' : 'Enregistrer')}
           </button>
-          <button onClick={() => { setPreviewProductId(null); setShowPreview(true); }} className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 px-4 py-2 rounded-xl text-sm font-black hover:bg-indigo-100 hover:scale-105 transition-all shadow-sm" title={storeIsAr ? 'محرر الموقع الاحترافي' : 'Éditeur Visuel PRO'}>
-            <LayoutTemplate className="w-4 h-4" /> {storeIsAr ? 'بناء الموقع' : 'Éditeur PRO'}
+          <button onClick={() => { setPreviewProductId(null); setShowPreview(true); }} className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 px-4 py-2 rounded-xl text-sm font-black hover:bg-indigo-100 hover:scale-105 transition-all shadow-sm" title={storeLang === 'ar' ? 'محرر الموقع الاحترافي' : storeLang === 'en' ? 'Visual PRO Editor' : 'Éditeur Visuel PRO'}>
+            <LayoutTemplate className="w-4 h-4" /> {storeLang === 'ar' ? 'بناء الموقع' : storeLang === 'en' ? 'PRO Editor' : 'Éditeur PRO'}
           </button>
-          <button 
+          <button
              onClick={() => {
                 const url = customDomain ? `https://${customDomain}` : `https://${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`;
                 window.open(url, '_blank');
-             }} 
+             }}
              disabled={!config.storeName}
-             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${!config.storeName ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-50' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`} 
-             title={!config.storeName ? (storeIsAr ? 'يرجى حفظ المتجر أولاً' : 'Veuillez enregistrer d\'abord') : (storeIsAr ? 'زيارة المتجر المباشر' : 'Visiter la boutique en ligne')}
+             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${!config.storeName ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-50' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}
+             title={!config.storeName ? (storeLang === 'ar' ? 'يرجى حفظ المتجر أولاً' : storeLang === 'en' ? 'Please save the store first' : 'Veuillez enregistrer d\'abord') : (storeLang === 'ar' ? 'زيارة المتجر المباشر' : storeLang === 'en' ? 'Visit the live store' : 'Visiter la boutique en ligne')}
           >
-            <ExternalLink className="w-4 h-4" /> {storeIsAr ? 'زيارة المتجر' : 'Visiter'}
+            <ExternalLink className="w-4 h-4" /> {storeLang === 'ar' ? 'زيارة المتجر' : storeLang === 'en' ? 'Visit' : 'Visiter'}
           </button>
-          <button 
-             onClick={handlePublish} 
-             disabled={isPublishing || !config.storeName} 
+          <button
+             onClick={handlePublish}
+             disabled={isPublishing || !config.storeName}
              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${!config.storeName ? 'bg-slate-200 text-slate-400 cursor-not-allowed opacity-50' : 'bg-gradient-to-r from-slate-800 to-slate-900 text-white hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed'}`}
-             title={!config.storeName ? (storeIsAr ? 'يرجى حفظ المتجر أولاً' : 'Veuillez enregistrer d\'abord') : undefined}
+             title={!config.storeName ? (storeLang === 'ar' ? 'يرجى حفظ المتجر أولاً' : storeLang === 'en' ? 'Please save the store first' : 'Veuillez enregistrer d\'abord') : undefined}
           >
-            {isPublishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />} 
-            {isPublishing ? (storeIsAr ? 'جاري النشر...' : 'Publication...') : (storeIsAr ? 'نشر' : 'Publier')}
+            {isPublishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
+            {isPublishing ? (storeLang === 'ar' ? 'جاري النشر...' : storeLang === 'en' ? 'Publishing...' : 'Publication...') : (storeLang === 'ar' ? 'نشر' : storeLang === 'en' ? 'Publish' : 'Publier')}
           </button>
         </div>
       </div>
@@ -2622,16 +2622,16 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         {/* VERTICAL SIDE NAVIGATION */}
         <div className="w-24 shrink-0 flex flex-col gap-3">
            {(platformMode === 'gestion' ? [
-                 { id: 'orders', icon: ListOrdered, label: storeIsAr ? 'الطلبات' : 'Commandes' },
-                 { id: 'products', icon: ShoppingBag, label: storeIsAr ? 'المنتجات' : 'Produits' },
-                 { id: 'customers', icon: Users, label: storeIsAr ? 'الزبائن' : 'Clients' },
-                 { id: 'payments', icon: CreditCard, label: storeIsAr ? 'الأداء' : 'Paiements' },
-                 { id: 'delivery', icon: Truck, label: storeIsAr ? 'التوصيل' : 'Livraison' }
+                 { id: 'orders', icon: ListOrdered, label: storeLang === 'ar' ? 'الطلبات' : storeLang === 'en' ? 'Orders' : 'Commandes' },
+                 { id: 'products', icon: ShoppingBag, label: storeLang === 'ar' ? 'المنتجات' : storeLang === 'en' ? 'Products' : 'Produits' },
+                 { id: 'customers', icon: Users, label: storeLang === 'ar' ? 'الزبائن' : storeLang === 'en' ? 'Customers' : 'Clients' },
+                 { id: 'payments', icon: CreditCard, label: storeLang === 'ar' ? 'الأداء' : storeLang === 'en' ? 'Payments' : 'Paiements' },
+                 { id: 'delivery', icon: Truck, label: storeLang === 'ar' ? 'التوصيل' : storeLang === 'en' ? 'Delivery' : 'Livraison' }
            ] : [
-                 { id: 'themes', icon: LayoutTemplate, label: storeIsAr ? 'القوالب' : 'Thèmes' },
-                 { id: 'design', icon: Paintbrush, label: storeIsAr ? 'التصميم' : 'Design' },
-                 { id: 'apps', icon: Box, label: storeIsAr ? 'تطبيقات' : 'Apps' },
-                 { id: 'settings', icon: Settings, label: storeIsAr ? 'إعدادات' : 'Config' }
+                 { id: 'themes', icon: LayoutTemplate, label: storeLang === 'ar' ? 'القوالب' : storeLang === 'en' ? 'Themes' : 'Thèmes' },
+                 { id: 'design', icon: Paintbrush, label: storeLang === 'ar' ? 'التصميم' : storeLang === 'en' ? 'Design' : 'Design' },
+                 { id: 'apps', icon: Box, label: storeLang === 'ar' ? 'تطبيقات' : storeLang === 'en' ? 'Apps' : 'Apps' },
+                 { id: 'settings', icon: Settings, label: storeLang === 'ar' ? 'إعدادات' : storeLang === 'en' ? 'Settings' : 'Config' }
            ]).map(tab => (
                  <button 
                    key={tab.id}
