@@ -1910,6 +1910,21 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     const [selectedColor, setSelectedColor] = useState<string>('');
     const [quantity, setQuantity] = useState(1);
 
+    const PLAYFUL_PASTELS = ['#FFE5EC', '#E0F2FE', '#FEF3C7', '#DCFCE7', '#F3E8FF', '#FFEDD5'];
+    const MobileProductCard = ({ p, idx }: any) => (
+       <div className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
+          <div className="relative aspect-[4/5] rounded-3xl overflow-hidden mb-2 flex items-center justify-center" style={{ backgroundColor: PLAYFUL_PASTELS[idx % PLAYFUL_PASTELS.length] }}>
+             <span className="absolute top-2.5 left-2.5 bg-white text-slate-800 text-[8px] font-black uppercase px-2 py-1 rounded-full shadow-sm">{isAr ? 'جديد' : 'New'}</span>
+             {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-10 h-10 opacity-20" />}
+             <button onClick={(e) => { e.stopPropagation(); navigateToProduct(p.id); }} className="absolute bottom-2.5 right-2.5 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center">
+                <Plus className="w-4 h-4 text-slate-700" />
+             </button>
+          </div>
+          <h4 className="font-bold text-xs text-slate-800 truncate px-0.5">{p.name}</h4>
+          <p className="text-xs font-black px-0.5" style={{ color: primaryColor }}>{p.price} MAD</p>
+       </div>
+    );
+
     return (
     <div className={`w-full min-h-full bg-white text-slate-900 ${fontFamily} flex flex-col`}>
       <div className={`p-4 mx-4 mt-4 bg-slate-100 rounded-full flex justify-between items-center ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4 rounded-3xl' : 'flex-col md:flex-row gap-4 rounded-3xl md:rounded-full'}`}>
@@ -1942,8 +1957,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                </HeroBackgroundEditor>
             </div>
             <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-6'} mx-auto w-full`}>
-               <h3 className="text-3xl font-black text-center mb-10 text-slate-800">{storeLang === 'ar' ? 'وصل حديثاً ✨' : storeLang === 'en' ? 'New Arrivals ✨' : 'Nouveautés ✨'}</h3>
-               <div className={`grid gap-6 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2')}`}>
+               <h3 className="text-2xl md:text-3xl font-black text-center mb-6 md:mb-10 text-slate-800">{storeLang === 'ar' ? 'وصل حديثاً ✨' : storeLang === 'en' ? 'New Arrivals ✨' : 'Nouveautés ✨'}</h3>
+               <div className="md:hidden grid grid-cols-2 gap-3">
+                  {storeProducts.map((p: any, idx: number) => (
+                     <MobileProductCard key={p.id} p={p} idx={idx} />
+                  ))}
+               </div>
+               <div className={`hidden md:grid gap-6 ${isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2'}`}>
                   {storeProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer bg-slate-50 p-4 rounded-3xl hover:bg-slate-100 transition-colors border-2 border-transparent hover:border-current" style={{ borderColor: primaryColor }} onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-square mb-4 overflow-hidden relative rounded-2xl shadow-sm border flex items-center justify-center" style={{ backgroundColor: cardBg, borderColor, borderRadius: cardStyle === 'square' ? '0px' : undefined }}>
@@ -1979,7 +1999,12 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                      ))}
                   </div>
                )}
-               <div className={`grid gap-6 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2')}`}>
+               <div className="md:hidden grid grid-cols-2 gap-3">
+                  {filteredProducts.map((p: any, idx: number) => (
+                     <MobileProductCard key={p.id} p={p} idx={idx} />
+                  ))}
+               </div>
+               <div className={`hidden md:grid gap-6 ${isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2'}`}>
                   {filteredProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer bg-slate-50 p-4 rounded-3xl hover:bg-slate-100 transition-colors border-2 border-transparent hover:border-current" style={{ borderColor: primaryColor }} onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-square mb-4 overflow-hidden relative rounded-2xl shadow-sm border flex items-center justify-center" style={{ backgroundColor: cardBg, borderColor, borderRadius: cardStyle === 'square' ? '0px' : undefined }}>
