@@ -1382,7 +1382,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                 <button onClick={handleAddToCart} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: '#1e293b' }}>{tr('Add to cart')}</button>
                              )}
                              {(buyMode === 'direct' || buyMode === 'both') && (
-                                <button onClick={() => setPage('checkout')} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: primaryColor }}>Buy Now</button>
+                                <button onClick={() => setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage })} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: primaryColor }}>Buy Now</button>
                              )}
                           </div>
                        )}
@@ -1629,7 +1629,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                 <button onClick={handleAddToCart} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-max px-12 py-4 bg-white border border-black text-black text-xs tracking-widest hover:bg-gray-100 transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{tr('ADD TO CART')}</button>
                              )}
                              {(buyMode === 'direct' || buyMode === 'both') && (
-                                <button onClick={() => setPage('checkout')} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-max px-12 py-4 text-white text-xs tracking-widest transition-opacity hover:opacity-90 ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: primaryColor }}>{tr('BUY NOW')}</button>
+                                <button onClick={() => setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage })} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-max px-12 py-4 text-white text-xs tracking-widest transition-opacity hover:opacity-90 ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: primaryColor }}>{tr('BUY NOW')}</button>
                              )}
                           </div>
                        )}
@@ -1853,7 +1853,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                 <button onClick={handleAddToCart} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-max px-12 py-4 border border-white/20 text-white text-xs tracking-widest hover:bg-white/5 transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{tr('ADD TO CART')}</button>
                              )}
                              {(buyMode === 'direct' || buyMode === 'both') && (
-                                <button onClick={() => setPage('checkout')} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-max px-12 py-4 bg-white text-black text-xs tracking-widest hover:bg-gray-200 transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{tr('BUY NOW')}</button>
+                                <button onClick={() => setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage })} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-max px-12 py-4 bg-white text-black text-xs tracking-widest hover:bg-gray-200 transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{tr('BUY NOW')}</button>
                              )}
                           </div>
                        )}
@@ -2097,7 +2097,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                 <button onClick={handleAddToCart} className="flex-1 px-8 py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl" style={{ backgroundColor: '#f43f5e' }}>{storeLang === 'ar' ? 'السلة 🛒' : storeLang === 'en' ? 'Cart 🛒' : 'Panier 🛒'}</button>
                              )}
                              {(buyMode === 'direct' || buyMode === 'both') && (
-                                <button onClick={() => setPage('checkout')} className="flex-1 px-8 py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl" style={{ backgroundColor: primaryColor }}>{storeLang === 'ar' ? 'اشتري الآن 🎈' : storeLang === 'en' ? 'Buy Now 🎈' : 'Achetez maintenant 🎈'}</button>
+                                <button onClick={() => setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage })} className="flex-1 px-8 py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl" style={{ backgroundColor: primaryColor }}>{storeLang === 'ar' ? 'اشتري الآن 🎈' : storeLang === 'en' ? 'Buy Now 🎈' : 'Achetez maintenant 🎈'}</button>
                              )}
                           </div>
                        )}
@@ -2311,7 +2311,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                     <button onClick={handleAddToCart} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-full h-14 bg-[#1a1a1a] text-white font-bold uppercase tracking-widest text-xs hover:bg-black transition-colors mb-4 ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{storeIsAr ? 'أضف للسلة' : 'Ajouter au panier'}</button>
                  )}
                  {(buyMode === 'both' || buyMode === 'direct') && (
-                    <button onClick={() => setPage('checkout')} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-full h-14 bg-[#f5f1e9] text-[#1a1a1a] font-bold uppercase tracking-widest text-xs hover:bg-[#e8e2d7] transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{storeIsAr ? 'اشتري الآن' : 'Acheter Maintenant'}</button>
+                    <button onClick={() => setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage })} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-full h-14 bg-[#f5f1e9] text-[#1a1a1a] font-bold uppercase tracking-widest text-xs hover:bg-[#e8e2d7] transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{storeIsAr ? 'اشتري الآن' : 'Acheter Maintenant'}</button>
                  )}
               </div>
            </div>
@@ -2804,6 +2804,46 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                          storeDomain={customDomain || `${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`}
                          storeName={storeName}
                          onAuthed={(user: any, profile: any) => { setCustomerUser(user); setCustomerProfile(profile); setIsAuthOpen(false); }}
+                      />
+                   </div>
+                </div>
+             </div>
+          )}
+          {quickBuyContext && (
+             <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setQuickBuyContext(null)}>
+                <div className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl" onClick={e => e.stopPropagation()}>
+                   <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50 sticky top-0 rounded-t-3xl z-10">
+                      <h2 className="text-lg font-black uppercase tracking-tight">{storeLang === 'ar' ? 'شراء سريع' : storeLang === 'en' ? 'Quick Buy' : 'Achat Rapide'}</h2>
+                      <button onClick={() => setQuickBuyContext(null)} className="w-8 h-8 flex items-center justify-center bg-white rounded-full border border-slate-200 text-slate-500 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-all">
+                         <X className="w-4 h-4" />
+                      </button>
+                   </div>
+                   <div className="p-6">
+                      <div className="flex items-center gap-3 mb-6 pb-6 border-b border-slate-100">
+                         <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0 flex items-center justify-center">
+                            {getCoverImage(quickBuyContext.product) ? <img src={getCoverImage(quickBuyContext.product) as string} className="w-full h-full object-cover" alt={quickBuyContext.product.name} /> : <ImageIcon className="w-6 h-6 text-slate-300" />}
+                         </div>
+                         <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-sm text-slate-800 truncate">{quickBuyContext.product.name}</h4>
+                            <p className="text-sm font-black" style={{ color: primaryColor }}>{quickBuyContext.product.price} MAD {quickBuyContext.quantity > 1 ? `× ${quickBuyContext.quantity}` : ''}</p>
+                         </div>
+                      </div>
+                      <CheckoutForm
+                         storeIsAr={storeIsAr}
+                         storeLang={storeLang}
+                         onSubmit={(product: any, qty: any, formData: any) => {
+                            submitGlobalOrder(product, qty, formData);
+                            quickBuyContext.setPage('success');
+                            setQuickBuyContext(null);
+                         }}
+                         product={quickBuyContext.product}
+                         quantity={quickBuyContext.quantity}
+                         selectedColor={quickBuyContext.selectedColor}
+                         selectedSize={quickBuyContext.selectedSize}
+                         disabled={false}
+                         requireAccount={requireAccountToOrder}
+                         isAuthenticated={!!customerUser}
+                         onRequestLogin={() => { setQuickBuyContext(null); setAuthMode('login'); setIsAuthOpen(true); }}
                       />
                    </div>
                 </div>
