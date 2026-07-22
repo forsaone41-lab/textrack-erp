@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown, TrendingUp, Package, RefreshCw, Undo2, Menu } from 'lucide-react';
+import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown, TrendingUp, Package, RefreshCw, Undo2, Menu, Home } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import StoreManagerDashboard from '../components/Tools/StoreManagerDashboard';
 import ProAITools from '../components/Tools/ProAITools';
@@ -970,6 +970,41 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                  <NavLink p={p} currentPage={currentPage} setPage={setPageFn} />
               </div>
            ))}
+        </div>
+     );
+  };
+
+  // App-shell style bottom tab bar for mobile, so the storefront feels like a real
+  // shopping app instead of a shrunk desktop site. Currently wired into Clement only.
+  const BottomNavBar = ({ page: currentPage, setPage: setPageFn }: any) => {
+     const homePage = storePages.find(p => p.id === 'home') || storePages[0];
+     const collectionsPage = storePages.find(p => p.id === 'collections') || storePages[1] || storePages[0];
+     const navItems = [
+        { id: homePage?.id, icon: Home, label: isAr ? 'الرئيسية' : 'Accueil' },
+        { id: collectionsPage?.id, icon: LayoutGrid, label: isAr ? 'التشكيلات' : 'Collections' }
+     ].filter(item => item.id);
+
+     return (
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] flex items-center justify-around py-2 px-2">
+           {navItems.map(item => {
+              const isActive = currentPage === item.id;
+              const Icon = item.icon;
+              return (
+                 <button key={item.id} onClick={() => setPageFn(item.id)} className="flex flex-col items-center gap-1 px-3 py-1">
+                    <Icon className="w-5 h-5" style={{ color: isActive ? primaryColor : '#94a3b8' }} />
+                    <span className="text-[9px] font-bold" style={{ color: isActive ? primaryColor : '#94a3b8' }}>{item.label}</span>
+                 </button>
+              );
+           })}
+           <button onClick={() => setIsCartOpen(true)} className="flex flex-col items-center gap-1 px-3 py-1 relative">
+              <ShoppingBag className="w-5 h-5 text-slate-400" />
+              {cartCount > 0 && <span className="absolute top-0 right-1.5 bg-rose-500 text-white text-[8px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">{cartCount}</span>}
+              <span className="text-[9px] font-bold text-slate-400">{isAr ? 'السلة' : 'Panier'}</span>
+           </button>
+           <button onClick={() => { if (!customerUser) { setAuthMode('login'); setIsAuthOpen(true); } }} className="flex flex-col items-center gap-1 px-3 py-1">
+              <Users className="w-5 h-5 text-slate-400" />
+              <span className="text-[9px] font-bold text-slate-400">{customerUser ? (customerProfile?.name?.split(' ')[0] || (isAr ? 'حسابي' : 'Compte')) : (isAr ? 'حسابي' : 'Compte')}</span>
+           </button>
         </div>
      );
   };
@@ -2138,7 +2173,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
       </div>
       <MobileNavPanel bgClass="bg-[#e8e2d7]" textClass="text-[#1a1a1a]" page={page} setPage={setPage} />
 
-      <div className="flex-1 overflow-y-auto bg-white">
+      <div className="flex-1 overflow-y-auto bg-white pb-16 md:pb-0">
         {page === 'home' && (
           <>
             <div className="w-full bg-[#e8e2d7]">
@@ -2293,6 +2328,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
       </div>
       <ThemeFooter setPage={setPage} />
+      <BottomNavBar page={page} setPage={setPage} />
     </div>
   );
   };
