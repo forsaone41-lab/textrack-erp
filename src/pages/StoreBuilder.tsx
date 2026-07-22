@@ -353,7 +353,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [borderColor, setBorderColor] = useState(config.borderColor || '#e2e8f0');
   const [footerBgColor, setFooterBgColor] = useState(config.footerBgColor || '#f8f9fa');
   const [footerTextColor, setFooterTextColor] = useState(config.footerTextColor || '#64748b');
-  const [cardStyle, setCardStyle] = useState<'rounded' | 'square' | 'arch' | 'pill'>(config.cardStyle || 'rounded');
+  const [cardStyle, setCardStyle] = useState<'rounded' | 'square' | 'arch' | 'pill' | 'trend'>(config.cardStyle || 'rounded');
   const [showCardBadge, setShowCardBadge] = useState<boolean>(config.showCardBadge ?? false);
   const getCardRadius = (): string | undefined => {
      if (cardStyle === 'square') return '0px';
@@ -369,6 +369,25 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         </span>
      );
   };
+  const trendCardAccents = ['#fde8ef', '#e8f0fe', '#fef6e4', '#e9f9f0', '#f3e8fd'];
+  const ProductCardTrend = ({ p, idx = 0, onClick }: any) => (
+     <div className="group cursor-pointer rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow bg-white border border-slate-100" onClick={onClick}>
+        <div className="aspect-[3/4] relative overflow-hidden" style={{ backgroundColor: trendCardAccents[idx % trendCardAccents.length] }}>
+           {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={p.name} /> : <div className="w-full h-full flex items-center justify-center opacity-20"><Box className="w-10 h-10" /></div>}
+           <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider text-white shadow-sm" style={{ backgroundColor: primaryColor }}>{p.category || (isAr ? 'جديد' : 'Nouveau')}</span>
+        </div>
+        <div className="p-3">
+           <h4 className="text-xs font-bold text-slate-800 truncate mb-1">{p.name}</h4>
+           <div className="flex items-center gap-0.5 mb-1.5">
+              {Array.from({ length: 5 }).map((_, i) => <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />)}
+           </div>
+           <div className="flex items-center gap-2">
+              <span className="text-sm font-black text-slate-900">{p.price} MAD</span>
+              <span className="text-[10px] text-slate-400 line-through">{Math.round(parseFloat(p.price) * 1.2)} MAD</span>
+           </div>
+        </div>
+     </div>
+  );
   const [heroHeight, setHeroHeight] = useState<number>(config.heroHeight || 450);
   const [heroImagePosX, setHeroImagePosX] = useState<number>(config.heroImagePosX ?? 50);
   const [heroImagePosY, setHeroImagePosY] = useState<number>(config.heroImagePosY ?? 50);
@@ -1236,7 +1255,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        setLikedProducts(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
     };
 
-    const MobileProductCard = ({ p }: any) => (
+    const MobileProductCard = ({ p, idx = 0 }: any) => (
+       cardStyle === 'trend' ? (
+          <ProductCardTrend p={p} idx={idx} onClick={() => navigateToProduct(p.id)} />
+       ) : (
        <div className="cursor-pointer" onClick={() => navigateToProduct(p.id)}>
           <div className="relative aspect-square rounded-2xl overflow-hidden mb-2 border" style={{ backgroundColor: cardBg, borderColor, borderRadius: getCardRadius() }}>
                            <CardBadge text={p.category} />
@@ -1248,6 +1270,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
           <h4 className="font-bold text-xs text-slate-800 truncate">{p.name}</h4>
           <p className="text-xs font-black mt-0.5" style={{ color: primaryColor }}>{p.price} MAD</p>
        </div>
+       )
     );
 
     return (
@@ -1433,12 +1456,15 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                   </div>
                </div>
                <div className="md:hidden grid grid-cols-2 gap-4">
-                  {filteredProducts.map((p: any) => (
-                     <MobileProductCard key={p.id} p={p} />
+                  {filteredProducts.map((p: any, idx: number) => (
+                     <MobileProductCard key={p.id} p={p} idx={idx} />
                   ))}
                </div>
                <div className={`hidden md:grid gap-8 ${isModal ? gridColsClass('lg4') : gridColsClass('lg3')}`}>
-                  {filteredProducts.map((p: any) => (
+                  {filteredProducts.map((p: any, idx: number) => (
+                     cardStyle === 'trend' ? (
+                        <ProductCardTrend key={p.id} p={p} idx={idx} onClick={() => navigateToProduct(p.id)} />
+                     ) : (
                      <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-[3/4] mb-4 overflow-hidden relative rounded-xl border" style={{ backgroundColor: cardBg, borderColor, borderRadius: getCardRadius() }}>
                            <CardBadge text={p.category} />
@@ -1450,6 +1476,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                         <h4 className="font-bold text-sm">{p.name}</h4>
                         <p className="text-slate-500 text-sm mt-1">{p.price} MAD</p>
                      </div>
+                     )
                   ))}
                </div>
             </div>
@@ -1663,7 +1690,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                   <span className="text-sm cursor-pointer hover:underline" style={{ color: primaryColor }}>{storeLang === 'ar' ? 'عرض الكل' : storeLang === 'en' ? 'View all' : 'Voir tout'}</span>
                </div>
                <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : gridColsClass('lg3')}`}>
-                  {storeProducts.map((p: any) => (
+                  {storeProducts.map((p: any, idx: number) => (
+                     cardStyle === 'trend' ? (
+                        <ProductCardTrend key={p.id} p={p} idx={idx} onClick={() => navigateToProduct(p.id)} />
+                     ) : (
                      <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-[4/5] mb-6 relative overflow-hidden flex items-center justify-center border" style={{ backgroundColor: cardBg, borderColor, borderRadius: getCardRadius() }}>
                            <CardBadge text={p.category} />
@@ -1675,6 +1705,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                         <h4 className="font-medium text-lg mb-2">{p.name}</h4>
                         <p className="text-gray-500">{p.price} MAD</p>
                      </div>
+                     )
                   ))}
                </div>
             </div>
@@ -1702,7 +1733,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                   </div>
                </div>
                <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : gridColsClass('lg3')}`}>
-                  {filteredProducts.map((p: any) => (
+                  {filteredProducts.map((p: any, idx: number) => (
+                     cardStyle === 'trend' ? (
+                        <ProductCardTrend key={p.id} p={p} idx={idx} onClick={() => navigateToProduct(p.id)} />
+                     ) : (
                      <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-[4/5] mb-6 relative overflow-hidden flex items-center justify-center border" style={{ backgroundColor: cardBg, borderColor, borderRadius: getCardRadius() }}>
                            <CardBadge text={p.category} />
@@ -1714,6 +1748,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                         <h4 className="font-medium text-lg mb-2">{p.name}</h4>
                         <p className="text-gray-500">{p.price} MAD</p>
                      </div>
+                     )
                   ))}
                </div>
             </div>
@@ -2141,7 +2176,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                   ))}
                </div>
                <div className={`hidden md:grid gap-6 ${isModal ? gridColsClass('lg4') : gridColsClass('sm2')}`}>
-                  {storeProducts.map((p: any) => (
+                  {storeProducts.map((p: any, idx: number) => (
+                     cardStyle === 'trend' ? (
+                        <ProductCardTrend key={p.id} p={p} idx={idx} onClick={() => navigateToProduct(p.id)} />
+                     ) : (
                      <div key={p.id} className="group cursor-pointer bg-slate-50 p-4 rounded-3xl hover:bg-slate-100 transition-colors border-2 border-transparent hover:border-current" style={{ borderColor: primaryColor }} onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-square mb-4 overflow-hidden relative rounded-2xl shadow-sm border flex items-center justify-center" style={{ backgroundColor: cardBg, borderColor, borderRadius: getCardRadius() }}>
                            <CardBadge text={p.category} />
@@ -2153,6 +2191,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                         <h4 className="font-bold text-base text-center text-slate-700">{p.name}</h4>
                         <p className="text-center font-black mt-1" style={{ color: primaryColor }}>{p.price} MAD</p>
                      </div>
+                     )
                   ))}
                </div>
             </div>
@@ -2183,7 +2222,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                   ))}
                </div>
                <div className={`hidden md:grid gap-6 ${isModal ? gridColsClass('lg4') : gridColsClass('sm2')}`}>
-                  {filteredProducts.map((p: any) => (
+                  {filteredProducts.map((p: any, idx: number) => (
+                     cardStyle === 'trend' ? (
+                        <ProductCardTrend key={p.id} p={p} idx={idx} onClick={() => navigateToProduct(p.id)} />
+                     ) : (
                      <div key={p.id} className="group cursor-pointer bg-slate-50 p-4 rounded-3xl hover:bg-slate-100 transition-colors border-2 border-transparent hover:border-current" style={{ borderColor: primaryColor }} onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-square mb-4 overflow-hidden relative rounded-2xl shadow-sm border flex items-center justify-center" style={{ backgroundColor: cardBg, borderColor, borderRadius: getCardRadius() }}>
                            <CardBadge text={p.category} />
@@ -2195,6 +2237,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                         <h4 className="font-bold text-base text-center text-slate-700">{p.name}</h4>
                         <p className="text-center font-black mt-1" style={{ color: primaryColor }}>{p.price} MAD</p>
                      </div>
+                     )
                   ))}
                </div>
             </div>
@@ -2420,7 +2463,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                </div>
 
                <div className={`grid ${previewDevice === 'mobile' && !isModal ? 'grid-cols-2' : gridColsClass('md4')} gap-6`}>
-                  {filteredProducts.map((p: any) => (
+                  {filteredProducts.map((p: any, idx: number) => (
+                     cardStyle === 'trend' ? (
+                        <ProductCardTrend key={p.id} p={p} idx={idx} onClick={() => navigateToProduct(p.id)} />
+                     ) : (
                      <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-[3/4] mb-4 relative overflow-hidden flex items-center justify-center border" style={{ backgroundColor: cardBg, borderColor, borderRadius: getCardRadius() }}>
                            <CardBadge text={p.category} />
@@ -2435,6 +2481,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                            <p className="text-[13px] font-bold text-[#1a1a1a]">{storeIsAr ? 'ابتداءً من' : 'à partir de'} {p.price} MAD</p>
                         </div>
                      </div>
+                     )
                   ))}
                </div>
             </div>
@@ -3777,7 +3824,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                      {/* CARD STYLE */}
                      <div className="pt-4 border-t border-slate-100">
                         <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'شكل بطاقات المنتجات' : 'Style des Cartes Produits'}</label>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-3 gap-2">
                            {([
                               { key: 'rounded', labelFr: 'Arrondi', labelAr: 'مستدير', radius: '12px' },
                               { key: 'square', labelFr: 'Carré', labelAr: 'مربع', radius: '0px' },
@@ -3790,6 +3837,14 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                  <span className={`text-[10px] font-bold ${cardStyle === key ? 'text-indigo-600' : 'text-slate-500'}`}>{isAr ? labelAr : labelFr}</span>
                               </button>
                            ))}
+                           <button onClick={() => setCardStyle('trend')}
+                              className={`flex flex-col items-center gap-2 p-3 border-2 rounded-xl transition-all ${cardStyle === 'trend' ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                              <div className="w-12 h-12 rounded-xl overflow-hidden flex flex-col shadow-sm" style={{ backgroundColor: '#fde8ef' }}>
+                                 <div className="flex-1 flex items-center justify-center"><Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" /></div>
+                                 <div className="h-2.5 bg-white" />
+                              </div>
+                              <span className={`text-[10px] font-bold ${cardStyle === 'trend' ? 'text-indigo-600' : 'text-slate-500'}`}>{isAr ? 'ترند' : 'Trendy'}</span>
+                           </button>
                         </div>
                         <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
                            <span className="text-[10px] font-bold text-slate-500">{isAr ? 'إظهار شارة الفئة على الصورة' : 'Afficher un badge catégorie sur l\'image'}</span>
@@ -4542,10 +4597,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
                        <div>
                           <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'شكل بطاقات المنتجات' : 'Cartes produits'}</label>
-                          <div className="grid grid-cols-2 gap-1.5">
-                             {(['rounded', 'square', 'arch', 'pill'] as const).map(key => (
+                          <div className="grid grid-cols-3 gap-1.5">
+                             {(['rounded', 'square', 'arch', 'pill', 'trend'] as const).map(key => (
                                 <button key={key} onClick={() => setCardStyle(key)} className={`py-1.5 text-[9px] font-bold rounded-lg border ${cardStyle === key ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-slate-200 text-slate-500'}`}>
-                                   {key === 'rounded' ? (isAr ? 'مستدير' : 'Arrondi') : key === 'square' ? (isAr ? 'مربع' : 'Carré') : key === 'arch' ? (isAr ? 'قوس' : 'Arche') : (isAr ? 'كبسولة' : 'Pilule')}
+                                   {key === 'rounded' ? (isAr ? 'مستدير' : 'Arrondi') : key === 'square' ? (isAr ? 'مربع' : 'Carré') : key === 'arch' ? (isAr ? 'قوس' : 'Arche') : key === 'pill' ? (isAr ? 'كبسولة' : 'Pilule') : (isAr ? 'ترند' : 'Trendy')}
                                 </button>
                              ))}
                           </div>
