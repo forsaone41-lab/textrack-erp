@@ -345,6 +345,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [primaryColor, setPrimaryColor] = useState(config.primaryColor || THEMES[0].defaultColor);
   const [secondaryColor, setSecondaryColor] = useState(config.secondaryColor || '#ffffff');
   const [borderColor, setBorderColor] = useState(config.borderColor || '#e2e8f0');
+  const [footerBgColor, setFooterBgColor] = useState(config.footerBgColor || '#f8f9fa');
+  const [footerTextColor, setFooterTextColor] = useState(config.footerTextColor || '#64748b');
+  const [cardStyle, setCardStyle] = useState<'rounded' | 'square'>(config.cardStyle || 'rounded');
   const [textStyles, setTextStyles] = useState<Record<string, { fontSize?: number; color?: string; fontFamily?: string }>>(config.textStyles || {});
   const [activeStyleKey, setActiveStyleKey] = useState<string | null>(null);
   const [toolbarPos, setToolbarPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
@@ -519,6 +522,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               if (conf.secondaryColor) setSecondaryColor(conf.secondaryColor);
               if (conf.borderColor) setBorderColor(conf.borderColor);
               if (conf.textStyles) setTextStyles(conf.textStyles);
+              if (conf.footerBgColor) setFooterBgColor(conf.footerBgColor);
+              if (conf.footerTextColor) setFooterTextColor(conf.footerTextColor);
+              if (conf.cardStyle) setCardStyle(conf.cardStyle);
               if (conf.buttonStyle) setButtonStyle(conf.buttonStyle);
               if (conf.showReviews !== undefined) setShowReviews(conf.showReviews);
               if (conf.homeBlocks) setHomeBlocks(conf.homeBlocks);
@@ -704,6 +710,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        secondaryColor,
        borderColor,
        textStyles,
+       footerBgColor,
+       footerTextColor,
+       cardStyle,
        buttonStyle,
        showReviews,
        requireAccountToOrder,
@@ -849,19 +858,23 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
 
 
-  const ThemeFooter = ({ bgColor = '#f8f9fa', textColor = '#64748b', setPage }: any) => (
-     <footer className="mt-auto py-12 px-6 border-t" style={{ backgroundColor: bgColor, borderColor: 'rgba(0,0,0,0.05)' }}>
-        <div className="max-w-4xl mx-auto flex flex-col items-center text-center gap-6">
-           <div className="text-xl font-bold" style={{ color: primaryColor }}>{storeLogo ? <img src={storeLogo} alt={storeName} className="h-10 object-contain" /> : storeName}</div>
-           <div className="flex flex-wrap justify-center gap-6 text-sm font-medium" style={{ color: textColor }}>
-              {footerSettings.showPrivacy && <button onClick={() => setPage('privacy')} className="hover:opacity-70 transition-opacity">{storeIsAr ? 'سياسة الخصوصية' : 'Politique de Confidentialité'}</button>}
-              {footerSettings.showTerms && <button onClick={() => setPage('terms')} className="hover:opacity-70 transition-opacity">{storeIsAr ? 'الشروط والأحكام' : 'Conditions Générales'}</button>}
-              {footerSettings.showCookies && <button onClick={() => setPage('cookies')} className="hover:opacity-70 transition-opacity">{storeIsAr ? 'سياسة ملفات الارتباط' : 'Politique des Cookies'}</button>}
+  const ThemeFooter = ({ bgColor, textColor, setPage }: any) => {
+     const effBg = bgColor || footerBgColor;
+     const effText = textColor || footerTextColor;
+     return (
+        <footer className="mt-auto py-12 px-6 border-t" style={{ backgroundColor: effBg, borderColor }}>
+           <div className="max-w-4xl mx-auto flex flex-col items-center text-center gap-6">
+              <div className="text-xl font-bold" style={{ color: effText }}>{storeLogo ? <img src={storeLogo} alt={storeName} className="h-10 object-contain" /> : storeName}</div>
+              <div className="flex flex-wrap justify-center gap-6 text-sm font-medium" style={{ color: effText }}>
+                 {footerSettings.showPrivacy && <button onClick={() => setPage('privacy')} className="hover:opacity-70 transition-opacity">{storeIsAr ? 'سياسة الخصوصية' : 'Politique de Confidentialité'}</button>}
+                 {footerSettings.showTerms && <button onClick={() => setPage('terms')} className="hover:opacity-70 transition-opacity">{storeIsAr ? 'الشروط والأحكام' : 'Conditions Générales'}</button>}
+                 {footerSettings.showCookies && <button onClick={() => setPage('cookies')} className="hover:opacity-70 transition-opacity">{storeIsAr ? 'سياسة ملفات الارتباط' : 'Politique des Cookies'}</button>}
+              </div>
+              <EditableText as="p" text={footerSettings.copyright} onTextChange={(v: string) => setFooterSettings({...footerSettings, copyright: v})} isLiveStore={isLiveStore} className="text-xs opacity-70 mt-4" style={{ color: effText }} styleKey="footerCopyright" />
            </div>
-           <EditableText as="p" text={footerSettings.copyright} onTextChange={(v: string) => setFooterSettings({...footerSettings, copyright: v})} isLiveStore={isLiveStore} className="text-xs opacity-70 mt-4" style={{ color: textColor }} styleKey="footerCopyright" />
-        </div>
-     </footer>
-  );
+        </footer>
+     );
+  };
 
   // Shared header icon cluster (language / search / account / cart) used by every theme,
   // so they all stay wired the same way and respect the show/hide toggles from Settings.
@@ -1133,7 +1146,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                <div className={`grid gap-8 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3')}`}>
                   {filteredProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
-                        <div className="aspect-[3/4] mb-4 overflow-hidden relative rounded-xl border" style={{ backgroundColor: cardBg, borderColor }}>
+                        <div className="aspect-[3/4] mb-4 overflow-hidden relative rounded-xl border" style={{ backgroundColor: cardBg, borderColor, borderRadius: cardStyle === 'square' ? '0px' : undefined }}>
                            {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-12 h-12" /></div>}
                            <div className={`absolute bottom-4 left-0 right-0 flex justify-center transition-opacity ${(previewDevice === 'mobile' && !isModal) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                               <button onClick={handleAddToCart} className="px-8 py-3 text-white text-xs font-bold uppercase tracking-wider shadow-2xl rounded-full" style={btnStyle}>{tr('Add to cart')}</button>
@@ -1337,7 +1350,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
                   {storeProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
-                        <div className="aspect-[4/5] mb-6 relative overflow-hidden flex items-center justify-center border" style={{ backgroundColor: cardBg, borderColor }}>
+                        <div className="aspect-[4/5] mb-6 relative overflow-hidden flex items-center justify-center border" style={{ backgroundColor: cardBg, borderColor, borderRadius: cardStyle === 'square' ? '0px' : undefined }}>
                            {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-10"><ImageIcon className="w-16 h-16" /></div>}
                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                               <button onClick={handleAddToCart} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`px-8 py-3 bg-white text-black text-xs tracking-widest hover:bg-black hover:text-white transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{tr('ADD TO CART')}</button>
@@ -1375,7 +1388,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
                   {filteredProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
-                        <div className="aspect-[4/5] mb-6 relative overflow-hidden flex items-center justify-center border" style={{ backgroundColor: cardBg, borderColor }}>
+                        <div className="aspect-[4/5] mb-6 relative overflow-hidden flex items-center justify-center border" style={{ backgroundColor: cardBg, borderColor, borderRadius: cardStyle === 'square' ? '0px' : undefined }}>
                            {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-10"><ImageIcon className="w-16 h-16" /></div>}
                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                               <button onClick={handleAddToCart} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`px-8 py-3 bg-white text-black text-xs tracking-widest hover:bg-black hover:text-white transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{tr('ADD TO CART')}</button>
@@ -1777,7 +1790,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                <div className={`grid gap-6 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2')}`}>
                   {storeProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer bg-slate-50 p-4 rounded-3xl hover:bg-slate-100 transition-colors border-2 border-transparent hover:border-current" style={{ borderColor: primaryColor }} onClick={() => navigateToProduct(p.id)}>
-                        <div className="aspect-square mb-4 overflow-hidden relative rounded-2xl shadow-sm border flex items-center justify-center" style={{ backgroundColor: cardBg, borderColor }}>
+                        <div className="aspect-square mb-4 overflow-hidden relative rounded-2xl shadow-sm border flex items-center justify-center" style={{ backgroundColor: cardBg, borderColor, borderRadius: cardStyle === 'square' ? '0px' : undefined }}>
                            {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-12 h-12 opacity-10" />}
                            <div className={`absolute inset-0 bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center`}>
                               <button onClick={handleAddToCart} className="px-6 py-3 text-white text-xs font-black uppercase tracking-wider rounded-full shadow-xl hover:scale-105 transition-transform" style={btnStyle}>{tr('Add to cart')}</button>
@@ -1813,7 +1826,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                <div className={`grid gap-6 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : (isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2')}`}>
                   {filteredProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer bg-slate-50 p-4 rounded-3xl hover:bg-slate-100 transition-colors border-2 border-transparent hover:border-current" style={{ borderColor: primaryColor }} onClick={() => navigateToProduct(p.id)}>
-                        <div className="aspect-square mb-4 overflow-hidden relative rounded-2xl shadow-sm border flex items-center justify-center" style={{ backgroundColor: cardBg, borderColor }}>
+                        <div className="aspect-square mb-4 overflow-hidden relative rounded-2xl shadow-sm border flex items-center justify-center" style={{ backgroundColor: cardBg, borderColor, borderRadius: cardStyle === 'square' ? '0px' : undefined }}>
                            {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-12 h-12 opacity-10" />}
                            <div className={`absolute inset-0 bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center`}>
                               <button onClick={handleAddToCart} className="px-6 py-3 text-white text-xs font-black uppercase tracking-wider rounded-full shadow-xl hover:scale-105 transition-transform" style={btnStyle}>{tr('Add to cart')}</button>
@@ -2032,7 +2045,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                <div className={`grid ${previewDevice === 'mobile' && !isModal ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-4'} gap-6`}>
                   {filteredProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
-                        <div className="aspect-[3/4] mb-4 relative overflow-hidden flex items-center justify-center border" style={{ backgroundColor: cardBg, borderColor }}>
+                        <div className="aspect-[3/4] mb-4 relative overflow-hidden flex items-center justify-center border" style={{ backgroundColor: cardBg, borderColor, borderRadius: cardStyle === 'square' ? '0px' : undefined }}>
                            <img src={getCoverImage(p)} alt={p.name} className="w-full h-full object-cover mix-blend-multiply transition-transform duration-500 group-hover:scale-105" />
                            <button className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/50 transition-colors" onClick={(e) => { e.stopPropagation(); }}>
                               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
@@ -2158,7 +2171,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         )}
 
       </div>
-      <ThemeFooter bgColor="#1a1a1a" textColor="#fff" setPage={setPage} />
+      <ThemeFooter setPage={setPage} />
     </div>
   );
   };
@@ -3233,6 +3246,50 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                         </div>
                      </div>
                      
+                     {/* CARD STYLE */}
+                     <div className="pt-4 border-t border-slate-100">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'شكل بطاقات المنتجات' : 'Style des Cartes Produits'}</label>
+                        <div className="grid grid-cols-2 gap-2">
+                           {([
+                              { key: 'rounded', labelFr: 'Arrondi', labelAr: 'مستدير', radius: 'rounded-xl' },
+                              { key: 'square', labelFr: 'Carré', labelAr: 'مربع', radius: 'rounded-none' }
+                           ] as const).map(({ key, labelFr, labelAr, radius }) => (
+                              <button key={key} onClick={() => setCardStyle(key)}
+                                 className={`flex flex-col items-center gap-2 p-3 border-2 rounded-xl transition-all ${cardStyle === key ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                                 <div className={`w-12 h-12 border ${radius}`} style={{ backgroundColor: secondaryColor, borderColor }} />
+                                 <span className={`text-[10px] font-bold ${cardStyle === key ? 'text-indigo-600' : 'text-slate-500'}`}>{isAr ? labelAr : labelFr}</span>
+                              </button>
+                           ))}
+                        </div>
+                     </div>
+
+                     {/* FOOTER COLORS */}
+                     <div className="pt-4 border-t border-slate-100">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'ألوان التذييل (Footer)' : 'Couleurs du Footer'}</label>
+                        <div className="grid grid-cols-2 gap-3">
+                           <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                 <label className="relative cursor-pointer">
+                                    <div className="w-8 h-8 rounded-lg border-2 shadow-sm ring-1 ring-slate-200" style={{ backgroundColor: footerBgColor, borderColor: '#e2e8f0' }} />
+                                    <input type="color" value={footerBgColor} onChange={e => setFooterBgColor(e.target.value)} className="opacity-0 w-0 h-0 absolute" />
+                                 </label>
+                                 <span className="text-[10px] font-mono font-bold text-slate-600">{footerBgColor.toUpperCase()}</span>
+                              </div>
+                              <p className="text-[9px] text-slate-400">{isAr ? 'خلفية' : 'Fond'}</p>
+                           </div>
+                           <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                 <label className="relative cursor-pointer">
+                                    <div className="w-8 h-8 rounded-lg border-2 shadow-sm ring-1 ring-slate-200" style={{ backgroundColor: footerTextColor, borderColor: '#e2e8f0' }} />
+                                    <input type="color" value={footerTextColor} onChange={e => setFooterTextColor(e.target.value)} className="opacity-0 w-0 h-0 absolute" />
+                                 </label>
+                                 <span className="text-[10px] font-mono font-bold text-slate-600">{footerTextColor.toUpperCase()}</span>
+                              </div>
+                              <p className="text-[9px] text-slate-400">{isAr ? 'النص والشعار' : 'Texte & Logo'}</p>
+                           </div>
+                        </div>
+                     </div>
+
                      {/* TYPOGRAPHY */}
                      <div className="pt-4 border-t border-slate-100">
                         <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'الخط' : 'Typographie'}</label>
