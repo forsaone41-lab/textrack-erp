@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown, TrendingUp, Package } from 'lucide-react';
+import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown, TrendingUp, Package, RefreshCw } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import StoreManagerDashboard from '../components/Tools/StoreManagerDashboard';
 import ProAITools from '../components/Tools/ProAITools';
@@ -75,6 +75,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [showTrash, setShowTrash] = useState(false);
   const [newOrderToast, setNewOrderToast] = useState<string | null>(null);
+  const [isRefreshingOrders, setIsRefreshingOrders] = useState(false);
   const knownOrderIdsRef = useRef<Set<string> | null>(null);
   const [orderStatusFilter, setOrderStatusFilter] = useState<'all' | 'confirmed' | 'refused'>('all');
   const CONFIRMED_STATUSES = ['Confirmé', 'Confirmée', 'Validée', 'Livrée', 'مؤكد', 'تم التوصيل'];
@@ -120,15 +121,26 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     }
   }, [storeOrders, config.storeName]);
 
-  // Fetch LIVE orders from Supabase for this specific store
+  // Fetch LIVE orders from Supabase for this specific store.
+  // Must match the exact same name resolution submitGlobalOrder uses when writing the order
+  // (storeName state first, falling back to the saved config) - otherwise the filter below
+  // silently matches nothing and orders placed by real customers never show up here.
+  const effectiveStoreName = storeName || config.storeName;
+
+  const fetchStoreOrdersNow = useRef<() => Promise<void>>(async () => {});
+  const handleManualRefreshOrders = async () => {
+     setIsRefreshingOrders(true);
+     try { await fetchStoreOrdersNow.current(); } finally { setIsRefreshingOrders(false); }
+  };
+
   useEffect(() => {
-    if (!isLiveStore && config.storeName) {
+    if (!isLiveStore && effectiveStoreName) {
       const fetchStoreOrders = async () => {
         try {
           const { data, error } = await supabase
             .from('commandes')
             .select('*')
-            .ilike('tissu', `%Store: ${config.storeName}%`)
+            .ilike('tissu', `%Store: ${effectiveStoreName}%`)
             .order('dateCommande', { ascending: false });
             
           if (data && !error && data.length > 0) {
@@ -202,10 +214,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
       };
 
       fetchStoreOrders();
+      fetchStoreOrdersNow.current = fetchStoreOrders;
       const pollInterval = setInterval(fetchStoreOrders, 20000);
       return () => clearInterval(pollInterval);
     }
-  }, [isLiveStore, config.storeName]);
+  }, [isLiveStore, effectiveStoreName]);
 
   const handleUpdateOrderStatus = (orderId: string, newStatus: string, newColor: string) => {
     setStoreOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus, statusColor: newColor } : o));
@@ -614,7 +627,17 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         customer_id: customerUser?.id || null
     };
     supabase.from('commandes').insert(cmd).then(({ error }: any) => {
-        if (error) console.error(error);
+        if (error) {
+            console.error(error);
+            // If the customer_id column hasn't been added yet (store_customers_setup.sql not run),
+            // don't lose the whole order - retry without it rather than failing silently.
+            if (error.code === '42703' || (error.message || '').includes('customer_id')) {
+                const { customer_id, ...cmdWithoutCustomerId } = cmd;
+                supabase.from('commandes').insert(cmdWithoutCustomerId).then(({ error: retryError }: any) => {
+                    if (retryError) console.error('Retry without customer_id also failed:', retryError);
+                });
+            }
+        }
     });
     
     if (!isLiveStore) {
@@ -2808,6 +2831,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                             <h3 className={`text-xs font-black uppercase tracking-wider cursor-pointer flex items-center gap-1 transition-colors ${showTrash ? 'text-rose-600' : 'text-slate-400 hover:text-rose-400'}`} onClick={() => { setShowTrash(true); setSelectedOrderIds([]); }}>
                                <Trash2 className="w-3 h-3" /> Poubelle
                             </h3>
+                            <button onClick={handleManualRefreshOrders} disabled={isRefreshingOrders} title={isAr ? 'تحديث الطلبات' : 'Actualiser les commandes'} className="text-slate-400 hover:text-indigo-600 transition-colors disabled:opacity-50">
+                               <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingOrders ? 'animate-spin' : ''}`} />
+                            </button>
                           </div>
                           {selectedOrderIds.length > 0 ? (
                              <div className="flex items-center gap-2">
