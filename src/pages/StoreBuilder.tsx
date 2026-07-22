@@ -1134,7 +1134,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
       </div>
       <MobileNavPanel page={page} setPage={setPage} />
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
         {page === 'home' && (
           <>
             <div className="flex flex-col gap-0 w-full">
@@ -1445,6 +1445,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         )}
         <ThemeFooter setPage={setPage} />
       </div>
+      <BottomNavBar page={page} setPage={setPage} />
     </div>
   );
   };
@@ -1470,7 +1471,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
       </div>
       <MobileNavPanel page={page} setPage={setPage} />
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
         {page === 'home' && (
           <>
             <div className={`flex ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'} h-auto bg-white`} style={{ minHeight: previewDevice === 'mobile' && !isModal ? undefined : `${isModal ? heroHeight + 150 : heroHeight}px` }}>
@@ -1675,6 +1676,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
            </div>
         )}
       </div>
+      <BottomNavBar page={page} setPage={setPage} />
     </div>
   );
   };
@@ -1704,7 +1706,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
       </div>
       <MobileNavPanel bgClass="bg-[#111]" textClass="text-[#f5f5f5]" page={page} setPage={setPage} />
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
         {page === 'home' && (
           <>
             <div className="p-8">
@@ -1898,6 +1900,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
            </div>
         )}
       </div>
+      <BottomNavBar page={page} setPage={setPage} />
     </div>
   );
   };
@@ -1925,7 +1928,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
       </div>
       <MobileNavPanel page={page} setPage={setPage} />
 
-      <div className="flex-1 overflow-y-auto pt-6">
+      <div className="flex-1 overflow-y-auto pt-6 pb-16 md:pb-0">
         {page === 'home' && (
           <>
             <div className="px-4">
@@ -2117,6 +2120,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
            </div>
         )}
       </div>
+      <BottomNavBar page={page} setPage={setPage} />
     </div>
   );
   };
@@ -2664,10 +2668,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             {footerSettings.showPrivacy && <span className="hover:text-slate-900 cursor-pointer">{tr('Privacy Policy')}</span>}
          </div>
       </div>
+      <BottomNavBar page={page} setPage={setPage} />
     </div>
     );
   };
-  
+
   const Layout = () => {
        if (activeTheme.layout === 'hero-center') return <LayoutHeroCenter {...props} />;
        if (activeTheme.layout === 'split-screen') return <LayoutSplitScreen {...props} />;
