@@ -367,6 +367,14 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [pdpImageWidth, setPdpImageWidth] = useState<number>(config.pdpImageWidth ?? 50);
   const [pdpMaxWidth, setPdpMaxWidth] = useState<number>(config.pdpMaxWidth ?? 1200);
   const [pdpImageAspect, setPdpImageAspect] = useState<string>(config.pdpImageAspect || '4/5');
+  const [productCardSize, setProductCardSize] = useState<'small' | 'medium' | 'large'>(config.productCardSize || 'medium');
+  const gridColsClass = (variant: 'lg4' | 'lg3' | 'sm2' | 'md4' | 'plain4') => {
+     if (variant === 'lg4') return productCardSize === 'small' ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5' : productCardSize === 'large' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4';
+     if (variant === 'lg3') return productCardSize === 'small' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : productCardSize === 'large' ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
+     if (variant === 'sm2') return productCardSize === 'small' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2';
+     if (variant === 'md4') return productCardSize === 'small' ? 'grid-cols-2 md:grid-cols-5' : productCardSize === 'large' ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-4';
+     return productCardSize === 'small' ? 'grid-cols-5' : productCardSize === 'large' ? 'grid-cols-3' : 'grid-cols-4';
+  };
   const [showPdpTrustBadges, setShowPdpTrustBadges] = useState<boolean>(config.showPdpTrustBadges ?? true);
   const [deliveryScope, setDeliveryScope] = useState<'morocco' | 'international'>(config.deliveryScope || 'morocco');
   const [deliveryText, setDeliveryText] = useState<string>(config.deliveryText || 'Livraison 24-48h');
@@ -599,6 +607,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               if (conf.pdpImageWidth !== undefined) setPdpImageWidth(conf.pdpImageWidth);
               if (conf.pdpMaxWidth !== undefined) setPdpMaxWidth(conf.pdpMaxWidth);
               if (conf.pdpImageAspect) setPdpImageAspect(conf.pdpImageAspect);
+              if (conf.productCardSize) setProductCardSize(conf.productCardSize);
               if (conf.showPdpTrustBadges !== undefined) setShowPdpTrustBadges(conf.showPdpTrustBadges);
               if (conf.deliveryScope) setDeliveryScope(conf.deliveryScope);
               if (conf.deliveryText) setDeliveryText(conf.deliveryText);
@@ -803,6 +812,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        pdpImageWidth,
        pdpMaxWidth,
        pdpImageAspect,
+       productCardSize,
        showPdpTrustBadges,
        deliveryScope,
        deliveryText,
@@ -1283,7 +1293,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              <MobileProductCard key={p.id} p={p} />
                           ))}
                        </div>
-                       <div className={`hidden md:grid gap-8 ${isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
+                       <div className={`hidden md:grid gap-8 ${isModal ? gridColsClass('lg4') : gridColsClass('lg3')}`}>
                           {storeProducts.slice(0, 8).map((p: any) => (
                              <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
                                 <div className="aspect-[3/4] bg-slate-100 mb-4 overflow-hidden relative rounded-xl">
@@ -1406,7 +1416,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                      <MobileProductCard key={p.id} p={p} />
                   ))}
                </div>
-               <div className={`hidden md:grid gap-8 ${isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
+               <div className={`hidden md:grid gap-8 ${isModal ? gridColsClass('lg4') : gridColsClass('lg3')}`}>
                   {filteredProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-[3/4] mb-4 overflow-hidden relative rounded-xl border" style={{ backgroundColor: cardBg, borderColor, borderRadius: cardStyle === 'square' ? '0px' : undefined }}>
@@ -1630,7 +1640,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                   <h3 className="text-2xl font-light">{storeLang === 'ar' ? 'وصل حديثاً' : storeLang === 'en' ? 'New Arrivals' : 'Nouveautés'}</h3>
                   <span className="text-sm cursor-pointer hover:underline" style={{ color: primaryColor }}>{storeLang === 'ar' ? 'عرض الكل' : storeLang === 'en' ? 'View all' : 'Voir tout'}</span>
                </div>
-               <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
+               <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : gridColsClass('lg3')}`}>
                   {storeProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-[4/5] mb-6 relative overflow-hidden flex items-center justify-center border" style={{ backgroundColor: cardBg, borderColor, borderRadius: cardStyle === 'square' ? '0px' : undefined }}>
@@ -1668,7 +1678,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                      </select>
                   </div>
                </div>
-               <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
+               <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : gridColsClass('lg3')}`}>
                   {filteredProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-[4/5] mb-6 relative overflow-hidden flex items-center justify-center border" style={{ backgroundColor: cardBg, borderColor, borderRadius: cardStyle === 'square' ? '0px' : undefined }}>
@@ -1864,7 +1874,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             </div>
             <div className={`${isModal ? 'p-16' : 'p-8'} mx-auto w-full`}>
                <h3 className="text-xl tracking-widest uppercase text-center mb-16" style={{ color: primaryColor }}>Curated Selection</h3>
-               <div className={`grid gap-4 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
+               <div className={`grid gap-4 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : gridColsClass('sm2')}`}>
                   {storeProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer relative aspect-square border p-4 flex flex-col items-center justify-center" style={{ backgroundColor: cardBg, borderColor }} onClick={() => navigateToProduct(p.id)}>
                         {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover mb-8" alt={p.name} /> : <ImageIcon className="w-16 h-16 opacity-10 mb-8" />}
@@ -1896,7 +1906,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                      <option value="price-high-low">{tr('Price: High - Low')}</option>
                   </select>
                </div>
-               <div className={`grid gap-4 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
+               <div className={`grid gap-4 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : gridColsClass('sm2')}`}>
                   {filteredProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer relative aspect-square border p-4 flex flex-col items-center justify-center" style={{ backgroundColor: cardBg, borderColor }} onClick={() => navigateToProduct(p.id)}>
                         {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover mb-8" alt={p.name} /> : <ImageIcon className="w-16 h-16 opacity-10 mb-8" />}
@@ -2106,7 +2116,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                      <MobileProductCard key={p.id} p={p} idx={idx} />
                   ))}
                </div>
-               <div className={`hidden md:grid gap-6 ${isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2'}`}>
+               <div className={`hidden md:grid gap-6 ${isModal ? gridColsClass('lg4') : gridColsClass('sm2')}`}>
                   {storeProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer bg-slate-50 p-4 rounded-3xl hover:bg-slate-100 transition-colors border-2 border-transparent hover:border-current" style={{ borderColor: primaryColor }} onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-square mb-4 overflow-hidden relative rounded-2xl shadow-sm border flex items-center justify-center" style={{ backgroundColor: cardBg, borderColor, borderRadius: cardStyle === 'square' ? '0px' : undefined }}>
@@ -2147,7 +2157,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                      <MobileProductCard key={p.id} p={p} idx={idx} />
                   ))}
                </div>
-               <div className={`hidden md:grid gap-6 ${isModal ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2'}`}>
+               <div className={`hidden md:grid gap-6 ${isModal ? gridColsClass('lg4') : gridColsClass('sm2')}`}>
                   {filteredProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer bg-slate-50 p-4 rounded-3xl hover:bg-slate-100 transition-colors border-2 border-transparent hover:border-current" style={{ borderColor: primaryColor }} onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-square mb-4 overflow-hidden relative rounded-2xl shadow-sm border flex items-center justify-center" style={{ backgroundColor: cardBg, borderColor, borderRadius: cardStyle === 'square' ? '0px' : undefined }}>
@@ -2383,7 +2393,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                   </div>
                </div>
 
-               <div className={`grid ${previewDevice === 'mobile' && !isModal ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-4'} gap-6`}>
+               <div className={`grid ${previewDevice === 'mobile' && !isModal ? 'grid-cols-2' : gridColsClass('md4')} gap-6`}>
                   {filteredProducts.map((p: any) => (
                      <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
                         <div className="aspect-[3/4] mb-4 relative overflow-hidden flex items-center justify-center border" style={{ backgroundColor: cardBg, borderColor, borderRadius: cardStyle === 'square' ? '0px' : undefined }}>
@@ -2592,7 +2602,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                      <span className="hover:text-slate-900 cursor-pointer">Kids</span>
                   </div>
                </div>
-               <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-2' : 'grid-cols-4'}`}>
+               <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-2' : gridColsClass('plain4')}`}>
                   {storeProducts.slice(0, 8).map((p: any) => (
                      <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
                         <div className="relative aspect-[3/4] bg-[#f8f9fa] mb-4 overflow-hidden">
@@ -2671,7 +2681,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
       {page === 'collections' && (
          <div className="flex-1 max-w-6xl mx-auto w-full px-4 py-16">
             <h2 className="text-3xl font-black text-center mb-16 uppercase tracking-tight">{tr(allCollectionsTitle || 'ALL PRODUCTS')}</h2>
-            <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-2' : 'grid-cols-4'}`}>
+            <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-2' : gridColsClass('plain4')}`}>
                {storeProducts.map((p: any) => (
                   <div key={p.id} className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
                      <div className="relative aspect-[3/4] bg-[#f8f9fa] mb-4 overflow-hidden">
@@ -3749,6 +3759,28 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                  className={`flex flex-col items-center gap-2 p-3 border-2 rounded-xl transition-all ${cardStyle === key ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 hover:border-slate-300'}`}>
                                  <div className={`w-12 h-12 border ${radius}`} style={{ backgroundColor: secondaryColor, borderColor }} />
                                  <span className={`text-[10px] font-bold ${cardStyle === key ? 'text-indigo-600' : 'text-slate-500'}`}>{isAr ? labelAr : labelFr}</span>
+                              </button>
+                           ))}
+                        </div>
+                     </div>
+
+                     {/* PRODUCT CARD SIZE */}
+                     <div className="pt-4 border-t border-slate-100">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'حجم بطاقات المنتجات' : 'Taille des Cartes Produits'}</label>
+                        <div className="grid grid-cols-3 gap-2">
+                           {([
+                              { key: 'small', labelFr: 'Petites', labelAr: 'صغيرة', cols: 5 },
+                              { key: 'medium', labelFr: 'Moyennes', labelAr: 'متوسطة', cols: 4 },
+                              { key: 'large', labelFr: 'Grandes', labelAr: 'كبيرة', cols: 3 }
+                           ] as const).map(({ key, labelFr, labelAr, cols }) => (
+                              <button key={key} onClick={() => setProductCardSize(key)}
+                                 className={`flex flex-col items-center gap-2 p-3 border-2 rounded-xl transition-all ${productCardSize === key ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                                 <div className="flex gap-0.5 w-12 h-8">
+                                    {Array.from({ length: cols > 4 ? 4 : cols }).map((_, i) => (
+                                       <div key={i} className="flex-1 bg-slate-300 rounded-sm" style={productCardSize === key ? { backgroundColor: primaryColor, opacity: 0.6 } : undefined} />
+                                    ))}
+                                 </div>
+                                 <span className={`text-[10px] font-bold ${productCardSize === key ? 'text-indigo-600' : 'text-slate-500'}`}>{isAr ? labelAr : labelFr}</span>
                               </button>
                            ))}
                         </div>
