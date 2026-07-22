@@ -365,6 +365,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [quickBuyContext, setQuickBuyContext] = useState<any>(null);
   const [buyNowAsPopup, setBuyNowAsPopup] = useState<boolean>(config.buyNowAsPopup ?? true);
   const [pdpImageWidth, setPdpImageWidth] = useState<number>(config.pdpImageWidth ?? 50);
+  const [pdpMaxWidth, setPdpMaxWidth] = useState<number>(config.pdpMaxWidth ?? 1200);
+  const [pdpImageAspect, setPdpImageAspect] = useState<string>(config.pdpImageAspect || '4/5');
+  const [showPdpTrustBadges, setShowPdpTrustBadges] = useState<boolean>(config.showPdpTrustBadges ?? true);
+  const [deliveryScope, setDeliveryScope] = useState<'morocco' | 'international'>(config.deliveryScope || 'morocco');
+  const [deliveryText, setDeliveryText] = useState<string>(config.deliveryText || 'Livraison 24-48h');
+  const [guaranteeText, setGuaranteeText] = useState<string>(config.guaranteeText || 'Satisfait ou remboursé');
+  const [returnText, setReturnText] = useState<string>(config.returnText || 'Retour gratuit sous 14 jours');
   const [textStyles, setTextStyles] = useState<Record<string, { fontSize?: number; color?: string; fontFamily?: string }>>(config.textStyles || {});
   const [activeStyleKey, setActiveStyleKey] = useState<string | null>(null);
   const [toolbarPos, setToolbarPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
@@ -583,6 +590,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               if (conf.proThemesUnlocked !== undefined) setProThemesUnlocked(conf.proThemesUnlocked);
               if (conf.buyNowAsPopup !== undefined) setBuyNowAsPopup(conf.buyNowAsPopup);
               if (conf.pdpImageWidth !== undefined) setPdpImageWidth(conf.pdpImageWidth);
+              if (conf.pdpMaxWidth !== undefined) setPdpMaxWidth(conf.pdpMaxWidth);
+              if (conf.pdpImageAspect) setPdpImageAspect(conf.pdpImageAspect);
+              if (conf.showPdpTrustBadges !== undefined) setShowPdpTrustBadges(conf.showPdpTrustBadges);
+              if (conf.deliveryScope) setDeliveryScope(conf.deliveryScope);
+              if (conf.deliveryText) setDeliveryText(conf.deliveryText);
+              if (conf.guaranteeText) setGuaranteeText(conf.guaranteeText);
+              if (conf.returnText) setReturnText(conf.returnText);
               if (conf.buttonStyle) setButtonStyle(conf.buttonStyle);
               if (conf.showReviews !== undefined) setShowReviews(conf.showReviews);
               if (conf.homeBlocks) setHomeBlocks(conf.homeBlocks);
@@ -780,6 +794,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        proThemesUnlocked,
        buyNowAsPopup,
        pdpImageWidth,
+       pdpMaxWidth,
+       pdpImageAspect,
+       showPdpTrustBadges,
+       deliveryScope,
+       deliveryText,
+       guaranteeText,
+       returnText,
        buttonStyle,
        showReviews,
        requireAccountToOrder,
@@ -944,6 +965,39 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               <EditableText as="p" text={footerSettings.copyright} onTextChange={(v: string) => setFooterSettings({...footerSettings, copyright: v})} isLiveStore={isLiveStore} className="text-xs opacity-70 mt-4" style={{ color: effText }} styleKey="footerCopyright" />
            </div>
         </footer>
+     );
+  };
+
+  // Shared trust-badges row (delivery / guarantee / return) shown on the product
+  // page to help convince hesitant buyers. Content and delivery scope (Morocco
+  // only vs international) are editable from Settings.
+  const PdpTrustBadges = () => {
+     if (!showPdpTrustBadges) return null;
+     const items = [
+        {
+           icon: deliveryScope === 'morocco'
+              ? <img src="https://flagcdn.com/w20/ma.png" alt="MA" className="w-5 h-3.5 rounded-sm object-cover" />
+              : <Globe className="w-4 h-4" />,
+           title: storeIsAr ? 'التوصيل' : 'Livraison',
+           text: deliveryText
+        },
+        { icon: <ShieldCheck className="w-4 h-4" />, title: storeIsAr ? 'الضمان' : 'Garantie', text: guaranteeText },
+        { icon: <RefreshCw className="w-4 h-4" />, title: storeIsAr ? 'الإرجاع' : 'Retour', text: returnText }
+     ];
+     return (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6 pt-6 border-t border-slate-100">
+           {items.map((item, i) => (
+              <div key={i} className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                 <div className="w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center shrink-0" style={{ color: primaryColor }}>
+                    {item.icon}
+                 </div>
+                 <div className="min-w-0">
+                    <p className="text-[10px] font-black text-slate-800 uppercase tracking-wider">{item.title}</p>
+                    <p className="text-[10px] text-slate-500 font-semibold truncate">{item.text}</p>
+                 </div>
+              </div>
+           ))}
+        </div>
      );
   };
 
@@ -1368,10 +1422,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
            </div>
         )}
         {page === 'product' && activeProductId && (
-           <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-8 pb-24 md:pb-8'} mx-auto w-full`}>
+           <div className={`${isModal ? 'p-16' : 'p-8 pb-24 md:pb-8'} mx-auto w-full`} style={{ maxWidth: `${pdpMaxWidth}px` }}>
               {storeProducts.filter(p => p.id === activeProductId).map(p => (
                  <div key={p.id} className={`flex gap-12 ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'}`} style={{ '--pdp-img-pct': `${pdpImageWidth}%` } as any}>
-                    <div className="pdp-img-col flex-1 aspect-[4/5] bg-slate-100 rounded-2xl flex items-center justify-center overflow-hidden">
+                    <div className="pdp-img-col flex-1 bg-slate-100 rounded-2xl flex items-center justify-center overflow-hidden" style={{ aspectRatio: pdpImageAspect }}>
                        {(selectedColor && p.colorImages?.[selectedColor]) ? <img src={p.colorImages[selectedColor]} className="w-full h-full object-cover" alt={p.name} /> : (p.image ? <img src={p.image} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-20 h-20 opacity-10" />)}
                     </div>
                     <div className="pdp-details-col flex-1 flex flex-col justify-center">
@@ -1454,6 +1508,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                           </div>
                           </>
                        )}
+                       <PdpTrustBadges />
                     </div>
                  </div>
               ))}
@@ -1629,10 +1684,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
            </div>
         )}
         {page === 'product' && activeProductId && (
-           <div className={`${isModal ? 'p-20 max-w-5xl' : 'p-8'} mx-auto w-full`}>
+           <div className={`${isModal ? 'p-20' : 'p-8'} mx-auto w-full`} style={{ maxWidth: `${pdpMaxWidth}px` }}>
               {storeProducts.filter(p => p.id === activeProductId).map(p => (
                  <div key={p.id} className={`flex gap-16 ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'}`} style={{ '--pdp-img-pct': `${pdpImageWidth}%` } as any}>
-                    <div className="pdp-img-col flex-1 relative flex items-center justify-center bg-gray-50 overflow-hidden aspect-[3/4]">
+                    <div className="pdp-img-col flex-1 relative flex items-center justify-center bg-gray-50 overflow-hidden" style={{ aspectRatio: pdpImageAspect }}>
                        {(selectedColor && p.colorImages?.[selectedColor]) ? <img src={p.colorImages[selectedColor]} className="w-full h-full object-cover" alt={p.name} /> : (p.image ? <img src={p.image} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-20 h-20 opacity-10 absolute inset-0 m-auto" />)}
                     </div>
                     <div className="pdp-details-col flex-1 flex flex-col justify-center">
@@ -1701,6 +1756,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              )}
                           </div>
                        )}
+                       <PdpTrustBadges />
                     </div>
                  </div>
               ))}
@@ -1852,10 +1908,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
            </div>
         )}
         {page === 'product' && activeProductId && (
-           <div className={`${isModal ? 'p-16 max-w-5xl' : 'p-8'} mx-auto w-full`}>
+           <div className={`${isModal ? 'p-16' : 'p-8'} mx-auto w-full`} style={{ maxWidth: `${pdpMaxWidth}px` }}>
               {storeProducts.filter(p => p.id === activeProductId).map(p => (
                  <div key={p.id} className={`flex gap-16 ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'}`} style={{ '--pdp-img-pct': `${pdpImageWidth}%` } as any}>
-                    <div className="pdp-img-col flex-1 bg-white/5 border border-white/10 flex items-center justify-center aspect-[3/4] overflow-hidden relative">
+                    <div className="pdp-img-col flex-1 bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden relative" style={{ aspectRatio: pdpImageAspect }}>
                        {(selectedColor && p.colorImages?.[selectedColor]) ? <img src={p.colorImages[selectedColor]} className="w-full h-full object-cover absolute inset-0" alt={p.name} /> : (p.image ? <img src={p.image} className="w-full h-full object-cover absolute inset-0" alt={p.name} /> : <ImageIcon className="w-20 h-20 opacity-10" />)}
                     </div>
                     <div className="pdp-details-col flex-1 flex flex-col justify-center">
@@ -1925,6 +1981,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              )}
                           </div>
                        )}
+                       <PdpTrustBadges />
                     </div>
                  </div>
               ))}
@@ -2106,10 +2163,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
            </div>
         )}
         {page === 'product' && activeProductId && (
-           <div className={`${isModal ? 'p-16 max-w-[1200px]' : 'p-8'} mx-auto w-full`}>
+           <div className={`${isModal ? 'p-16' : 'p-8'} mx-auto w-full`} style={{ maxWidth: `${pdpMaxWidth}px` }}>
               {storeProducts.filter(p => p.id === activeProductId).map(p => (
                  <div key={p.id} className={`flex gap-12 bg-slate-50 p-8 rounded-[3rem] ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'}`} style={{ '--pdp-img-pct': `${pdpImageWidth}%` } as any}>
-                    <div className="pdp-img-col flex-1 bg-white rounded-[2rem] border-4 border-slate-100 flex items-center justify-center aspect-square shadow-xl overflow-hidden relative">
+                    <div className="pdp-img-col flex-1 bg-white rounded-[2rem] border-4 border-slate-100 flex items-center justify-center shadow-xl overflow-hidden relative" style={{ aspectRatio: pdpImageAspect }}>
                        {(selectedColor && p.colorImages?.[selectedColor]) ? <img src={p.colorImages[selectedColor]} className="w-full h-full object-cover absolute inset-0" alt={p.name} /> : (p.image ? <img src={p.image} className="w-full h-full object-cover absolute inset-0" alt={p.name} /> : <ImageIcon className="w-20 h-20 opacity-10" />)}
                     </div>
                     <div className="pdp-details-col flex-1 flex flex-col justify-center px-4">
@@ -2169,6 +2226,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              )}
                           </div>
                        )}
+                       <PdpTrustBadges />
                     </div>
                  </div>
               ))}
@@ -2331,9 +2389,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
            const product = storeProducts.find((p: any) => p.id === activeProductId);
            if (!product) return null;
            return (
-           <div className="p-8 max-w-6xl mx-auto min-h-[600px] my-8 flex flex-col md:flex-row gap-12" style={{ backgroundColor: cardBg, '--pdp-img-pct': `${pdpImageWidth}%` } as any}>
+           <div className="p-8 mx-auto min-h-[600px] my-8 flex flex-col md:flex-row gap-12" style={{ backgroundColor: cardBg, maxWidth: `${pdpMaxWidth}px`, '--pdp-img-pct': `${pdpImageWidth}%` } as any}>
               <div className="pdp-img-col w-full md:w-1/2 flex gap-4">
-                 <div className="w-full aspect-[3/4] bg-[#f5f1e9] rounded-sm overflow-hidden flex items-center justify-center">
+                 <div className="w-full bg-[#f5f1e9] rounded-sm overflow-hidden flex items-center justify-center" style={{ aspectRatio: pdpImageAspect }}>
                     <img src={getCoverImage(product)} className="w-full h-full object-cover mix-blend-multiply" alt="Product" />
                  </div>
               </div>
@@ -2381,6 +2439,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                  {(buyMode === 'both' || buyMode === 'direct') && (
                     <button onClick={() => buyNowAsPopup ? setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage }) : setPage('checkout')} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-full h-14 bg-[#f5f1e9] text-[#1a1a1a] font-bold uppercase tracking-widest text-xs hover:bg-[#e8e2d7] transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{storeIsAr ? 'اشتري الآن' : 'Acheter Maintenant'}</button>
                  )}
+                 <PdpTrustBadges />
               </div>
            </div>
          );
@@ -3624,6 +3683,41 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                         </div>
                      </div>
 
+                     {/* PDP IMAGE HEIGHT / ASPECT */}
+                     <div className="pt-4 border-t border-slate-100">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'ارتفاع صورة المنتج' : "Hauteur de l'image produit"}</label>
+                        <div className="grid grid-cols-4 gap-2">
+                           {([
+                              { key: '3/4', labelFr: 'Portrait', labelAr: 'طولي' },
+                              { key: '4/5', labelFr: 'Standard', labelAr: 'قياسي' },
+                              { key: '1/1', labelFr: 'Carré', labelAr: 'مربع' },
+                              { key: '4/3', labelFr: 'Large', labelAr: 'عريض' }
+                           ] as const).map(({ key, labelFr, labelAr }) => (
+                              <button key={key} onClick={() => setPdpImageAspect(key)}
+                                 className={`py-2 text-[9px] font-bold rounded-lg border ${pdpImageAspect === key ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-slate-200 text-slate-500'}`}>
+                                 {isAr ? labelAr : labelFr}
+                              </button>
+                           ))}
+                        </div>
+                     </div>
+
+                     {/* PDP CONTAINER WIDTH */}
+                     <div className="pt-4 border-t border-slate-100">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'عرض صفحة المنتج' : 'Largeur de la page produit'}</label>
+                        <div className="flex items-center gap-3">
+                           <input
+                              type="range"
+                              min={800}
+                              max={1600}
+                              step={50}
+                              value={pdpMaxWidth}
+                              onChange={e => setPdpMaxWidth(parseInt(e.target.value))}
+                              className="flex-1 accent-indigo-600"
+                           />
+                           <span className="text-[10px] font-mono font-bold text-slate-600 w-14 text-right">{pdpMaxWidth}px</span>
+                        </div>
+                     </div>
+
                      {/* CARD STYLE */}
                      <div className="pt-4 border-t border-slate-100">
                         <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'شكل بطاقات المنتجات' : 'Style des Cartes Produits'}</label>
@@ -3829,6 +3923,49 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                               <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${buyNowAsPopup ? 'translate-x-5' : ''}`} />
                            </button>
                         </div>
+                     </div>
+
+                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                        <div className="flex items-center justify-between">
+                           <div>
+                              <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{isAr ? 'عناصر الثقة في صفحة المنتج' : 'Réassurance (page produit)'}</h4>
+                              <p className="text-[11px] text-slate-500 font-semibold mt-1">{isAr ? 'معلومات التوصيل والضمان والإرجاع أسفل زر الشراء' : "Infos livraison/garantie/retour affichées sous le bouton d'achat."}</p>
+                           </div>
+                           <button
+                              onClick={() => setShowPdpTrustBadges((v: boolean) => !v)}
+                              className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${showPdpTrustBadges ? 'bg-indigo-600' : 'bg-slate-300'}`}
+                           >
+                              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${showPdpTrustBadges ? 'translate-x-5' : ''}`} />
+                           </button>
+                        </div>
+
+                        {showPdpTrustBadges && (
+                           <div className="space-y-3 pt-3 border-t border-slate-200">
+                              <div>
+                                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 block">{isAr ? 'نطاق التوصيل' : 'Zone de livraison'}</label>
+                                 <div className="flex gap-2">
+                                    <button onClick={() => setDeliveryScope('morocco')} className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${deliveryScope === 'morocco' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}`}>
+                                       <img src="https://flagcdn.com/w20/ma.png" alt="MA" className="w-4 h-3 rounded-sm object-cover" /> {isAr ? 'المغرب فقط' : 'Maroc uniquement'}
+                                    </button>
+                                    <button onClick={() => setDeliveryScope('international')} className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${deliveryScope === 'international' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}`}>
+                                       <Globe className="w-3.5 h-3.5" /> {isAr ? 'دولي' : 'International'}
+                                    </button>
+                                 </div>
+                              </div>
+                              <div>
+                                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">{isAr ? 'نص التوصيل' : 'Texte livraison'}</label>
+                                 <input type="text" value={deliveryText} onChange={e => setDeliveryText(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" />
+                              </div>
+                              <div>
+                                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">{isAr ? 'نص الضمان' : 'Texte garantie'}</label>
+                                 <input type="text" value={guaranteeText} onChange={e => setGuaranteeText(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" />
+                              </div>
+                              <div>
+                                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">{isAr ? 'نص الإرجاع' : 'Texte retour'}</label>
+                                 <input type="text" value={returnText} onChange={e => setReturnText(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" />
+                              </div>
+                           </div>
+                        )}
                      </div>
 
                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
