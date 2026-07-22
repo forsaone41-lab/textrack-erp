@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown, TrendingUp, Package, RefreshCw, Undo2 } from 'lucide-react';
+import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown, TrendingUp, Package, RefreshCw, Undo2, Menu } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import StoreManagerDashboard from '../components/Tools/StoreManagerDashboard';
 import ProAITools from '../components/Tools/ProAITools';
@@ -950,6 +950,28 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
      );
   };
 
+  // Mobile hamburger toggle - shown only below the md breakpoint since nav links
+  // themselves are hidden there (hidden md:flex), so mobile visitors would otherwise
+  // have no way to reach Collections/About at all.
+  const MobileMenuButton = ({ colorClass = 'text-current' }: any) => (
+     <button onClick={() => setIsMobileNavOpen(o => !o)} className={`md:hidden ${colorClass} hover:opacity-70 transition-opacity`} aria-label="Menu">
+        {isMobileNavOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+     </button>
+  );
+
+  const MobileNavPanel = ({ bgClass = 'bg-white', textClass = 'text-slate-800' }: any) => {
+     if (!isMobileNavOpen) return null;
+     return (
+        <div className={`md:hidden w-full ${bgClass} ${textClass} border-b border-black/5 px-8 py-4 flex flex-col gap-4`}>
+           {storePages.map(p => (
+              <div key={p.id} onClick={() => setIsMobileNavOpen(false)}>
+                 <NavLink p={p} currentPage={page} setPage={setPage} />
+              </div>
+           ))}
+        </div>
+     );
+  };
+
   // Shared header icon cluster (language / search / account / cart) used by every theme,
   // so they all stay wired the same way and respect the show/hide toggles from Settings.
   const HeaderIconsCluster = ({ variant = 'light' }: any) => {
@@ -1062,7 +1084,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     return (
     <div className={`w-full min-h-full bg-white text-slate-900 ${fontFamily} flex flex-col`}>
       <div className={`p-6 flex justify-between items-center border-b border-slate-100 ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4' : 'flex-col md:flex-row gap-4 md:gap-0'}`}>
-         <LogoEditor onClick={() => setPage('home')} className="text-2xl font-black uppercase tracking-tighter" />
+         <div className="flex items-center gap-3 w-full md:w-auto justify-between">
+            <LogoEditor onClick={() => setPage('home')} className="text-2xl font-black uppercase tracking-tighter" />
+            <MobileMenuButton />
+         </div>
          <div className={`flex gap-6 text-sm font-bold ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
             {storePages.map(p => (
                <NavLink key={p.id} p={p} currentPage={page} setPage={setPage} />
@@ -1070,6 +1095,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
          </div>
          <HeaderIconsCluster variant="light" />
       </div>
+      <MobileNavPanel />
 
       <div className="flex-1 overflow-y-auto">
         {page === 'home' && (
@@ -1399,9 +1425,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                <NavLink key={p.id} p={p} currentPage={page} setPage={setPage} />
             ))}
          </div>
-         <LogoEditor onClick={() => setPage('home')} className="text-3xl font-normal tracking-wide" style={{ color: primaryColor }} />
+         <div className="flex items-center gap-3 w-full md:w-auto justify-between">
+            <LogoEditor onClick={() => setPage('home')} className="text-3xl font-normal tracking-wide" style={{ color: primaryColor }} />
+            <MobileMenuButton />
+         </div>
          <HeaderIconsCluster variant="light" />
       </div>
+      <MobileNavPanel />
 
       <div className="flex-1 overflow-y-auto">
         {page === 'home' && (
@@ -1620,14 +1650,22 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     return (
     <div className={`w-full min-h-full bg-[#111] text-[#f5f5f5] ${fontFamily} flex flex-col`}>
       <div className={`p-8 flex flex-col items-center gap-6 border-b border-white/10 ${previewDevice === 'mobile' && !isModal ? 'p-4' : 'p-4 md:p-8'}`}>
-         <LogoEditor onClick={() => setPage('home')} className="text-4xl font-serif tracking-widest" style={{ color: primaryColor }} />
+         <div className="flex items-center gap-4 w-full justify-between md:justify-center md:relative">
+            <div className="w-5 md:hidden" />
+            <LogoEditor onClick={() => setPage('home')} className="text-4xl font-serif tracking-widest" style={{ color: primaryColor }} />
+            <MobileMenuButton />
+         </div>
          <div className={`flex gap-12 text-xs tracking-widest uppercase ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
             {storePages.map(p => (
                <NavLink key={p.id} p={p} currentPage={page} setPage={setPage} />
             ))}
             <HeaderIconsCluster variant="dark" />
          </div>
+         <div className="md:hidden">
+            <HeaderIconsCluster variant="dark" />
+         </div>
       </div>
+      <MobileNavPanel bgClass="bg-[#111]" textClass="text-[#f5f5f5]" />
 
       <div className="flex-1 overflow-y-auto">
         {page === 'home' && (
@@ -1835,7 +1873,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     return (
     <div className={`w-full min-h-full bg-white text-slate-900 ${fontFamily} flex flex-col`}>
       <div className={`p-4 mx-4 mt-4 bg-slate-100 rounded-full flex justify-between items-center ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4 rounded-3xl' : 'flex-col md:flex-row gap-4 rounded-3xl md:rounded-full'}`}>
-         <LogoEditor onClick={() => setPage('home')} className="text-2xl font-black tracking-tight px-4" style={{ color: primaryColor }} />
+         <div className="flex items-center gap-3 w-full md:w-auto justify-between">
+            <LogoEditor onClick={() => setPage('home')} className="text-2xl font-black tracking-tight px-4" style={{ color: primaryColor }} />
+            <MobileMenuButton />
+         </div>
          <div className={`flex gap-2 text-sm font-bold ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
             {storePages.map(p => (
                <NavLink key={p.id} p={p} currentPage={page} setPage={setPage} />
@@ -1845,6 +1886,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             <HeaderIconsCluster variant="light" />
          </div>
       </div>
+      <MobileNavPanel />
 
       <div className="flex-1 overflow-y-auto pt-6">
         {page === 'home' && (
@@ -2048,6 +2090,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     const [activeCategory, setActiveCategory] = useState('All');
     const [sortBy, setSortBy] = useState('featured');
     const [isCartOpen, setIsCartOpen] = useState(false);
+    const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
     const navigateToProduct = (id: any) => {
         setActiveProductId(id);
@@ -2082,7 +2125,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     return (
     <div className={`w-full min-h-full bg-[#e8e2d7] text-[#1a1a1a] ${fontFamily} flex flex-col`}>
       <div className={`px-8 py-6 flex justify-between items-center ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4' : 'flex-col md:flex-row gap-4 md:gap-0'}`}>
-         <LogoEditor onClick={() => setPage('home')} className="text-2xl font-black uppercase tracking-widest text-[#1a1a1a]" style={{ color: primaryColor }} />
+         <div className="flex items-center gap-3 w-full md:w-auto justify-between">
+            <LogoEditor onClick={() => setPage('home')} className="text-2xl font-black uppercase tracking-widest text-[#1a1a1a]" style={{ color: primaryColor }} />
+            <MobileMenuButton />
+         </div>
          <div className={`flex gap-8 text-sm font-medium text-[#4a4a4a] ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
             {storePages.map(p => (
                <NavLink key={p.id} p={p} currentPage={page} setPage={setPage} />
@@ -2090,6 +2136,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
          </div>
          <HeaderIconsCluster variant="light" />
       </div>
+      <MobileNavPanel bgClass="bg-[#e8e2d7]" textClass="text-[#1a1a1a]" />
 
       <div className="flex-1 overflow-y-auto bg-white">
         {page === 'home' && (
@@ -2266,6 +2313,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                <NavLink key={p.id} p={p} currentPage={page} setPage={setPage} />
             ))}
          </div>
+         <MobileMenuButton colorClass="text-slate-800" />
          {/* Logo - Center */}
          <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
             <LogoEditor onClick={() => setPage('home')} className={`text-2xl font-black tracking-tighter text-slate-900 ${fontFamily}`} style={{ color: primaryColor }} />
@@ -2273,6 +2321,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
          {/* Icons - Right */}
          <HeaderIconsCluster variant="light" />
       </div>
+      <MobileNavPanel />
 
       {page === 'home' && (
          <div className="flex-1 flex flex-col pb-20">
