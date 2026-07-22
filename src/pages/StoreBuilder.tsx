@@ -363,6 +363,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [proThemesUnlocked, setProThemesUnlocked] = useState<boolean>(config.proThemesUnlocked ?? false);
   const [proUpsellTheme, setProUpsellTheme] = useState<any>(null);
   const [quickBuyContext, setQuickBuyContext] = useState<any>(null);
+  const [buyNowAsPopup, setBuyNowAsPopup] = useState<boolean>(config.buyNowAsPopup ?? true);
   const [textStyles, setTextStyles] = useState<Record<string, { fontSize?: number; color?: string; fontFamily?: string }>>(config.textStyles || {});
   const [activeStyleKey, setActiveStyleKey] = useState<string | null>(null);
   const [toolbarPos, setToolbarPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
@@ -579,6 +580,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               if (conf.menuActiveColor !== undefined) setMenuActiveColor(conf.menuActiveColor);
               if (conf.menuStyle) setMenuStyle(conf.menuStyle);
               if (conf.proThemesUnlocked !== undefined) setProThemesUnlocked(conf.proThemesUnlocked);
+              if (conf.buyNowAsPopup !== undefined) setBuyNowAsPopup(conf.buyNowAsPopup);
               if (conf.buttonStyle) setButtonStyle(conf.buttonStyle);
               if (conf.showReviews !== undefined) setShowReviews(conf.showReviews);
               if (conf.homeBlocks) setHomeBlocks(conf.homeBlocks);
@@ -774,6 +776,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        menuActiveColor,
        menuStyle,
        proThemesUnlocked,
+       buyNowAsPopup,
        buttonStyle,
        showReviews,
        requireAccountToOrder,
@@ -834,10 +837,14 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   };
 
   const applyTheme = (theme: typeof THEMES[0]) => {
+     const previousPreviewImg = activeTheme.previewImg;
      setActiveTheme(theme);
      setPrimaryColor(theme.defaultColor);
      setFontFamily(theme.defaultFont);
-     setHeroImage(theme.previewImg);
+     // Only swap in the theme's suggested photo if the store is still using the
+     // previous theme's default - otherwise this silently wipes a real product
+     // photo the admin already uploaded every time they switch/preview a theme.
+     setHeroImage((prev: string) => (!prev || prev === previousPreviewImg) ? theme.previewImg : prev);
   };
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -1382,7 +1389,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                 <button onClick={handleAddToCart} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: '#1e293b' }}>{tr('Add to cart')}</button>
                              )}
                              {(buyMode === 'direct' || buyMode === 'both') && (
-                                <button onClick={() => setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage })} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: primaryColor }}>Buy Now</button>
+                                <button onClick={() => buyNowAsPopup ? setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage }) : setPage('checkout')} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: primaryColor }}>Buy Now</button>
                              )}
                           </div>
                        )}
@@ -1629,7 +1636,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                 <button onClick={handleAddToCart} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-max px-12 py-4 bg-white border border-black text-black text-xs tracking-widest hover:bg-gray-100 transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{tr('ADD TO CART')}</button>
                              )}
                              {(buyMode === 'direct' || buyMode === 'both') && (
-                                <button onClick={() => setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage })} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-max px-12 py-4 text-white text-xs tracking-widest transition-opacity hover:opacity-90 ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: primaryColor }}>{tr('BUY NOW')}</button>
+                                <button onClick={() => buyNowAsPopup ? setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage }) : setPage('checkout')} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-max px-12 py-4 text-white text-xs tracking-widest transition-opacity hover:opacity-90 ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: primaryColor }}>{tr('BUY NOW')}</button>
                              )}
                           </div>
                        )}
@@ -1853,7 +1860,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                 <button onClick={handleAddToCart} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-max px-12 py-4 border border-white/20 text-white text-xs tracking-widest hover:bg-white/5 transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{tr('ADD TO CART')}</button>
                              )}
                              {(buyMode === 'direct' || buyMode === 'both') && (
-                                <button onClick={() => setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage })} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-max px-12 py-4 bg-white text-black text-xs tracking-widest hover:bg-gray-200 transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{tr('BUY NOW')}</button>
+                                <button onClick={() => buyNowAsPopup ? setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage }) : setPage('checkout')} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-max px-12 py-4 bg-white text-black text-xs tracking-widest hover:bg-gray-200 transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{tr('BUY NOW')}</button>
                              )}
                           </div>
                        )}
@@ -2097,7 +2104,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                 <button onClick={handleAddToCart} className="flex-1 px-8 py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl" style={{ backgroundColor: '#f43f5e' }}>{storeLang === 'ar' ? 'السلة 🛒' : storeLang === 'en' ? 'Cart 🛒' : 'Panier 🛒'}</button>
                              )}
                              {(buyMode === 'direct' || buyMode === 'both') && (
-                                <button onClick={() => setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage })} className="flex-1 px-8 py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl" style={{ backgroundColor: primaryColor }}>{storeLang === 'ar' ? 'اشتري الآن 🎈' : storeLang === 'en' ? 'Buy Now 🎈' : 'Achetez maintenant 🎈'}</button>
+                                <button onClick={() => buyNowAsPopup ? setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage }) : setPage('checkout')} className="flex-1 px-8 py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl" style={{ backgroundColor: primaryColor }}>{storeLang === 'ar' ? 'اشتري الآن 🎈' : storeLang === 'en' ? 'Buy Now 🎈' : 'Achetez maintenant 🎈'}</button>
                              )}
                           </div>
                        )}
@@ -2311,7 +2318,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                     <button onClick={handleAddToCart} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-full h-14 bg-[#1a1a1a] text-white font-bold uppercase tracking-widest text-xs hover:bg-black transition-colors mb-4 ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{storeIsAr ? 'أضف للسلة' : 'Ajouter au panier'}</button>
                  )}
                  {(buyMode === 'both' || buyMode === 'direct') && (
-                    <button onClick={() => setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage })} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-full h-14 bg-[#f5f1e9] text-[#1a1a1a] font-bold uppercase tracking-widest text-xs hover:bg-[#e8e2d7] transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{storeIsAr ? 'اشتري الآن' : 'Acheter Maintenant'}</button>
+                    <button onClick={() => buyNowAsPopup ? setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage }) : setPage('checkout')} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-full h-14 bg-[#f5f1e9] text-[#1a1a1a] font-bold uppercase tracking-widest text-xs hover:bg-[#e8e2d7] transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{storeIsAr ? 'اشتري الآن' : 'Acheter Maintenant'}</button>
                  )}
               </div>
            </div>
@@ -3721,6 +3728,21 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                               className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${requireAccountToOrder ? 'bg-indigo-600' : 'bg-slate-300'}`}
                            >
                               <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${requireAccountToOrder ? 'translate-x-5' : ''}`} />
+                           </button>
+                        </div>
+                     </div>
+
+                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                        <div className="flex items-center justify-between">
+                           <div>
+                              <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{isAr ? '"اشتري الآن" كنافذة منبثقة' : "'Acheter Maintenant' en popup"}</h4>
+                              <p className="text-[11px] text-slate-500 font-semibold mt-1">{isAr ? 'إذا فُعّل، يفتح "اشتري الآن" نافذة شراء سريع بدل الانتقال لصفحة كاملة' : "Si activé, le bouton ouvre une fenêtre d'achat rapide au lieu d'aller sur une page de commande complète."}</p>
+                           </div>
+                           <button
+                              onClick={() => setBuyNowAsPopup((v: boolean) => !v)}
+                              className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${buyNowAsPopup ? 'bg-indigo-600' : 'bg-slate-300'}`}
+                           >
+                              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${buyNowAsPopup ? 'translate-x-5' : ''}`} />
                            </button>
                         </div>
                      </div>
