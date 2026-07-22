@@ -438,6 +438,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   
   const [cartCount, setCartCount] = useState(0);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  // Preview navigation state (which storefront page/product is shown) lives up
+  // here, not inside StorePreviewWrapper - that component is redefined on every
+  // StoreBuilder render (it's a nested function), so React remounts it whenever
+  // any Design/Settings field changes, which would otherwise reset the preview
+  // back to Home every single time an admin tweaks a slider or toggle.
+  const [previewPage, setPreviewPage] = useState<string>('home');
+  const [previewActiveProductId, setPreviewActiveProductId] = useState<any>(null);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [customerUser, setCustomerUser] = useState<any>(null);
   const [customerProfile, setCustomerProfile] = useState<any>(null);
@@ -2288,10 +2295,22 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   };
 
   const StorePreviewWrapper = ({ isModal = false, initialProductId = null }: any) => {
-    const [page, setPage] = useState(initialProductId ? 'product' : 'home');
-    const [activeProductId, setActiveProductId] = useState<any>(initialProductId);
+    const page = previewPage;
+    const setPage = setPreviewPage;
+    const activeProductId = previewActiveProductId;
+    const setActiveProductId = setPreviewActiveProductId;
     const [activeCategory, setActiveCategory] = useState('All');
     const [sortBy, setSortBy] = useState('featured');
+
+    // Only jump to a specific product when the caller actually asks for one
+    // (e.g. "preview this product"), not on every re-render.
+    useEffect(() => {
+       if (initialProductId) {
+          setPreviewActiveProductId(initialProductId);
+          setPreviewPage('product');
+       }
+       // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [initialProductId]);
 
     const navigateToProduct = (id: any) => {
         setActiveProductId(id);
