@@ -2541,7 +2541,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
   if (builderMode === 'dashboard') {
      return (
-       <div className={`space-y-6 ${storeIsAr ? 'text-right' : 'text-left'} bg-slate-50 min-h-screen p-6 md:p-12`}>
+       <div className={`space-y-6 ${isAr ? 'text-right' : 'text-left'} bg-slate-50 min-h-screen p-6 md:p-12`}>
          <StoreManagerDashboard onSelectStore={(store?: any) => {
              if (store && store.config_json) {
                 localStorage.setItem('beya_store_config', JSON.stringify(store.config_json));
@@ -2550,50 +2550,50 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
              }
              setBuilderMode('editor');
              window.location.reload(); // Force all state to re-initialize with new config
-         }} onOpenAI={() => setBuilderMode('pro_ai')} storeIsAr={storeIsAr} />
+         }} onOpenAI={() => setBuilderMode('pro_ai')} isAr={isAr} />
        </div>
      );
   }
   
   if (builderMode === 'pro_ai') {
      return (
-       <div className={`space-y-6 ${storeIsAr ? 'text-right' : 'text-left'} bg-slate-50 min-h-screen p-6 md:p-12`}>
-         <ProAITools onBack={() => setBuilderMode('dashboard')} storeIsAr={storeIsAr} />
+       <div className={`space-y-6 ${isAr ? 'text-right' : 'text-left'} bg-slate-50 min-h-screen p-6 md:p-12`}>
+         <ProAITools onBack={() => setBuilderMode('dashboard')} isAr={isAr} />
        </div>
      );
   }
 
   return (
-    <div className={`space-y-6 ${storeIsAr ? 'text-right' : 'text-left'} bg-slate-50 min-h-screen p-6`}>
+    <div className={`space-y-6 ${isAr ? 'text-right' : 'text-left'} bg-slate-50 min-h-screen p-6`}>
       {/* Top Navigation / Back Button */}
       <div className="flex items-center justify-between mb-4">
          <button onClick={() => setBuilderMode('dashboard')} className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors font-bold text-sm bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-200">
-            {storeLang === 'ar' ? '→ العودة إلى لوحة المتاجر' : storeLang === 'en' ? '← Back to Stores' : '← Retour aux Boutiques'}
+            {isAr ? '→ العودة إلى لوحة المتاجر' : '← Retour aux Boutiques'}
          </button>
          <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{storeLang === 'ar' ? 'المتجر نشط' : storeLang === 'en' ? 'SaaS Builder Active' : 'SaaS Builder Actif'}</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{isAr ? 'المتجر نشط' : 'SaaS Builder Actif'}</span>
          </div>
       </div>
 
-      <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${storeIsAr ? 'sm:flex-row-reverse' : ''}`}>
-        <div className={storeIsAr ? 'text-right' : 'text-left'}>
-          <div className={`flex items-center gap-3 ${storeIsAr ? 'flex-row-reverse' : ''}`}>
+      <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${isAr ? 'sm:flex-row-reverse' : ''}`}>
+        <div className={isAr ? 'text-right' : 'text-left'}>
+          <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
             <h1 className="text-2xl font-black text-slate-800 tracking-tight">BEYA STORE PRO</h1>
-            <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded uppercase tracking-widest">{storeLang === 'ar' ? 'نسخة الساس' : storeLang === 'en' ? 'SaaS EDITION' : 'SaaS ÉDITION'}</span>
-            <span className="flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-black rounded uppercase tracking-widest" title="Connexion chiffrée de bout en bout et route protégée (Admin uniquement)"><ShieldCheck className="w-3 h-3" /> {storeLang === 'ar' ? 'آمن' : storeLang === 'en' ? 'Secured' : 'Sécurisé'}</span>
+            <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded uppercase tracking-widest">{isAr ? 'نسخة الساس' : 'SaaS ÉDITION'}</span>
+            <span className="flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-black rounded uppercase tracking-widest" title="Connexion chiffrée de bout en bout et route protégée (Admin uniquement)"><ShieldCheck className="w-3 h-3" /> {isAr ? 'آمن' : 'Sécurisé'}</span>
           </div>
           <div className="flex bg-slate-100 p-1 rounded-xl w-max mt-4 shadow-inner">
-             <button onClick={() => { setPlatformMode('gestion'); setActiveTab('orders'); }} className={`px-5 py-2 rounded-lg text-xs font-black transition-all ${platformMode === 'gestion' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>{storeLang === 'ar' ? 'إدارة المتجر' : storeLang === 'en' ? 'Store Management' : 'Gestion Boutique'}</button>
-             <button onClick={() => { setPlatformMode('builder'); setActiveTab('themes'); }} className={`px-5 py-2 rounded-lg text-xs font-black transition-all ${platformMode === 'builder' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>{storeLang === 'ar' ? 'تطوير الموقع' : storeLang === 'en' ? 'Site Development' : 'Développement Site'}</button>
+             <button onClick={() => { setPlatformMode('gestion'); setActiveTab('orders'); }} className={`px-5 py-2 rounded-lg text-xs font-black transition-all ${platformMode === 'gestion' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>{isAr ? 'إدارة المتجر' : 'Gestion Boutique'}</button>
+             <button onClick={() => { setPlatformMode('builder'); setActiveTab('themes'); }} className={`px-5 py-2 rounded-lg text-xs font-black transition-all ${platformMode === 'builder' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>{isAr ? 'تطوير الموقع' : 'Développement Site'}</button>
           </div>
         </div>
-        <div className={`flex items-center gap-2 ${storeIsAr ? 'flex-row-reverse' : ''}`}>
+        <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
           <button onClick={handleSave} disabled={isSaving} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${isSaving ? 'bg-green-500 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
-            {isSaving ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />} {isSaving ? (storeLang === 'ar' ? 'تم الحفظ' : storeLang === 'en' ? 'Saved' : 'Enregistré') : (storeLang === 'ar' ? 'حفظ' : storeLang === 'en' ? 'Save' : 'Enregistrer')}
+            {isSaving ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />} {isSaving ? (isAr ? 'تم الحفظ' : 'Enregistré') : (isAr ? 'حفظ' : 'Enregistrer')}
           </button>
-          <button onClick={() => { setPreviewProductId(null); setShowPreview(true); }} className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 px-4 py-2 rounded-xl text-sm font-black hover:bg-indigo-100 hover:scale-105 transition-all shadow-sm" title={storeLang === 'ar' ? 'محرر الموقع الاحترافي' : storeLang === 'en' ? 'Visual PRO Editor' : 'Éditeur Visuel PRO'}>
-            <LayoutTemplate className="w-4 h-4" /> {storeLang === 'ar' ? 'بناء الموقع' : storeLang === 'en' ? 'PRO Editor' : 'Éditeur PRO'}
+          <button onClick={() => { setPreviewProductId(null); setShowPreview(true); }} className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 px-4 py-2 rounded-xl text-sm font-black hover:bg-indigo-100 hover:scale-105 transition-all shadow-sm" title={isAr ? 'محرر الموقع الاحترافي' : 'Éditeur Visuel PRO'}>
+            <LayoutTemplate className="w-4 h-4" /> {isAr ? 'بناء الموقع' : 'Éditeur PRO'}
           </button>
           <button
              onClick={() => {
@@ -2602,36 +2602,36 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
              }}
              disabled={!config.storeName}
              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${!config.storeName ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-50' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}
-             title={!config.storeName ? (storeLang === 'ar' ? 'يرجى حفظ المتجر أولاً' : storeLang === 'en' ? 'Please save the store first' : 'Veuillez enregistrer d\'abord') : (storeLang === 'ar' ? 'زيارة المتجر المباشر' : storeLang === 'en' ? 'Visit the live store' : 'Visiter la boutique en ligne')}
+             title={!config.storeName ? (isAr ? 'يرجى حفظ المتجر أولاً' : 'Veuillez enregistrer d\'abord') : (isAr ? 'زيارة المتجر المباشر' : 'Visiter la boutique en ligne')}
           >
-            <ExternalLink className="w-4 h-4" /> {storeLang === 'ar' ? 'زيارة المتجر' : storeLang === 'en' ? 'Visit' : 'Visiter'}
+            <ExternalLink className="w-4 h-4" /> {isAr ? 'زيارة المتجر' : 'Visiter'}
           </button>
           <button
              onClick={handlePublish}
              disabled={isPublishing || !config.storeName}
              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${!config.storeName ? 'bg-slate-200 text-slate-400 cursor-not-allowed opacity-50' : 'bg-gradient-to-r from-slate-800 to-slate-900 text-white hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed'}`}
-             title={!config.storeName ? (storeLang === 'ar' ? 'يرجى حفظ المتجر أولاً' : storeLang === 'en' ? 'Please save the store first' : 'Veuillez enregistrer d\'abord') : undefined}
+             title={!config.storeName ? (isAr ? 'يرجى حفظ المتجر أولاً' : 'Veuillez enregistrer d\'abord') : undefined}
           >
             {isPublishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
-            {isPublishing ? (storeLang === 'ar' ? 'جاري النشر...' : storeLang === 'en' ? 'Publishing...' : 'Publication...') : (storeLang === 'ar' ? 'نشر' : storeLang === 'en' ? 'Publish' : 'Publier')}
+            {isPublishing ? (isAr ? 'جاري النشر...' : 'Publication...') : (isAr ? 'نشر' : 'Publier')}
           </button>
         </div>
       </div>
 
-      <div className={`flex gap-6 ${storeIsAr ? 'flex-row-reverse' : ''}`}>
+      <div className={`flex gap-6 ${isAr ? 'flex-row-reverse' : ''}`}>
         {/* VERTICAL SIDE NAVIGATION */}
         <div className="w-24 shrink-0 flex flex-col gap-3">
            {(platformMode === 'gestion' ? [
-                 { id: 'orders', icon: ListOrdered, label: storeLang === 'ar' ? 'الطلبات' : storeLang === 'en' ? 'Orders' : 'Commandes' },
-                 { id: 'products', icon: ShoppingBag, label: storeLang === 'ar' ? 'المنتجات' : storeLang === 'en' ? 'Products' : 'Produits' },
-                 { id: 'customers', icon: Users, label: storeLang === 'ar' ? 'الزبائن' : storeLang === 'en' ? 'Customers' : 'Clients' },
-                 { id: 'payments', icon: CreditCard, label: storeLang === 'ar' ? 'الأداء' : storeLang === 'en' ? 'Payments' : 'Paiements' },
-                 { id: 'delivery', icon: Truck, label: storeLang === 'ar' ? 'التوصيل' : storeLang === 'en' ? 'Delivery' : 'Livraison' }
+                 { id: 'orders', icon: ListOrdered, label: isAr ? 'الطلبات' : 'Commandes' },
+                 { id: 'products', icon: ShoppingBag, label: isAr ? 'المنتجات' : 'Produits' },
+                 { id: 'customers', icon: Users, label: isAr ? 'الزبائن' : 'Clients' },
+                 { id: 'payments', icon: CreditCard, label: isAr ? 'الأداء' : 'Paiements' },
+                 { id: 'delivery', icon: Truck, label: isAr ? 'التوصيل' : 'Livraison' }
            ] : [
-                 { id: 'themes', icon: LayoutTemplate, label: storeLang === 'ar' ? 'القوالب' : storeLang === 'en' ? 'Themes' : 'Thèmes' },
-                 { id: 'design', icon: Paintbrush, label: storeLang === 'ar' ? 'التصميم' : storeLang === 'en' ? 'Design' : 'Design' },
-                 { id: 'apps', icon: Box, label: storeLang === 'ar' ? 'تطبيقات' : storeLang === 'en' ? 'Apps' : 'Apps' },
-                 { id: 'settings', icon: Settings, label: storeLang === 'ar' ? 'إعدادات' : storeLang === 'en' ? 'Settings' : 'Config' }
+                 { id: 'themes', icon: LayoutTemplate, label: isAr ? 'القوالب' : 'Thèmes' },
+                 { id: 'design', icon: Paintbrush, label: isAr ? 'التصميم' : 'Design' },
+                 { id: 'apps', icon: Box, label: isAr ? 'تطبيقات' : 'Apps' },
+                 { id: 'settings', icon: Settings, label: isAr ? 'إعدادات' : 'Config' }
            ]).map(tab => (
                  <button 
                    key={tab.id}
@@ -2663,12 +2663,12 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                       {/* Reviews Toggle */}
                       <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mt-4">
                          <h4 className="text-xs font-black text-slate-800 mb-4 uppercase tracking-wider flex items-center gap-2">
-                           <Star className="w-4 h-4 text-amber-500" /> {storeIsAr ? 'تقييمات العملاء' : 'Avis Clients (Reviews)'}
+                           <Star className="w-4 h-4 text-amber-500" /> {isAr ? 'تقييمات العملاء' : 'Avis Clients (Reviews)'}
                          </h4>
                          <label className="flex items-center justify-between gap-3 p-4 bg-slate-50 border border-slate-100 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
                             <div>
-                               <span className="text-sm font-bold text-slate-700">{storeIsAr ? 'تفعيل قسم التقييمات' : 'Activer la section Avis'}</span>
-                               <p className="text-[10px] text-slate-400 mt-0.5">{storeIsAr ? 'السماح للعملاء بترك تقييماتهم' : 'Permettre aux clients de laisser des avis'}</p>
+                               <span className="text-sm font-bold text-slate-700">{isAr ? 'تفعيل قسم التقييمات' : 'Activer la section Avis'}</span>
+                               <p className="text-[10px] text-slate-400 mt-0.5">{isAr ? 'السماح للعملاء بترك تقييماتهم' : 'Permettre aux clients de laisser des avis'}</p>
                             </div>
                             <div onClick={() => setShowReviews(!showReviews)} className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer flex-shrink-0 ${showReviews ? 'bg-indigo-600' : 'bg-slate-200'}`}>
                                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${showReviews ? 'translate-x-7' : 'translate-x-1'}`} />
@@ -2722,7 +2722,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                  <TrendingUp className="w-2.5 h-2.5 text-emerald-300" />
                                  <span className="text-[9px] font-black text-emerald-200">+12%</span>
                                </div>
-                               <p className="text-[9px] text-indigo-200 font-bold ml-1">{storeIsAr ? 'هذا الشهر' : 'ce mois'}</p>
+                               <p className="text-[9px] text-indigo-200 font-bold ml-1">{isAr ? 'هذا الشهر' : 'ce mois'}</p>
                              </div>
                           </div>
                        </div>
@@ -2743,7 +2743,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                  <TrendingUp className="w-2.5 h-2.5 text-white" />
                                  <span className="text-[9px] font-black text-white">+8.5%</span>
                                </div>
-                               <p className="text-[9px] text-emerald-100 font-bold ml-1">{storeIsAr ? 'هذا الشهر' : 'ce mois'}</p>
+                               <p className="text-[9px] text-emerald-100 font-bold ml-1">{isAr ? 'هذا الشهر' : 'ce mois'}</p>
                              </div>
                           </div>
                        </div>
@@ -2754,7 +2754,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        >
                           <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-green-400 group-hover:w-2 transition-all"></div>
                           <div className="pl-2">
-                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{storeIsAr ? 'مؤكدة' : 'Confirmées'}</p>
+                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'مؤكدة' : 'Confirmées'}</p>
                              <h4 className="text-xl font-black text-slate-800 tracking-tight">{storeOrders.filter((ord: any) => !ord.deleted && CONFIRMED_STATUSES.includes(ord.status)).length.toLocaleString('fr-FR')}</h4>
                           </div>
                           <div className="w-10 h-10 bg-green-50 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:bg-green-100 transition-all"><CheckCircle className="w-5 h-5 text-green-500" /></div>
@@ -2766,7 +2766,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        >
                           <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-400 group-hover:w-2 transition-all"></div>
                           <div className="pl-2">
-                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{storeIsAr ? 'مرفوضة' : 'Refusées'}</p>
+                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'مرفوضة' : 'Refusées'}</p>
                              <h4 className="text-xl font-black text-slate-800 tracking-tight">{storeOrders.filter((ord: any) => !ord.deleted && REFUSED_STATUSES.includes(ord.status)).length.toLocaleString('fr-FR')}</h4>
                           </div>
                           <div className="w-10 h-10 bg-rose-50 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:bg-rose-100 transition-all"><X className="w-5 h-5 text-rose-500" /></div>
@@ -2784,15 +2784,15 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                           </div>
                           {selectedOrderIds.length > 0 ? (
                              <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-bold text-slate-500">{selectedOrderIds.length} {storeIsAr ? 'محدد' : 'sélectionné(s)'}</span>
-                                <button onClick={() => setSelectedOrderIds([])} className="text-[10px] font-bold text-slate-400 hover:text-slate-600 transition-colors">{storeIsAr ? 'إلغاء' : 'Annuler'}</button>
+                                <span className="text-[10px] font-bold text-slate-500">{selectedOrderIds.length} {isAr ? 'محدد' : 'sélectionné(s)'}</span>
+                                <button onClick={() => setSelectedOrderIds([])} className="text-[10px] font-bold text-slate-400 hover:text-slate-600 transition-colors">{isAr ? 'إلغاء' : 'Annuler'}</button>
                                 <button onClick={() => setIsBulkDeleteOpen(true)} className="flex items-center gap-1 text-[10px] font-black text-rose-600 bg-rose-50 px-2.5 py-1.5 rounded-lg hover:bg-rose-100 transition-colors">
-                                   <Trash2 className="w-3 h-3" /> {showTrash ? (storeIsAr ? 'حذف نهائي' : 'Supprimer définitivement') : (storeIsAr ? 'حذف' : 'Supprimer')}
+                                   <Trash2 className="w-3 h-3" /> {showTrash ? (isAr ? 'حذف نهائي' : 'Supprimer définitivement') : (isAr ? 'حذف' : 'Supprimer')}
                                 </button>
                              </div>
                           ) : orderStatusFilter !== 'all' ? (
                              <button onClick={() => setOrderStatusFilter('all')} className={`flex items-center gap-1 text-[10px] font-black px-2.5 py-1.5 rounded-lg transition-colors ${orderStatusFilter === 'confirmed' ? 'text-green-700 bg-green-50 hover:bg-green-100' : 'text-rose-700 bg-rose-50 hover:bg-rose-100'}`}>
-                                {orderStatusFilter === 'confirmed' ? (storeIsAr ? 'مؤكدة' : 'Confirmées') : (storeIsAr ? 'مرفوضة' : 'Refusées')} <X className="w-3 h-3" />
+                                {orderStatusFilter === 'confirmed' ? (isAr ? 'مؤكدة' : 'Confirmées') : (isAr ? 'مرفوضة' : 'Refusées')} <X className="w-3 h-3" />
                              </button>
                           ) : (
                              <span className="text-[10px] text-indigo-600 font-bold cursor-pointer hover:underline">Voir tout</span>
@@ -2805,8 +2805,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                    <div className="absolute inset-0 bg-indigo-50 rounded-2xl animate-ping opacity-20"></div>
                                    <Package className="w-8 h-8 text-slate-300 relative z-10" />
                                 </div>
-                                <h4 className="text-sm font-black text-slate-700 mb-1">{showTrash ? (storeIsAr ? 'سلة المهملات فارغة' : 'Corbeille vide') : (storeIsAr ? 'لا توجد طلبات بعد' : 'Aucune commande pour le moment')}</h4>
-                                <p className="text-[10px] font-bold text-slate-400 max-w-[200px] leading-relaxed">{showTrash ? '' : (storeIsAr ? 'ستظهر طلباتك هنا بمجرد أن يقوم عملاؤك بالشراء' : 'Vos commandes apparaîtront ici dès que vos clients commenceront à acheter')}</p>
+                                <h4 className="text-sm font-black text-slate-700 mb-1">{showTrash ? (isAr ? 'سلة المهملات فارغة' : 'Corbeille vide') : (isAr ? 'لا توجد طلبات بعد' : 'Aucune commande pour le moment')}</h4>
+                                <p className="text-[10px] font-bold text-slate-400 max-w-[200px] leading-relaxed">{showTrash ? '' : (isAr ? 'ستظهر طلباتك هنا بمجرد أن يقوم عملاؤك بالشراء' : 'Vos commandes apparaîtront ici dès que vos clients commenceront à acheter')}</p>
                              </div>
                           ) : storeOrders.filter(matchesOrderFilter).map(order => (
                              <div key={order.id} onClick={() => setSelectedOrder(order)} className={`p-3 border rounded-2xl bg-white shadow-sm cursor-pointer transition-colors hover:shadow-md group flex gap-3 items-start ${selectedOrderIds.includes(order.id) ? 'border-indigo-500 ring-2 ring-indigo-100' : 'border-slate-200 hover:border-indigo-500'}`}>
@@ -2843,16 +2843,16 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               {activeTab === 'products' && (
                  <div className="space-y-4">
                     <div className="flex items-center justify-between mb-2">
-                       <h3 className="text-xl font-black text-slate-800 tracking-tight">{storeIsAr ? 'إدارة المنتجات' : 'Gestion des Produits'}</h3>
+                       <h3 className="text-xl font-black text-slate-800 tracking-tight">{isAr ? 'إدارة المنتجات' : 'Gestion des Produits'}</h3>
                        <button onClick={() => { setProductForm({ name: '', price: '', stock: '', description: '', category: '', sizes: [], colors: [], colorImages: {}, variantQuantities: {} }); setIsProductModalOpen(true); }} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 transition-colors shadow-sm">
-                          <Plus className="w-4 h-4" /> {storeIsAr ? 'إضافة منتج' : 'Ajouter Produit'}
+                          <Plus className="w-4 h-4" /> {isAr ? 'إضافة منتج' : 'Ajouter Produit'}
                        </button>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
                        {storeProducts.map((p: any) => (
                           <div key={p.id} onClick={() => { setProductForm(p); setIsProductModalOpen(true); }} className="bg-white border border-slate-200 rounded-2xl p-3 flex gap-3 hover:border-indigo-300 transition-colors cursor-pointer group shadow-sm relative">
-                             <button onClick={(e) => { e.stopPropagation(); const newProds = storeProducts.filter((prod: any) => prod.id !== p.id); setStoreProducts(newProds); handleSave(newProds); }} className={`absolute top-2 ${storeIsAr ? 'left-2' : 'right-2'} w-7 h-7 bg-white text-rose-500 rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 hover:bg-rose-500 hover:text-white transition-all z-10 border border-slate-100`} title={storeIsAr ? 'حذف المنتج' : 'Supprimer'}>
+                             <button onClick={(e) => { e.stopPropagation(); const newProds = storeProducts.filter((prod: any) => prod.id !== p.id); setStoreProducts(newProds); handleSave(newProds); }} className={`absolute top-2 ${isAr ? 'left-2' : 'right-2'} w-7 h-7 bg-white text-rose-500 rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 hover:bg-rose-500 hover:text-white transition-all z-10 border border-slate-100`} title={isAr ? 'حذف المنتج' : 'Supprimer'}>
                                 <Trash2 className="w-3.5 h-3.5" />
                              </button>
                              <div className="w-16 h-16 bg-slate-100 rounded-xl overflow-hidden shrink-0 flex items-center justify-center">
@@ -2886,11 +2886,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                  <div className="space-y-4">
                      <div className="flex justify-between items-center mb-6">
                         <div>
-                           <h3 className="text-xl font-black text-slate-800 tracking-tight">{storeIsAr ? 'التوصيل' : 'Livraison'}</h3>
-                           <p className="text-xs text-slate-500 font-bold mt-1">{storeIsAr ? 'إدارة شركات التوصيل الخاصة بك' : 'Gérez vos sociétés de livraison partenaires'}</p>
+                           <h3 className="text-xl font-black text-slate-800 tracking-tight">{isAr ? 'التوصيل' : 'Livraison'}</h3>
+                           <p className="text-xs text-slate-500 font-bold mt-1">{isAr ? 'إدارة شركات التوصيل الخاصة بك' : 'Gérez vos sociétés de livraison partenaires'}</p>
                         </div>
                         <button onClick={() => setIsDeliveryModalOpen(true)} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 shadow-sm transition-colors">
-                           <Plus className="w-4 h-4" /> {storeIsAr ? 'إضافة شركة' : 'Ajouter société'}
+                           <Plus className="w-4 h-4" /> {isAr ? 'إضافة شركة' : 'Ajouter société'}
                         </button>
                      </div>
                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -2906,7 +2906,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                  </div>
                               </div>
                               <span className={`text-[10px] px-2 py-1 rounded-lg font-black uppercase tracking-wider ${comp.isActive ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
-                                 {comp.isActive ? (storeIsAr ? 'نشط' : 'Actif') : (storeIsAr ? 'غير نشط' : 'Inactif')}
+                                 {comp.isActive ? (isAr ? 'نشط' : 'Actif') : (isAr ? 'غير نشط' : 'Inactif')}
                               </span>
                            </div>
                         ))}
@@ -2973,14 +2973,14 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              <LayoutTemplate className="w-6 h-6 text-white" />
                           </div>
                           <h3 className="text-xl font-black tracking-tight mb-2">
-                             {storeIsAr ? 'محرر الموقع الاحترافي' : 'Éditeur Visuel PRO'}
+                             {isAr ? 'محرر الموقع الاحترافي' : 'Éditeur Visuel PRO'}
                           </h3>
                           <p className="text-indigo-100 text-xs mb-5 leading-relaxed px-2 font-medium">
-                             {storeIsAr ? 'صمم موقعك بالكامل! أضف نصوصاً، صوراً، أقساماً، وتحكم بكل شيء بسهولة تامة.' : 'Concevez votre site de A à Z ! Gérez le design, le texte et les sections avec des outils pro.'}
+                             {isAr ? 'صمم موقعك بالكامل! أضف نصوصاً، صوراً، أقساماً، وتحكم بكل شيء بسهولة تامة.' : 'Concevez votre site de A à Z ! Gérez le design, le texte et les sections avec des outils pro.'}
                           </p>
                           <button onClick={() => setShowPreview(true)} className="w-full bg-white text-indigo-600 font-black py-3.5 rounded-xl shadow-[0_8px_16px_-6px_rgba(0,0,0,0.3)] hover:bg-slate-50 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2">
                              <Paintbrush className="w-4 h-4" />
-                             {storeIsAr ? 'افتح المحرر المرئي' : 'Ouvrir l\'Éditeur PRO'}
+                             {isAr ? 'افتح المحرر المرئي' : 'Ouvrir l\'Éditeur PRO'}
                           </button>
                        </div>
                     </div>
@@ -2988,7 +2988,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                     {/* PRIMARY COLOR */}
                      <div className="pt-2 space-y-5">
                         <div>
-                           <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{storeIsAr ? 'اللون الرئيسي' : 'Couleur Principale'}</label>
+                           <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'اللون الرئيسي' : 'Couleur Principale'}</label>
                            <div className="flex items-center gap-3 mb-3">
                               <label className="relative cursor-pointer">
                                  <div className="w-10 h-10 rounded-xl border-2 border-white shadow-md ring-1 ring-slate-200 hover:scale-105 transition-transform" style={{ backgroundColor: primaryColor }} />
@@ -2996,7 +2996,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                               </label>
                               <div className="flex-1">
                                  <span className="text-sm font-mono font-bold text-slate-700">{primaryColor.toUpperCase()}</span>
-                                 <p className="text-[10px] text-slate-400 mt-0.5">{storeIsAr ? 'أزرار وروابط' : 'Boutons, liens & accents'}</p>
+                                 <p className="text-[10px] text-slate-400 mt-0.5">{isAr ? 'أزرار وروابط' : 'Boutons, liens & accents'}</p>
                               </div>
                            </div>
                            <div className="flex gap-2 flex-wrap">
@@ -3016,7 +3016,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
                         {/* Secondary Color */}
                         <div className="pt-3 border-t border-slate-100">
-                           <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{storeIsAr ? 'لون الخلفية / الثانوي' : 'Couleur de Fond / Secondaire'}</label>
+                           <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'لون الخلفية / الثانوي' : 'Couleur de Fond / Secondaire'}</label>
                            <div className="flex items-center gap-3 mb-3">
                               <label className="relative cursor-pointer">
                                  <div className="w-10 h-10 rounded-xl border-2 shadow-md ring-1 ring-slate-200 hover:scale-105 transition-transform" style={{ backgroundColor: secondaryColor, borderColor: '#e2e8f0' }} />
@@ -3024,7 +3024,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                               </label>
                               <div className="flex-1">
                                  <span className="text-sm font-mono font-bold text-slate-700">{secondaryColor.toUpperCase()}</span>
-                                 <p className="text-[10px] text-slate-400 mt-0.5">{storeIsAr ? 'خلفية البطاقات والأقسام' : 'Fond des cartes & sections'}</p>
+                                 <p className="text-[10px] text-slate-400 mt-0.5">{isAr ? 'خلفية البطاقات والأقسام' : 'Fond des cartes & sections'}</p>
                               </div>
                            </div>
                            <div className="flex gap-2 flex-wrap">
@@ -3042,7 +3042,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                         </div>
 
                         <div className="pt-3 border-t border-slate-100">
-                           <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{storeIsAr ? 'لون الحدود والخطوط' : 'Couleur des Bordures & Lignes'}</label>
+                           <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'لون الحدود والخطوط' : 'Couleur des Bordures & Lignes'}</label>
                            <div className="flex items-center gap-3 mb-3">
                               <label className="relative cursor-pointer">
                                  <div className="w-10 h-10 rounded-xl border-2 shadow-md ring-1 ring-slate-200 hover:scale-105 transition-transform" style={{ backgroundColor: borderColor, borderColor: '#e2e8f0' }} />
@@ -3050,7 +3050,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                               </label>
                               <div className="flex-1">
                                  <span className="text-sm font-mono font-bold text-slate-700">{borderColor.toUpperCase()}</span>
-                                 <p className="text-[10px] text-slate-400 mt-0.5">{storeIsAr ? 'حدود بطاقات المنتجات والفواصل' : 'Bordures des cartes produits & séparateurs'}</p>
+                                 <p className="text-[10px] text-slate-400 mt-0.5">{isAr ? 'حدود بطاقات المنتجات والفواصل' : 'Bordures des cartes produits & séparateurs'}</p>
                               </div>
                            </div>
                            <div className="flex gap-2 flex-wrap">
@@ -3068,7 +3068,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
                         {/* Live Preview Mini */}
                         <div className="pt-3 border-t border-slate-100">
-                           <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">{storeIsAr ? 'معاينة فورية' : 'Aperçu Instantané'}</label>
+                           <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">{isAr ? 'معاينة فورية' : 'Aperçu Instantané'}</label>
                            <div className="rounded-xl overflow-hidden shadow-sm border border-slate-200" style={{ backgroundColor: secondaryColor }}>
                               <div className="px-4 py-2 flex items-center justify-between border-b border-slate-100">
                                  <div className="text-xs font-black" style={{ color: primaryColor }}>STORE</div>
@@ -3080,7 +3080,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                               <div className="p-3 flex items-center gap-2">
                                  <div className="flex-1 h-5 rounded opacity-20" style={{ backgroundColor: primaryColor }} />
                                  <button className={`px-3 py-1 text-white text-[10px] font-bold ${buttonStyle === 'pill' ? 'rounded-full' : buttonStyle === 'square' ? 'rounded-none' : 'rounded-md'}`} style={btnStyle}>
-                                    {storeIsAr ? 'شراء' : 'Acheter'}
+                                    {isAr ? 'شراء' : 'Acheter'}
                                  </button>
                               </div>
                            </div>
@@ -3089,7 +3089,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
                      {/* BUTTON STYLE */}
                      <div className="pt-4 border-t border-slate-100">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{storeIsAr ? 'شكل الأزرار' : 'Style des Boutons'}</label>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'شكل الأزرار' : 'Style des Boutons'}</label>
                         <div className="grid grid-cols-3 gap-2">
                            {([
                               { key: 'rounded', labelFr: 'Arrondi', labelAr: 'مستدير', radius: 'rounded-lg' },
@@ -3099,9 +3099,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                               <button key={key} onClick={() => setButtonStyle(key)}
                                  className={`flex flex-col items-center gap-2 p-3 border-2 rounded-xl transition-all ${buttonStyle === key ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 hover:border-slate-300'}`}>
                                  <div className={`px-3 py-1.5 text-white text-[10px] font-bold ${radius}`} style={{ backgroundColor: primaryColor }}>
-                                    {storeIsAr ? 'زر' : 'Btn'}
+                                    {isAr ? 'زر' : 'Btn'}
                                  </div>
-                                 <span className={`text-[10px] font-bold ${buttonStyle === key ? 'text-indigo-600' : 'text-slate-500'}`}>{storeIsAr ? labelAr : labelFr}</span>
+                                 <span className={`text-[10px] font-bold ${buttonStyle === key ? 'text-indigo-600' : 'text-slate-500'}`}>{isAr ? labelAr : labelFr}</span>
                               </button>
                            ))}
                         </div>
@@ -3109,7 +3109,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                      
                      {/* TYPOGRAPHY */}
                      <div className="pt-4 border-t border-slate-100">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{storeIsAr ? 'الخط' : 'Typographie'}</label>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'الخط' : 'Typographie'}</label>
                         <div className="space-y-2">
                            <button onClick={() => setFontFamily('font-sans')} className={`w-full p-3 rounded-lg border text-left flex justify-between items-center ${fontFamily === 'font-sans' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
                               <span className="font-sans font-medium">Inter / Roboto (Sans-serif)</span>
@@ -3132,25 +3132,25 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                {activeTab === 'apps' && (
                  <div className="space-y-6">
                     <div className="flex justify-between items-center mb-6">
-                       <h3 className="text-xl font-black text-slate-800">{storeIsAr ? 'تطبيقات المتجر' : 'Applications (Apps)'}</h3>
+                       <h3 className="text-xl font-black text-slate-800">{isAr ? 'تطبيقات المتجر' : 'Applications (Apps)'}</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                        {[
-                         { id: 'WhatsApp Chat', name: 'WhatsApp', desc: storeIsAr ? 'زر واتساب عائم للتواصل السريع' : 'Bouton flottant pour chat rapide', icon: Smartphone, color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200' },
-                         { id: 'Facebook Pixel', name: 'Facebook Pixel', desc: storeIsAr ? 'تتبع زوار المتجر وحملات فيسبوك' : 'Suivi des conversions Facebook', icon: Monitor, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
-                         { id: 'TikTok Pixel', name: 'TikTok Pixel', desc: storeIsAr ? 'تتبع تحويلات حملات تيك توك' : 'Suivi des conversions TikTok', icon: Video, color: 'text-slate-900', bg: 'bg-slate-100', border: 'border-slate-300' },
-                         { id: 'Google Analytics 4', name: 'Google Analytics 4', desc: storeIsAr ? 'إحصائيات دقيقة لزوار متجرك' : 'Statistiques détaillées des visiteurs', icon: Globe, color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200' },
-                         { id: 'AI Auto-Builder', name: 'AI Product Builder', desc: storeIsAr ? 'Premium: توليد تفاصيل المنتجات والـ SEO بالذكاء الاصطناعي من الصور' : 'Premium: Génération IA des détails et SEO via image', icon: Sparkles, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200' }
+                         { id: 'WhatsApp Chat', name: 'WhatsApp', desc: isAr ? 'زر واتساب عائم للتواصل السريع' : 'Bouton flottant pour chat rapide', icon: Smartphone, color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+                         { id: 'Facebook Pixel', name: 'Facebook Pixel', desc: isAr ? 'تتبع زوار المتجر وحملات فيسبوك' : 'Suivi des conversions Facebook', icon: Monitor, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
+                         { id: 'TikTok Pixel', name: 'TikTok Pixel', desc: isAr ? 'تتبع تحويلات حملات تيك توك' : 'Suivi des conversions TikTok', icon: Video, color: 'text-slate-900', bg: 'bg-slate-100', border: 'border-slate-300' },
+                         { id: 'Google Analytics 4', name: 'Google Analytics 4', desc: isAr ? 'إحصائيات دقيقة لزوار متجرك' : 'Statistiques détaillées des visiteurs', icon: Globe, color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200' },
+                         { id: 'AI Auto-Builder', name: 'AI Product Builder', desc: isAr ? 'Premium: توليد تفاصيل المنتجات والـ SEO بالذكاء الاصطناعي من الصور' : 'Premium: Génération IA des détails et SEO via image', icon: Sparkles, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200' }
                        ].map(app => (
                           <div key={app.id} className={`bg-white border ${appsConfig[app.id] ? app.border : 'border-slate-200'} rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group cursor-pointer`} onClick={() => { setAppInputValue(appsConfig[app.id] || ''); setActiveAppModal(app.id); }}>
-                             {appsConfig[app.id] && <div className="absolute top-3 right-3 bg-green-100 text-green-700 text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider">{storeIsAr ? 'نشط' : 'Actif'}</div>}
+                             {appsConfig[app.id] && <div className="absolute top-3 right-3 bg-green-100 text-green-700 text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider">{isAr ? 'نشط' : 'Actif'}</div>}
                              <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${appsConfig[app.id] ? app.bg : 'bg-slate-50'}`}>
                                 <app.icon className={`w-6 h-6 ${appsConfig[app.id] ? app.color : 'text-slate-400'}`} />
                              </div>
                              <h4 className="font-black text-slate-800 mb-1">{app.name}</h4>
                              <p className="text-xs font-bold text-slate-500 line-clamp-2">{app.desc}</p>
                              <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
-                                <span className={`text-[10px] font-black uppercase tracking-wider ${appsConfig[app.id] ? 'text-indigo-600' : 'text-slate-400'}`}>{appsConfig[app.id] ? (storeIsAr ? 'تعديل الإعدادات' : 'Modifier Config') : (storeIsAr ? 'تثبيت التطبيق' : 'Installer l\'App')}</span>
+                                <span className={`text-[10px] font-black uppercase tracking-wider ${appsConfig[app.id] ? 'text-indigo-600' : 'text-slate-400'}`}>{appsConfig[app.id] ? (isAr ? 'تعديل الإعدادات' : 'Modifier Config') : (isAr ? 'تثبيت التطبيق' : 'Installer l\'App')}</span>
                                 <div className={`w-6 h-6 rounded-full flex items-center justify-center ${appsConfig[app.id] ? 'bg-indigo-50 group-hover:bg-indigo-100' : 'bg-slate-50 group-hover:bg-slate-200'} transition-colors`}>
                                    <Plus className={`w-3 h-3 ${appsConfig[app.id] ? 'text-indigo-600' : 'text-slate-400'}`} />
                                 </div>
@@ -3166,7 +3166,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                  <div className="space-y-6">
                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
                         <div>
-                           <h4 className="text-xs font-black text-slate-800 mb-2 uppercase tracking-wider">{storeLang === 'ar' ? 'لغة المتجر' : storeLang === 'en' ? 'Store Language' : 'Langue de la boutique'}</h4>
+                           <h4 className="text-xs font-black text-slate-800 mb-2 uppercase tracking-wider">{isAr ? 'لغة المتجر' : 'Langue de la boutique'}</h4>
                            <div className="flex gap-2">
                               <button onClick={() => setStoreLang('fr')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${storeLang === 'fr' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}`}>Français</button>
                               <button onClick={() => setStoreLang('en')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${storeLang === 'en' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}`}>English</button>
@@ -3178,8 +3178,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
                         <div className="flex items-center justify-between">
                            <div>
-                              <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{storeLang === 'ar' ? 'يتطلب حساب لإتمام الطلب' : storeLang === 'en' ? 'Account required to order' : 'Compte requis pour commander'}</h4>
-                              <p className="text-[11px] text-slate-500 font-semibold mt-1">{storeLang === 'ar' ? 'إذا تم التفعيل، يجب على الزبناء إنشاء حساب قبل إتمام الطلب' : storeLang === 'en' ? 'If enabled, customers must create an account before completing an order.' : "Si activé, les clients doivent créer un compte avant de finaliser une commande."}</p>
+                              <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{isAr ? 'يتطلب حساب لإتمام الطلب' : 'Compte requis pour commander'}</h4>
+                              <p className="text-[11px] text-slate-500 font-semibold mt-1">{isAr ? 'إذا تم التفعيل، يجب على الزبناء إنشاء حساب قبل إتمام الطلب' : "Si activé, les clients doivent créer un compte avant de finaliser une commande."}</p>
                            </div>
                            <button
                               onClick={() => setRequireAccountToOrder((v: boolean) => !v)}
@@ -3191,21 +3191,21 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                      </div>
 
                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-                        <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{storeLang === 'ar' ? 'أيقونات رأس المتجر' : storeLang === 'en' ? 'Header Icons' : "Icônes de l'en-tête"}</h4>
+                        <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{isAr ? 'أيقونات رأس المتجر' : "Icônes de l'en-tête"}</h4>
                         <div className="flex items-center justify-between">
-                           <p className="text-xs font-bold text-slate-600">{storeLang === 'ar' ? 'اختيار اللغة' : storeLang === 'en' ? 'Language selector' : 'Sélecteur de langue'}</p>
+                           <p className="text-xs font-bold text-slate-600">{isAr ? 'اختيار اللغة' : 'Sélecteur de langue'}</p>
                            <button onClick={() => setShowHeaderLang((v: boolean) => !v)} className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${showHeaderLang ? 'bg-indigo-600' : 'bg-slate-300'}`}>
                               <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${showHeaderLang ? 'translate-x-5' : ''}`} />
                            </button>
                         </div>
                         <div className="flex items-center justify-between">
-                           <p className="text-xs font-bold text-slate-600">{storeLang === 'ar' ? 'البحث' : storeLang === 'en' ? 'Search' : 'Recherche'}</p>
+                           <p className="text-xs font-bold text-slate-600">{isAr ? 'البحث' : 'Recherche'}</p>
                            <button onClick={() => setShowHeaderSearch((v: boolean) => !v)} className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${showHeaderSearch ? 'bg-indigo-600' : 'bg-slate-300'}`}>
                               <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${showHeaderSearch ? 'translate-x-5' : ''}`} />
                            </button>
                         </div>
                         <div className="flex items-center justify-between">
-                           <p className="text-xs font-bold text-slate-600">{storeLang === 'ar' ? 'حساب الزبون (تسجيل الدخول)' : storeLang === 'en' ? 'Customer account (login)' : 'Compte client (connexion)'}</p>
+                           <p className="text-xs font-bold text-slate-600">{isAr ? 'حساب الزبون (تسجيل الدخول)' : 'Compte client (connexion)'}</p>
                            <button onClick={() => setShowHeaderAccount((v: boolean) => !v)} className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${showHeaderAccount ? 'bg-indigo-600' : 'bg-slate-300'}`}>
                               <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${showHeaderAccount ? 'translate-x-5' : ''}`} />
                            </button>
@@ -3214,7 +3214,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
                        <div>
-                          <h4 className="text-xs font-black text-slate-800 mb-1 uppercase tracking-wider">{storeLang === 'ar' ? 'اسم المتجر' : storeLang === 'en' ? 'Store Name' : 'Nom de la boutique'}</h4>
+                          <h4 className="text-xs font-black text-slate-800 mb-1 uppercase tracking-wider">{isAr ? 'اسم المتجر' : 'Nom de la boutique'}</h4>
                           <input 
                             type="text" 
                             value={storeName} 
@@ -3224,57 +3224,57 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        </div>
                        
                        <div className="pt-4 border-t border-slate-200">
-                          <h4 className="text-xs font-black text-slate-800 mb-2 uppercase tracking-wider">{storeLang === 'ar' ? 'شعار المتجر (اختياري)' : storeLang === 'en' ? 'Store Logo (Optional)' : 'Logo de la boutique (Optionnel)'}</h4>
+                          <h4 className="text-xs font-black text-slate-800 mb-2 uppercase tracking-wider">{isAr ? 'شعار المتجر (اختياري)' : 'Logo de la boutique (Optionnel)'}</h4>
                           <div className="flex items-center gap-4">
                              <div className="w-16 h-16 bg-white border border-slate-200 rounded-xl flex items-center justify-center overflow-hidden shadow-sm shrink-0">
                                 {storeLogo ? <img src={storeLogo} className="w-full h-full object-contain p-1" alt="Logo" /> : <ImageIcon className="w-6 h-6 text-slate-300" />}
                              </div>
                              <label className="cursor-pointer px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm">
-                                {storeLang === 'ar' ? 'رفع الشعار' : storeLang === 'en' ? 'Upload a logo' : 'Importer un logo'}
+                                {isAr ? 'رفع الشعار' : 'Importer un logo'}
                                 <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
                                    const file = e.target.files?.[0];
                                    if (file) setStoreLogo(await readFileAsBase64(file));
                                 }} />
                              </label>
                              {storeLogo && (
-                                <button onClick={() => setStoreLogo('')} className="text-xs font-bold text-rose-500 hover:text-rose-600">{storeLang === 'ar' ? 'إزالة' : storeLang === 'en' ? 'Remove' : 'Retirer'}</button>
+                                <button onClick={() => setStoreLogo('')} className="text-xs font-bold text-rose-500 hover:text-rose-600">{isAr ? 'إزالة' : 'Retirer'}</button>
                              )}
                           </div>
                        </div>
 
                        <div className="pt-4 border-t border-slate-200">
-                          <h4 className="text-xs font-black text-slate-800 mb-2 uppercase tracking-wider">{storeLang === 'ar' ? 'أيقونة المتجر (Favicon)' : storeLang === 'en' ? 'Store Favicon' : 'Favicon de la boutique'}</h4>
+                          <h4 className="text-xs font-black text-slate-800 mb-2 uppercase tracking-wider">{isAr ? 'أيقونة المتجر (Favicon)' : 'Favicon de la boutique'}</h4>
                           <div className="flex items-center gap-4">
                              <div className="w-10 h-10 bg-white border border-slate-200 rounded-lg flex items-center justify-center overflow-hidden shadow-sm shrink-0">
                                 {storeFavicon ? <img src={storeFavicon} className="w-full h-full object-contain" alt="Favicon" /> : <ImageIcon className="w-4 h-4 text-slate-300" />}
                              </div>
                              <label className="cursor-pointer px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm">
-                                {storeLang === 'ar' ? 'رفع الأيقونة' : storeLang === 'en' ? 'Upload a favicon' : 'Importer un favicon'}
+                                {isAr ? 'رفع الأيقونة' : 'Importer un favicon'}
                                 <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
                                    const file = e.target.files?.[0];
                                    if (file) setStoreFavicon(await readFileAsBase64(file));
                                 }} />
                              </label>
                              {storeFavicon && (
-                                <button onClick={() => setStoreFavicon('')} className="text-xs font-bold text-rose-500 hover:text-rose-600">{storeLang === 'ar' ? 'إزالة' : storeLang === 'en' ? 'Remove' : 'Retirer'}</button>
+                                <button onClick={() => setStoreFavicon('')} className="text-xs font-bold text-rose-500 hover:text-rose-600">{isAr ? 'إزالة' : 'Retirer'}</button>
                              )}
                           </div>
                        </div>
                     </div>
 
                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                       <h4 className="text-xs font-black text-slate-800 mb-1 uppercase tracking-wider flex items-center gap-2"><Globe className="w-4 h-4 text-indigo-600" /> {storeLang === 'ar' ? 'نطاق مخصص (دومين)' : storeLang === 'en' ? 'Custom Domain' : 'Domaine Personnalisé'}</h4>
-                       <p className="text-[10px] text-slate-500 mb-2">{storeLang === 'ar' ? 'اربط النطاق الخاص بك (مثال: www.maboutique.com)' : storeLang === 'en' ? 'Connect your own domain (e.g. www.mystore.com).' : 'Connectez votre propre domaine (ex: www.maboutique.com).'}</p>
+                       <h4 className="text-xs font-black text-slate-800 mb-1 uppercase tracking-wider flex items-center gap-2"><Globe className="w-4 h-4 text-indigo-600" /> {isAr ? 'نطاق مخصص (دومين)' : 'Domaine Personnalisé'}</h4>
+                       <p className="text-[10px] text-slate-500 mb-2">{isAr ? 'اربط النطاق الخاص بك (مثال: www.maboutique.com)' : 'Connectez votre propre domaine (ex: www.maboutique.com).'}</p>
                        <div className="flex gap-2">
                          <input
                            type="text"
-                           placeholder={storeLang === 'ar' ? 'مثال: www.maboutique.com' : storeLang === 'en' ? 'e.g: www.mystore.com' : 'ex: www.maboutique.com'}
+                           placeholder={isAr ? 'مثال: www.maboutique.com' : 'ex: www.maboutique.com'}
                            value={customDomain}
                            onChange={e => setCustomDomain(e.target.value)}
                            className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 font-medium"
                          />
                          <button onClick={handleLinkDomain} disabled={isLinkingDomain} className="bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-800 transition-colors disabled:opacity-50">
-                           {isLinkingDomain ? '...' : storeLang === 'ar' ? 'ربط' : storeLang === 'en' ? 'Link' : 'Lier'}
+                           {isLinkingDomain ? '...' : isAr ? 'ربط' : 'Lier'}
                          </button>
                        </div>
                        {domainError && <p className="text-xs text-rose-500 mt-2 font-bold flex items-center gap-1"><AlertCircle className="w-3 h-3"/> {domainError}</p>}
@@ -3283,29 +3283,29 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                           <div className="mt-4 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
                              <div className="bg-indigo-50/50 p-3 border-b border-slate-100 flex items-center gap-2">
                                 <ShieldCheck className="w-4 h-4 text-indigo-600" />
-                                <span className="text-xs font-bold text-slate-700">{storeLang === 'ar' ? 'إعدادات مطلوبة (Namecheap, Hostinger...)' : storeLang === 'en' ? 'Required configuration (Namecheap, Hostinger...)' : 'Configuration requise (Namecheap, Hostinger...)'}</span>
+                                <span className="text-xs font-bold text-slate-700">{isAr ? 'إعدادات مطلوبة (Namecheap, Hostinger...)' : 'Configuration requise (Namecheap, Hostinger...)'}</span>
                              </div>
                              <div className="p-4 space-y-4">
                                 <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
-                                   {storeLang === 'ar' ? <>لكي يعمل نطاقك، أضف <b>سجل A (A Record)</b> عند مزود الخدمة الخاص بك (Namecheap, Hostinger...) بهذه المعلومات :</> : storeLang === 'en' ? <>For your domain to work, add an <b>A Record</b> at your provider (Namecheap, Hostinger...) with this information:</> : <>Pour que votre domaine fonctionne, ajoutez un <b>Enregistrement A (A Record)</b> chez votre fournisseur (Namecheap, Hostinger...) avec ces informations :</>}
+                                   {isAr ? <>لكي يعمل نطاقك، أضف <b>سجل A (A Record)</b> عند مزود الخدمة الخاص بك (Namecheap, Hostinger...) بهذه المعلومات :</> : <>Pour que votre domaine fonctionne, ajoutez un <b>Enregistrement A (A Record)</b> chez votre fournisseur (Namecheap, Hostinger...) avec ces informations :</>}
                                 </p>
                                 <div className="space-y-2">
                                    <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-100 rounded-lg group">
-                                      <span className="text-xs text-slate-500 font-medium w-16">{storeLang === 'ar' ? 'النوع' : 'Type'}</span>
+                                      <span className="text-xs text-slate-500 font-medium w-16">{isAr ? 'النوع' : 'Type'}</span>
                                       <code className="text-xs font-black text-slate-800 tracking-wide flex-1">A</code>
                                    </div>
                                    <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-100 rounded-lg group">
-                                      <span className="text-xs text-slate-500 font-medium w-16">{storeLang === 'ar' ? 'الاسم/المضيف' : storeLang === 'en' ? 'Name/Host' : 'Nom/Hôte'}</span>
+                                      <span className="text-xs text-slate-500 font-medium w-16">{isAr ? 'الاسم/المضيف' : 'Nom/Hôte'}</span>
                                       <code className="text-xs font-black text-slate-800 tracking-wide flex-1">@</code>
                                       <button onClick={() => navigator.clipboard.writeText('@')} className="p-1 text-slate-400 group-hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors" title="Copier"><Copy className="w-3.5 h-3.5" /></button>
                                    </div>
                                    <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-100 rounded-lg group">
-                                      <span className="text-xs text-slate-500 font-medium w-16">{storeLang === 'ar' ? 'القيمة/IP' : storeLang === 'en' ? 'Value/IP' : 'Valeur/IP'}</span>
+                                      <span className="text-xs text-slate-500 font-medium w-16">{isAr ? 'القيمة/IP' : 'Valeur/IP'}</span>
                                       <code className="text-xs font-black text-slate-800 tracking-wide flex-1">76.76.21.21</code>
                                       <button onClick={() => navigator.clipboard.writeText('76.76.21.21')} className="p-1 text-slate-400 group-hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors" title="Copier"><Copy className="w-3.5 h-3.5" /></button>
                                    </div>
                                 </div>
-                                <p className="text-[10px] text-slate-400 italic">{storeLang === 'ar' ? 'قد يستغرق انتشار DNS ما بين 15 دقيقة و24 ساعة.' : storeLang === 'en' ? 'DNS propagation can take between 15 minutes and 24 hours.' : 'La propagation DNS peut prendre entre 15 minutes et 24 heures.'}</p>
+                                <p className="text-[10px] text-slate-400 italic">{isAr ? 'قد يستغرق انتشار DNS ما بين 15 دقيقة و24 ساعة.' : 'La propagation DNS peut prendre entre 15 minutes et 24 heures.'}</p>
                              </div>
                           </div>
                        )}
@@ -3313,13 +3313,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
                     <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                        <h4 className="text-xs font-black text-slate-800 mb-4 uppercase tracking-wider flex items-center gap-2">
-                         <LayoutTemplate className="w-4 h-4 text-indigo-600" /> {storeLang === 'ar' ? 'إدارة الصفحات' : storeLang === 'en' ? 'Page Management' : 'Gestion des Pages'}
+                         <LayoutTemplate className="w-4 h-4 text-indigo-600" /> {isAr ? 'إدارة الصفحات' : 'Gestion des Pages'}
                        </h4>
 
                        <div className="flex gap-2 mb-4">
                           <input
                             type="text"
-                            placeholder={storeLang === 'ar' ? 'العنوان (مثال: اتصل بنا)' : storeLang === 'en' ? 'Title (e.g: Contact)' : 'Titre (ex: Contact)'}
+                            placeholder={isAr ? 'العنوان (مثال: اتصل بنا)' : 'Titre (ex: Contact)'}
                             value={newPageTitle}
                             onChange={e => setNewPageTitle(e.target.value)}
                             className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500"
@@ -3334,7 +3334,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                             }}
                             className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors"
                           >
-                            {storeLang === 'ar' ? 'إضافة' : storeLang === 'en' ? 'Add' : 'Ajouter'}
+                            {isAr ? 'إضافة' : 'Ajouter'}
                           </button>
                        </div>
 
@@ -3355,7 +3355,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                       </button>
                                    )}
                                    {page.isDefault && (
-                                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 px-2 py-1 bg-slate-200 rounded-md">{storeLang === 'ar' ? 'نظام' : storeLang === 'en' ? 'System' : 'Système'}</span>
+                                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 px-2 py-1 bg-slate-200 rounded-md">{isAr ? 'نظام' : 'Système'}</span>
                                    )}
                                 </div>
                              </div>
@@ -3365,12 +3365,12 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
                     <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mt-4 mb-4">
                         <h4 className="text-xs font-black text-slate-800 mb-4 uppercase tracking-wider flex items-center gap-2">
-                          <LayoutTemplate className="w-4 h-4 text-indigo-600" /> {storeLang === 'ar' ? 'تذييل الصفحة (Footer)' : storeLang === 'en' ? 'Footer' : 'Pied de page (Footer)'}
+                          <LayoutTemplate className="w-4 h-4 text-indigo-600" /> {isAr ? 'تذييل الصفحة (Footer)' : 'Pied de page (Footer)'}
                         </h4>
 
                         <div className="space-y-4">
                            <div>
-                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">{storeLang === 'ar' ? 'نص حقوق النشر' : storeLang === 'en' ? 'Copyright Text' : 'Texte du Copyright'}</label>
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">{isAr ? 'نص حقوق النشر' : 'Texte du Copyright'}</label>
                               <input
                                 type="text"
                                 value={footerSettings.copyright}
@@ -3380,21 +3380,21 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                            </div>
 
                            <div className="space-y-2 pt-2">
-                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">{storeLang === 'ar' ? 'الصفحات القانونية (تُنشأ تلقائياً)' : storeLang === 'en' ? 'Legal Pages (Auto-Generated)' : 'Pages Légales (Générées Automatiquement)'}</label>
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">{isAr ? 'الصفحات القانونية (تُنشأ تلقائياً)' : 'Pages Légales (Générées Automatiquement)'}</label>
 
                               <label className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
                                  <input type="checkbox" checked={footerSettings.showPrivacy} onChange={e => setFooterSettings({...footerSettings, showPrivacy: e.target.checked})} className="w-4 h-4 accent-indigo-600" />
-                                 <span className="text-sm font-bold text-slate-700">{storeLang === 'ar' ? 'سياسة الخصوصية' : storeLang === 'en' ? 'Privacy Policy' : 'Politique de Confidentialité'}</span>
+                                 <span className="text-sm font-bold text-slate-700">{isAr ? 'سياسة الخصوصية' : 'Politique de Confidentialité'}</span>
                               </label>
 
                               <label className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
                                  <input type="checkbox" checked={footerSettings.showTerms} onChange={e => setFooterSettings({...footerSettings, showTerms: e.target.checked})} className="w-4 h-4 accent-indigo-600" />
-                                 <span className="text-sm font-bold text-slate-700">{storeLang === 'ar' ? 'الشروط والأحكام العامة للبيع' : storeLang === 'en' ? 'Terms & Conditions of Sale' : 'Conditions Générales de Vente (CGV)'}</span>
+                                 <span className="text-sm font-bold text-slate-700">{isAr ? 'الشروط والأحكام العامة للبيع' : 'Conditions Générales de Vente (CGV)'}</span>
                               </label>
 
                               <label className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
                                  <input type="checkbox" checked={footerSettings.showCookies} onChange={e => setFooterSettings({...footerSettings, showCookies: e.target.checked})} className="w-4 h-4 accent-indigo-600" />
-                                 <span className="text-sm font-bold text-slate-700">{storeLang === 'ar' ? 'سياسة ملفات الارتباط' : storeLang === 'en' ? 'Cookie Policy' : 'Politique des Cookies'}</span>
+                                 <span className="text-sm font-bold text-slate-700">{isAr ? 'سياسة ملفات الارتباط' : 'Politique des Cookies'}</span>
                               </label>
                            </div>
                         </div>
@@ -3402,24 +3402,24 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
                      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mt-4">
                        <h4 className="text-xs font-black text-slate-800 mb-4 uppercase tracking-wider flex items-center gap-2">
-                         <ShoppingBag className="w-4 h-4 text-indigo-600" /> {storeLang === 'ar' ? 'طريقة الشراء (الأزرار)' : storeLang === 'en' ? 'Buy Mode (Buttons)' : "Mode d'Achat (Boutons)"}
+                         <ShoppingBag className="w-4 h-4 text-indigo-600" /> {isAr ? 'طريقة الشراء (الأزرار)' : "Mode d'Achat (Boutons)"}
                        </h4>
                        <div className="space-y-3">
                           <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors">
                              <input type="radio" name="buyMode" checked={buyMode === 'both'} onChange={() => setBuyMode('both')} className="accent-indigo-600" />
-                             {storeLang === 'ar' ? "عرض 'أضف للسلة' و'اشتري الآن'" : storeLang === 'en' ? "Show 'Add to cart' & 'Buy direct'" : "Afficher 'Ajouter au panier' & 'Acheter direct'"}
+                             {isAr ? "عرض 'أضف للسلة' و'اشتري الآن'" : "Afficher 'Ajouter au panier' & 'Acheter direct'"}
                           </label>
                           <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors">
                              <input type="radio" name="buyMode" checked={buyMode === 'direct'} onChange={() => setBuyMode('direct')} className="accent-indigo-600" />
-                             {storeLang === 'ar' ? "فقط 'اشتري مباشرة' (سريع)" : storeLang === 'en' ? "Only 'Buy direct' (Express)" : "Uniquement 'Acheter direct' (Express)"}
+                             {isAr ? "فقط 'اشتري مباشرة' (سريع)" : "Uniquement 'Acheter direct' (Express)"}
                           </label>
                           <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors">
                              <input type="radio" name="buyMode" checked={buyMode === 'cart'} onChange={() => setBuyMode('cart')} className="accent-indigo-600" />
-                             {storeLang === 'ar' ? "فقط 'أضف للسلة' (كلاسيكي)" : storeLang === 'en' ? "Only 'Add to cart' (Classic)" : "Uniquement 'Ajouter au panier' (Classique)"}
+                             {isAr ? "فقط 'أضف للسلة' (كلاسيكي)" : "Uniquement 'Ajouter au panier' (Classique)"}
                           </label>
                           <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors">
                              <input type="radio" name="buyMode" checked={buyMode === 'form'} onChange={() => setBuyMode('form')} className="accent-indigo-600" />
-                             {storeLang === 'ar' ? "نموذج مدمج (سريع في الصفحة)" : storeLang === 'en' ? "Embedded form (Express on page)" : "Formulaire intégré (Express sur la page)"}
+                             {isAr ? "نموذج مدمج (سريع في الصفحة)" : "Formulaire intégré (Express sur la page)"}
                           </label>
                        </div>
                     </div>
@@ -3470,7 +3470,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
              <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
                 <div className="flex items-center gap-2 text-indigo-700">
                    <LayoutTemplate className="w-5 h-5" />
-                   <span className="font-black tracking-tight">{storeIsAr ? 'المحرر المرئي' : 'Éditeur Visuel PRO'}</span>
+                   <span className="font-black tracking-tight">{isAr ? 'المحرر المرئي' : 'Éditeur Visuel PRO'}</span>
                 </div>
                 <button onClick={() => setShowPreview(false)} className="w-8 h-8 flex items-center justify-center bg-white border border-slate-200 text-slate-400 rounded hover:text-rose-500 transition-colors">
                    <X className="w-4 h-4" />
@@ -3479,13 +3479,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
              
              <div className="flex-1 overflow-y-auto p-4 space-y-6">
                 <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
-                   <h4 className="text-xs font-bold text-indigo-900 uppercase tracking-wider mb-3">{storeIsAr ? 'العناصر الأساسية' : 'Éléments de Base'}</h4>
+                   <h4 className="text-xs font-bold text-indigo-900 uppercase tracking-wider mb-3">{isAr ? 'العناصر الأساسية' : 'Éléments de Base'}</h4>
                    {(() => {
                       const blockDefs = [
-                         { id: 'hero', name: storeIsAr ? 'القسم الرئيسي' : 'Bannière (Hero)', icon: Type, activeClasses: 'border-indigo-500 shadow-md ring-2 ring-indigo-100', bgClasses: 'bg-indigo-50 text-indigo-500', checkClass: 'text-indigo-500' },
-                         { id: 'slider', name: storeIsAr ? 'معرض صور' : 'Slider', icon: ImageIcon, activeClasses: 'border-emerald-500 shadow-md ring-2 ring-emerald-100', bgClasses: 'bg-emerald-50 text-emerald-500', checkClass: 'text-emerald-500' },
-                         { id: 'collections', name: storeIsAr ? 'تصنيفات' : 'Collections', icon: MousePointerClick, activeClasses: 'border-amber-500 shadow-md ring-2 ring-amber-100', bgClasses: 'bg-amber-50 text-amber-500', checkClass: 'text-amber-500' },
-                         { id: 'products', name: storeIsAr ? 'منتجات' : 'Produits', icon: LayoutGrid, activeClasses: 'border-rose-500 shadow-md ring-2 ring-rose-100', bgClasses: 'bg-rose-50 text-rose-500', checkClass: 'text-rose-500' }
+                         { id: 'hero', name: isAr ? 'القسم الرئيسي' : 'Bannière (Hero)', icon: Type, activeClasses: 'border-indigo-500 shadow-md ring-2 ring-indigo-100', bgClasses: 'bg-indigo-50 text-indigo-500', checkClass: 'text-indigo-500' },
+                         { id: 'slider', name: isAr ? 'معرض صور' : 'Slider', icon: ImageIcon, activeClasses: 'border-emerald-500 shadow-md ring-2 ring-emerald-100', bgClasses: 'bg-emerald-50 text-emerald-500', checkClass: 'text-emerald-500' },
+                         { id: 'collections', name: isAr ? 'تصنيفات' : 'Collections', icon: MousePointerClick, activeClasses: 'border-amber-500 shadow-md ring-2 ring-amber-100', bgClasses: 'bg-amber-50 text-amber-500', checkClass: 'text-amber-500' },
+                         { id: 'products', name: isAr ? 'منتجات' : 'Produits', icon: LayoutGrid, activeClasses: 'border-rose-500 shadow-md ring-2 ring-rose-100', bgClasses: 'bg-rose-50 text-rose-500', checkClass: 'text-rose-500' }
                       ];
                       return (
                          <div className="space-y-2">
@@ -3528,31 +3528,31 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                 </div>
 
                 <div className="space-y-4">
-                   <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">{storeIsAr ? 'إعدادات القسم المحدد' : 'Paramètres de la Section'}</h4>
+                   <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">{isAr ? 'إعدادات القسم المحدد' : 'Paramètres de la Section'}</h4>
                    
                     {activeSidebarSection === 'hero' && (
                        <>
                        <div>
-                          <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{storeIsAr ? 'النص الرئيسي' : 'Texte Principal'}</label>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'النص الرئيسي' : 'Texte Principal'}</label>
                           <input type="text" value={heroTitle} onChange={(e) => setHeroTitle(e.target.value)} className="w-full text-sm font-medium bg-slate-50 border border-slate-200 rounded-lg px-3 py-2" />
                        </div>
                        <div>
-                          <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{storeIsAr ? 'النص الفرعي' : 'Sous-titre'}</label>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'النص الفرعي' : 'Sous-titre'}</label>
                           <input type="text" value={heroSubtitle} onChange={(e) => setHeroSubtitle(e.target.value)} className="w-full text-sm font-medium bg-slate-50 border border-slate-200 rounded-lg px-3 py-2" />
                        </div>
                        <div>
-                          <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{storeIsAr ? 'نص الزر' : 'Texte du Bouton'}</label>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'نص الزر' : 'Texte du Bouton'}</label>
                           <input type="text" value={heroButtonText} onChange={(e) => setHeroButtonText(e.target.value)} className="w-full text-sm font-medium bg-slate-50 border border-slate-200 rounded-lg px-3 py-2" />
                        </div>
                        <div>
-                          <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{storeIsAr ? 'صورة الغلاف' : 'Image de Couverture'}</label>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'صورة الغلاف' : 'Image de Couverture'}</label>
                           <label className="w-full h-24 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors group relative overflow-hidden">
                              {heroImage ? (
                                 <img src={heroImage} className="w-full h-full object-cover opacity-50 group-hover:opacity-30 transition-opacity" />
                              ) : null}
                              <div className="absolute inset-0 flex flex-col items-center justify-center">
                                 <ImageIcon className="w-5 h-5 text-slate-400 mb-1" />
-                                <span className="text-[10px] font-bold text-slate-500">{storeIsAr ? 'تغيير الصورة' : 'Changer l\'image'}</span>
+                                <span className="text-[10px] font-bold text-slate-500">{isAr ? 'تغيير الصورة' : 'Changer l\'image'}</span>
                              </div>
                              <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
                                 const file = e.target.files?.[0];
@@ -3565,7 +3565,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
                     {activeSidebarSection === 'slider' && (
                        <div>
-                          <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{storeIsAr ? 'صور السلايدر' : 'Images du Slider'}</label>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'صور السلايدر' : 'Images du Slider'}</label>
                           <div className="grid grid-cols-2 gap-2 mb-2">
                              {sliderImages.map((img, idx) => (
                                 <div key={idx} className="relative aspect-video rounded border border-slate-200 overflow-hidden group">
@@ -3575,7 +3575,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              ))}
                           </div>
                           <label className="w-full h-12 border-2 border-dashed border-indigo-200 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-indigo-50 text-indigo-500 transition-colors">
-                             <span className="text-xs font-bold flex items-center gap-1"><Plus className="w-3 h-3"/> {storeIsAr ? 'إضافة صورة' : 'Ajouter une image'}</span>
+                             <span className="text-xs font-bold flex items-center gap-1"><Plus className="w-3 h-3"/> {isAr ? 'إضافة صورة' : 'Ajouter une image'}</span>
                              <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
                                 const file = e.target.files?.[0];
                                 if (file) setSliderImages([...sliderImages, await readFileAsBase64(file)]);
@@ -3586,20 +3586,20 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
                     {activeSidebarSection === 'collections' && (
                        <div>
-                          <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{storeIsAr ? 'عنوان التصنيفات' : 'Titre des Collections'}</label>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'عنوان التصنيفات' : 'Titre des Collections'}</label>
                           <input type="text" value={allCollectionsTitle} onChange={(e) => setAllCollectionsTitle(e.target.value)} className="w-full text-sm font-medium bg-slate-50 border border-slate-200 rounded-lg px-3 py-2" />
                        </div>
                     )}
 
                     {activeSidebarSection === 'products' && (
                        <div>
-                          <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{storeIsAr ? 'عنوان المنتجات المميزة' : 'Titre des Produits'}</label>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'عنوان المنتجات المميزة' : 'Titre des Produits'}</label>
                           <input type="text" value={homeCollectionsTitle} onChange={(e) => setHomeCollectionsTitle(e.target.value)} className="w-full text-sm font-medium bg-slate-50 border border-slate-200 rounded-lg px-3 py-2" />
                        </div>
                     )}
 
                     <div className="pt-4 mt-4 border-t border-slate-100">
-                       <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{storeIsAr ? 'اللون الرئيسي' : 'Couleur Principale'}</label>
+                       <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'اللون الرئيسي' : 'Couleur Principale'}</label>
                        <div className="flex items-center gap-2">
                           <label className="w-8 h-8 rounded-full border border-slate-200 cursor-pointer flex-shrink-0 shadow-inner" style={{ backgroundColor: primaryColor }}>
                              <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="opacity-0 w-0 h-0" />
@@ -3612,7 +3612,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
              <div className="p-4 border-t border-slate-100 bg-slate-50">
                 <button onClick={handleSave} className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 flex items-center justify-center gap-2">
-                   <Save className="w-4 h-4" /> {storeIsAr ? 'حفظ التغييرات' : 'Sauvegarder'}
+                   <Save className="w-4 h-4" /> {isAr ? 'حفظ التغييرات' : 'Sauvegarder'}
                 </button>
              </div>
           </div>
@@ -3679,11 +3679,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                </div>
 
                <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
-                  <button onClick={() => setIsPageModalOpen(false)} className="px-6 py-3 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-colors">{storeIsAr ? 'إلغاء' : 'Annuler'}</button>
+                  <button onClick={() => setIsPageModalOpen(false)} className="px-6 py-3 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-colors">{isAr ? 'إلغاء' : 'Annuler'}</button>
                   <button onClick={() => {
                      setStorePages(storePages.map(p => p.id === pageForm.id ? pageForm : p));
                      setIsPageModalOpen(false);
-                  }} className="px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">{storeIsAr ? 'حفظ' : 'Enregistrer'}</button>
+                  }} className="px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">{isAr ? 'حفظ' : 'Enregistrer'}</button>
                </div>
             </div>
          </div>
@@ -3755,28 +3755,28 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-               <h3 className="text-lg font-black text-slate-800">{storeIsAr ? 'إضافة شركة توصيل' : 'Ajouter une société'}</h3>
+               <h3 className="text-lg font-black text-slate-800">{isAr ? 'إضافة شركة توصيل' : 'Ajouter une société'}</h3>
                <button onClick={() => setIsDeliveryModalOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400"><X className="w-5 h-5"/></button>
             </div>
             <div className="p-6 space-y-4">
                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{storeIsAr ? 'اسم الشركة' : 'Nom de la société'}</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{isAr ? 'اسم الشركة' : 'Nom de la société'}</label>
                   <input type="text" value={newDeliveryCompany.name} onChange={(e) => setNewDeliveryCompany({...newDeliveryCompany, name: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 font-bold text-sm" placeholder="Ex: Amana, Ghazal..." />
                </div>
                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{storeIsAr ? 'نوع الخدمة' : 'Type de service'}</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{isAr ? 'نوع الخدمة' : 'Type de service'}</label>
                   <input type="text" value={newDeliveryCompany.type} onChange={(e) => setNewDeliveryCompany({...newDeliveryCompany, type: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 font-bold text-sm" placeholder="Ex: Express, Standard..." />
                </div>
             </div>
             <div className="p-6 border-t border-slate-100 bg-slate-50 flex gap-3">
-               <button onClick={() => setIsDeliveryModalOpen(false)} className="flex-1 py-3 font-bold text-slate-600 hover:bg-slate-200 bg-slate-100 rounded-xl transition-colors">{storeIsAr ? 'إلغاء' : 'Annuler'}</button>
+               <button onClick={() => setIsDeliveryModalOpen(false)} className="flex-1 py-3 font-bold text-slate-600 hover:bg-slate-200 bg-slate-100 rounded-xl transition-colors">{isAr ? 'إلغاء' : 'Annuler'}</button>
                <button onClick={() => {
                   if(newDeliveryCompany.name) {
                      setDeliveryCompanies([...deliveryCompanies, { ...newDeliveryCompany, id: Date.now() }]);
                      setNewDeliveryCompany({ name: '', type: 'Standard • National', isActive: true });
                      setIsDeliveryModalOpen(false);
                   }
-               }} className="flex-1 py-3 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md transition-colors">{storeIsAr ? 'إضافة' : 'Ajouter'}</button>
+               }} className="flex-1 py-3 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md transition-colors">{isAr ? 'إضافة' : 'Ajouter'}</button>
             </div>
           </div>
         </div>
@@ -3786,17 +3786,17 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-               <h3 className="text-lg font-black text-slate-800">{storeIsAr ? 'إعداد' : 'Configurer'} {activeAppModal}</h3>
+               <h3 className="text-lg font-black text-slate-800">{isAr ? 'إعداد' : 'Configurer'} {activeAppModal}</h3>
                <button onClick={() => setActiveAppModal(null)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400"><X className="w-5 h-5"/></button>
             </div>
             <div className="p-6">
                <label className="block text-sm font-bold text-slate-700 mb-2">
-                  {activeAppModal === 'WhatsApp Chat' ? (storeIsAr ? 'رقم الواتساب (مثال: +212600000000)' : 'Numéro WhatsApp (ex: +212600000000)') :
-                   activeAppModal === 'Facebook Pixel' ? (storeIsAr ? 'معرف بيكسل فيسبوك' : 'ID Pixel Facebook') :
-                   activeAppModal === 'TikTok Pixel' ? (storeIsAr ? 'معرف بيكسل تيك توك' : 'ID Pixel TikTok') :
-                   activeAppModal === 'Google Analytics 4' ? (storeIsAr ? 'معرف التتبع (G-XXXXXXX)' : 'ID de suivi (G-XXXXXXX)') :
-                   activeAppModal === 'AI Auto-Builder' ? (storeIsAr ? 'اكتب "ACTIF" لتفعيل الميزة' : 'Tapez "ACTIF" pour activer cette option') :
-                   (storeIsAr ? 'رقم التعريف / المفتاح' : 'ID / Clé d\'API')}
+                  {activeAppModal === 'WhatsApp Chat' ? (isAr ? 'رقم الواتساب (مثال: +212600000000)' : 'Numéro WhatsApp (ex: +212600000000)') :
+                   activeAppModal === 'Facebook Pixel' ? (isAr ? 'معرف بيكسل فيسبوك' : 'ID Pixel Facebook') :
+                   activeAppModal === 'TikTok Pixel' ? (isAr ? 'معرف بيكسل تيك توك' : 'ID Pixel TikTok') :
+                   activeAppModal === 'Google Analytics 4' ? (isAr ? 'معرف التتبع (G-XXXXXXX)' : 'ID de suivi (G-XXXXXXX)') :
+                   activeAppModal === 'AI Auto-Builder' ? (isAr ? 'اكتب "ACTIF" لتفعيل الميزة' : 'Tapez "ACTIF" pour activer cette option') :
+                   (isAr ? 'رقم التعريف / المفتاح' : 'ID / Clé d\'API')}
                </label>
                <input 
                   type="text" 
@@ -3807,11 +3807,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                />
             </div>
             <div className="p-6 border-t border-slate-100 bg-slate-50 flex gap-3">
-               <button onClick={() => setActiveAppModal(null)} className="flex-1 py-3 font-bold text-slate-600 hover:bg-slate-200 bg-slate-100 rounded-xl transition-colors">{storeIsAr ? 'إلغاء' : 'Annuler'}</button>
+               <button onClick={() => setActiveAppModal(null)} className="flex-1 py-3 font-bold text-slate-600 hover:bg-slate-200 bg-slate-100 rounded-xl transition-colors">{isAr ? 'إلغاء' : 'Annuler'}</button>
                <button onClick={() => {
                   setAppsConfig(prev => ({ ...prev, [activeAppModal]: appInputValue }));
                   setActiveAppModal(null);
-               }} className="flex-1 py-3 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md transition-colors">{storeIsAr ? 'حفظ التغييرات' : 'Enregistrer'}</button>
+               }} className="flex-1 py-3 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md transition-colors">{isAr ? 'حفظ التغييرات' : 'Enregistrer'}</button>
             </div>
           </div>
         </div>
@@ -3822,8 +3822,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
            <div className="bg-white w-full max-w-7xl max-h-[95vh] rounded-[2rem] shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
               <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50 sticky top-0 z-10">
                  <div>
-                    <h2 className="text-3xl font-black text-slate-800">{productForm?.id ? (storeIsAr ? 'تعديل المنتج' : 'Modifier le Produit') : (storeIsAr ? 'إضافة منتج جديد' : 'Créer un Produit')}</h2>
-                    <p className="text-slate-500 mt-2">{storeIsAr ? 'التفاصيل، المخزون، والمتغيرات.' : 'Détails, inventaire, et variantes de votre article.'}</p>
+                    <h2 className="text-3xl font-black text-slate-800">{productForm?.id ? (isAr ? 'تعديل المنتج' : 'Modifier le Produit') : (isAr ? 'إضافة منتج جديد' : 'Créer un Produit')}</h2>
+                    <p className="text-slate-500 mt-2">{isAr ? 'التفاصيل، المخزون، والمتغيرات.' : 'Détails, inventaire, et variantes de votre article.'}</p>
                  </div>
                  <button onClick={() => setIsProductModalOpen(false)} className="p-4 bg-white rounded-2xl shadow-sm text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all border border-slate-200">
                     <X className="w-6 h-6" />
@@ -3834,14 +3834,14 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                     {/* Left Column (Images & Basic) */}
                     <div className="col-span-3 space-y-6 flex flex-col">
                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                          <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-4">{storeIsAr ? 'صورة المنتج' : 'Image du Produit'}</label>
+                          <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-4">{isAr ? 'صورة المنتج' : 'Image du Produit'}</label>
                           <label className="aspect-square bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-indigo-500 transition-colors group relative overflow-hidden">
                              {productForm?.image ? (
                                 <img src={productForm.image} alt="Preview" className="absolute inset-0 w-full h-full object-cover" />
                              ) : (
                                 <>
                                    <ImageIcon className="w-12 h-12 text-slate-300 group-hover:text-indigo-400 mb-2 transition-colors" />
-                                   <span className="text-xs font-bold text-slate-500 group-hover:text-indigo-600">{storeIsAr ? 'إضافة صورة' : 'Ajouter une image'}</span>
+                                   <span className="text-xs font-bold text-slate-500 group-hover:text-indigo-600">{isAr ? 'إضافة صورة' : 'Ajouter une image'}</span>
                                 </>
                              )}
                              <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
@@ -3854,7 +3854,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                           {appsConfig['AI Auto-Builder'] && productForm?.image && (
                              <button onClick={handleAIGenerate} disabled={isAIGenerating} className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 rounded-xl text-xs shadow-lg shadow-purple-600/30 hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:hover:scale-100">
                                 {isAIGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                                {storeIsAr ? 'تحليل بالذكاء الاصطناعي' : 'Analyser avec l\'IA ✨'}
+                                {isAr ? 'تحليل بالذكاء الاصطناعي' : 'Analyser avec l\'IA ✨'}
                              </button>
                           )}
                        </div>
@@ -3862,35 +3862,35 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                     {/* Middle Column (Details) */}
                     <div className="col-span-5 space-y-6 flex flex-col">
                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                          <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">{storeIsAr ? 'المعلومات الأساسية' : 'Informations Générales'}</label>
+                          <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">{isAr ? 'المعلومات الأساسية' : 'Informations Générales'}</label>
                           <div>
-                             <input type="text" placeholder={storeIsAr ? 'اسم المنتج (مثال: قميص فاخر)' : 'Titre du produit (ex: Premium T-Shirt)'} value={productForm?.name || ''} onChange={e => setProductForm({...productForm, name: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-lg font-bold" />
+                             <input type="text" placeholder={isAr ? 'اسم المنتج (مثال: قميص فاخر)' : 'Titre du produit (ex: Premium T-Shirt)'} value={productForm?.name || ''} onChange={e => setProductForm({...productForm, name: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-lg font-bold" />
                           </div>
                           <div className="flex gap-4">
                              <div className="flex-1">
-                                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">{storeIsAr ? 'السعر (درهم)' : 'Prix (MAD)'}</label>
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">{isAr ? 'السعر (درهم)' : 'Prix (MAD)'}</label>
                                 <input type="number" placeholder="0.00" value={productForm?.price || ''} onChange={e => setProductForm({...productForm, price: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 font-bold" />
                              </div>
                              <div className="flex-1">
-                                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">{storeIsAr ? 'المخزون (الكمية)' : 'Stock (Quantité)'}</label>
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">{isAr ? 'المخزون (الكمية)' : 'Stock (Quantité)'}</label>
                                 <input type="number" placeholder="10" value={productForm?.stock || ''} onChange={e => setProductForm({...productForm, stock: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 font-bold" />
                              </div>
                           </div>
                           <div>
-                             <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">{storeIsAr ? 'الوصف' : 'Description'}</label>
-                             <textarea rows={4} placeholder={storeIsAr ? 'اوصف منتجك بالتفصيل...' : 'Décrivez votre produit en détail...'} value={productForm?.description || ''} onChange={e => setProductForm({...productForm, description: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 resize-none"></textarea>
+                             <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">{isAr ? 'الوصف' : 'Description'}</label>
+                             <textarea rows={4} placeholder={isAr ? 'اوصف منتجك بالتفصيل...' : 'Décrivez votre produit en détail...'} value={productForm?.description || ''} onChange={e => setProductForm({...productForm, description: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 resize-none"></textarea>
                           </div>
                        </div>
                     </div>
                     {/* Right Column (Variants) */}
                     <div className="col-span-4 space-y-6">
                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-                          <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">{storeIsAr ? 'المتغيرات (المقاسات والألوان)' : 'Variantes (Tailles & Couleurs)'}</label>
+                          <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">{isAr ? 'المتغيرات (المقاسات والألوان)' : 'Variantes (Tailles & Couleurs)'}</label>
                           <div>
-                             <label className="block text-[10px] font-bold text-slate-500 uppercase mb-3">{storeIsAr ? 'المقاسات المتاحة' : 'Tailles Disponibles'}</label>
+                             <label className="block text-[10px] font-bold text-slate-500 uppercase mb-3">{isAr ? 'المقاسات المتاحة' : 'Tailles Disponibles'}</label>
                              <div className="flex gap-2 mb-4">
-                                <input type="text" placeholder={storeIsAr ? 'مثال: XXL, 42, 6 سنوات...' : 'Ex: XXL, 42, 6 Ans...'} value={newSizeInput} onChange={e => setNewSizeInput(e.target.value)} onKeyDown={e => { if(e.key === 'Enter' && newSizeInput) { setProductForm({...productForm, sizes: [...(productForm.sizes||[]), newSizeInput]}); setNewSizeInput(''); e.preventDefault(); } }} className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" />
-                                <button onClick={() => { if(newSizeInput) { setProductForm({...productForm, sizes: [...(productForm.sizes||[]), newSizeInput]}); setNewSizeInput(''); } }} className="px-4 py-2 bg-slate-900 text-white font-bold text-xs rounded-lg hover:bg-slate-800 transition-colors">{storeIsAr ? 'إضافة' : 'Ajouter'}</button>
+                                <input type="text" placeholder={isAr ? 'مثال: XXL, 42, 6 سنوات...' : 'Ex: XXL, 42, 6 Ans...'} value={newSizeInput} onChange={e => setNewSizeInput(e.target.value)} onKeyDown={e => { if(e.key === 'Enter' && newSizeInput) { setProductForm({...productForm, sizes: [...(productForm.sizes||[]), newSizeInput]}); setNewSizeInput(''); e.preventDefault(); } }} className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" />
+                                <button onClick={() => { if(newSizeInput) { setProductForm({...productForm, sizes: [...(productForm.sizes||[]), newSizeInput]}); setNewSizeInput(''); } }} className="px-4 py-2 bg-slate-900 text-white font-bold text-xs rounded-lg hover:bg-slate-800 transition-colors">{isAr ? 'إضافة' : 'Ajouter'}</button>
                              </div>
                              <div className="flex flex-wrap gap-2">
                                 {(productForm?.sizes || []).map((size: string) => (
@@ -3902,13 +3902,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              </div>
                           </div>
                           <div>
-                             <label className="block text-[10px] font-bold text-slate-500 uppercase mb-3">{storeIsAr ? 'الألوان المتاحة' : 'Couleurs Disponibles'}</label>
+                             <label className="block text-[10px] font-bold text-slate-500 uppercase mb-3">{isAr ? 'الألوان المتاحة' : 'Couleurs Disponibles'}</label>
                              <div className="flex gap-2 mb-4">
                                 <div className="relative w-12 h-10 rounded-lg overflow-hidden border border-slate-200 shadow-sm shrink-0">
                                    <input type="color" value={newColorInput} onChange={e => setNewColorInput(e.target.value)} className="absolute -inset-4 w-[200%] h-[200%] cursor-pointer" />
                                 </div>
                                 <input type="text" value={newColorInput} readOnly className="w-24 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 focus:outline-none uppercase" />
-                                <button onClick={() => { if(!productForm?.colors?.includes(newColorInput)) { setProductForm({...productForm, colors: [...(productForm.colors||[]), newColorInput]}); } }} className="px-4 py-2 bg-slate-900 text-white font-bold text-xs rounded-lg hover:bg-slate-800 transition-colors">{storeIsAr ? 'إضافة' : 'Ajouter'}</button>
+                                <button onClick={() => { if(!productForm?.colors?.includes(newColorInput)) { setProductForm({...productForm, colors: [...(productForm.colors||[]), newColorInput]}); } }} className="px-4 py-2 bg-slate-900 text-white font-bold text-xs rounded-lg hover:bg-slate-800 transition-colors">{isAr ? 'إضافة' : 'Ajouter'}</button>
                              </div>
                              <div className="flex flex-wrap gap-3">
                                 {(productForm?.colors || []).map((color: string) => (
@@ -3927,13 +3927,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                            {/* VARIANT IMAGES UPLOAD */}
                            {productForm?.colors?.length > 0 && (
                               <div className="mt-6 border-t border-slate-100 pt-6">
-                                 <label className="block text-[10px] font-bold text-slate-500 uppercase mb-3">{storeIsAr ? 'صور لكل لون (اختياري)' : 'Images par Couleur (Optionnel)'}</label>
+                                 <label className="block text-[10px] font-bold text-slate-500 uppercase mb-3">{isAr ? 'صور لكل لون (اختياري)' : 'Images par Couleur (Optionnel)'}</label>
                                  <div className="space-y-3">
                                     {productForm.colors.map((color: string) => (
                                        <div key={color} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
                                           <div className="flex items-center gap-3">
                                              <div className="w-6 h-6 rounded-full border shadow-sm" style={{ backgroundColor: color }}></div>
-                                             <span className="text-xs font-bold text-slate-600 capitalize">{storeIsAr ? 'صورة المتغير' : 'Image Variante'}</span>
+                                             <span className="text-xs font-bold text-slate-600 capitalize">{isAr ? 'صورة المتغير' : 'Image Variante'}</span>
                                           </div>
                                           <div>
                                              <label className="cursor-pointer px-4 py-2 bg-white border border-slate-200 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-colors flex items-center gap-2 shadow-sm">
@@ -3942,7 +3942,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                                 ) : (
                                                    <ImageIcon className="w-4 h-4" />
                                                 )}
-                                                {productForm?.colorImages?.[color] ? (storeIsAr ? 'تغيير' : 'Changer') : (storeIsAr ? 'ربط صورة' : 'Lier une image')}
+                                                {productForm?.colorImages?.[color] ? (isAr ? 'تغيير' : 'Changer') : (isAr ? 'ربط صورة' : 'Lier une image')}
                                                 <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
                                                    const file = e.target.files?.[0];
                                                    if (file) {
@@ -3979,13 +3979,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
                               return (
                                   <div className="mt-8 pt-8 border-t border-slate-100">
-                                      <label className="block text-xs font-black text-slate-800 uppercase mb-4">{storeIsAr ? 'المخزون لكل متغير' : 'Stock par Variante'}</label>
+                                      <label className="block text-xs font-black text-slate-800 uppercase mb-4">{isAr ? 'المخزون لكل متغير' : 'Stock par Variante'}</label>
                                       <div className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
                                           <table className="w-full text-left text-sm">
                                               <thead className="bg-white border-b border-slate-200 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
                                                   <tr>
-                                                      <th className="px-6 py-4">{storeIsAr ? 'المتغير' : 'Variante'}</th>
-                                                      <th className="px-6 py-4 w-40">{storeIsAr ? 'الكمية (المخزون)' : 'Quantité (Stock)'}</th>
+                                                      <th className="px-6 py-4">{isAr ? 'المتغير' : 'Variante'}</th>
+                                                      <th className="px-6 py-4 w-40">{isAr ? 'الكمية (المخزون)' : 'Quantité (Stock)'}</th>
                                                   </tr>
                                               </thead>
                                               <tbody className="divide-y divide-slate-100 bg-white">
@@ -3997,7 +3997,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                                               <td className="px-6 py-4 font-bold text-slate-700 flex items-center gap-3">
                                                                   {comb.color && <div className="w-5 h-5 rounded-full border shadow-sm shrink-0" style={{ backgroundColor: comb.color }}></div>}
                                                                   {comb.size && <span className="bg-slate-100 px-2 py-1 rounded text-xs">{comb.size}</span>}
-                                                                  {(!comb.size && comb.color) && <span className="uppercase text-[10px] text-slate-400 font-bold">{storeIsAr ? 'لون' : 'Couleur'}</span>}
+                                                                  {(!comb.size && comb.color) && <span className="uppercase text-[10px] text-slate-400 font-bold">{isAr ? 'لون' : 'Couleur'}</span>}
                                                               </td>
                                                               <td className="px-6 py-3">
                                                                   <input type="number" placeholder="0" value={qty} onChange={async (e) => {
@@ -4018,18 +4018,18 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                            })()}
                         </div>
                         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                           <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">{storeIsAr ? 'الفئة' : 'Catégorie'}</label>
-                           <input type="text" placeholder={storeIsAr ? 'مثال: قميص, جاكيت, فستان...' : 'Ex: T-Shirt, Chemise, Robe...'} value={productForm?.category || ''} onChange={e => setProductForm({...productForm, category: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 font-bold" />
-                           <p className="text-[10px] text-slate-400 mt-2 font-medium">{storeIsAr ? 'لتصنيف المنتج في فلاتر المتجر.' : 'Permet de classer le produit dans les filtres du magasin.'}</p>
+                           <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">{isAr ? 'الفئة' : 'Catégorie'}</label>
+                           <input type="text" placeholder={isAr ? 'مثال: قميص, جاكيت, فستان...' : 'Ex: T-Shirt, Chemise, Robe...'} value={productForm?.category || ''} onChange={e => setProductForm({...productForm, category: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 font-bold" />
+                           <p className="text-[10px] text-slate-400 mt-2 font-medium">{isAr ? 'لتصنيف المنتج في فلاتر المتجر.' : 'Permet de classer le produit dans les filtres du magasin.'}</p>
                         </div>
                         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                            <div className="flex items-center gap-2 mb-2">
-                              <label className="block text-xs font-black text-slate-400 uppercase tracking-wider">{storeIsAr ? 'الكلمات الدلالية (SEO Tags)' : 'Mots-clés (SEO Tags)'}</label>
+                              <label className="block text-xs font-black text-slate-400 uppercase tracking-wider">{isAr ? 'الكلمات الدلالية (SEO Tags)' : 'Mots-clés (SEO Tags)'}</label>
                               {appsConfig['AI Auto-Builder'] && <Sparkles className="w-3 h-3 text-purple-500" />}
                            </div>
                            <div className="flex gap-2 mb-3">
-                              <input type="text" placeholder={storeIsAr ? 'مثال: صيفي, فستان...' : 'Ex: été, robe, premium...'} value={newTagInput} onChange={e => setNewTagInput(e.target.value)} onKeyDown={e => { if(e.key === 'Enter' && newTagInput) { setProductForm({...productForm, tags: [...(productForm.tags||[]), newTagInput]}); setNewTagInput(''); e.preventDefault(); } }} className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" />
-                              <button onClick={() => { if(newTagInput) { setProductForm({...productForm, tags: [...(productForm.tags||[]), newTagInput]}); setNewTagInput(''); } }} className="px-4 py-2 bg-slate-900 text-white font-bold text-xs rounded-lg hover:bg-slate-800 transition-colors">{storeIsAr ? 'إضافة' : 'Ajouter'}</button>
+                              <input type="text" placeholder={isAr ? 'مثال: صيفي, فستان...' : 'Ex: été, robe, premium...'} value={newTagInput} onChange={e => setNewTagInput(e.target.value)} onKeyDown={e => { if(e.key === 'Enter' && newTagInput) { setProductForm({...productForm, tags: [...(productForm.tags||[]), newTagInput]}); setNewTagInput(''); e.preventDefault(); } }} className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" />
+                              <button onClick={() => { if(newTagInput) { setProductForm({...productForm, tags: [...(productForm.tags||[]), newTagInput]}); setNewTagInput(''); } }} className="px-4 py-2 bg-slate-900 text-white font-bold text-xs rounded-lg hover:bg-slate-800 transition-colors">{isAr ? 'إضافة' : 'Ajouter'}</button>
                            </div>
                            <div className="flex flex-wrap gap-2">
                               {(productForm?.tags || []).map((tag: string) => (
@@ -4039,13 +4039,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                  </div>
                               ))}
                            </div>
-                           <p className="text-[10px] text-slate-400 mt-2 font-medium">{storeIsAr ? 'تساعد في ظهور المنتج في محركات البحث.' : 'Améliore le référencement (SEO) de votre produit.'}</p>
+                           <p className="text-[10px] text-slate-400 mt-2 font-medium">{isAr ? 'تساعد في ظهور المنتج في محركات البحث.' : 'Améliore le référencement (SEO) de votre produit.'}</p>
                         </div>
                     </div>
                  </div>
               </div>
               <div className="p-6 border-t border-slate-100 bg-white flex justify-end gap-4 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
-                 <button onClick={() => setIsProductModalOpen(false)} className="px-8 py-4 font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-colors">{storeIsAr ? 'إلغاء' : 'Annuler'}</button>
+                 <button onClick={() => setIsProductModalOpen(false)} className="px-8 py-4 font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-colors">{isAr ? 'إلغاء' : 'Annuler'}</button>
                  <button onClick={() => {
                     if(productForm?.name && productForm?.price) {
                        let newProds;
@@ -4059,7 +4059,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        handleSave(newProds);
                     }
                  }} className="px-10 py-4 font-black uppercase tracking-widest bg-indigo-600 text-white rounded-xl shadow-lg shadow-indigo-600/30 hover:bg-indigo-700 hover:scale-105 transition-all">
-                    {productForm?.id ? (storeIsAr ? 'تحديث المنتج' : 'Mettre à jour') : (storeIsAr ? 'حفظ المنتج' : 'Enregistrer le produit')}
+                    {productForm?.id ? (isAr ? 'تحديث المنتج' : 'Mettre à jour') : (isAr ? 'حفظ المنتج' : 'Enregistrer le produit')}
                  </button>
               </div>
            </div>
@@ -4167,7 +4167,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                      </>
                   ) : (
                      <>
-                        <button onClick={() => handleDeleteOrder(selectedOrder.id)} className="w-12 h-12 shrink-0 bg-white border border-rose-200 text-rose-600 rounded-xl flex items-center justify-center hover:bg-rose-50 hover:text-rose-700 transition-colors active:scale-95" title={storeIsAr ? 'حذف الطلب' : 'Supprimer'}>
+                        <button onClick={() => handleDeleteOrder(selectedOrder.id)} className="w-12 h-12 shrink-0 bg-white border border-rose-200 text-rose-600 rounded-xl flex items-center justify-center hover:bg-rose-50 hover:text-rose-700 transition-colors active:scale-95" title={isAr ? 'حذف الطلب' : 'Supprimer'}>
                            <Trash2 className="w-5 h-5" />
                         </button>
                         <button onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'Refusé', 'bg-rose-100 text-rose-700')} className="flex-1 py-3 bg-white border border-rose-200 text-rose-600 font-bold rounded-xl hover:bg-rose-50 transition-colors text-sm active:scale-95">Refuser</button>
@@ -4191,12 +4191,12 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                   <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
                      <Trash2 className="w-8 h-8 text-rose-600" />
                   </div>
-                  <h2 className="text-xl font-black text-slate-800 mb-2">{storeIsAr ? 'نقل إلى سلة المهملات؟' : 'Déplacer vers la corbeille ?'}</h2>
-                  <p className="text-slate-500 text-sm mb-6">{storeIsAr ? 'سيتم نقل هذا الطلب إلى سلة المهملات. يمكنك حذفه نهائياً من هناك.' : 'Cette commande sera déplacée vers la corbeille. Vous pourrez la supprimer définitivement par la suite.'}</p>
+                  <h2 className="text-xl font-black text-slate-800 mb-2">{isAr ? 'نقل إلى سلة المهملات؟' : 'Déplacer vers la corbeille ?'}</h2>
+                  <p className="text-slate-500 text-sm mb-6">{isAr ? 'سيتم نقل هذا الطلب إلى سلة المهملات. يمكنك حذفه نهائياً من هناك.' : 'Cette commande sera déplacée vers la corbeille. Vous pourrez la supprimer définitivement par la suite.'}</p>
                   
                   <div className="flex gap-3">
-                     <button onClick={() => setOrderToDelete(null)} className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors text-sm">{storeIsAr ? 'إلغاء' : 'Annuler'}</button>
-                     <button onClick={confirmDeleteOrder} className="flex-1 py-3 bg-rose-600 text-white font-bold rounded-xl hover:bg-rose-700 shadow-md shadow-rose-200 transition-colors text-sm">{storeIsAr ? 'نقل' : 'Confirmer'}</button>
+                     <button onClick={() => setOrderToDelete(null)} className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors text-sm">{isAr ? 'إلغاء' : 'Annuler'}</button>
+                     <button onClick={confirmDeleteOrder} className="flex-1 py-3 bg-rose-600 text-white font-bold rounded-xl hover:bg-rose-700 shadow-md shadow-rose-200 transition-colors text-sm">{isAr ? 'نقل' : 'Confirmer'}</button>
                   </div>
                </div>
             </div>
@@ -4213,17 +4213,17 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                   </div>
                   <h2 className="text-xl font-black text-slate-800 mb-2">
                      {showTrash
-                        ? (storeIsAr ? `حذف ${selectedOrderIds.length} طلب نهائياً؟` : `Supprimer définitivement ${selectedOrderIds.length} commande(s) ?`)
-                        : (storeIsAr ? `نقل ${selectedOrderIds.length} طلب إلى سلة المهملات؟` : `Déplacer ${selectedOrderIds.length} commande(s) vers la corbeille ?`)}
+                        ? (isAr ? `حذف ${selectedOrderIds.length} طلب نهائياً؟` : `Supprimer définitivement ${selectedOrderIds.length} commande(s) ?`)
+                        : (isAr ? `نقل ${selectedOrderIds.length} طلب إلى سلة المهملات؟` : `Déplacer ${selectedOrderIds.length} commande(s) vers la corbeille ?`)}
                   </h2>
                   <p className="text-slate-500 text-sm mb-6">
                      {showTrash
-                        ? (storeIsAr ? 'لا يمكن التراجع عن هذا الإجراء.' : 'Cette action est irréversible.')
-                        : (storeIsAr ? 'يمكنك استعادتها لاحقاً من سلة المهملات.' : 'Vous pourrez les restaurer depuis la corbeille.')}
+                        ? (isAr ? 'لا يمكن التراجع عن هذا الإجراء.' : 'Cette action est irréversible.')
+                        : (isAr ? 'يمكنك استعادتها لاحقاً من سلة المهملات.' : 'Vous pourrez les restaurer depuis la corbeille.')}
                   </p>
                   <div className="flex gap-3">
-                     <button onClick={() => setIsBulkDeleteOpen(false)} className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors text-sm">{storeIsAr ? 'إلغاء' : 'Annuler'}</button>
-                     <button onClick={confirmBulkDelete} className="flex-1 py-3 bg-rose-600 text-white font-bold rounded-xl hover:bg-rose-700 shadow-md shadow-rose-200 transition-colors text-sm">{storeIsAr ? 'تأكيد' : 'Confirmer'}</button>
+                     <button onClick={() => setIsBulkDeleteOpen(false)} className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors text-sm">{isAr ? 'إلغاء' : 'Annuler'}</button>
+                     <button onClick={confirmBulkDelete} className="flex-1 py-3 bg-rose-600 text-white font-bold rounded-xl hover:bg-rose-700 shadow-md shadow-rose-200 transition-colors text-sm">{isAr ? 'تأكيد' : 'Confirmer'}</button>
                   </div>
                </div>
             </div>
@@ -4270,7 +4270,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        {!isLiveStore && platformMode === 'builder' && (
           <div className="fixed bottom-6 right-6 z-[300] flex flex-col items-end gap-2">
              <div className="bg-white p-2 rounded-full shadow-2xl flex items-center gap-3 border-2 border-slate-200 hover:scale-105 transition-transform">
-                <span className="text-xs font-black text-slate-700 pl-2 uppercase tracking-wider">{storeIsAr ? 'اللون:' : 'Couleur:'}</span>
+                <span className="text-xs font-black text-slate-700 pl-2 uppercase tracking-wider">{isAr ? 'اللون:' : 'Couleur:'}</span>
                 <label className="w-10 h-10 rounded-full cursor-pointer shadow-inner border-[3px] border-white ring-2 ring-slate-100" style={{ backgroundColor: primaryColor }} title="Changer la couleur">
                    <input type="color" className="opacity-0 w-0 h-0" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} />
                 </label>
