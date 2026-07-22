@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown, TrendingUp, Package, RefreshCw } from 'lucide-react';
+import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown, TrendingUp, Package, RefreshCw, Undo2 } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import StoreManagerDashboard from '../components/Tools/StoreManagerDashboard';
 import ProAITools from '../components/Tools/ProAITools';
@@ -348,6 +348,38 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [footerBgColor, setFooterBgColor] = useState(config.footerBgColor || '#f8f9fa');
   const [footerTextColor, setFooterTextColor] = useState(config.footerTextColor || '#64748b');
   const [cardStyle, setCardStyle] = useState<'rounded' | 'square'>(config.cardStyle || 'rounded');
+  const [heroHeight, setHeroHeight] = useState<number>(config.heroHeight || 450);
+  const [heroImagePosX, setHeroImagePosX] = useState<number>(config.heroImagePosX ?? 50);
+  const [heroImagePosY, setHeroImagePosY] = useState<number>(config.heroImagePosY ?? 50);
+
+  // Undo history for Design tab changes
+  const [designHistory, setDesignHistory] = useState<any[]>([]);
+  const isRestoringDesign = useRef(false);
+  useEffect(() => {
+     if (isRestoringDesign.current) { isRestoringDesign.current = false; return; }
+     setDesignHistory(prev => [...prev, { primaryColor, secondaryColor, borderColor, buttonStyle, cardStyle, footerBgColor, footerTextColor, fontFamily, heroHeight, heroImagePosX, heroImagePosY }].slice(-20));
+     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [primaryColor, secondaryColor, borderColor, buttonStyle, cardStyle, footerBgColor, footerTextColor, fontFamily, heroHeight, heroImagePosX, heroImagePosY]);
+
+  const handleUndoDesign = () => {
+     setDesignHistory(prev => {
+        if (prev.length < 2) return prev;
+        const target = prev[prev.length - 2];
+        isRestoringDesign.current = true;
+        setPrimaryColor(target.primaryColor);
+        setSecondaryColor(target.secondaryColor);
+        setBorderColor(target.borderColor);
+        setButtonStyle(target.buttonStyle);
+        setCardStyle(target.cardStyle);
+        setFooterBgColor(target.footerBgColor);
+        setFooterTextColor(target.footerTextColor);
+        setFontFamily(target.fontFamily);
+        setHeroHeight(target.heroHeight);
+        setHeroImagePosX(target.heroImagePosX);
+        setHeroImagePosY(target.heroImagePosY);
+        return prev.slice(0, -1);
+     });
+  };
   const [textStyles, setTextStyles] = useState<Record<string, { fontSize?: number; color?: string; fontFamily?: string }>>(config.textStyles || {});
   const [activeStyleKey, setActiveStyleKey] = useState<string | null>(null);
   const [toolbarPos, setToolbarPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
@@ -525,6 +557,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               if (conf.footerBgColor) setFooterBgColor(conf.footerBgColor);
               if (conf.footerTextColor) setFooterTextColor(conf.footerTextColor);
               if (conf.cardStyle) setCardStyle(conf.cardStyle);
+              if (conf.heroHeight) setHeroHeight(conf.heroHeight);
+              if (conf.heroImagePosX !== undefined) setHeroImagePosX(conf.heroImagePosX);
+              if (conf.heroImagePosY !== undefined) setHeroImagePosY(conf.heroImagePosY);
               if (conf.buttonStyle) setButtonStyle(conf.buttonStyle);
               if (conf.showReviews !== undefined) setShowReviews(conf.showReviews);
               if (conf.homeBlocks) setHomeBlocks(conf.homeBlocks);
@@ -713,6 +748,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        footerBgColor,
        footerTextColor,
        cardStyle,
+       heroHeight,
+       heroImagePosX,
+       heroImagePosY,
        buttonStyle,
        showReviews,
        requireAccountToOrder,
@@ -1003,7 +1041,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             <div className="flex flex-col gap-0 w-full">
              {homeBlocks.map((block: string) => {
                 if (block === 'hero') return (
-                    <HeroBackgroundEditor key="hero" className={`h-[${isModal ? '600px' : '400px'}] flex flex-col items-center justify-center text-center p-8 bg-cover bg-center relative`} style={{ backgroundImage: `url(${heroImage})` }}>
+                    <HeroBackgroundEditor key="hero" className="flex flex-col items-center justify-center text-center p-8 bg-cover relative" style={{ backgroundImage: `url(${heroImage})`, height: `${isModal ? heroHeight + 150 : heroHeight}px`, backgroundPosition: `${heroImagePosX}% ${heroImagePosY}%` }}>
                        <div className="absolute inset-0 bg-black/60"></div>
                        <div className="relative z-10 flex flex-col items-center">
                           <EditableText as="h1" text={heroTitle} onTextChange={setHeroTitle} isLiveStore={isLiveStore} className={`${isModal ? 'text-7xl' : 'text-5xl'} font-black text-white uppercase tracking-tighter mb-4`} styleKey="heroTitle" />
@@ -1332,7 +1370,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
       <div className="flex-1 overflow-y-auto">
         {page === 'home' && (
           <>
-            <div className={`flex ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'} h-auto md:h-[${isModal ? '600px' : '400px'}] bg-white`}>
+            <div className={`flex ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'} h-auto bg-white`} style={{ minHeight: previewDevice === 'mobile' && !isModal ? undefined : `${isModal ? heroHeight + 150 : heroHeight}px` }}>
                <div className="flex-1 flex flex-col justify-center p-12">
                   <h1 className="text-5xl font-light leading-tight mb-6" style={{ color: primaryColor }}>
                      {storeLang === 'ar' ? <>أناقة في<br/>البساطة.</> : storeLang === 'en' ? <>Elegance in <br/>Simplicity.</> : <>Élégance et<br/>Simplicité.</>}
@@ -1340,7 +1378,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                   <p className="text-gray-500 mb-8 max-w-sm leading-relaxed">{storeLang === 'ar' ? 'اكتشف تشكيلة تتميز بخطوط نقية ومواد طبيعية.' : storeLang === 'en' ? 'Experience a collection defined by pure lines and organic materials.' : 'Découvrez une collection définie par des lignes pures et des matériaux naturels.'}</p>
                   <button onClick={() => setPage('collections')} className="w-max px-10 py-4 text-white text-sm tracking-widest transition-opacity hover:opacity-90" style={{ backgroundColor: primaryColor }}>{tr('DISCOVER')}</button>
                </div>
-               <HeroBackgroundEditor className="flex-1 bg-cover bg-center" style={{ backgroundImage: `url(${heroImage})` }} />
+               <HeroBackgroundEditor className="flex-1 bg-cover" style={{ backgroundImage: `url(${heroImage})`, backgroundPosition: `${heroImagePosX}% ${heroImagePosY}%` }} />
             </div>
             <div className={`${isModal ? 'p-20' : 'p-8'} mx-auto w-full`}>
                <div className="flex justify-between items-end mb-12 border-b pb-4">
@@ -1559,7 +1597,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         {page === 'home' && (
           <>
             <div className="p-8">
-               <HeroBackgroundEditor className={`w-full h-[${isModal ? '700px' : '500px'}] bg-cover bg-center relative rounded-sm border`} style={{ backgroundImage: `url(${heroImage})`, borderColor: `${primaryColor}40` }}>
+               <HeroBackgroundEditor className="w-full bg-cover relative rounded-sm border" style={{ backgroundImage: `url(${heroImage})`, borderColor: `${primaryColor}40`, height: `${isModal ? heroHeight + 250 : heroHeight + 50}px`, backgroundPosition: `${heroImagePosX}% ${heroImagePosY}%` }}>
                   <div className="absolute inset-0 bg-gradient-to-t from-[#111] via-transparent to-transparent"></div>
                   <div className="absolute bottom-12 left-12 right-12 flex justify-between items-end">
                      <div>
@@ -1776,7 +1814,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         {page === 'home' && (
           <>
             <div className="px-4">
-               <HeroBackgroundEditor className={`h-[${isModal ? '500px' : '300px'}] rounded-[2rem] flex flex-col items-center justify-center text-center p-8 bg-cover bg-center relative overflow-hidden`} style={{ backgroundImage: `url(${heroImage})` }}>
+               <HeroBackgroundEditor className="rounded-[2rem] flex flex-col items-center justify-center text-center p-8 bg-cover relative overflow-hidden" style={{ backgroundImage: `url(${heroImage})`, height: `${isModal ? heroHeight + 50 : heroHeight - 150}px`, backgroundPosition: `${heroImagePosX}% ${heroImagePosY}%` }}>
                   <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px]"></div>
                   <div className="relative z-10 flex flex-col items-center p-8 bg-white/90 rounded-[2rem] shadow-xl border-4 border-white">
                      <h1 className={`${isModal ? 'text-6xl' : 'text-4xl'} font-black tracking-tight mb-2`} style={{ color: primaryColor }}>{storeLang === 'ar' ? 'مرح وحيوية!' : storeLang === 'en' ? 'Fun & Fresh!' : 'Fun & Frais !'}</h1>
@@ -2021,7 +2059,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         {page === 'home' && (
           <>
             <div className="w-full bg-[#e8e2d7]">
-               <HeroBackgroundEditor className={`w-full h-[${isModal ? '600px' : '400px'}] bg-cover bg-right-top relative flex items-center`} style={{ backgroundImage: `url(${heroImage})` }}>
+               <HeroBackgroundEditor className="w-full bg-cover relative flex items-center" style={{ backgroundImage: `url(${heroImage})`, height: `${isModal ? heroHeight + 150 : heroHeight}px`, backgroundPosition: `${heroImagePosX}% ${heroImagePosY}%` }}>
                   <div className="max-w-2xl px-12 md:px-24">
                      <EditableText as="h1" text={heroTitle} onTextChange={setHeroTitle} isLiveStore={isLiveStore} className="text-5xl md:text-7xl font-serif italic tracking-wide text-[#2c2c2c] mb-6 leading-tight" style={{ fontFamily: 'Georgia, serif' }} styleKey="heroTitle" />
                   </div>
@@ -3246,6 +3284,41 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                         </div>
                      </div>
                      
+                     {/* HERO SIZE & IMAGE POSITION */}
+                     <div className="pt-4 border-t border-slate-100">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'حجم صورة البانر (Hero)' : 'Taille de la Bannière (Hero)'}</label>
+                        <div className="flex items-center gap-3">
+                           <input
+                              type="range"
+                              min={250}
+                              max={800}
+                              step={10}
+                              value={heroHeight}
+                              onChange={e => setHeroHeight(parseInt(e.target.value))}
+                              className="flex-1 accent-indigo-600"
+                           />
+                           <span className="text-[10px] font-mono font-bold text-slate-600 w-12 text-right">{heroHeight}px</span>
+                        </div>
+                     </div>
+
+                     <div className="pt-4 border-t border-slate-100">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'موضع صورة البانر' : "Position de l'image"}</label>
+                        <div className="grid grid-cols-3 gap-1.5 w-32">
+                           {[0, 50, 100].map(y => (
+                              [0, 50, 100].map(x => (
+                                 <button
+                                    key={`${x}-${y}`}
+                                    onClick={() => { setHeroImagePosX(x); setHeroImagePosY(y); }}
+                                    className={`w-9 h-9 rounded-md border-2 flex items-center justify-center transition-all ${heroImagePosX === x && heroImagePosY === y ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 hover:border-slate-300 bg-white'}`}
+                                    title={`${x}% / ${y}%`}
+                                 >
+                                    <span className={`w-2 h-2 rounded-full ${heroImagePosX === x && heroImagePosY === y ? 'bg-indigo-600' : 'bg-slate-300'}`} />
+                                 </button>
+                              ))
+                           ))}
+                        </div>
+                     </div>
+
                      {/* CARD STYLE */}
                      <div className="pt-4 border-t border-slate-100">
                         <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'شكل بطاقات المنتجات' : 'Style des Cartes Produits'}</label>
@@ -3628,6 +3701,11 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                     {isControlsCollapsed ? <><Minimize2 className="w-3.5 h-3.5" /> Afficher outils</> : <><Maximize2 className="w-3.5 h-3.5" /> Agrandir</>}
                  </button>
               )}
+              {activeTab === 'design' && (
+                 <button onClick={handleUndoDesign} disabled={designHistory.length < 2} title={isAr ? 'تراجع' : 'Annuler la dernière modification'} className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-indigo-600 px-2 py-1 rounded-md hover:bg-indigo-50 transition-colors border border-slate-200 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-slate-500 disabled:hover:bg-transparent">
+                    <Undo2 className="w-3.5 h-3.5" /> {isAr ? 'تراجع' : 'Annuler'}
+                 </button>
+              )}
             </div>
             <div className="flex items-center gap-2 text-slate-400">
               <button onClick={() => setPreviewDevice('desktop')} className={`p-1.5 rounded-md ${previewDevice === 'desktop' ? 'text-indigo-600 bg-indigo-50' : 'hover:bg-slate-100'}`}><Monitor className="w-4 h-4" /></button>
@@ -3781,13 +3859,95 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        </div>
                     )}
 
-                    <div className="pt-4 mt-4 border-t border-slate-100">
-                       <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'اللون الرئيسي' : 'Couleur Principale'}</label>
-                       <div className="flex items-center gap-2">
-                          <label className="w-8 h-8 rounded-full border border-slate-200 cursor-pointer flex-shrink-0 shadow-inner" style={{ backgroundColor: primaryColor }}>
-                             <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="opacity-0 w-0 h-0" />
-                          </label>
-                          <input type="text" value={primaryColor} readOnly className="flex-1 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg px-2 py-1" />
+                    <div className="pt-4 mt-4 border-t border-slate-100 space-y-4">
+                       <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">{isAr ? 'التصميم والألوان' : 'Design & Couleurs'}</h4>
+
+                       <div className="grid grid-cols-3 gap-2">
+                          <div>
+                             <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block truncate">{isAr ? 'أساسي' : 'Principale'}</label>
+                             <label className="w-full h-8 rounded-lg border border-slate-200 cursor-pointer block shadow-inner" style={{ backgroundColor: primaryColor }}>
+                                <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="opacity-0 w-0 h-0" />
+                             </label>
+                          </div>
+                          <div>
+                             <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block truncate">{isAr ? 'ثانوي' : 'Secondaire'}</label>
+                             <label className="w-full h-8 rounded-lg border border-slate-200 cursor-pointer block shadow-inner" style={{ backgroundColor: secondaryColor }}>
+                                <input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="opacity-0 w-0 h-0" />
+                             </label>
+                          </div>
+                          <div>
+                             <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block truncate">{isAr ? 'حدود' : 'Bordures'}</label>
+                             <label className="w-full h-8 rounded-lg border border-slate-200 cursor-pointer block shadow-inner" style={{ backgroundColor: borderColor }}>
+                                <input type="color" value={borderColor} onChange={(e) => setBorderColor(e.target.value)} className="opacity-0 w-0 h-0" />
+                             </label>
+                          </div>
+                       </div>
+
+                       <div>
+                          <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'شكل الأزرار' : 'Style des boutons'}</label>
+                          <div className="grid grid-cols-3 gap-1.5">
+                             {(['rounded', 'pill', 'square'] as const).map(key => (
+                                <button key={key} onClick={() => setButtonStyle(key)} className={`py-1.5 text-[9px] font-bold rounded-lg border ${buttonStyle === key ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-slate-200 text-slate-500'}`}>
+                                   {key === 'rounded' ? (isAr ? 'مستدير' : 'Arrondi') : key === 'pill' ? (isAr ? 'كبسولة' : 'Capsule') : (isAr ? 'مربع' : 'Carré')}
+                                </button>
+                             ))}
+                          </div>
+                       </div>
+
+                       <div>
+                          <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'شكل بطاقات المنتجات' : 'Cartes produits'}</label>
+                          <div className="grid grid-cols-2 gap-1.5">
+                             {(['rounded', 'square'] as const).map(key => (
+                                <button key={key} onClick={() => setCardStyle(key)} className={`py-1.5 text-[9px] font-bold rounded-lg border ${cardStyle === key ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-slate-200 text-slate-500'}`}>
+                                   {key === 'rounded' ? (isAr ? 'مستدير' : 'Arrondi') : (isAr ? 'مربع' : 'Carré')}
+                                </button>
+                             ))}
+                          </div>
+                       </div>
+
+                       <div className="grid grid-cols-2 gap-2">
+                          <div>
+                             <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block truncate">{isAr ? 'فوتر - خلفية' : 'Footer - Fond'}</label>
+                             <label className="w-full h-8 rounded-lg border border-slate-200 cursor-pointer block shadow-inner" style={{ backgroundColor: footerBgColor }}>
+                                <input type="color" value={footerBgColor} onChange={(e) => setFooterBgColor(e.target.value)} className="opacity-0 w-0 h-0" />
+                             </label>
+                          </div>
+                          <div>
+                             <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block truncate">{isAr ? 'فوتر - نص' : 'Footer - Texte'}</label>
+                             <label className="w-full h-8 rounded-lg border border-slate-200 cursor-pointer block shadow-inner" style={{ backgroundColor: footerTextColor }}>
+                                <input type="color" value={footerTextColor} onChange={(e) => setFooterTextColor(e.target.value)} className="opacity-0 w-0 h-0" />
+                             </label>
+                          </div>
+                       </div>
+
+                       <div>
+                          <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'حجم البانر' : 'Taille de la bannière'}</label>
+                          <div className="flex items-center gap-2">
+                             <input type="range" min={250} max={800} step={10} value={heroHeight} onChange={e => setHeroHeight(parseInt(e.target.value))} className="flex-1 accent-indigo-600" />
+                             <span className="text-[9px] font-mono font-bold text-slate-500 w-9 text-right">{heroHeight}px</span>
+                          </div>
+                       </div>
+
+                       <div>
+                          <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'موضع صورة البانر' : "Position de l'image"}</label>
+                          <div className="grid grid-cols-3 gap-1 w-24">
+                             {[0, 50, 100].map(y => (
+                                [0, 50, 100].map(x => (
+                                   <button key={`${x}-${y}`} onClick={() => { setHeroImagePosX(x); setHeroImagePosY(y); }} className={`w-7 h-7 rounded border flex items-center justify-center ${heroImagePosX === x && heroImagePosY === y ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 bg-white'}`}>
+                                      <span className={`w-1.5 h-1.5 rounded-full ${heroImagePosX === x && heroImagePosY === y ? 'bg-indigo-600' : 'bg-slate-300'}`} />
+                                   </button>
+                                ))
+                             ))}
+                          </div>
+                       </div>
+
+                       <div>
+                          <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'الخط' : 'Typographie'}</label>
+                          <div className="grid grid-cols-3 gap-1.5">
+                             <button onClick={() => setFontFamily('font-sans')} className={`py-1.5 text-[9px] font-bold rounded-lg border font-sans ${fontFamily === 'font-sans' ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-slate-200 text-slate-500'}`}>Sans</button>
+                             <button onClick={() => setFontFamily('font-serif')} className={`py-1.5 text-[9px] font-bold rounded-lg border font-serif ${fontFamily === 'font-serif' ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-slate-200 text-slate-500'}`}>Serif</button>
+                             <button onClick={() => setFontFamily('font-mono')} className={`py-1.5 text-[9px] font-bold rounded-lg border font-mono ${fontFamily === 'font-mono' ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-slate-200 text-slate-500'}`}>Mono</button>
+                          </div>
                        </div>
                     </div>
                 </div>
