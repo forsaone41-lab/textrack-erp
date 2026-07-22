@@ -3166,7 +3166,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                  <div className="space-y-6">
                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
                         <div>
-                           <h4 className="text-xs font-black text-slate-800 mb-2 uppercase tracking-wider">{storeIsAr ? 'لغة المتجر' : 'Langue de la boutique'}</h4>
+                           <h4 className="text-xs font-black text-slate-800 mb-2 uppercase tracking-wider">{storeLang === 'ar' ? 'لغة المتجر' : storeLang === 'en' ? 'Store Language' : 'Langue de la boutique'}</h4>
                            <div className="flex gap-2">
                               <button onClick={() => setStoreLang('fr')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${storeLang === 'fr' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}`}>Français</button>
                               <button onClick={() => setStoreLang('en')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${storeLang === 'en' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}`}>English</button>
@@ -3178,8 +3178,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
                         <div className="flex items-center justify-between">
                            <div>
-                              <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{storeIsAr ? 'يتطلب حساب لإتمام الطلب' : 'Compte requis pour commander'}</h4>
-                              <p className="text-[11px] text-slate-500 font-semibold mt-1">{storeIsAr ? 'إذا تم التفعيل، يجب على الزبناء إنشاء حساب قبل إتمام الطلب' : "Si activé, les clients doivent créer un compte avant de finaliser une commande."}</p>
+                              <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{storeLang === 'ar' ? 'يتطلب حساب لإتمام الطلب' : storeLang === 'en' ? 'Account required to order' : 'Compte requis pour commander'}</h4>
+                              <p className="text-[11px] text-slate-500 font-semibold mt-1">{storeLang === 'ar' ? 'إذا تم التفعيل، يجب على الزبناء إنشاء حساب قبل إتمام الطلب' : storeLang === 'en' ? 'If enabled, customers must create an account before completing an order.' : "Si activé, les clients doivent créer un compte avant de finaliser une commande."}</p>
                            </div>
                            <button
                               onClick={() => setRequireAccountToOrder((v: boolean) => !v)}
@@ -3191,21 +3191,21 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                      </div>
 
                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-                        <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{storeIsAr ? 'أيقونات رأس المتجر' : "Icônes de l'en-tête"}</h4>
+                        <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{storeLang === 'ar' ? 'أيقونات رأس المتجر' : storeLang === 'en' ? 'Header Icons' : "Icônes de l'en-tête"}</h4>
                         <div className="flex items-center justify-between">
-                           <p className="text-xs font-bold text-slate-600">{storeIsAr ? 'اختيار اللغة' : 'Sélecteur de langue'}</p>
+                           <p className="text-xs font-bold text-slate-600">{storeLang === 'ar' ? 'اختيار اللغة' : storeLang === 'en' ? 'Language selector' : 'Sélecteur de langue'}</p>
                            <button onClick={() => setShowHeaderLang((v: boolean) => !v)} className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${showHeaderLang ? 'bg-indigo-600' : 'bg-slate-300'}`}>
                               <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${showHeaderLang ? 'translate-x-5' : ''}`} />
                            </button>
                         </div>
                         <div className="flex items-center justify-between">
-                           <p className="text-xs font-bold text-slate-600">{storeIsAr ? 'البحث' : 'Recherche'}</p>
+                           <p className="text-xs font-bold text-slate-600">{storeLang === 'ar' ? 'البحث' : storeLang === 'en' ? 'Search' : 'Recherche'}</p>
                            <button onClick={() => setShowHeaderSearch((v: boolean) => !v)} className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${showHeaderSearch ? 'bg-indigo-600' : 'bg-slate-300'}`}>
                               <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${showHeaderSearch ? 'translate-x-5' : ''}`} />
                            </button>
                         </div>
                         <div className="flex items-center justify-between">
-                           <p className="text-xs font-bold text-slate-600">{storeIsAr ? 'حساب الزبون (تسجيل الدخول)' : 'Compte client (connexion)'}</p>
+                           <p className="text-xs font-bold text-slate-600">{storeLang === 'ar' ? 'حساب الزبون (تسجيل الدخول)' : storeLang === 'en' ? 'Customer account (login)' : 'Compte client (connexion)'}</p>
                            <button onClick={() => setShowHeaderAccount((v: boolean) => !v)} className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${showHeaderAccount ? 'bg-indigo-600' : 'bg-slate-300'}`}>
                               <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${showHeaderAccount ? 'translate-x-5' : ''}`} />
                            </button>
@@ -3214,7 +3214,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
                        <div>
-                          <h4 className="text-xs font-black text-slate-800 mb-1 uppercase tracking-wider">{storeIsAr ? 'اسم المتجر' : 'Nom de la boutique'}</h4>
+                          <h4 className="text-xs font-black text-slate-800 mb-1 uppercase tracking-wider">{storeLang === 'ar' ? 'اسم المتجر' : storeLang === 'en' ? 'Store Name' : 'Nom de la boutique'}</h4>
                           <input 
                             type="text" 
                             value={storeName} 
@@ -3224,88 +3224,88 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        </div>
                        
                        <div className="pt-4 border-t border-slate-200">
-                          <h4 className="text-xs font-black text-slate-800 mb-2 uppercase tracking-wider">{storeIsAr ? 'شعار المتجر (اختياري)' : 'Logo de la boutique (Optionnel)'}</h4>
+                          <h4 className="text-xs font-black text-slate-800 mb-2 uppercase tracking-wider">{storeLang === 'ar' ? 'شعار المتجر (اختياري)' : storeLang === 'en' ? 'Store Logo (Optional)' : 'Logo de la boutique (Optionnel)'}</h4>
                           <div className="flex items-center gap-4">
                              <div className="w-16 h-16 bg-white border border-slate-200 rounded-xl flex items-center justify-center overflow-hidden shadow-sm shrink-0">
                                 {storeLogo ? <img src={storeLogo} className="w-full h-full object-contain p-1" alt="Logo" /> : <ImageIcon className="w-6 h-6 text-slate-300" />}
                              </div>
                              <label className="cursor-pointer px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm">
-                                {storeIsAr ? 'رفع الشعار' : 'Importer un logo'}
+                                {storeLang === 'ar' ? 'رفع الشعار' : storeLang === 'en' ? 'Upload a logo' : 'Importer un logo'}
                                 <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
                                    const file = e.target.files?.[0];
                                    if (file) setStoreLogo(await readFileAsBase64(file));
                                 }} />
                              </label>
                              {storeLogo && (
-                                <button onClick={() => setStoreLogo('')} className="text-xs font-bold text-rose-500 hover:text-rose-600">{storeIsAr ? 'إزالة' : 'Retirer'}</button>
+                                <button onClick={() => setStoreLogo('')} className="text-xs font-bold text-rose-500 hover:text-rose-600">{storeLang === 'ar' ? 'إزالة' : storeLang === 'en' ? 'Remove' : 'Retirer'}</button>
                              )}
                           </div>
                        </div>
-                       
+
                        <div className="pt-4 border-t border-slate-200">
-                          <h4 className="text-xs font-black text-slate-800 mb-2 uppercase tracking-wider">{storeIsAr ? 'أيقونة المتجر (Favicon)' : 'Favicon de la boutique'}</h4>
+                          <h4 className="text-xs font-black text-slate-800 mb-2 uppercase tracking-wider">{storeLang === 'ar' ? 'أيقونة المتجر (Favicon)' : storeLang === 'en' ? 'Store Favicon' : 'Favicon de la boutique'}</h4>
                           <div className="flex items-center gap-4">
                              <div className="w-10 h-10 bg-white border border-slate-200 rounded-lg flex items-center justify-center overflow-hidden shadow-sm shrink-0">
                                 {storeFavicon ? <img src={storeFavicon} className="w-full h-full object-contain" alt="Favicon" /> : <ImageIcon className="w-4 h-4 text-slate-300" />}
                              </div>
                              <label className="cursor-pointer px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm">
-                                {storeIsAr ? 'رفع الأيقونة' : 'Importer un favicon'}
+                                {storeLang === 'ar' ? 'رفع الأيقونة' : storeLang === 'en' ? 'Upload a favicon' : 'Importer un favicon'}
                                 <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
                                    const file = e.target.files?.[0];
                                    if (file) setStoreFavicon(await readFileAsBase64(file));
                                 }} />
                              </label>
                              {storeFavicon && (
-                                <button onClick={() => setStoreFavicon('')} className="text-xs font-bold text-rose-500 hover:text-rose-600">{storeIsAr ? 'إزالة' : 'Retirer'}</button>
+                                <button onClick={() => setStoreFavicon('')} className="text-xs font-bold text-rose-500 hover:text-rose-600">{storeLang === 'ar' ? 'إزالة' : storeLang === 'en' ? 'Remove' : 'Retirer'}</button>
                              )}
                           </div>
                        </div>
                     </div>
 
                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                       <h4 className="text-xs font-black text-slate-800 mb-1 uppercase tracking-wider flex items-center gap-2"><Globe className="w-4 h-4 text-indigo-600" /> {storeIsAr ? 'نطاق مخصص (دومين)' : 'Domaine Personnalisé'}</h4>
-                       <p className="text-[10px] text-slate-500 mb-2">{storeIsAr ? 'اربط النطاق الخاص بك (مثال: www.maboutique.com)' : 'Connectez votre propre domaine (ex: www.maboutique.com).'}</p>
+                       <h4 className="text-xs font-black text-slate-800 mb-1 uppercase tracking-wider flex items-center gap-2"><Globe className="w-4 h-4 text-indigo-600" /> {storeLang === 'ar' ? 'نطاق مخصص (دومين)' : storeLang === 'en' ? 'Custom Domain' : 'Domaine Personnalisé'}</h4>
+                       <p className="text-[10px] text-slate-500 mb-2">{storeLang === 'ar' ? 'اربط النطاق الخاص بك (مثال: www.maboutique.com)' : storeLang === 'en' ? 'Connect your own domain (e.g. www.mystore.com).' : 'Connectez votre propre domaine (ex: www.maboutique.com).'}</p>
                        <div className="flex gap-2">
-                         <input 
-                           type="text" 
-                           placeholder={storeIsAr ? 'مثال: www.maboutique.com' : 'ex: www.maboutique.com'}
-                           value={customDomain} 
-                           onChange={e => setCustomDomain(e.target.value)} 
+                         <input
+                           type="text"
+                           placeholder={storeLang === 'ar' ? 'مثال: www.maboutique.com' : storeLang === 'en' ? 'e.g: www.mystore.com' : 'ex: www.maboutique.com'}
+                           value={customDomain}
+                           onChange={e => setCustomDomain(e.target.value)}
                            className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 font-medium"
                          />
                          <button onClick={handleLinkDomain} disabled={isLinkingDomain} className="bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-800 transition-colors disabled:opacity-50">
-                           {isLinkingDomain ? '...' : storeIsAr ? 'ربط' : 'Lier'}
+                           {isLinkingDomain ? '...' : storeLang === 'ar' ? 'ربط' : storeLang === 'en' ? 'Link' : 'Lier'}
                          </button>
                        </div>
                        {domainError && <p className="text-xs text-rose-500 mt-2 font-bold flex items-center gap-1"><AlertCircle className="w-3 h-3"/> {domainError}</p>}
-                       
+
                        {customDomain && (
                           <div className="mt-4 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
                              <div className="bg-indigo-50/50 p-3 border-b border-slate-100 flex items-center gap-2">
                                 <ShieldCheck className="w-4 h-4 text-indigo-600" />
-                                <span className="text-xs font-bold text-slate-700">{storeIsAr ? 'إعدادات مطلوبة (Namecheap, Hostinger...)' : 'Configuration requise (Namecheap, Hostinger...)'}</span>
+                                <span className="text-xs font-bold text-slate-700">{storeLang === 'ar' ? 'إعدادات مطلوبة (Namecheap, Hostinger...)' : storeLang === 'en' ? 'Required configuration (Namecheap, Hostinger...)' : 'Configuration requise (Namecheap, Hostinger...)'}</span>
                              </div>
                              <div className="p-4 space-y-4">
                                 <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
-                                   {storeIsAr ? <>لكي يعمل نطاقك، أضف <b>سجل A (A Record)</b> عند مزود الخدمة الخاص بك (Namecheap, Hostinger...) بهذه المعلومات :</> : <>Pour que votre domaine fonctionne, ajoutez un <b>Enregistrement A (A Record)</b> chez votre fournisseur (Namecheap, Hostinger...) avec ces informations :</>}
+                                   {storeLang === 'ar' ? <>لكي يعمل نطاقك، أضف <b>سجل A (A Record)</b> عند مزود الخدمة الخاص بك (Namecheap, Hostinger...) بهذه المعلومات :</> : storeLang === 'en' ? <>For your domain to work, add an <b>A Record</b> at your provider (Namecheap, Hostinger...) with this information:</> : <>Pour que votre domaine fonctionne, ajoutez un <b>Enregistrement A (A Record)</b> chez votre fournisseur (Namecheap, Hostinger...) avec ces informations :</>}
                                 </p>
                                 <div className="space-y-2">
                                    <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-100 rounded-lg group">
-                                      <span className="text-xs text-slate-500 font-medium w-16">{storeIsAr ? 'النوع' : 'Type'}</span>
+                                      <span className="text-xs text-slate-500 font-medium w-16">{storeLang === 'ar' ? 'النوع' : 'Type'}</span>
                                       <code className="text-xs font-black text-slate-800 tracking-wide flex-1">A</code>
                                    </div>
                                    <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-100 rounded-lg group">
-                                      <span className="text-xs text-slate-500 font-medium w-16">Nom/Hôte</span>
+                                      <span className="text-xs text-slate-500 font-medium w-16">{storeLang === 'ar' ? 'الاسم/المضيف' : storeLang === 'en' ? 'Name/Host' : 'Nom/Hôte'}</span>
                                       <code className="text-xs font-black text-slate-800 tracking-wide flex-1">@</code>
                                       <button onClick={() => navigator.clipboard.writeText('@')} className="p-1 text-slate-400 group-hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors" title="Copier"><Copy className="w-3.5 h-3.5" /></button>
                                    </div>
                                    <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-100 rounded-lg group">
-                                      <span className="text-xs text-slate-500 font-medium w-16">Valeur/IP</span>
+                                      <span className="text-xs text-slate-500 font-medium w-16">{storeLang === 'ar' ? 'القيمة/IP' : storeLang === 'en' ? 'Value/IP' : 'Valeur/IP'}</span>
                                       <code className="text-xs font-black text-slate-800 tracking-wide flex-1">76.76.21.21</code>
                                       <button onClick={() => navigator.clipboard.writeText('76.76.21.21')} className="p-1 text-slate-400 group-hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors" title="Copier"><Copy className="w-3.5 h-3.5" /></button>
                                    </div>
                                 </div>
-                                <p className="text-[10px] text-slate-400 italic">La propagation DNS peut prendre entre 15 minutes et 24 heures.</p>
+                                <p className="text-[10px] text-slate-400 italic">{storeLang === 'ar' ? 'قد يستغرق انتشار DNS ما بين 15 دقيقة و24 ساعة.' : storeLang === 'en' ? 'DNS propagation can take between 15 minutes and 24 hours.' : 'La propagation DNS peut prendre entre 15 minutes et 24 heures.'}</p>
                              </div>
                           </div>
                        )}
@@ -3313,18 +3313,18 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
                     <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                        <h4 className="text-xs font-black text-slate-800 mb-4 uppercase tracking-wider flex items-center gap-2">
-                         <LayoutTemplate className="w-4 h-4 text-indigo-600" /> {storeIsAr ? 'إدارة الصفحات' : 'Gestion des Pages'}
+                         <LayoutTemplate className="w-4 h-4 text-indigo-600" /> {storeLang === 'ar' ? 'إدارة الصفحات' : storeLang === 'en' ? 'Page Management' : 'Gestion des Pages'}
                        </h4>
-                       
+
                        <div className="flex gap-2 mb-4">
-                          <input 
-                            type="text" 
-                            placeholder="Titre (ex: Contact)" 
+                          <input
+                            type="text"
+                            placeholder={storeLang === 'ar' ? 'العنوان (مثال: اتصل بنا)' : storeLang === 'en' ? 'Title (e.g: Contact)' : 'Titre (ex: Contact)'}
                             value={newPageTitle}
                             onChange={e => setNewPageTitle(e.target.value)}
-                            className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" 
+                            className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500"
                           />
-                          <button 
+                          <button
                             onClick={() => {
                                if(newPageTitle) {
                                   const id = newPageTitle.toLowerCase().replace(/\s+/g, '-');
@@ -3334,7 +3334,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                             }}
                             className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors"
                           >
-                            {storeIsAr ? 'إضافة' : 'Ajouter'}
+                            {storeLang === 'ar' ? 'إضافة' : storeLang === 'en' ? 'Add' : 'Ajouter'}
                           </button>
                        </div>
 
@@ -3355,7 +3355,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                       </button>
                                    )}
                                    {page.isDefault && (
-                                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 px-2 py-1 bg-slate-200 rounded-md">{storeIsAr ? 'نظام' : 'Système'}</span>
+                                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 px-2 py-1 bg-slate-200 rounded-md">{storeLang === 'ar' ? 'نظام' : storeLang === 'en' ? 'System' : 'Système'}</span>
                                    )}
                                 </div>
                              </div>
@@ -3365,36 +3365,36 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
                     <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mt-4 mb-4">
                         <h4 className="text-xs font-black text-slate-800 mb-4 uppercase tracking-wider flex items-center gap-2">
-                          <LayoutTemplate className="w-4 h-4 text-indigo-600" /> Pied de page (Footer)
+                          <LayoutTemplate className="w-4 h-4 text-indigo-600" /> {storeLang === 'ar' ? 'تذييل الصفحة (Footer)' : storeLang === 'en' ? 'Footer' : 'Pied de page (Footer)'}
                         </h4>
-                        
+
                         <div className="space-y-4">
                            <div>
-                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">{storeIsAr ? 'نص حقوق النشر' : 'Texte du Copyright'}</label>
-                              <input 
-                                type="text" 
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">{storeLang === 'ar' ? 'نص حقوق النشر' : storeLang === 'en' ? 'Copyright Text' : 'Texte du Copyright'}</label>
+                              <input
+                                type="text"
                                 value={footerSettings.copyright}
                                 onChange={e => setFooterSettings({...footerSettings, copyright: e.target.value})}
-                                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" 
+                                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500"
                               />
                            </div>
 
                            <div className="space-y-2 pt-2">
-                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Pages Légales (Générées Automatiquement)</label>
-                              
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">{storeLang === 'ar' ? 'الصفحات القانونية (تُنشأ تلقائياً)' : storeLang === 'en' ? 'Legal Pages (Auto-Generated)' : 'Pages Légales (Générées Automatiquement)'}</label>
+
                               <label className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
                                  <input type="checkbox" checked={footerSettings.showPrivacy} onChange={e => setFooterSettings({...footerSettings, showPrivacy: e.target.checked})} className="w-4 h-4 accent-indigo-600" />
-                                 <span className="text-sm font-bold text-slate-700">{storeIsAr ? 'سياسة الخصوصية' : 'Politique de Confidentialité'}</span>
+                                 <span className="text-sm font-bold text-slate-700">{storeLang === 'ar' ? 'سياسة الخصوصية' : storeLang === 'en' ? 'Privacy Policy' : 'Politique de Confidentialité'}</span>
                               </label>
-                              
+
                               <label className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
                                  <input type="checkbox" checked={footerSettings.showTerms} onChange={e => setFooterSettings({...footerSettings, showTerms: e.target.checked})} className="w-4 h-4 accent-indigo-600" />
-                                 <span className="text-sm font-bold text-slate-700">Conditions Générales de Vente (CGV)</span>
+                                 <span className="text-sm font-bold text-slate-700">{storeLang === 'ar' ? 'الشروط والأحكام العامة للبيع' : storeLang === 'en' ? 'Terms & Conditions of Sale' : 'Conditions Générales de Vente (CGV)'}</span>
                               </label>
-                              
+
                               <label className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
                                  <input type="checkbox" checked={footerSettings.showCookies} onChange={e => setFooterSettings({...footerSettings, showCookies: e.target.checked})} className="w-4 h-4 accent-indigo-600" />
-                                 <span className="text-sm font-bold text-slate-700">{storeIsAr ? 'سياسة ملفات الارتباط' : 'Politique des Cookies'}</span>
+                                 <span className="text-sm font-bold text-slate-700">{storeLang === 'ar' ? 'سياسة ملفات الارتباط' : storeLang === 'en' ? 'Cookie Policy' : 'Politique des Cookies'}</span>
                               </label>
                            </div>
                         </div>
@@ -3402,24 +3402,24 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
                      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mt-4">
                        <h4 className="text-xs font-black text-slate-800 mb-4 uppercase tracking-wider flex items-center gap-2">
-                         <ShoppingBag className="w-4 h-4 text-indigo-600" /> Mode d'Achat (Boutons)
+                         <ShoppingBag className="w-4 h-4 text-indigo-600" /> {storeLang === 'ar' ? 'طريقة الشراء (الأزرار)' : storeLang === 'en' ? 'Buy Mode (Buttons)' : "Mode d'Achat (Boutons)"}
                        </h4>
                        <div className="space-y-3">
                           <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors">
                              <input type="radio" name="buyMode" checked={buyMode === 'both'} onChange={() => setBuyMode('both')} className="accent-indigo-600" />
-                             {storeIsAr ? "عرض 'أضف للسلة' و'اشتري الآن'" : "Afficher 'Ajouter au panier' & 'Acheter direct'"}
+                             {storeLang === 'ar' ? "عرض 'أضف للسلة' و'اشتري الآن'" : storeLang === 'en' ? "Show 'Add to cart' & 'Buy direct'" : "Afficher 'Ajouter au panier' & 'Acheter direct'"}
                           </label>
                           <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors">
                              <input type="radio" name="buyMode" checked={buyMode === 'direct'} onChange={() => setBuyMode('direct')} className="accent-indigo-600" />
-                             Uniquement 'Acheter direct' (Express)
+                             {storeLang === 'ar' ? "فقط 'اشتري مباشرة' (سريع)" : storeLang === 'en' ? "Only 'Buy direct' (Express)" : "Uniquement 'Acheter direct' (Express)"}
                           </label>
                           <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors">
                              <input type="radio" name="buyMode" checked={buyMode === 'cart'} onChange={() => setBuyMode('cart')} className="accent-indigo-600" />
-                             {storeIsAr ? "فقط 'أضف للسلة' (كلاسيكي)" : "Uniquement 'Ajouter au panier' (Classique)"}
+                             {storeLang === 'ar' ? "فقط 'أضف للسلة' (كلاسيكي)" : storeLang === 'en' ? "Only 'Add to cart' (Classic)" : "Uniquement 'Ajouter au panier' (Classique)"}
                           </label>
                           <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors">
                              <input type="radio" name="buyMode" checked={buyMode === 'form'} onChange={() => setBuyMode('form')} className="accent-indigo-600" />
-                             Formulaire intégré (Express sur la page)
+                             {storeLang === 'ar' ? "نموذج مدمج (سريع في الصفحة)" : storeLang === 'en' ? "Embedded form (Express on page)" : "Formulaire intégré (Express sur la page)"}
                           </label>
                        </div>
                     </div>
