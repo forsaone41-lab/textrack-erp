@@ -4298,6 +4298,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
         {/* VERTICAL SIDE NAVIGATION */}
         <div className="w-24 shrink-0 flex flex-col gap-3">
            {(platformMode === 'gestion' ? [
+                 { id: 'analytics', icon: TrendingUp, label: isAr ? 'لوحة PRO' : 'Dashboard' },
                  { id: 'orders', icon: ListOrdered, label: isAr ? 'الطلبات' : 'Commandes' },
                  { id: 'products', icon: ShoppingBag, label: isAr ? 'المنتجات' : 'Produits' },
                  { id: 'customers', icon: Users, label: isAr ? 'الزبائن' : 'Clients' },
@@ -4388,80 +4389,24 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
               )}
 
               {/* ORDERS TAB (NEW PRO DASHBOARD!) */}
-              {activeTab === 'orders' && (
-                 <div className="space-y-6">
-                    {/* Dashboard KPIs */}
-                    {/* Dashboard KPIs PRO EDITION */}
-                    <div className="grid grid-cols-2 gap-3">
-                       <div className="bg-gradient-to-br from-indigo-500 via-indigo-600 to-blue-700 p-4 rounded-2xl shadow-lg shadow-indigo-300/50 flex flex-col justify-between relative overflow-hidden group">
-                          {/* Glow effect */}
-                          <div className="absolute -top-10 -right-10 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
-                          <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-blue-400 opacity-20 rounded-full blur-xl group-hover:translate-x-4 transition-transform duration-700"></div>
-                          
-                          <div className="flex items-center justify-between mb-4 relative z-10">
-                             <span className="text-[10px] font-black text-indigo-100 uppercase tracking-widest drop-shadow-sm">Commandes</span>
-                             <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/20 shadow-inner"><ShoppingBag className="w-4 h-4 text-white" /></div>
-                          </div>
-                          <div className="relative z-10">
-                             <h4 className="text-3xl font-black text-white tracking-tight drop-shadow-md">{storeOrders.filter((o: any) => !o.deleted).length.toLocaleString('fr-FR')}</h4>
-                             <div className="flex items-center gap-1 mt-1">
-                               <div className="bg-emerald-400/20 px-1.5 py-0.5 rounded flex items-center gap-1 backdrop-blur-sm">
-                                 <TrendingUp className="w-2.5 h-2.5 text-emerald-300" />
-                                 <span className="text-[9px] font-black text-emerald-200">+12%</span>
-                               </div>
-                               <p className="text-[9px] text-indigo-200 font-bold ml-1">{isAr ? 'هذا الشهر' : 'ce mois'}</p>
-                             </div>
-                          </div>
-                       </div>
-                       
-                       <div className="bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600 p-4 rounded-2xl shadow-lg shadow-emerald-300/50 flex flex-col justify-between relative overflow-hidden group">
-                          {/* Glow effect */}
-                          <div className="absolute -top-10 -right-10 w-32 h-32 bg-white opacity-20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
-                          <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-teal-200 opacity-20 rounded-full blur-xl group-hover:-translate-y-4 transition-transform duration-700"></div>
-                          
-                          <div className="flex items-center justify-between mb-4 relative z-10">
-                             <span className="text-[10px] font-black text-emerald-50 uppercase tracking-widest drop-shadow-sm">Revenus</span>
-                             <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/20 shadow-inner"><CreditCard className="w-4 h-4 text-white" /></div>
-                          </div>
-                          <div className="relative z-10">
-                             <h4 className="text-2xl font-black text-white tracking-tight drop-shadow-md">{storeOrders.filter((o: any) => !o.deleted).reduce((sum: number, ord: any) => sum + (parseFloat(ord.amount) || 0), 0).toLocaleString('fr-FR')} <span className="text-[10px] font-bold text-emerald-100">MAD</span></h4>
-                             <div className="flex items-center gap-1 mt-1">
-                               <div className="bg-white/20 px-1.5 py-0.5 rounded flex items-center gap-1 backdrop-blur-sm">
-                                 <TrendingUp className="w-2.5 h-2.5 text-white" />
-                                 <span className="text-[9px] font-black text-white">+8.5%</span>
-                               </div>
-                               <p className="text-[9px] text-emerald-100 font-bold ml-1">{isAr ? 'هذا الشهر' : 'ce mois'}</p>
-                             </div>
-                          </div>
-                       </div>
-
-                       <div
-                          onClick={() => { setShowTrash(false); setSelectedOrderIds([]); setOrderStatusFilter(prev => prev === 'confirmed' ? 'all' : 'confirmed'); }}
-                          className={`bg-white p-3.5 rounded-2xl border shadow-sm hover:shadow-md transition-all flex items-center justify-between group cursor-pointer relative overflow-hidden ${orderStatusFilter === 'confirmed' ? 'border-green-400 ring-2 ring-green-100' : 'border-slate-100'}`}
-                       >
-                          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-green-400 group-hover:w-2 transition-all"></div>
-                          <div className="pl-2">
-                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'مؤكدة' : 'Confirmées'}</p>
-                             <h4 className="text-xl font-black text-slate-800 tracking-tight">{storeOrders.filter((ord: any) => !ord.deleted && CONFIRMED_STATUSES.includes(ord.status)).length.toLocaleString('fr-FR')}</h4>
-                          </div>
-                          <div className="w-10 h-10 bg-green-50 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:bg-green-100 transition-all"><CheckCircle className="w-5 h-5 text-green-500" /></div>
-                       </div>
-
-                       <div
-                          onClick={() => { setShowTrash(false); setSelectedOrderIds([]); setOrderStatusFilter(prev => prev === 'refused' ? 'all' : 'refused'); }}
-                          className={`bg-white p-3.5 rounded-2xl border shadow-sm hover:shadow-md transition-all flex items-center justify-between group cursor-pointer relative overflow-hidden ${orderStatusFilter === 'refused' ? 'border-rose-400 ring-2 ring-rose-100' : 'border-slate-100'}`}
-                       >
-                          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-400 group-hover:w-2 transition-all"></div>
-                          <div className="pl-2">
-                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'مرفوضة' : 'Refusées'}</p>
-                             <h4 className="text-xl font-black text-slate-800 tracking-tight">{storeOrders.filter((ord: any) => !ord.deleted && REFUSED_STATUSES.includes(ord.status)).length.toLocaleString('fr-FR')}</h4>
-                          </div>
-                          <div className="w-10 h-10 bg-rose-50 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:bg-rose-100 transition-all"><X className="w-5 h-5 text-rose-500" /></div>
-                       </div>
-                    </div>
-                    
-
-                    {/* Analytics PRO Section */}
+                           {activeTab === 'analytics' && (
+                  <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                     <div className="bg-gradient-to-br from-indigo-900 via-indigo-800 to-slate-900 rounded-2xl p-8 text-white relative overflow-hidden shadow-xl">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
+                        <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-500 opacity-10 rounded-full blur-2xl translate-y-1/3 -translate-x-1/3 pointer-events-none"></div>
+                        
+                        <div className="relative z-10 flex items-center gap-4 mb-2">
+                           <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 shadow-inner">
+                              <Crown className="w-6 h-6 text-amber-400 drop-shadow-md" />
+                           </div>
+                           <div>
+                              <h2 className="text-2xl font-black tracking-tight">{isAr ? 'لوحة التحكم الاحترافية' : 'Dashboard Premium'}</h2>
+                              <p className="text-sm font-bold text-indigo-200 mt-1">{isAr ? 'تحليلات ذكية لمتجرك مدعومة بالبيانات.' : 'Des analyses intelligentes pour votre boutique.'}</p>
+                           </div>
+                        </div>
+                     </div>
+                     
+                     {/* Analytics PRO Section */}
                     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-6">
                        <div className="flex items-center justify-between">
                           <h3 className="text-sm font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
@@ -4596,7 +4541,84 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                           </div>
                        </div>
                     </div>
-\n                    {/* Recent Orders List */}
+\n                    
+                  </div>
+              )}
+              
+              {activeTab === 'orders' && (
+                 <div className="space-y-6">
+                    {/* Dashboard KPIs */}
+                    {/* Dashboard KPIs PRO EDITION */}
+                    <div className="grid grid-cols-2 gap-3">
+                       <div className="bg-gradient-to-br from-indigo-500 via-indigo-600 to-blue-700 p-4 rounded-2xl shadow-lg shadow-indigo-300/50 flex flex-col justify-between relative overflow-hidden group">
+                          {/* Glow effect */}
+                          <div className="absolute -top-10 -right-10 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+                          <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-blue-400 opacity-20 rounded-full blur-xl group-hover:translate-x-4 transition-transform duration-700"></div>
+                          
+                          <div className="flex items-center justify-between mb-4 relative z-10">
+                             <span className="text-[10px] font-black text-indigo-100 uppercase tracking-widest drop-shadow-sm">Commandes</span>
+                             <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/20 shadow-inner"><ShoppingBag className="w-4 h-4 text-white" /></div>
+                          </div>
+                          <div className="relative z-10">
+                             <h4 className="text-3xl font-black text-white tracking-tight drop-shadow-md">{storeOrders.filter((o: any) => !o.deleted).length.toLocaleString('fr-FR')}</h4>
+                             <div className="flex items-center gap-1 mt-1">
+                               <div className="bg-emerald-400/20 px-1.5 py-0.5 rounded flex items-center gap-1 backdrop-blur-sm">
+                                 <TrendingUp className="w-2.5 h-2.5 text-emerald-300" />
+                                 <span className="text-[9px] font-black text-emerald-200">+12%</span>
+                               </div>
+                               <p className="text-[9px] text-indigo-200 font-bold ml-1">{isAr ? 'هذا الشهر' : 'ce mois'}</p>
+                             </div>
+                          </div>
+                       </div>
+                       
+                       <div className="bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600 p-4 rounded-2xl shadow-lg shadow-emerald-300/50 flex flex-col justify-between relative overflow-hidden group">
+                          {/* Glow effect */}
+                          <div className="absolute -top-10 -right-10 w-32 h-32 bg-white opacity-20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+                          <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-teal-200 opacity-20 rounded-full blur-xl group-hover:-translate-y-4 transition-transform duration-700"></div>
+                          
+                          <div className="flex items-center justify-between mb-4 relative z-10">
+                             <span className="text-[10px] font-black text-emerald-50 uppercase tracking-widest drop-shadow-sm">Revenus</span>
+                             <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/20 shadow-inner"><CreditCard className="w-4 h-4 text-white" /></div>
+                          </div>
+                          <div className="relative z-10">
+                             <h4 className="text-2xl font-black text-white tracking-tight drop-shadow-md">{storeOrders.filter((o: any) => !o.deleted).reduce((sum: number, ord: any) => sum + (parseFloat(ord.amount) || 0), 0).toLocaleString('fr-FR')} <span className="text-[10px] font-bold text-emerald-100">MAD</span></h4>
+                             <div className="flex items-center gap-1 mt-1">
+                               <div className="bg-white/20 px-1.5 py-0.5 rounded flex items-center gap-1 backdrop-blur-sm">
+                                 <TrendingUp className="w-2.5 h-2.5 text-white" />
+                                 <span className="text-[9px] font-black text-white">+8.5%</span>
+                               </div>
+                               <p className="text-[9px] text-emerald-100 font-bold ml-1">{isAr ? 'هذا الشهر' : 'ce mois'}</p>
+                             </div>
+                          </div>
+                       </div>
+
+                       <div
+                          onClick={() => { setShowTrash(false); setSelectedOrderIds([]); setOrderStatusFilter(prev => prev === 'confirmed' ? 'all' : 'confirmed'); }}
+                          className={`bg-white p-3.5 rounded-2xl border shadow-sm hover:shadow-md transition-all flex items-center justify-between group cursor-pointer relative overflow-hidden ${orderStatusFilter === 'confirmed' ? 'border-green-400 ring-2 ring-green-100' : 'border-slate-100'}`}
+                       >
+                          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-green-400 group-hover:w-2 transition-all"></div>
+                          <div className="pl-2">
+                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'مؤكدة' : 'Confirmées'}</p>
+                             <h4 className="text-xl font-black text-slate-800 tracking-tight">{storeOrders.filter((ord: any) => !ord.deleted && CONFIRMED_STATUSES.includes(ord.status)).length.toLocaleString('fr-FR')}</h4>
+                          </div>
+                          <div className="w-10 h-10 bg-green-50 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:bg-green-100 transition-all"><CheckCircle className="w-5 h-5 text-green-500" /></div>
+                       </div>
+
+                       <div
+                          onClick={() => { setShowTrash(false); setSelectedOrderIds([]); setOrderStatusFilter(prev => prev === 'refused' ? 'all' : 'refused'); }}
+                          className={`bg-white p-3.5 rounded-2xl border shadow-sm hover:shadow-md transition-all flex items-center justify-between group cursor-pointer relative overflow-hidden ${orderStatusFilter === 'refused' ? 'border-rose-400 ring-2 ring-rose-100' : 'border-slate-100'}`}
+                       >
+                          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-400 group-hover:w-2 transition-all"></div>
+                          <div className="pl-2">
+                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'مرفوضة' : 'Refusées'}</p>
+                             <h4 className="text-xl font-black text-slate-800 tracking-tight">{storeOrders.filter((ord: any) => !ord.deleted && REFUSED_STATUSES.includes(ord.status)).length.toLocaleString('fr-FR')}</h4>
+                          </div>
+                          <div className="w-10 h-10 bg-rose-50 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:bg-rose-100 transition-all"><X className="w-5 h-5 text-rose-500" /></div>
+                       </div>
+                    </div>
+                    
+
+                    {/* Recent Orders List */}
                     <div>
                        <div className="flex justify-between items-center mb-3">
                           <div className="flex gap-4 items-center">
