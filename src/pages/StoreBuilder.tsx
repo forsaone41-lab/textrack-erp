@@ -355,6 +355,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [footerTextColor, setFooterTextColor] = useState(config.footerTextColor || '#64748b');
   const [cardStyle, setCardStyle] = useState<'rounded' | 'square' | 'arch' | 'pill' | 'trend'>(config.cardStyle || 'rounded');
   const [showCardBadge, setShowCardBadge] = useState<boolean>(config.showCardBadge ?? false);
+  const [collectionLabelBelow, setCollectionLabelBelow] = useState<boolean>(config.collectionLabelBelow ?? false);
   const getCardRadius = (): string | undefined => {
      if (cardStyle === 'square') return '0px';
      if (cardStyle === 'arch') return '40px 40px 10px 10px';
@@ -632,6 +633,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               if (conf.footerTextColor) setFooterTextColor(conf.footerTextColor);
               if (conf.cardStyle) setCardStyle(conf.cardStyle);
               if (conf.showCardBadge !== undefined) setShowCardBadge(conf.showCardBadge);
+              if (conf.collectionLabelBelow !== undefined) setCollectionLabelBelow(conf.collectionLabelBelow);
               if (conf.heroHeight) setHeroHeight(conf.heroHeight);
               if (conf.heroImagePosX !== undefined) setHeroImagePosX(conf.heroImagePosX);
               if (conf.heroImagePosY !== undefined) setHeroImagePosY(conf.heroImagePosY);
@@ -839,6 +841,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        footerTextColor,
        cardStyle,
        showCardBadge,
+       collectionLabelBelow,
        heroHeight,
        heroImagePosX,
        heroImagePosY,
@@ -1370,6 +1373,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                       <ChevronDown className="w-3.5 h-3.5 -rotate-90 text-slate-400" />
                                    </div>
                                 </div>
+                             ) : (collectionLabelBelow || cardStyle === 'pill' || cardStyle === 'arch') ? (
+                             <div key={idx} onClick={() => { setActiveCategory(cat); setPage('collections'); }} className="cursor-pointer group">
+                                <div className="aspect-square relative overflow-hidden shadow-sm hover:shadow-xl transition-all" style={{ borderRadius: getCardRadius() ?? '16px' }}>
+                                   <img src={storeProducts.find((p:any)=>p.category===cat)?.image || 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&q=80&w=600'} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                </div>
+                                <p className="text-center font-bold text-sm mt-3 text-slate-800">{cat}</p>
+                             </div>
                              ) : (
                              <div key={idx} onClick={() => { setActiveCategory(cat); setPage('collections'); }} className="cursor-pointer group aspect-square relative overflow-hidden shadow-sm hover:shadow-xl transition-all" style={{ borderRadius: getCardRadius() ?? '16px' }}>
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10 flex items-end p-6">
@@ -3865,6 +3875,15 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                               <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${showCardBadge ? 'translate-x-4' : ''}`} />
                            </button>
                         </div>
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
+                           <span className="text-[10px] font-bold text-slate-500">{isAr ? 'اسم الفئة تحت الصورة (وليس فوقها)' : 'Nom de la collection en dessous de l\'image'}</span>
+                           <button onClick={() => setCollectionLabelBelow(v => !v)} className={`relative w-9 h-5 rounded-full transition-colors shrink-0 ${collectionLabelBelow || cardStyle === 'pill' || cardStyle === 'arch' ? 'bg-indigo-600' : 'bg-slate-300'}`} disabled={cardStyle === 'pill' || cardStyle === 'arch'}>
+                              <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${collectionLabelBelow || cardStyle === 'pill' || cardStyle === 'arch' ? 'translate-x-4' : ''}`} />
+                           </button>
+                        </div>
+                        {(cardStyle === 'pill' || cardStyle === 'arch') && (
+                           <p className="text-[9px] text-slate-400 mt-1.5">{isAr ? 'مفعّل تلقائيًا مع هذا الشكل' : 'Activé automatiquement avec cette forme de carte'}</p>
+                        )}
                      </div>
 
                      {/* PRODUCT CARD SIZE */}
