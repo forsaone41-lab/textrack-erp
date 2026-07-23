@@ -499,18 +499,18 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                        <table className="w-full text-sm min-w-[320px]">
                           <thead>
                              <tr className="text-slate-400 border-b border-slate-100">
-                                <th className="text-left font-bold py-2">{storeIsAr ? 'القياس (سم)' : 'Mesure (cm)'}</th>
+                                <th className="text-left font-bold py-3 pr-4">{storeIsAr ? 'القياس (سم)' : 'Mesure (cm)'}</th>
                                 {(sizeGuideData.tailles || []).map(t => (
-                                   <th key={t} className="font-black py-2 text-center">{t}</th>
+                                   <th key={t} className="font-black py-3 px-3 text-center min-w-[55px]">{t}</th>
                                 ))}
                              </tr>
                           </thead>
                           <tbody>
                              {sizeGuideData.mesures.map((m, idx) => (
                                 <tr key={idx} className="border-b border-slate-50">
-                                   <td className="py-2.5 font-semibold text-slate-600">{m.nom}</td>
+                                   <td className="py-3 pr-4 font-semibold text-slate-600 leading-tight min-w-[150px]">{m.nom}</td>
                                    {(sizeGuideData.tailles || []).map(t => (
-                                      <td key={t} className="py-2.5 text-center text-slate-800 font-bold">{m.valeurs[t] ?? '-'}</td>
+                                      <td key={t} className="py-3 px-3 text-center text-slate-800 font-bold min-w-[55px]">{m.valeurs[t] ?? '-'}</td>
                                    ))}
                                 </tr>
                              ))}
