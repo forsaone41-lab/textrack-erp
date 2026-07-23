@@ -37,6 +37,22 @@ const readFileAsBase64 = (file: File): Promise<string> => {
   });
 };
 
+// Uploads to Supabase Storage and returns a real public URL (needed for favicon/OG image -
+// Google/Facebook cannot fetch a base64 data URI as a site's icon or link preview image).
+// Falls back to a base64 data URI if the storage bucket isn't set up yet (see storage_setup.sql).
+const uploadStoreAsset = async (file: File, folder: string): Promise<string> => {
+  try {
+    const ext = file.name.split('.').pop() || 'png';
+    const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await supabase.storage.from('store-assets').upload(path, file, { upsert: true });
+    if (error) throw error;
+    const { data } = supabase.storage.from('store-assets').getPublicUrl(path);
+    return data.publicUrl;
+  } catch {
+    return readFileAsBase64(file);
+  }
+};
+
 const getSavedConfig = () => {
     try {
         const saved = localStorage.getItem('beya_store_config');
@@ -549,12 +565,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   
   const [storeLogo, setStoreLogo] = useState(config.storeLogo || '');
   const [storeFavicon, setStoreFavicon] = useState(config.storeFavicon || '');
-  
+  const [seoDescription, setSeoDescription] = useState(config.seoDescription || '');
+
   useEffect(() => {
      if (isLiveStore) {
         document.title = storeName;
         const finalIcon = storeFavicon || storeLogo || "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛍️</text></svg>";
-        
+
         document.querySelectorAll("link[rel*='icon']").forEach(node => {
             (node as HTMLLinkElement).href = finalIcon;
         });
@@ -565,8 +582,31 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
             document.getElementsByTagName('head')[0].appendChild(appleLink);
         }
         appleLink.href = finalIcon;
+
+        const description = seoDescription || `${storeName} - ${storeIsAr ? 'تسوق أونلاين' : 'Boutique en ligne'}`;
+        const setMeta = (selector: string, attr: string, content: string) => {
+           let el = document.querySelector(selector) as HTMLMetaElement;
+           if (!el) {
+              el = document.createElement('meta');
+              const [attrName, attrValue] = selector.match(/\[(.+?)="(.+?)"\]/)?.slice(1) || [];
+              if (attrName && attrValue) el.setAttribute(attrName, attrValue);
+              document.head.appendChild(el);
+           }
+           el.setAttribute(attr, content);
+        };
+        setMeta('meta[name="description"]', 'content', description);
+        setMeta('meta[property="og:title"]', 'content', storeName);
+        setMeta('meta[property="og:description"]', 'content', description);
+        setMeta('meta[property="og:type"]', 'content', 'website');
+        setMeta('meta[property="twitter:title"]', 'content', storeName);
+        setMeta('meta[property="twitter:description"]', 'content', description);
+        if (storeLogo) {
+           setMeta('meta[property="og:image"]', 'content', storeLogo);
+           setMeta('meta[property="twitter:image"]', 'content', storeLogo);
+           setMeta('meta[property="twitter:card"]', 'content', 'summary_large_image');
+        }
      }
-  }, [isLiveStore, storeName, storeLogo, storeFavicon]);
+  }, [isLiveStore, storeName, storeLogo, storeFavicon, seoDescription, storeIsAr]);
 
   const [isLoadingLiveConfig, setIsLoadingLiveConfig] = useState(isLiveStore);
 
@@ -612,6 +652,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               if (conf.storeName) setStoreName(conf.storeName);
               if (conf.storeLogo) setStoreLogo(conf.storeLogo);
               if (conf.storeFavicon) setStoreFavicon(conf.storeFavicon);
+              if (conf.seoDescription) setSeoDescription(conf.seoDescription);
               if (conf.activeTheme) setActiveTheme(conf.activeTheme);
               if (conf.primaryColor) setPrimaryColor(conf.primaryColor);
               if (conf.fontFamily) setFontFamily(conf.fontFamily);
@@ -813,6 +854,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
        storeName,
        storeLogo,
        storeFavicon,
+       seoDescription,
        customDomain,
        activeTheme,
        primaryColor,
@@ -984,7 +1026,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                <ImageIcon className="w-3 h-3" />
                <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
                   const file = e.target.files?.[0];
-                  if (file) setStoreLogo(await readFileAsBase64(file));
+                  if (file) setStoreLogo(await uploadStoreAsset(file, 'logo'));
                }} />
             </div>
          </label>
@@ -4201,7 +4243,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                 {isAr ? 'رفع الشعار' : 'Importer un logo'}
                                 <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
                                    const file = e.target.files?.[0];
-                                   if (file) setStoreLogo(await readFileAsBase64(file));
+                                   if (file) setStoreLogo(await uploadStoreAsset(file, 'logo'));
                                 }} />
                              </label>
                              {storeLogo && (
@@ -4220,13 +4262,26 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                 {isAr ? 'رفع الأيقونة' : 'Importer un favicon'}
                                 <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
                                    const file = e.target.files?.[0];
-                                   if (file) setStoreFavicon(await readFileAsBase64(file));
+                                   if (file) setStoreFavicon(await uploadStoreAsset(file, 'favicon'));
                                 }} />
                              </label>
                              {storeFavicon && (
                                 <button onClick={() => setStoreFavicon('')} className="text-xs font-bold text-rose-500 hover:text-rose-600">{isAr ? 'إزالة' : 'Retirer'}</button>
                              )}
                           </div>
+                       </div>
+
+                       <div className="pt-4 border-t border-slate-200">
+                          <h4 className="text-xs font-black text-slate-800 mb-2 uppercase tracking-wider">{isAr ? 'وصف SEO (يظهر في نتائج جوجل)' : 'Description SEO (affichée sur Google)'}</h4>
+                          <textarea
+                             value={seoDescription}
+                             onChange={e => setSeoDescription(e.target.value)}
+                             rows={3}
+                             maxLength={160}
+                             placeholder={isAr ? 'وصف قصير للمتجر ديالك (أقل من 160 حرف)' : 'Courte description de votre boutique (moins de 160 caractères)'}
+                             className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 resize-none"
+                          />
+                          <p className="text-[10px] text-slate-400 mt-1 text-right">{seoDescription.length}/160</p>
                        </div>
                     </div>
 
