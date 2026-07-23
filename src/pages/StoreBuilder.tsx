@@ -873,9 +873,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
   const handleAIGenerate = async () => {
      if (!productForm?.image) return;
-     const apiKey = localStorage.getItem('beya_gemini_api_key');
+     const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key');
      if (!apiKey) {
-        alert(isAr ? 'المرجو إضافة مفتاح Gemini API في إعدادات مساحة الذكاء الاصطناعي أولاً.' : 'Veuillez ajouter votre clé API Gemini dans l\'Espace IA en premier.');
+        alert(isAr ? 'لم يتم تكوين الذكاء الاصطناعي في هذا الخادم.' : 'L\'IA n\'est pas configurée sur ce serveur.');
         return;
      }
 
