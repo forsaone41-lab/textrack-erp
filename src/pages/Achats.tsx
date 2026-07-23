@@ -122,7 +122,7 @@ export default function Achats() {
       const updated = besoins.filter(b => b.id !== id);
       setBesoins(updated);
       localStorage.setItem('textrack_data_achats', JSON.stringify(updated));
-      deleteRecord('achats', id, true).catch(console.error);
+      deleteRecord('achats', id, 'true').catch(console.error);
     }
   };
 

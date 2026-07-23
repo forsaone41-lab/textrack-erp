@@ -28,7 +28,7 @@ export default function EvaluationPatronage() {
       if (error) throw error;
       if (data) {
         const filtered = data.filter(l => {
-           let details = {};
+           let details: any = {};
            try { details = JSON.parse(l.details || '{}'); } catch(e) {}
            return details.patronageStatus === 'requested' || details.patronageStatus === 'priced';
         });

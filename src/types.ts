@@ -403,7 +403,7 @@ export type AppPage =
   | 'dashboard' | 'fiches' | 'ordres' | 'chaine' | 'stocks' | 'pilotage' | 'scan_production'
   | 'rh' | 'commandes' | 'clients' | 'factures' | 'charges' | 'bilan' | 'fast_scanner'
   | 'pointage' | 'portail_client' | 'performance' | 'utilisateurs' | 'parametres' | 'demandes'
-  | 'worker_portal' | 'controle_qualite' | 'partenaire_portal' | 'agenda' | 'notifications' | 'ai_space' | 'crm' | 'chef_chaine_portal'
+  | 'worker_portal' | 'controle_qualite' | 'partenaire_portal' | 'agenda' | 'notifications' | 'ai_space' | 'crm' | 'chef_chaine_portal' | 'validation'
   | 'inbox' | 'gmail' | 'plaintes' | 'fournisseurs' | 'achats' | 'visio' | 'tarifs' | 'tarifs_edit' | 'devis' | 'recus' | 'evaluation_patronage' | 'commercial_portal';
 
 export type RolePermMap = Record<'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire' | 'chef_chaine' | 'commercial', AppPage[]>;
@@ -583,6 +583,11 @@ export interface Lead {
   crmPriority?: boolean;
   rejectedAt?: string;
   aiNotes?: string;
+  patronageStatus?: 'en_attente' | 'en_cours' | 'termine' | 'priced';
+  patronagePrice?: number;
+  commercialUnlocked?: boolean;
+  prixEchantillon?: number;
+  patronageNotes?: string;
 }
 
 export const DEFAULT_COMPANY: CompanyProfile = {

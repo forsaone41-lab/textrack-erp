@@ -513,7 +513,7 @@ export default function Demandes() {
     window.open(`https://wa.me/${formattedPhone}?text=${encoded}`, '_blank');
 
     // Save price to lead automatically
-    const updatedLead = { ...devisLead, crmPrice: total, crmDevisMode: devisMode, crmStage: devisLead.crmStage || 'contact_en_cours' };
+    const updatedLead = { ...devisLead, crmPrice: total, crmDevisMode: devisMode, crmStage: (devisLead.crmStage || 'contact_en_cours') as any };
     saveRecord('leads', updatedLead);
 
     if (!isPDF) {
@@ -2110,7 +2110,7 @@ export default function Demandes() {
                                 <UserPlus className="w-3.5 h-3.5" /> {isAr ? 'لائحة الانتظار' : 'Attente'}
                               </button>
                               <button onClick={async () => {
-                                const updated = { ...lead, status: 'completed' as Lead['status'], crmStage: 'rejeté' };
+                                const updated = { ...lead, status: 'completed' as Lead['status'], crmStage: 'rejeté' as any };
                                 setLeads(prev => prev.map(l => l.id === lead.id ? updated : l));
                                 await saveRecord('leads', updated, true);
                               }}

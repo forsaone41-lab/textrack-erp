@@ -84,9 +84,9 @@ export default function LandingPage() {
           if (ctx) {
             ctx.drawImage(img, 0, 0, width, height);
             const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
-            setSelectedPhoto(compressedBase64);
+            // setSelectedPhoto(compressedBase64);
           } else {
-            setSelectedPhoto(event.target?.result as string);
+            // setSelectedPhoto(event.target?.result as string);
           }
         };
         img.src = event.target?.result as string;
@@ -161,6 +161,7 @@ export default function LandingPage() {
     details: string;
     photo: string | null;
     photos: string[];
+    provideFabric?: boolean;
   }
 
   const emptyModel = (): ModelEntry => ({

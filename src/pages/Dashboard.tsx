@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import {
   loadData, Commande, StockTissu, Employe, Facture, Presence,
-  PHASE_LABELS, PHASE_ORDER, User, Lead, loadLeads, loadCompanyProfile
+  PHASE_LABELS, PHASE_ORDER, User, Lead, loadLeads, loadCompanyProfile, saveRecord
 } from '../types';
 import { supabase } from '../supabase';
 import { useLang } from '../contexts/LangContext';

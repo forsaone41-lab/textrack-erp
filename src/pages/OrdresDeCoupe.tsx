@@ -356,7 +356,7 @@ export default function OrdresDeCoupe() {
                         client: c.client,
                         quantite: c.quantite,
                         tissu: c.tissu,
-                        couleur: c.couleur || '',
+                        couleur: c.couleurs?.[0] || '',
                         statut: 'planifié',
                         metrage: Number(((c as any).tissus?.reduce((acc: number, t: any) => acc + (c.quantite * (t.conso || 0)), 0) || (c.quantite * (fiche?.tissuConsommation || 0))).toFixed(2)),
                         tissus: (c as any).tissus || []
@@ -582,8 +582,8 @@ export default function OrdresDeCoupe() {
                 <div className="space-y-4">
                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Répartition des Tailles</label>
                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                      {commandes.find(cmd => cmd.id === form.commandeId)?.quantitesTailles && 
-                        Object.entries(commandes.find(cmd => cmd.id === form.commandeId)!.quantitesTailles).map(([size, qty]) => (
+                      {commandes.find(cmd => cmd.id === form.commandeId)?.tailles && 
+                        Object.entries(commandes.find(cmd => cmd.id === form.commandeId)!.tailles!).map(([size, qty]) => (
                           <div key={size} className="bg-slate-50 border border-slate-100 rounded-2xl p-3 text-center">
                              <p className="text-[9px] font-black text-slate-400 uppercase mb-1">{size}</p>
                              <p className="text-sm font-black text-slate-800">{qty as number}</p>
@@ -606,7 +606,7 @@ export default function OrdresDeCoupe() {
                        </div>
                        <div className="space-y-4">
                           {(form as any).tissus.map((t: any, i: number) => {
-                            const rowMetrage = (form.quantite * (t.conso || 0)).toFixed(2);
+                            const rowMetrage = ((form.quantite || 0) * (t.conso || 0)).toFixed(2);
                             return (
                               <div key={t.id || i} className="flex justify-between items-center">
                                 <div className="flex items-center gap-3">

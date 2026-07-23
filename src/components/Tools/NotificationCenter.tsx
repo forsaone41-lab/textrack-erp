@@ -28,7 +28,7 @@ export default function NotificationCenter() {
   const permissions = loadPermissions();
   const can = (page: AppPage) => {
     const role = (currentUser?.role || '').toLowerCase() as any;
-    return (permissions[role] || []).includes(page);
+    return ((permissions as any)[role] || []).includes(page);
   };
 
   useEffect(() => {

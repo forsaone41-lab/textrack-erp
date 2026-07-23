@@ -1193,7 +1193,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
                             : `Bonjour! 👋\nSuite à votre demande concernant le modèle *${analysisResult.category}*, nous avons analysé le modèle et voici nos suggestions :\n\n`;
 
                           if (isEnsemble) {
-                            analysisResult.pieces.forEach((p: any) => {
+                            analysisResult.pieces?.forEach((p: any) => {
                               const suggested = p.fabricSuggested || (isAr ? 'غير محدد' : 'Non spécifié');
                               const conso = p.consumption || (isAr ? 'غير محدد' : 'Non spécifié');
                               const alternatives = p.fabricAlternatives || [];
