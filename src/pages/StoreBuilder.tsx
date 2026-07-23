@@ -187,6 +187,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
      localStorage.setItem('beya_active_tab', tab);
      setActiveTabState(tab);
   };
+    const [showTopBar, setShowTopBar] = useState(config.showTopBar ?? false);
+  const [topBarText, setTopBarText] = useState(config.topBarText || "LIVRAISON GRATUITE DÈS 799 DH D'ACHATS");
+  const [topBarBgColor, setTopBarBgColor] = useState(config.topBarBgColor || '#f1f5f9');
+  const [topBarTextColor, setTopBarTextColor] = useState(config.topBarTextColor || '#0f172a');
+  const [topBarPosition, setTopBarPosition] = useState(config.topBarPosition || 'top');
+  const [topBarAnimation, setTopBarAnimation] = useState(config.topBarAnimation || 'static');
+
   const [storeName, setStoreName] = useState(config.storeName || '');
   const [showPreview, setShowPreview] = useState(false);
   const [previewProductId, setPreviewProductId] = useState<number | null>(null);
@@ -681,7 +688,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [showHeaderSearch, setShowHeaderSearch] = useState(config.showHeaderSearch ?? true);
   const [showHeaderAccount, setShowHeaderAccount] = useState(config.showHeaderAccount ?? true);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [storeProducts, setStoreProducts] = useState(config.storeProducts || [
+  const [showTopBar, topBarText, topBarBgColor, topBarTextColor, topBarPosition, topBarAnimation,
+        storeProducts, setStoreProducts] = useState(config.storeProducts || [
     { id: 1, name: 'Premium Hoodie', price: '450.00', category: 'Outerwear', image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800' },
     { id: 2, name: 'Essential T-Shirt', price: '150.00', category: 'Tops', image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=800' },
     { id: 3, name: 'Cargo Pants', price: '350.00', category: 'Bottoms', image: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&q=80&w=800' },
@@ -816,6 +824,12 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               const conf = data.config_json;
               if (conf.storeLang) setStoreLang(conf.storeLang);
               if (conf.storeName) setStoreName(conf.storeName);
+              if (conf.showTopBar !== undefined) setShowTopBar(conf.showTopBar);
+              if (conf.topBarText) setTopBarText(conf.topBarText);
+              if (conf.topBarBgColor) setTopBarBgColor(conf.topBarBgColor);
+              if (conf.topBarTextColor) setTopBarTextColor(conf.topBarTextColor);
+              if (conf.topBarPosition) setTopBarPosition(conf.topBarPosition);
+              if (conf.topBarAnimation) setTopBarAnimation(conf.topBarAnimation);
               if (conf.storeLogo) setStoreLogo(conf.storeLogo);
               if (conf.storeFavicon) setStoreFavicon(conf.storeFavicon);
               if (conf.seoDescription) setSeoDescription(conf.seoDescription);
@@ -5446,7 +5460,57 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                      </div>
 
                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-                        <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{isAr ? 'أيقونات رأس المتجر' : "Icônes de l'en-tête"}</h4>
+                        
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 mb-4">
+                         <div className="flex items-center justify-between mb-2">
+                            <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{isAr ? 'شريط الإعلانات العُلوي' : "Barre d'annonce (Top Bar)"}</h4>
+                            <button onClick={() => setShowTopBar((v: boolean) => !v)} className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${showTopBar ? 'bg-indigo-600' : 'bg-slate-300'}`}>
+                               <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${showTopBar ? 'translate-x-5' : ''}`} />
+                            </button>
+                         </div>
+                         {showTopBar && (
+                            <div className="space-y-3 pt-2 border-t border-slate-200">
+                               <div>
+                                  <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'النص' : 'Texte'}</label>
+                                  <input type="text" value={topBarText} onChange={e => setTopBarText(e.target.value)} className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg outline-none" />
+                               </div>
+                               <div className="grid grid-cols-2 gap-2">
+                                  <div>
+                                     <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'الخلفية' : 'Fond'}</label>
+                                     <div className="flex h-8 rounded-lg overflow-hidden border border-slate-200">
+                                        <input type="color" value={topBarBgColor} onChange={e => setTopBarBgColor(e.target.value)} className="w-8 h-8 p-0 border-0" />
+                                        <input type="text" value={topBarBgColor} onChange={e => setTopBarBgColor(e.target.value)} className="w-full text-xs px-2 outline-none" />
+                                     </div>
+                                  </div>
+                                  <div>
+                                     <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'النص' : 'Texte'}</label>
+                                     <div className="flex h-8 rounded-lg overflow-hidden border border-slate-200">
+                                        <input type="color" value={topBarTextColor} onChange={e => setTopBarTextColor(e.target.value)} className="w-8 h-8 p-0 border-0" />
+                                        <input type="text" value={topBarTextColor} onChange={e => setTopBarTextColor(e.target.value)} className="w-full text-xs px-2 outline-none" />
+                                     </div>
+                                  </div>
+                               </div>
+                               <div className="grid grid-cols-2 gap-2">
+                                  <div>
+                                     <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'المكان' : 'Position'}</label>
+                                     <select value={topBarPosition} onChange={e => setTopBarPosition(e.target.value)} className="w-full px-2 py-1.5 text-xs border border-slate-200 rounded-lg outline-none bg-white">
+                                        <option value="top">{isAr ? 'أعلى' : 'En haut'}</option>
+                                        <option value="bottom">{isAr ? 'أسفل' : 'En bas'}</option>
+                                     </select>
+                                  </div>
+                                  <div>
+                                     <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'الحركة' : 'Animation'}</label>
+                                     <select value={topBarAnimation} onChange={e => setTopBarAnimation(e.target.value)} className="w-full px-2 py-1.5 text-xs border border-slate-200 rounded-lg outline-none bg-white">
+                                        <option value="static">{isAr ? 'ثابت' : 'Statique'}</option>
+                                        <option value="marquee">{isAr ? 'متحرك' : 'Défilant'}</option>
+                                     </select>
+                                  </div>
+                               </div>
+                            </div>
+                         )}
+                      </div>
+
+<h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{isAr ? 'أيقونات رأس المتجر' : "Icônes de l'en-tête"}</h4>
                         <div className="flex items-center justify-between">
                            <p className="text-xs font-bold text-slate-600">{isAr ? 'اختيار اللغة' : 'Sélecteur de langue'}</p>
                            <button onClick={() => setShowHeaderLang((v: boolean) => !v)} className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${showHeaderLang ? 'bg-indigo-600' : 'bg-slate-300'}`}>
