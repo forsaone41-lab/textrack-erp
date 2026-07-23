@@ -1,5 +1,6 @@
 // @ts-nocheck
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams } from 'react-router-dom';
 import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown, TrendingUp, Package, RefreshCw, Undo2, Menu, Home, Heart, SlidersHorizontal, ArrowRight, ArrowLeft, Grid, User, Ruler } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
@@ -60,6 +61,46 @@ const getSavedConfig = () => {
         return saved ? JSON.parse(saved) : {};
     } catch(e) { return {}; }
 };
+const IframePreview = ({ children, isMobile, className }: any) => {
+  const [contentRef, setContentRef] = useState<HTMLIFrameElement | null>(null);
+  const mountNode = contentRef?.contentWindow?.document?.body;
+
+  useEffect(() => {
+    if (contentRef && contentRef.contentWindow) {
+      const doc = contentRef.contentWindow.document;
+      // Copy styles
+      Array.from(document.head.querySelectorAll('style, link[rel="stylesheet"]')).forEach(node => {
+        doc.head.appendChild(node.cloneNode(true));
+      });
+      doc.documentElement.style.height = '100%';
+      doc.body.style.height = '100%';
+      doc.body.className = "bg-white antialiased overflow-x-hidden";
+      
+      // Prevent link clicks inside iframe from navigating the iframe itself
+      doc.addEventListener('click', (e: any) => {
+        const link = e.target.closest('a');
+        if (link && link.getAttribute('href')?.startsWith('#')) {
+          e.preventDefault();
+        }
+      });
+    }
+  }, [contentRef]);
+
+  // Use a wrapper to scale the iframe without breaking its aspect ratio flow
+  return (
+    <div className={`relative flex items-start justify-center ${isMobile ? '' : 'w-full h-full'}`} style={isMobile ? { width: '375px', height: '812px', transform: 'scale(calc(min(1, (100vh - 180px) / 812)))', transformOrigin: 'top center' } : {}}>
+      <iframe
+        title="Mobile Preview"
+        ref={setContentRef}
+        className={className}
+        style={{ width: '100%', height: '100%' }}
+      >
+        {mountNode && createPortal(children, mountNode)}
+      </iframe>
+    </div>
+  );
+};
+
 
 export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: boolean }) {
   const { storeNameUrl } = useParams<{storeNameUrl: string}>();
@@ -767,10 +808,12 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         description: f.description || prev?.description || '',
         image: f.photo || prev?.image || '',
         sizes: (f.tailles && f.tailles.length > 0) ? f.tailles : (prev?.sizes || []),
+        ficheId: f.id,
      }));
      setIsFichePickerOpen(false);
      setFichePickerSearch('');
   };
+  const linkedFiche = productForm?.ficheId ? fichesList.find(f => f.id === productForm.ficheId) : null;
 
   // Pre-fill "Créer un Produit" when arriving from the Fiches Techniques page (see FichesTechniques.tsx)
   useEffect(() => {
@@ -5216,10 +5259,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
           </div>
 
           {/* Iframe / Preview Area */}
-          <div className="flex-1 bg-slate-200 relative overflow-y-auto flex items-start justify-center p-4">
-             <div className={`bg-white shadow-2xl transition-all duration-500 overflow-hidden ${previewDevice === 'mobile' ? 'w-[375px] h-[812px] rounded-[2rem] border-[8px] border-slate-800' : 'w-full min-h-full rounded-lg'}`}>
+          <div className="flex-1 bg-slate-200 relative overflow-hidden flex items-start justify-center p-4">
+             <IframePreview 
+               isMobile={previewDevice === 'mobile'} 
+               className={`bg-white shadow-2xl transition-all duration-500 ${previewDevice === 'mobile' ? 'rounded-[2rem] border-[8px] border-slate-800' : 'w-full h-full rounded-lg border-0'}`}
+             >
                 <StorePreviewWrapper />
-             </div>
+             </IframePreview>
           </div>
         </div>
         )}
@@ -5813,6 +5859,52 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                              <textarea rows={4} placeholder={isAr ? 'اوصف منتجك بالتفصيل...' : 'Décrivez votre produit en détail...'} value={productForm?.description || ''} onChange={e => setProductForm({...productForm, description: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 resize-none"></textarea>
                           </div>
                        </div>
+
+                       {linkedFiche ? (
+                          <div className="bg-white p-6 rounded-2xl border border-indigo-200 shadow-sm space-y-4">
+                             <div className="flex items-center justify-between">
+                                <label className="flex items-center gap-2 text-xs font-black text-indigo-600 uppercase tracking-wider">
+                                   <Ruler className="w-4 h-4" /> {isAr ? 'الفيش تقنيك المرتبطة' : 'Fiche Technique liée'}
+                                </label>
+                                <div className="flex items-center gap-2">
+                                   <button onClick={() => setIsFichePickerOpen(true)} className="text-[10px] font-bold text-indigo-600 hover:underline">{isAr ? 'تغيير' : 'Changer'}</button>
+                                   <button onClick={() => setProductForm({...productForm, ficheId: undefined})} className="text-[10px] font-bold text-slate-400 hover:text-rose-500">{isAr ? 'إلغاء الربط' : 'Détacher'}</button>
+                                </div>
+                             </div>
+                             <p className="text-sm font-bold text-slate-800">{linkedFiche.modele} <span className="text-slate-400 font-medium">— {linkedFiche.client}</span></p>
+                             {(linkedFiche.mesures || []).length > 0 && (linkedFiche.tailles || []).length > 0 ? (
+                                <div className="overflow-x-auto -mx-2">
+                                   <table className="w-full text-[11px] min-w-[320px]">
+                                      <thead>
+                                         <tr className="text-slate-400">
+                                            <th className="text-left font-bold px-2 py-1">{isAr ? 'القياس' : 'Mesure'}</th>
+                                            {linkedFiche.tailles.map(t => (
+                                               <th key={t} className="font-bold px-2 py-1 text-center">{t}</th>
+                                            ))}
+                                         </tr>
+                                      </thead>
+                                      <tbody>
+                                         {linkedFiche.mesures.map((m, idx) => (
+                                            <tr key={idx} className="border-t border-slate-100">
+                                               <td className="px-2 py-1.5 font-semibold text-slate-600">{m.nom}</td>
+                                               {linkedFiche.tailles.map(t => (
+                                                  <td key={t} className="px-2 py-1.5 text-center text-slate-700">{m.valeurs[t] ?? '-'}</td>
+                                               ))}
+                                            </tr>
+                                         ))}
+                                      </tbody>
+                                   </table>
+                                </div>
+                             ) : (
+                                <p className="text-xs text-slate-400 italic">{isAr ? 'لا توجد قياسات مسجلة بعد لهذا الموديل' : "Aucune mesure enregistrée pour ce modèle pour l'instant"}</p>
+                             )}
+                          </div>
+                       ) : (
+                          <button onClick={() => setIsFichePickerOpen(true)} className="w-full py-5 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all flex flex-col items-center justify-center gap-2">
+                             <Ruler className="w-5 h-5" />
+                             <span className="text-xs font-bold">{isAr ? 'ربط بفيش تقنيك (لعرض القياسات هنا تلقائيًا)' : 'Lier à une Fiche Technique (mesures affichées ici automatiquement)'}</span>
+                          </button>
+                       )}
                     </div>
                     {/* Right Column (Variants) */}
                     <div className="col-span-4 space-y-6">
