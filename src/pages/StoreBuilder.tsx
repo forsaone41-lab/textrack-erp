@@ -5959,7 +5959,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                  </div>
                  <div className="flex items-center gap-3">
                     <button onClick={() => setIsFichePickerOpen(true)} className="flex items-center gap-2 px-4 py-3 bg-white border border-indigo-200 text-indigo-600 rounded-2xl text-xs font-black uppercase tracking-wider hover:bg-indigo-50 hover:border-indigo-500 transition-all shadow-sm">
-                       <Ruler className="w-4 h-4" /> {isAr ? 'اختر من الفيش تقنيك' : 'Choisir depuis Fiches Techniques'}
+                       <Ruler className="w-4 h-4" /> {isAr ? 'استيراد من BEYA' : 'IMPORT BEYA'}
                     </button>
                     <button onClick={() => setIsProductModalOpen(false)} className="p-4 bg-white rounded-2xl shadow-sm text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all border border-slate-200">
                        <X className="w-6 h-6" />
@@ -5970,7 +5970,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                  <div className="fixed inset-0 z-[500] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setIsFichePickerOpen(false)}>
                     <div className="bg-white w-full max-w-2xl max-h-[80vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
                        <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-                          <h3 className="text-lg font-black text-slate-800">{isAr ? 'اختر موديل من الفيش تقنيك' : 'Choisir un modèle'}</h3>
+                          <h3 className="text-lg font-black text-slate-800">{isAr ? 'استيراد موديل من BEYA' : 'Importer un modèle BEYA'}</h3>
                           <button onClick={() => setIsFichePickerOpen(false)} className="p-2 text-slate-400 hover:text-rose-500"><X className="w-5 h-5" /></button>
                        </div>
                        <div className="p-4 border-b border-slate-100">
