@@ -1673,6 +1673,44 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                     </div>
                 );
 
+                if (block === 'newsletter') return (
+                    <div key="newsletter" className="w-full py-16 px-4" style={{ backgroundColor: '#fff', borderTop: '1px solid #f1f5f9' }}>
+                        <div className="max-w-xl mx-auto text-center space-y-6">
+                            <h3 className="text-2xl font-black">{storeIsAr ? 'اشترك في النشرة البريدية' : 'Abonnez-vous à notre newsletter'}</h3>
+                            <div className="flex flex-col gap-4">
+                               <input type="email" placeholder={storeIsAr ? 'أدخل بريدك الإلكتروني' : 'Saisissez votre adresse électronique'} className="w-full bg-transparent border-b border-black py-3 px-2 text-sm outline-none text-center" />
+                               <button className="w-full border border-black py-3 text-sm font-bold hover:bg-black hover:text-white transition-colors">{storeIsAr ? 'اشتراك' : 'S\'abonner'}</button>
+                            </div>
+                            <div className="flex items-center justify-center gap-2 mt-4 text-[10px] text-slate-500">
+                               <input type="checkbox" id="news-agree" />
+                               <label htmlFor="news-agree">{storeIsAr ? 'أوافق على الشروط والسياسات' : 'J\'accepte les conditions générales et la politique de confidentialité'}</label>
+                            </div>
+                        </div>
+                    </div>
+                );
+
+                if (block === 'features') return (
+                    <div key="features" className="w-full py-10 px-4" style={{ backgroundColor: '#fafafa' }}>
+                        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                            <div className="flex flex-col items-center gap-3">
+                               <RefreshCw className="w-6 h-6 stroke-[1.5]" />
+                               <p className="text-[10px] font-bold">{storeIsAr ? 'إرجاع سريع خلال 7 أيام' : 'Retour rapide sous 7 jours'}</p>
+                            </div>
+                            <div className="flex flex-col items-center gap-3">
+                               <ShieldCheck className="w-6 h-6 stroke-[1.5]" />
+                               <p className="text-[10px] font-bold">{storeIsAr ? 'دفع آمن ومضمون' : 'Paiement sécurisé'}</p>
+                            </div>
+                            <div className="flex flex-col items-center gap-3">
+                               <Package className="w-6 h-6 stroke-[1.5]" />
+                               <p className="text-[10px] font-bold">{storeIsAr ? 'توصيل مجاني' : 'Livraison offerte dès 799 Dhs d\'achat'}</p>
+                            </div>
+                            <div className="flex flex-col items-center gap-3">
+                               <Smartphone className="w-6 h-6 stroke-[1.5]" />
+                               <p className="text-[10px] font-bold">{storeIsAr ? 'مساعدة' : 'Aide'}<br/>06 62 15 30 86</p>
+                            </div>
+                        </div>
+                    </div>
+                );
                 if (block === 'products') return (
                     <div key="products" className={`${isModal ? 'p-16' : 'p-8'} mx-auto w-full`} style={{ maxWidth: `${siteMaxWidth}px` }}>
                        <div className="flex items-center justify-between mb-6 md:justify-center md:mb-10">
@@ -5720,6 +5758,8 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                    <h4 className="text-xs font-bold text-indigo-900 uppercase tracking-wider mb-3">{isAr ? 'العناصر الأساسية' : 'Éléments de Base'}</h4>
                    {(() => {
                       const blockDefs = [
+                         { id: 'features', name: isAr ? 'ميزات' : 'Avantages', icon: ShieldCheck, activeClasses: 'border-blue-500 shadow-md ring-2 ring-blue-100', bgClasses: 'bg-blue-50 text-blue-500', checkClass: 'text-blue-500' },
+                         { id: 'newsletter', name: isAr ? 'النشرة البريدية' : 'Newsletter', icon: Mail, activeClasses: 'border-purple-500 shadow-md ring-2 ring-purple-100', bgClasses: 'bg-purple-50 text-purple-500', checkClass: 'text-purple-500' },
                          { id: 'hero', name: isAr ? 'القسم الرئيسي' : 'Bannière (Hero)', icon: Type, activeClasses: 'border-indigo-500 shadow-md ring-2 ring-indigo-100', bgClasses: 'bg-indigo-50 text-indigo-500', checkClass: 'text-indigo-500' },
                          { id: 'slider', name: isAr ? 'معرض صور' : 'Slider', icon: ImageIcon, activeClasses: 'border-emerald-500 shadow-md ring-2 ring-emerald-100', bgClasses: 'bg-emerald-50 text-emerald-500', checkClass: 'text-emerald-500' },
                          { id: 'collections', name: isAr ? 'تصنيفات' : 'Collections', icon: MousePointerClick, activeClasses: 'border-amber-500 shadow-md ring-2 ring-amber-100', bgClasses: 'bg-amber-50 text-amber-500', checkClass: 'text-amber-500' },
