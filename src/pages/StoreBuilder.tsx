@@ -5043,7 +5043,18 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                               <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{isAr ? 'باقة Pro' : 'Plan Pro'}</h4>
                            </div>
                            <button
-                              onClick={() => setProThemesUnlocked((v: boolean) => !v)}
+                              onClick={() => {
+                                 setProThemesUnlocked((v: boolean) => {
+                                    const newValue = !v;
+                                    if (newValue) {
+                                       setAppsConfig((prev: any) => ({ ...prev, 'AI Auto-Builder': 'ACTIF' }));
+                                    } else {
+                                       // Optionally disable it when downgrading?
+                                       // setAppsConfig((prev: any) => { const newConf = {...prev}; delete newConf['AI Auto-Builder']; return newConf; });
+                                    }
+                                    return newValue;
+                                 });
+                              }}
                               className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${proThemesUnlocked ? 'bg-amber-400' : 'bg-slate-300'}`}
                            >
                               <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${proThemesUnlocked ? 'translate-x-5' : ''}`} />
