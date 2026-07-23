@@ -3006,9 +3006,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
   
   // --- PRO THEMES ---
-  const LayoutProLamode = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts, storeIsAr, storeLang, config, activeTheme }: any) => {
-    const primaryColor = config.primaryColor || activeTheme.defaultColor;
-    const fontFamily = config.fontFamily || activeTheme.defaultFont;
+  const LayoutProLamode = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts }: any) => {
+    const primaryColor = config?.primaryColor || activeTheme?.defaultColor;
+    const fontFamily = config?.fontFamily || activeTheme?.defaultFont;
     
     // Derived values
     const featuredCollection = storeProducts.slice(0, 3);
@@ -3170,9 +3170,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   };
 
   
-  const LayoutProJoyride = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts, storeIsAr, storeLang, config, activeTheme }: any) => {
-    const primaryColor = config.primaryColor || activeTheme.defaultColor;
-    const fontFamily = config.fontFamily || activeTheme.defaultFont;
+  const LayoutProJoyride = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts }: any) => {
+    const primaryColor = config?.primaryColor || activeTheme?.defaultColor;
+    const fontFamily = config?.fontFamily || activeTheme?.defaultFont;
     
     return (
       <div className={`flex-1 w-full bg-slate-50 text-[#1a1a1a] ${fontFamily} relative pb-24 overflow-x-hidden min-h-screen`}>
@@ -3350,9 +3350,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   };
 
   
-  const LayoutProUltimate = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts, storeIsAr, storeLang, config, activeTheme }: any) => {
-    const primaryColor = config.primaryColor || activeTheme.defaultColor;
-    const fontFamily = config.fontFamily || activeTheme.defaultFont;
+  const LayoutProUltimate = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts }: any) => {
+    const primaryColor = config?.primaryColor || activeTheme?.defaultColor;
+    const fontFamily = config?.fontFamily || activeTheme?.defaultFont;
     
     return (
       <div className={`flex-1 w-full bg-white text-[#1a1a1a] ${fontFamily} relative pb-20`}>
@@ -3524,9 +3524,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   };
 
   
-  const LayoutProSimple = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts, storeIsAr, storeLang, config, activeTheme }: any) => {
-    const primaryColor = config.primaryColor || activeTheme.defaultColor;
-    const fontFamily = config.fontFamily || activeTheme.defaultFont;
+  const LayoutProSimple = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts }: any) => {
+    const primaryColor = config?.primaryColor || activeTheme?.defaultColor;
+    const fontFamily = config?.fontFamily || activeTheme?.defaultFont;
     
     return (
       <div className={`flex-1 w-full bg-white text-[#1a1a1a] ${fontFamily} relative pb-20`}>
