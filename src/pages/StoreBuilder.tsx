@@ -1884,20 +1884,30 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                           <>
                           <div className="hidden md:flex gap-4">
                              {(buyMode === 'cart' || buyMode === 'both') && (
-                                <button onClick={(e) => handleAddToCart(e, typeof p !== 'undefined' ? p : (typeof product !== 'undefined' ? product : null), typeof quantity !== 'undefined' ? quantity : 1, typeof selectedColor !== 'undefined' ? selectedColor : undefined, typeof selectedSize !== 'undefined' ? selectedSize : undefined)} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: '#1e293b' }}>{tr('Add to cart')}</button>
+                                <button onClick={(e) => handleAddToCart(e, typeof p !== 'undefined' ? p : (typeof product !== 'undefined' ? product : null), typeof quantity !== 'undefined' ? quantity : 1, typeof selectedColor !== 'undefined' ? selectedColor : undefined, typeof selectedSize !== 'undefined' ? selectedSize : undefined)}  className={`flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg `} style={{ backgroundColor: '#1e293b' }}>{tr('Add to cart')}</button>
                              )}
                              {(buyMode === 'direct' || buyMode === 'both') && (
-                                <button onClick={() => buyNowAsPopup ? setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage }) : setPage('checkout')} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: primaryColor }}>{tr('BUY NOW')}</button>
+                                <button onClick={() => {
+                                 const prod = typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId);
+                                 if (prod && prod.colors?.length > 0 && !selectedColor) { alert(storeIsAr ? 'الرجاء اختيار اللون أولاً' : 'Veuillez choisir une couleur d\'abord'); return; }
+                                 if (prod && prod.sizes?.length > 0 && !selectedSize) { alert(storeIsAr ? 'الرجاء اختيار المقاس أولاً' : 'Veuillez choisir une taille d\'abord'); return; }
+                                 buyNowAsPopup ? setQuickBuyContext({ product: prod, quantity: typeof quantity !== 'undefined' ? quantity : 1, selectedColor, selectedSize, setPage }) : setPage('checkout')
+                              }}  className={`flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg `} style={{ backgroundColor: primaryColor }}>{tr('BUY NOW')}</button>
                              )}
                           </div>
                           <div className="md:hidden fixed bottom-16 left-0 right-0 z-30 bg-white border-t border-slate-100 p-4 flex gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
                              {(buyMode === 'cart' || buyMode === 'both') && (
-                                <button onClick={(e) => handleAddToCart(e, typeof p !== 'undefined' ? p : (typeof product !== 'undefined' ? product : null), typeof quantity !== 'undefined' ? quantity : 1, typeof selectedColor !== 'undefined' ? selectedColor : undefined, typeof selectedSize !== 'undefined' ? selectedSize : undefined)} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`flex-1 py-3.5 border-2 border-slate-800 text-slate-800 font-bold uppercase tracking-wider text-xs rounded-xl flex items-center justify-center gap-2 ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>
+                                <button onClick={(e) => handleAddToCart(e, typeof p !== 'undefined' ? p : (typeof product !== 'undefined' ? product : null), typeof quantity !== 'undefined' ? quantity : 1, typeof selectedColor !== 'undefined' ? selectedColor : undefined, typeof selectedSize !== 'undefined' ? selectedSize : undefined)}  className={`flex-1 py-3.5 border-2 border-slate-800 text-slate-800 font-bold uppercase tracking-wider text-xs rounded-xl flex items-center justify-center gap-2 `}>
                                    <ShoppingBag className="w-4 h-4" /> {tr('ADD TO CART')}
                                 </button>
                              )}
                              {(buyMode === 'direct' || buyMode === 'both') && (
-                                <button onClick={() => buyNowAsPopup ? setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage }) : setPage('checkout')} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`flex-1 py-3.5 bg-slate-900 text-white font-bold uppercase tracking-wider text-xs rounded-xl ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>
+                                <button onClick={() => {
+                                 const prod = typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId);
+                                 if (prod && prod.colors?.length > 0 && !selectedColor) { alert(storeIsAr ? 'الرجاء اختيار اللون أولاً' : 'Veuillez choisir une couleur d\'abord'); return; }
+                                 if (prod && prod.sizes?.length > 0 && !selectedSize) { alert(storeIsAr ? 'الرجاء اختيار المقاس أولاً' : 'Veuillez choisir une taille d\'abord'); return; }
+                                 buyNowAsPopup ? setQuickBuyContext({ product: prod, quantity: typeof quantity !== 'undefined' ? quantity : 1, selectedColor, selectedSize, setPage }) : setPage('checkout')
+                              }}  className={`flex-1 py-3.5 bg-slate-900 text-white font-bold uppercase tracking-wider text-xs rounded-xl `}>
                                    {tr('BUY NOW')}
                                 </button>
                              )}
@@ -2029,7 +2039,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                            <CardBadge text={p.category} />
                            {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-10"><ImageIcon className="w-16 h-16" /></div>}
                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <button onClick={(e) => handleAddToCart(e, typeof p !== 'undefined' ? p : (typeof product !== 'undefined' ? product : null), typeof quantity !== 'undefined' ? quantity : 1, typeof selectedColor !== 'undefined' ? selectedColor : undefined, typeof selectedSize !== 'undefined' ? selectedSize : undefined)} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`px-8 py-3 bg-white text-black text-xs tracking-widest hover:bg-black hover:text-white transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{tr('ADD TO CART')}</button>
+                              <button onClick={(e) => handleAddToCart(e, typeof p !== 'undefined' ? p : (typeof product !== 'undefined' ? product : null), typeof quantity !== 'undefined' ? quantity : 1, typeof selectedColor !== 'undefined' ? selectedColor : undefined, typeof selectedSize !== 'undefined' ? selectedSize : undefined)}  className={`px-8 py-3 bg-white text-black text-xs tracking-widest hover:bg-black hover:text-white transition-colors `}>{tr('ADD TO CART')}</button>
                            </div>
                         </div>
                         <h4 className="font-medium text-lg mb-2">{p.name}</h4>
@@ -2072,7 +2082,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                            <CardBadge text={p.category} />
                            {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-10"><ImageIcon className="w-16 h-16" /></div>}
                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <button onClick={(e) => handleAddToCart(e, typeof p !== 'undefined' ? p : (typeof product !== 'undefined' ? product : null), typeof quantity !== 'undefined' ? quantity : 1, typeof selectedColor !== 'undefined' ? selectedColor : undefined, typeof selectedSize !== 'undefined' ? selectedSize : undefined)} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`px-8 py-3 bg-white text-black text-xs tracking-widest hover:bg-black hover:text-white transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{tr('ADD TO CART')}</button>
+                              <button onClick={(e) => handleAddToCart(e, typeof p !== 'undefined' ? p : (typeof product !== 'undefined' ? product : null), typeof quantity !== 'undefined' ? quantity : 1, typeof selectedColor !== 'undefined' ? selectedColor : undefined, typeof selectedSize !== 'undefined' ? selectedSize : undefined)}  className={`px-8 py-3 bg-white text-black text-xs tracking-widest hover:bg-black hover:text-white transition-colors `}>{tr('ADD TO CART')}</button>
                            </div>
                         </div>
                         <h4 className="font-medium text-lg mb-2">{p.name}</h4>
@@ -2158,10 +2168,15 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                        ) : (
                           <div className="flex gap-4">
                              {(buyMode === 'cart' || buyMode === 'both') && (
-                                <button onClick={(e) => handleAddToCart(e, typeof p !== 'undefined' ? p : (typeof product !== 'undefined' ? product : null), typeof quantity !== 'undefined' ? quantity : 1, typeof selectedColor !== 'undefined' ? selectedColor : undefined, typeof selectedSize !== 'undefined' ? selectedSize : undefined)} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-max px-12 py-4 bg-white border border-black text-black text-xs tracking-widest hover:bg-gray-100 transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{tr('ADD TO CART')}</button>
+                                <button onClick={(e) => handleAddToCart(e, typeof p !== 'undefined' ? p : (typeof product !== 'undefined' ? product : null), typeof quantity !== 'undefined' ? quantity : 1, typeof selectedColor !== 'undefined' ? selectedColor : undefined, typeof selectedSize !== 'undefined' ? selectedSize : undefined)}  className={`w-max px-12 py-4 bg-white border border-black text-black text-xs tracking-widest hover:bg-gray-100 transition-colors `}>{tr('ADD TO CART')}</button>
                              )}
                              {(buyMode === 'direct' || buyMode === 'both') && (
-                                <button onClick={() => buyNowAsPopup ? setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage }) : setPage('checkout')} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-max px-12 py-4 text-white text-xs tracking-widest transition-opacity hover:opacity-90 ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: primaryColor }}>{tr('BUY NOW')}</button>
+                                <button onClick={() => {
+                                 const prod = typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId);
+                                 if (prod && prod.colors?.length > 0 && !selectedColor) { alert(storeIsAr ? 'الرجاء اختيار اللون أولاً' : 'Veuillez choisir une couleur d\'abord'); return; }
+                                 if (prod && prod.sizes?.length > 0 && !selectedSize) { alert(storeIsAr ? 'الرجاء اختيار المقاس أولاً' : 'Veuillez choisir une taille d\'abord'); return; }
+                                 buyNowAsPopup ? setQuickBuyContext({ product: prod, quantity: typeof quantity !== 'undefined' ? quantity : 1, selectedColor, selectedSize, setPage }) : setPage('checkout')
+                              }}  className={`w-max px-12 py-4 text-white text-xs tracking-widest transition-opacity hover:opacity-90 `} style={{ backgroundColor: primaryColor }}>{tr('BUY NOW')}</button>
                              )}
                           </div>
                        )}
@@ -2386,10 +2401,15 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                        ) : (
                           <div className="flex gap-4">
                              {(buyMode === 'cart' || buyMode === 'both') && (
-                                <button onClick={(e) => handleAddToCart(e, typeof p !== 'undefined' ? p : (typeof product !== 'undefined' ? product : null), typeof quantity !== 'undefined' ? quantity : 1, typeof selectedColor !== 'undefined' ? selectedColor : undefined, typeof selectedSize !== 'undefined' ? selectedSize : undefined)} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-max px-12 py-4 border border-white/20 text-white text-xs tracking-widest hover:bg-white/5 transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{tr('ADD TO CART')}</button>
+                                <button onClick={(e) => handleAddToCart(e, typeof p !== 'undefined' ? p : (typeof product !== 'undefined' ? product : null), typeof quantity !== 'undefined' ? quantity : 1, typeof selectedColor !== 'undefined' ? selectedColor : undefined, typeof selectedSize !== 'undefined' ? selectedSize : undefined)}  className={`w-max px-12 py-4 border border-white/20 text-white text-xs tracking-widest hover:bg-white/5 transition-colors `}>{tr('ADD TO CART')}</button>
                              )}
                              {(buyMode === 'direct' || buyMode === 'both') && (
-                                <button onClick={() => buyNowAsPopup ? setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage }) : setPage('checkout')} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-max px-12 py-4 bg-white text-black text-xs tracking-widest hover:bg-gray-200 transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{tr('BUY NOW')}</button>
+                                <button onClick={() => {
+                                 const prod = typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId);
+                                 if (prod && prod.colors?.length > 0 && !selectedColor) { alert(storeIsAr ? 'الرجاء اختيار اللون أولاً' : 'Veuillez choisir une couleur d\'abord'); return; }
+                                 if (prod && prod.sizes?.length > 0 && !selectedSize) { alert(storeIsAr ? 'الرجاء اختيار المقاس أولاً' : 'Veuillez choisir une taille d\'abord'); return; }
+                                 buyNowAsPopup ? setQuickBuyContext({ product: prod, quantity: typeof quantity !== 'undefined' ? quantity : 1, selectedColor, selectedSize, setPage }) : setPage('checkout')
+                              }}  className={`w-max px-12 py-4 bg-white text-black text-xs tracking-widest hover:bg-gray-200 transition-colors `}>{tr('BUY NOW')}</button>
                              )}
                           </div>
                        )}
@@ -2639,7 +2659,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                              <input type="text" placeholder={storeLang === 'ar' ? 'الاسم الكامل' : storeLang === 'en' ? 'Your Name' : 'Votre nom'} className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-full focus:outline-none focus:border-current text-base font-bold" style={{ '--tw-ring-color': primaryColor } as React.CSSProperties} />
                              <input type="text" placeholder={storeLang === 'ar' ? 'رقم الهاتف' : storeLang === 'en' ? 'Phone Number' : 'Numéro de Téléphone'} className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-full focus:outline-none focus:border-current text-base font-bold" style={{ '--tw-ring-color': primaryColor } as React.CSSProperties} />
                              <input type="text" placeholder={storeLang === 'ar' ? 'عنوان التوصيل' : storeLang === 'en' ? 'Where to send?' : 'Adresse de livraison ?'} className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-full focus:outline-none focus:border-current text-base font-bold" style={{ '--tw-ring-color': primaryColor } as React.CSSProperties} />
-                             <button onClick={(e) => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1, e)} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-full py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl mt-4 ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: primaryColor }}>{storeLang === 'ar' ? 'أرسل الطلب! 🚀' : storeLang === 'en' ? 'Send it to me! 🚀' : 'Envoyez-le moi ! 🚀'}</button>
+                             <button onClick={(e) => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1, e)}  className={`w-full py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl mt-4 `} style={{ backgroundColor: primaryColor }}>{storeLang === 'ar' ? 'أرسل الطلب! 🚀' : storeLang === 'en' ? 'Send it to me! 🚀' : 'Envoyez-le moi ! 🚀'}</button>
                           </div>
                        ) : (
                           <div className="flex gap-4">
@@ -2647,7 +2667,12 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                 <button onClick={(e) => handleAddToCart(e, typeof p !== 'undefined' ? p : (typeof product !== 'undefined' ? product : null), typeof quantity !== 'undefined' ? quantity : 1, typeof selectedColor !== 'undefined' ? selectedColor : undefined, typeof selectedSize !== 'undefined' ? selectedSize : undefined)} className="flex-1 px-8 py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl" style={{ backgroundColor: '#f43f5e' }}>{storeLang === 'ar' ? 'السلة 🛒' : storeLang === 'en' ? 'Cart 🛒' : 'Panier 🛒'}</button>
                              )}
                              {(buyMode === 'direct' || buyMode === 'both') && (
-                                <button onClick={() => buyNowAsPopup ? setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage }) : setPage('checkout')} className="flex-1 px-8 py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl" style={{ backgroundColor: primaryColor }}>{storeLang === 'ar' ? 'اشتري الآن 🎈' : storeLang === 'en' ? 'Buy Now 🎈' : 'Achetez maintenant 🎈'}</button>
+                                <button onClick={() => {
+                                 const prod = typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId);
+                                 if (prod && prod.colors?.length > 0 && !selectedColor) { alert(storeIsAr ? 'الرجاء اختيار اللون أولاً' : 'Veuillez choisir une couleur d\'abord'); return; }
+                                 if (prod && prod.sizes?.length > 0 && !selectedSize) { alert(storeIsAr ? 'الرجاء اختيار المقاس أولاً' : 'Veuillez choisir une taille d\'abord'); return; }
+                                 buyNowAsPopup ? setQuickBuyContext({ product: prod, quantity: typeof quantity !== 'undefined' ? quantity : 1, selectedColor, selectedSize, setPage }) : setPage('checkout')
+                              }} className="flex-1 px-8 py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl" style={{ backgroundColor: primaryColor }}>{storeLang === 'ar' ? 'اشتري الآن 🎈' : storeLang === 'en' ? 'Buy Now 🎈' : 'Achetez maintenant 🎈'}</button>
                              )}
                           </div>
                        )}
@@ -2879,10 +2904,15 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                  </div>
 
                  {(buyMode === 'both' || buyMode === 'cart') && (
-                    <button onClick={(e) => handleAddToCart(e, typeof p !== 'undefined' ? p : (typeof product !== 'undefined' ? product : null), typeof quantity !== 'undefined' ? quantity : 1, typeof selectedColor !== 'undefined' ? selectedColor : undefined, typeof selectedSize !== 'undefined' ? selectedSize : undefined)} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-full h-14 bg-[#1a1a1a] text-white font-bold uppercase tracking-widest text-xs hover:bg-black transition-colors mb-4 ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{storeIsAr ? 'أضف للسلة' : 'Ajouter au panier'}</button>
+                    <button onClick={(e) => handleAddToCart(e, typeof p !== 'undefined' ? p : (typeof product !== 'undefined' ? product : null), typeof quantity !== 'undefined' ? quantity : 1, typeof selectedColor !== 'undefined' ? selectedColor : undefined, typeof selectedSize !== 'undefined' ? selectedSize : undefined)}  className={`w-full h-14 bg-[#1a1a1a] text-white font-bold uppercase tracking-widest text-xs hover:bg-black transition-colors mb-4 `}>{storeIsAr ? 'أضف للسلة' : 'Ajouter au panier'}</button>
                  )}
                  {(buyMode === 'both' || buyMode === 'direct') && (
-                    <button onClick={() => buyNowAsPopup ? setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage }) : setPage('checkout')} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`w-full h-14 bg-[#f5f1e9] text-[#1a1a1a] font-bold uppercase tracking-widest text-xs hover:bg-[#e8e2d7] transition-colors ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>{storeIsAr ? 'اشتري الآن' : 'Acheter Maintenant'}</button>
+                    <button onClick={() => {
+                                 const prod = typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId);
+                                 if (prod && prod.colors?.length > 0 && !selectedColor) { alert(storeIsAr ? 'الرجاء اختيار اللون أولاً' : 'Veuillez choisir une couleur d\'abord'); return; }
+                                 if (prod && prod.sizes?.length > 0 && !selectedSize) { alert(storeIsAr ? 'الرجاء اختيار المقاس أولاً' : 'Veuillez choisir une taille d\'abord'); return; }
+                                 buyNowAsPopup ? setQuickBuyContext({ product: prod, quantity: typeof quantity !== 'undefined' ? quantity : 1, selectedColor, selectedSize, setPage }) : setPage('checkout')
+                              }}  className={`w-full h-14 bg-[#f5f1e9] text-[#1a1a1a] font-bold uppercase tracking-widest text-xs hover:bg-[#e8e2d7] transition-colors `}>{storeIsAr ? 'اشتري الآن' : 'Acheter Maintenant'}</button>
                  )}
                  <PdpTrustBadges />
               </div>
