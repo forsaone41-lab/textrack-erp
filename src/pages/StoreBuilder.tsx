@@ -3022,7 +3022,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
            <h1 className="text-xl font-serif font-black tracking-tighter">Lamode</h1>
            <div className="flex gap-4">
               <button onClick={() => setIsCartOpen(true)} className="relative"><ShoppingBag className="w-5 h-5 text-slate-800" /></button>
-              <button><Search className="w-5 h-5 text-slate-800" /></button>
+              <button onClick={() => setPage('collections')}><Search className="w-5 h-5 text-slate-800" /></button>
            </div>
         </div>
 
@@ -3041,7 +3041,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
              </div>
 
              {/* Hero Collection Card */}
-             <div className="relative w-full h-48 rounded-[2rem] overflow-hidden shadow-lg cursor-pointer group">
+             <div onClick={() => setPage('collections')} className="relative w-full h-48 rounded-[2rem] overflow-hidden shadow-lg cursor-pointer group">
                 <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                 <div className="absolute inset-0 bg-gradient-to-r from-orange-900/40 to-transparent" />
                 <div className="absolute inset-0 p-8 flex flex-col justify-center">
@@ -3055,7 +3055,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
              <div>
                 <div className="flex items-center justify-between mb-4">
                    <h3 className="text-sm font-black text-slate-900">New Release</h3>
-                   <button className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">See all</button>
+                   <button onClick={() => setPage('collections')} className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">See all</button>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                    {filteredProducts.map((p: any) => (
@@ -3086,7 +3086,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                  <div className="flex items-center justify-between mb-6">
                     <button onClick={() => setPage('home')} className="w-10 h-10 bg-white shadow-sm border border-slate-100 rounded-full flex items-center justify-center hover:bg-slate-50"><ArrowLeft className="w-4 h-4 text-slate-900" /></button>
                     <h2 className="text-xs font-bold uppercase tracking-widest">Product Details</h2>
-                    <button className="w-10 h-10 bg-white shadow-sm border border-slate-100 rounded-full flex items-center justify-center hover:bg-slate-50"><Heart className="w-4 h-4 text-slate-900" /></button>
+                    <button onClick={() => setPage('collections')} className="w-10 h-10 bg-white shadow-sm border border-slate-100 rounded-full flex items-center justify-center hover:bg-slate-50"><Heart className="w-4 h-4 text-slate-900" /></button>
                  </div>
                  
                  <div className="relative bg-slate-50 rounded-[2rem] p-8 mb-6 h-80 flex items-center justify-center">
@@ -3158,12 +3158,12 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         )}
 
         {/* Bottom Navigation */}
-        <div className="fixed bottom-6 left-6 right-6 h-16 bg-[#1e1e1e] rounded-[2rem] flex items-center justify-between px-8 shadow-2xl z-50">
-           <button className="w-10 h-10 bg-[#333] rounded-full flex items-center justify-center text-[#ff5a1f]"><Home className="w-5 h-5 fill-current" /></button>
-           <button className="text-slate-400 hover:text-white transition-colors"><Grid className="w-5 h-5" /></button>
-           <button className="text-slate-400 hover:text-white transition-colors relative"><ShoppingBag className="w-5 h-5" /><span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#ff5a1f] rounded-full border-2 border-[#1e1e1e]"></span></button>
-           <button className="text-slate-400 hover:text-white transition-colors"><Heart className="w-5 h-5" /></button>
-           <button className="text-slate-400 hover:text-white transition-colors"><User className="w-5 h-5" /></button>
+        <div className="md:hidden fixed bottom-6 left-6 right-6 h-16 bg-[#1e1e1e] rounded-[2rem] flex items-center justify-between px-8 shadow-2xl z-50">
+           <button onClick={() => setPage('home')} className={`w-10 h-10 rounded-full flex items-center justify-center ${page === 'home' ? 'bg-[#333] text-[#ff5a1f]' : 'text-slate-400 hover:text-white'}`}><Home className={`w-5 h-5 ${page === 'home' ? 'fill-current' : ''}`} /></button>
+           <button onClick={() => setPage('collections')} className={`transition-colors ${page === 'collections' ? 'text-white' : 'text-slate-400 hover:text-white'}`}><Grid className="w-5 h-5" /></button>
+           <button onClick={() => setIsCartOpen(true)} className="text-slate-400 hover:text-white transition-colors relative"><ShoppingBag className="w-5 h-5" /><span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#ff5a1f] rounded-full border-2 border-[#1e1e1e]"></span></button>
+           <button onClick={() => setPage('collections')} className="text-slate-400 hover:text-white transition-colors"><Heart className="w-5 h-5" /></button>
+           <button onClick={() => setPage('home')} className="text-slate-400 hover:text-white transition-colors"><User className="w-5 h-5" /></button>
         </div>
       </div>
     );
@@ -3187,10 +3187,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                 
                 {/* Header Navbar inside Hero */}
                 <div className="flex items-center justify-between relative z-10 mb-8 pt-4">
-                   <button className="w-10 h-10 flex items-center"><ArrowLeft className="w-6 h-6 text-white" /></button>
+                   <button onClick={() => setPage('home')} className="w-10 h-10 flex items-center"><ArrowLeft className="w-6 h-6 text-white" /></button>
                    <div className="flex gap-4">
-                      <button><Search className="w-5 h-5 text-white" /></button>
-                      <button><Heart className="w-5 h-5 text-white" /></button>
+                      <button onClick={() => setPage('collections')}><Search className="w-5 h-5 text-white" /></button>
+                      <button onClick={() => setPage('collections')}><Heart className="w-5 h-5 text-white" /></button>
                    </div>
                 </div>
 
@@ -3223,13 +3223,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
              <div className="mt-2 px-6">
                 <h3 className="text-sm font-bold text-slate-800 mb-4">Discover</h3>
                 <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-6 -mx-6 px-6">
-                   <div className="w-64 h-32 shrink-0 rounded-3xl overflow-hidden relative shadow-lg cursor-pointer">
-                      <img src="https://images.unsplash.com/photo-1552346154-21d32810baa3?auto=format&fit=crop&q=80" className="w-full h-full object-cover" />
+                   <div onClick={() => setPage('collections')} className="w-64 h-32 shrink-0 rounded-3xl overflow-hidden relative shadow-lg cursor-pointer group">
+                      <img src="https://images.unsplash.com/photo-1552346154-21d32810baa3?auto=format&fit=crop&q=80" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                       <div className="absolute inset-0 bg-gradient-to-t from-indigo-900/80 to-transparent"></div>
                       <span className="absolute bottom-4 left-4 text-white font-bold text-sm">New Sneaker Trends</span>
                    </div>
-                   <div className="w-48 h-32 shrink-0 rounded-3xl overflow-hidden relative shadow-lg cursor-pointer bg-gradient-to-br from-blue-500 to-cyan-400">
-                      <div className="absolute inset-0 flex flex-col justify-end p-4 text-white">
+                   <div onClick={() => setPage('collections')} className="w-48 h-32 shrink-0 rounded-3xl overflow-hidden relative shadow-lg cursor-pointer bg-gradient-to-br from-blue-500 to-cyan-400 group">
+                      <div className="absolute inset-0 flex flex-col justify-end p-4 text-white group-hover:scale-105 transition-transform">
                          <span className="font-bold text-sm">Custom Designs</span>
                       </div>
                    </div>
@@ -3336,14 +3336,14 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         )}
 
         {/* Floating Bottom Nav */}
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white rounded-full h-16 flex items-center justify-between px-8 shadow-[0_10px_40px_rgba(0,0,0,0.1)] w-[calc(100%-3rem)] max-w-sm z-50">
-           <button onClick={() => setPage('home')} className="text-indigo-600 relative">
-              <div className="absolute inset-0 bg-indigo-50 rounded-full scale-150 -z-10"></div>
-              <Home className="w-5 h-5 fill-indigo-600" />
+        <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-white rounded-full h-16 flex items-center justify-between px-8 shadow-[0_10px_40px_rgba(0,0,0,0.1)] w-[calc(100%-3rem)] max-w-sm z-50">
+           <button onClick={() => setPage('home')} className={`${page === 'home' ? 'text-indigo-600' : 'text-slate-400 hover:text-indigo-600'} relative transition-colors`}>
+              {page === 'home' && <div className="absolute inset-0 bg-indigo-50 rounded-full scale-150 -z-10"></div>}
+              <Home className={`w-5 h-5 ${page === 'home' ? 'fill-indigo-600' : ''}`} />
            </button>
-           <button className="text-slate-400 hover:text-indigo-600 transition-colors"><Grid className="w-5 h-5" /></button>
-           <button className="text-slate-400 hover:text-indigo-600 transition-colors"><ShoppingBag className="w-5 h-5" /></button>
-           <button className="text-slate-400 hover:text-indigo-600 transition-colors"><User className="w-5 h-5" /></button>
+           <button onClick={() => setPage('collections')} className={`transition-colors ${page === 'collections' ? 'text-indigo-600' : 'text-slate-400 hover:text-indigo-600'}`}><Grid className="w-5 h-5" /></button>
+           <button onClick={() => setIsCartOpen(true)} className="text-slate-400 hover:text-indigo-600 transition-colors"><ShoppingBag className="w-5 h-5" /></button>
+           <button onClick={() => setPage('home')} className="text-slate-400 hover:text-indigo-600 transition-colors"><User className="w-5 h-5" /></button>
         </div>
       </div>
     );
@@ -3370,34 +3370,34 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               {config.storeName || 'Clothing Store'}
            </h1>
            <div className="hidden md:flex gap-8 text-sm font-bold text-slate-600">
-              <span className="text-slate-900">Home</span>
+              <span onClick={() => setPage('home')} className={`cursor-pointer ${page === 'home' ? 'text-slate-900' : 'hover:text-slate-900'}`}>Home</span>
               <span className="hover:text-slate-900 cursor-pointer">About Us</span>
-              <span className="hover:text-slate-900 cursor-pointer">Shop</span>
-              <span className="hover:text-slate-900 cursor-pointer">Collection</span>
+              <span onClick={() => setPage('collections')} className={`cursor-pointer ${page === 'collections' ? 'text-slate-900' : 'hover:text-slate-900'}`}>Shop</span>
+              <span onClick={() => setPage('collections')} className="hover:text-slate-900 cursor-pointer">Collection</span>
               <span className="hover:text-slate-900 cursor-pointer">Contact Us</span>
            </div>
            <div className="flex gap-4">
-              <button><Search className="w-5 h-5 text-slate-800" /></button>
-              <button><Heart className="w-5 h-5 text-slate-800" /></button>
-              <button><User className="w-5 h-5 text-slate-800" /></button>
+              <button onClick={() => setPage('collections')}><Search className="w-5 h-5 text-slate-800" /></button>
+              <button onClick={() => setPage('collections')}><Heart className="w-5 h-5 text-slate-800" /></button>
+              <button onClick={() => setPage('home')}><User className="w-5 h-5 text-slate-800" /></button>
               <button onClick={() => setIsCartOpen(true)} className="relative"><ShoppingBag className="w-5 h-5 text-slate-800" /><span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-sky-500 rounded-full border-2 border-white"></span></button>
            </div>
         </div>
 
         {page === 'home' && (
           <div className="animate-in fade-in duration-500 max-w-7xl mx-auto px-4 md:px-8 pt-8">
-             {/* Split Hero */}
+              {/* Split Hero */}
              <div className="flex flex-col md:flex-row gap-6 mb-16">
                 <div className="flex-1 bg-sky-100 rounded-[2rem] p-10 flex flex-col justify-center relative overflow-hidden h-[400px]">
                    <div className="relative z-10 max-w-md">
                       <h2 className="text-4xl md:text-5xl font-black text-slate-900 leading-tight mb-4">The Ultimate New Best Winter Collection</h2>
                       <p className="text-slate-600 mb-8">Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
-                      <button className="bg-white border-2 border-slate-900 text-slate-900 px-8 py-3 font-bold uppercase text-sm tracking-widest hover:bg-slate-900 hover:text-white transition-colors">Shop Collections</button>
+                      <button onClick={() => setPage('collections')} className="bg-white border-2 border-slate-900 text-slate-900 px-8 py-3 font-bold uppercase text-sm tracking-widest hover:bg-slate-900 hover:text-white transition-colors">Shop Collections</button>
                    </div>
                    {/* Background Image / Decorative */}
                    <img src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80" className="absolute right-0 bottom-0 h-[110%] object-cover object-left max-w-[50%]" />
                 </div>
-                <div className="w-full md:w-1/3 bg-sky-50 rounded-[2rem] p-6 relative h-[400px] overflow-hidden flex flex-col items-center group cursor-pointer">
+                <div onClick={() => setPage('collections')} className="w-full md:w-1/3 bg-sky-50 rounded-[2rem] p-6 relative h-[400px] overflow-hidden flex flex-col items-center group cursor-pointer">
                    <div className="absolute top-6 right-6 bg-orange-500 text-white w-16 h-16 rounded-full flex flex-col items-center justify-center font-black leading-none z-10 shadow-lg group-hover:scale-110 transition-transform"><span className="text-xl">30</span><span className="text-[10px]">% OFF</span></div>
                    <h3 className="text-3xl font-black tracking-widest uppercase mb-4 z-10">SALE</h3>
                    <div className="flex-1 w-full relative rounded-2xl overflow-hidden mb-4">
@@ -3446,13 +3446,13 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                                   <h4 className="font-bold text-slate-800 mb-1">{p.name}</h4>
                                   <p className="font-black text-slate-900">${parseFloat(p.price).toFixed(2)}</p>
                                </div>
-                               <button className="text-slate-400 hover:text-rose-500 transition-colors"><Heart className="w-5 h-5" /></button>
+                               <button onClick={(e) => { e.stopPropagation(); setPage('collections'); }} className="text-slate-400 hover:text-rose-500 transition-colors"><Heart className="w-5 h-5" /></button>
                             </div>
                             <div className="flex items-center gap-1 text-[10px] text-slate-400 mb-4">
                                <div className="flex text-slate-800"><Star className="w-3 h-3 fill-current"/><Star className="w-3 h-3 fill-current"/><Star className="w-3 h-3 fill-current"/><Star className="w-3 h-3 fill-current"/><Star className="w-3 h-3 fill-current"/></div>
                                <span>4.5/5 (99 Review)</span>
                             </div>
-                            <button className="w-full border-2 border-[#3a3f44] text-[#3a3f44] py-2 font-bold text-sm hover:bg-[#3a3f44] hover:text-white transition-colors">
+                            <button onClick={(e) => { e.stopPropagation(); setPage('checkout'); }} className="w-full border-2 border-[#3a3f44] text-[#3a3f44] py-2 font-bold text-sm hover:bg-[#3a3f44] hover:text-white transition-colors">
                                Add To Bag
                             </button>
                          </div>
@@ -3602,7 +3602,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                             <div className="relative aspect-[3/4] bg-slate-50 rounded-xl overflow-hidden mb-4">
                                <img src={getCoverImage(p)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 mix-blend-multiply" />
                                {p.id % 3 === 0 && <div className="absolute top-3 left-3 bg-white text-rose-500 text-[10px] font-bold px-2 py-1 rounded shadow-sm">Hot item</div>}
-                               <button className="absolute bottom-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center text-slate-400 hover:text-rose-500 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                               <button onClick={(e) => { e.stopPropagation(); setPage('collections'); }} className="absolute bottom-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center text-slate-400 hover:text-rose-500 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
                                   <Heart className="w-4 h-4" />
                                </button>
                             </div>
