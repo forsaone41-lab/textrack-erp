@@ -1,13 +1,14 @@
 // @ts-nocheck
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown, TrendingUp, Package, RefreshCw, Undo2, Menu, Home, Heart, SlidersHorizontal, ArrowRight, ArrowLeft, Grid, User } from 'lucide-react';
+import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown, TrendingUp, Package, RefreshCw, Undo2, Menu, Home, Heart, SlidersHorizontal, ArrowRight, ArrowLeft, Grid, User, Ruler } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import StoreManagerDashboard from '../components/Tools/StoreManagerDashboard';
 import ProAITools from '../components/Tools/ProAITools';
 import CheckoutForm from '../components/CheckoutForm';
 import AuthForm from '../components/AuthForm';
 import { supabase } from '../supabase';
+import { loadData, FicheTechnique } from '../types';
 
 const THEMES = [
   { id: 'streetwear', name: 'Streetwear Pro', layout: 'hero-center', defaultColor: '#0f172a', defaultFont: 'font-sans', tier: 'free', previewImg: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop' },
@@ -749,6 +750,27 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [newColorInput, setNewColorInput] = useState('#000000');
   const [newTagInput, setNewTagInput] = useState('');
   const [isAIGenerating, setIsAIGenerating] = useState(false);
+  const [fichesList, setFichesList] = useState<FicheTechnique[]>([]);
+  const [isFichePickerOpen, setIsFichePickerOpen] = useState(false);
+  const [fichePickerSearch, setFichePickerSearch] = useState('');
+
+  useEffect(() => {
+     if (isLiveStore) return;
+     loadData<FicheTechnique>('fiches').then(setFichesList);
+  }, [isLiveStore]);
+
+  const applyFicheToProductForm = (f: FicheTechnique) => {
+     setProductForm((prev: any) => ({
+        ...(prev || { price: '', stock: '', colors: [], colorImages: {}, variantQuantities: {} }),
+        name: f.modele || prev?.name || '',
+        category: f.type || prev?.category || '',
+        description: f.description || prev?.description || '',
+        image: f.photo || prev?.image || '',
+        sizes: (f.tailles && f.tailles.length > 0) ? f.tailles : (prev?.sizes || []),
+     }));
+     setIsFichePickerOpen(false);
+     setFichePickerSearch('');
+  };
 
   // Pre-fill "Créer un Produit" when arriving from the Fiches Techniques page (see FichesTechniques.tsx)
   useEffect(() => {
@@ -5688,10 +5710,57 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                     <h2 className="text-3xl font-black text-slate-800">{productForm?.id ? (isAr ? 'تعديل المنتج' : 'Modifier le Produit') : (isAr ? 'إضافة منتج جديد' : 'Créer un Produit')}</h2>
                     <p className="text-slate-500 mt-2">{isAr ? 'التفاصيل، المخزون، والمتغيرات.' : 'Détails, inventaire, et variantes de votre article.'}</p>
                  </div>
-                 <button onClick={() => setIsProductModalOpen(false)} className="p-4 bg-white rounded-2xl shadow-sm text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all border border-slate-200">
-                    <X className="w-6 h-6" />
-                 </button>
+                 <div className="flex items-center gap-3">
+                    <button onClick={() => setIsFichePickerOpen(true)} className="flex items-center gap-2 px-4 py-3 bg-white border border-indigo-200 text-indigo-600 rounded-2xl text-xs font-black uppercase tracking-wider hover:bg-indigo-50 hover:border-indigo-500 transition-all shadow-sm">
+                       <Ruler className="w-4 h-4" /> {isAr ? 'اختر من الفيش تقنيك' : 'Choisir depuis Fiches Techniques'}
+                    </button>
+                    <button onClick={() => setIsProductModalOpen(false)} className="p-4 bg-white rounded-2xl shadow-sm text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all border border-slate-200">
+                       <X className="w-6 h-6" />
+                    </button>
+                 </div>
               </div>
+              {isFichePickerOpen && (
+                 <div className="fixed inset-0 z-[500] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setIsFichePickerOpen(false)}>
+                    <div className="bg-white w-full max-w-2xl max-h-[80vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+                       <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+                          <h3 className="text-lg font-black text-slate-800">{isAr ? 'اختر موديل من الفيش تقنيك' : 'Choisir un modèle'}</h3>
+                          <button onClick={() => setIsFichePickerOpen(false)} className="p-2 text-slate-400 hover:text-rose-500"><X className="w-5 h-5" /></button>
+                       </div>
+                       <div className="p-4 border-b border-slate-100">
+                          <input
+                             type="text"
+                             autoFocus
+                             value={fichePickerSearch}
+                             onChange={e => setFichePickerSearch(e.target.value)}
+                             placeholder={isAr ? 'بحث بالموديل أو الزبون...' : 'Rechercher un modèle ou client...'}
+                             className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500"
+                          />
+                       </div>
+                       <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                          {fichesList
+                             .filter(f => !fichePickerSearch || f.modele.toLowerCase().includes(fichePickerSearch.toLowerCase()) || (f.client || '').toLowerCase().includes(fichePickerSearch.toLowerCase()))
+                             .map(f => (
+                                <button
+                                   key={f.id}
+                                   onClick={() => applyFicheToProductForm(f)}
+                                   className="w-full flex items-center gap-4 p-3 bg-white border border-slate-200 rounded-xl hover:border-indigo-400 hover:bg-indigo-50 transition-all text-left"
+                                >
+                                   <div className="w-14 h-14 rounded-lg bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center">
+                                      {f.photo ? <img src={f.photo} alt={f.modele} className="w-full h-full object-cover" /> : <ImageIcon className="w-5 h-5 text-slate-300" />}
+                                   </div>
+                                   <div className="min-w-0">
+                                      <p className="font-bold text-slate-800 truncate">{f.modele}</p>
+                                      <p className="text-xs text-slate-500 truncate">{f.client}{f.type ? ` · ${f.type}` : ''}</p>
+                                   </div>
+                                </button>
+                             ))}
+                          {fichesList.length === 0 && (
+                             <p className="text-center text-sm text-slate-400 py-8">{isAr ? 'لا توجد فيش تقنيك' : 'Aucune fiche technique trouvée'}</p>
+                          )}
+                       </div>
+                    </div>
+                 </div>
+              )}
               <div className="flex-1 overflow-y-auto p-8 bg-slate-50/50">
                  <div className="grid grid-cols-12 gap-6">
                     {/* Left Column (Images & Basic) */}
