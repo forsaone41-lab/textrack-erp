@@ -102,7 +102,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
   useEffect(() => {
-    setApiKeyInput(((import.meta as any).env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key')) || '');
+    setApiKeyInput((import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key')) || '');
     loadLeads().then(data => {
       setLeads(data.filter(l => l.photo));
     });
@@ -405,7 +405,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     setAnalyzing(true);
     setActivePieceIdx(0);
 
-    const apiKey = ((import.meta as any).env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key'));
+    const apiKey = (import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key'));
     if (!apiKey) {
       // Fallback: simulated analysis
       setTimeout(() => {
@@ -737,7 +737,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
 
   const translateFabricsBox = async () => {
     if (!analysisResult) return;
-    const apiKey = ((import.meta as any).env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key'));
+    const apiKey = (import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key'));
     if (!apiKey) {
       setCustomAlert({ title: isAr ? "مفتاح API مفقود" : "Clé API manquante", message: isAr ? "المرجو إضافة مفتاح Gemini الخاص بك لترجمة النص." : "Veuillez ajouter votre clé API Gemini pour traduire le texte.", isError: true });
       return;
@@ -786,7 +786,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
     const userMessage = directMsg;
     setChat(prev => [...prev, { role: 'user', text: userMessage }]);
 
-    const apiKey = ((import.meta as any).env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key'));
+    const apiKey = (import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key'));
     if (apiKey) {
       try {
         setChat(prev => [...prev, { role: 'ai', text: '...' }]);
@@ -844,7 +844,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
     setChat(prev => [...prev, { role: 'user', text: userMessage }]);
     setMsg('');
 
-    const apiKey = ((import.meta as any).env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key'));
+    const apiKey = (import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key'));
     if (apiKey) {
       try {
         // show loading indicator

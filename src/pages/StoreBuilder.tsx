@@ -459,6 +459,73 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         </span>
      );
   };
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
+  const [sizeGuideLoading, setSizeGuideLoading] = useState(false);
+  const [sizeGuideData, setSizeGuideData] = useState<{ modele: string; tailles: string[]; mesures: { nom: string; valeurs: Record<string, number> }[] } | null>(null);
+
+  const openSizeGuide = async (ficheId: string) => {
+     setSizeGuideOpen(true);
+     setSizeGuideLoading(true);
+     setSizeGuideData(null);
+     const { data } = await supabase.from('fiches').select('modele, tailles, mesures').eq('id', ficheId).single();
+     if (data) setSizeGuideData(data as any);
+     setSizeGuideLoading(false);
+  };
+
+  const SizeGuideButton = ({ ficheId, className }: { ficheId?: string; className?: string }) => {
+     if (!ficheId) return null;
+     return (
+        <button type="button" onClick={() => openSizeGuide(ficheId)} className={className || "text-[11px] font-bold underline underline-offset-2 text-slate-500 hover:text-slate-900"}>
+           {storeIsAr ? 'دليل المقاسات' : 'Guide des tailles'}
+        </button>
+     );
+  };
+
+  const SizeGuideModal = () => {
+     if (!sizeGuideOpen) return null;
+     return (
+        <div className="fixed inset-0 z-[600] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setSizeGuideOpen(false)}>
+           <div className="bg-white w-full max-w-xl max-h-[80vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+              <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+                 <h3 className="text-lg font-black text-slate-800">{storeIsAr ? 'دليل المقاسات' : 'Guide des tailles'}{sizeGuideData?.modele ? ` — ${sizeGuideData.modele}` : ''}</h3>
+                 <button onClick={() => setSizeGuideOpen(false)} className="p-2 text-slate-400 hover:text-rose-500"><X className="w-5 h-5" /></button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6">
+                 {sizeGuideLoading && (
+                    <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-slate-300" /></div>
+                 )}
+                 {!sizeGuideLoading && sizeGuideData && (sizeGuideData.mesures || []).length > 0 ? (
+                    <div className="overflow-x-auto">
+                       <table className="w-full text-sm min-w-[320px]">
+                          <thead>
+                             <tr className="text-slate-400 border-b border-slate-100">
+                                <th className="text-left font-bold py-2">{storeIsAr ? 'القياس (سم)' : 'Mesure (cm)'}</th>
+                                {(sizeGuideData.tailles || []).map(t => (
+                                   <th key={t} className="font-black py-2 text-center">{t}</th>
+                                ))}
+                             </tr>
+                          </thead>
+                          <tbody>
+                             {sizeGuideData.mesures.map((m, idx) => (
+                                <tr key={idx} className="border-b border-slate-50">
+                                   <td className="py-2.5 font-semibold text-slate-600">{m.nom}</td>
+                                   {(sizeGuideData.tailles || []).map(t => (
+                                      <td key={t} className="py-2.5 text-center text-slate-800 font-bold">{m.valeurs[t] ?? '-'}</td>
+                                   ))}
+                                </tr>
+                             ))}
+                          </tbody>
+                       </table>
+                       <p className="text-[11px] text-slate-400 mt-4">{storeIsAr ? 'جميع القياسات بالسنتيمتر. قد تختلف بشكل بسيط حسب القماش.' : 'Toutes les mesures sont en centimètres. Une légère variation est possible selon le tissu.'}</p>
+                    </div>
+                 ) : (!sizeGuideLoading && (
+                    <p className="text-center text-sm text-slate-400 py-8">{storeIsAr ? 'دليل المقاسات غير متوفر لهذا المنتج' : 'Guide des tailles indisponible pour ce produit'}</p>
+                 ))}
+              </div>
+           </div>
+        </div>
+     );
+  };
   const trendCardAccents = ['#fde8ef', '#e8f0fe', '#fef6e4', '#e9f9f0', '#f3e8fd'];
   const ProductCardTrend = ({ p, idx = 0, onClick }: any) => (
      <div className="group cursor-pointer rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow bg-white border border-slate-100" onClick={onClick}>
@@ -873,7 +940,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
 
   const handleAIGenerate = async () => {
      if (!productForm?.image) return;
-     const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key');
+     const apiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key');
      if (!apiKey) {
         alert(isAr ? 'لم يتم تكوين الذكاء الاصطناعي في هذا الخادم.' : 'L\'IA n\'est pas configurée sur ce serveur.');
         return;
@@ -1747,7 +1814,10 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                           )}
                           {p.sizes?.length > 0 && (
                              <div>
-                                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 block">{storeIsAr ? 'المقاس' : 'Taille'}</span>
+                                <div className="flex items-center justify-between mb-3">
+                                   <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block">{storeIsAr ? 'المقاس' : 'Taille'}</span>
+                                   <SizeGuideButton ficheId={p.ficheId} />
+                                </div>
                                 <div className="flex flex-wrap gap-2">
                                    {p.sizes.map((s: string) => (
                                       <button key={s} onClick={() => setSelectedSize(s)} className={`px-4 py-2 text-sm font-bold border rounded-lg transition-colors ${selectedSize === s ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-400'}`}>
@@ -2019,7 +2089,10 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                           )}
                           {p.sizes?.length > 0 && (
                              <div>
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 block">Size</span>
+                                <div className="flex items-center justify-between mb-4">
+                                   <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block">Size</span>
+                                   <SizeGuideButton ficheId={p.ficheId} />
+                                </div>
                                 <div className="flex flex-wrap gap-3">
                                    {p.sizes.map((s: string) => (
                                       <button key={s} onClick={() => setSelectedSize(s)} className={`px-4 py-2 text-xs tracking-widest border transition-colors ${selectedSize === s ? 'bg-black border-black text-white' : 'bg-transparent border-gray-200 text-gray-600 hover:border-black'}`}>
@@ -2244,7 +2317,10 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                           )}
                           {p.sizes?.length > 0 && (
                              <div>
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-4 block">Size</span>
+                                <div className="flex items-center justify-between mb-4">
+                                   <span className="text-[10px] font-bold uppercase tracking-widest text-white/50 block">Size</span>
+                                   <SizeGuideButton ficheId={p.ficheId} className="text-[11px] font-bold underline underline-offset-2 text-white/50 hover:text-white" />
+                                </div>
                                 <div className="flex flex-wrap gap-3">
                                    {p.sizes.map((s: string) => (
                                       <button key={s} onClick={() => setSelectedSize(s)} className={`px-4 py-2 text-xs tracking-widest border transition-colors ${selectedSize === s ? 'bg-white border-white text-black' : 'bg-transparent border-white/20 text-white/70 hover:border-white'}`}>
@@ -2508,7 +2584,10 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                           )}
                           {p.sizes?.length > 0 && (
                              <div>
-                                <span className="text-sm font-black uppercase tracking-wider text-slate-400 mb-3 block">Size</span>
+                                <div className="flex items-center justify-between mb-3">
+                                   <span className="text-sm font-black uppercase tracking-wider text-slate-400 block">Size</span>
+                                   <SizeGuideButton ficheId={p.ficheId} />
+                                </div>
                                 <div className="flex flex-wrap gap-2">
                                    {p.sizes.map((s: string) => (
                                       <button key={s} onClick={() => setSelectedSize(s)} className={`px-5 py-3 text-sm font-black rounded-xl transition-transform border-4 ${selectedSize === s ? 'bg-slate-800 border-slate-800 text-white scale-105 shadow-xl' : 'bg-slate-50 border-transparent text-slate-500 hover:border-slate-200'}`}>
@@ -2749,7 +2828,10 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                     )}
                     {product.sizes?.length > 0 && (
                        <div>
-                          <span className="text-[11px] font-bold uppercase tracking-widest text-[#666] mb-3 block">{storeIsAr ? 'المقاس' : 'Taille'}</span>
+                          <div className="flex items-center justify-between mb-3">
+                             <span className="text-[11px] font-bold uppercase tracking-widest text-[#666] block">{storeIsAr ? 'المقاس' : 'Taille'}</span>
+                             <SizeGuideButton ficheId={product.ficheId} />
+                          </div>
                           <div className="flex flex-wrap gap-2">
                              {product.sizes.map((s: string) => (
                                 <button key={s} onClick={() => setSelectedSize(s)} className={`min-w-[40px] h-10 px-3 text-[11px] font-bold uppercase tracking-widest transition-colors border ${selectedSize === s ? 'bg-[#1a1a1a] text-white border-[#1a1a1a]' : 'bg-white text-[#444] border-[#ddd] hover:border-[#1a1a1a]'}`}>
@@ -3967,6 +4049,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                 </div>
              </div>
           )}
+          <SizeGuideModal />
           {quickBuyContext && (
              <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setQuickBuyContext(null)}>
                 <div className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl" onClick={e => e.stopPropagation()}>
