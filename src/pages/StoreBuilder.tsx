@@ -22,11 +22,11 @@ const THEMES = [
   { id: 'ochaka', name: 'Ochaka', layout: 'split-screen', defaultColor: '#9f1239', defaultFont: 'font-sans', tier: 'free', previewImg: 'https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=800&auto=format&fit=crop' },
   { id: 'mazia', name: 'Mazia', layout: 'mazia', defaultColor: '#ef4444', defaultFont: 'font-serif', tier: 'free', previewImg: 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=800&auto=format&fit=crop' },
   // PRO themes - locked behind the Pro plan (Settings > Plan Pro)
-  { id: 'blush-studio', name: 'Blush Studio', layout: 'hero-center', defaultColor: '#e8a5b5', defaultFont: 'font-serif', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1567016432779-094069958ea5?q=80&w=800&auto=format&fit=crop' },
-  { id: 'pop-fashion', name: 'Pop Fashion', layout: 'playful', defaultColor: '#e11d48', defaultFont: 'font-sans', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=800&auto=format&fit=crop' },
-  { id: 'fitness-pulse', name: 'Fitness Pulse', layout: 'hero-center', defaultColor: '#7c3aed', defaultFont: 'font-sans', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop' },
-  { id: 'editorial-noir', name: 'Editorial Noir', layout: 'split-screen', defaultColor: '#dc2626', defaultFont: 'font-sans', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=800&auto=format&fit=crop' },
-  { id: 'emerald-market', name: 'Emerald Market', layout: 'mazia', defaultColor: '#0d9488', defaultFont: 'font-sans', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=800&auto=format&fit=crop' }
+  { id: 'blush-studio', name: 'Lamode App (Pro)', layout: 'pro-lamode', defaultColor: '#e8a5b5', defaultFont: 'font-serif', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1567016432779-094069958ea5?q=80&w=800&auto=format&fit=crop' },
+  { id: 'pop-fashion', name: 'Simple Minimal (Pro)', layout: 'pro-simple', defaultColor: '#e11d48', defaultFont: 'font-sans', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=800&auto=format&fit=crop' },
+  { id: 'fitness-pulse', name: 'Joyride (Pro)', layout: 'pro-joyride', defaultColor: '#7c3aed', defaultFont: 'font-sans', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop' },
+  { id: 'editorial-noir', name: 'Lamode Web (Pro)', layout: 'pro-lamode', defaultColor: '#dc2626', defaultFont: 'font-sans', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=800&auto=format&fit=crop' },
+  { id: 'emerald-market', name: 'Ultimate Store (Pro)', layout: 'pro-ultimate', defaultColor: '#0d9488', defaultFont: 'font-sans', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=800&auto=format&fit=crop' }
 ];
 
 const readFileAsBase64 = (file: File): Promise<string> => {
@@ -3004,12 +3004,691 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     );
   };
 
+  
+  // --- PRO THEMES ---
+  const LayoutProLamode = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts, storeIsAr, storeLang, config, activeTheme }: any) => {
+    const primaryColor = config.primaryColor || activeTheme.defaultColor;
+    const fontFamily = config.fontFamily || activeTheme.defaultFont;
+    
+    // Derived values
+    const featuredCollection = storeProducts.slice(0, 3);
+    const newReleases = storeProducts.slice(3, 7);
+
+    return (
+      <div className={`flex-1 w-full bg-[#fcfcfc] text-[#1a1a1a] ${fontFamily} relative pb-20`}>
+        {/* Top Bar */}
+        <div className="flex items-center justify-between p-6 bg-white/80 backdrop-blur-md sticky top-0 z-50">
+           <button className="w-10 h-10 flex items-center justify-center"><div className="w-5 h-0.5 bg-slate-800 relative before:absolute before:w-3 before:h-0.5 before:bg-slate-800 before:-top-1.5 before:left-0 after:absolute after:w-4 after:h-0.5 after:bg-slate-800 after:top-1.5 after:left-0"></div></button>
+           <h1 className="text-xl font-serif font-black tracking-tighter">Lamode</h1>
+           <div className="flex gap-4">
+              <button onClick={() => setIsCartOpen(true)} className="relative"><ShoppingBag className="w-5 h-5 text-slate-800" /></button>
+              <button><Search className="w-5 h-5 text-slate-800" /></button>
+           </div>
+        </div>
+
+        {page === 'home' && (
+          <div className="px-6 space-y-8 animate-in fade-in duration-500">
+             {/* Categories */}
+             <div className="flex justify-between items-center overflow-x-auto scrollbar-hide gap-4 pb-2">
+                {['Tops', 'Bottoms', 'Shoes', 'Jewelry'].map(cat => (
+                   <div key={cat} className="flex flex-col items-center gap-2 cursor-pointer group shrink-0">
+                      <div className="w-14 h-14 bg-white border border-slate-100 rounded-2xl flex items-center justify-center shadow-sm group-hover:border-slate-800 transition-colors">
+                         <span className="text-xl opacity-50 group-hover:opacity-100">👔</span>
+                      </div>
+                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-slate-900">{cat}</span>
+                   </div>
+                ))}
+             </div>
+
+             {/* Hero Collection Card */}
+             <div className="relative w-full h-48 rounded-[2rem] overflow-hidden shadow-lg cursor-pointer group">
+                <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-900/40 to-transparent" />
+                <div className="absolute inset-0 p-8 flex flex-col justify-center">
+                   <p className="text-white/80 text-[10px] uppercase tracking-widest mb-2 font-bold flex items-center gap-1">The Best <ArrowRight className="w-3 h-3" /></p>
+                   <h2 className="text-3xl font-serif text-white leading-tight">Lamode<br/>Collection</h2>
+                   <div className="absolute bottom-6 right-6 bg-black/80 text-white text-[10px] font-bold px-3 py-1.5 flex items-center gap-1">2023 <Sparkles className="w-3 h-3" /></div>
+                </div>
+             </div>
+
+             {/* New Release */}
+             <div>
+                <div className="flex items-center justify-between mb-4">
+                   <h3 className="text-sm font-black text-slate-900">New Release</h3>
+                   <button className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">See all</button>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                   {filteredProducts.map((p: any) => (
+                      <div key={p.id} onClick={() => navigateToProduct(p.id)} className="group cursor-pointer">
+                         <div className="relative aspect-[3/4] bg-slate-50 rounded-[1.5rem] overflow-hidden mb-3">
+                            <img src={getCoverImage(p)} className="w-full h-full object-cover mix-blend-multiply group-hover:scale-110 transition-transform duration-500" />
+                            {p.id % 2 === 0 && (
+                               <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-rose-500 text-white text-[9px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm"><Sparkles className="w-2.5 h-2.5" /> Best Seller</div>
+                            )}
+                         </div>
+                         <h4 className="text-xs font-bold text-slate-800 leading-tight mb-1 line-clamp-2">{p.name}</h4>
+                         <div className="flex items-center justify-between">
+                            <span className="text-sm font-black text-emerald-600">${parseFloat(p.price).toFixed(2)}</span>
+                            <div className="flex items-center gap-0.5 text-[10px] font-bold text-slate-400"><Star className="w-3 h-3 text-amber-400 fill-amber-400" /> 4.{p.id % 5 + 5}</div>
+                         </div>
+                      </div>
+                   ))}
+                </div>
+             </div>
+          </div>
+        )}
+
+        {page === 'product' && activeProductId && (() => {
+           const product = storeProducts.find((p: any) => p.id === activeProductId);
+           if (!product) return null;
+           return (
+              <div className="px-6 animate-in slide-in-from-bottom-8 duration-500">
+                 <div className="flex items-center justify-between mb-6">
+                    <button onClick={() => setPage('home')} className="w-10 h-10 bg-white shadow-sm border border-slate-100 rounded-full flex items-center justify-center hover:bg-slate-50"><ArrowLeft className="w-4 h-4 text-slate-900" /></button>
+                    <h2 className="text-xs font-bold uppercase tracking-widest">Product Details</h2>
+                    <button className="w-10 h-10 bg-white shadow-sm border border-slate-100 rounded-full flex items-center justify-center hover:bg-slate-50"><Heart className="w-4 h-4 text-slate-900" /></button>
+                 </div>
+                 
+                 <div className="relative bg-slate-50 rounded-[2rem] p-8 mb-6 h-80 flex items-center justify-center">
+                    <img src={getCoverImage(product)} className="w-full h-full object-contain drop-shadow-2xl" />
+                    <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5">
+                       <div className="w-1.5 h-1.5 bg-slate-300 rounded-full"></div>
+                       <div className="w-1.5 h-1.5 bg-slate-800 rounded-full"></div>
+                       <div className="w-1.5 h-1.5 bg-slate-300 rounded-full"></div>
+                    </div>
+                 </div>
+
+                 <div className="flex gap-3 mb-6 overflow-x-auto scrollbar-hide pb-2">
+                    {[getCoverImage(product), getCoverImage(product), getCoverImage(product)].map((img, i) => (
+                       <div key={i} className={`w-14 h-14 rounded-2xl bg-slate-50 shrink-0 border-2 ${i === 1 ? 'border-[#ff5a1f]' : 'border-transparent'}`}>
+                          <img src={img} className="w-full h-full object-cover mix-blend-multiply p-1" />
+                       </div>
+                    ))}
+                 </div>
+
+                 <div className="flex items-center justify-between mb-4">
+                    <div className="bg-rose-500 text-white text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-sm"><Sparkles className="w-3 h-3" /> Best Seller</div>
+                    <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500"><Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" /> 4.8 (65 Ratings)</div>
+                 </div>
+
+                 <h1 className="text-xl font-bold text-slate-900 leading-tight mb-6">{product.name}</h1>
+                 
+                 <div className="flex items-center justify-between mb-8">
+                    <span className="text-2xl font-black text-emerald-600">${parseFloat(product.price).toFixed(2)}</span>
+                    <div className="flex items-center border border-slate-200 rounded-full px-2 py-1">
+                       <button className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-900">-</button>
+                       <span className="text-sm font-bold w-6 text-center">1</span>
+                       <button className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-900">+</button>
+                    </div>
+                 </div>
+
+                 <button onClick={() => setPage('checkout')} className="w-full py-5 bg-[#ff5a1f] text-white rounded-[1.5rem] font-bold text-sm shadow-xl shadow-[#ff5a1f]/30 hover:scale-[1.02] transition-transform">
+                    Order Now
+                 </button>
+              </div>
+           );
+        })()}
+
+        {page === 'checkout' && (
+           <div className="px-6 pt-4">
+              <div className="flex items-center mb-8">
+                 <button onClick={() => setPage('product')} className="w-10 h-10 bg-white shadow-sm border border-slate-100 rounded-full flex items-center justify-center"><ArrowLeft className="w-4 h-4 text-slate-900" /></button>
+                 <h2 className="text-sm font-black flex-1 text-center pr-10">Checkout</h2>
+              </div>
+              <CheckoutForm
+                  storeIsAr={storeIsAr}
+                  onSubmit={submitGlobalOrder}
+                  product={storeProducts.find((p: any) => p.id === activeProductId) || storeProducts[0]}
+                  quantity={1}
+               />
+           </div>
+        )}
+
+        {page === 'success' && (
+           <div className="px-6 py-20 flex flex-col items-center justify-center text-center">
+              <div className="w-24 h-24 bg-gradient-to-tr from-emerald-400 to-green-500 rounded-full flex items-center justify-center mb-8 shadow-xl">
+                 <CheckCircle className="w-10 h-10 text-white" />
+              </div>
+              <h2 className="text-2xl font-black text-slate-900 mb-2">Order Successful!</h2>
+              <p className="text-slate-500 text-sm mb-10">Your items are being prepared.</p>
+              <button onClick={() => setPage('home')} className="w-full py-5 bg-slate-900 text-white rounded-[1.5rem] font-bold text-sm">
+                 Continue Shopping
+              </button>
+           </div>
+        )}
+
+        {/* Bottom Navigation */}
+        <div className="fixed bottom-6 left-6 right-6 h-16 bg-[#1e1e1e] rounded-[2rem] flex items-center justify-between px-8 shadow-2xl z-50">
+           <button className="w-10 h-10 bg-[#333] rounded-full flex items-center justify-center text-[#ff5a1f]"><Home className="w-5 h-5 fill-current" /></button>
+           <button className="text-slate-400 hover:text-white transition-colors"><Grid className="w-5 h-5" /></button>
+           <button className="text-slate-400 hover:text-white transition-colors relative"><ShoppingBag className="w-5 h-5" /><span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#ff5a1f] rounded-full border-2 border-[#1e1e1e]"></span></button>
+           <button className="text-slate-400 hover:text-white transition-colors"><Heart className="w-5 h-5" /></button>
+           <button className="text-slate-400 hover:text-white transition-colors"><User className="w-5 h-5" /></button>
+        </div>
+      </div>
+    );
+  };
+
+  
+  const LayoutProJoyride = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts, storeIsAr, storeLang, config, activeTheme }: any) => {
+    const primaryColor = config.primaryColor || activeTheme.defaultColor;
+    const fontFamily = config.fontFamily || activeTheme.defaultFont;
+    
+    return (
+      <div className={`flex-1 w-full bg-slate-50 text-[#1a1a1a] ${fontFamily} relative pb-24 overflow-x-hidden min-h-screen`}>
+        
+        {page === 'home' && (
+          <div className="animate-in fade-in duration-500">
+             {/* Vibrant Curved Hero */}
+             <div className="relative w-full h-[400px] bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-b-[3rem] p-6 text-white overflow-hidden shadow-2xl">
+                {/* Decorative bubbles */}
+                <div className="absolute top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+                <div className="absolute bottom-10 -left-10 w-40 h-40 bg-black/10 rounded-full blur-2xl"></div>
+                
+                {/* Header Navbar inside Hero */}
+                <div className="flex items-center justify-between relative z-10 mb-8 pt-4">
+                   <button className="w-10 h-10 flex items-center"><ArrowLeft className="w-6 h-6 text-white" /></button>
+                   <div className="flex gap-4">
+                      <button><Search className="w-5 h-5 text-white" /></button>
+                      <button><Heart className="w-5 h-5 text-white" /></button>
+                   </div>
+                </div>
+
+                <div className="relative z-10 mt-4">
+                   <p className="text-white/80 text-sm font-bold tracking-widest uppercase mb-1 drop-shadow-sm">New Nike Series</p>
+                   <h2 className="text-5xl font-black italic tracking-tighter drop-shadow-md">JOYRIDE</h2>
+                </div>
+
+                {/* Floating Sneaker Image */}
+                <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80" className="absolute -right-16 -bottom-10 w-96 h-96 object-contain -rotate-12 drop-shadow-[0_20px_20px_rgba(0,0,0,0.5)] z-20" />
+             </div>
+
+             {/* Featured Horizontal Scroll */}
+             <div className="mt-8 px-6">
+                <h3 className="text-sm font-bold text-slate-800 mb-4">Featured</h3>
+                <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-6 -mx-6 px-6">
+                   {storeProducts.slice(0, 4).map((p: any, i: number) => (
+                      <div key={p.id} onClick={() => navigateToProduct(p.id)} className="w-40 shrink-0 bg-white rounded-3xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative cursor-pointer hover:-translate-y-2 transition-transform">
+                         <div className="absolute top-4 left-4 bg-lime-400 text-slate-900 text-[9px] font-black px-2 py-0.5 rounded-md">20%</div>
+                         <img src={getCoverImage(p)} className="w-full h-24 object-contain mt-6 mb-4 drop-shadow-xl" />
+                         <div className="text-center">
+                            <span className="text-sm font-black text-slate-800">${parseFloat(p.price).toFixed(2)}</span>
+                         </div>
+                      </div>
+                   ))}
+                </div>
+             </div>
+
+             {/* Discover Tiles */}
+             <div className="mt-2 px-6">
+                <h3 className="text-sm font-bold text-slate-800 mb-4">Discover</h3>
+                <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-6 -mx-6 px-6">
+                   <div className="w-64 h-32 shrink-0 rounded-3xl overflow-hidden relative shadow-lg cursor-pointer">
+                      <img src="https://images.unsplash.com/photo-1552346154-21d32810baa3?auto=format&fit=crop&q=80" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-indigo-900/80 to-transparent"></div>
+                      <span className="absolute bottom-4 left-4 text-white font-bold text-sm">New Sneaker Trends</span>
+                   </div>
+                   <div className="w-48 h-32 shrink-0 rounded-3xl overflow-hidden relative shadow-lg cursor-pointer bg-gradient-to-br from-blue-500 to-cyan-400">
+                      <div className="absolute inset-0 flex flex-col justify-end p-4 text-white">
+                         <span className="font-bold text-sm">Custom Designs</span>
+                      </div>
+                   </div>
+                </div>
+             </div>
+          </div>
+        )}
+
+        {page === 'product' && activeProductId && (() => {
+           const product = storeProducts.find((p: any) => p.id === activeProductId);
+           if (!product) return null;
+           return (
+              <div className="bg-white min-h-screen animate-in slide-in-from-right duration-500">
+                 <div className="flex items-center justify-between p-6">
+                    <button onClick={() => setPage('home')} className="w-10 h-10 flex items-center"><ArrowLeft className="w-6 h-6 text-slate-800" /></button>
+                    <div className="flex-1 bg-slate-100 h-10 rounded-full mx-4 flex items-center px-4">
+                       <Search className="w-4 h-4 text-slate-400 mr-2" />
+                       <input type="text" className="bg-transparent outline-none text-sm w-full" placeholder="Search..." />
+                    </div>
+                    <button onClick={() => setIsCartOpen(true)}><ShoppingBag className="w-6 h-6 text-slate-800" /></button>
+                 </div>
+
+                 {/* Categories Row */}
+                 <div className="px-6 mb-6 overflow-x-auto scrollbar-hide whitespace-nowrap">
+                    <h1 className="text-2xl font-black text-slate-900 mb-4">{product.category || 'Sneakers'}</h1>
+                    <div className="flex gap-6 text-sm font-bold">
+                       <span className="text-indigo-600 border-b-2 border-indigo-600 pb-2">Nike</span>
+                       <span className="text-slate-400">Adidas</span>
+                       <span className="text-slate-400">Puma</span>
+                       <span className="text-slate-400">Hummel</span>
+                       <span className="text-slate-400">Reebok</span>
+                    </div>
+                 </div>
+
+                 {/* Giant Product Card */}
+                 <div className="px-6 mb-8">
+                    <div className="w-full bg-gradient-to-br from-rose-500 to-orange-400 rounded-[2.5rem] p-6 text-white relative shadow-2xl shadow-rose-500/30 overflow-hidden h-[340px]">
+                       <div className="flex justify-between items-start relative z-10">
+                          <div>
+                             <p className="text-[10px] font-black tracking-widest uppercase mb-1 opacity-80">NIKE</p>
+                             <h2 className="text-2xl font-bold leading-none mb-2">{product.name}</h2>
+                             <p className="text-lg font-bold">${parseFloat(product.price).toFixed(2)}</p>
+                          </div>
+                          <button className="w-8 h-8 flex items-center justify-center border border-white/30 rounded-full backdrop-blur-md">
+                             <Heart className="w-4 h-4 text-white" />
+                          </button>
+                       </div>
+                       <img src={getCoverImage(product)} className="absolute -right-12 bottom-10 w-80 h-80 object-contain -rotate-12 drop-shadow-2xl z-20" />
+                    </div>
+                 </div>
+
+                 {/* Sales Grid */}
+                 <div className="px-6 pb-24">
+                    <h3 className="text-sm font-bold text-slate-800 mb-4">Sales</h3>
+                    <div className="grid grid-cols-3 gap-3">
+                       {filteredProducts.slice(0, 3).map((p: any) => (
+                          <div key={p.id} onClick={() => navigateToProduct(p.id)} className="bg-white border border-slate-100 rounded-2xl p-2 shadow-sm cursor-pointer hover:shadow-md transition-shadow relative">
+                             <div className="absolute top-2 left-2 bg-lime-400 text-slate-900 text-[8px] font-black px-1.5 py-0.5 rounded">20%</div>
+                             <img src={getCoverImage(p)} className="w-full h-16 object-contain my-3 drop-shadow-md" />
+                             <div className="text-center pb-1">
+                                <span className="text-[11px] font-black text-slate-800">${parseFloat(p.price).toFixed(2)}</span>
+                             </div>
+                          </div>
+                       ))}
+                    </div>
+                 </div>
+                 
+                 {/* Floating CTA */}
+                 <div className="fixed bottom-24 left-6 right-6">
+                    <button onClick={() => setPage('checkout')} className="w-full h-14 bg-indigo-600 text-white rounded-full font-black uppercase tracking-widest text-sm shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2 hover:scale-105 transition-transform">
+                       <ShoppingBag className="w-5 h-5" /> Buy Now
+                    </button>
+                 </div>
+              </div>
+           );
+        })()}
+
+        {page === 'checkout' && (
+           <div className="px-6 pt-6">
+              <div className="flex items-center mb-8">
+                 <button onClick={() => setPage('product')} className="w-10 h-10 bg-white shadow-sm border border-slate-100 rounded-full flex items-center justify-center"><ArrowLeft className="w-4 h-4 text-slate-900" /></button>
+                 <h2 className="text-sm font-black flex-1 text-center pr-10">Checkout</h2>
+              </div>
+              <CheckoutForm
+                  storeIsAr={storeIsAr}
+                  onSubmit={submitGlobalOrder}
+                  product={storeProducts.find((p: any) => p.id === activeProductId) || storeProducts[0]}
+                  quantity={1}
+               />
+           </div>
+        )}
+
+        {page === 'success' && (
+           <div className="px-6 py-20 flex flex-col items-center justify-center text-center">
+              <div className="w-24 h-24 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-full flex items-center justify-center mb-8 shadow-2xl shadow-indigo-500/30">
+                 <CheckCircle className="w-10 h-10 text-white" />
+              </div>
+              <h2 className="text-2xl font-black text-slate-900 mb-2">Awesome! 🎉</h2>
+              <p className="text-slate-500 text-sm mb-10">Your new kicks are on the way.</p>
+              <button onClick={() => setPage('home')} className="w-full py-5 bg-indigo-600 text-white rounded-[1.5rem] font-bold text-sm shadow-xl shadow-indigo-600/30">
+                 Back to Store
+              </button>
+           </div>
+        )}
+
+        {/* Floating Bottom Nav */}
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white rounded-full h-16 flex items-center justify-between px-8 shadow-[0_10px_40px_rgba(0,0,0,0.1)] w-[calc(100%-3rem)] max-w-sm z-50">
+           <button onClick={() => setPage('home')} className="text-indigo-600 relative">
+              <div className="absolute inset-0 bg-indigo-50 rounded-full scale-150 -z-10"></div>
+              <Home className="w-5 h-5 fill-indigo-600" />
+           </button>
+           <button className="text-slate-400 hover:text-indigo-600 transition-colors"><Grid className="w-5 h-5" /></button>
+           <button className="text-slate-400 hover:text-indigo-600 transition-colors"><ShoppingBag className="w-5 h-5" /></button>
+           <button className="text-slate-400 hover:text-indigo-600 transition-colors"><User className="w-5 h-5" /></button>
+        </div>
+      </div>
+    );
+  };
+
+  
+  const LayoutProUltimate = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts, storeIsAr, storeLang, config, activeTheme }: any) => {
+    const primaryColor = config.primaryColor || activeTheme.defaultColor;
+    const fontFamily = config.fontFamily || activeTheme.defaultFont;
+    
+    return (
+      <div className={`flex-1 w-full bg-white text-[#1a1a1a] ${fontFamily} relative pb-20`}>
+        
+        {/* Top Navbar */}
+        <div className="border-b border-slate-100 hidden md:block bg-slate-900 text-white py-2 px-8 text-xs flex justify-between items-center">
+           <div>{config.contactEmail || 'clothstore@example.com'}</div>
+           <div className="flex gap-4">
+              <span>Free International Shipping On Orders Over $60</span>
+           </div>
+        </div>
+        <div className="flex items-center justify-between px-4 md:px-8 py-6 sticky top-0 bg-white/90 backdrop-blur-md z-50 shadow-sm">
+           <h1 className="text-2xl font-black tracking-tighter flex items-center gap-2">
+              <ShoppingBag className="w-6 h-6 text-sky-500" />
+              {config.storeName || 'Clothing Store'}
+           </h1>
+           <div className="hidden md:flex gap-8 text-sm font-bold text-slate-600">
+              <span className="text-slate-900">Home</span>
+              <span className="hover:text-slate-900 cursor-pointer">About Us</span>
+              <span className="hover:text-slate-900 cursor-pointer">Shop</span>
+              <span className="hover:text-slate-900 cursor-pointer">Collection</span>
+              <span className="hover:text-slate-900 cursor-pointer">Contact Us</span>
+           </div>
+           <div className="flex gap-4">
+              <button><Search className="w-5 h-5 text-slate-800" /></button>
+              <button><Heart className="w-5 h-5 text-slate-800" /></button>
+              <button><User className="w-5 h-5 text-slate-800" /></button>
+              <button onClick={() => setIsCartOpen(true)} className="relative"><ShoppingBag className="w-5 h-5 text-slate-800" /><span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-sky-500 rounded-full border-2 border-white"></span></button>
+           </div>
+        </div>
+
+        {page === 'home' && (
+          <div className="animate-in fade-in duration-500 max-w-7xl mx-auto px-4 md:px-8 pt-8">
+             {/* Split Hero */}
+             <div className="flex flex-col md:flex-row gap-6 mb-16">
+                <div className="flex-1 bg-sky-100 rounded-[2rem] p-10 flex flex-col justify-center relative overflow-hidden h-[400px]">
+                   <div className="relative z-10 max-w-md">
+                      <h2 className="text-4xl md:text-5xl font-black text-slate-900 leading-tight mb-4">The Ultimate New Best Winter Collection</h2>
+                      <p className="text-slate-600 mb-8">Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
+                      <button className="bg-white border-2 border-slate-900 text-slate-900 px-8 py-3 font-bold uppercase text-sm tracking-widest hover:bg-slate-900 hover:text-white transition-colors">Shop Collections</button>
+                   </div>
+                   {/* Background Image / Decorative */}
+                   <img src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80" className="absolute right-0 bottom-0 h-[110%] object-cover object-left max-w-[50%]" />
+                </div>
+                <div className="w-full md:w-1/3 bg-sky-50 rounded-[2rem] p-6 relative h-[400px] overflow-hidden flex flex-col items-center group cursor-pointer">
+                   <div className="absolute top-6 right-6 bg-orange-500 text-white w-16 h-16 rounded-full flex flex-col items-center justify-center font-black leading-none z-10 shadow-lg group-hover:scale-110 transition-transform"><span className="text-xl">30</span><span className="text-[10px]">% OFF</span></div>
+                   <h3 className="text-3xl font-black tracking-widest uppercase mb-4 z-10">SALE</h3>
+                   <div className="flex-1 w-full relative rounded-2xl overflow-hidden mb-4">
+                      <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                   </div>
+                   <p className="font-bold text-slate-800">The Ultimate Collection</p>
+                </div>
+             </div>
+
+             {/* Bottom Grid Layout */}
+             <div className="flex flex-col md:flex-row gap-10">
+                {/* Left Testimonial */}
+                <div className="w-full md:w-1/4">
+                   <h3 className="text-2xl font-black mb-6">Testimonial</h3>
+                   <div className="bg-[#3a3f44] text-white p-8 rounded-tr-[3rem] rounded-bl-[3rem] text-center">
+                      <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80" className="w-20 h-20 rounded-full mx-auto mb-4 border-4 border-white/10" />
+                      <h4 className="font-bold mb-1">John Verma</h4>
+                      <p className="text-[10px] text-white/50 uppercase tracking-widest mb-6">Business CEO</p>
+                      <p className="text-sm text-white/80 leading-relaxed italic">"Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s."</p>
+                      <div className="flex justify-center gap-2 mt-6">
+                         <div className="w-4 h-1.5 bg-white rounded-full"></div>
+                         <div className="w-4 h-1.5 bg-white/30 rounded-full"></div>
+                         <div className="w-4 h-1.5 bg-white/30 rounded-full"></div>
+                      </div>
+                   </div>
+                </div>
+
+                {/* Right Products */}
+                <div className="w-full md:w-3/4">
+                   <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-2xl font-black">Grab Your Favorite Winter Cloths</h3>
+                      <div className="flex gap-2">
+                         <button className="w-8 h-8 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center hover:bg-sky-200"><ArrowLeft className="w-4 h-4" /></button>
+                         <button className="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center hover:bg-slate-900"><ArrowRight className="w-4 h-4" /></button>
+                      </div>
+                   </div>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {filteredProducts.slice(0, 3).map((p: any) => (
+                         <div key={p.id} onClick={() => navigateToProduct(p.id)} className="group cursor-pointer">
+                            <div className="relative aspect-[4/3] bg-slate-100 mb-4 overflow-hidden">
+                               <img src={getCoverImage(p)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                            </div>
+                            <div className="flex justify-between items-start mb-2">
+                               <div>
+                                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">{p.category || 'CATEGORY'}</p>
+                                  <h4 className="font-bold text-slate-800 mb-1">{p.name}</h4>
+                                  <p className="font-black text-slate-900">${parseFloat(p.price).toFixed(2)}</p>
+                               </div>
+                               <button className="text-slate-400 hover:text-rose-500 transition-colors"><Heart className="w-5 h-5" /></button>
+                            </div>
+                            <div className="flex items-center gap-1 text-[10px] text-slate-400 mb-4">
+                               <div className="flex text-slate-800"><Star className="w-3 h-3 fill-current"/><Star className="w-3 h-3 fill-current"/><Star className="w-3 h-3 fill-current"/><Star className="w-3 h-3 fill-current"/><Star className="w-3 h-3 fill-current"/></div>
+                               <span>4.5/5 (99 Review)</span>
+                            </div>
+                            <button className="w-full border-2 border-[#3a3f44] text-[#3a3f44] py-2 font-bold text-sm hover:bg-[#3a3f44] hover:text-white transition-colors">
+                               Add To Bag
+                            </button>
+                         </div>
+                      ))}
+                   </div>
+                </div>
+             </div>
+          </div>
+        )}
+
+        {page === 'product' && activeProductId && (() => {
+           const product = storeProducts.find((p: any) => p.id === activeProductId);
+           if (!product) return null;
+           return (
+              <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 animate-in fade-in">
+                 <button onClick={() => setPage('home')} className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-900 mb-8"><ArrowLeft className="w-4 h-4"/> Back to Store</button>
+                 <div className="flex flex-col md:flex-row gap-12">
+                    <div className="w-full md:w-1/2">
+                       <img src={getCoverImage(product)} className="w-full aspect-[4/5] object-cover bg-slate-50 shadow-sm" />
+                    </div>
+                    <div className="w-full md:w-1/2 flex flex-col justify-center">
+                       <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">{product.category || 'CLOTHING'}</p>
+                       <h1 className="text-4xl md:text-5xl font-black text-slate-900 leading-tight mb-4">{product.name}</h1>
+                       <div className="flex items-center gap-4 mb-6">
+                          <span className="text-3xl font-black text-slate-900">${parseFloat(product.price).toFixed(2)}</span>
+                          <div className="flex items-center gap-1 text-sm font-bold text-slate-500 bg-slate-50 px-3 py-1 rounded-full"><Star className="w-4 h-4 text-amber-400 fill-amber-400" /> 4.9 Rating</div>
+                       </div>
+                       <p className="text-slate-600 mb-8 leading-relaxed">Experience unparalleled comfort and style with our premium {product.name}. Crafted from carefully selected materials, this piece offers both durability and elegance for any occasion.</p>
+                       <button onClick={() => setPage('checkout')} className="w-full md:w-auto bg-[#3a3f44] text-white px-12 py-4 font-black uppercase tracking-widest text-sm hover:bg-black transition-colors shadow-xl shadow-black/10 flex items-center justify-center gap-2">
+                          <ShoppingBag className="w-5 h-5" /> Buy Now
+                       </button>
+                    </div>
+                 </div>
+              </div>
+           );
+        })()}
+
+        {page === 'checkout' && (
+           <div className="max-w-3xl mx-auto px-4 md:px-8 py-12">
+              <div className="flex items-center mb-10 border-b border-slate-100 pb-6">
+                 <button onClick={() => setPage('product')} className="w-10 h-10 border border-slate-200 rounded-full flex items-center justify-center hover:bg-slate-50"><ArrowLeft className="w-4 h-4 text-slate-900" /></button>
+                 <h2 className="text-2xl font-black flex-1 text-center pr-10 uppercase tracking-tight">Secure Checkout</h2>
+              </div>
+              <div className="bg-white p-8 md:p-12 border border-slate-100 shadow-xl shadow-slate-200/50 rounded-2xl">
+                 <CheckoutForm
+                     storeIsAr={storeIsAr}
+                     onSubmit={submitGlobalOrder}
+                     product={storeProducts.find((p: any) => p.id === activeProductId) || storeProducts[0]}
+                     quantity={1}
+                  />
+              </div>
+           </div>
+        )}
+
+        {page === 'success' && (
+           <div className="max-w-2xl mx-auto px-4 py-24 text-center">
+              <div className="w-24 h-24 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-8 border-4 border-white shadow-xl shadow-sky-100/50">
+                 <CheckCircle className="w-12 h-12 text-sky-500" />
+              </div>
+              <h2 className="text-4xl font-black text-slate-900 mb-4 tracking-tight">Order Confirmed!</h2>
+              <p className="text-slate-500 text-lg mb-10">Thank you for your purchase. We are preparing your order for shipping.</p>
+              <button onClick={() => setPage('home')} className="bg-[#3a3f44] text-white px-10 py-4 font-black uppercase tracking-widest text-sm hover:bg-black transition-colors">
+                 Return to Shop
+              </button>
+           </div>
+        )}
+      </div>
+    );
+  };
+
+  
+  const LayoutProSimple = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts, storeIsAr, storeLang, config, activeTheme }: any) => {
+    const primaryColor = config.primaryColor || activeTheme.defaultColor;
+    const fontFamily = config.fontFamily || activeTheme.defaultFont;
+    
+    return (
+      <div className={`flex-1 w-full bg-white text-[#1a1a1a] ${fontFamily} relative pb-20`}>
+        
+        {/* Top Navbar */}
+        <div className="flex items-center justify-between px-6 py-4 sticky top-0 bg-white/90 backdrop-blur-md z-50 border-b border-slate-100">
+           <h1 className="text-xl font-bold tracking-tighter text-emerald-500">STELLAR</h1>
+           <div className="hidden md:flex flex-1 max-w-md mx-8 relative">
+              <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input type="text" placeholder="What are you looking for?" className="w-full bg-slate-50 border border-slate-200 rounded-full py-2.5 pl-10 pr-4 text-sm outline-none focus:border-emerald-500" />
+           </div>
+           <div className="flex gap-4 items-center">
+              <span className="hidden md:block text-xs font-bold text-slate-600">🇬🇧 English</span>
+              <button onClick={() => setIsCartOpen(true)} className="relative flex items-center gap-2">
+                 <ShoppingBag className="w-5 h-5 text-slate-800" />
+                 <span className="text-xs font-bold bg-rose-500 text-white rounded-full w-4 h-4 flex items-center justify-center">2</span>
+              </button>
+           </div>
+        </div>
+
+        {page === 'home' && (
+          <div className="animate-in fade-in duration-500">
+             {/* Hero Banner */}
+             <div className="bg-[#8b939a] text-white w-full h-[300px] md:h-[400px] relative overflow-hidden flex flex-col justify-center px-8 md:px-20">
+                <div className="relative z-10">
+                   <h2 className="text-5xl md:text-7xl font-light leading-tight">Simple<br/>is More</h2>
+                </div>
+                <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&q=80" className="absolute right-0 top-0 h-full object-cover object-left opacity-90 md:w-1/2" />
+                <div className="absolute bottom-10 right-10 w-10 h-10 rounded-full border border-white/30 flex items-center justify-center z-10">
+                   <ArrowRight className="w-4 h-4 rotate-90" />
+                </div>
+             </div>
+
+             <div className="max-w-7xl mx-auto px-6 py-8 flex gap-10">
+                {/* Left Sidebar Filter (Desktop) */}
+                <div className="hidden md:block w-64 shrink-0">
+                   <div className="mb-8 text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2"><Home className="w-3 h-3" /> / Clothes</div>
+                   <div className="flex items-center justify-between mb-6">
+                      <h3 className="font-bold">Filter</h3>
+                      <span className="text-xs text-emerald-500 cursor-pointer">Clear all</span>
+                   </div>
+                   
+                   <div className="mb-6">
+                      <div className="flex items-center justify-between mb-4 cursor-pointer">
+                         <span className="text-sm font-bold text-slate-600">Brand</span>
+                         <ArrowRight className="w-4 h-4 -rotate-90 text-slate-400" />
+                      </div>
+                      <div className="space-y-3">
+                         {['Nike', 'Adidas', 'New Balance', 'Puma'].map((b, i) => (
+                            <div key={b} className="flex items-center gap-3">
+                               <div className={`w-4 h-4 rounded border flex items-center justify-center ${i===0 ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300'}`}>
+                                  {i===0 && <CheckCircle className="w-3 h-3" />}
+                               </div>
+                               <span className="text-sm text-slate-600">{b}</span>
+                            </div>
+                         ))}
+                      </div>
+                   </div>
+                </div>
+
+                {/* Main Content Grid */}
+                <div className="flex-1">
+                   <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-xl font-bold">84 result for clothes</h2>
+                      <div className="flex items-center gap-4 text-sm">
+                         <span className="text-slate-400">Sort by: <span className="font-bold text-slate-900">Popular</span></span>
+                      </div>
+                   </div>
+                   
+                   <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10">
+                      {filteredProducts.map((p: any) => (
+                         <div key={p.id} onClick={() => navigateToProduct(p.id)} className="group cursor-pointer">
+                            <div className="relative aspect-[3/4] bg-slate-50 rounded-xl overflow-hidden mb-4">
+                               <img src={getCoverImage(p)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 mix-blend-multiply" />
+                               {p.id % 3 === 0 && <div className="absolute top-3 left-3 bg-white text-rose-500 text-[10px] font-bold px-2 py-1 rounded shadow-sm">Hot item</div>}
+                               <button className="absolute bottom-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center text-slate-400 hover:text-rose-500 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Heart className="w-4 h-4" />
+                               </button>
+                            </div>
+                            <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-1">{p.category || 'Simple'}</p>
+                            <h4 className="text-sm font-bold text-slate-800 leading-snug mb-1 line-clamp-1">{p.name}</h4>
+                            <div className="flex items-center gap-2">
+                               <span className="text-sm font-black text-sky-600">${parseFloat(p.price).toFixed(2)}</span>
+                               {p.comparePrice && <span className="text-xs text-rose-400 line-through">${parseFloat(p.comparePrice).toFixed(2)}</span>}
+                            </div>
+                         </div>
+                      ))}
+                   </div>
+                </div>
+             </div>
+          </div>
+        )}
+
+        {page === 'product' && activeProductId && (() => {
+           const product = storeProducts.find((p: any) => p.id === activeProductId);
+           if (!product) return null;
+           return (
+              <div className="max-w-5xl mx-auto px-6 py-12 animate-in fade-in">
+                 <button onClick={() => setPage('home')} className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-900 mb-8"><ArrowLeft className="w-4 h-4"/> Back</button>
+                 <div className="flex flex-col md:flex-row gap-12">
+                    <div className="w-full md:w-1/2">
+                       <img src={getCoverImage(product)} className="w-full aspect-[3/4] object-cover rounded-2xl shadow-sm bg-slate-50 mix-blend-multiply" />
+                    </div>
+                    <div className="w-full md:w-1/2 flex flex-col justify-center">
+                       <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">{product.category || 'CLOTHING'}</p>
+                       <h1 className="text-3xl font-black text-slate-900 leading-tight mb-4">{product.name}</h1>
+                       <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100">
+                          <span className="text-3xl font-black text-sky-600">${parseFloat(product.price).toFixed(2)}</span>
+                       </div>
+                       <p className="text-slate-600 mb-8 leading-relaxed text-sm">Experience unparalleled comfort and style with our premium simple collection. Less is more.</p>
+                       <button onClick={() => setPage('checkout')} className="w-full md:w-auto bg-emerald-500 text-white px-12 py-4 font-black uppercase tracking-widest text-sm hover:bg-emerald-600 transition-colors shadow-lg rounded-xl flex items-center justify-center gap-2">
+                          <ShoppingBag className="w-5 h-5" /> Add to Cart
+                       </button>
+                    </div>
+                 </div>
+              </div>
+           );
+        })()}
+
+        {page === 'checkout' && (
+           <div className="max-w-3xl mx-auto px-4 md:px-8 py-12">
+              <div className="flex items-center mb-10 pb-6">
+                 <button onClick={() => setPage('product')} className="w-10 h-10 border border-slate-200 rounded-full flex items-center justify-center hover:bg-slate-50"><ArrowLeft className="w-4 h-4 text-slate-900" /></button>
+                 <h2 className="text-xl font-bold flex-1 text-center pr-10">Checkout</h2>
+              </div>
+              <div className="bg-white p-8 border border-slate-100 shadow-sm rounded-2xl">
+                 <CheckoutForm
+                     storeIsAr={storeIsAr}
+                     onSubmit={submitGlobalOrder}
+                     product={storeProducts.find((p: any) => p.id === activeProductId) || storeProducts[0]}
+                     quantity={1}
+                  />
+              </div>
+           </div>
+        )}
+
+        {page === 'success' && (
+           <div className="max-w-2xl mx-auto px-4 py-24 text-center">
+              <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-8 border-4 border-white shadow-sm">
+                 <CheckCircle className="w-12 h-12 text-emerald-500" />
+              </div>
+              <h2 className="text-3xl font-bold text-slate-900 mb-4 tracking-tight">Order Confirmed!</h2>
+              <p className="text-slate-500 text-sm mb-10">Thank you for your purchase. We are preparing your order.</p>
+              <button onClick={() => setPage('home')} className="bg-emerald-500 text-white px-10 py-4 font-bold rounded-xl text-sm hover:bg-emerald-600 transition-colors">
+                 Return to Shop
+              </button>
+           </div>
+        )}
+      </div>
+    );
+  };
+
   const Layout = () => {
        if (activeTheme.layout === 'hero-center') return <LayoutHeroCenter {...props} />;
        if (activeTheme.layout === 'split-screen') return <LayoutSplitScreen {...props} />;
        if (activeTheme.layout === 'elegant') return <LayoutElegant {...props} />;
        if (activeTheme.layout === 'mazia') return <LayoutMazia {...props} />;
        if (activeTheme.layout === 'playful') return <LayoutPlayful {...props} />;
+       if (activeTheme.layout === 'pro-simple') return <LayoutProSimple {...props} />;
+       if (activeTheme.layout === 'pro-ultimate') return <LayoutProUltimate {...props} />;
+       if (activeTheme.layout === 'pro-joyride') return <LayoutProJoyride {...props} />;
+       if (activeTheme.layout === 'pro-lamode') return <LayoutProLamode {...props} />;
        if (activeTheme.layout === 'clement') return <LayoutClement {...props} />;
        return <LayoutHeroCenter {...props} />;
     };
