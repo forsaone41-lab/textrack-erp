@@ -86,14 +86,28 @@ const IframePreview = ({ children, isMobile, className }: any) => {
     }
   }, [contentRef]);
 
-  // Use a wrapper to scale the iframe without breaking its aspect ratio flow
   return (
-    <div className={`relative flex items-start justify-center ${isMobile ? '' : 'w-full h-full'}`} style={isMobile ? { width: '375px', height: '812px', transform: 'scale(calc(min(1, (100vh - 180px) / 812)))', transformOrigin: 'top center' } : {}}>
+    <div 
+      className={`relative flex items-start justify-center ${isMobile ? '' : 'w-full h-full'}`} 
+      style={isMobile ? { 
+        width: 'calc(375px * min(1, (100vh - 220px) / 812))', 
+        height: 'calc(812px * min(1, (100vh - 220px) / 812))',
+        position: 'relative'
+      } : {}}
+    >
       <iframe
         title="Mobile Preview"
         ref={setContentRef}
         className={className}
-        style={{ width: '100%', height: '100%' }}
+        style={isMobile ? { 
+          width: '375px', 
+          height: '812px', 
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          transform: 'scale(calc(min(1, (100vh - 220px) / 812)))', 
+          transformOrigin: 'top left' 
+        } : { width: '100%', height: '100%' }}
       >
         {mountNode && createPortal(children, mountNode)}
       </iframe>
