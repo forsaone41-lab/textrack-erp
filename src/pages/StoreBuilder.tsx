@@ -3027,9 +3027,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         </div>
 
         {page === 'home' && (
-          <div className="px-6 space-y-8 animate-in fade-in duration-500">
+          <div className="px-6 space-y-8 animate-in fade-in duration-500 md:max-w-6xl md:mx-auto md:py-12">
              {/* Categories */}
-             <div className="flex justify-between items-center overflow-x-auto scrollbar-hide gap-4 pb-2">
+             <div className="flex justify-between md:justify-center items-center overflow-x-auto scrollbar-hide gap-4 md:gap-16 pb-2">
                 {['Tops', 'Bottoms', 'Shoes', 'Jewelry'].map(cat => (
                    <div key={cat} className="flex flex-col items-center gap-2 cursor-pointer group shrink-0">
                       <div className="w-14 h-14 bg-white border border-slate-100 rounded-2xl flex items-center justify-center shadow-sm group-hover:border-slate-800 transition-colors">
@@ -3041,34 +3041,34 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
              </div>
 
              {/* Hero Collection Card */}
-             <div onClick={() => setPage('collections')} className="relative w-full h-48 rounded-[2rem] overflow-hidden shadow-lg cursor-pointer group">
+             <div onClick={() => setPage('collections')} className="relative w-full h-48 md:h-[500px] rounded-[2rem] overflow-hidden shadow-lg cursor-pointer group">
                 <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                 <div className="absolute inset-0 bg-gradient-to-r from-orange-900/40 to-transparent" />
-                <div className="absolute inset-0 p-8 flex flex-col justify-center">
-                   <p className="text-white/80 text-[10px] uppercase tracking-widest mb-2 font-bold flex items-center gap-1">The Best <ArrowRight className="w-3 h-3" /></p>
-                   <h2 className="text-3xl font-serif text-white leading-tight">Lamode<br/>Collection</h2>
-                   <div className="absolute bottom-6 right-6 bg-black/80 text-white text-[10px] font-bold px-3 py-1.5 flex items-center gap-1">2023 <Sparkles className="w-3 h-3" /></div>
+                <div className="absolute inset-0 p-8 md:p-16 flex flex-col justify-center">
+                   <p className="text-white/80 text-[10px] md:text-sm uppercase tracking-widest mb-2 md:mb-4 font-bold flex items-center gap-1">The Best <ArrowRight className="w-3 h-3 md:w-4 md:h-4" /></p>
+                   <h2 className="text-3xl md:text-6xl font-serif text-white leading-tight">Lamode<br/>Collection</h2>
+                   <div className="absolute bottom-6 md:bottom-12 right-6 md:right-12 bg-black/80 text-white text-[10px] md:text-sm font-bold px-3 md:px-6 py-1.5 md:py-3 flex items-center gap-1 md:gap-2 rounded-full">2023 <Sparkles className="w-3 h-3 md:w-4 md:h-4" /></div>
                 </div>
              </div>
 
              {/* New Release */}
              <div>
-                <div className="flex items-center justify-between mb-4">
-                   <h3 className="text-sm font-black text-slate-900">New Release</h3>
-                   <button onClick={() => setPage('collections')} className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">See all</button>
+                <div className="flex items-center justify-between mb-4 md:mb-8">
+                   <h3 className="text-sm md:text-2xl font-black text-slate-900">New Release</h3>
+                   <button onClick={() => setPage('collections')} className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-slate-900">See all</button>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
                    {filteredProducts.map((p: any) => (
                       <div key={p.id} onClick={() => navigateToProduct(p.id)} className="group cursor-pointer">
                          <div className="relative aspect-[3/4] bg-slate-50 rounded-[1.5rem] overflow-hidden mb-3">
                             <img src={getCoverImage(p)} className="w-full h-full object-cover mix-blend-multiply group-hover:scale-110 transition-transform duration-500" />
                             {p.id % 2 === 0 && (
-                               <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-rose-500 text-white text-[9px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm"><Sparkles className="w-2.5 h-2.5" /> Best Seller</div>
+                               <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-rose-500 text-white text-[9px] md:text-[11px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm whitespace-nowrap"><Sparkles className="w-2.5 h-2.5" /> Best Seller</div>
                             )}
                          </div>
-                         <h4 className="text-xs font-bold text-slate-800 leading-tight mb-1 line-clamp-2">{p.name}</h4>
+                         <h4 className="text-xs md:text-base font-bold text-slate-800 leading-tight mb-1 line-clamp-2">{p.name}</h4>
                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-black text-emerald-600">${parseFloat(p.price).toFixed(2)}</span>
+                            <span className="text-sm md:text-lg font-black text-emerald-600">${parseFloat(p.price).toFixed(2)}</span>
                             <div className="flex items-center gap-0.5 text-[10px] font-bold text-slate-400"><Star className="w-3 h-3 text-amber-400 fill-amber-400" /> 4.{p.id % 5 + 5}</div>
                          </div>
                       </div>
@@ -3082,47 +3082,56 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
            const product = storeProducts.find((p: any) => p.id === activeProductId);
            if (!product) return null;
            return (
-              <div className="px-6 animate-in slide-in-from-bottom-8 duration-500">
-                 <div className="flex items-center justify-between mb-6">
+              <div className="px-6 animate-in slide-in-from-bottom-8 duration-500 md:max-w-6xl md:mx-auto md:py-12 md:flex md:gap-12 md:items-start">
+                 <div className="flex items-center justify-between mb-6 md:hidden">
                     <button onClick={() => setPage('home')} className="w-10 h-10 bg-white shadow-sm border border-slate-100 rounded-full flex items-center justify-center hover:bg-slate-50"><ArrowLeft className="w-4 h-4 text-slate-900" /></button>
                     <h2 className="text-xs font-bold uppercase tracking-widest">Product Details</h2>
                     <button onClick={() => setPage('collections')} className="w-10 h-10 bg-white shadow-sm border border-slate-100 rounded-full flex items-center justify-center hover:bg-slate-50"><Heart className="w-4 h-4 text-slate-900" /></button>
                  </div>
                  
-                 <div className="relative bg-slate-50 rounded-[2rem] p-8 mb-6 h-80 flex items-center justify-center">
-                    <img src={getCoverImage(product)} className="w-full h-full object-contain drop-shadow-2xl" />
-                    <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5">
-                       <div className="w-1.5 h-1.5 bg-slate-300 rounded-full"></div>
-                       <div className="w-1.5 h-1.5 bg-slate-800 rounded-full"></div>
-                       <div className="w-1.5 h-1.5 bg-slate-300 rounded-full"></div>
+                 <div className="md:w-1/2">
+                    <div className="relative bg-slate-50 rounded-[2rem] p-8 mb-6 h-80 md:h-[600px] flex items-center justify-center">
+                       <img src={getCoverImage(product)} className="w-full h-full object-contain drop-shadow-2xl" />
+                       <div className="absolute bottom-4 md:bottom-8 left-0 right-0 flex justify-center gap-1.5 md:gap-2">
+                          <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-slate-300 rounded-full"></div>
+                          <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-slate-800 rounded-full"></div>
+                          <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-slate-300 rounded-full"></div>
+                       </div>
                     </div>
-                 </div>
 
-                 <div className="flex gap-3 mb-6 overflow-x-auto scrollbar-hide pb-2">
+                 <div className="flex gap-3 mb-6 overflow-x-auto scrollbar-hide pb-2 md:hidden">
                     {[getCoverImage(product), getCoverImage(product), getCoverImage(product)].map((img, i) => (
                        <div key={i} className={`w-14 h-14 rounded-2xl bg-slate-50 shrink-0 border-2 ${i === 1 ? 'border-[#ff5a1f]' : 'border-transparent'}`}>
                           <img src={img} className="w-full h-full object-cover mix-blend-multiply p-1" />
                        </div>
                     ))}
                  </div>
+                 </div>
+
+                 <div className="md:w-1/2 md:flex md:flex-col md:justify-center">
+                    <div className="hidden md:flex items-center justify-between mb-8">
+                       <button onClick={() => setPage('home')} className="w-10 h-10 bg-white shadow-sm border border-slate-100 rounded-full flex items-center justify-center hover:bg-slate-50"><ArrowLeft className="w-4 h-4 text-slate-900" /></button>
+                       <h2 className="text-xs font-bold uppercase tracking-widest">Product Details</h2>
+                       <button onClick={() => setPage('collections')} className="w-10 h-10 bg-white shadow-sm border border-slate-100 rounded-full flex items-center justify-center hover:bg-slate-50"><Heart className="w-4 h-4 text-slate-900" /></button>
+                    </div>
 
                  <div className="flex items-center justify-between mb-4">
                     <div className="bg-rose-500 text-white text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-sm"><Sparkles className="w-3 h-3" /> Best Seller</div>
                     <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500"><Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" /> 4.8 (65 Ratings)</div>
                  </div>
 
-                 <h1 className="text-xl font-bold text-slate-900 leading-tight mb-6">{product.name}</h1>
+                 <h1 className="text-xl md:text-5xl font-bold text-slate-900 leading-tight mb-6">{product.name}</h1>
                  
-                 <div className="flex items-center justify-between mb-8">
-                    <span className="text-2xl font-black text-emerald-600">${parseFloat(product.price).toFixed(2)}</span>
-                    <div className="flex items-center border border-slate-200 rounded-full px-2 py-1">
-                       <button className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-900">-</button>
-                       <span className="text-sm font-bold w-6 text-center">1</span>
-                       <button className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-900">+</button>
+                 <div className="flex items-center justify-between mb-8 md:mb-12">
+                    <span className="text-2xl md:text-4xl font-black text-emerald-600">${parseFloat(product.price).toFixed(2)}</span>
+                    <div className="flex items-center border border-slate-200 rounded-full px-2 py-1 md:px-4 md:py-2">
+                       <button className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-slate-400 hover:text-slate-900 md:text-lg">-</button>
+                       <span className="text-sm md:text-lg font-bold w-6 md:w-10 text-center">1</span>
+                       <button className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-slate-400 hover:text-slate-900 md:text-lg">+</button>
                     </div>
                  </div>
 
-                 <button onClick={() => setPage('checkout')} className="w-full py-5 bg-[#ff5a1f] text-white rounded-[1.5rem] font-bold text-sm shadow-xl shadow-[#ff5a1f]/30 hover:scale-[1.02] transition-transform">
+                 <button onClick={() => setPage('checkout')} className="w-full py-5 md:py-6 bg-[#ff5a1f] text-white rounded-[1.5rem] font-bold text-sm md:text-base shadow-xl shadow-[#ff5a1f]/30 hover:scale-[1.02] transition-transform">
                     Order Now
                  </button>
               </div>
@@ -3130,7 +3139,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         })()}
 
         {page === 'checkout' && (
-           <div className="px-6 pt-4">
+           <div className="px-6 pt-4 md:max-w-3xl md:mx-auto md:py-12">
               <div className="flex items-center mb-8">
                  <button onClick={() => setPage('product')} className="w-10 h-10 bg-white shadow-sm border border-slate-100 rounded-full flex items-center justify-center"><ArrowLeft className="w-4 h-4 text-slate-900" /></button>
                  <h2 className="text-sm font-black flex-1 text-center pr-10">Checkout</h2>
@@ -3145,7 +3154,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         )}
 
         {page === 'success' && (
-           <div className="px-6 py-20 flex flex-col items-center justify-center text-center">
+           <div className="px-6 py-20 md:py-32 flex flex-col items-center justify-center text-center">
               <div className="w-24 h-24 bg-gradient-to-tr from-emerald-400 to-green-500 rounded-full flex items-center justify-center mb-8 shadow-xl">
                  <CheckCircle className="w-10 h-10 text-white" />
               </div>
@@ -3154,23 +3163,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               <button onClick={() => setPage('home')} className="w-full py-5 bg-slate-900 text-white rounded-[1.5rem] font-bold text-sm">
                  Continue Shopping
               </button>
-           </div>
-        )}
-
-        {/* Bottom Navigation */}
-        <div className="md:hidden fixed bottom-6 left-6 right-6 h-16 bg-[#1e1e1e] rounded-[2rem] flex items-center justify-between px-8 shadow-2xl z-50">
-           <button onClick={() => setPage('home')} className={`w-10 h-10 rounded-full flex items-center justify-center ${page === 'home' ? 'bg-[#333] text-[#ff5a1f]' : 'text-slate-400 hover:text-white'}`}><Home className={`w-5 h-5 ${page === 'home' ? 'fill-current' : ''}`} /></button>
-           <button onClick={() => setPage('collections')} className={`transition-colors ${page === 'collections' ? 'text-white' : 'text-slate-400 hover:text-white'}`}><Grid className="w-5 h-5" /></button>
-           <button onClick={() => setIsCartOpen(true)} className="text-slate-400 hover:text-white transition-colors relative"><ShoppingBag className="w-5 h-5" /><span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#ff5a1f] rounded-full border-2 border-[#1e1e1e]"></span></button>
-           <button onClick={() => setPage('collections')} className="text-slate-400 hover:text-white transition-colors"><Heart className="w-5 h-5" /></button>
-           <button onClick={() => setPage('home')} className="text-slate-400 hover:text-white transition-colors"><User className="w-5 h-5" /></button>
-        </div>
-      </div>
-    );
-  };
-
-  
-  const LayoutProJoyride = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts }: any) => {
+const LayoutProJoyride = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts }: any) => {
     const primaryColor = config?.primaryColor || activeTheme?.defaultColor;
     const fontFamily = config?.fontFamily || activeTheme?.defaultFont;
     
@@ -3180,7 +3173,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         {page === 'home' && (
           <div className="animate-in fade-in duration-500">
              {/* Vibrant Curved Hero */}
-             <div className="relative w-full h-[400px] bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-b-[3rem] p-6 text-white overflow-hidden shadow-2xl">
+             <div className="relative w-full h-[400px] md:h-[600px] md:rounded-[3rem] md:max-w-6xl md:mx-auto md:mt-6 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-b-[3rem] p-6 md:p-12 text-white overflow-hidden shadow-2xl">
                 {/* Decorative bubbles */}
                 <div className="absolute top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
                 <div className="absolute bottom-10 -left-10 w-40 h-40 bg-black/10 rounded-full blur-2xl"></div>
@@ -3194,25 +3187,25 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                    </div>
                 </div>
 
-                <div className="relative z-10 mt-4">
-                   <p className="text-white/80 text-sm font-bold tracking-widest uppercase mb-1 drop-shadow-sm">New Nike Series</p>
-                   <h2 className="text-5xl font-black italic tracking-tighter drop-shadow-md">JOYRIDE</h2>
+                <div className="relative z-10 mt-4 md:mt-12 md:max-w-lg">
+                   <p className="text-white/80 text-sm md:text-xl font-bold tracking-widest uppercase mb-1 md:mb-4 drop-shadow-sm">New Nike Series</p>
+                   <h2 className="text-5xl md:text-8xl font-black italic tracking-tighter drop-shadow-md">JOYRIDE</h2>
                 </div>
 
                 {/* Floating Sneaker Image */}
-                <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80" className="absolute -right-16 -bottom-10 w-96 h-96 object-contain -rotate-12 drop-shadow-[0_20px_20px_rgba(0,0,0,0.5)] z-20" />
+                <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80" className="absolute -right-16 -bottom-10 w-96 h-96 md:w-[600px] md:h-[600px] md:right-10 md:bottom-0 object-contain -rotate-12 drop-shadow-[0_20px_20px_rgba(0,0,0,0.5)] z-20" />
              </div>
 
              {/* Featured Horizontal Scroll */}
-             <div className="mt-8 px-6">
-                <h3 className="text-sm font-bold text-slate-800 mb-4">Featured</h3>
-                <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-6 -mx-6 px-6">
+             <div className="mt-8 px-6 md:max-w-6xl md:mx-auto md:mt-16">
+                <h3 className="text-sm md:text-2xl font-bold text-slate-800 mb-4 md:mb-8">Featured</h3>
+                <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-6 -mx-6 px-6 md:grid md:grid-cols-4 md:mx-0 md:px-0">
                    {storeProducts.slice(0, 4).map((p: any, i: number) => (
-                      <div key={p.id} onClick={() => navigateToProduct(p.id)} className="w-40 shrink-0 bg-white rounded-3xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative cursor-pointer hover:-translate-y-2 transition-transform">
-                         <div className="absolute top-4 left-4 bg-lime-400 text-slate-900 text-[9px] font-black px-2 py-0.5 rounded-md">20%</div>
-                         <img src={getCoverImage(p)} className="w-full h-24 object-contain mt-6 mb-4 drop-shadow-xl" />
+                      <div key={p.id} onClick={() => navigateToProduct(p.id)} className="w-40 md:w-full shrink-0 bg-white rounded-3xl p-4 md:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative cursor-pointer hover:-translate-y-2 transition-transform">
+                         <div className="absolute top-4 left-4 bg-lime-400 text-slate-900 text-[9px] md:text-xs font-black px-2 md:px-3 py-0.5 md:py-1 rounded-md">20%</div>
+                         <img src={getCoverImage(p)} className="w-full h-24 md:h-48 object-contain mt-6 mb-4 drop-shadow-xl" />
                          <div className="text-center">
-                            <span className="text-sm font-black text-slate-800">${parseFloat(p.price).toFixed(2)}</span>
+                            <span className="text-sm md:text-xl font-black text-slate-800">${parseFloat(p.price).toFixed(2)}</span>
                          </div>
                       </div>
                    ))}
@@ -3220,17 +3213,17 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
              </div>
 
              {/* Discover Tiles */}
-             <div className="mt-2 px-6">
-                <h3 className="text-sm font-bold text-slate-800 mb-4">Discover</h3>
-                <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-6 -mx-6 px-6">
-                   <div onClick={() => setPage('collections')} className="w-64 h-32 shrink-0 rounded-3xl overflow-hidden relative shadow-lg cursor-pointer group">
+             <div className="mt-2 px-6 md:max-w-6xl md:mx-auto md:mt-12">
+                <h3 className="text-sm md:text-2xl font-bold text-slate-800 mb-4 md:mb-8">Discover</h3>
+                <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-6 -mx-6 px-6 md:grid md:grid-cols-2 md:mx-0 md:px-0">
+                   <div onClick={() => setPage('collections')} className="w-64 md:w-full h-32 md:h-80 shrink-0 rounded-3xl overflow-hidden relative shadow-lg cursor-pointer group">
                       <img src="https://images.unsplash.com/photo-1552346154-21d32810baa3?auto=format&fit=crop&q=80" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                       <div className="absolute inset-0 bg-gradient-to-t from-indigo-900/80 to-transparent"></div>
-                      <span className="absolute bottom-4 left-4 text-white font-bold text-sm">New Sneaker Trends</span>
+                      <span className="absolute bottom-4 left-4 md:bottom-8 md:left-8 text-white font-bold text-sm md:text-3xl">New Sneaker Trends</span>
                    </div>
-                   <div onClick={() => setPage('collections')} className="w-48 h-32 shrink-0 rounded-3xl overflow-hidden relative shadow-lg cursor-pointer bg-gradient-to-br from-blue-500 to-cyan-400 group">
-                      <div className="absolute inset-0 flex flex-col justify-end p-4 text-white group-hover:scale-105 transition-transform">
-                         <span className="font-bold text-sm">Custom Designs</span>
+                   <div onClick={() => setPage('collections')} className="w-48 md:w-full h-32 md:h-80 shrink-0 rounded-3xl overflow-hidden relative shadow-lg cursor-pointer bg-gradient-to-br from-blue-500 to-cyan-400 group">
+                      <div className="absolute inset-0 flex flex-col justify-end p-4 md:p-8 text-white group-hover:scale-105 transition-transform">
+                         <span className="font-bold text-sm md:text-3xl">Custom Designs</span>
                       </div>
                    </div>
                 </div>
@@ -3242,9 +3235,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
            const product = storeProducts.find((p: any) => p.id === activeProductId);
            if (!product) return null;
            return (
-              <div className="bg-white min-h-screen animate-in slide-in-from-right duration-500">
-                 <div className="flex items-center justify-between p-6">
-                    <button onClick={() => setPage('home')} className="w-10 h-10 flex items-center"><ArrowLeft className="w-6 h-6 text-slate-800" /></button>
+              <div className="bg-white min-h-screen animate-in slide-in-from-right duration-500 md:max-w-6xl md:mx-auto md:my-12 md:rounded-[3rem] md:shadow-2xl md:min-h-0 md:pb-12 md:relative">
+                 <div className="flex items-center justify-between p-6 md:p-12">
+                    <button onClick={() => setPage('home')} className="w-10 h-10 flex items-center hover:scale-110 transition-transform"><ArrowLeft className="w-6 h-6 md:w-8 md:h-8 text-slate-800" /></button>
                     <div className="flex-1 bg-slate-100 h-10 rounded-full mx-4 flex items-center px-4">
                        <Search className="w-4 h-4 text-slate-400 mr-2" />
                        <input type="text" className="bg-transparent outline-none text-sm w-full" placeholder="Search..." />
@@ -3253,8 +3246,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                  </div>
 
                  {/* Categories Row */}
-                 <div className="px-6 mb-6 overflow-x-auto scrollbar-hide whitespace-nowrap">
-                    <h1 className="text-2xl font-black text-slate-900 mb-4">{product.category || 'Sneakers'}</h1>
+                 <div className="px-6 md:px-12 mb-6 overflow-x-auto scrollbar-hide whitespace-nowrap">
+                    <h1 className="text-2xl md:text-4xl font-black text-slate-900 mb-4">{product.category || 'Sneakers'}</h1>
                     <div className="flex gap-6 text-sm font-bold">
                        <span className="text-indigo-600 border-b-2 border-indigo-600 pb-2">Nike</span>
                        <span className="text-slate-400">Adidas</span>
@@ -3265,19 +3258,19 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                  </div>
 
                  {/* Giant Product Card */}
-                 <div className="px-6 mb-8">
-                    <div className="w-full bg-gradient-to-br from-rose-500 to-orange-400 rounded-[2.5rem] p-6 text-white relative shadow-2xl shadow-rose-500/30 overflow-hidden h-[340px]">
+                 <div className="px-6 md:px-12 mb-8 md:mb-16">
+                    <div className="w-full bg-gradient-to-br from-rose-500 to-orange-400 rounded-[2.5rem] md:rounded-[3rem] p-6 md:p-12 text-white relative shadow-2xl shadow-rose-500/30 overflow-hidden h-[340px] md:h-[600px]">
                        <div className="flex justify-between items-start relative z-10">
                           <div>
-                             <p className="text-[10px] font-black tracking-widest uppercase mb-1 opacity-80">NIKE</p>
-                             <h2 className="text-2xl font-bold leading-none mb-2">{product.name}</h2>
-                             <p className="text-lg font-bold">${parseFloat(product.price).toFixed(2)}</p>
+                             <p className="text-[10px] md:text-sm font-black tracking-widest uppercase mb-1 md:mb-2 opacity-80">NIKE</p>
+                             <h2 className="text-2xl md:text-6xl font-bold leading-none mb-2 md:mb-4">{product.name}</h2>
+                             <p className="text-lg md:text-3xl font-bold">${parseFloat(product.price).toFixed(2)}</p>
                           </div>
-                          <button className="w-8 h-8 flex items-center justify-center border border-white/30 rounded-full backdrop-blur-md">
-                             <Heart className="w-4 h-4 text-white" />
+                          <button onClick={(e) => { e.stopPropagation(); setPage('collections'); }} className="w-8 h-8 md:w-16 md:h-16 flex items-center justify-center border border-white/30 rounded-full backdrop-blur-md hover:bg-white/20 transition-colors">
+                             <Heart className="w-4 h-4 md:w-8 md:h-8 text-white" />
                           </button>
                        </div>
-                       <img src={getCoverImage(product)} className="absolute -right-12 bottom-10 w-80 h-80 object-contain -rotate-12 drop-shadow-2xl z-20" />
+                       <img src={getCoverImage(product)} className="absolute -right-12 bottom-10 md:right-10 md:bottom-20 w-80 h-80 md:w-[600px] md:h-[600px] object-contain -rotate-12 drop-shadow-2xl z-20" />
                     </div>
                  </div>
 
@@ -3308,7 +3301,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         })()}
 
         {page === 'checkout' && (
-           <div className="px-6 pt-6">
+           <div className="px-6 pt-6 md:max-w-3xl md:mx-auto md:py-12">
               <div className="flex items-center mb-8">
                  <button onClick={() => setPage('product')} className="w-10 h-10 bg-white shadow-sm border border-slate-100 rounded-full flex items-center justify-center"><ArrowLeft className="w-4 h-4 text-slate-900" /></button>
                  <h2 className="text-sm font-black flex-1 text-center pr-10">Checkout</h2>
@@ -3323,7 +3316,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         )}
 
         {page === 'success' && (
-           <div className="px-6 py-20 flex flex-col items-center justify-center text-center">
+           <div className="px-6 py-20 md:py-32 flex flex-col items-center justify-center text-center">
               <div className="w-24 h-24 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-full flex items-center justify-center mb-8 shadow-2xl shadow-indigo-500/30">
                  <CheckCircle className="w-10 h-10 text-white" />
               </div>
