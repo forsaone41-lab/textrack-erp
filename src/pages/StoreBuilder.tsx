@@ -64,6 +64,23 @@ const getSavedConfig = () => {
 const IframePreview = ({ children, isMobile, className }: any) => {
   const [contentRef, setContentRef] = useState<HTMLIFrameElement | null>(null);
   const mountNode = contentRef?.contentWindow?.document?.body;
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    if (isMobile) {
+      const updateScale = () => {
+        // Calculate scale to fit within available height (100vh - roughly 220px for headers/padding)
+        const availableHeight = window.innerHeight - 220;
+        const newScale = Math.min(1, availableHeight / 812);
+        setScale(newScale);
+      };
+      updateScale();
+      window.addEventListener('resize', updateScale);
+      return () => window.removeEventListener('resize', updateScale);
+    } else {
+      setScale(1);
+    }
+  }, [isMobile]);
 
   useEffect(() => {
     if (contentRef && contentRef.contentWindow) {
@@ -90,8 +107,8 @@ const IframePreview = ({ children, isMobile, className }: any) => {
     <div 
       className={`relative flex items-start justify-center ${isMobile ? '' : 'w-full h-full'}`} 
       style={isMobile ? { 
-        width: 'calc(375px * min(1, (100vh - 220px) / 812))', 
-        height: 'calc(812px * min(1, (100vh - 220px) / 812))',
+        width: `${375 * scale}px`, 
+        height: `${812 * scale}px`,
         position: 'relative'
       } : {}}
     >
@@ -105,7 +122,7 @@ const IframePreview = ({ children, isMobile, className }: any) => {
           position: 'absolute',
           top: 0,
           left: 0,
-          transform: 'scale(calc(min(1, (100vh - 220px) / 812)))', 
+          transform: `scale(${scale})`, 
           transformOrigin: 'top left' 
         } : { width: '100%', height: '100%' }}
       >
