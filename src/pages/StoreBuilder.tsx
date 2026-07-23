@@ -840,24 +840,72 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleAIGenerate = () => {
+  const handleAIGenerate = async () => {
      if (!productForm?.image) return;
+     const apiKey = localStorage.getItem('beya_gemini_api_key');
+     if (!apiKey) {
+        alert(isAr ? 'المرجو إضافة مفتاح Gemini API في إعدادات مساحة الذكاء الاصطناعي أولاً.' : 'Veuillez ajouter votre clé API Gemini dans l\'Espace IA en premier.');
+        return;
+     }
+
      setIsAIGenerating(true);
-     // Simulate AI Vision Analysis
-     setTimeout(() => {
+     try {
+        const base64Data = productForm.image.split(',')[1];
+        const mimeType = productForm.image.split(';')[0].split(':')[1];
+        
+        const langStr = storeIsAr ? "Arabic (Moroccan style for description, no formal classical Arabic unless necessary)" : "French";
+        const prompt = `You are an expert e-commerce copywriter. Look at this clothing product image and generate a highly converting product listing in ${langStr}. 
+Return ONLY a raw JSON object (no markdown formatting, no backticks) with the following structure:
+{
+  "name": "A catchy, SEO-friendly product name (e.g. Ensemble Kimono Large, Manteau Hiver Premium) based on the image.",
+  "price": "A realistic selling price in MAD based on Moroccan market (number only as string, e.g. '350')",
+  "description": "A highly professional, persuasive, and detailed product description emphasizing quality, fit, and style as seen in the image. Minimum 3 sentences.",
+  "category": "The best matching category (e.g. Robes, Outerwear, Ensembles, etc.)",
+  "tags": ["3 to 5 highly relevant SEO keywords/tags based on the item"],
+  "colors": ["Hex codes for 1-3 dominant colors found in the garment, e.g. '#000000'"]
+}`;
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify({
+              contents: [{
+                 role: "user",
+                 parts: [
+                    { text: prompt },
+                    { inlineData: { data: base64Data, mimeType } }
+                 ]
+              }]
+           })
+        });
+
+        const data = await response.json();
+        
+        if (data.error) {
+           throw new Error(data.error.message);
+        }
+
+        let aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        aiText = aiText.replace(/```json/g, '').replace(/```/g, '').trim();
+        
+        const result = JSON.parse(aiText);
+
         setProductForm({
            ...productForm,
-           name: storeIsAr ? "فستان صيفي أنيق" : "Manteau Premium Hiver",
-           price: storeIsAr ? "299" : "850",
-           stock: "50",
-           description: storeIsAr ? "تصميم عصري وخفيف، مثالي للأيام والمناسبات. قماش عالي الجودة." : "Manteau de haute qualité, parfait pour l'hiver. Design élégant et tissu chaud.",
-           category: storeIsAr ? "فساتين" : "Outerwear",
-           sizes: ["S", "M", "L", "XL"],
-           colors: ["#000000", "#FFC0CB", "#FFFFFF"],
-           tags: storeIsAr ? ["صيفي", "فستان", "موضة", "أنيق", "2026"] : ["manteau", "hiver", "premium", "fashion", "tendance2026", "outerwear"]
+           name: result.name || productForm.name,
+           price: result.price || productForm.price,
+           description: result.description || productForm.description,
+           category: result.category || productForm.category,
+           colors: result.colors?.length > 0 ? result.colors : ["#000000"],
+           tags: result.tags?.length > 0 ? result.tags : productForm.tags,
+           sizes: productForm.sizes?.length > 0 ? productForm.sizes : ["S", "M", "L", "XL"]
         });
+     } catch (err: any) {
+        console.error('AI Error:', err);
+        alert(isAr ? 'حدث خطأ أثناء التحليل: ' + err.message : 'Erreur lors de l\'analyse : ' + err.message);
+     } finally {
         setIsAIGenerating(false);
-     }, 1500);
+     }
   };
 
   const [isPublishing, setIsPublishing] = useState(false);
