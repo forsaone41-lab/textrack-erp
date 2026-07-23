@@ -1650,7 +1650,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                 <div className="aspect-[3/4] bg-slate-100 mb-4 overflow-hidden relative rounded-xl">
                                    {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <div className="absolute inset-0 flex items-center justify-center opacity-20"><Box className="w-12 h-12" /></div>}
                                    <div className="absolute bottom-4 left-0 right-0 flex justify-center transition-opacity opacity-0 group-hover:opacity-100">
-                                      <button onClick={(e) => handleAddToCart(e, typeof p !== 'undefined' ? p : (typeof product !== 'undefined' ? product : null), typeof quantity !== 'undefined' ? quantity : 1, typeof selectedColor !== 'undefined' ? selectedColor : undefined, typeof selectedSize !== 'undefined' ? selectedSize : undefined)} className="px-8 py-3 text-white text-xs font-bold uppercase tracking-wider shadow-2xl rounded-full" style={btnStyle}>{tr('Add to cart')}</button>
+                                      <button onClick={(e) => handleAddToCart(e, typeof p !== 'undefined' ? p : (typeof product !== 'undefined' ? product : null), typeof quantity !== 'undefined' ? quantity : 1, typeof selectedColor !== 'undefined' ? selectedColor : undefined, typeof selectedSize !== 'undefined' ? selectedSize : undefined)} className="px-8 py-3 text-white text-xs font-bold uppercase tracking-wider shadow-2xl rounded-full" style={btnStyle}>{tr('ADD TO CART')}</button>
                                    </div>
                                 </div>
                                 <h4 className="font-bold text-sm">{p.name}</h4>
@@ -1887,18 +1887,18 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                 <button onClick={(e) => handleAddToCart(e, typeof p !== 'undefined' ? p : (typeof product !== 'undefined' ? product : null), typeof quantity !== 'undefined' ? quantity : 1, typeof selectedColor !== 'undefined' ? selectedColor : undefined, typeof selectedSize !== 'undefined' ? selectedSize : undefined)} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: '#1e293b' }}>{tr('Add to cart')}</button>
                              )}
                              {(buyMode === 'direct' || buyMode === 'both') && (
-                                <button onClick={() => buyNowAsPopup ? setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage }) : setPage('checkout')} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: primaryColor }}>Buy Now</button>
+                                <button onClick={() => buyNowAsPopup ? setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage }) : setPage('checkout')} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`flex-1 px-8 py-4 text-white font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform rounded-xl shadow-lg ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`} style={{ backgroundColor: primaryColor }}>{tr('BUY NOW')}</button>
                              )}
                           </div>
                           <div className="md:hidden fixed bottom-16 left-0 right-0 z-30 bg-white border-t border-slate-100 p-4 flex gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
                              {(buyMode === 'cart' || buyMode === 'both') && (
                                 <button onClick={(e) => handleAddToCart(e, typeof p !== 'undefined' ? p : (typeof product !== 'undefined' ? product : null), typeof quantity !== 'undefined' ? quantity : 1, typeof selectedColor !== 'undefined' ? selectedColor : undefined, typeof selectedSize !== 'undefined' ? selectedSize : undefined)} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`flex-1 py-3.5 border-2 border-slate-800 text-slate-800 font-bold uppercase tracking-wider text-xs rounded-xl flex items-center justify-center gap-2 ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>
-                                   <ShoppingBag className="w-4 h-4" /> {isAr ? 'أضف للسلة' : 'Add to Cart'}
+                                   <ShoppingBag className="w-4 h-4" /> {tr('ADD TO CART')}
                                 </button>
                              )}
                              {(buyMode === 'direct' || buyMode === 'both') && (
                                 <button onClick={() => buyNowAsPopup ? setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage }) : setPage('checkout')} disabled={((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize))} className={`flex-1 py-3.5 bg-slate-900 text-white font-bold uppercase tracking-wider text-xs rounded-xl ${((p.colors?.length > 0 && !selectedColor) || (p.sizes?.length > 0 && !selectedSize)) ? ' opacity-50 cursor-not-allowed' : ''}`}>
-                                   {isAr ? 'اشتري الآن' : 'Buy Now'}
+                                   {tr('BUY NOW')}
                                 </button>
                              )}
                           </div>
