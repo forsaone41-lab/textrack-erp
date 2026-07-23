@@ -3,6 +3,31 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams } from 'react-router-dom';
 import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown, TrendingUp, Package, RefreshCw, Undo2, Menu, Home, Heart, SlidersHorizontal, ArrowRight, ArrowLeft, Grid, User, Ruler } from 'lucide-react';
+
+
+const ReadMoreDescription = ({ text, className, isAr }: any) => {
+   const [expanded, setExpanded] = React.useState(false);
+   if (!text) return null;
+   const maxLength = 100;
+   if (text.length <= maxLength) return <p className={className}>{text}</p>;
+   
+   // Extract any mb-* classes to apply to the wrapper instead, so we don't have weird spacing
+   const mbMatch = className.match(/mb-\d+/);
+   const mbClass = mbMatch ? mbMatch[0] : 'mb-6';
+   const innerClass = className.replace(/mb-\d+/, '').trim();
+
+   return (
+      <div className={mbClass}>
+         <p className={`${innerClass} mb-2`}>
+            {expanded ? text : `${text.substring(0, maxLength)}...`}
+         </p>
+         <button onClick={() => setExpanded(!expanded)} className="text-[10px] font-black underline underline-offset-4 text-slate-800 hover:text-indigo-600 transition-colors uppercase tracking-widest">
+            {expanded ? (isAr ? 'عرض أقل' : 'Voir moins') : (isAr ? 'اقرأ المزيد' : 'Lire la suite')}
+         </button>
+      </div>
+   );
+};
+
 import { useLang } from '../contexts/LangContext';
 import StoreManagerDashboard from '../components/Tools/StoreManagerDashboard';
 import ProAITools from '../components/Tools/ProAITools';
@@ -1798,7 +1823,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                     <div className="pdp-details-col flex-1 flex flex-col justify-center">
                        <h2 className="text-4xl font-black mb-4">{p.name}</h2>
                        <p className="text-2xl font-bold mb-8" style={{ color: primaryColor }}>{p.price} MAD</p>
-                       <p className="text-slate-500 mb-8 leading-relaxed">{p.description || 'This is a premium quality product. Lorem ipsum dolor sit amet, consectetur adipiscing elit.'}</p>
+                       <ReadMoreDescription text={p.description || 'This is a premium quality product. Lorem ipsum dolor sit amet, consectetur adipiscing elit.'} className="text-slate-500 mb-8 leading-relaxed" isAr={storeIsAr} />
                        
                        {/* PRO SELECTORS */}
                        <div className="mb-8 space-y-6">
@@ -2073,7 +2098,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                     <div className="pdp-details-col flex-1 flex flex-col justify-center">
                        <h2 className="text-5xl font-light mb-4">{p.name}</h2>
                        <p className="text-2xl font-light text-gray-500 mb-8">{p.price} MAD</p>
-                       <p className="text-gray-500 mb-12 leading-relaxed font-light">{p.description || 'Experience true elegance with this meticulously designed piece. Perfect for every occasion.'}</p>
+                       <ReadMoreDescription text={p.description || 'Experience true elegance with this meticulously designed piece. Perfect for every occasion.'} className="text-gray-500 mb-12 leading-relaxed font-light" isAr={storeIsAr} />
                        
                        {/* PRO SELECTORS */}
                        <div className="mb-12 space-y-8">
@@ -2301,7 +2326,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                        <h2 className="text-5xl font-serif mb-4 text-white">{p.name}</h2>
                        <p className="text-2xl tracking-widest mb-8" style={{ color: primaryColor }}>{p.price} MAD</p>
                        <div className="w-12 h-px bg-white/20 mb-8"></div>
-                       <p className="text-[#888] mb-12 tracking-wide leading-relaxed">{p.description || 'Embrace luxury with this exclusive item. Crafted with precision for the modern elegant individual.'}</p>
+                       <ReadMoreDescription text={p.description || 'Embrace luxury with this exclusive item. Crafted with precision for the modern elegant individual.'} className="text-[#888] mb-12 tracking-wide leading-relaxed" isAr={storeIsAr} />
                        
                        {/* PRO SELECTORS */}
                        <div className="mb-12 space-y-8">
@@ -2568,7 +2593,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                     <div className="pdp-details-col flex-1 flex flex-col justify-center px-4">
                        <h2 className="text-5xl font-black mb-4 text-slate-800">{p.name}</h2>
                        <p className="text-3xl font-black mb-8" style={{ color: primaryColor }}>{p.price} MAD</p>
-                       <p className="text-slate-500 font-medium mb-8 text-lg">{p.description || 'Fun, fresh, and perfectly designed for everyday adventures!'}</p>
+                       <ReadMoreDescription text={p.description || 'Fun, fresh, and perfectly designed for everyday adventures!'} className="text-slate-500 font-medium mb-8 text-lg" isAr={storeIsAr} />
                        
                        {/* PRO SELECTORS */}
                        <div className="mb-8 space-y-6 bg-white p-6 rounded-[2rem] border-4 border-slate-100">
@@ -3144,9 +3169,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                         )}
 
                         {product.description && (
-                         <p className="text-slate-500 text-sm leading-relaxed mb-8 max-w-md">
-                            {product.description}
-                         </p>
+                         <ReadMoreDescription text={product.description} className="text-slate-500 text-sm leading-relaxed mb-8 max-w-md" isAr={storeIsAr} />
                         )}
 
                         {(product.showStock || product.sku) && (
@@ -3192,7 +3215,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                      </div>
                      <div className="text-sm text-slate-500 leading-relaxed max-w-3xl">
                         {activePDPTab === 'description' ? (
-                           <p>{storeLang === 'ar' ? `وصف تفصيلي لـ ${product.name}. هذا المنتج مصنوع من مواد فاخرة تضمن الراحة والمتانة. تصميمه العملي يجعله أساسياً في خزانتك.` : storeLang === 'en' ? `Detailed description about the ${product.name}. This item is crafted from premium materials, ensuring both comfort and durability. Perfect for any occasion, its versatile design makes it a wardrobe essential.` : `Description détaillée de ${product.name}. Cet article est fabriqué à partir de matériaux premium, garantissant confort et durabilité. Parfait pour toute occasion, son design polyvalent en fait un essentiel de la garde-robe.`}</p>
+                           <ReadMoreDescription text={product.description || (storeLang === 'ar' ? `وصف تفصيلي لـ ${product.name}.` : `Description détaillée de ${product.name}.`)} className="text-slate-500 text-sm leading-relaxed mb-8" isAr={storeIsAr} />
                         ) : (
                            <div className="space-y-6">
                               <div className="flex gap-4">
