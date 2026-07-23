@@ -6032,8 +6032,8 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                           </label>
                           {appsConfig['AI Auto-Builder'] && productForm?.image && (
                              <button onClick={handleAIGenerate} disabled={isAIGenerating} className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 rounded-xl text-xs shadow-lg shadow-purple-600/30 hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:hover:scale-100">
-                                {isAIGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                                {isAr ? 'تحليل بالذكاء الاصطناعي' : 'Analyser avec l\'IA ✨'}
+                                {isAIGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Settings className="w-4 h-4" />}
+                                {isAr ? 'مساعد BEYA' : 'BEYA ASSISTANT'}
                              </button>
                           )}
                        </div>
