@@ -375,7 +375,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
      <div className="group cursor-pointer rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow bg-white border border-slate-100" onClick={onClick}>
         <div className="aspect-[3/4] relative overflow-hidden" style={{ backgroundColor: trendCardAccents[idx % trendCardAccents.length] }}>
            {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={p.name} /> : <div className="w-full h-full flex items-center justify-center opacity-20"><Box className="w-10 h-10" /></div>}
-           <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider text-white shadow-sm" style={{ backgroundColor: primaryColor }}>{p.category || (isAr ? 'جديد' : 'Nouveau')}</span>
+           <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider text-white shadow-sm" style={{ backgroundColor: primaryColor }}>{p.category || (storeIsAr ? 'جديد' : storeLang === 'en' ? 'New' : 'Nouveau')}</span>
         </div>
         <div className="p-3">
            <h4 className="text-xs font-bold text-slate-800 truncate mb-1">{p.name}</h4>
@@ -1359,14 +1359,14 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                 
                 if (block === 'collections' && categories.length > 1) return (
                     <div key="collections" className={`${isModal ? 'p-16' : 'p-8'} mx-auto w-full bg-slate-50`} style={{ maxWidth: `${siteMaxWidth}px` }}>
-                       <h3 className="text-2xl font-black uppercase text-center mb-10">{allCollectionsTitle}</h3>
+                       <h3 className="text-2xl font-black uppercase text-center mb-10">{tr(allCollectionsTitle)}</h3>
                        <div className={`grid gap-4 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-2' : (isModal ? 'grid-cols-4' : 'grid-cols-3')}`}>
                           {categories.filter((c:string) => c !== 'All').map((cat: string, idx: number) => (
                              cardStyle === 'trend' ? (
                                 <div key={idx} onClick={() => { setActiveCategory(cat); setPage('collections'); }} className="cursor-pointer group relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all bg-white border border-slate-100">
                                    <div className="aspect-square relative overflow-hidden" style={{ backgroundColor: trendCardAccents[idx % trendCardAccents.length] }}>
                                       <img src={storeProducts.find((p:any)=>p.category===cat)?.image || 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&q=80&w=600'} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                                      <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider text-white shadow-sm" style={{ backgroundColor: primaryColor }}>{isAr ? 'مجموعة' : 'Collection'}</span>
+                                      <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider text-white shadow-sm" style={{ backgroundColor: primaryColor }}>{storeIsAr ? 'مجموعة' : storeLang === 'en' ? 'Collection' : 'Collection'}</span>
                                    </div>
                                    <div className="p-3 flex items-center justify-between">
                                       <span className="text-xs font-bold text-slate-800">{cat}</span>
@@ -2149,7 +2149,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
     const MobileProductCard = ({ p, idx }: any) => (
        <div className="group cursor-pointer" onClick={() => navigateToProduct(p.id)}>
           <div className="relative aspect-[4/5] rounded-3xl overflow-hidden mb-2 flex items-center justify-center" style={{ backgroundColor: PLAYFUL_PASTELS[idx % PLAYFUL_PASTELS.length] }}>
-             <span className="absolute top-2.5 left-2.5 bg-white text-slate-800 text-[8px] font-black uppercase px-2 py-1 rounded-full shadow-sm">{isAr ? 'جديد' : 'New'}</span>
+             <span className="absolute top-2.5 left-2.5 bg-white text-slate-800 text-[8px] font-black uppercase px-2 py-1 rounded-full shadow-sm">{storeIsAr ? 'جديد' : 'New'}</span>
              {getCoverImage(p) ? <img src={getCoverImage(p) as string} className="w-full h-full object-cover" alt={p.name} /> : <ImageIcon className="w-10 h-10 opacity-20" />}
              <button onClick={(e) => { e.stopPropagation(); navigateToProduct(p.id); }} className="absolute bottom-2.5 right-2.5 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center">
                 <Plus className="w-4 h-4 text-slate-700" />
