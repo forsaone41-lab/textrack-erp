@@ -750,6 +750,31 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [newTagInput, setNewTagInput] = useState('');
   const [isAIGenerating, setIsAIGenerating] = useState(false);
 
+  // Pre-fill "Créer un Produit" when arriving from the Fiches Techniques page (see FichesTechniques.tsx)
+  useEffect(() => {
+     if (isLiveStore) return;
+     const state = (window as any).history.state?.usr;
+     if (state && state.fromFiche) {
+        setBuilderMode('editor');
+        setActiveTab('products');
+        setProductForm({
+           name: state.fromFiche.modele || '',
+           price: '',
+           stock: state.fromFiche.stock || '10',
+           description: state.fromFiche.description || '',
+           category: state.fromFiche.type || '',
+           image: state.fromFiche.photo || '',
+           sizes: state.fromFiche.tailles || [],
+           colors: [],
+           colorImages: {},
+           variantQuantities: {}
+        });
+        setIsProductModalOpen(true);
+        window.history.replaceState({}, document.title);
+     }
+     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleAIGenerate = () => {
      if (!productForm?.image) return;
      setIsAIGenerating(true);
@@ -3135,8 +3160,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
                     Order Now
                  </button>
               </div>
-           );
-        })()}
+           </div>
+        );
+     })()}
 
         {page === 'checkout' && (
            <div className="px-6 pt-4 md:max-w-3xl md:mx-auto md:py-12">
@@ -3163,7 +3189,22 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               <button onClick={() => setPage('home')} className="w-full py-5 bg-slate-900 text-white rounded-[1.5rem] font-bold text-sm">
                  Continue Shopping
               </button>
-const LayoutProJoyride = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts }: any) => {
+           </div>
+        )}
+
+        {/* Bottom Navigation */}
+        <div className="md:hidden fixed bottom-6 left-6 right-6 h-16 bg-[#1e1e1e] rounded-[2rem] flex items-center justify-between px-8 shadow-2xl z-50">
+           <button onClick={() => setPage('home')} className={`w-10 h-10 rounded-full flex items-center justify-center ${page === 'home' ? 'bg-[#333] text-[#ff5a1f]' : 'text-slate-400 hover:text-white'}`}><Home className={`w-5 h-5 ${page === 'home' ? 'fill-current' : ''}`} /></button>
+           <button onClick={() => setPage('collections')} className={`transition-colors ${page === 'collections' ? 'text-white' : 'text-slate-400 hover:text-white'}`}><Grid className="w-5 h-5" /></button>
+           <button onClick={() => setIsCartOpen(true)} className="text-slate-400 hover:text-white transition-colors relative"><ShoppingBag className="w-5 h-5" /><span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#ff5a1f] rounded-full border-2 border-[#1e1e1e]"></span></button>
+           <button onClick={() => setPage('collections')} className="text-slate-400 hover:text-white transition-colors"><Heart className="w-5 h-5" /></button>
+           <button onClick={() => setPage('home')} className="text-slate-400 hover:text-white transition-colors"><User className="w-5 h-5" /></button>
+        </div>
+      </div>
+    );
+  };
+
+  const LayoutProJoyride = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts }: any) => {
     const primaryColor = config?.primaryColor || activeTheme?.defaultColor;
     const fontFamily = config?.fontFamily || activeTheme?.defaultFont;
     
