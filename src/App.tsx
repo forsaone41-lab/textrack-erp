@@ -66,6 +66,7 @@ const ValidationBoard = lazy(() => import('./pages/ValidationBoard'));
 const HPGLViewer      = lazy(() => import('./pages/HPGLViewer'));
 const StoreBuilder    = lazy(() => import('./pages/StoreBuilder'));
 const StoreLanding    = lazy(() => import('./pages/StoreLanding'));
+const StoreSignup     = lazy(() => import('./pages/StoreSignup'));
 import { PageLoader } from './components/PageLoader';
 
 import { initMockData, User, loadPermissions, AppPage, loadCompanyProfile, syncCompanyProfile, loadData, saveRecord } from './types';
@@ -389,6 +390,7 @@ function AppContent() {
         <Route path="/devis-express" element={<AdsLanding />} />
         <Route path="/new" element={<NewLanding />} />
         <Route path="/store-landing" element={<StoreLanding />} />
+        <Route path="/store-signup" element={<StoreSignup onLogin={handleLogin} />} />
         <Route path="/" element={<LandingPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -516,7 +518,7 @@ function AppContent() {
         <Route path="fast-scanner" element={can('fast_scanner') ? <FastScanner /> : <Navigate to="/" replace />} />
       </Route>
       {/* Standalone SaaS Route for BEYA STORE Builder */}
-      <Route path="/store-builder" element={currentUser?.role === 'admin' ? <div className="min-h-screen bg-white"><StoreBuilder /></div> : <Navigate to="/" replace />} />
+      <Route path="/store-builder" element={(currentUser?.role === 'admin' || currentUser?.role === 'merchant') ? <div className="min-h-screen bg-white"><StoreBuilder /></div> : <Navigate to="/" replace />} />
       <Route path="/store/:storeNameUrl" element={<div className="min-h-screen bg-white"><StoreBuilder isLiveStore={true} /></div>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

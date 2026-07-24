@@ -78,7 +78,7 @@ export default function StoreLanding() {
             </ul>
             
             <div className="pt-4 flex flex-col sm:flex-row gap-4">
-              <Link to="/store-builder" className="px-10 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg text-center transition-all shadow-[0_10px_20px_rgba(37,99,235,0.2)] hover:shadow-[0_10px_30px_rgba(37,99,235,0.4)] hover:-translate-y-0.5">
+              <Link to="/store-signup" className="px-10 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg text-center transition-all shadow-[0_10px_20px_rgba(37,99,235,0.2)] hover:shadow-[0_10px_30px_rgba(37,99,235,0.4)] hover:-translate-y-0.5">
                 {isAr ? 'ابدأ الآن' : 'Get Started'}
               </Link>
               <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="px-10 py-4 bg-white text-slate-900 border-2 border-slate-200 hover:border-slate-300 rounded-xl font-bold text-lg text-center transition-all hover:bg-slate-50 flex items-center justify-center gap-2">

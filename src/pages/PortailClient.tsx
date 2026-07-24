@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
-import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2 } from 'lucide-react';
+import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2, Store } from 'lucide-react';
 import {
   Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile, saveRecord, Lead, loadLeads, loadLeadPhoto, deleteRecord, genId
 } from '../types';
@@ -627,6 +627,34 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                     </div>
                   )}
                </div>
+               
+               {/* BEYA STORE PROMO BANNER */}
+               {currentUser?.role === 'client' && (
+                 <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl md:rounded-[2rem] p-6 md:p-8 text-white relative overflow-hidden shadow-xl shadow-blue-500/20 flex flex-col md:flex-row items-center justify-between gap-6">
+                   <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32" />
+                   <div className="relative z-10">
+                     <div className="flex items-center gap-3 mb-2">
+                       <Store className="w-6 h-6 text-blue-200" />
+                       <h3 className="text-xl md:text-2xl font-black uppercase tracking-tight">
+                         {isAr ? 'أطلق متجرك الإلكتروني الآن' : 'Lancez votre boutique en ligne'}
+                       </h3>
+                     </div>
+                     <p className="text-blue-100 text-sm md:text-base font-medium max-w-xl">
+                       {isAr 
+                         ? 'هل تحتاج إلى متجر إلكتروني لبيع منتجاتك؟ أنشئ متجرك مجاناً في ثوانٍ.' 
+                         : 'Besoin d\'une boutique e-commerce pour vendre vos produits ? Créez votre store gratuitement en quelques secondes.'}
+                     </p>
+                   </div>
+                   <div className="relative z-10 w-full md:w-auto">
+                     <a 
+                       href="#/store-signup"
+                       className="block w-full md:w-auto px-8 py-4 bg-white text-blue-600 rounded-xl text-sm font-black uppercase tracking-widest text-center shadow-lg hover:scale-105 transition-all"
+                     >
+                       {isAr ? 'أنشئ متجري' : 'Créer ma boutique'}
+                     </a>
+                   </div>
+                 </div>
+               )}
 
                {/* Recent Orders Overview */}
                <div>
