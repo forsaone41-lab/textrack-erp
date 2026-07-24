@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ShieldCheck, Mail, AlertCircle, Lock, User as UserIcon, CheckCircle, Store, ArrowRight, Loader2 } from 'lucide-react';
+import { ShieldCheck, Mail, AlertCircle, Lock, User as UserIcon, CheckCircle, Store, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../supabase';
 import { loadCompanyProfile } from '../types';
 import { useLang } from '../contexts/LangContext';
@@ -22,6 +22,7 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
   const [fullName, setFullName] = useState('');
   const [storeName, setStoreName] = useState('');
   const [phone, setPhone] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +32,10 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
 
     try {
       if (mode === 'signup') {
+        if (password !== confirmPassword) {
+          throw new Error(isAr ? 'كلمات السر غير متطابقة' : 'Les mots de passe ne correspondent pas');
+        }
+
         // 1. Create secure Supabase Auth user
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
@@ -229,9 +234,16 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
                       minLength={8}
                       value={password}
                       onChange={e => setPassword(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+                      className="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
                       placeholder="••••••••"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute top-1/2 -translate-y-1/2 right-3 p-1 text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
                   </div>
                   {mode === 'signup' && (
                     <p className="text-[10px] text-slate-400 mt-1.5 flex items-center gap-1">
@@ -240,6 +252,24 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
                     </p>
                   )}
                 </div>
+
+                {mode === 'signup' && (
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1.5">{isAr ? 'تأكيد كلمة السر' : 'Confirmer le mot de passe'}</label>
+                    <div className="relative">
+                      <Lock className="absolute top-1/2 -translate-y-1/2 left-3 w-4 h-4 text-slate-400" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        minLength={8}
+                        value={confirmPassword}
+                        onChange={e => setConfirmPassword(e.target.value)}
+                        className="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+                        placeholder="••••••••"
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {error && (
                   <div className="p-3 bg-rose-50 border border-rose-100 text-rose-600 text-xs font-bold rounded-xl flex items-start gap-2">
