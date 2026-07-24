@@ -9,6 +9,12 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
    useEffect(() => {
       const fetchStores = async () => {
          try {
+            // Get current user to enforce Multi-Tenant isolation
+            const { data: sessionData } = await supabase.auth.getSession();
+            const user = sessionData?.session?.user;
+            const userRole = user?.user_metadata?.role || 'merchant';
+            const userId = user?.id;
+
             const { data, error } = await supabase
                .from('stores')
                .select('*')
@@ -16,26 +22,33 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
             
             if (data) {
                // Map real data or mix with mock stats if stats are missing
-               const realStores = data.filter((st: any) => st.domain !== 'latest_saved_store').map((st: any) => ({
-                  id: st.id,
-                  name: st.name || 'Boutique Sans Nom',
-                  url: st.domain || `${st.id}.beyacreative.com`,
-                  plan: st.subscription_tier || st.config_json?.plan || 'NORMAL',
-                  status: 'Active',
-                  visitors: st.config_json?.stats?.visitors || 0,
-                  revenue: st.config_json?.stats?.revenue ? `${st.config_json.stats.revenue} MAD` : '0 MAD',
-                  config_json: st.config_json
-               }));
-               // If no real stores, fallback to a mock one to show the UI
-               setStores(realStores.length > 0 ? realStores : [
-                  { id: 'mock1', name: 'Fashlow Maroc', url: 'fashlow.store', plan: 'NORMAL', status: 'Active', visitors: 0, revenue: '0 MAD', config_json: JSON.parse(localStorage.getItem('beya_store_config') || '{}') }
-               ]);
+               let realStores = data
+                  .filter((st: any) => st.domain !== 'latest_saved_store')
+                  .map((st: any) => ({
+                     id: st.id,
+                     name: st.name || 'Boutique Sans Nom',
+                     url: st.domain || `${st.id}.beyacreative.com`,
+                     plan: st.subscription_tier || st.config_json?.plan || 'NORMAL',
+                     status: 'Active',
+                     visitors: st.config_json?.stats?.visitors || 0,
+                     revenue: st.config_json?.stats?.revenue ? `${st.config_json.stats.revenue} MAD` : '0 MAD',
+                     config_json: st.config_json,
+                     owner_id: st.config_json?.owner_id
+                  }));
+
+               // VERY SENSITIVE: Isolate stores for merchants
+               if (userRole === 'merchant' && userId) {
+                  realStores = realStores.filter((st: any) => st.owner_id === userId);
+               }
+
+               // Set to realStores. If empty, the UI will just show no stores.
+               setStores(realStores);
             } else {
-                setStores([{ id: 'mock1', name: 'Fashlow Maroc', url: 'fashlow.store', plan: 'NORMAL', status: 'Active', visitors: 0, revenue: '0 MAD', config_json: JSON.parse(localStorage.getItem('beya_store_config') || '{}') }]);
+                setStores([]);
             }
          } catch (err) {
             console.warn("Supabase fetch failed", err);
-            setStores([{ id: 'mock1', name: 'Fashlow Maroc', url: 'fashlow.store', plan: 'NORMAL', status: 'Active', visitors: 0, revenue: '0 MAD', config_json: JSON.parse(localStorage.getItem('beya_store_config') || '{}') }]);
+            setStores([]);
          } finally {
             setIsLoading(false);
          }

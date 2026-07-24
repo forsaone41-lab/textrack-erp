@@ -1187,6 +1187,18 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
        showHeaderSearch,
        showHeaderAccount
     };
+
+    // Add owner details for Multi-Tenant Data Isolation
+    try {
+       const { data: sessionData } = await supabase.auth.getSession();
+       if (sessionData?.session?.user) {
+          (storeConfig as any).owner_id = sessionData.session.user.id;
+          (storeConfig as any).owner_email = sessionData.session.user.email;
+       }
+    } catch(e) {
+       console.error("Could not fetch session for owner_id", e);
+    }
+
     localStorage.setItem('beya_store_config', JSON.stringify(storeConfig));
     
     // Sync to Supabase for cross-domain live preview (SaaS mode)
