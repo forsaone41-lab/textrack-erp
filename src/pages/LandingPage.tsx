@@ -406,9 +406,9 @@ export default function LandingPage() {
             {isAr ? 'الشريك الأول لنجاحك الرقمي في المغرب' : 'Le 1er Partenaire de votre réussite digitale au Maroc'}
           </div>
           
-          <h1 className="text-4xl md:text-5xl lg:text-[4.5rem] font-extrabold mb-8 tracking-tight leading-tight uppercase text-slate-900 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+          <h1 className="text-4xl md:text-5xl lg:text-[4.5rem] font-extrabold mb-8 tracking-tight leading-snug uppercase text-slate-900 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
             {isAr ? 'نصنع منتجاتك،' : 'Nous fabriquons vos produits,'}<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 pb-4 inline-block">
               {isAr ? 'ونبني لك متجرك الإلكتروني.' : 'Et nous créons votre boutique.'}
             </span>
           </h1>
