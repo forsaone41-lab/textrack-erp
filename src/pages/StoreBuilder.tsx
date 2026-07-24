@@ -1051,6 +1051,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
   const [isSaving, setIsSaving] = useState(false);
   const [customDomain, setCustomDomain] = useState(config.customDomain || '');
   const [isLinkingDomain, setIsLinkingDomain] = useState(false);
+  const [isLinkingSubdomain, setIsLinkingSubdomain] = useState(false);
   const [domainError, setDomainError] = useState('');
 
   const submitGlobalOrder = (product: any, qty: number, formData?: any) => {
@@ -1226,6 +1227,16 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
     setTimeout(async () => {
        setIsLinkingDomain(false);
        await handleSave(); // Automatically save the domain to DB
+    }, 1500);
+  };
+
+  const handleLinkSubdomain = async () => {
+    if (!storeSlug) return;
+    setIsLinkingSubdomain(true);
+    
+    setTimeout(async () => {
+       setIsLinkingSubdomain(false);
+       await handleSave();
     }, 1500);
   };
 
@@ -5600,17 +5611,22 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                     <div className="bg-indigo-50/50 p-5 rounded-xl border border-indigo-100">
                        <h4 className="text-xs font-black text-indigo-900 mb-1 uppercase tracking-wider flex items-center gap-2"><Globe className="w-4 h-4 text-indigo-600" /> {isAr ? 'نطاق فرعي مجاني' : 'Sous-domaine Gratuit'}</h4>
                        <p className="text-[10px] text-slate-600 mb-3">{isAr ? 'اختر اسماً لمتجرك ليظهر كرابط مجاني خاص بك.' : 'Choisissez un nom pour votre boutique pour avoir un lien gratuit.'}</p>
-                       <div className="flex items-center overflow-hidden border border-slate-200 rounded-lg bg-white focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
-                         <input
-                           type="text"
-                           placeholder="maboutique"
-                           value={storeSlug}
-                           onChange={e => setStoreSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                           className="flex-1 px-3 py-2 text-sm font-bold text-slate-800 bg-transparent focus:outline-none"
-                         />
-                         <div className="px-3 py-2 bg-slate-50 border-l border-slate-200 text-slate-500 font-medium text-sm select-none" dir="ltr">
-                           .beyacreative.com
+                       <div className="flex gap-2">
+                         <div className="flex-1 flex items-center overflow-hidden border border-slate-200 rounded-lg bg-white focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
+                           <input
+                             type="text"
+                             placeholder="maboutique"
+                             value={storeSlug}
+                             onChange={e => setStoreSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                             className="flex-1 px-3 py-2 text-sm font-bold text-slate-800 bg-transparent focus:outline-none"
+                           />
+                           <div className="px-3 py-2 bg-slate-50 border-l border-slate-200 text-slate-500 font-medium text-sm select-none" dir="ltr">
+                             .beyacreative.com
+                           </div>
                          </div>
+                         <button onClick={handleLinkSubdomain} disabled={isLinkingSubdomain} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50">
+                           {isLinkingSubdomain ? '...' : isAr ? 'ربط' : 'Lier'}
+                         </button>
                        </div>
                     </div>
 
