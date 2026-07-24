@@ -460,16 +460,13 @@ export default function LandingPage() {
                     : 'Vous n\'avez pas de site ? Nous construisons une boutique indépendante (sans commissions) avec un design moderne et des outils marketing intégrés pour maximiser vos ventes.'}
                 </p>
               </div>
-              <button 
-                onClick={() => {
-                  alert(isAr ? 'سيتم توجيهك قريباً لصفحة بناء المتجر. مؤقتاً تواصل معنا.' : 'Vous serez bientôt redirigé vers le Store Builder. Contactez-nous en attendant.');
-                  window.open(`https://wa.me/${company.phone.replace(/\D/g, '')}?text=${encodeURIComponent('مرحباً BEYA CREATIVE، أريد الاستفسار عن خدمة بناء متجر إلكتروني احترافي.')}`, '_blank');
-                }}
+              <Link 
+                to="/store-landing"
                 className="inline-flex items-center justify-center gap-3 w-full px-8 py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 hover:shadow-blue-600/40 hover:-translate-y-1 relative z-10"
               >
                 {isAr ? 'اطلب تصميم متجرك' : 'Commander ma boutique'}
                 <ArrowRight className="w-5 h-5" />
-              </button>
+              </Link>
             </div>
 
             {/* Manufacturing Service - Light version */}

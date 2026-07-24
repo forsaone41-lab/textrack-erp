@@ -65,6 +65,7 @@ const Reglement       = lazy(() => import('./pages/Reglement'));
 const ValidationBoard = lazy(() => import('./pages/ValidationBoard'));
 const HPGLViewer      = lazy(() => import('./pages/HPGLViewer'));
 const StoreBuilder    = lazy(() => import('./pages/StoreBuilder'));
+const StoreLanding    = lazy(() => import('./pages/StoreLanding'));
 import { PageLoader } from './components/PageLoader';
 
 import { initMockData, User, loadPermissions, AppPage, loadCompanyProfile, syncCompanyProfile, loadData, saveRecord } from './types';
@@ -387,6 +388,7 @@ function AppContent() {
         <Route path="/recrut" element={<Navigate to="/recrutement" replace />} />
         <Route path="/devis-express" element={<AdsLanding />} />
         <Route path="/new" element={<NewLanding />} />
+        <Route path="/store-landing" element={<StoreLanding />} />
         <Route path="/" element={<LandingPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -505,6 +507,7 @@ function AppContent() {
         <Route path="meet" element={<PublicMeet />} />
         <Route path="planning-view/:id" element={<PlanningView />} />
         <Route path="/devis-express" element={<AdsLanding />} />
+        <Route path="/store-landing" element={<StoreLanding />} />
 
       </Route>
       <Route element={<PointageLayout />}>
