@@ -1,309 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { Play, ShieldCheck, Zap, Users, ArrowRight, MessageCircle, Star, Package, Factory, Globe, Shirt, Scissors, CheckCircle, Image as ImageIcon, X, ChevronDown, Search, LogOut, RotateCw, MapPin, AlertTriangle } from 'lucide-react';
-import { useLang } from '../contexts/LangContext';
-import { Link } from 'react-router-dom';
-import { loadCompanyProfile, saveLead, syncCompanyProfile, CompanyProfile, loadData, TarifService, saveRecord } from '../types';
-import { generatePDF } from '../utils/pdf';
-import { trackPixelEvent } from '../utils/pixel';
-import { sendPushToAll } from '../utils/pushNotifications';
-import emailjs from '@emailjs/browser';
+const fs = require('fs');
 
-const EMAILJS_SERVICE = 'service_itjhz3n';
-const EMAILJS_TEMPLATE = 'template_tnjq79k';
-const EMAILJS_PUBLIC_KEY = '8KXb_0ilZfpaovLCk';
+try {
+  let content = fs.readFileSync('src/pages/LandingPage.tsx', 'utf8');
 
-const sendEmailNotification = (name: string, phone: string, email: string, ville: string, models: { type: string; quantity: number }[]) => {
-  const modelsList = models.map(m => `• ${m.type} (${m.quantity} pcs)`).join('\n');
-  const totalQty = models.reduce((s, m) => s + m.quantity, 0);
-  emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
-    to_email: 'beyacreative@gmail.com',
-    from_name: name,
-    from_phone: phone,
-    from_email: email || 'Non fourni',
-    from_ville: ville || 'Non fourni',
-    models_list: modelsList,
-    total_qty: totalQty,
-    message: `Nouvelle demande de ${name}\nTél: ${phone}\nVille: ${ville}\n\nModèles:\n${modelsList}\n\nTotal: ${totalQty} pcs`,
-  }, EMAILJS_PUBLIC_KEY).catch(() => {});
-};
+  // Find where LandingPage starts
+  const lpStart = content.indexOf('export default function LandingPage() {');
+  if (lpStart === -1) throw new Error("Could not find LandingPage");
 
-const LogoWithFallback = ({ src, alt }: { src: string; alt: string }) => {
-  const [error, setError] = useState(false);
-  if (error || !src) {
-    return (
-      <div className="flex flex-col">
-        <span className="text-lg md:text-xl font-black text-slate-900 uppercase tracking-tighter italic leading-none">
-          {alt.split(' ')[0]}<span className="text-indigo-600">CREATIVE</span>
-        </span>
-        <span className="text-[7px] md:text-[8px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic">
-          Manufacturing Excellence
-        </span>
-      </div>
-    );
-  }
-  return <img src={src} className="h-10 md:h-12 object-contain" alt={alt} onError={() => setError(true)} />;
-};
+  const returnRegex = /return \([\s\S]{1,50}<div className=\{`min-h-screen/;
+  const match = returnRegex.exec(content.substring(lpStart));
+  if (!match) throw new Error("Could not find the main return ( inside LandingPage");
 
-export default function LandingPage() {
-  const { isAr, toggle } = useLang();
-  const [company, setCompany] = useState<CompanyProfile>(loadCompanyProfile());
+  const returnIndex = lpStart + match.index;
+  const stateLogic = content.substring(0, returnIndex);
 
-  useEffect(() => {
-    const sync = async () => {
-      const remote = await syncCompanyProfile();
-      setCompany(remote);
-    };
-    sync();
-  }, []);
-
-  const _unusedPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        alert(isAr ? 'حجم الصورة كبير جداً (الأقصى 10MB)' : 'Photo trop grande (Max 10MB)');
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          const MAX_SIZE = 800;
-          if (width > height && width > MAX_SIZE) {
-            height *= MAX_SIZE / width;
-            width = MAX_SIZE;
-          } else if (height > MAX_SIZE) {
-            width *= MAX_SIZE / height;
-            height = MAX_SIZE;
-          }
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(img, 0, 0, width, height);
-            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
-            // setSelectedPhoto(compressedBase64);
-          } else {
-            // setSelectedPhoto(event.target?.result as string);
-          }
-        };
-        img.src = event.target?.result as string;
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const services = [
-    {
-      title: isAr ? 'الفصالة العصرية' : 'Coupe de Précision',
-      desc: isAr ? 'أحدث التقنيات لضمان دقة متناهية في كل قطعة.' : 'Utilisation des dernières technologies pour une précision millimétrée.',
-      icon: Factory,
-      color: 'from-orange-500 to-rose-500'
-    },
-    {
-      title: isAr ? 'خياطة احترافية' : 'Montage & Couture',
-      desc: isAr ? 'فريق من الخبراء يضمنون جودة الخياطة والمتانة.' : 'Une équipe d\'experts garantissant la solidité et la finesse des finitions.',
-      icon: Users,
-      color: 'from-indigo-500 to-purple-600'
-    },
-    {
-      title: isAr ? 'مراقبة الجودة' : 'Contrôle Qualité',
-      desc: isAr ? 'كل قطعة تخضع لفحص دقيق قبل التسليم.' : 'Chaque pièce subit une inspection rigoureuse avant expédition.',
-      icon: ShieldCheck,
-      color: 'from-emerald-500 to-teal-600'
-    }
-  ];
-
-  // Helper to format video URL (Instagram or direct)
-  const getEmbedUrl = (url?: string) => {
-    if (!url) return null;
-    
-    // Instagram
-    if (url.includes('instagram.com')) {
-      const cleanUrl = url.split('?')[0].replace(/\/$/, '');
-      return `${cleanUrl}/embed`;
-    }
-
-    // YouTube
-    if (url.includes('youtube.com') || url.includes('youtu.be')) {
-      let videoId = '';
-      if (url.includes('v=')) {
-        videoId = url.split('v=')[1].split('&')[0];
-      } else if (url.includes('youtu.be/')) {
-        videoId = url.split('youtu.be/')[1].split('?')[0];
-      } else if (url.includes('shorts/')) {
-        videoId = url.split('shorts/')[1].split('?')[0];
-      } else if (url.includes('embed/')) {
-        return url;
-      }
-      return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
-    }
-
-    return url;
-  };
-
-  const embedUrl = getEmbedUrl(company.landingVideoUrl);
-
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [newClientCode, setNewClientCode] = useState<{name: string, code: string, email: string, phone: string, id: string} | null>(null);
-  const [submittedName, setSubmittedName] = useState('');
-  const [isSending, setIsSending] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
-  interface ModelEntry {
-    id: string;
-    type: string;
-    customType: string;
-    quantity: string;
-    tailles: Record<string, string>;
-    details: string;
-    photo: string | null;
-    photos: string[];
-    provideFabric?: boolean;
-  }
-
-  const emptyModel = (): ModelEntry => ({
-    id: Math.random().toString(36).slice(2),
-    type: 'T-Shirt', customType: '', quantity: '',
-    tailles: { XS: '', S: '', M: '', L: '', XL: '', XXL: '' },
-    details: '', photo: null, photos: [], provideFabric: false
-  });
-
-  const [models, setModels] = useState<ModelEntry[]>([emptyModel()]);
-
-  const updateModel = (id: string, field: Partial<ModelEntry>) => {
-    setModels(prev => prev.map(m => m.id === id ? { ...m, ...field } : m));
-  };
-
-  const updateModelTaille = (id: string, size: string, val: string) => {
-    setModels(prev => prev.map(m => {
-      if (m.id !== id) return m;
-      const newTailles = { ...m.tailles, [size]: val };
-      const total = Object.values(newTailles).reduce((a, v) => a + (Number(v) || 0), 0);
-      return { ...m, tailles: newTailles, quantity: total > 0 ? total.toString() : m.quantity };
-    }));
-  };
-
-  const handleModelPhoto = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 10 * 1024 * 1024) { setErrorMsg(isAr ? 'الصورة كبيرة جداً (Max 10MB)' : 'Photo trop grande (Max 10MB)'); return; }
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX = 800;
-        let w = img.width, h = img.height;
-        if (w > h && w > MAX) { h = h * MAX / w; w = MAX; }
-        else if (h > MAX) { w = w * MAX / h; h = MAX; }
-        canvas.width = w; canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        let newPhoto = '';
-        if (ctx) { ctx.drawImage(img, 0, 0, w, h); newPhoto = canvas.toDataURL('image/jpeg', 0.6); }
-        else { newPhoto = ev.target?.result as string; }
-        
-        setModels(prev => prev.map(m => {
-          if (m.id !== id) return m;
-          const currentPhotos = m.photos || (m.photo ? [m.photo] : []);
-          const newPhotos = [...currentPhotos, newPhoto];
-          return { ...m, photo: newPhotos[0], photos: newPhotos };
-        }));
-      };
-      img.src = ev.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const removeModelPhoto = (id: string, index: number) => {
-    setModels(prev => prev.map(m => {
-      if (m.id !== id) return m;
-      const currentPhotos = m.photos || (m.photo ? [m.photo] : []);
-      const newPhotos = currentPhotos.filter((_, i) => i !== index);
-      return { ...m, photo: newPhotos.length > 0 ? newPhotos[0] : null, photos: newPhotos };
-    }));
-  };
-
-  // Dynamic SEO Title & Description
-  useEffect(() => {
-    const title = isAr
-      ? `BEYA CREATIVE - رائد صناعة الملابس بالمغرب 🇲🇦`
-      : `BEYA CREATIVE - Excellence en Confection Textile au Maroc 🇲🇦`;
-    const desc = isAr
-      ? 'نحن نوفر حلولاً متكاملة لصناعة الملابس بالمغرب. تيشيرت، قميص، جلابة، وملابس العمل بجودة عالمية.'
-      : 'BEYA CREATIVE : Leader de la confection textile au Maroc. Fabrication de vêtements haute qualité et production 100% marocaine.';
-
-    document.title = title;
-
-    // Update meta description
-    let metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) {
-      metaDesc.setAttribute('content', desc);
-    }
-  }, [isAr]);
-
-  
-  const [simulatorStep, setSimulatorStep] = useState(1);
-  const [tarifsDb, setTarifsDb] = useState<TarifService[]>([]);
-
-  useEffect(() => {
-    const fetchTarifs = async () => {
-      const tarifsList = await loadData<TarifService>('tarifs');
-      const activeConfections = (tarifsList || []).filter(t => t.categorie === 'Confection' && t.actif);
-      setTarifsDb(activeConfections);
-    };
-    fetchTarifs();
-  }, []);
-
-  const calculateEstimate = (type: string, qtyStr: string, provideFabric: boolean = false) => {
-    const quantity = parseInt(qtyStr) || 0;
-    if (quantity === 0) return null;
-    let baseMin = 0;
-    let baseMax = 0;
-    const dbTarif = tarifsDb.find(t => t.titre.toLowerCase() === type.toLowerCase());
-    if (dbTarif) {
-      baseMin = dbTarif.prixMin;
-      baseMax = dbTarif.prixMax || dbTarif.prixMin;
-    } else {
-      switch(type) {
-        case 'T-Shirt': baseMin = 35; baseMax = 45; break;
-        case 'Polo': baseMin = 60; baseMax = 75; break;
-        case 'T-Shirt Oversize': baseMin = 45; baseMax = 60; break;
-        case 'Sweat / Hoodie': baseMin = 120; baseMax = 150; break;
-        case 'Djellaba / Gandoura': baseMin = 150; baseMax = 250; break;
-        case 'Ensemble / Survêtement': baseMin = 180; baseMax = 260; break;
-        case 'Pyjama': baseMin = 80; baseMax = 120; break;
-        case 'Uniforme / Travail': baseMin = 100; baseMax = 180; break;
-        case 'Pantalon': baseMin = 80; baseMax = 130; break;
-        default: return null;
-      }
-    }
-    if (quantity < 100) { baseMin *= 1.15; baseMax *= 1.15; }
-    else if (quantity >= 500) { baseMin *= 0.9; baseMax *= 0.9; }
-
-    if (provideFabric) {
-      baseMin *= 0.45;
-      baseMax *= 0.45;
-    }
-    return {
-      min: Math.round(baseMin),
-      max: Math.round(baseMax),
-      totalMin: Math.round(baseMin * quantity),
-      totalMax: Math.round(baseMax * quantity)
-    };
-  };
-
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    const auth = localStorage.getItem('textrack_auth');
-    if (auth) setIsLoggedIn(true);
-  }, []);
-
-  return (
-    <div className={`min-h-screen bg-slate-50 text-slate-900 relative overflow-hidden ${isAr ? 'font-sans' : ''}`} dir={isAr ? 'rtl' : 'ltr'}>
+  const newRender = `return (
+    <div className={\`min-h-screen bg-slate-50 text-slate-900 relative overflow-hidden \${isAr ? 'font-sans' : ''}\`} dir={isAr ? 'rtl' : 'ltr'}>
       {/* Messages/Modals (Error & Success) */}
       {errorMsg && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setErrorMsg(null)}>
@@ -327,7 +39,7 @@ export default function LandingPage() {
               {isAr ? 'تم إرسال طلبكم بنجاح!' : 'Demande Envoyée avec Succès!'}
             </h3>
             <p className="text-center text-slate-500 font-medium text-lg mb-10">
-              {isAr ? 'شكراً لاختياركم BEYA CREATIVE. سنتواصل معكم في أقرب وقت.' : 'Merci d\'avoir choisi BEYA CREATIVE. Nous vous contacterons très bientôt.'}
+              {isAr ? 'شكراً لاختياركم BEYA CREATIVE. سنتواصل معكم في أقرب وقت.' : 'Merci d\\'avoir choisi BEYA CREATIVE. Nous vous contacterons très bientôt.'}
             </p>
 
             {newClientCode && (
@@ -351,7 +63,7 @@ export default function LandingPage() {
               <button onClick={() => setShowSuccess(false)} className="w-full sm:w-1/3 py-5 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-200 transition-colors">
                 {isAr ? 'إغلاق' : 'Fermer'}
               </button>
-              <a href={`https://wa.me/${company.phone ? company.phone.replace(/\D/g, '') : '212624465962'}?text=${encodeURIComponent('مرحباً BEYA CREATIVE...')}`} target="_blank" rel="noreferrer" className="w-full sm:w-2/3 py-5 bg-emerald-500 text-white rounded-2xl font-black uppercase text-center tracking-widest hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-3">
+              <a href={\`https://wa.me/\${company.phone ? company.phone.replace(/\\D/g, '') : '212624465962'}?text=\${encodeURIComponent('مرحباً BEYA CREATIVE...')}\`} target="_blank" rel="noreferrer" className="w-full sm:w-2/3 py-5 bg-emerald-500 text-white rounded-2xl font-black uppercase text-center tracking-widest hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-3">
                 {isAr ? 'تأكيد الطلب عبر الواتساب' : 'Confirmer via WhatsApp'}
               </a>
             </div>
@@ -424,7 +136,7 @@ export default function LandingPage() {
               {isAr ? 'اختر الخدمة الآن' : 'Choisir un service'}
               <ArrowRight className="w-5 h-5" />
             </button>
-            <a href={`https://wa.me/${company.phone ? company.phone.replace(/\D/g, '') : '212624465962'}?text=${encodeURIComponent('مرحباً BEYA CREATIVE...')}`} target="_blank" rel="noreferrer" className="w-full sm:w-auto px-12 py-5 bg-white text-slate-900 border-2 border-slate-100 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-50 hover:border-slate-200 transition-all flex items-center justify-center gap-3">
+            <a href={\`https://wa.me/\${company.phone ? company.phone.replace(/\\D/g, '') : '212624465962'}?text=\${encodeURIComponent('مرحباً BEYA CREATIVE...')}\`} target="_blank" rel="noreferrer" className="w-full sm:w-auto px-12 py-5 bg-white text-slate-900 border-2 border-slate-100 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-50 hover:border-slate-200 transition-all flex items-center justify-center gap-3">
               {isAr ? 'تواصل مع خبير' : 'Parler à un expert'}
             </a>
           </div>
@@ -439,7 +151,7 @@ export default function LandingPage() {
               {isAr ? 'كيف يمكننا مساعدتك؟' : 'Comment pouvons-nous vous aider ?'}
             </h2>
             <p className="text-slate-500 text-lg md:text-xl font-medium max-w-2xl mx-auto">
-              {isAr ? 'اختر الخدمة التي تناسب احتياجات علامتك التجارية اليوم' : 'Choisissez le service qui correspond aux besoins de votre marque aujourd\'hui'}
+              {isAr ? 'اختر الخدمة التي تناسب احتياجات علامتك التجارية اليوم' : 'Choisissez le service qui correspond aux besoins de votre marque aujourd\\'hui'}
             </p>
           </div>
 
@@ -457,13 +169,13 @@ export default function LandingPage() {
                 <p className="text-slate-500 text-lg mb-10 leading-relaxed font-medium">
                   {isAr 
                     ? 'ليس لديك موقع؟ نحن نبني لك متجراً مستقلاً بتصميم عصري وأدوات تسويقية مدمجة لرفع نسبة التحويل (Conversion Rate) ومنافسة كبار السوق بقوة.' 
-                    : 'Vous n\'avez pas de site ? Nous construisons une boutique indépendante (sans commissions) avec un design moderne et des outils marketing intégrés pour maximiser vos ventes.'}
+                    : 'Vous n\\'avez pas de site ? Nous construisons une boutique indépendante (sans commissions) avec un design moderne et des outils marketing intégrés pour maximiser vos ventes.'}
                 </p>
               </div>
               <button 
                 onClick={() => {
                   alert(isAr ? 'سيتم توجيهك قريباً لصفحة بناء المتجر. مؤقتاً تواصل معنا.' : 'Vous serez bientôt redirigé vers le Store Builder. Contactez-nous en attendant.');
-                  window.open(`https://wa.me/${company.phone.replace(/\D/g, '')}?text=${encodeURIComponent('مرحباً BEYA CREATIVE، أريد الاستفسار عن خدمة بناء متجر إلكتروني احترافي.')}`, '_blank');
+                  window.open(\`https://wa.me/\${company.phone.replace(/\\D/g, '')}?text=\${encodeURIComponent('مرحباً BEYA CREATIVE، أريد الاستفسار عن خدمة بناء متجر إلكتروني احترافي.')}\`, '_blank');
                 }}
                 className="inline-flex items-center justify-center gap-3 w-full px-8 py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 hover:shadow-blue-600/40 hover:-translate-y-1 relative z-10"
               >
@@ -558,11 +270,11 @@ export default function LandingPage() {
                 setIsSending(false);
                 setSubmittedName(clientName);
                 
-                const newId = `user-${Date.now()}`;
+                const newId = \`user-\${Date.now()}\`;
                 const autoCode = Math.floor(100000 + Math.random() * 900000).toString();
                 const newClient = {
                   id: newId, nom: clientName, role: 'client' as const,
-                  email: (clientEmail && clientEmail !== 'Non spécifié' ? clientEmail : `${clientName.replace(/\s+/g, '').toLowerCase()}_${newId.slice(0, 4)}@beya.ma`).toLowerCase().trim(),
+                  email: (clientEmail && clientEmail !== 'Non spécifié' ? clientEmail : \`\${clientName.replace(/\\s+/g, '').toLowerCase()}_\${newId.slice(0, 4)}@beya.ma\`).toLowerCase().trim(),
                   telephone: fullPhone, password: autoCode, pinCode: autoCode,
                   actif: true, ville: clientVille || '', adresse: ''
                 };
@@ -576,7 +288,7 @@ export default function LandingPage() {
                   clientName, fullPhone, clientEmail, clientVille,
                   models.map(m => ({ type: (m.type === 'Autre' || m.type === 'آخر') ? m.customType : m.type, quantity: Number(m.quantity) || 1 }))
                 );
-                sendPushToAll('🧵 Nouvelle Demande!', `${clientName} — ${models.map(m => m.type).join(', ')}`, '/demandes').catch(() => {});
+                sendPushToAll('🧵 Nouvelle Demande!', \`\${clientName} — \${models.map(m => m.type).join(', ')}\`, '/demandes').catch(() => {});
                 formElement.reset();
               } catch (err: any) {
                 setIsSending(false);
@@ -586,8 +298,8 @@ export default function LandingPage() {
               
               <div className="bg-white border border-slate-100 rounded-[3rem] p-6 md:p-12 shadow-[0_30px_80px_rgba(0,0,0,0.05)] relative overflow-hidden">
                 <div className="flex items-center justify-center gap-4 mb-10 relative z-10">
-                  <div className={`h-2.5 rounded-full transition-all duration-500 ${simulatorStep >= 1 ? 'w-24 bg-purple-600 shadow-[0_0_15px_rgba(168,85,247,0.3)]' : 'w-8 bg-slate-200'}`}></div>
-                  <div className={`h-2.5 rounded-full transition-all duration-500 ${simulatorStep >= 2 ? 'w-24 bg-purple-600 shadow-[0_0_15px_rgba(168,85,247,0.3)]' : 'w-8 bg-slate-200'}`}></div>
+                  <div className={\`h-2.5 rounded-full transition-all duration-500 \${simulatorStep >= 1 ? 'w-24 bg-purple-600 shadow-[0_0_15px_rgba(168,85,247,0.3)]' : 'w-8 bg-slate-200'}\`}></div>
+                  <div className={\`h-2.5 rounded-full transition-all duration-500 \${simulatorStep >= 2 ? 'w-24 bg-purple-600 shadow-[0_0_15px_rgba(168,85,247,0.3)]' : 'w-8 bg-slate-200'}\`}></div>
                 </div>
 
                 {simulatorStep === 1 && (
@@ -667,7 +379,7 @@ export default function LandingPage() {
                     </button>
 
                     <button type="submit" className="w-full py-6 bg-slate-900 text-white rounded-3xl font-black text-lg uppercase tracking-widest shadow-[0_20px_40px_rgba(0,0,0,0.1)] hover:bg-indigo-600 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(79,70,229,0.3)] transition-all flex justify-center items-center gap-3 mt-8">
-                      {isAr ? 'التالي' : 'Suivant'} <ArrowRight className={`w-6 h-6 ${isAr ? '-scale-x-100' : ''}`} />
+                      {isAr ? 'التالي' : 'Suivant'} <ArrowRight className={\`w-6 h-6 \${isAr ? '-scale-x-100' : ''}\`} />
                     </button>
                   </div>
                 )}
@@ -726,5 +438,11 @@ export default function LandingPage() {
         </div>
       </footer>
     </div>
-  );
+  );`;
+
+  content = stateLogic + newRender + "\n}\n";
+  fs.writeFileSync('src/pages/LandingPage.tsx', content, 'utf8');
+  console.log("Successfully rebuilt LandingPage.tsx for Light Theme!");
+} catch(err) {
+  console.error("Failed:", err);
 }
