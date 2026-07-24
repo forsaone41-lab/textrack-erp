@@ -195,6 +195,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [topBarAnimation, setTopBarAnimation] = useState(config.topBarAnimation || 'static');
 
   const [storeName, setStoreName] = useState(config.storeName || '');
+  const [storeSlug, setStoreSlug] = useState(config.storeSlug || '');
   const [showPreview, setShowPreview] = useState(false);
   const [previewProductId, setPreviewProductId] = useState<number | null>(null);
   const [previewDevice, setPreviewDevice] = useState<'desktop'|'mobile'>('desktop');
@@ -1127,6 +1128,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
     const storeConfig = {
        storeLang,
        storeName,
+       storeSlug,
        storeLogo,
        storeFavicon,
        seoDescription,
@@ -5594,6 +5596,25 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                        </div>
                     </div>
 
+                    {/* SUBDOMAIN SECTION */}
+                    <div className="bg-indigo-50/50 p-5 rounded-xl border border-indigo-100">
+                       <h4 className="text-xs font-black text-indigo-900 mb-1 uppercase tracking-wider flex items-center gap-2"><Globe className="w-4 h-4 text-indigo-600" /> {isAr ? 'نطاق فرعي مجاني' : 'Sous-domaine Gratuit'}</h4>
+                       <p className="text-[10px] text-slate-600 mb-3">{isAr ? 'اختر اسماً لمتجرك ليظهر كرابط مجاني خاص بك.' : 'Choisissez un nom pour votre boutique pour avoir un lien gratuit.'}</p>
+                       <div className="flex items-center overflow-hidden border border-slate-200 rounded-lg bg-white focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
+                         <input
+                           type="text"
+                           placeholder="maboutique"
+                           value={storeSlug}
+                           onChange={e => setStoreSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                           className="flex-1 px-3 py-2 text-sm font-bold text-slate-800 bg-transparent focus:outline-none"
+                         />
+                         <div className="px-3 py-2 bg-slate-50 border-l border-slate-200 text-slate-500 font-medium text-sm select-none" dir="ltr">
+                           .beyacreative.com
+                         </div>
+                       </div>
+                    </div>
+
+                    {/* CUSTOM DOMAIN SECTION */}
                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                        <h4 className="text-xs font-black text-slate-800 mb-1 uppercase tracking-wider flex items-center gap-2"><Globe className="w-4 h-4 text-indigo-600" /> {isAr ? 'نطاق مخصص (دومين)' : 'Domaine Personnalisé'}</h4>
                        <p className="text-[10px] text-slate-500 mb-2">{isAr ? 'اربط النطاق الخاص بك (مثال: www.maboutique.com)' : 'Connectez votre propre domaine (ex: www.maboutique.com).'}</p>
