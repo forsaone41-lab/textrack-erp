@@ -18,13 +18,7 @@ export default function StoreLanding() {
       <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center transform rotate-12">
-              <span className="text-white font-black text-xl -rotate-12">B</span>
-            </div>
-            <div>
-              <span className="font-black text-xl tracking-tight text-slate-900 block leading-none">BEYACREATIVE</span>
-              <span className="text-[9px] font-bold text-indigo-600 tracking-[0.2em] uppercase">{isAr ? 'التميز في التصنيع' : 'MANUFACTURING EXCELLENCE'}</span>
-            </div>
+            <img src={company.logoMobileHeader || company.logoUrl || '/logo.png'} alt={company.name} className="h-10 object-contain" />
           </Link>
           
           <div className="flex items-center gap-4">
@@ -79,7 +73,7 @@ export default function StoreLanding() {
             </ul>
             
             <div className="pt-4 flex flex-col sm:flex-row gap-4">
-              <Link to="/store-builder" className="px-10 py-4 bg-[#e91e63] hover:bg-[#c2185b] text-white rounded-xl font-bold text-lg text-center transition-all shadow-[0_10px_20px_rgba(233,30,99,0.2)] hover:shadow-[0_10px_30px_rgba(233,30,99,0.4)] hover:-translate-y-0.5">
+              <Link to="/store-builder" className="px-10 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg text-center transition-all shadow-[0_10px_20px_rgba(37,99,235,0.2)] hover:shadow-[0_10px_30px_rgba(37,99,235,0.4)] hover:-translate-y-0.5">
                 {isAr ? 'ابدأ الآن' : 'Get Started'}
               </Link>
               <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="px-10 py-4 bg-white text-slate-900 border-2 border-slate-200 hover:border-slate-300 rounded-xl font-bold text-lg text-center transition-all hover:bg-slate-50 flex items-center justify-center gap-2">
