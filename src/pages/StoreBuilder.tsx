@@ -1203,7 +1203,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
     
     // Sync to Supabase for cross-domain live preview (SaaS mode)
     try {
-       const domain = customDomain || `${storeName.toLowerCase().replace(/\\s+/g, '')}.beyacreative.com`;
+       const domain = customDomain || (storeSlug ? `${storeSlug}.beyacreative.com` : `${storeName.toLowerCase().replace(/\\s+/g, '')}.beyacreative.com`);
        
        // Update both exact domain AND a fallback to ensure changes apply immediately
        await supabase.from('stores').upsert({
@@ -4390,7 +4390,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
           </button>
           <button
              onClick={() => {
-                const url = customDomain ? `https://${customDomain}` : `https://${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`;
+                const url = customDomain ? `https://${customDomain}` : (storeSlug ? `https://${storeSlug}.beyacreative.com` : `https://${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`);
                 window.open(url, '_blank');
              }}
              disabled={!config.storeName}
