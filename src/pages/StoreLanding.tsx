@@ -18,7 +18,13 @@ export default function StoreLanding() {
       <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <img src={company.logoMobileHeader || company.logoUrl || '/logo.png'} alt={company.name} className="h-10 object-contain" />
+            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center transform rotate-12">
+              <span className="text-white font-black text-xl -rotate-12">B</span>
+            </div>
+            <div>
+              <span className="font-black text-xl tracking-tight text-slate-900 block leading-none">BEYACREATIVE</span>
+              <span className="text-[9px] font-bold text-blue-600 tracking-[0.2em] uppercase">{isAr ? 'التميز في التصنيع' : 'MANUFACTURING EXCELLENCE'}</span>
+            </div>
           </Link>
           
           <div className="flex items-center gap-4">
