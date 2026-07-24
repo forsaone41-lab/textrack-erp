@@ -901,19 +901,6 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
      }
   }, [isLiveStore]);
 
-  // Plan (Normal/PRO/Premier) comes straight from the stores table so it can only be
-  // changed by an admin, never by the merchant editing their own store config_json.
-  // Runs for both the editor and the live storefront.
-  useEffect(() => {
-     if (!storeName) return;
-     const domain = customDomain || (storeSlug ? `${storeSlug}.beyacreative.com` : `${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`);
-     supabase.from('stores').select('subscription_tier').eq('domain', domain).single()
-        .then(({ data }: any) => {
-           if (data?.subscription_tier) setSubscriptionTier(data.subscription_tier);
-        })
-        .catch(() => {});
-  }, [storeName, customDomain, storeSlug]);
-
   // Customer auth session bootstrap (live store only, to avoid swapping the admin's own session in the builder preview)
   useEffect(() => {
      if (!isLiveStore) return;
@@ -1069,6 +1056,19 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
   const [isLinkingDomain, setIsLinkingDomain] = useState(false);
   const [isLinkingSubdomain, setIsLinkingSubdomain] = useState(false);
   const [domainError, setDomainError] = useState('');
+
+  // Plan (Normal/PRO/Premier) comes straight from the stores table so it can only be
+  // changed by an admin, never by the merchant editing their own store config_json.
+  // Runs for both the editor and the live storefront.
+  useEffect(() => {
+     if (!storeName) return;
+     const domain = customDomain || (storeSlug ? `${storeSlug}.beyacreative.com` : `${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`);
+     supabase.from('stores').select('subscription_tier').eq('domain', domain).single()
+        .then(({ data }: any) => {
+           if (data?.subscription_tier) setSubscriptionTier(data.subscription_tier);
+        })
+        .catch(() => {});
+  }, [storeName, customDomain, storeSlug]);
 
   const submitGlobalOrder = (product: any, qty: number, formData?: any) => {
     try {
