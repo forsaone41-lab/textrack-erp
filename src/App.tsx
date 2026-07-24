@@ -67,6 +67,7 @@ const HPGLViewer      = lazy(() => import('./pages/HPGLViewer'));
 const StoreBuilder    = lazy(() => import('./pages/StoreBuilder'));
 const StoreLanding    = lazy(() => import('./pages/StoreLanding'));
 const StoreSignup     = lazy(() => import('./pages/StoreSignup'));
+const MerchantDashboard = lazy(() => import('./pages/MerchantDashboard'));
 import { PageLoader } from './components/PageLoader';
 
 import { initMockData, User, loadPermissions, AppPage, loadCompanyProfile, syncCompanyProfile, loadData, saveRecord } from './types';
@@ -413,6 +414,28 @@ function AppContent() {
     return <Suspense fallback={<PageLoader />}><CommercialPortal currentUser={currentUser} onLogout={handleLogout} /></Suspense>;
   }
 
+  // 🔥 Dedicated Merchant Portal (SaaS Dashboard)
+  if (currentUser.role === 'merchant') {
+    return (
+      <Routes>
+        <Route path="/" element={
+          <Suspense fallback={<PageLoader />}>
+            <MerchantDashboard currentUser={currentUser} onLogout={handleLogout} />
+          </Suspense>
+        } />
+        {/* They can also access the builder */}
+        <Route path="/store-builder" element={
+          <Suspense fallback={<PageLoader />}>
+            <div className="min-h-screen bg-white">
+              <StoreBuilder />
+            </div>
+          </Suspense>
+        } />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    );
+  }
+
   const permissions = loadPermissions();
   let userRoleRaw = (currentUser.role || '').toLowerCase();
   if (userRoleRaw === 'agent' || userRoleRaw.includes('pointage')) userRoleRaw = 'agent_pointage';
@@ -517,8 +540,8 @@ function AppContent() {
         <Route path="kiosk" element={<KioskScanner />} />
         <Route path="fast-scanner" element={can('fast_scanner') ? <FastScanner /> : <Navigate to="/" replace />} />
       </Route>
-      {/* Standalone SaaS Route for BEYA STORE Builder */}
-      <Route path="/store-builder" element={(currentUser?.role === 'admin' || currentUser?.role === 'merchant') ? <div className="min-h-screen bg-white"><StoreBuilder /></div> : <Navigate to="/" replace />} />
+      {/* Standalone SaaS Route for BEYA STORE Builder (Accessible by admin via this specific route) */}
+      <Route path="/store-builder" element={(currentUser?.role === 'admin') ? <div className="min-h-screen bg-white"><StoreBuilder /></div> : <Navigate to="/" replace />} />
       <Route path="/store/:storeNameUrl" element={<div className="min-h-screen bg-white"><StoreBuilder isLiveStore={true} /></div>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
