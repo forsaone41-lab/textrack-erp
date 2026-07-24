@@ -688,8 +688,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [showHeaderSearch, setShowHeaderSearch] = useState(config.showHeaderSearch ?? true);
   const [showHeaderAccount, setShowHeaderAccount] = useState(config.showHeaderAccount ?? true);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [showTopBar, topBarText, topBarBgColor, topBarTextColor, topBarPosition, topBarAnimation,
-        storeProducts, setStoreProducts] = useState(config.storeProducts || [
+  const [storeProducts, setStoreProducts] = useState(config.storeProducts || [
     { id: 1, name: 'Premium Hoodie', price: '450.00', category: 'Outerwear', image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800' },
     { id: 2, name: 'Essential T-Shirt', price: '150.00', category: 'Tops', image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=800' },
     { id: 3, name: 'Cargo Pants', price: '350.00', category: 'Bottoms', image: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&q=80&w=800' },
