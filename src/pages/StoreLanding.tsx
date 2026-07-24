@@ -2,9 +2,15 @@ import React from 'react';
 import { ArrowRight, CheckCircle2, MonitorSmartphone, Zap, Code, ShieldCheck } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { Link } from 'react-router-dom';
+import { loadCompanyProfile } from '../types';
 
 export default function StoreLanding() {
   const { isAr, toggle } = useLang();
+  const company = loadCompanyProfile();
+  
+  const whatsappUrl = `https://wa.me/${company.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
+    isAr ? 'مرحباً BEYA CREATIVE، أريد الاستفسار عن خدمة تصميم وبناء متجر إلكتروني احترافي.' : 'Bonjour BEYA CREATIVE, je suis intéressé par la création d\'une boutique en ligne professionnelle.'
+  )}`;
   
   return (
     <div className={`min-h-screen bg-white ${isAr ? 'font-arabic' : 'font-sans'}`} dir={isAr ? 'rtl' : 'ltr'}>
@@ -76,9 +82,9 @@ export default function StoreLanding() {
               <Link to="/store-builder" className="px-10 py-4 bg-[#e91e63] hover:bg-[#c2185b] text-white rounded-xl font-bold text-lg text-center transition-all shadow-[0_10px_20px_rgba(233,30,99,0.2)] hover:shadow-[0_10px_30px_rgba(233,30,99,0.4)] hover:-translate-y-0.5">
                 {isAr ? 'ابدأ الآن' : 'Get Started'}
               </Link>
-              <Link to="/#new" className="px-10 py-4 bg-white text-slate-900 border-2 border-slate-200 hover:border-slate-300 rounded-xl font-bold text-lg text-center transition-all hover:bg-slate-50">
+              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="px-10 py-4 bg-white text-slate-900 border-2 border-slate-200 hover:border-slate-300 rounded-xl font-bold text-lg text-center transition-all hover:bg-slate-50 flex items-center justify-center gap-2">
                 {isAr ? 'اطلب تصميماً مخصصاً' : 'Demander un design sur-mesure'}
-              </Link>
+              </a>
             </div>
             
             {/* Stats */}
