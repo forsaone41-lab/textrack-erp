@@ -62,7 +62,7 @@ export default function StoreLanding() {
             <ul className="space-y-4">
               {[
                 isAr ? 'إعداد متجر سهل وبديهي' : 'Configuration de boutique facile et intuitive',
-                isAr ? 'لا توجد رسوم حتى تنجح (بدون عمولات)' : 'Aucun frais jusqu\'à votre succès (Zéro commission)',
+                isAr ? 'بدون رسوم إنشاء، فقط 1.5% على المبيعات (أو 0% في PRO)' : 'Aucun frais de création, seulement 1.5% (ou 0% en PRO)',
                 isAr ? 'جميع أدوات التجارة الإلكترونية في مكان واحد' : 'Tous les outils e-commerce au même endroit'
               ].map((text, i) => (
                 <li key={i} className="flex items-center gap-3 text-slate-700 font-medium">
@@ -135,6 +135,86 @@ export default function StoreLanding() {
           
         </div>
       </main>
+
+      {/* Pricing Section */}
+      <section className="py-24 bg-slate-50 border-t border-slate-100" id="pricing">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center max-w-2xl mx-auto mb-16 animate-fade-in-up">
+            <h2 className="text-3xl md:text-5xl font-extrabold text-slate-900 mb-6">
+              {isAr ? 'خطط أسعار تناسب طموحك' : 'Des tarifs adaptés à votre ambition'}
+            </h2>
+            <p className="text-lg text-slate-600">
+              {isAr 
+                ? 'اختر الخطة التي تناسبك وابدأ البيع اليوم. بدون رسوم خفية.'
+                : 'Choisissez le plan qui vous convient et commencez à vendre aujourd\'hui. Sans frais cachés.'}
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Normal Plan */}
+            <div className="bg-white rounded-[2rem] p-8 md:p-10 border border-slate-200 hover:border-indigo-200 transition-all hover:shadow-xl relative overflow-hidden group">
+              <h3 className="text-2xl font-black text-slate-900 mb-2">NORMAL</h3>
+              <p className="text-slate-500 mb-6 font-medium">{isAr ? 'مثالي للمبتدئين' : 'Idéal pour débuter'}</p>
+              <div className="mb-8">
+                <span className="text-6xl font-black text-slate-900 group-hover:text-indigo-600 transition-colors">99</span>
+                <span className="text-slate-500 font-bold ml-2 uppercase tracking-widest text-sm">MAD / {isAr ? 'شهر' : 'mois'}</span>
+              </div>
+              <ul className="space-y-4 mb-10">
+                {[
+                  isAr ? 'عمولة 1.5% على المبيعات' : '1.5% de frais de transaction',
+                  isAr ? 'متجر إلكتروني متكامل' : 'Boutique en ligne complète',
+                  isAr ? 'استضافة مجانية وسريعة' : 'Hébergement rapide et gratuit',
+                  isAr ? 'دعم فني أساسي' : 'Support basique',
+                ].map((f, i) => (
+                  <li key={i} className="flex items-center gap-3 text-slate-700 font-medium">
+                    <CheckCircle2 className="w-5 h-5 text-indigo-500 shrink-0" />
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link to="/store-builder" className="block w-full py-5 text-center rounded-2xl font-black uppercase tracking-widest text-sm bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 transition-all">
+                {isAr ? 'ابدأ الآن' : 'Commencer maintenant'}
+              </Link>
+            </div>
+            
+            {/* PRO Plan */}
+            <div className="bg-slate-900 rounded-[2rem] p-8 md:p-10 border border-indigo-500 shadow-[0_20px_50px_rgba(99,102,241,0.2)] relative overflow-hidden transform md:-translate-y-4 hover:-translate-y-6 transition-transform duration-300">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full blur-[100px] opacity-40" />
+              <div className="absolute top-8 right-8 bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg shadow-amber-500/20">
+                {isAr ? 'الأكثر طلباً' : 'Le plus populaire'}
+              </div>
+              
+              <h3 className="text-2xl font-black text-white mb-2 relative z-10">PRO</h3>
+              <p className="text-indigo-200 mb-6 font-medium relative z-10">{isAr ? 'للمحترفين والشركات' : 'Pour les pros et entreprises'}</p>
+              <div className="mb-8 relative z-10">
+                <span className="text-6xl font-black text-white">249</span>
+                <span className="text-indigo-200 font-bold ml-2 uppercase tracking-widest text-sm">MAD / {isAr ? 'شهر' : 'mois'}</span>
+              </div>
+              <ul className="space-y-4 mb-10 relative z-10">
+                {[
+                  isAr ? '0% عمولة على المبيعات' : '0% de frais de transaction',
+                  isAr ? 'المساعد الذكي (AI) لاكتشاف المنتجات' : 'Assistant IA pour produits gagnants',
+                  isAr ? 'أولوية في التصنيع (BEYA ERP)' : 'Priorité de confection (BEYA ERP)',
+                  isAr ? 'دومين مخصص' : 'Nom de domaine personnalisé',
+                  isAr ? 'دعم فني VIP مباشر' : 'Support VIP prioritaire',
+                ].map((f, i) => (
+                  <li key={i} className="flex items-center gap-3 text-white font-medium">
+                    <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0" />
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link to="/store-builder" className="block w-full py-5 text-center rounded-2xl font-black uppercase tracking-widest text-sm bg-indigo-500 text-white hover:bg-indigo-400 transition-all shadow-[0_10px_20px_rgba(99,102,241,0.2)] hover:shadow-[0_15px_30px_rgba(99,102,241,0.4)] relative z-10">
+                {isAr ? 'اشترك الآن' : 'S\'abonner maintenant'}
+              </Link>
+              <p className="mt-6 text-center text-xs font-bold text-amber-300 relative z-10 p-3 bg-amber-400/10 rounded-xl border border-amber-400/20">
+                🚀 {isAr ? 'عرض خاص: PRO مجاني إذا صنعت منتجاتك معنا!' : 'Offre: PRO Gratuit si vous confectionnez avec BEYA !'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </div>
   );
 }
