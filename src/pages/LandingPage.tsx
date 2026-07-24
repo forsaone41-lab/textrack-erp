@@ -406,17 +406,17 @@ export default function LandingPage() {
             {isAr ? 'الشريك الأول لنجاحك الرقمي في المغرب' : 'Le 1er Partenaire de votre réussite digitale au Maroc'}
           </div>
           
-          <h1 className="text-5xl md:text-7xl lg:text-[5.5rem] font-black mb-8 tracking-tighter leading-[1.05] uppercase text-slate-900 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+          <h1 className="text-4xl md:text-5xl lg:text-[4.5rem] font-extrabold mb-8 tracking-tight leading-tight uppercase text-slate-900 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
             {isAr ? 'نصنع منتجاتك،' : 'Nous fabriquons vos produits,'}<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600">
               {isAr ? 'ونبني لك متجرك الإلكتروني.' : 'Et nous créons votre boutique.'}
             </span>
           </h1>
           
-          <p className="text-lg md:text-2xl text-slate-500 mb-14 font-medium max-w-3xl mx-auto leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+          <p className="text-base md:text-lg text-slate-500 mb-14 font-medium max-w-3xl mx-auto leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
             {isAr 
-              ? 'سواء كنت تملك متجراً وتحتاج إلى تصنيع ملابس عالية الجودة، أو كنت تبدأ من الصفر وتحتاج لمتجر احترافي قوي كـ Shopify، نحن هنا لنحقق ذلك بأعلى معدل تحويل.' 
-              : 'Que vous ayez déjà un site et cherchiez une confection de qualité, ou que vous partiez de zéro pour créer une boutique pro puissante, nous sommes là pour maximiser votre taux de conversion.'}
+              ? 'سواء كنت تملك متجراً وتحتاج إلى تصنيع ملابس عالية الجودة، أو كنت تبدأ من الصفر وتحتاج لمتجر إلكتروني احترافي قوي، نحن هنا لنحقق ذلك بأعلى معدل تحويل.' 
+              : 'Que vous ayez déjà un site et cherchiez une confection de qualité, ou que vous partiez de zéro pour créer une boutique en ligne professionnelle, nous sommes là pour maximiser votre taux de conversion.'}
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-5 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
@@ -435,7 +435,7 @@ export default function LandingPage() {
       <section id="services" className="py-32 px-6 relative z-20 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-slate-900 mb-6">
+            <h2 className="text-3xl md:text-5xl font-extrabold uppercase tracking-tight text-slate-900 mb-6">
               {isAr ? 'كيف يمكننا مساعدتك؟' : 'Comment pouvons-nous vous aider ?'}
             </h2>
             <p className="text-slate-500 text-lg md:text-xl font-medium max-w-2xl mx-auto">
@@ -451,7 +451,7 @@ export default function LandingPage() {
                 <div className="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center mb-8 border border-blue-100 group-hover:scale-110 transition-transform">
                   <Globe className="w-10 h-10 text-blue-500" />
                 </div>
-                <h3 className="text-3xl lg:text-4xl font-black uppercase tracking-tight mb-6 text-slate-900 leading-tight">
+                <h3 className="text-2xl lg:text-3xl font-extrabold uppercase tracking-tight mb-6 text-slate-900 leading-tight">
                   {isAr ? '1. بناء متجر إلكتروني احترافي' : '1. Création de Boutique Pro'}
                 </h3>
                 <p className="text-slate-500 text-lg mb-10 leading-relaxed font-medium">
@@ -479,7 +479,7 @@ export default function LandingPage() {
                 <div className="w-20 h-20 bg-purple-50 rounded-3xl flex items-center justify-center mb-8 border border-purple-100 group-hover:scale-110 transition-transform">
                   <Factory className="w-10 h-10 text-purple-600" />
                 </div>
-                <h3 className="text-3xl lg:text-4xl font-black uppercase tracking-tight mb-6 text-slate-900 leading-tight">
+                <h3 className="text-2xl lg:text-3xl font-extrabold uppercase tracking-tight mb-6 text-slate-900 leading-tight">
                   {isAr ? '2. تصنيع الملابس الجاهزة (Confection)' : '2. Confection & Production'}
                 </h3>
                 <p className="text-slate-500 text-lg mb-10 leading-relaxed font-medium">
