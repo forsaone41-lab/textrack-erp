@@ -23,7 +23,6 @@ export default function StoreLanding() {
             </div>
             <div>
               <span className="font-black text-xl tracking-tight text-slate-900 block leading-none">BEYACREATIVE</span>
-              <span className="text-[9px] font-bold text-blue-600 tracking-[0.2em] uppercase">{isAr ? 'التميز في التصنيع' : 'MANUFACTURING EXCELLENCE'}</span>
             </div>
           </Link>
           
