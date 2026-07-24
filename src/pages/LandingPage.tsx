@@ -488,10 +488,10 @@ export default function LandingPage() {
                     : 'Vous avez déjà votre site et cherchez des produits premium ? Nous fabriquons vos vêtements sur-mesure avec une précision extrême et un packaging soigné.'}
                 </p>
               </div>
-              <button onClick={() => document.getElementById('contact-form')?.scrollIntoView({behavior:'smooth'})} className="inline-flex items-center justify-center gap-3 w-full px-8 py-5 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl font-black uppercase tracking-widest transition-all shadow-lg shadow-purple-600/20 hover:shadow-purple-600/40 hover:-translate-y-1 relative z-10">
+              <a href="/#/devis-express" className="inline-flex items-center justify-center gap-3 w-full px-8 py-5 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl font-black uppercase tracking-widest transition-all shadow-lg shadow-purple-600/20 hover:shadow-purple-600/40 hover:-translate-y-1 relative z-10">
                 {isAr ? 'اطلب تصنيع منتجاتك' : 'Commander mes produits'}
                 <ArrowRight className="w-5 h-5" />
-              </button>
+              </a>
             </div>
           </div>
         </div>
