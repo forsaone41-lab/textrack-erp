@@ -33,7 +33,7 @@ export default function StoreLanding() {
             >
               {isAr ? 'FR' : 'AR'}
             </button>
-            <Link to="/login" className="px-6 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-indigo-600 transition-all shadow-sm">
+            <Link to="/store-signup" className="px-6 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-indigo-600 transition-all shadow-sm">
               {isAr ? 'تسجيل الدخول' : 'Connexion'}
             </Link>
           </div>
