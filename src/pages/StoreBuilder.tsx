@@ -37,18 +37,19 @@ import { supabase } from '../supabase';
 import { loadData, FicheTechnique } from '../types';
 
 const THEMES = [
+  // Normal (free) tier - only these 2 stay unlocked for every store
   { id: 'streetwear', name: 'Streetwear Pro', layout: 'hero-center', defaultColor: '#0f172a', defaultFont: 'font-sans', tier: 'free', previewImg: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop' },
   { id: 'minimalist', name: 'Minimalist', layout: 'split-screen', defaultColor: '#171717', defaultFont: 'font-serif', tier: 'free', previewImg: 'https://images.unsplash.com/photo-1489987707023-afc7f93c6508?q=80&w=800&auto=format&fit=crop' },
-  { id: 'abaya', name: 'Luxury Abaya', layout: 'elegant', defaultColor: '#b48a44', defaultFont: 'font-serif', tier: 'free', previewImg: 'https://images.unsplash.com/photo-1589465885857-44edb59bbff2?q=80&w=800&auto=format&fit=crop' },
-  { id: 'sportswear', name: 'Active Sport', layout: 'hero-center', defaultColor: '#84cc16', defaultFont: 'font-sans', tier: 'free', previewImg: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop' },
-  { id: 'eco', name: 'Eco Nature', layout: 'split-screen', defaultColor: '#4d7c0f', defaultFont: 'font-serif', tier: 'free', previewImg: 'https://images.unsplash.com/photo-1523381294911-8d3cead13475?q=80&w=800&auto=format&fit=crop' },
-  { id: 'kids', name: 'Playful Kids', layout: 'playful', defaultColor: '#0ea5e9', defaultFont: 'font-sans', tier: 'free', previewImg: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=800&auto=format&fit=crop' },
-  { id: 'clement', name: 'Clement Design', layout: 'clement', defaultColor: '#1e293b', defaultFont: 'font-sans', tier: 'free', previewImg: 'https://images.unsplash.com/photo-1577221084712-45b0445d2b00?q=80&w=800&auto=format&fit=crop' },
-  { id: 'xton', name: 'Xton', layout: 'hero-center', defaultColor: '#f59e0b', defaultFont: 'font-sans', tier: 'free', previewImg: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=800&auto=format&fit=crop' },
-  { id: 'amaza', name: 'Amaza', layout: 'sidebar-right', defaultColor: '#06b6d4', defaultFont: 'font-sans', tier: 'free', previewImg: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop' },
-  { id: 'ochaka', name: 'Ochaka', layout: 'split-screen', defaultColor: '#9f1239', defaultFont: 'font-sans', tier: 'free', previewImg: 'https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=800&auto=format&fit=crop' },
-  { id: 'mazia', name: 'Mazia', layout: 'mazia', defaultColor: '#ef4444', defaultFont: 'font-serif', tier: 'free', previewImg: 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=800&auto=format&fit=crop' },
-  // PRO themes - locked behind the Pro plan (Settings > Plan Pro)
+  // PRO themes - locked behind the store's subscription_tier (admin-controlled, see stores.subscription_tier)
+  { id: 'abaya', name: 'Luxury Abaya', layout: 'elegant', defaultColor: '#b48a44', defaultFont: 'font-serif', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1589465885857-44edb59bbff2?q=80&w=800&auto=format&fit=crop' },
+  { id: 'sportswear', name: 'Active Sport', layout: 'hero-center', defaultColor: '#84cc16', defaultFont: 'font-sans', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop' },
+  { id: 'eco', name: 'Eco Nature', layout: 'split-screen', defaultColor: '#4d7c0f', defaultFont: 'font-serif', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1523381294911-8d3cead13475?q=80&w=800&auto=format&fit=crop' },
+  { id: 'kids', name: 'Playful Kids', layout: 'playful', defaultColor: '#0ea5e9', defaultFont: 'font-sans', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=800&auto=format&fit=crop' },
+  { id: 'clement', name: 'Clement Design', layout: 'clement', defaultColor: '#1e293b', defaultFont: 'font-sans', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1577221084712-45b0445d2b00?q=80&w=800&auto=format&fit=crop' },
+  { id: 'xton', name: 'Xton', layout: 'hero-center', defaultColor: '#f59e0b', defaultFont: 'font-sans', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=800&auto=format&fit=crop' },
+  { id: 'amaza', name: 'Amaza', layout: 'sidebar-right', defaultColor: '#06b6d4', defaultFont: 'font-sans', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop' },
+  { id: 'ochaka', name: 'Ochaka', layout: 'split-screen', defaultColor: '#9f1239', defaultFont: 'font-sans', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=800&auto=format&fit=crop' },
+  { id: 'mazia', name: 'Mazia', layout: 'mazia', defaultColor: '#ef4444', defaultFont: 'font-serif', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=800&auto=format&fit=crop' },
   { id: 'blush-studio', name: 'Lamode App (Pro)', layout: 'pro-lamode', defaultColor: '#e8a5b5', defaultFont: 'font-serif', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1567016432779-094069958ea5?q=80&w=800&auto=format&fit=crop' },
   { id: 'pop-fashion', name: 'Simple Minimal (Pro)', layout: 'pro-simple', defaultColor: '#e11d48', defaultFont: 'font-sans', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=800&auto=format&fit=crop' },
   { id: 'fitness-pulse', name: 'Joyride (Pro)', layout: 'pro-joyride', defaultColor: '#7c3aed', defaultFont: 'font-sans', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop' },
@@ -584,7 +585,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [menuTextColor, setMenuTextColor] = useState(config.menuTextColor || '#64748b');
   const [menuActiveColor, setMenuActiveColor] = useState(config.menuActiveColor || '');
   const [menuStyle, setMenuStyle] = useState<'underline' | 'pill' | 'bold'>(config.menuStyle || 'underline');
-  const [proThemesUnlocked, setProThemesUnlocked] = useState<boolean>(config.proThemesUnlocked ?? false);
+  // The store's plan (Normal/PRO/Premier) is admin-controlled, read from stores.subscription_tier
+  // (a real DB column, not the merchant-writable config_json) - see fetchSubscriptionTier below.
+  const [subscriptionTier, setSubscriptionTier] = useState<string>('NORMAL');
+  const proThemesUnlocked = subscriptionTier === 'PRO' || subscriptionTier === 'PREMIER';
   const [proUpsellTheme, setProUpsellTheme] = useState<any>(null);
   const [quickBuyContext, setQuickBuyContext] = useState<any>(null);
   const [buyNowAsPopup, setBuyNowAsPopup] = useState<boolean>(config.buyNowAsPopup ?? true);
@@ -861,7 +865,6 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
               if (conf.menuTextColor) setMenuTextColor(conf.menuTextColor);
               if (conf.menuActiveColor !== undefined) setMenuActiveColor(conf.menuActiveColor);
               if (conf.menuStyle) setMenuStyle(conf.menuStyle);
-              if (conf.proThemesUnlocked !== undefined) setProThemesUnlocked(conf.proThemesUnlocked);
               if (conf.buyNowAsPopup !== undefined) setBuyNowAsPopup(conf.buyNowAsPopup);
               if (conf.pdpImageWidth !== undefined) setPdpImageWidth(conf.pdpImageWidth);
               if (conf.pdpMaxWidth !== undefined) setPdpMaxWidth(conf.pdpMaxWidth);
@@ -897,6 +900,19 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
         fetchLiveConfig();
      }
   }, [isLiveStore]);
+
+  // Plan (Normal/PRO/Premier) comes straight from the stores table so it can only be
+  // changed by an admin, never by the merchant editing their own store config_json.
+  // Runs for both the editor and the live storefront.
+  useEffect(() => {
+     if (!storeName) return;
+     const domain = customDomain || (storeSlug ? `${storeSlug}.beyacreative.com` : `${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`);
+     supabase.from('stores').select('subscription_tier').eq('domain', domain).single()
+        .then(({ data }: any) => {
+           if (data?.subscription_tier) setSubscriptionTier(data.subscription_tier);
+        })
+        .catch(() => {});
+  }, [storeName, customDomain, storeSlug]);
 
   // Customer auth session bootstrap (live store only, to avoid swapping the admin's own session in the builder preview)
   useEffect(() => {
@@ -1168,7 +1184,6 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
        menuTextColor,
        menuActiveColor,
        menuStyle,
-       proThemesUnlocked,
        buyNowAsPopup,
        pdpImageWidth,
        pdpMaxWidth,
@@ -5373,30 +5388,18 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                         <div className="flex items-center justify-between">
                            <div className="flex items-center gap-2">
                               <ShieldCheck className={`w-4 h-4 ${proThemesUnlocked ? 'text-amber-500' : 'text-slate-400'}`} />
-                              <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{isAr ? 'باقة Pro' : 'Plan Pro'}</h4>
+                              <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{isAr ? 'باقتي الحالية' : 'Mon Plan Actuel'}</h4>
                            </div>
-                           <button
-                              onClick={() => {
-                                 setProThemesUnlocked((v: boolean) => {
-                                    const newValue = !v;
-                                    if (newValue) {
-                                       setAppsConfig((prev: any) => ({ ...prev, 'AI Auto-Builder': 'ACTIF' }));
-                                    } else {
-                                       // Optionally disable it when downgrading?
-                                       // setAppsConfig((prev: any) => { const newConf = {...prev}; delete newConf['AI Auto-Builder']; return newConf; });
-                                    }
-                                    return newValue;
-                                 });
-                              }}
-                              className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${proThemesUnlocked ? 'bg-amber-400' : 'bg-slate-300'}`}
-                           >
-                              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${proThemesUnlocked ? 'translate-x-5' : ''}`} />
-                           </button>
+                           <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${proThemesUnlocked ? 'bg-amber-400 text-white' : 'bg-slate-300 text-slate-700'}`}>
+                              {subscriptionTier === 'PREMIER' ? (isAr ? 'بريميير' : 'Premier') : subscriptionTier === 'PRO' ? 'PRO' : (isAr ? 'عادي' : 'Normal')}
+                           </span>
                         </div>
                         <p className="text-[11px] text-slate-500 font-semibold">
-                           {isAr
-                              ? 'إذا فُعّلت، تُفتح جميع التصاميم المميزة (Pro). يتم التفعيل يدويًا حاليًا (بدون نظام دفع إلكتروني مربوط بعد).'
-                              : "Une fois activé, tous les thèmes Pro sont débloqués. Activation manuelle pour l'instant (pas encore de paiement en ligne branché)."}
+                           {proThemesUnlocked
+                              ? (isAr ? 'باقتك تفتح جميع التصاميم المميزة (Pro).' : 'Votre plan débloque tous les thèmes Pro.')
+                              : (isAr
+                                 ? 'باقة Normal تعطيك 2 من التصاميم. تواصل معنا للترقية إلى Pro وفتح باقي التصاميم.'
+                                 : "Le plan Normal donne accès à 2 thèmes. Contactez-nous pour passer à PRO et débloquer les autres thèmes.")}
                         </p>
                      </div>
 

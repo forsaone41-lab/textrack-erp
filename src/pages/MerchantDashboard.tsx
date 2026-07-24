@@ -34,7 +34,7 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
          .eq('config_json->>owner_id', currentUser.id)
          .then(({count}) => {
             setStoreCount(count || 0);
-         }).catch(() => setStoreCount(0));
+         }, () => setStoreCount(0));
      }
   }, [currentUser]);
 
