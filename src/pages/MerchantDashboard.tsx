@@ -13,7 +13,15 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
   const { isAr } = useLang();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
-  
+
+  const [dashLang, setDashLang] = useState<'fr' | 'en' | 'ar'>(() => (localStorage.getItem('beya_dash_lang') as any) || (isAr ? 'ar' : 'fr'));
+  const isArDash = dashLang === 'ar';
+  const setLang = (l: 'fr' | 'en' | 'ar') => {
+    localStorage.setItem('beya_dash_lang', l);
+    setDashLang(l);
+  };
+  const t = (fr: string, en: string, ar: string) => (dashLang === 'ar' ? ar : dashLang === 'en' ? en : fr);
+
   const [showProductionModal, setShowProductionModal] = useState(false);
   const [prodForm, setProdForm] = useState({ category: '', quantity: '50', targetPrice: '', description: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,18 +41,18 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
       });
       if (error) throw error;
       
-      alert(isAr ? 'تم إرسال طلبك بنجاح! سيتواصل معك المصنع قريباً.' : 'Votre demande a été envoyée avec succès ! L\'usine vous contactera bientôt.');
+      alert(t('Votre demande a été envoyée avec succès ! L\'usine vous contactera bientôt.', 'Your request was sent successfully! The factory will contact you soon.', 'تم إرسال طلبك بنجاح! سيتواصل معك المصنع قريباً.'));
       setShowProductionModal(false);
       setProdForm({ category: '', quantity: '50', targetPrice: '', description: '' });
     } catch (err: any) {
-      alert(isAr ? 'حدث خطأ: ' + err.message : 'Erreur: ' + err.message);
+      alert(t('Erreur: ', 'Error: ', 'حدث خطأ: ') + err.message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]" dir={isAr ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-[#F8FAFC]" dir={isArDash ? 'rtl' : 'ltr'}>
       {/* Top Navbar */}
       <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -58,8 +66,19 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
                 <span className="text-[10px] font-bold text-indigo-600 tracking-[0.2em] uppercase">STORES</span>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-4">
+              <div className="flex items-center bg-slate-100 rounded-full p-1 gap-0.5">
+                {(['fr', 'en', 'ar'] as const).map(l => (
+                  <button
+                    key={l}
+                    onClick={() => setLang(l)}
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${dashLang === l ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    {l}
+                  </button>
+                ))}
+              </div>
               <button className="relative p-2 text-slate-400 hover:text-slate-600 transition-colors">
                 <Bell className="w-5 h-5" />
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
@@ -68,7 +87,7 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
               <div className="flex items-center gap-3">
                 <div className="text-right hidden sm:block">
                   <p className="text-sm font-bold text-slate-900 leading-none">{currentUser?.nom || 'Merchant'}</p>
-                  <p className="text-[10px] font-semibold text-slate-500 uppercase mt-1">Gérant de boutique</p>
+                  <p className="text-[10px] font-semibold text-slate-500 uppercase mt-1">{t('Gérant de boutique', 'Store Manager', 'مسير المتجر')}</p>
                 </div>
                 <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-md cursor-pointer border-2 border-white">
                   {currentUser?.nom?.charAt(0).toUpperCase() || 'M'}
@@ -76,7 +95,7 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
                 <button 
                   onClick={onLogout}
                   className="p-2 text-slate-400 hover:text-rose-500 transition-colors"
-                  title="Déconnexion"
+                  title={t('Déconnexion', 'Log out', 'تسجيل الخروج')}
                 >
                   <LogOut className="w-5 h-5" />
                 </button>
@@ -92,10 +111,10 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
         {/* Welcome Section */}
         <div className="mb-10">
           <h1 className="text-3xl sm:text-4xl font-black text-slate-900 mb-2 tracking-tight">
-            {isAr ? `مرحباً، ${currentUser?.nom}` : `Bonjour, ${currentUser?.nom}`}
+            {t(`Bonjour, ${currentUser?.nom}`, `Hello, ${currentUser?.nom}`, `مرحباً، ${currentUser?.nom}`)}
           </h1>
           <p className="text-slate-500 text-lg font-medium">
-            {isAr ? 'ماذا تريد أن تفعل اليوم؟' : 'Que souhaitez-vous faire aujourd\'hui ?'}
+            {t('Que souhaitez-vous faire aujourd\'hui ?', 'What would you like to do today?', 'ماذا تريد أن تفعل اليوم؟')}
           </p>
         </div>
 
@@ -113,15 +132,17 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
                 <Smartphone className="w-7 h-7" />
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-2">
-                {isAr ? 'تعديل متجري' : 'Gérer ma boutique'}
+                {t('Gérer ma boutique', 'Manage my store', 'تعديل متجري')}
               </h3>
               <p className="text-sm text-slate-500 font-medium mb-6">
-                {isAr 
-                  ? 'قم بتخصيص تصميم متجرك، أضف منتجات، وعدّل الإعدادات.' 
-                  : 'Personnalisez le design, ajoutez des produits et gérez vos paramètres.'}
+                {t(
+                  'Personnalisez le design, ajoutez des produits et gérez vos paramètres.',
+                  'Customize the design, add products and manage your settings.',
+                  'قم بتخصيص تصميم متجرك، أضف منتجات، وعدّل الإعدادات.'
+                )}
               </p>
               <div className="flex items-center text-indigo-600 font-bold text-sm group-hover:translate-x-1 transition-transform">
-                {isAr ? 'فتح المحرر' : 'Ouvrir l\'éditeur'} <ChevronRight className="w-4 h-4 ml-1" />
+                {t('Ouvrir l\'éditeur', 'Open the editor', 'فتح المحرر')} <ChevronRight className="w-4 h-4 ml-1" />
               </div>
             </div>
           </div>
@@ -137,15 +158,17 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
                 <Package className="w-7 h-7" />
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-2">
-                {isAr ? 'طلب تصنيع سلع' : 'Demander une production'}
+                {t('Demander une production', 'Request a production', 'طلب تصنيع سلع')}
               </h3>
               <p className="text-sm text-slate-500 font-medium mb-6">
-                {isAr 
-                  ? 'اطلب تصنيع ملابس جديدة لمتجرك مباشرة من مصنع BEYA.' 
-                  : 'Commandez la fabrication de nouveaux vêtements directement depuis l\'usine BEYA.'}
+                {t(
+                  'Commandez la fabrication de nouveaux vêtements directement depuis l\'usine BEYA.',
+                  'Order the manufacturing of new garments directly from the BEYA factory.',
+                  'اطلب تصنيع ملابس جديدة لمتجرك مباشرة من مصنع BEYA.'
+                )}
               </p>
               <div className="flex items-center text-emerald-600 font-bold text-sm group-hover:translate-x-1 transition-transform">
-                {isAr ? 'إنشاء طلب جديد' : 'Créer une demande'} <ChevronRight className="w-4 h-4 ml-1" />
+                {t('Créer une demande', 'Create a request', 'إنشاء طلب جديد')} <ChevronRight className="w-4 h-4 ml-1" />
               </div>
             </div>
           </div>
@@ -160,15 +183,17 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
                 <ShoppingBag className="w-7 h-7" />
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-2">
-                {isAr ? 'طلبيات الزبناء' : 'Commandes clients'}
+                {t('Commandes clients', 'Customer orders', 'طلبيات الزبناء')}
               </h3>
               <p className="text-sm text-slate-500 font-medium mb-6">
-                {isAr 
-                  ? 'تتبع مبيعاتك، تجهيز الطلبيات وإدارتها بكل سهولة.' 
-                  : 'Suivez vos ventes, préparez et gérez les commandes facilement.'}
+                {t(
+                  'Suivez vos ventes, préparez et gérez les commandes facilement.',
+                  'Track your sales, prepare and manage orders easily.',
+                  'تتبع مبيعاتك، تجهيز الطلبيات وإدارتها بكل سهولة.'
+                )}
               </p>
               <div className="flex items-center text-blue-600 font-bold text-sm group-hover:translate-x-1 transition-transform">
-                {isAr ? 'عرض الطلبيات' : 'Voir les commandes'} <ChevronRight className="w-4 h-4 ml-1" />
+                {t('Voir les commandes', 'View orders', 'عرض الطلبيات')} <ChevronRight className="w-4 h-4 ml-1" />
               </div>
             </div>
           </div>
@@ -179,10 +204,10 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
         <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm p-8">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-xl font-black text-slate-900 tracking-tight">
-              {isAr ? 'نظرة عامة على متجرك' : 'Aperçu de votre boutique'}
+              {t('Aperçu de votre boutique', 'Store overview', 'نظرة عامة على متجرك')}
             </h2>
             <button className="text-sm font-bold text-indigo-600 hover:text-indigo-700">
-              {isAr ? 'عرض التفاصيل' : 'Voir les détails'}
+              {t('Voir les détails', 'View details', 'عرض التفاصيل')}
             </button>
           </div>
           
@@ -190,7 +215,7 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
             <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100">
               <div className="flex items-center gap-2 mb-2">
                 <BarChart3 className="w-4 h-4 text-slate-400" />
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{isAr ? 'المبيعات' : 'Ventes'}</span>
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('Ventes', 'Sales', 'المبيعات')}</span>
               </div>
               <div className="text-2xl font-black text-slate-900">0.00 MAD</div>
             </div>
@@ -198,7 +223,7 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
             <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100">
               <div className="flex items-center gap-2 mb-2">
                 <ShoppingBag className="w-4 h-4 text-slate-400" />
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{isAr ? 'الطلبات' : 'Commandes'}</span>
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('Commandes', 'Orders', 'الطلبات')}</span>
               </div>
               <div className="text-2xl font-black text-slate-900">0</div>
             </div>
@@ -206,7 +231,7 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
             <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100">
               <div className="flex items-center gap-2 mb-2">
                 <Users className="w-4 h-4 text-slate-400" />
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{isAr ? 'الزوار' : 'Visiteurs'}</span>
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('Visiteurs', 'Visitors', 'الزوار')}</span>
               </div>
               <div className="text-2xl font-black text-slate-900">0</div>
             </div>
@@ -214,7 +239,7 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
             <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100">
               <div className="flex items-center gap-2 mb-2">
                 <TrendingUp className="w-4 h-4 text-slate-400" />
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{isAr ? 'معدل التحويل' : 'Taux Conv.'}</span>
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('Taux Conv.', 'Conv. Rate', 'معدل التحويل')}</span>
               </div>
               <div className="text-2xl font-black text-slate-900">0%</div>
             </div>
@@ -229,21 +254,23 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
                   <Zap className="w-5 h-5 text-indigo-300" />
                 </div>
                 <h3 className="text-xl font-bold text-white">
-                  {isAr ? 'أكمل إعداد متجرك' : 'Finalisez votre boutique'}
+                  {t('Finalisez votre boutique', 'Finish setting up your store', 'أكمل إعداد متجرك')}
                 </h3>
               </div>
               <p className="text-indigo-200 text-sm max-w-xl font-medium">
-                {isAr 
-                  ? 'متجرك قيد الإنشاء. قم بإضافة منتجاتك، تعديل الألوان، والبدء في استقبال الطلبات اليوم.' 
-                  : 'Votre boutique est en cours de création. Ajoutez vos produits, personnalisez les couleurs et commencez à vendre aujourd\'hui.'}
+                {t(
+                  'Votre boutique est en cours de création. Ajoutez vos produits, personnalisez les couleurs et commencez à vendre aujourd\'hui.',
+                  'Your store is being set up. Add your products, customize the colors and start selling today.',
+                  'متجرك قيد الإنشاء. قم بإضافة منتجاتك، تعديل الألوان، والبدء في استقبال الطلبات اليوم.'
+                )}
               </p>
             </div>
             <div className="relative z-10 w-full md:w-auto">
-              <button 
+              <button
                 onClick={() => navigate('/store-builder')}
                 className="w-full md:w-auto px-8 py-3.5 bg-white text-indigo-900 rounded-xl font-black text-sm hover:bg-indigo-50 transition-colors shadow-xl flex items-center justify-center gap-2"
               >
-                {isAr ? 'متابعة التصميم' : 'Continuer le design'} <ChevronRight className="w-4 h-4" />
+                {t('Continuer le design', 'Continue designing', 'متابعة التصميم')} <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -259,10 +286,10 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
               <div className="flex items-start justify-between mb-6">
                 <div>
                   <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-2">
-                    {isAr ? 'طلب تصنيع جديد' : 'Nouvelle Demande de Production'}
+                    {t('Nouvelle Demande de Production', 'New Production Request', 'طلب تصنيع جديد')}
                   </h3>
                   <p className="text-sm text-slate-500 font-medium">
-                    {isAr ? 'أدخل تفاصيل الملابس التي تريد تصنيعها لمتجرك.' : 'Entrez les détails des vêtements que vous souhaitez fabriquer.'}
+                    {t('Entrez les détails des vêtements que vous souhaitez fabriquer.', 'Enter the details of the garments you want to manufacture.', 'أدخل تفاصيل الملابس التي تريد تصنيعها لمتجرك.')}
                   </p>
                 </div>
                 <button 
@@ -276,14 +303,14 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
               <form onSubmit={handleProductionRequest} className="space-y-5">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                    {isAr ? 'نوع الملابس (الموديل)' : 'Type de vêtement (Modèle)'}
+                    {t('Type de vêtement (Modèle)', 'Garment type (Model)', 'نوع الملابس (الموديل)')}
                   </label>
                   <input
                     type="text"
                     required
                     value={prodForm.category}
                     onChange={e => setProdForm({...prodForm, category: e.target.value})}
-                    placeholder={isAr ? 'مثال: تيشرت أوفر سايز، عباية...' : 'ex: T-shirt Oversize, Abaya...'}
+                    placeholder={t('ex: T-shirt Oversize, Abaya...', 'ex: Oversize T-shirt, Abaya...', 'مثال: تيشرت أوفر سايز، عباية...')}
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all font-medium text-slate-900"
                   />
                 </div>
@@ -291,7 +318,7 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
                 <div className="grid grid-cols-2 gap-5">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                      {isAr ? 'الكمية التقريبية' : 'Quantité estimée'}
+                      {t('Quantité estimée', 'Estimated quantity', 'الكمية التقريبية')}
                     </label>
                     <input
                       type="number"
@@ -304,7 +331,7 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                      {isAr ? 'السعر المستهدف (للقطعة)' : 'Prix cible (Unité)'}
+                      {t('Prix cible (Unité)', 'Target price (Unit)', 'السعر المستهدف (للقطعة)')}
                     </label>
                     <input
                       type="text"
@@ -318,13 +345,13 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                    {isAr ? 'ملاحظات / تفاصيل أخرى' : 'Notes / Détails'}
+                    {t('Notes / Détails', 'Notes / Details', 'ملاحظات / تفاصيل أخرى')}
                   </label>
                   <textarea
                     rows={4}
                     value={prodForm.description}
                     onChange={e => setProdForm({...prodForm, description: e.target.value})}
-                    placeholder={isAr ? 'ألوان، مقاسات، نوع الثوب...' : 'Couleurs, tailles, type de tissu...'}
+                    placeholder={t('Couleurs, tailles, type de tissu...', 'Colors, sizes, fabric type...', 'ألوان، مقاسات، نوع الثوب...')}
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all font-medium text-slate-900 resize-none"
                   ></textarea>
                 </div>
@@ -335,14 +362,14 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
                     onClick={() => setShowProductionModal(false)}
                     className="px-6 py-3.5 bg-white text-slate-700 font-bold text-sm rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors"
                   >
-                    {isAr ? 'إلغاء' : 'Annuler'}
+                    {t('Annuler', 'Cancel', 'إلغاء')}
                   </button>
-                  <button 
+                  <button
                     type="submit"
                     disabled={isSubmitting}
                     className="flex-1 px-6 py-3.5 bg-emerald-600 text-white font-bold text-sm rounded-xl hover:bg-emerald-700 transition-all shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    {isSubmitting ? (isAr ? 'جاري الإرسال...' : 'Envoi...') : (isAr ? 'إرسال الطلب' : 'Envoyer la demande')}
+                    {isSubmitting ? t('Envoi...', 'Sending...', 'جاري الإرسال...') : t('Envoyer la demande', 'Send the request', 'إرسال الطلب')}
                     {!isSubmitting && <Send className="w-4 h-4" />}
                   </button>
                 </div>
