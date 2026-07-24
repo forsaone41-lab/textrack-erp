@@ -194,7 +194,7 @@ export default function StoreLanding() {
                 {[
                   isAr ? '0% عمولة على المبيعات' : '0% de frais de transaction',
                   isAr ? 'المساعد الذكي (AI) لاكتشاف المنتجات' : 'Assistant IA pour produits gagnants',
-                  isAr ? 'أولوية في التصنيع (BEYA ERP)' : 'Priorité de confection (BEYA ERP)',
+                  isAr ? 'أولوية في التصنيع' : 'Priorité de confection',
                   isAr ? 'دومين مخصص' : 'Nom de domaine personnalisé',
                   isAr ? 'دعم فني VIP مباشر' : 'Support VIP prioritaire',
                 ].map((f, i) => (
