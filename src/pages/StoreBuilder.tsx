@@ -6376,7 +6376,14 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                        </div>
                        <div className="flex-1 overflow-y-auto p-4 space-y-2">
                           {fichesList
-                             .filter(f => !fichePickerSearch || f.modele.toLowerCase().includes(fichePickerSearch.toLowerCase()) || (f.client || '').toLowerCase().includes(fichePickerSearch.toLowerCase()))
+                             .filter(f => {
+                                const clientName = (f.client || '').toLowerCase();
+                                const currentStore = (storeName || '').toLowerCase().trim();
+                                const isMine = currentStore.length > 1 && clientName.includes(currentStore);
+                                const isSystem = clientName.includes('beya') || clientName.includes('ia') || clientName.includes('suggestion');
+                                if (!isMine && !isSystem) return false;
+                                return !fichePickerSearch || f.modele.toLowerCase().includes(fichePickerSearch.toLowerCase()) || clientName.includes(fichePickerSearch.toLowerCase());
+                             })
                              .map(f => (
                                 <button
                                    key={f.id}
