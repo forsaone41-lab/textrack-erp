@@ -25,6 +25,18 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
   const [showProductionModal, setShowProductionModal] = useState(false);
   const [prodForm, setProdForm] = useState({ category: '', quantity: '50', targetPrice: '', description: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [storeCount, setStoreCount] = useState<number | null>(null);
+
+  React.useEffect(() => {
+     if(currentUser?.id) {
+       supabase.from('stores').select('id', { count: 'exact' })
+         // Note: using basic exact check for MVP
+         .eq('config_json->>owner_id', currentUser.id)
+         .then(({count}) => {
+            setStoreCount(count || 0);
+         }).catch(() => setStoreCount(0));
+     }
+  }, [currentUser]);
 
   const handleProductionRequest = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -251,26 +263,48 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
             <div className="relative z-10 flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <div className="bg-indigo-500/20 p-2 rounded-xl">
-                  <Zap className="w-5 h-5 text-indigo-300" />
+                  {storeCount && storeCount > 0 ? (
+                     <Store className="w-5 h-5 text-indigo-300" />
+                  ) : (
+                     <Zap className="w-5 h-5 text-indigo-300" />
+                  )}
                 </div>
                 <h3 className="text-xl font-bold text-white">
-                  {t('Finalisez votre boutique', 'Finish setting up your store', 'أكمل إعداد متجرك')}
+                  {storeCount && storeCount > 0 
+                     ? t('Votre boutique est prête', 'Your store is ready', 'متجرك جاهز للعمل')
+                     : t('Finalisez votre boutique', 'Finish setting up your store', 'أكمل إعداد متجرك')
+                  }
                 </h3>
               </div>
               <p className="text-indigo-200 text-sm max-w-xl font-medium">
-                {t(
-                  'Votre boutique est en cours de création. Ajoutez vos produits, personnalisez les couleurs et commencez à vendre aujourd\'hui.',
-                  'Your store is being set up. Add your products, customize the colors and start selling today.',
-                  'متجرك قيد الإنشاء. قم بإضافة منتجاتك، تعديل الألوان، والبدء في استقبال الطلبات اليوم.'
-                )}
+                {storeCount && storeCount > 0 
+                   ? t(
+                      'Votre boutique est maintenant en ligne. Suivez vos analyses de visiteurs et de ventes pour développer votre activité.',
+                      'Your store is now online. Track visitor and sales analytics to grow your business.',
+                      'متجرك الآن متصل بالإنترنت. قم بمتابعة تحليلات الزوار والمبيعات لتنمية أعمالك وتحليل الأداء.'
+                     )
+                   : t(
+                      'Votre boutique est en cours de création. Ajoutez vos produits, personnalisez les couleurs et commencez à vendre aujourd\'hui.',
+                      'Your store is being set up. Add your products, customize the colors and start selling today.',
+                      'متجرك قيد الإنشاء. قم بإضافة منتجاتك، تعديل الألوان، والبدء في استقبال الطلبات اليوم.'
+                     )
+                }
               </p>
             </div>
             <div className="relative z-10 w-full md:w-auto">
               <button
                 onClick={() => navigate('/store-builder')}
-                className="w-full md:w-auto px-8 py-3.5 bg-white text-indigo-900 rounded-xl font-black text-sm hover:bg-indigo-50 transition-colors shadow-xl flex items-center justify-center gap-2"
+                className={`w-full md:w-auto px-8 py-3.5 rounded-xl font-black text-sm transition-colors shadow-xl flex items-center justify-center gap-2 ${
+                  storeCount && storeCount > 0 
+                    ? 'bg-indigo-500 text-white hover:bg-indigo-600'
+                    : 'bg-white text-indigo-900 hover:bg-indigo-50'
+                }`}
               >
-                {t('Continuer le design', 'Continue designing', 'متابعة التصميم')} <ChevronRight className="w-4 h-4" />
+                {storeCount && storeCount > 0
+                   ? t('Gérer & Analyser', 'Manage & Analyze', 'إدارة وتحليل المتجر')
+                   : t('Continuer le design', 'Continue designing', 'متابعة التصميم')
+                }
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </div>
