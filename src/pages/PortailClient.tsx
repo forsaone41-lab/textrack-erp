@@ -123,8 +123,8 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
       setFactures(allFactures);
       setFiches(allFiches);
 
-      // If a client is logged in, show their orders automatically
-      if (currentUser?.role === 'client') {
+      // If a client or merchant is logged in, show their orders automatically
+      if (currentUser?.role === 'client' || currentUser?.role === 'merchant') {
         const myCommandes = allCommandes.filter(c =>
           (c.client || '').trim().toLowerCase() === (currentUser?.nom || '').trim().toLowerCase()
         );
@@ -431,6 +431,14 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                  </div>
                </div>
              )}
+             {currentUser?.role === 'merchant' && (
+                <button 
+                  onClick={() => window.location.hash = '#/'}
+                  className="w-full py-4 mb-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border border-indigo-500/20"
+                >
+                  {isAr ? 'العودة للمتجر' : 'Retour au Store'}
+                </button>
+             )}
              <button 
                onClick={onLogout}
                className="w-full py-4 bg-white/5 hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border border-transparent hover:border-rose-500/20"
@@ -576,7 +584,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                   </div>
 
                   {/* WhatsApp Notification — CallMeBot setup */}
-                  {currentUser?.role === 'client' && currentUser.telephone && (
+                  {(currentUser?.role === 'client' || currentUser?.role === 'merchant') && currentUser.telephone && (
                     <div className="mt-8 md:mt-12 p-4 md:p-6 bg-white/5 backdrop-blur-md border border-white/10 rounded-[2rem] md:rounded-[2.5rem]">
                       <div className="flex items-center gap-3 mb-3">
                         <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shrink-0">
@@ -629,7 +637,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
                </div>
                
                {/* BEYA STORE PROMO BANNER */}
-               {currentUser?.role === 'client' && (
+               {(currentUser?.role === 'client' || currentUser?.role === 'merchant') && (
                  <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl md:rounded-[2rem] p-6 md:p-8 text-white relative overflow-hidden shadow-xl shadow-blue-500/20 flex flex-col md:flex-row items-center justify-between gap-6">
                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32" />
                    <div className="relative z-10">

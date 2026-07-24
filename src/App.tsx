@@ -431,6 +431,11 @@ function AppContent() {
             </div>
           </Suspense>
         } />
+        <Route path="/portal" element={
+          <Suspense fallback={<PageLoader />}>
+            <PortailClient currentUser={currentUser} onLogout={handleLogout} />
+          </Suspense>
+        } />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );

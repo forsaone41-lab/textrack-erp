@@ -149,7 +149,7 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
 
           {/* Action: Request Production */}
           <div 
-            onClick={() => setShowProductionModal(true)}
+            onClick={() => window.location.hash = '#/portal'}
             className="group cursor-pointer bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-emerald-500/10 hover:border-emerald-200 transition-all duration-300 relative overflow-hidden"
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-full blur-2xl -mr-16 -mt-16 transition-all group-hover:bg-emerald-100/50"></div>
