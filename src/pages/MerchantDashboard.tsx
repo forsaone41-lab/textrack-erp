@@ -27,6 +27,14 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [storeCount, setStoreCount] = useState<number | null>(null);
 
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profileForm, setProfileForm] = useState({ 
+    nom: currentUser?.nom || '', 
+    telephone: currentUser?.telephone || '',
+    password: '' 
+  });
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+
   React.useEffect(() => {
      if(currentUser?.id) {
        supabase.from('stores').select('id', { count: 'exact' })
@@ -63,6 +71,28 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
     }
   };
 
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsUpdatingProfile(true);
+    try {
+      const updates: any = { data: { full_name: profileForm.nom, phone: profileForm.telephone } };
+      if (profileForm.password) {
+        updates.password = profileForm.password;
+      }
+      
+      const { error } = await supabase.auth.updateUser(updates);
+      if (error) throw error;
+      
+      alert(t('Profil mis à jour avec succès', 'Profile updated successfully', 'تم تحديث الملف الشخصي بنجاح'));
+      setShowProfileModal(false);
+      window.location.reload();
+    } catch (err: any) {
+      alert(t('Erreur: ', 'Error: ', 'حدث خطأ: ') + err.message);
+    } finally {
+      setIsUpdatingProfile(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAFC]" dir={isArDash ? 'rtl' : 'ltr'}>
       {/* Top Navbar */}
@@ -96,17 +126,23 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
               </button>
               <div className="h-8 w-px bg-slate-200"></div>
-              <div className="flex items-center gap-3">
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-bold text-slate-900 leading-none">{currentUser?.nom || 'Merchant'}</p>
-                  <p className="text-[10px] font-semibold text-slate-500 uppercase mt-1">{t('Gérant de boutique', 'Store Manager', 'مسير المتجر')}</p>
-                </div>
-                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-md cursor-pointer border-2 border-white">
-                  {currentUser?.nom?.charAt(0).toUpperCase() || 'M'}
+              <div className="flex items-center gap-2">
+                <div 
+                  onClick={() => setShowProfileModal(true)}
+                  className="flex items-center gap-3 cursor-pointer hover:bg-slate-50 p-1.5 px-3 rounded-xl transition-colors border border-transparent hover:border-slate-100"
+                  title={t('Modifier le profil', 'Edit Profile', 'تعديل الملف الشخصي')}
+                >
+                  <div className="text-right hidden sm:block">
+                    <p className="text-sm font-bold text-slate-900 leading-none">{currentUser?.nom || 'Merchant'}</p>
+                    <p className="text-[10px] font-semibold text-slate-500 uppercase mt-1">{t('Gérant de boutique', 'Store Manager', 'مسير المتجر')}</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-md border-2 border-white">
+                    {currentUser?.nom?.charAt(0).toUpperCase() || 'M'}
+                  </div>
                 </div>
                 <button 
                   onClick={onLogout}
-                  className="p-2 text-slate-400 hover:text-rose-500 transition-colors"
+                  className="p-2 text-slate-400 hover:text-rose-500 transition-colors ml-1 bg-slate-50 hover:bg-rose-50 rounded-xl"
                   title={t('Déconnexion', 'Log out', 'تسجيل الخروج')}
                 >
                   <LogOut className="w-5 h-5" />
@@ -405,6 +441,82 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
                   >
                     {isSubmitting ? t('Envoi...', 'Sending...', 'جاري الإرسال...') : t('Envoyer la demande', 'Send the request', 'إرسال الطلب')}
                     {!isSubmitting && <Send className="w-4 h-4" />}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Profile Modal */}
+      {showProfileModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-[2rem] w-full max-w-sm shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6 md:p-8">
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-1">
+                    {t('Mon Profil', 'My Profile', 'الملف الشخصي')}
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    {t('Modifiez vos informations.', 'Edit your info.', 'تعديل معلومات حسابك.')}
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setShowProfileModal(false)}
+                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdateProfile} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    {t('Nom complet', 'Full name', 'الاسم الكامل')}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={profileForm.nom}
+                    onChange={e => setProfileForm({...profileForm, nom: e.target.value})}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all font-bold text-slate-900"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    {t('Téléphone', 'Phone', 'رقم الهاتف')}
+                  </label>
+                  <input
+                    type="tel"
+                    value={profileForm.telephone}
+                    onChange={e => setProfileForm({...profileForm, telephone: e.target.value})}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all font-bold text-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    {t('Nouveau mot de passe', 'New password', 'كلمة السر الجديدة')}
+                  </label>
+                  <input
+                    type="password"
+                    placeholder={t('(Optionnel)', '(Optional)', '(اختياري)')}
+                    value={profileForm.password}
+                    onChange={e => setProfileForm({...profileForm, password: e.target.value})}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all font-bold text-slate-900"
+                  />
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 flex gap-3">
+                  <button
+                    type="submit"
+                    disabled={isUpdatingProfile}
+                    className="w-full px-6 py-3.5 bg-indigo-600 text-white font-bold text-sm rounded-xl hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 disabled:opacity-70 flex items-center justify-center gap-2"
+                  >
+                    {isUpdatingProfile ? t('Enregistrement...', 'Saving...', 'جاري الحفظ...') : t('Enregistrer', 'Save', 'حفظ التغييرات')}
                   </button>
                 </div>
               </form>
