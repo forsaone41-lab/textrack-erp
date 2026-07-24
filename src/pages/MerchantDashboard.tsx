@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Store, Package, ShoppingBag, Plus, Bell, Settings, LogOut, ChevronRight, BarChart3, TrendingUp, Users, Smartphone, Zap } from 'lucide-react';
+import { Store, Package, ShoppingBag, Plus, Bell, Settings, LogOut, ChevronRight, BarChart3, TrendingUp, Users, Smartphone, Zap, X, Send } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
+import { supabase } from '../supabase';
 
 interface MerchantDashboardProps {
   currentUser: any;
@@ -12,6 +13,35 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
   const { isAr } = useLang();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
+  
+  const [showProductionModal, setShowProductionModal] = useState(false);
+  const [prodForm, setProdForm] = useState({ category: '', quantity: '50', targetPrice: '', description: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleProductionRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.from('demandes').insert({
+        client: currentUser?.nom || 'Merchant',
+        telephone: currentUser?.telephone || '',
+        article: prodForm.category,
+        quantite: parseInt(prodForm.quantity) || 50,
+        budget_unitaire: prodForm.targetPrice,
+        notes: prodForm.description,
+        source: 'Dashboard Merchant'
+      });
+      if (error) throw error;
+      
+      alert(isAr ? 'تم إرسال طلبك بنجاح! سيتواصل معك المصنع قريباً.' : 'Votre demande a été envoyée avec succès ! L\'usine vous contactera bientôt.');
+      setShowProductionModal(false);
+      setProdForm({ category: '', quantity: '50', targetPrice: '', description: '' });
+    } catch (err: any) {
+      alert(isAr ? 'حدث خطأ: ' + err.message : 'Erreur: ' + err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]" dir={isAr ? 'rtl' : 'ltr'}>
@@ -98,7 +128,7 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
 
           {/* Action: Request Production */}
           <div 
-            onClick={() => alert(isAr ? 'قريباً: تقديم طلب تصنيع منتجات جديدة' : 'Bientôt : Demander la production de nouveaux articles')}
+            onClick={() => setShowProductionModal(true)}
             className="group cursor-pointer bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-emerald-500/10 hover:border-emerald-200 transition-all duration-300 relative overflow-hidden"
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-full blur-2xl -mr-16 -mt-16 transition-all group-hover:bg-emerald-100/50"></div>
@@ -220,6 +250,107 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
         </div>
 
       </main>
+
+      {/* Production Request Modal */}
+      {showProductionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-[2rem] w-full max-w-lg shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6 md:p-8">
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-2">
+                    {isAr ? 'طلب تصنيع جديد' : 'Nouvelle Demande de Production'}
+                  </h3>
+                  <p className="text-sm text-slate-500 font-medium">
+                    {isAr ? 'أدخل تفاصيل الملابس التي تريد تصنيعها لمتجرك.' : 'Entrez les détails des vêtements que vous souhaitez fabriquer.'}
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setShowProductionModal(false)}
+                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleProductionRequest} className="space-y-5">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    {isAr ? 'نوع الملابس (الموديل)' : 'Type de vêtement (Modèle)'}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={prodForm.category}
+                    onChange={e => setProdForm({...prodForm, category: e.target.value})}
+                    placeholder={isAr ? 'مثال: تيشرت أوفر سايز، عباية...' : 'ex: T-shirt Oversize, Abaya...'}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all font-medium text-slate-900"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                      {isAr ? 'الكمية التقريبية' : 'Quantité estimée'}
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min="10"
+                      value={prodForm.quantity}
+                      onChange={e => setProdForm({...prodForm, quantity: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all font-bold text-slate-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                      {isAr ? 'السعر المستهدف (للقطعة)' : 'Prix cible (Unité)'}
+                    </label>
+                    <input
+                      type="text"
+                      value={prodForm.targetPrice}
+                      onChange={e => setProdForm({...prodForm, targetPrice: e.target.value})}
+                      placeholder="ex: 120 MAD"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all font-medium text-slate-900"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    {isAr ? 'ملاحظات / تفاصيل أخرى' : 'Notes / Détails'}
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={prodForm.description}
+                    onChange={e => setProdForm({...prodForm, description: e.target.value})}
+                    placeholder={isAr ? 'ألوان، مقاسات، نوع الثوب...' : 'Couleurs, tailles, type de tissu...'}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all font-medium text-slate-900 resize-none"
+                  ></textarea>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 flex gap-3">
+                  <button 
+                    type="button"
+                    onClick={() => setShowProductionModal(false)}
+                    className="px-6 py-3.5 bg-white text-slate-700 font-bold text-sm rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors"
+                  >
+                    {isAr ? 'إلغاء' : 'Annuler'}
+                  </button>
+                  <button 
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex-1 px-6 py-3.5 bg-emerald-600 text-white font-bold text-sm rounded-xl hover:bg-emerald-700 transition-all shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? (isAr ? 'جاري الإرسال...' : 'Envoi...') : (isAr ? 'إرسال الطلب' : 'Envoyer la demande')}
+                    {!isSubmitting && <Send className="w-4 h-4" />}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
