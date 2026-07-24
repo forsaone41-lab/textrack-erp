@@ -307,7 +307,7 @@ export interface Presence {
 export interface User {
   id: string;
   nom: string;
-  role: 'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire' | 'chef_chaine' | 'commercial';
+  role: 'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire' | 'chef_chaine' | 'commercial' | 'merchant';
   email: string;
   telephone?: string;
   password?: string;
