@@ -15,7 +15,8 @@ import {
   Inbox,
   Mail,
   Tag,
-  Target
+  Target,
+  Store
 } from 'lucide-react';
 
 import { User, CompanyProfile, loadPermissions, AppPage, syncCompanyProfile } from '../types';
@@ -275,7 +276,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
           )}
 
           {/* Group 5: System Admin */}
-          {(can('rh') || can('pointage') || can('fast_scanner') || can('performance') || can('utilisateurs') || can('parametres') || can('plaintes')) && (
+          {(can('rh') || can('pointage') || can('fast_scanner') || can('performance') || can('utilisateurs') || can('parametres') || can('plaintes') || can('store_plans')) && (
             <div className="space-y-1">
               {!collapsed && <SectionTitle title={isAr ? 'النظام' : 'Système'} isAr={isAr} />}
             {can('rh') && <NavItem to="/rh" icon={Users} label={isAr ? 'الموارد البشرية' : 'RH'} />}
@@ -286,6 +287,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
             {can('fast_scanner') && <NavItem to="/fast-scanner" icon={QrCode} label={isAr ? 'الماسح الضوئي' : 'Scanner PRO'} />}
             {can('performance') && <NavItem to="/performance" icon={Trophy} label={isAr ? 'الأداء والإنتاجية' : 'Performance'} />}
             {can('utilisateurs') && <NavItem to="/utilisateurs" icon={ShieldCheck} label={isAr ? 'المستخدمين' : 'Utilisateurs'} />}
+            {can('store_plans') && <NavItem to="/store-plans" icon={Store} label={isAr ? 'باقات المتاجر' : 'Plans Boutiques'} />}
             {can('parametres') && <NavItem to="/parametres" icon={Settings} label={isAr ? 'الإعدادات' : 'Paramètres'} />}
             </div>
           )}

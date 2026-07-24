@@ -35,6 +35,7 @@ const Pointage         = lazy(() => import('./pages/Pointage'));
 const PortailClient    = lazy(() => import('./pages/PortailClient'));
 const ClientInfo       = lazy(() => import('./pages/ClientInfo'));
 const Utilisateurs     = lazy(() => import('./pages/Utilisateurs'));
+const StorePlans       = lazy(() => import('./pages/StorePlans'));
 const Performance      = lazy(() => import('./pages/Performance'));
 const Charges          = lazy(() => import('./pages/Charges'));
 const BilanFinancier   = lazy(() => import('./pages/BilanFinancier'));
@@ -515,6 +516,7 @@ function AppContent() {
         
         {/* Protected Admin & Other Routes */}
         <Route path="utilisateurs" element={can('utilisateurs') ? <Utilisateurs /> : <Navigate to="/" replace />} />
+        <Route path="store-plans" element={can('store_plans') ? <StorePlans /> : <Navigate to="/" replace />} />
         <Route path="rh" element={can('rh') ? <SuiviRH /> : <Navigate to="/" replace />} />
         <Route path="reclamations" element={can('plaintes') ? <Reclamations /> : <Navigate to="/" replace />} />
         <Route path="clients" element={can('clients') ? <Clients /> : <Navigate to="/" replace />} />
