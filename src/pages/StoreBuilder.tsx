@@ -6908,7 +6908,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
       )}
 
     
-       {!isLiveStore && platformMode === 'builder' && (
+       {!isLiveStore && platformMode === 'builder' && ['themes', 'design'].includes(activeTab) && (
           <div className="fixed bottom-6 right-6 z-[300] flex flex-col items-end gap-2">
              <div className="bg-white p-2 rounded-full shadow-2xl flex items-center gap-3 border-2 border-slate-200 hover:scale-105 transition-transform">
                 <span className="text-xs font-black text-slate-700 pl-2 uppercase tracking-wider">{isAr ? 'اللون:' : 'Couleur:'}</span>
