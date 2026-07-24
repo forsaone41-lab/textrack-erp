@@ -245,6 +245,31 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+                  
+                  {mode === 'login' && (
+                    <div className="flex justify-end mt-2">
+                      <button 
+                        type="button" 
+                        onClick={async () => {
+                          if (!email) {
+                            alert(isAr ? 'الرجاء إدخال بريدك الإلكتروني أولاً' : 'Veuillez d\'abord entrer votre email');
+                            return;
+                          }
+                          try {
+                            const { error } = await supabase.auth.resetPasswordForEmail(email);
+                            if (error) throw error;
+                            alert(isAr ? 'تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني' : 'Un lien de réinitialisation a été envoyé à votre email');
+                          } catch (err: any) {
+                            alert(err.message);
+                          }
+                        }}
+                        className="text-[11px] font-bold text-blue-600 hover:text-blue-700 hover:underline transition-all"
+                      >
+                        {isAr ? 'نسيت كلمة السر؟' : 'Mot de passe oublié ?'}
+                      </button>
+                    </div>
+                  )}
+
                   {mode === 'signup' && (
                     <p className="text-[10px] text-slate-400 mt-1.5 flex items-center gap-1">
                       <ShieldCheck className="w-3 h-3" />
