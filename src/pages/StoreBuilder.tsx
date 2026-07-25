@@ -4536,11 +4536,11 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                         
                         <div className="relative z-10 flex items-center gap-4 mb-2">
                            <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 shadow-inner">
-                              <Crown className="w-6 h-6 text-amber-400 drop-shadow-md" />
+                              <BarChart3 className="w-6 h-6 text-white drop-shadow-md" />
                            </div>
                            <div>
-                              <h2 className="text-2xl font-black tracking-tight">{isAr ? 'لوحة التحكم الاحترافية' : 'Dashboard Premium'}</h2>
-                              <p className="text-sm font-bold text-indigo-200 mt-1">{isAr ? 'تحليلات ذكية لمتجرك مدعومة بالبيانات.' : 'Des analyses intelligentes pour votre boutique.'}</p>
+                              <h2 className="text-2xl font-black tracking-tight">{isAr ? 'لوحة التحكم' : 'Dashboard'}</h2>
+                              <p className="text-sm font-bold text-indigo-200 mt-1">{isAr ? 'تحليلات متجرك مدعومة بالبيانات.' : 'Des analyses pour votre boutique.'}</p>
                            </div>
                         </div>
                      </div>
@@ -4549,12 +4549,10 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-6">
                        <div className="flex items-center justify-between">
                           <h3 className="text-sm font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
-                             <Sparkles className="w-4 h-4 text-amber-500" /> 
-                             {isAr ? 'تحليلات المبيعات الذكية (PRO)' : 'Analytique des Ventes (PRO)'}
+                             <TrendingUp className="w-4 h-4 text-indigo-500" /> 
+                             {isAr ? 'تحليلات المبيعات' : 'Analytique des Ventes'}
                           </h3>
-                          <span className="px-2.5 py-1 bg-amber-100 text-amber-700 text-[9px] font-black uppercase tracking-widest rounded-full flex items-center gap-1 shadow-sm">
-                             <Crown className="w-3 h-3" /> Premium
-                          </span>
+                          
                        </div>
                        
                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
