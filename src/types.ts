@@ -536,6 +536,7 @@ export interface CompanyProfile {
   heureLimiteRetard?: string;
   storeProPrice?: string;
   storePremiumPrice?: string;
+  storeAgencyPrice?: string;
 }
 
 export interface FaqItem {

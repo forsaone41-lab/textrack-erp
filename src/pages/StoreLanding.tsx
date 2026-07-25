@@ -9,6 +9,7 @@ export default function StoreLanding() {
   const company = loadCompanyProfile();
   const proPrice = company.storeProPrice || '299';
   const premiumPrice = company.storePremiumPrice || '499';
+  const agencyPrice = company.storeAgencyPrice || '999';
   
   const whatsappUrl = `https://wa.me/${company.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
     isAr ? 'مرحباً BEYA CREATIVE، أريد الاستفسار عن خدمة تصميم وبناء متجر إلكتروني احترافي.' : 'Bonjour BEYA CREATIVE, je suis intéressé par la création d\'une boutique en ligne professionnelle.'
@@ -160,71 +161,102 @@ export default function StoreLanding() {
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-8 max-w-7xl mx-auto">
             {/* PRO Plan */}
-            <div className="bg-white rounded-[2rem] p-8 md:p-10 border border-slate-200 hover:border-indigo-200 transition-all hover:shadow-xl relative overflow-hidden group">
+            <div className="bg-white rounded-[2rem] p-8 border border-slate-200 hover:border-indigo-200 transition-all hover:shadow-xl relative overflow-hidden flex flex-col">
               <div className="absolute top-0 right-0 p-6 opacity-50">
                 <span className="bg-indigo-100 text-indigo-600 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
-                  {isAr ? 'تجربة مجانية 14 يوم' : '14 jours d\'essai gratuit'}
+                  {isAr ? 'تجربة مجانية 14 يوم' : '14 jours d\'essai'}
                 </span>
               </div>
               <h3 className="text-2xl font-black text-slate-900 mb-2">PRO</h3>
-              <p className="text-slate-500 mb-6 font-medium">{isAr ? 'متجر إلكتروني متكامل' : 'Boutique en ligne complète'}</p>
+              <p className="text-slate-500 mb-6 font-medium text-sm">{isAr ? 'لأصحاب العلامات التجارية' : 'Pour les créateurs de marques'}</p>
               <div className="mb-8">
-                <span className="text-6xl font-black text-slate-900 group-hover:text-indigo-600 transition-colors">{proPrice}</span>
-                <span className="text-slate-500 font-bold ml-2 uppercase tracking-widest text-sm">MAD / {isAr ? 'شهر' : 'mois'}</span>
+                <span className="text-5xl font-black text-slate-900 transition-colors">{proPrice}</span>
+                <span className="text-slate-500 font-bold ml-2 uppercase tracking-widest text-xs">MAD / {isAr ? 'شهر' : 'mois'}</span>
               </div>
-              <ul className="space-y-4 mb-10">
+              <ul className="space-y-4 mb-10 flex-1">
                 {[
+                  isAr ? 'متجر إلكتروني واحد' : '1 Boutique en ligne',
                   isAr ? 'منتجات غير محدودة' : 'Produits illimités',
-                  isAr ? 'متجر إلكتروني احترافي' : 'Boutique professionnelle',
                   isAr ? 'استضافة مجانية وسريعة' : 'Hébergement rapide et gratuit',
                   isAr ? 'دعم فني قياسي' : 'Support standard',
                 ].map((f, i) => (
-                  <li key={i} className="flex items-center gap-3 text-slate-700 font-medium">
-                    <CheckCircle2 className="w-5 h-5 text-indigo-500 shrink-0" />
+                  <li key={i} className="flex items-start gap-3 text-slate-700 font-medium text-sm">
+                    <CheckCircle2 className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
                     <span>{f}</span>
                   </li>
                 ))}
               </ul>
-              <Link to="/store-signup" className="block w-full py-5 text-center rounded-2xl font-black uppercase tracking-widest text-sm bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 transition-all">
+              <Link to="/store-signup" className="block w-full py-4 text-center rounded-2xl font-black uppercase tracking-widest text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 transition-all">
                 {isAr ? 'ابدأ تجربتك المجانية' : 'Commencer l\'essai gratuit'}
               </Link>
             </div>
             
             {/* PREMIUM Plan */}
-            <div className="bg-slate-900 rounded-[2rem] p-8 md:p-10 border border-indigo-500 shadow-[0_20px_50px_rgba(99,102,241,0.2)] relative overflow-hidden transform md:-translate-y-4 hover:-translate-y-6 transition-transform duration-300">
+            <div className="bg-slate-900 rounded-[2rem] p-8 border border-indigo-500 shadow-[0_20px_50px_rgba(99,102,241,0.2)] relative overflow-hidden transform lg:-translate-y-4 hover:-translate-y-6 transition-transform duration-300 flex flex-col">
               <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full blur-[100px] opacity-40" />
-              <div className={`absolute top-8 ${isAr ? 'left-8' : 'right-8'} bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg shadow-amber-500/20`}>
-                {isAr ? 'الأكثر طلباً' : 'Le plus populaire'}
+              <div className={`absolute top-6 ${isAr ? 'left-6' : 'right-6'} bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg shadow-amber-500/20`}>
+                {isAr ? 'الأكثر طلباً' : 'Populaire'}
               </div>
               
               <h3 className="text-2xl font-black text-white mb-2 relative z-10">PREMIUM</h3>
-              <p className="text-indigo-200 mb-6 font-medium relative z-10">{isAr ? 'للمحترفين والشركات' : 'Pour les pros et entreprises'}</p>
+              <p className="text-indigo-200 mb-6 font-medium text-sm relative z-10">{isAr ? 'لرواد الأعمال (عدة علامات)' : 'Pour les multi-marques'}</p>
               <div className="mb-8 relative z-10">
-                <span className="text-6xl font-black text-white">{premiumPrice}</span>
-                <span className="text-indigo-200 font-bold ml-2 uppercase tracking-widest text-sm">MAD / {isAr ? 'شهر' : 'mois'}</span>
+                <span className="text-5xl font-black text-white">{premiumPrice}</span>
+                <span className="text-indigo-200 font-bold ml-2 uppercase tracking-widest text-xs">MAD / {isAr ? 'شهر' : 'mois'}</span>
               </div>
-              <ul className="space-y-4 mb-10 relative z-10">
+              <ul className="space-y-4 mb-10 relative z-10 flex-1">
                 {[
-                  isAr ? 'جميع مزايا PRO' : 'Tous les avantages PRO',
+                  isAr ? 'حتى 5 متاجر إلكترونية' : 'Jusqu\'à 5 Boutiques',
                   isAr ? '0% عمولة على المبيعات' : '0% de frais de transaction',
-                  isAr ? 'المساعد الذكي (AI) لاكتشاف المنتجات' : 'Assistant IA pour produits gagnants',
-                  isAr ? 'أولوية في التصنيع' : 'Priorité de confection',
+                  isAr ? 'المساعد الذكي (AI) لاكتشاف المنتجات' : 'Assistant IA pour produits',
+                  isAr ? 'أولوية في التصنيع (VIP)' : 'Priorité de confection (VIP)',
                   isAr ? 'مدير حساب شخصي' : 'Account manager dédié',
                 ].map((f, i) => (
-                  <li key={i} className="flex items-center gap-3 text-white font-medium">
-                    <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0" />
+                  <li key={i} className="flex items-start gap-3 text-white font-medium text-sm">
+                    <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
                     <span>{f}</span>
                   </li>
                 ))}
               </ul>
-              <Link to="/store-signup" className="block w-full py-5 text-center rounded-2xl font-black uppercase tracking-widest text-sm bg-indigo-500 text-white hover:bg-indigo-400 transition-all shadow-[0_10px_20px_rgba(99,102,241,0.2)] hover:shadow-[0_15px_30px_rgba(99,102,241,0.4)] relative z-10">
+              <Link to="/store-signup" className="block w-full py-4 text-center rounded-2xl font-black uppercase tracking-widest text-xs bg-indigo-500 text-white hover:bg-indigo-400 transition-all shadow-[0_10px_20px_rgba(99,102,241,0.2)] hover:shadow-[0_15px_30px_rgba(99,102,241,0.4)] relative z-10">
                 {isAr ? 'اشترك الآن' : 'S\'abonner maintenant'}
               </Link>
-              <p className="mt-6 text-center text-xs font-bold text-amber-300 relative z-10 p-3 bg-amber-400/10 rounded-xl border border-amber-400/20">
-                🎁 {isAr ? 'عرض خاص: PREMIUM مجاني إذا صنعت منتجاتك معنا!' : 'Offre: PREMIUM Gratuit si vous confectionnez avec BEYA !'}
-              </p>
+            </div>
+
+            {/* AGENCY Plan */}
+            <div className="bg-gradient-to-b from-slate-900 to-indigo-950 rounded-[2rem] p-8 border border-amber-500/30 relative overflow-hidden hover:shadow-2xl hover:shadow-amber-500/20 transition-all flex flex-col group">
+              <div className="absolute -top-24 -right-24 w-48 h-48 bg-amber-500 rounded-full blur-[80px] opacity-20 group-hover:opacity-40 transition-opacity" />
+              <div className={`absolute top-6 ${isAr ? 'left-6' : 'right-6'} bg-slate-800 text-amber-400 border border-amber-400/20 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full`}>
+                {isAr ? 'جديد للوكالات' : 'Pour Agences'}
+              </div>
+              
+              <h3 className="text-2xl font-black text-amber-400 mb-2 relative z-10 flex items-center gap-2">
+                AGENCY
+              </h3>
+              <p className="text-slate-400 mb-6 font-medium text-sm relative z-10">{isAr ? 'اصنع متاجر لعملائك واربح' : 'Créez des boutiques pour vos clients'}</p>
+              <div className="mb-8 relative z-10">
+                <span className="text-5xl font-black text-white">{agencyPrice}</span>
+                <span className="text-slate-400 font-bold ml-2 uppercase tracking-widest text-xs">MAD / {isAr ? 'شهر' : 'mois'}</span>
+              </div>
+              <ul className="space-y-4 mb-10 relative z-10 flex-1">
+                {[
+                  isAr ? 'متاجر غير محدودة (Unlimited)' : 'Boutiques Illimitées',
+                  isAr ? 'العلامة البيضاء (إزالة شعار BEYA)' : 'Marque Blanche (White-label)',
+                  isAr ? 'نسخ المتاجر بنقرة واحدة (Clone)' : 'Duplication de boutique en 1 clic',
+                  isAr ? 'لوحة تحكم خاصة لإدارة عملائك' : 'Dashboard de gestion des clients',
+                  isAr ? 'اربح عمولة من مبيعات عملائك (Affiliate)' : 'Gagnez sur les ventes de vos clients',
+                ].map((f, i) => (
+                  <li key={i} className="flex items-start gap-3 text-slate-200 font-medium text-sm">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link to="/store-signup" className="block w-full py-4 text-center rounded-2xl font-black uppercase tracking-widest text-xs bg-amber-500 text-amber-950 hover:bg-amber-400 transition-all shadow-[0_10px_20px_rgba(245,158,11,0.2)] relative z-10">
+                {isAr ? 'ابدأ وكالتك الآن' : 'Lancer votre agence'}
+              </Link>
             </div>
           </div>
         </div>
