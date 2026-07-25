@@ -158,6 +158,7 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
                 </button>
               </div>
             ) : (
+              <>
               <form onSubmit={handleAuth} className="space-y-5">
                 {mode === 'signup' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -360,6 +361,7 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
                   </button>
                 </div>
               </div>
+              </>
             )}
           </div>
           
