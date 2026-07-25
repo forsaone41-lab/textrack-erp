@@ -102,8 +102,18 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
             <div className={`flex flex-wrap items-center gap-3 ${storeIsAr ? 'flex-row-reverse' : ''}`}>
                {/* Language Switcher */}
                <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
-                 <button onClick={() => { localStorage.setItem('beya_dash_lang', 'fr'); window.location.reload(); }} className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all ${!storeIsAr ? 'bg-indigo-50 text-indigo-700' : 'text-slate-500 hover:bg-slate-50'}`}>FR</button>
-                 <button onClick={() => { localStorage.setItem('beya_dash_lang', 'ar'); window.location.reload(); }} className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all ${storeIsAr ? 'bg-indigo-50 text-indigo-700' : 'text-slate-500 hover:bg-slate-50'}`}>AR</button>
+                 {(['fr', 'en', 'ar'] as const).map(l => {
+                   const isActive = (localStorage.getItem('beya_dash_lang') || (storeIsAr ? 'ar' : 'fr')) === l;
+                   return (
+                     <button 
+                       key={l}
+                       onClick={() => { localStorage.setItem('beya_dash_lang', l); window.location.reload(); }} 
+                       className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all ${isActive ? 'bg-indigo-50 text-indigo-700' : 'text-slate-500 hover:bg-slate-50'}`}
+                     >
+                       {l}
+                     </button>
+                   );
+                 })}
                </div>
 
                {/* Profile Button */}
