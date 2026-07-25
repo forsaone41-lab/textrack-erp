@@ -32,7 +32,8 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
   const [profileForm, setProfileForm] = useState({ 
     nom: currentUser?.nom || '', 
     telephone: currentUser?.telephone || '',
-    password: '' 
+    password: '',
+    confirmPassword: ''
   });
   const [storeStats, setStoreStats] = useState({ visitors: 0, revenue: 0, orders: 0, convRate: 0 });
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -110,6 +111,11 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (profileForm.password && profileForm.password !== profileForm.confirmPassword) {
+      alert(isAr ? 'كلمات المرور غير متطابقة!' : 'Les mots de passe ne correspondent pas !');
+      return;
+    }
+    
     setIsUpdatingProfile(true);
     try {
       const updates: any = { data: { full_name: profileForm.nom, phone: profileForm.telephone } };
@@ -683,6 +689,26 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all font-bold text-slate-900"
                   />
                 </div>
+
+                {profileForm.password && (
+                  <div className="animate-in fade-in slide-in-from-top-2">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                      {t('Confirmer le mot de passe', 'Confirm password', 'تأكيد كلمة السر')}
+                    </label>
+                    <input
+                      type="password"
+                      required={!!profileForm.password}
+                      placeholder="••••••••"
+                      value={profileForm.confirmPassword}
+                      onChange={e => setProfileForm({...profileForm, confirmPassword: e.target.value})}
+                      className={`w-full px-4 py-3 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all font-bold text-slate-900 ${
+                        profileForm.confirmPassword && profileForm.password !== profileForm.confirmPassword
+                          ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-100'
+                          : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-100'
+                      }`}
+                    />
+                  </div>
+                )}
 
                 <div className="pt-4 border-t border-slate-100 flex gap-3">
                   <button
