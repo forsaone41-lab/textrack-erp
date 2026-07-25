@@ -14,7 +14,7 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
   const { isAr } = useLang();
   const company = loadCompanyProfile();
 
-  const [mode, setMode] = useState<'signup' | 'login'>(initialMode);
+  const [mode, setMode] = useState<'signup' | 'login' | 'recovery'>(initialMode);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -77,7 +77,7 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
             : 'Compte créé avec succès ! Veuillez vérifier votre email pour confirmer votre compte.');
         }
 
-      } else {
+      } else if (mode === 'login') {
         // LOGIN
         const { data, error: signInError } = await supabase.auth.signInWithPassword({
           email,
@@ -101,6 +101,11 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
         };
         if (onLogin) onLogin(userObj);
         navigate('/store-builder');
+      } else if (mode === 'recovery') {
+        // PASSWORD RECOVERY
+        const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email);
+        if (resetErr) throw resetErr;
+        setSuccess(isAr ? 'تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني' : 'Un lien de réinitialisation a été envoyé à votre email');
       }
     } catch (err: any) {
       setError(err.message || (isAr ? 'حدث خطأ غير متوقع' : 'Une erreur inattendue est survenue'));
@@ -127,11 +132,15 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
           <h1 className="text-3xl font-extrabold text-slate-900 mb-2">
             {mode === 'signup' 
               ? (isAr ? 'أنشئ متجرك الآن' : 'Créez votre boutique') 
+              : mode === 'recovery'
+              ? (isAr ? 'استعادة كلمة المرور' : 'Récupération du mot de passe')
               : (isAr ? 'تسجيل الدخول لمتجرك' : 'Connectez-vous à votre boutique')}
           </h1>
           <p className="text-slate-500 font-medium">
             {mode === 'signup'
               ? (isAr ? 'انضم إلينا وابدأ البيع عبر الإنترنت باحترافية وأمان.' : 'Rejoignez-nous et commencez à vendre en ligne en toute sécurité.')
+              : mode === 'recovery'
+              ? (isAr ? 'أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور.' : 'Entrez votre email et nous vous enverrons un lien de réinitialisation.')
               : (isAr ? 'مرحباً بك مجدداً، قم بإدارة مبيعاتك وتصميم متجرك.' : 'Bon retour, gérez vos ventes et le design de votre boutique.')}
           </p>
         </div>
@@ -233,60 +242,49 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1.5">{isAr ? 'كلمة السر' : 'Mot de passe'}</label>
-                  <div className="relative">
-                    <Lock className="absolute top-1/2 -translate-y-1/2 left-3 w-4 h-4 text-slate-400" />
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      required
-                      minLength={8}
-                      value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      className="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
-                      placeholder="••••••••"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute top-1/2 -translate-y-1/2 right-3 p-1 text-slate-400 hover:text-slate-600 transition-colors"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  
-                  {mode === 'login' && (
-                    <div className="flex justify-end mt-2">
-                      <button 
-                        type="button" 
-                        onClick={async () => {
-                          if (!email) {
-                            setError(isAr ? 'الرجاء إدخال بريدك الإلكتروني أولاً' : 'Veuillez d\'abord entrer votre email');
-                            return;
-                          }
-                          try {
-                            const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email);
-                            if (resetErr) throw resetErr;
-                            setSuccess(isAr ? 'تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني' : 'Un lien de réinitialisation a été envoyé à votre email');
-                            setError('');
-                          } catch (err: any) {
-                            setError(err.message);
-                          }
-                        }}
-                        className="text-[11px] font-bold text-blue-600 hover:text-blue-700 hover:underline transition-all"
+                {mode !== 'recovery' && (
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1.5">{isAr ? 'كلمة السر' : 'Mot de passe'}</label>
+                    <div className="relative">
+                      <Lock className="absolute top-1/2 -translate-y-1/2 left-3 w-4 h-4 text-slate-400" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        minLength={8}
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        className="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+                        placeholder="••••••••"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute top-1/2 -translate-y-1/2 right-3 p-1 text-slate-400 hover:text-slate-600 transition-colors"
                       >
-                        {isAr ? 'نسيت كلمة السر؟' : 'Mot de passe oublié ?'}
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
-                  )}
+                    
+                    {mode === 'login' && (
+                      <div className="flex justify-end mt-2">
+                        <button 
+                          type="button" 
+                          onClick={() => { setError(''); setMode('recovery'); }}
+                          className="text-[11px] font-bold text-blue-600 hover:text-blue-700 hover:underline transition-all"
+                        >
+                          {isAr ? 'نسيت كلمة السر؟' : 'Mot de passe oublié ?'}
+                        </button>
+                      </div>
+                    )}
 
-                  {mode === 'signup' && (
-                    <p className="text-[10px] text-slate-400 mt-1.5 flex items-center gap-1">
-                      <ShieldCheck className="w-3 h-3" />
-                      {isAr ? 'يجب أن تحتوي على 8 أحرف على الأقل.' : 'Doit contenir au moins 8 caractères.'}
-                    </p>
-                  )}
-                </div>
+                    {mode === 'signup' && (
+                      <p className="text-[10px] text-slate-400 mt-1.5 flex items-center gap-1">
+                        <ShieldCheck className="w-3 h-3" />
+                        {isAr ? 'يجب أن تحتوي على 8 أحرف على الأقل.' : 'Doit contenir au moins 8 caractères.'}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {mode === 'signup' && (
                   <div>
@@ -361,6 +359,8 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
                       {isAr ? 'إنشاء حسابي مجاناً' : 'Créer mon compte gratuitement'}
                       <ArrowRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
                     </>
+                  ) : mode === 'recovery' ? (
+                    isAr ? 'إرسال رابط الاستعادة' : 'Envoyer le lien'
                   ) : (
                     isAr ? 'تسجيل الدخول' : 'Se connecter'
                   )}
@@ -414,14 +414,19 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
               <p className="text-xs font-semibold text-slate-500">
                 {mode === 'signup' 
                   ? (isAr ? 'لديك حساب بالفعل؟' : 'Vous avez déjà un compte ?')
+                  : mode === 'recovery'
+                  ? (isAr ? 'تذكرت كلمة المرور؟' : 'Vous vous souvenez du mot de passe ?')
                   : (isAr ? 'ليس لديك حساب؟' : 'Vous n\'avez pas de compte ?')}
                 {' '}
                 <button 
-                  onClick={() => { setError(''); setMode(mode === 'signup' ? 'login' : 'signup'); }}
+                  type="button"
+                  onClick={() => { setError(''); setMode(mode === 'signup' ? 'login' : mode === 'recovery' ? 'login' : 'signup'); }}
                   className="text-blue-600 font-bold hover:underline"
                 >
                   {mode === 'signup' 
                     ? (isAr ? 'تسجيل الدخول' : 'Se connecter')
+                    : mode === 'recovery'
+                    ? (isAr ? 'العودة لتسجيل الدخول' : 'Retour à la connexion')
                     : (isAr ? 'أنشئ متجرك مجاناً' : 'Créer une boutique')}
                 </button>
               </p>
