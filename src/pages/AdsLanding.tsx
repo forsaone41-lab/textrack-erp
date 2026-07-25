@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shirt, Scissors, Zap, ShieldCheck, ChevronRight, CheckCircle2, Factory, Loader2, Sparkles, Send, X, ChevronDown, ImageIcon, ArrowRight, AlertTriangle, Globe } from 'lucide-react';
+import { Shirt, Scissors, Zap, ShieldCheck, ChevronRight, CheckCircle2, Factory, Loader2, Sparkles, Send, X, ChevronDown, ImageIcon, ArrowRight, AlertTriangle, Globe, Store } from 'lucide-react';
 import { supabase } from '../supabase';
 import { loadCompanyProfile, syncCompanyProfile, CompanyProfile, saveLead, loadData, TarifService, saveRecord } from '../types';
 import { generatePDF } from '../utils/pdf';
@@ -317,6 +317,13 @@ export default function AdsLanding() {
             )}
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
+            <a 
+              href="#/store-landing"
+              className="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-black transition-colors border border-indigo-200"
+            >
+              <Store className="w-4 h-4" />
+              <span className="hidden sm:inline">{isAr ? 'أنشئ متجرك' : 'Créer une boutique'}</span>
+            </a>
             <button 
               onClick={() => setIsAr(!isAr)}
               className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black transition-colors border border-slate-200"
