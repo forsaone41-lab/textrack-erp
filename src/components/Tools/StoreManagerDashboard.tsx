@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+// Vercel deployment trigger
 import { Plus, Settings, ExternalLink, Crown, ArrowRight, ArrowLeft, TrendingUp, Sparkles, LayoutDashboard, Loader2, Trash2, AlertTriangle, X } from 'lucide-react';
 import { supabase } from '../../supabase';
 
