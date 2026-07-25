@@ -6361,7 +6361,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                  <div className="fixed inset-0 z-[500] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setIsFichePickerOpen(false)}>
                     <div className="bg-white w-full max-w-2xl max-h-[80vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
                        <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-                          <h3 className="text-lg font-black text-slate-800">{isAr ? 'استيراد موديل من BEYA' : 'Importer un modèle BEYA'}</h3>
+                          <h3 className="text-lg font-black text-slate-800">{isAr ? 'استيراد موديل من BEYA (V2)' : 'Importer un modèle BEYA (V2)'}</h3>
                           <button onClick={() => setIsFichePickerOpen(false)} className="p-2 text-slate-400 hover:text-rose-500"><X className="w-5 h-5" /></button>
                        </div>
                        <div className="p-4 border-b border-slate-100">
