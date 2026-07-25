@@ -1325,13 +1325,22 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
                   } ${isAr ? 'text-right' : 'text-left'}`}>
                     {c.text}
                     {c.role === 'ai' && c.text !== '...' && (
-                      <button 
-                        onClick={() => exportChatToPDFAndSave(c.text)}
-                        className={`absolute -bottom-3 ${isAr ? 'left-2' : 'right-2'} transition-all bg-white border border-slate-200 text-indigo-600 p-1.5 rounded-full shadow-sm hover:bg-indigo-50 hover:scale-110 z-10`}
-                        title={isAr ? 'حفظ وتصدير PDF' : 'Sauvegarder & Exporter PDF'}
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                      </button>
+                      <div className={`absolute -bottom-3 ${isAr ? 'left-2' : 'right-2'} flex items-center gap-1.5 z-10`}>
+                        <button 
+                          onClick={() => sendToDevis(c.text)}
+                          className="bg-white border border-emerald-200 text-emerald-600 p-1.5 rounded-full shadow-sm hover:bg-emerald-50 hover:scale-110 transition-all"
+                          title={isAr ? 'إنشاء دوفي (Devis) من هذا التحليل' : 'Créer un devis depuis cette analyse'}
+                        >
+                          <DollarSign className="w-3.5 h-3.5" />
+                        </button>
+                        <button 
+                          onClick={() => exportChatToPDFAndSave(c.text)}
+                          className="bg-white border border-slate-200 text-indigo-600 p-1.5 rounded-full shadow-sm hover:bg-indigo-50 hover:scale-110 transition-all"
+                          title={isAr ? 'حفظ وتصدير PDF' : 'Sauvegarder & Exporter PDF'}
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     )}
                   </div>
                   
