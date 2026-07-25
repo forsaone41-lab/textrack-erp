@@ -106,13 +106,21 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
          </div>
 
          {/* PRO Assistant Banner */}
-         <div className="bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-900 rounded-3xl p-8 text-white relative overflow-hidden shadow-2xl">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+         {(() => {
+            const hasProStore = stores.some(s => s.plan === 'PRO');
+            return (
+               <div className="bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-900 rounded-3xl p-8 text-white relative overflow-hidden shadow-2xl">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
             
             <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
                <div className="flex-1">
                   <div className="flex items-center gap-3 mb-4">
+                     {!hasProStore && (
+                        <span className="px-3 py-1 bg-slate-800/50 backdrop-blur text-slate-300 border border-slate-700/50 text-xs font-black uppercase tracking-widest rounded-full flex items-center gap-1">
+                           <Lock className="w-3 h-3" /> {storeIsAr ? 'ميزة مقفلة' : 'Verrouillé'}
+                        </span>
+                     )}
                      <span className="text-indigo-200 text-sm font-medium">{storeIsAr ? 'أدوات حصرية' : 'Outils Exclusifs'}</span>
                   </div>
                   <h2 className="text-3xl md:text-4xl font-black mb-4 leading-tight">
@@ -123,10 +131,18 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                         ? 'ميزة حصرية للمشتركين في خطة PRO. قم بتحليل السوق المغربي، اعرف أسعار المنافسين، واكتشف مجالات (Niches) مربحة قبل الجميع.'
                         : 'Fonctionnalité exclusive au plan PRO. Analysez le marché marocain, découvrez les prix des concurrents et trouvez des niches rentables.'}
                   </p>
-                  <button onClick={onOpenAI} className="flex items-center gap-3 bg-white/10 border border-white/20 text-white px-8 py-4 rounded-xl font-black hover:bg-white/20 active:scale-95 transition-all shadow-xl group">
-                     <Lock className="w-5 h-5 text-amber-400" />
-                     {storeIsAr ? 'إطلاق المساعد الخبير' : 'Lancer l\'Assistant PRO'}
-                  </button>
+                  {hasProStore ? (
+                     <button onClick={onOpenAI} className="flex items-center gap-2 bg-white text-indigo-900 px-8 py-4 rounded-xl font-black hover:scale-105 active:scale-95 transition-all shadow-xl shadow-white/10 group">
+                        <Sparkles className="w-5 h-5 text-indigo-600" />
+                        {storeIsAr ? 'إطلاق المساعد الخبير' : 'Lancer l\'Assistant PRO'}
+                        <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                     </button>
+                  ) : (
+                     <button onClick={() => alert(storeIsAr ? 'يجب ترقية متجرك إلى خطة PRO لاستخدام هذه الميزة.' : 'Vous devez passer au plan PRO pour utiliser cette fonctionnalité.')} className="flex items-center gap-3 bg-white/10 border border-white/20 text-white/50 px-8 py-4 rounded-xl font-black cursor-not-allowed shadow-xl group">
+                        <Lock className="w-5 h-5 text-slate-400" />
+                        {storeIsAr ? 'إطلاق المساعد الخبير (مقفل)' : 'Lancer l\'Assistant PRO (Verrouillé)'}
+                     </button>
+                  )}
                </div>
                
                <div className="hidden md:block shrink-0 relative">
@@ -135,8 +151,8 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                      <TrendingUp className="w-24 h-24 text-amber-400" />
                   </div>
                </div>
-            </div>
-         </div>
+            );
+         })()}
 
          {/* Store List */}
          <div>
