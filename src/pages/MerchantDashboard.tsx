@@ -33,16 +33,40 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
     telephone: currentUser?.telephone || '',
     password: '' 
   });
+  const [storeStats, setStoreStats] = useState({ visitors: 0, revenue: 0, orders: 0, convRate: 0 });
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
 
   React.useEffect(() => {
      if(currentUser?.id) {
-       supabase.from('stores').select('id', { count: 'exact' })
-         // Note: using basic exact check for MVP
+       supabase.from('stores')
+         .select('config_json')
          .eq('config_json->>owner_id', currentUser.id)
-         .then(({count}) => {
-            setStoreCount(count || 0);
-         }, () => setStoreCount(0));
+         .then(({data, error}) => {
+            if (data && data.length > 0) {
+               setStoreCount(data.length);
+               let totalVisitors = 0;
+               let totalRevenue = 0;
+               let totalOrders = 0;
+               
+               data.forEach(st => {
+                 const stats = st.config_json?.stats || {};
+                 totalVisitors += (parseInt(stats.visitors) || 0);
+                 totalRevenue += (parseFloat(stats.revenue) || 0);
+                 totalOrders += (parseInt(stats.orders) || 0);
+               });
+               
+               const convRate = totalVisitors > 0 ? ((totalOrders / totalVisitors) * 100).toFixed(1) : 0;
+               
+               setStoreStats({
+                 visitors: totalVisitors,
+                 revenue: totalRevenue,
+                 orders: totalOrders,
+                 convRate: parseFloat(convRate as string)
+               });
+            } else {
+               setStoreCount(0);
+            }
+         });
      }
   }, [currentUser]);
 
@@ -269,7 +293,7 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
                 <BarChart3 className="w-4 h-4 text-slate-400" />
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('Ventes', 'Sales', 'المبيعات')}</span>
               </div>
-              <div className="text-2xl font-black text-slate-900">0.00 MAD</div>
+              <div className="text-2xl font-black text-slate-900">{storeStats.revenue.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2})} MAD</div>
             </div>
             
             <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100">
@@ -277,7 +301,7 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
                 <ShoppingBag className="w-4 h-4 text-slate-400" />
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('Commandes', 'Orders', 'الطلبات')}</span>
               </div>
-              <div className="text-2xl font-black text-slate-900">0</div>
+              <div className="text-2xl font-black text-slate-900">{storeStats.orders.toLocaleString()}</div>
             </div>
             
             <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100">
@@ -285,7 +309,7 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
                 <Users className="w-4 h-4 text-slate-400" />
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('Visiteurs', 'Visitors', 'الزوار')}</span>
               </div>
-              <div className="text-2xl font-black text-slate-900">0</div>
+              <div className="text-2xl font-black text-slate-900">{storeStats.visitors.toLocaleString()}</div>
             </div>
             
             <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100">
@@ -293,7 +317,7 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
                 <TrendingUp className="w-4 h-4 text-slate-400" />
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('Taux Conv.', 'Conv. Rate', 'معدل التحويل')}</span>
               </div>
-              <div className="text-2xl font-black text-slate-900">0%</div>
+              <div className="text-2xl font-black text-slate-900">{storeStats.convRate}%</div>
             </div>
           </div>
 
