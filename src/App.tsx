@@ -70,6 +70,7 @@ const StoreLanding    = lazy(() => import('./pages/StoreLanding'));
 const StoreSignup     = lazy(() => import('./pages/StoreSignup'));
 const MerchantDashboard = lazy(() => import('./pages/MerchantDashboard'));
 const Terms           = lazy(() => import('./pages/Terms'));
+const Partners        = lazy(() => import('./pages/Partners'));
 const Privacy         = lazy(() => import('./pages/Privacy'));
 import { PageLoader } from './components/PageLoader';
 
@@ -395,6 +396,11 @@ function AppContent() {
         <Route path="/new" element={<NewLanding />} />
         <Route path="/store-landing" element={<StoreLanding />} />
         <Route path="/store-signup" element={<StoreSignup onLogin={handleLogin} />} />
+        <Route path="/partners" element={
+          <Suspense fallback={<PageLoader />}>
+            <Partners />
+          </Suspense>
+        } />
         <Route path="/terms" element={
           <Suspense fallback={<PageLoader />}>
             <Terms />
@@ -552,6 +558,11 @@ function AppContent() {
         <Route path="planning-view/:id" element={<PlanningView />} />
         <Route path="/devis-express" element={<AdsLanding />} />
         <Route path="/store-landing" element={<StoreLanding />} />
+        <Route path="/partners" element={
+          <Suspense fallback={<PageLoader />}>
+            <Partners />
+          </Suspense>
+        } />
 
       </Route>
       <Route element={<PointageLayout />}>
