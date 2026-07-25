@@ -423,8 +423,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   };
   const [storeLang, setStoreLang] = useState<'fr'|'en'|'ar'>(config.storeLang || 'fr');
   const storeIsAr = storeLang === 'ar';
-  // Use adminIsAr for the dashboard UI, so they can translate it independently of the store!
-  const isAr = adminIsAr;
+  // Use dashLang for the dashboard UI, reading from the SaaS setting beya_dash_lang
+  const [dashLang, setDashLang] = useState<'fr' | 'en' | 'ar'>(() => (localStorage.getItem('beya_dash_lang') as any) || (adminIsAr ? 'ar' : 'fr'));
+  const isAr = dashLang === 'ar';
   
   const tr = (t: string) => {
      const dict: Record<string, { fr: string; en: string; ar: string }> = {
@@ -4388,14 +4389,18 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
          {/* Profile / Logout */}
          {!isLiveStore && (
             <div className="flex items-center gap-3">
-               <button 
-                  onClick={toggleLang}
-                  className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-2xl shadow-sm hover:bg-slate-50 transition-colors text-slate-600 font-bold text-sm h-[44px]"
-                  title={isAr ? 'Changer en Français' : 'التبديل للعربية'}
-               >
-                  <Globe className="w-4 h-4 text-indigo-500" />
-                  <span className="hidden sm:inline">{isAr ? 'Français' : 'العربية'}</span>
-               </button>
+               {/* Language Switcher */}
+               <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm h-[44px]">
+                 {(['fr', 'en', 'ar'] as const).map(l => (
+                   <button 
+                     key={l}
+                     onClick={() => { localStorage.setItem('beya_dash_lang', l); setDashLang(l); }} 
+                     className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all ${dashLang === l ? 'bg-indigo-50 text-indigo-700 shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}
+                   >
+                     {l}
+                   </button>
+                 ))}
+               </div>
                
                <div className="flex items-center gap-2 bg-white px-2 py-1.5 rounded-2xl shadow-sm border border-slate-200 h-[44px]">
                   <div className="hidden sm:block text-right pr-2 pl-3">
