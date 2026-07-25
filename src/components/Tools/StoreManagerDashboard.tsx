@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Settings, ExternalLink, Crown, ArrowRight, TrendingUp, Sparkles, LayoutDashboard, Loader2, Trash2 } from 'lucide-react';
+import { Plus, Settings, ExternalLink, Crown, ArrowRight, TrendingUp, Sparkles, LayoutDashboard, Loader2, Trash2, AlertTriangle, X } from 'lucide-react';
 import { supabase } from '../../supabase';
 
 export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIsAr }: any) {
    const [stores, setStores] = useState<any[]>([]);
    const [isLoading, setIsLoading] = useState(true);
+   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+   const [isDeleting, setIsDeleting] = useState(false);
 
    useEffect(() => {
       const fetchStores = async () => {
@@ -60,19 +62,22 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
       fetchStores();
    }, []);
 
-   const handleDeleteStore = async (id: string) => {
-      const confirmMsg = storeIsAr ? 'هل أنت متأكد أنك تريد حذف هذا المتجر؟ هذا الإجراء لا يمكن التراجع عنه.' : 'Êtes-vous sûr de vouloir supprimer cette boutique ? Cette action est irréversible.';
-      if (!window.confirm(confirmMsg)) return;
-
+   const handleDeleteStore = async () => {
+      if (!deleteTarget) return;
+      const { id } = deleteTarget;
+      setIsDeleting(true);
       try {
          if (!id.startsWith('mock')) {
             const { error } = await supabase.from('stores').delete().eq('id', id);
             if (error) throw error;
          }
          setStores(stores.filter(s => s.id !== id));
+         setDeleteTarget(null);
       } catch (err) {
          console.error('Failed to delete store:', err);
          alert(storeIsAr ? 'حدث خطأ أثناء حذف المتجر.' : 'Erreur lors de la suppression de la boutique.');
+      } finally {
+         setIsDeleting(false);
       }
    };
 
@@ -181,7 +186,7 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                            <button onClick={() => onSelectStore(store)} className="w-12 h-12 flex items-center justify-center bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors active:scale-95">
                               <Settings className="w-5 h-5" />
                            </button>
-                           <button onClick={() => handleDeleteStore(store.id)} className="w-12 h-12 flex items-center justify-center bg-white border border-rose-200 text-rose-500 rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-colors active:scale-95" title={storeIsAr ? 'حذف المتجر' : 'Supprimer la boutique'}>
+                           <button onClick={() => setDeleteTarget({ id: store.id, name: store.name })} className="w-12 h-12 flex items-center justify-center bg-white border border-rose-200 text-rose-500 rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-colors active:scale-95" title={storeIsAr ? 'حذف المتجر' : 'Supprimer la boutique'}>
                               <Trash2 className="w-5 h-5" />
                            </button>
                         </div>
@@ -190,6 +195,51 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                </div>
             )}
          </div>
+
+         {/* Delete Store Confirmation Modal */}
+         {deleteTarget && (
+            <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm" onClick={() => !isDeleting && setDeleteTarget(null)}>
+               <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+                  <div className="p-6 md:p-8">
+                     <div className="flex items-start justify-between mb-4">
+                        <div className="w-14 h-14 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center">
+                           <AlertTriangle className="w-7 h-7" />
+                        </div>
+                        <button onClick={() => !isDeleting && setDeleteTarget(null)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
+                           <X className="w-5 h-5" />
+                        </button>
+                     </div>
+                     <h3 className="text-xl font-black text-slate-900 tracking-tight mb-2">
+                        {storeIsAr ? 'حذف هذا المتجر؟' : 'Supprimer cette boutique ?'}
+                     </h3>
+                     <p className="text-sm text-slate-500 font-medium mb-6">
+                        {storeIsAr
+                           ? <>أنت على وشك حذف <span className="font-bold text-slate-700">{deleteTarget.name}</span> بشكل نهائي. هذا الإجراء لا يمكن التراجع عنه.</>
+                           : <>Vous êtes sur le point de supprimer définitivement <span className="font-bold text-slate-700">{deleteTarget.name}</span>. Cette action est irréversible.</>}
+                     </p>
+                     <div className="flex gap-3">
+                        <button
+                           type="button"
+                           onClick={() => setDeleteTarget(null)}
+                           disabled={isDeleting}
+                           className="flex-1 px-6 py-3.5 bg-white text-slate-700 font-bold text-sm rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-60"
+                        >
+                           {storeIsAr ? 'إلغاء' : 'Annuler'}
+                        </button>
+                        <button
+                           type="button"
+                           onClick={handleDeleteStore}
+                           disabled={isDeleting}
+                           className="flex-1 px-6 py-3.5 bg-rose-600 text-white font-bold text-sm rounded-xl hover:bg-rose-700 transition-all shadow-md shadow-rose-600/20 flex items-center justify-center gap-2 disabled:opacity-70"
+                        >
+                           {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                           {isDeleting ? (storeIsAr ? 'جاري الحذف...' : 'Suppression...') : (storeIsAr ? 'حذف نهائياً' : 'Supprimer définitivement')}
+                        </button>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         )}
       </div>
    );
 }
