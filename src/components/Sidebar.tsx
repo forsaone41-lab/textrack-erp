@@ -184,26 +184,26 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
 
               {workspaceDropdownOpen && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-slate-800 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[300] animate-in fade-in slide-in-from-top-2">
-                   <a href="/" className="flex items-center gap-3 px-3 py-3 hover:bg-white/5 transition-colors group">
+                   <NavLink to="/" onClick={() => { setWorkspaceDropdownOpen(false); closeMobile(); }} className="flex items-center gap-3 px-3 py-3 hover:bg-white/5 transition-colors group">
                      <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-colors shrink-0">
                        <Briefcase className="w-4 h-4" />
                      </div>
                      <span className="text-[10px] font-bold text-white leading-tight">BEYACREATIVE PRODUCTION</span>
-                   </a>
+                   </NavLink>
                    <div className="h-px bg-white/5" />
-                   <a href="/store-builder" className="flex items-center gap-3 px-3 py-3 hover:bg-white/5 transition-colors group">
+                   <NavLink to="/store-builder" onClick={() => { setWorkspaceDropdownOpen(false); closeMobile(); }} className="flex items-center gap-3 px-3 py-3 hover:bg-white/5 transition-colors group">
                      <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition-colors shrink-0">
                        <Store className="w-4 h-4" />
                      </div>
                      <span className="text-[10px] font-bold text-white leading-tight">BEYA STORE</span>
-                   </a>
+                   </NavLink>
                    <div className="h-px bg-white/5" />
-                   <a href="/partenaire-portal" className="flex items-center gap-3 px-3 py-3 hover:bg-white/5 transition-colors group">
+                   <NavLink to="/partenaire-portal" onClick={() => { setWorkspaceDropdownOpen(false); closeMobile(); }} className="flex items-center gap-3 px-3 py-3 hover:bg-white/5 transition-colors group">
                      <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors shrink-0">
                        <Globe className="w-4 h-4" />
                      </div>
                      <span className="text-[10px] font-bold text-white leading-tight">BEYA PORTAL</span>
-                   </a>
+                   </NavLink>
                 </div>
               )}
             </div>
