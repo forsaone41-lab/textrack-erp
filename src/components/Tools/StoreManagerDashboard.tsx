@@ -175,8 +175,10 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                      <TrendingUp className="w-24 h-24 text-amber-400" />
                   </div>
                </div>
-            );
-         })()}
+            </div>
+         </div>
+      );
+   })()}
 
          {/* Store List */}
          <div>
