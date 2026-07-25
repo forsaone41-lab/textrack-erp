@@ -208,7 +208,17 @@ export default function Utilisateurs() {
   useEffect(() => {
     async function loadAll() {
       const uList = await loadData<User>('users');
-      setUsers(uList || []);
+      let deletedIds: string[] = [];
+      try {
+        const raw = localStorage.getItem('textrack_deleted_ids');
+        if (raw) deletedIds = JSON.parse(raw);
+      } catch (e) {}
+      
+      const validUsers = (uList || []).filter(u => 
+        u.name !== '__DELETED__' && 
+        !deletedIds.includes(u.id)
+      );
+      setUsers(validUsers);
     }
     loadAll();
   }, []);

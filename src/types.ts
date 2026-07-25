@@ -1242,7 +1242,7 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
 
 export async function deleteRecord(table: string, id: string, email?: string): Promise<void> {
   // Prevent deletion of master-admin
-  if (table === 'users' && (id === 'master-admin' || id === 'yassine-admin' || email === '00.belbachir@gmail.com')) {
+  if (table === 'users' && (id === 'master-admin' || id === 'yassine-admin')) {
     console.warn(`Skipping deletion of protected admin: ${id}`);
     return;
   }
@@ -1256,6 +1256,8 @@ export async function deleteRecord(table: string, id: string, email?: string): P
     if (!error && data && data.length === 0) {
       console.warn(`[DEBUG] 0 rows deleted from ${table}, possibly blocked by RLS. Attempting soft delete...`);
       if (table === 'leads') {
+        await supabase.from(table).update({ name: '__DELETED__' }).eq('id', id);
+      } else if (table === 'users') {
         await supabase.from(table).update({ name: '__DELETED__' }).eq('id', id);
       }
     }
