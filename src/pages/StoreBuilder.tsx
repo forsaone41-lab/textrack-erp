@@ -4416,6 +4416,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                >
                  <LogOut className="w-4 h-4" />
                </button>
+               </div>
             </div>
          )}
       </div>
