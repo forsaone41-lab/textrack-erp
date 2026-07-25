@@ -6380,8 +6380,8 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                 const clientName = (f.client || '').toLowerCase();
                                 const currentStore = (storeName || '').toLowerCase().trim();
                                 const isMine = currentStore.length > 1 && clientName.includes(currentStore);
-                                const isSystem = clientName.includes('beya') || clientName.includes('ia') || clientName.includes('suggestion');
-                                if (!isMine && !isSystem) return false;
+                                // removed system models per request
+                                if (!isMine) return false;
                                 return !fichePickerSearch || f.modele.toLowerCase().includes(fichePickerSearch.toLowerCase()) || clientName.includes(fichePickerSearch.toLowerCase());
                              })
                              .map(f => (
