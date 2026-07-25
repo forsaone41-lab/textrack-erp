@@ -154,13 +154,13 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
 
             <div className="flex items-center gap-4">
               <div className="flex items-center bg-slate-100 rounded-full p-1 gap-0.5">
-                {(['fr', 'en', 'ar'] as const).map(l => (
+                {(['fr', 'en', 'ar'] as const).map(langOption => (
                   <button
-                    key={l}
-                    onClick={() => setLang(l)}
-                    className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${dashLang === l ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                    key={langOption}
+                    onClick={() => setLang(langOption)}
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${dashLang === langOption ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                   >
-                    {l}
+                    {langOption}
                   </button>
                 ))}
               </div>
