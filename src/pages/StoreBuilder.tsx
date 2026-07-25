@@ -4391,13 +4391,13 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
             <div className="flex items-center gap-3">
                {/* Language Switcher */}
                <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm h-[44px]">
-                 {(['fr', 'en', 'ar'] as const).map(l => (
+                 {(['fr', 'en', 'ar'] as const).map(langOption => (
                    <button 
-                     key={l}
-                     onClick={() => { localStorage.setItem('beya_dash_lang', l); setDashLang(l); }} 
-                     className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all ${dashLang === l ? 'bg-indigo-50 text-indigo-700 shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}
+                     key={langOption}
+                     onClick={() => { localStorage.setItem('beya_dash_lang', langOption); setDashLang(langOption); }} 
+                     className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all ${dashLang === langOption ? 'bg-indigo-50 text-indigo-700 shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}
                    >
-                     {l}
+                     {langOption}
                    </button>
                  ))}
                </div>

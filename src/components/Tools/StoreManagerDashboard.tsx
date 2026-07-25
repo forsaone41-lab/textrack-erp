@@ -102,15 +102,15 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
             <div className={`flex flex-wrap items-center gap-3 ${storeIsAr ? 'flex-row-reverse' : ''}`}>
                {/* Language Switcher */}
                <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
-                 {(['fr', 'en', 'ar'] as const).map(l => {
-                   const isActive = (localStorage.getItem('beya_dash_lang') || (storeIsAr ? 'ar' : 'fr')) === l;
+                 {(['fr', 'en', 'ar'] as const).map(langOption => {
+                   const isActive = (localStorage.getItem('beya_dash_lang') || (storeIsAr ? 'ar' : 'fr')) === langOption;
                    return (
                      <button 
-                       key={l}
-                       onClick={() => { localStorage.setItem('beya_dash_lang', l); window.location.reload(); }} 
+                       key={langOption}
+                       onClick={() => { localStorage.setItem('beya_dash_lang', langOption); window.location.reload(); }} 
                        className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all ${isActive ? 'bg-indigo-50 text-indigo-700' : 'text-slate-500 hover:bg-slate-50'}`}
                      >
-                       {l}
+                       {langOption}
                      </button>
                    );
                  })}
