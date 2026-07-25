@@ -38,6 +38,7 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [trialDaysLeft, setTrialDaysLeft] = useState(14);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   
   const company = loadCompanyProfile();
   const proPrice = company.storeProPrice || '299';
@@ -157,10 +158,44 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
                   </button>
                 ))}
               </div>
-              <button className="relative p-2 text-slate-400 hover:text-slate-600 transition-colors">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-              </button>
+              <div className="relative">
+                <button 
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className={`relative p-2 transition-colors ${showNotifications ? 'text-indigo-600 bg-indigo-50 rounded-full' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                  <Bell className="w-5 h-5" />
+                  <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                </button>
+                
+                {showNotifications && (
+                  <div className={`absolute ${isArDash ? 'left-0' : 'right-0'} mt-2 w-80 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2`}>
+                    <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                      <h3 className="font-bold text-slate-900">{t('Notifications', 'Notifications', 'الإشعارات')}</h3>
+                      <button onClick={() => setShowNotifications(false)} className="text-slate-400 hover:text-slate-600 p-1 rounded-md hover:bg-slate-200 transition-colors"><X className="w-4 h-4" /></button>
+                    </div>
+                    <div className="max-h-80 overflow-y-auto">
+                      <div className="p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer">
+                        <div className="flex gap-3">
+                          <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 text-indigo-600">
+                            <Store className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-900 mb-1 leading-tight">
+                              {t('Bienvenue sur BEYACREATIVE!', 'Welcome to BEYACREATIVE!', 'مرحباً بك في BEYACREATIVE!')}
+                            </p>
+                            <p className="text-xs text-slate-500 leading-snug">
+                              {t('Votre compte a été créé avec succès. Commencez à configurer votre boutique dès maintenant.', 'Your account was successfully created. Start setting up your store right now.', 'تم إنشاء حسابك بنجاح. ابدأ الآن في تجهيز وتصميم متجرك الإلكتروني.')}
+                            </p>
+                            <p className="text-[10px] font-medium text-indigo-500 mt-2 uppercase tracking-wider">
+                              {t('À l\'instant', 'Just now', 'الآن')}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
               <div className="h-8 w-px bg-slate-200"></div>
               <div className="flex items-center gap-2">
                 <div 
