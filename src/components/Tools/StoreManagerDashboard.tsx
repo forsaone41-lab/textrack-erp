@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 // Vercel deployment trigger
-import { Plus, Settings, ExternalLink, Crown, ArrowRight, ArrowLeft, TrendingUp, Sparkles, LayoutDashboard, Loader2, Trash2, AlertTriangle, X, Lock } from 'lucide-react';
+import { Plus, Settings, ExternalLink, Crown, ArrowRight, ArrowLeft, TrendingUp, Sparkles, LayoutDashboard, Loader2, Trash2, AlertTriangle, X, Lock, User } from 'lucide-react';
 import { supabase } from '../../supabase';
 
 export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIsAr }: any) {
@@ -99,10 +99,24 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                   <p className="text-slate-500 mt-1">{storeIsAr ? 'إدارة المتاجر الخاصة بك، والاشتراكات، والأدوات المتقدمة.' : 'Gérez vos boutiques, abonnements et outils avancés.'}</p>
                </div>
             </div>
-            <button onClick={onSelectStore} className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 active:scale-95">
-               <Plus className="w-5 h-5" />
-               {storeIsAr ? 'إنشاء متجر جديد' : 'Créer une boutique'}
-            </button>
+            <div className={`flex flex-wrap items-center gap-3 ${storeIsAr ? 'flex-row-reverse' : ''}`}>
+               {/* Language Switcher */}
+               <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
+                 <button onClick={() => { localStorage.setItem('beya_dash_lang', 'fr'); window.location.reload(); }} className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all ${!storeIsAr ? 'bg-indigo-50 text-indigo-700' : 'text-slate-500 hover:bg-slate-50'}`}>FR</button>
+                 <button onClick={() => { localStorage.setItem('beya_dash_lang', 'ar'); window.location.reload(); }} className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all ${storeIsAr ? 'bg-indigo-50 text-indigo-700' : 'text-slate-500 hover:bg-slate-50'}`}>AR</button>
+               </div>
+
+               {/* Profile Button */}
+               <button onClick={() => window.location.href = '/'} className="flex items-center justify-center w-11 h-11 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 hover:text-indigo-600 transition-all shadow-sm active:scale-95" title={storeIsAr ? 'الملف الشخصي (الرئيسية)' : 'Profil (Accueil)'}>
+                  <User className="w-5 h-5" />
+               </button>
+
+               <button onClick={onSelectStore} className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 h-11 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 active:scale-95">
+                  <Plus className="w-5 h-5" />
+                  <span className="hidden sm:inline">{storeIsAr ? 'إنشاء متجر' : 'Créer boutique'}</span>
+                  <span className="sm:hidden">{storeIsAr ? 'جديد' : 'Nouveau'}</span>
+               </button>
+            </div>
          </div>
 
          {/* PRO Assistant Banner */}
