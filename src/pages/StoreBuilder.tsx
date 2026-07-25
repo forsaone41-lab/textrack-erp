@@ -162,7 +162,7 @@ const IframePreview = ({ children, isMobile, className }: any) => {
 export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: boolean }) {
   const { storeNameUrl } = useParams<{storeNameUrl: string}>();
   const config = getSavedConfig();
-  const { isAr: adminIsAr } = useLang();
+  const { isAr: adminIsAr, toggleLang } = useLang();
   const [merchantUser, setMerchantUser] = useState<any>(null);
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setMerchantUser(data.user));
