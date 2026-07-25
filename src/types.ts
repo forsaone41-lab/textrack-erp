@@ -534,6 +534,8 @@ export interface CompanyProfile {
   metaPixelId?: string;
   permissions?: RolePermMap;
   heureLimiteRetard?: string;
+  storeProPrice?: string;
+  storePremiumPrice?: string;
 }
 
 export interface FaqItem {

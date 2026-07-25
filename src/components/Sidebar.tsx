@@ -164,7 +164,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
               </button>
             )}
           </div>
-          {!collapsed && (
+          {!collapsed && currentUser?.role === 'admin' && (
             <div className="relative mt-4">
               <button 
                 onClick={() => setWorkspaceDropdownOpen(!workspaceDropdownOpen)}

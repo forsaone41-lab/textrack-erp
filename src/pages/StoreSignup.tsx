@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { ShieldCheck, Mail, AlertCircle, Lock, User as UserIcon, CheckCircle, Store, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../supabase';
 import { loadCompanyProfile } from '../types';
@@ -7,10 +7,14 @@ import { useLang } from '../contexts/LangContext';
 
 export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const initialMode = queryParams.get('mode') === 'login' ? 'login' : 'signup';
+
   const { isAr } = useLang();
   const company = loadCompanyProfile();
 
-  const [mode, setMode] = useState<'signup' | 'login'>('signup');
+  const [mode, setMode] = useState<'signup' | 'login'>(initialMode);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -23,6 +27,7 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
   const [storeName, setStoreName] = useState('');
   const [phone, setPhone] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +37,9 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
 
     try {
       if (mode === 'signup') {
+        if (!acceptedTerms) {
+          throw new Error(isAr ? 'يجب الموافقة على شروط الخدمة وسياسة الخصوصية أولاً' : 'Vous devez accepter les conditions d\'utilisation et la politique de confidentialité');
+        }
         if (password !== confirmPassword) {
           throw new Error(isAr ? 'كلمات السر غير متطابقة' : 'Les mots de passe ne correspondent pas');
         }
@@ -305,6 +313,42 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
                   </div>
                 )}
 
+                {mode === 'signup' && (
+                  <div className="flex items-start gap-3 mt-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <div className="relative flex items-start pt-0.5">
+                      <input
+                        type="checkbox"
+                        id="terms"
+                        checked={acceptedTerms}
+                        onChange={(e) => setAcceptedTerms(e.target.checked)}
+                        className="peer sr-only"
+                      />
+                      <div className="w-5 h-5 bg-white border-2 border-slate-300 rounded peer-checked:bg-blue-600 peer-checked:border-blue-600 transition-colors flex items-center justify-center cursor-pointer" onClick={() => setAcceptedTerms(!acceptedTerms)}>
+                        <CheckCircle className={`w-3.5 h-3.5 text-white transition-transform ${acceptedTerms ? 'scale-100' : 'scale-0'}`} />
+                      </div>
+                    </div>
+                    <label htmlFor="terms" className="text-[11px] font-semibold text-slate-500 leading-relaxed cursor-pointer select-none">
+                      {isAr ? (
+                        <>
+                          أقر بأنني قرأت وأوافق على{' '}
+                          <a href="#/terms" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">شروط الخدمة</a>{' '}
+                          و{' '}
+                          <a href="#/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">سياسة الخصوصية</a>{' '}
+                          الخاصة بمنصة بية كريتيف، وأؤكد أن جميع المعلومات المقدمة صحيحة.
+                        </>
+                      ) : (
+                        <>
+                          Je reconnais avoir lu et j'accepte les{' '}
+                          <a href="#/terms" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Conditions d'utilisation</a>{' '}
+                          et la{' '}
+                          <a href="#/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Politique de confidentialité</a>{' '}
+                          de BEYACREATIVE, et je certifie que toutes les informations fournies sont exactes.
+                        </>
+                      )}
+                    </label>
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   disabled={loading}
@@ -385,12 +429,7 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
           )}
         </div>
         
-        {/* Footer info */}
-        <p className="text-center text-xs text-slate-400 mt-6 font-medium">
-          {isAr 
-            ? 'بإنشائك حساباً، فأنت توافق على شروط الخدمة وسياسة الخصوصية الخاصة بنا.' 
-            : 'En créant un compte, vous acceptez nos conditions d\'utilisation et notre politique de confidentialité.'}
-        </p>
+        {/* Footer info (removed old text as it's now in the checkbox) */}
       </div>
     </div>
   );

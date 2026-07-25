@@ -5453,9 +5453,9 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                         <div>
                            <h4 className="text-xs font-black text-slate-800 mb-2 uppercase tracking-wider">{isAr ? 'لغة المتجر' : 'Langue de la boutique'}</h4>
                            <div className="flex gap-2">
-                              <button onClick={() => setStoreLang('fr')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${storeLang === 'fr' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}`}>Français</button>
-                              <button onClick={() => setStoreLang('en')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${storeLang === 'en' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}`}>English</button>
-                              <button onClick={() => setStoreLang('ar')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${storeLang === 'ar' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}`}>العربية</button>
+                              <button onClick={() => setStoreLang('fr')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${storeLang === 'fr' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}`}>{isAr ? 'الفرنسية' : 'Français'}</button>
+                              <button onClick={() => setStoreLang('en')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${storeLang === 'en' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}`}>{isAr ? 'الإنجليزية' : 'English'}</button>
+                              <button onClick={() => setStoreLang('ar')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${storeLang === 'ar' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}`}>{isAr ? 'العربية' : 'Arabe'}</button>
                            </div>
                         </div>
                      </div>

@@ -691,6 +691,37 @@ export default function Settings() {
           </div>
         </div>
 
+        <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
+          <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <Globe className="w-5 h-5 text-indigo-500" />
+            {isAr ? 'أسعار باقات المتاجر (BEYA STORE)' : 'Prix des abonnements BEYA STORE'}
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-2">
+                {isAr ? 'سعر باقة PRO (درهم/شهر)' : 'Prix plan PRO (MAD/mois)'}
+              </label>
+              <input
+                type="number"
+                value={profile.storeProPrice || '299'}
+                onChange={e => handleChange('storeProPrice', e.target.value)}
+                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-2">
+                {isAr ? 'سعر باقة PREMIUM (درهم/شهر)' : 'Prix plan PREMIUM (MAD/mois)'}
+              </label>
+              <input
+                type="number"
+                value={profile.storePremiumPrice || '499'}
+                onChange={e => handleChange('storePremiumPrice', e.target.value)}
+                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Informations Légales */}
         <div className="p-6 border-b border-slate-100">
           <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">

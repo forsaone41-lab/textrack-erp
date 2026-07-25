@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Store, Package, ShoppingBag, Plus, Bell, Settings, LogOut, ChevronRight, BarChart3, TrendingUp, Users, Smartphone, Zap, X, Send, Crown } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { supabase } from '../supabase';
+import { loadCompanyProfile } from '../types';
 
 interface MerchantDashboardProps {
   currentUser: any;
@@ -37,6 +38,10 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [trialDaysLeft, setTrialDaysLeft] = useState(14);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  
+  const company = loadCompanyProfile();
+  const proPrice = company.storeProPrice || '299';
+  const premiumPrice = company.storePremiumPrice || '499';
 
   React.useEffect(() => {
      if(currentUser?.id) {
@@ -195,14 +200,14 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
                  <Zap className="w-5 h-5 text-amber-600" />
               </div>
               <div>
-                 <h3 className="font-bold text-amber-900">{isAr ? 'فترة تجريبية مجانية' : 'Essai Gratuit'}</h3>
+                 <h3 className="font-bold text-amber-900">{t('Essai Gratuit', 'Free Trial', 'فترة تجريبية مجانية')}</h3>
                  <p className="text-sm font-medium text-amber-700">
-                    {isAr ? `متبقي ${trialDaysLeft} أيام في فترتك التجريبية.` : `Il vous reste ${trialDaysLeft} jours d'essai.`}
+                    {t(`Il vous reste ${trialDaysLeft} jours d'essai.`, `You have ${trialDaysLeft} days left in your trial.`, `متبقي ${trialDaysLeft} أيام على انتهاء الفترة التجريبية.`)}
                  </p>
               </div>
            </div>
            <button onClick={() => setShowUpgradeModal(true)} className="w-full sm:w-auto px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm rounded-xl transition-colors whitespace-nowrap shadow-md shadow-amber-500/20">
-              {isAr ? 'ترقية الحساب الآن' : 'Mettre à niveau'}
+              {t('Mettre à niveau', 'Upgrade Now', 'ترقية الحساب الآن')}
            </button>
         </div>
 
@@ -512,8 +517,8 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl -mr-32 -mt-32"></div>
                <div className="flex items-start justify-between relative z-10">
                   <div>
-                     <h2 className="text-3xl font-black mb-2">{isAr ? 'اختر الباقة المناسبة لك' : 'Choisissez votre forfait'}</h2>
-                     <p className="text-slate-400 font-medium">{isAr ? 'قم بترقية حسابك للوصول إلى كافة المزايا.' : 'Mettez à niveau votre compte pour accéder à toutes les fonctionnalités.'}</p>
+                     <h2 className="text-3xl font-black mb-2">{t('Choisissez votre forfait', 'Choose your plan', 'اختر الباقة المناسبة لك')}</h2>
+                     <p className="text-slate-400 font-medium">{t('Mettez à niveau votre compte pour accéder à toutes les fonctionnalités.', 'Upgrade your account to access all features.', 'قم بترقية حسابك للوصول إلى كافة الميزات.')}</p>
                   </div>
                   <button onClick={() => setShowUpgradeModal(false)} className="p-2 text-slate-400 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-colors backdrop-blur-md">
                      <X className="w-5 h-5" />
@@ -527,42 +532,42 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
                   <div className="border-2 border-slate-200 hover:border-indigo-500 rounded-3xl p-6 transition-all relative group flex flex-col">
                      <h3 className="text-xl font-black text-slate-900 mb-1">PRO</h3>
                      <div className="flex items-end gap-1 mb-4">
-                        <span className="text-4xl font-black text-slate-900">299</span>
-                        <span className="text-slate-500 font-bold mb-1">MAD / {isAr ? 'شهر' : 'mois'}</span>
+                        <span className="text-4xl font-black text-slate-900">{proPrice}</span>
+                        <span className="text-slate-500 font-bold mb-1">MAD / {t('mois', 'month', 'شهر')}</span>
                      </div>
                      <ul className="space-y-3 mb-8 flex-1">
-                        <li className="flex items-center gap-2 text-sm font-medium text-slate-700"><div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center"><div className="w-2 h-2 bg-emerald-500 rounded-full"></div></div> {isAr ? 'متجر إلكتروني احترافي' : 'Boutique professionnelle'}</li>
-                        <li className="flex items-center gap-2 text-sm font-medium text-slate-700"><div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center"><div className="w-2 h-2 bg-emerald-500 rounded-full"></div></div> {isAr ? 'منتجات غير محدودة' : 'Produits illimités'}</li>
-                        <li className="flex items-center gap-2 text-sm font-medium text-slate-700"><div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center"><div className="w-2 h-2 bg-emerald-500 rounded-full"></div></div> {isAr ? 'دعم فني عادي' : 'Support standard'}</li>
+                        <li className="flex items-center gap-2 text-sm font-medium text-slate-700"><div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center"><div className="w-2 h-2 bg-emerald-500 rounded-full"></div></div> {t('Boutique professionnelle', 'Professional Store', 'متجر إلكتروني احترافي')}</li>
+                        <li className="flex items-center gap-2 text-sm font-medium text-slate-700"><div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center"><div className="w-2 h-2 bg-emerald-500 rounded-full"></div></div> {t('Produits illimités', 'Unlimited Products', 'منتجات غير محدودة')}</li>
+                        <li className="flex items-center gap-2 text-sm font-medium text-slate-700"><div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center"><div className="w-2 h-2 bg-emerald-500 rounded-full"></div></div> {t('Support standard', 'Standard Support', 'دعم فني قياسي')}</li>
                      </ul>
-                     <a href="https://wa.me/212600000000?text=Je%20veux%20passer%20au%20plan%20PRO" target="_blank" rel="noreferrer" className="w-full py-3.5 bg-slate-900 text-white rounded-xl font-bold text-center hover:bg-indigo-600 transition-colors block">
-                        {isAr ? 'اختيار باقة PRO' : 'Choisir le plan PRO'}
-                     </a>
+                     <button onClick={() => window.open(`https://wa.me/212684252575?text=Bonjour, je souhaite activer le plan PRO pour ma boutique ${currentUser?.nom}.`, '_blank')} className="w-full py-3.5 bg-slate-900 text-white rounded-xl font-bold text-center hover:bg-indigo-600 transition-colors block">
+                        {t('Choisir le plan PRO', 'Choose PRO plan', 'اختيار باقة PRO')}
+                     </button>
                   </div>
                   
                   {/* PREMIUM Plan */}
                   <div className="border-2 border-amber-400 bg-amber-50/30 rounded-3xl p-6 transition-all relative flex flex-col shadow-lg shadow-amber-500/10">
-                     <div className="absolute -top-4 right-6 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-md">
-                        {isAr ? 'الأكثر طلباً' : 'Populaire'}
+                     <div className={`absolute -top-4 ${dashLang === 'ar' ? 'left-6' : 'right-6'} bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-md`}>
+                        {t('Populaire', 'Popular', 'الأكثر طلباً')}
                      </div>
                      <h3 className="text-xl font-black text-amber-600 mb-1 flex items-center gap-2"><Crown className="w-5 h-5" /> PREMIUM</h3>
                      <div className="flex items-end gap-1 mb-4">
-                        <span className="text-4xl font-black text-slate-900">499</span>
-                        <span className="text-slate-500 font-bold mb-1">MAD / {isAr ? 'شهر' : 'mois'}</span>
+                        <span className="text-4xl font-black text-slate-900">{premiumPrice}</span>
+                        <span className="text-slate-500 font-bold mb-1">MAD / {t('mois', 'month', 'شهر')}</span>
                      </div>
                      <ul className="space-y-3 mb-8 flex-1">
-                        <li className="flex items-center gap-2 text-sm font-medium text-slate-700"><div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center"><div className="w-2 h-2 bg-amber-500 rounded-full"></div></div> {isAr ? 'كل مزايا PRO' : 'Tous les avantages PRO'}</li>
-                        <li className="flex items-center gap-2 text-sm font-medium text-slate-700"><div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center"><div className="w-2 h-2 bg-amber-500 rounded-full"></div></div> {isAr ? 'أولوية في التصنيع' : 'Priorité de production'}</li>
-                        <li className="flex items-center gap-2 text-sm font-medium text-slate-700"><div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center"><div className="w-2 h-2 bg-amber-500 rounded-full"></div></div> {isAr ? 'مدير حساب شخصي' : 'Account manager dédié'}</li>
+                        <li className="flex items-center gap-2 text-sm font-medium text-slate-700"><div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center"><div className="w-2 h-2 bg-amber-500 rounded-full"></div></div> {t('Tous les avantages PRO', 'All PRO benefits', 'جميع مزايا PRO')}</li>
+                        <li className="flex items-center gap-2 text-sm font-medium text-slate-700"><div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center"><div className="w-2 h-2 bg-amber-500 rounded-full"></div></div> {t('Priorité de production', 'Production priority', 'أولوية في الإنتاج')}</li>
+                        <li className="flex items-center gap-2 text-sm font-medium text-slate-700"><div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center"><div className="w-2 h-2 bg-amber-500 rounded-full"></div></div> {t('Account manager dédié', 'Dedicated account manager', 'مدير حساب مخصص')}</li>
                      </ul>
-                     <a href="https://wa.me/212600000000?text=Je%20veux%20passer%20au%20plan%20PREMIUM" target="_blank" rel="noreferrer" className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold text-center hover:opacity-90 transition-opacity shadow-md shadow-amber-500/25 block">
-                        {isAr ? 'اختيار باقة PREMIUM' : 'Choisir le plan PREMIUM'}
-                     </a>
+                     <button onClick={() => window.open(`https://wa.me/212684252575?text=Bonjour, je souhaite activer le plan PREMIUM pour ma boutique ${currentUser?.nom}.`, '_blank')} className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold text-center hover:opacity-90 transition-opacity shadow-md shadow-amber-500/25 block">
+                        {t('Choisir le plan PREMIUM', 'Choose PREMIUM plan', 'اختيار باقة PREMIUM')}
+                     </button>
                   </div>
                </div>
                
                <div className="mt-8 bg-slate-50 border border-slate-200 rounded-2xl p-6">
-                  <h4 className="font-black text-slate-900 mb-4 text-center">{isAr ? 'طرق الدفع المتاحة (المغرب)' : 'Moyens de paiement (Maroc)'}</h4>
+                  <h4 className="font-black text-slate-900 mb-4 text-center">{t('Moyens de paiement (Maroc)', 'Payment methods (Morocco)', 'طرق الدفع المتاحة (المغرب)')}</h4>
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-sm font-medium text-slate-600">
                      <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm">
                         🏦 Virement Bancaire (CIH, Attijari, etc.)

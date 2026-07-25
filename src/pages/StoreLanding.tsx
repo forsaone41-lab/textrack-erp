@@ -33,8 +33,11 @@ export default function StoreLanding() {
             >
               {isAr ? 'FR' : 'AR'}
             </button>
-            <Link to="/store-signup" className="px-6 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-indigo-600 transition-all shadow-sm">
+            <Link to="/store-signup?mode=login" className="px-6 py-2.5 text-slate-600 hover:text-slate-900 text-sm font-bold transition-colors">
               {isAr ? 'تسجيل الدخول' : 'Connexion'}
+            </Link>
+            <Link to="/store-signup" className="px-6 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all shadow-[0_4px_10px_rgba(37,99,235,0.2)]">
+              {isAr ? 'أنشئ حساباً' : 'Créer un compte'}
             </Link>
           </div>
         </div>
@@ -185,7 +188,7 @@ export default function StoreLanding() {
             {/* PRO Plan */}
             <div className="bg-slate-900 rounded-[2rem] p-8 md:p-10 border border-indigo-500 shadow-[0_20px_50px_rgba(99,102,241,0.2)] relative overflow-hidden transform md:-translate-y-4 hover:-translate-y-6 transition-transform duration-300">
               <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full blur-[100px] opacity-40" />
-              <div className="absolute top-8 right-8 bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg shadow-amber-500/20">
+              <div className={`absolute top-8 ${isAr ? 'left-8' : 'right-8'} bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg shadow-amber-500/20`}>
                 {isAr ? 'الأكثر طلباً' : 'Le plus populaire'}
               </div>
               

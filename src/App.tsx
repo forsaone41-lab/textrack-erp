@@ -69,6 +69,8 @@ const StoreBuilder    = lazy(() => import('./pages/StoreBuilder'));
 const StoreLanding    = lazy(() => import('./pages/StoreLanding'));
 const StoreSignup     = lazy(() => import('./pages/StoreSignup'));
 const MerchantDashboard = lazy(() => import('./pages/MerchantDashboard'));
+const Terms           = lazy(() => import('./pages/Terms'));
+const Privacy         = lazy(() => import('./pages/Privacy'));
 import { PageLoader } from './components/PageLoader';
 
 import { initMockData, User, loadPermissions, AppPage, loadCompanyProfile, syncCompanyProfile, loadData, saveRecord } from './types';
@@ -393,6 +395,16 @@ function AppContent() {
         <Route path="/new" element={<NewLanding />} />
         <Route path="/store-landing" element={<StoreLanding />} />
         <Route path="/store-signup" element={<StoreSignup onLogin={handleLogin} />} />
+        <Route path="/terms" element={
+          <Suspense fallback={<PageLoader />}>
+            <Terms />
+          </Suspense>
+        } />
+        <Route path="/privacy" element={
+          <Suspense fallback={<PageLoader />}>
+            <Privacy />
+          </Suspense>
+        } />
         <Route path="/" element={<LandingPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
