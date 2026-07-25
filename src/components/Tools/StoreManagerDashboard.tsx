@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 // Vercel deployment trigger
-import { Plus, Settings, ExternalLink, Crown, ArrowRight, ArrowLeft, TrendingUp, Sparkles, LayoutDashboard, Loader2, Trash2, AlertTriangle, X } from 'lucide-react';
+import { Plus, Settings, ExternalLink, Crown, ArrowRight, ArrowLeft, TrendingUp, Sparkles, LayoutDashboard, Loader2, Trash2, AlertTriangle, X, Lock } from 'lucide-react';
 import { supabase } from '../../supabase';
 
 export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIsAr }: any) {
@@ -113,9 +113,6 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
             <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
                <div className="flex-1">
                   <div className="flex items-center gap-3 mb-4">
-                     <span className="px-3 py-1 bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 text-xs font-black uppercase tracking-widest rounded-full flex items-center gap-1 shadow-lg shadow-amber-500/20">
-                        <Crown className="w-3 h-3" /> Plan PRO
-                     </span>
                      <span className="text-indigo-200 text-sm font-medium">{storeIsAr ? 'أدوات حصرية' : 'Outils Exclusifs'}</span>
                   </div>
                   <h2 className="text-3xl md:text-4xl font-black mb-4 leading-tight">
@@ -126,10 +123,9 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                         ? 'ميزة حصرية للمشتركين في خطة PRO. قم بتحليل السوق المغربي، اعرف أسعار المنافسين، واكتشف مجالات (Niches) مربحة قبل الجميع.'
                         : 'Fonctionnalité exclusive au plan PRO. Analysez le marché marocain, découvrez les prix des concurrents et trouvez des niches rentables.'}
                   </p>
-                  <button onClick={onOpenAI} className="flex items-center gap-2 bg-white text-indigo-900 px-8 py-4 rounded-xl font-black hover:scale-105 active:scale-95 transition-all shadow-xl shadow-white/10 group">
-                     <Sparkles className="w-5 h-5 text-indigo-600" />
+                  <button onClick={onOpenAI} className="flex items-center gap-3 bg-white/10 border border-white/20 text-white px-8 py-4 rounded-xl font-black hover:bg-white/20 active:scale-95 transition-all shadow-xl group">
+                     <Lock className="w-5 h-5 text-amber-400" />
                      {storeIsAr ? 'إطلاق المساعد الخبير' : 'Lancer l\'Assistant PRO'}
-                     <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                   </button>
                </div>
                
