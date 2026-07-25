@@ -164,7 +164,7 @@ export default function StoreLanding() {
           <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-8 max-w-7xl mx-auto">
             {/* PRO Plan */}
             <div className="bg-white rounded-[2rem] p-8 border border-slate-200 hover:border-indigo-200 transition-all hover:shadow-xl relative overflow-hidden flex flex-col">
-              <div className="absolute top-0 right-0 p-6 opacity-50">
+              <div className={`absolute top-6 ${isAr ? 'left-6' : 'right-6'}`}>
                 <span className="bg-indigo-100 text-indigo-600 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
                   {isAr ? 'تجربة مجانية 14 يوم' : '14 jours d\'essai'}
                 </span>
