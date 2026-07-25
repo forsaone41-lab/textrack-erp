@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Settings, ExternalLink, Crown, ArrowRight, TrendingUp, Sparkles, LayoutDashboard, Loader2, Trash2, AlertTriangle, X } from 'lucide-react';
+import { Plus, Settings, ExternalLink, Crown, ArrowRight, ArrowLeft, TrendingUp, Sparkles, LayoutDashboard, Loader2, Trash2, AlertTriangle, X } from 'lucide-react';
 import { supabase } from '../../supabase';
 
 export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIsAr }: any) {
@@ -85,9 +85,18 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
       <div className={`max-w-6xl mx-auto w-full space-y-8 ${storeIsAr ? 'text-right' : 'text-left'}`}>
          {/* Header */}
          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-               <h1 className="text-3xl font-black text-slate-900 tracking-tight">{storeIsAr ? 'متاجري' : 'Mes Boutiques'}</h1>
-               <p className="text-slate-500 mt-1">{storeIsAr ? 'إدارة المتاجر الخاصة بك، والاشتراكات، والأدوات المتقدمة.' : 'Gérez vos boutiques, abonnements et outils avancés.'}</p>
+            <div className={`flex items-center gap-4 ${storeIsAr ? 'flex-row-reverse text-right' : 'text-left'}`}>
+               <button 
+                  onClick={() => window.location.href = '/'} 
+                  className="p-3 bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 hover:text-indigo-600 transition-all shadow-sm active:scale-95 flex-shrink-0"
+                  title={storeIsAr ? 'الرجوع للرئيسية' : 'Retour à l\'accueil'}
+               >
+                  {storeIsAr ? <ArrowRight className="w-6 h-6" /> : <ArrowLeft className="w-6 h-6" />}
+               </button>
+               <div>
+                  <h1 className="text-3xl font-black text-slate-900 tracking-tight">{storeIsAr ? 'متاجري' : 'Mes Boutiques'}</h1>
+                  <p className="text-slate-500 mt-1">{storeIsAr ? 'إدارة المتاجر الخاصة بك، والاشتراكات، والأدوات المتقدمة.' : 'Gérez vos boutiques, abonnements et outils avancés.'}</p>
+               </div>
             </div>
             <button onClick={onSelectStore} className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 active:scale-95">
                <Plus className="w-5 h-5" />
