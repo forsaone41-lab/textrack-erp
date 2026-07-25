@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Code, Megaphone, PackageSearch, CheckCircle2, DollarSign } from 'lucide-react';
+import { ArrowRight, Code, Megaphone, PackageSearch, CheckCircle2, DollarSign, Factory } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { Link } from 'react-router-dom';
 
@@ -50,7 +50,7 @@ export default function Partners() {
 
       {/* 3 Pillars Section */}
       <section className="py-16 px-6">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-3 gap-8">
+        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-8">
           
           {/* Developers / Agencies */}
           <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-xl shadow-slate-200/20 hover:-translate-y-2 transition-all">
@@ -137,6 +137,35 @@ export default function Partners() {
             </ul>
             <Link to="/store-signup" className="flex items-center justify-center gap-2 w-full py-4 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-xl font-bold transition-colors">
               {isAr ? 'انضم كمورد' : 'Devenir Fournisseur'} <ArrowRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
+            </Link>
+          </div>
+
+          {/* Factories / Ateliers */}
+          <div className="bg-slate-900 rounded-3xl p-8 border border-slate-700 shadow-xl shadow-slate-900/20 hover:-translate-y-2 transition-all">
+            <div className="w-14 h-14 bg-slate-800 text-amber-400 rounded-2xl flex items-center justify-center mb-6">
+              <Factory className="w-7 h-7" />
+            </div>
+            <h3 className="text-2xl font-black text-white mb-4">
+              {isAr ? 'برنامج المعامل وورشات الخياطة' : 'Pour Ateliers & Usines'}
+            </h3>
+            <p className="text-slate-400 mb-8 h-24">
+              {isAr 
+                ? 'هل لديك معمل أو ورشة خياطة؟ قدم خدمات التفصيل والتصنيع بالجملة لمئات المتاجر الإلكترونية النشطة في منصتنا.'
+                : 'Vous avez un atelier de confection ? Proposez vos services de production en gros à des centaines de boutiques actives.'}
+            </p>
+            <ul className="space-y-3 mb-8">
+              {[
+                isAr ? 'طلبات تصنيع مستمرة (B2B)' : 'Commandes B2B continues',
+                isAr ? 'التعامل المباشر مع أصحاب الماركات' : 'Contact direct avec les marques',
+                isAr ? 'ضمان الدفع عبر المنصة' : 'Paiement garanti via la plateforme',
+              ].map((f, i) => (
+                <li key={i} className="flex items-center gap-2 text-slate-300 text-sm font-medium">
+                  <CheckCircle2 className="w-4 h-4 text-amber-400" /> {f}
+                </li>
+              ))}
+            </ul>
+            <Link to="/store-signup" className="flex items-center justify-center gap-2 w-full py-4 bg-amber-500 hover:bg-amber-400 text-amber-950 rounded-xl font-bold transition-colors">
+              {isAr ? 'انضم كمعمل' : 'Devenir Atelier Partenaire'} <ArrowRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
             </Link>
           </div>
 
