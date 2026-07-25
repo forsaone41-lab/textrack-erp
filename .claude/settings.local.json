@@ -12,7 +12,8 @@
       "Bash(npx web-push *)",
       "Bash(node -e ' *)",
       "Bash(grep -n \"const { isAr } = useLang\\\\|const \\\\[storeLang, setStoreLang\\\\]\\\\|const storeIsAr\" src/pages/StoreBuilder.tsx)",
-      "Bash(awk 'NR>165 && NR<420 && /\\\\bisAr\\\\b/ {print NR\": \"$0}' src/pages/StoreBuilder.tsx)"
+      "Bash(awk 'NR>165 && NR<420 && /\\\\bisAr\\\\b/ {print NR\": \"$0}' src/pages/StoreBuilder.tsx)",
+      "Bash(vercel --prod --yes)"
     ]
   }
 }

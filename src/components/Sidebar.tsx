@@ -16,7 +16,9 @@ import {
   Mail,
   Tag,
   Target,
-  Store
+  Store,
+  ChevronDown,
+  Briefcase
 } from 'lucide-react';
 
 import { User, CompanyProfile, loadPermissions, AppPage, syncCompanyProfile } from '../types';
@@ -64,6 +66,7 @@ const LogoIconOnly = ({ src, alt }: { src: string; alt: string }) => {
 export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOpen, company }: SidebarProps) {
   const { lang, isAr, toggle } = useLang();
   const [collapsed, setCollapsed] = React.useState(false);
+  const [workspaceDropdownOpen, setWorkspaceDropdownOpen] = React.useState(false);
   
   const permissions = loadPermissions();
   let userRoleRaw = (currentUser.role || '').toLowerCase();
@@ -162,11 +165,47 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
             )}
           </div>
           {!collapsed && (
-            <div className="flex items-center gap-2 mt-2">
-               <div className="h-px flex-1 bg-gradient-to-r from-indigo-500/50 to-transparent" />
-               <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] whitespace-nowrap">
-                  Elite Factory OS
-               </p>
+            <div className="relative mt-4">
+              <button 
+                onClick={() => setWorkspaceDropdownOpen(!workspaceDropdownOpen)}
+                className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-3 py-2.5 transition-all group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-6 h-6 rounded-md bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+                    <Briefcase className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="flex flex-col items-start min-w-0">
+                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-none mb-1">Espace de travail</span>
+                    <span className="text-[11px] font-black text-white leading-none truncate w-full text-left">BEYACREATIVE PRODUCTION</span>
+                  </div>
+                </div>
+                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${workspaceDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {workspaceDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-slate-800 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[300] animate-in fade-in slide-in-from-top-2">
+                   <a href="/" className="flex items-center gap-3 px-3 py-3 hover:bg-white/5 transition-colors group">
+                     <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-colors shrink-0">
+                       <Briefcase className="w-4 h-4" />
+                     </div>
+                     <span className="text-[10px] font-bold text-white leading-tight">BEYACREATIVE PRODUCTION</span>
+                   </a>
+                   <div className="h-px bg-white/5" />
+                   <a href="/store-builder" className="flex items-center gap-3 px-3 py-3 hover:bg-white/5 transition-colors group">
+                     <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition-colors shrink-0">
+                       <Store className="w-4 h-4" />
+                     </div>
+                     <span className="text-[10px] font-bold text-white leading-tight">BEYA STORE</span>
+                   </a>
+                   <div className="h-px bg-white/5" />
+                   <a href="/partenaire-portal" className="flex items-center gap-3 px-3 py-3 hover:bg-white/5 transition-colors group">
+                     <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors shrink-0">
+                       <Globe className="w-4 h-4" />
+                     </div>
+                     <span className="text-[10px] font-bold text-white leading-tight">BEYA PORTAL</span>
+                   </a>
+                </div>
+              )}
             </div>
           )}
         </div>
