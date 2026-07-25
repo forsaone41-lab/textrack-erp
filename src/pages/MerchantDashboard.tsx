@@ -48,7 +48,7 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
                setStoreCount(data.length);
                if (data[0].created_at) {
                   const createdAt = new Date(data[0].created_at);
-                  const diffDays = Math.floor(Math.abs(new Date() - createdAt) / (1000 * 60 * 60 * 24));
+                  const diffDays = Math.floor(Math.abs(new Date().getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
                   setTrialDaysLeft(Math.max(0, 14 - diffDays));
                }
                let totalVisitors = 0;

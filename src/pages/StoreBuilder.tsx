@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams } from 'react-router-dom';
-import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown, TrendingUp, Package, RefreshCw, Undo2, Menu, Home, Heart, SlidersHorizontal, ArrowRight, ArrowLeft, Grid, User, Ruler, Crown, RotateCcw, BarChart3 } from 'lucide-react';
+import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown, TrendingUp, Package, RefreshCw, Undo2, Menu, Home, Heart, SlidersHorizontal, ArrowRight, ArrowLeft, Grid, User, Ruler, Crown, RotateCcw, BarChart3, LogOut } from 'lucide-react';
 
 
 const ReadMoreDescription = ({ text, className, isAr }: any) => {
@@ -162,7 +162,11 @@ const IframePreview = ({ children, isMobile, className }: any) => {
 export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: boolean }) {
   const { storeNameUrl } = useParams<{storeNameUrl: string}>();
   const config = getSavedConfig();
-  const { isAr } = useLang();
+  const { isAr: adminIsAr } = useLang();
+  const [merchantUser, setMerchantUser] = useState<any>(null);
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setMerchantUser(data.user));
+  }, []);
   const [platformMode, setPlatformModeState] = useState<'gestion'|'builder'>(
      (localStorage.getItem('beya_platform_mode') as any) || (config.storeName ? 'gestion' : 'builder')
   );
@@ -419,6 +423,12 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   };
   const [storeLang, setStoreLang] = useState<'fr'|'en'|'ar'>(config.storeLang || 'fr');
   const storeIsAr = storeLang === 'ar';
+  // Merchants have no separate way to set an "admin dashboard language" (that toggle
+  // only exists in the full ERP Sidebar, which merchant accounts never see), so the
+  // whole StoreBuilder UI follows the same "Langue de la boutique" switch instead of
+  // the ERP-wide adminIsAr - otherwise switching it only half-translates the screen.
+  const isAr = storeIsAr;
+  void adminIsAr;
   
   const tr = (t: string) => {
      const dict: Record<string, { fr: string; en: string; ar: string }> = {
@@ -4373,11 +4383,35 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
             <button onClick={() => setNewOrderToast(null)} className="text-slate-400 hover:text-slate-600 shrink-0"><X className="w-4 h-4" /></button>
          </div>
       )}
-      {/* Top Navigation / Back Button */}
+            {/* Top Navigation / Back Button */}
       <div className="flex items-center justify-between mb-4">
          <button onClick={() => setBuilderMode('dashboard')} className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors font-bold text-sm bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-200">
             {isAr ? '→ العودة إلى لوحة المتاجر' : '← Retour aux Boutiques'}
          </button>
+         
+         {/* Profile / Logout */}
+         {!isLiveStore && (
+            <div className="flex items-center gap-2 bg-white px-2 py-1.5 rounded-2xl shadow-sm border border-slate-200">
+               <div className="hidden sm:block text-right pr-2 pl-3">
+                  <p className="text-sm font-bold text-slate-900 leading-none">{merchantUser?.user_metadata?.full_name || 'Merchant'}</p>
+                  <p className="text-[10px] font-black text-indigo-500 uppercase mt-1 tracking-wider">{isAr ? 'مدير المتجر' : 'Gérant'}</p>
+               </div>
+               <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-md border-2 border-white">
+                  {(merchantUser?.user_metadata?.full_name || 'M').charAt(0).toUpperCase()}
+               </div>
+               <div className="w-px h-6 bg-slate-200 mx-1"></div>
+               <button 
+                 onClick={async () => {
+                    await supabase.auth.signOut();
+                    window.location.href = '/';
+                 }}
+                 className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+                 title={isAr ? 'تسجيل الخروج' : 'Déconnexion'}
+               >
+                 <LogOut className="w-4 h-4" />
+               </button>
+            </div>
+         )}
       </div>
 
       <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${isAr ? 'sm:flex-row-reverse' : ''}`}>
