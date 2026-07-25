@@ -523,7 +523,12 @@ function AppContent() {
   }
 
   if (currentUser.role === 'client') {
-    return <PortailClient currentUser={currentUser} onLogout={handleLogout} />;
+    return (
+      <Routes>
+        <Route path="/store-signup" element={<StoreSignup onLogin={handleLogin} />} />
+        <Route path="*" element={<PortailClient currentUser={currentUser} onLogout={handleLogout} />} />
+      </Routes>
+    );
   }
 
   if (currentUser.role === 'partenaire') {
