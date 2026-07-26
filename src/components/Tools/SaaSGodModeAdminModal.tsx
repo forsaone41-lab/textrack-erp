@@ -275,12 +275,18 @@ export default function SaaSGodModeAdminModal({
 
   // Filtered Stores List
   const filteredStores = allStoresData.filter(st => {
-    const nameMatch = (st.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      (st.domain || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      (st.config_json?.owner_email || '').toLowerCase().includes(searchTerm.toLowerCase());
-    if (!nameMatch) return false;
+    // Search filter: empty search = show all
+    if (searchTerm.trim()) {
+      const q = searchTerm.toLowerCase();
+      const nameMatch = (st.name || '').toLowerCase().includes(q) ||
+                        (st.domain || '').toLowerCase().includes(q) ||
+                        (st.config_json?.owner_email || '').toLowerCase().includes(q) ||
+                        (st.id || '').toLowerCase().includes(q);
+      if (!nameMatch) return false;
+    }
 
-    const plan = st.subscription_tier || st.config_json?.plan || 'NORMAL';
+    // Plan filter
+    const plan = (st.subscription_tier || st.config_json?.plan || 'NORMAL').toUpperCase();
     if (filterPlan === 'NORMAL' && plan !== 'NORMAL') return false;
     if (filterPlan === 'PRO' && plan !== 'PRO') return false;
     if (filterPlan === 'PREMIUM' && plan !== 'PREMIUM') return false;
@@ -289,10 +295,11 @@ export default function SaaSGodModeAdminModal({
       if (!end || new Date(end) < new Date()) return false;
     }
 
-    // Persona Filtering
-    const persona = st.config_json?.persona || st.config_json?.intent || 'BOUTIQUE';
-    if (filterPersona !== 'ALL' && persona !== persona) return false;
-    if (filterPersona !== 'ALL' && persona !== filterPersona) return false;
+    // Persona filter — fallback to BOUTIQUE if not set
+    if (filterPersona !== 'ALL') {
+      const persona = (st.config_json?.persona || st.config_json?.intent || 'BOUTIQUE').toUpperCase();
+      if (persona !== filterPersona.toUpperCase()) return false;
+    }
 
     return true;
   });
