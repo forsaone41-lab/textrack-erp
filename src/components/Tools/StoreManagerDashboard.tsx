@@ -58,14 +58,17 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                      owner_id: st.config_json?.owner_id
                   }));
 
-               // Isolate stores for merchants, BUT never hide stores for admin or matching email
-               if (!isAdminOrOwner && userId) {
-                  realStores = realStores.filter((st: any) => 
-                     st.owner_id === userId || 
-                     st.config_json?.owner_email === user?.email ||
-                     st.config_json?.owner_id === userId ||
-                     st.url === 'fashlow.store'
-                  );
+               // STRICT MULTI-TENANT DATA ISOLATION:
+               // Only system admin or fashlow@gmail.com / 00.emaily.zero@gmail.com see all stores.
+               // Normal merchants MUST ONLY see their own stores!
+               if (!isAdminOrOwner && user) {
+                  const userEmailLower = user.email ? user.email.toLowerCase() : '';
+                  realStores = realStores.filter((st: any) => {
+                     const stEmailLower = st.config_json?.owner_email ? st.config_json.owner_email.toLowerCase() : '';
+                     const isOwnerByEmail = stEmailLower && stEmailLower === userEmailLower;
+                     const isOwnerById = (st.owner_id && st.owner_id === userId) || (st.config_json?.owner_id && st.config_json?.owner_id === userId);
+                     return isOwnerByEmail || isOwnerById;
+                  });
                }
 
                // Set to realStores.
