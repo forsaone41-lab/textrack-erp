@@ -1070,7 +1070,10 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
   // Runs for both the editor and the live storefront.
   useEffect(() => {
      if (!storeName) return;
-     const domain = customDomain || (storeSlug ? `${storeSlug}.beyacreative.com` : `${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`);
+     let domain = customDomain || (storeSlug ? `${storeSlug}.beyacreative.com` : `${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`);
+     if (storeName.toLowerCase().includes('fashlow') || (storeSlug && storeSlug.toLowerCase().includes('fashlow'))) {
+        domain = 'fashlow.store';
+     }
      supabase.from('stores').select('subscription_tier').eq('domain', domain).single()
         .then(({ data }: any) => {
            if (data?.subscription_tier) setSubscriptionTier(data.subscription_tier);
@@ -1226,7 +1229,10 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
     
     // Sync to Supabase for cross-domain live preview (SaaS mode)
     try {
-       const domain = customDomain || (storeSlug ? `${storeSlug}.beyacreative.com` : `${storeName.toLowerCase().replace(/\\s+/g, '')}.beyacreative.com`);
+       let domain = customDomain || (storeSlug ? `${storeSlug}.beyacreative.com` : `${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`);
+       if (storeName.toLowerCase().includes('fashlow') || (storeSlug && storeSlug.toLowerCase().includes('fashlow'))) {
+          domain = 'fashlow.store';
+       }
        
        // Update both exact domain AND a fallback to ensure changes apply immediately
        await supabase.from('stores').upsert({
