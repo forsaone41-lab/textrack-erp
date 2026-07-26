@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Building2, User, Sparkles, ShoppingCart, Rocket, ChevronRight, CheckCircle2, ArrowRight, X, Phone, Mail, ImageIcon, MousePointerClick, MessageSquareText, PhoneCall, Sun, Moon, ChevronDown, Globe } from 'lucide-react';
 import { saveRecord, TarifService, loadData } from '../types';
 import { useLang } from '../contexts/LangContext';
@@ -23,7 +24,8 @@ export default function NewLanding() {
     phone: '',
     email: '',
     name: '',
-    details: ''
+    details: '',
+    needWebsite: false
   });
 
   const [newClientCode, setNewClientCode] = useState<{name: string, code: string, email: string} | null>(null);
@@ -373,25 +375,34 @@ export default function NewLanding() {
             {isAr ? 'من الفكرة إلى الإنتاج النهائي. نرافق الشركات والماركات والمصممين في تحقيق تشكيلاتهم بجودة استثنائية.' : "De l'idée à la production finale. Nous accompagnons les entreprises, les marques et les créateurs dans la réalisation de leurs collections de vêtements avec une qualité premium."}
           </p>
 
-          {/* SMART E-COMMERCE WEBSITE SOLUTION BADGE / CARD */}
-          <div className={`mb-8 p-4 md:p-5 rounded-3xl border backdrop-blur-md max-w-xl mx-auto text-left flex items-start gap-4 shadow-xl transition-all ${isDark ? 'bg-gradient-to-r from-indigo-950/60 to-slate-900/80 border-indigo-500/30 text-indigo-100' : 'bg-gradient-to-r from-indigo-50/90 via-blue-50/80 to-slate-50 border-indigo-200 text-slate-800'}`}>
-             <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/30">
-                <Globe className="w-6 h-6" />
+          {/* SMART E-COMMERCE WEBSITE SOLUTION BADGE / CLICKABLE CARD WITH BUTTON */}
+          <div className={`mb-8 p-5 md:p-6 rounded-3xl border backdrop-blur-md max-w-xl mx-auto text-left flex flex-col sm:flex-row items-center sm:items-start gap-4 shadow-xl transition-all hover:scale-[1.01] ${isDark ? 'bg-gradient-to-r from-indigo-950/70 via-slate-900/90 to-slate-900 border-indigo-500/40 text-indigo-100' : 'bg-gradient-to-r from-indigo-50 via-blue-50/90 to-white border-indigo-200 text-slate-800'}`}>
+             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600 to-cyan-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/30">
+                <Globe className="w-7 h-7" />
              </div>
-             <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2 mb-1">
-                   <h4 className="text-xs md:text-sm font-black tracking-tight flex items-center gap-1.5">
+             <div className="flex-1 min-w-0 w-full">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                   <h4 className="text-sm md:text-base font-black tracking-tight flex items-center gap-1.5">
                       {isAr ? '🌐 معندكش موقع إلكتروني للبيع؟' : '🌐 Pas encore de site E-commerce pour vendre ?'}
                    </h4>
-                   <span className="px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0">
+                   <span className="px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0">
                       {isAr ? 'حل متكامل 100%' : 'Clés en main'}
                    </span>
                 </div>
-                <p className="text-xs leading-relaxed opacity-90 font-medium">
+                <p className="text-xs md:text-sm leading-relaxed opacity-90 font-medium mb-4">
                    {isAr 
                      ? 'ماشي غير كنصاوبو ليك الملابس! كنصاوبو ليك حتى المتجر الإلكتروني الاحترافي (Beya Store) لتتبع المبيعات والطلبات فورياً.' 
                      : 'Nous ne confectionnons pas seulement vos vêtements ! Nous créons également votre boutique en ligne (Beya Store) clés en main pour vendre et gérer vos commandes.'}
                 </p>
+                <div className="flex items-center justify-start">
+                   <Link
+                      to="/store-landing"
+                      className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-black text-xs md:text-sm transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
+                   >
+                      <span>{isAr ? '🚀 اكتشف Beya Store وصمم متجرك الآن' : '🚀 Découvrir Beya Store et créer ma boutique'}</span>
+                      <ArrowRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
+                   </Link>
+                </div>
              </div>
           </div>
 
@@ -507,7 +518,7 @@ export default function NewLanding() {
                     {isAr ? 'تأكيد الطلب عبر الواتساب' : 'Confirmer via WhatsApp'}
                   </a>
                   
-                  <button onClick={() => { setIsModalOpen(false); setIsSuccess(false); setStep(1); setFormData({ clientType: '', companyName: '', companySector: '', budget: '', intent: '', deadline: '', photo: '', phone: '', name: '', email: '', details: '' }); }} className="text-slate-400 hover:text-white text-sm font-medium">
+                  <button onClick={() => { setIsModalOpen(false); setIsSuccess(false); setStep(1); setFormData({ clientType: '', companyName: '', companySector: '', budget: '', intent: '', deadline: '', photo: '', phone: '', name: '', email: '', details: '', needWebsite: false }); }} className="text-slate-400 hover:text-white text-sm font-medium">
                     {isAr ? 'إغلاق' : 'Fermer'}
                   </button>
                 </div>

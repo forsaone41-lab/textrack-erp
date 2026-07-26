@@ -215,7 +215,7 @@ export default function Utilisateurs() {
       } catch (e) {}
       
       const validUsers = (uList || []).filter(u => 
-        u.name !== '__DELETED__' && 
+        (u.nom || (u as any).name) !== '__DELETED__' && 
         !deletedIds.includes(u.id)
       );
       setUsers(validUsers);

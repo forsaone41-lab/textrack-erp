@@ -675,149 +675,90 @@ export default function SaaSGodModeAdminModal({
                 const trialEnd = store.config_json?.trial_end_date;
                 const isTrialActive = trialEnd && new Date(trialEnd) >= new Date();
 
+                const planStyles: Record<string, string> = {
+                  NORMAL: isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600',
+                  PRO: 'bg-amber-500/15 text-amber-500',
+                  PREMIUM: 'bg-purple-500/15 text-purple-500',
+                };
+                const personaLabel = persona === 'COUTURE'
+                  ? (lang === 'ar' ? 'خياطة وإنتاج' : 'Couture & Atelier')
+                  : persona === 'COMMERCIAL'
+                  ? (lang === 'ar' ? 'شريك مسوق' : 'Affilié Commercial')
+                  : (lang === 'ar' ? 'متجر إلكتروني' : 'Marque / Boutique');
+
                 return (
                   <div
                     key={store.id}
-                    className={`rounded-3xl p-6 border transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-6 ${c.card} ${c.shadow} ${c.cardHover}`}
+                    className={`rounded-2xl p-5 border transition-all ${c.card} ${c.shadow} ${c.cardHover}`}
                   >
-                    {/* Left Info */}
-                    <div className="flex items-start gap-4">
-                      <div className={`w-14 h-14 rounded-2xl border flex items-center justify-center shrink-0 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-100 border-slate-200'}`}>
-                        {persona === 'COUTURE' ? (
-                          <Scissors className="w-6 h-6 text-purple-500" />
-                        ) : persona === 'COMMERCIAL' ? (
-                          <Briefcase className="w-6 h-6 text-blue-500" />
-                        ) : (
-                          <Store className="w-6 h-6 text-indigo-500" />
-                        )}
-                      </div>
-
-                      <div>
-                        <div className="flex items-center gap-3 flex-wrap">
-                          <h3 className={`text-lg font-black ${c.textPrimary}`}>{store.name || 'Boutique Sans Nom'}</h3>
-
-                          <span className={`text-xs font-mono px-3 py-1 rounded-xl border ${isDark ? 'text-slate-300 bg-slate-950 border-slate-800' : 'text-slate-600 bg-slate-50 border-slate-200'}`}>
-                            {store.domain || store.id.substring(0, 10)}
-                          </span>
-
-                          {/* Persona Badge */}
-                          <span className={`text-[11px] font-black uppercase px-3 py-1 rounded-full ${
-                            persona === 'COUTURE'
-                              ? 'bg-purple-500/15 text-purple-500 border border-purple-500/40'
-                              : persona === 'COMMERCIAL'
-                              ? 'bg-blue-500/15 text-blue-500 border border-blue-500/40'
-                              : 'bg-indigo-500/15 text-indigo-500 border border-indigo-500/40'
-                          }`}>
-                            {persona === 'COUTURE'
-                              ? (lang === 'ar' ? '✂️ خياطة وإنتاج فقط' : '✂️ Couture & Atelier')
-                              : persona === 'COMMERCIAL'
-                              ? (lang === 'ar' ? '💼 شريك مسوق' : '💼 Affilié Commercial')
-                              : (lang === 'ar' ? '🛍️ متجر إلكتروني' : '🛍️ Marque / Boutique')}
-                          </span>
-                        </div>
-
-                        <p className={`text-xs font-mono mt-2 ${c.textMuted}`}>{ownerEmail}</p>
-
-                        <div className={`flex items-center gap-4 mt-3 text-xs flex-wrap ${c.textMuted}`}>
-                          <span className="flex items-center gap-1.5">
-                            <Clock className={`w-3.5 h-3.5 ${c.textMuted2}`} />
-                            <span>{lang === 'ar' ? `تاريخ التسجيل: ${createdDate}` : `Créé le : ${createdDate}`}</span>
-                          </span>
-
-                          <span>•</span>
-
-                          {trialEnd ? (
-                            <span className={`flex items-center gap-1.5 font-bold ${isTrialActive ? 'text-emerald-500' : 'text-rose-500'}`}>
-                              <Calendar className="w-3.5 h-3.5" />
-                              <span>
-                                {lang === 'ar'
-                                  ? `${isTrialActive ? '🟢 تجربة نشطة حتى:' : '🔴 انتهت التجربة:'} ${new Date(trialEnd).toLocaleDateString('ar-MA')}`
-                                  : `${isTrialActive ? '🟢 Essai actif au :' : '🔴 Essai expiré :'} ${new Date(trialEnd).toLocaleDateString('fr-FR')}`}
-                              </span>
-                            </span>
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                      {/* Left Info */}
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-11 h-11 rounded-xl border flex items-center justify-center shrink-0 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-100 border-slate-200'}`}>
+                          {persona === 'COUTURE' ? (
+                            <Scissors className="w-5 h-5 text-purple-500" />
+                          ) : persona === 'COMMERCIAL' ? (
+                            <Briefcase className="w-5 h-5 text-blue-500" />
                           ) : (
-                            <span className={c.textMuted2}>
-                              {lang === 'ar' ? 'بدون تاريخ انتهاء تجريبية' : 'Sans date d\'essai'}
-                            </span>
+                            <Store className="w-5 h-5 text-indigo-500" />
                           )}
                         </div>
-                      </div>
-                    </div>
 
-                    {/* Right Controls: Segmented Plan Selector + Trial Extender */}
-                    <div className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-3 rounded-2xl border ${c.subtlePanel}`}>
-                      <span className={`text-xs font-bold px-2 hidden xl:inline ${c.textMuted}`}>
-                        {lang === 'ar' ? 'الخطة الحالية:' : 'Plan :'}
-                      </span>
-
-                      {/* Segmented Button Group */}
-                      <div className={`grid grid-cols-3 gap-1.5 p-1 rounded-xl border ${c.segGroup}`}>
-                        {/* NORMAL */}
-                        <button
-                          onClick={() => handleActivateClientPlan(store.id, 'NORMAL')}
-                          disabled={updatingStoreId === store.id || plan === 'NORMAL'}
-                          className={`px-4 py-2.5 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-                            plan === 'NORMAL'
-                              ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30'
-                              : `${c.textMuted} hover:${isDark ? 'text-white' : 'text-slate-900'} hover:${isDark ? 'bg-slate-800' : 'bg-slate-200'}`
-                          }`}
-                        >
-                          <span>NORMAL</span>
-                          {plan === 'NORMAL' && <Check className="w-3.5 h-3.5" />}
-                        </button>
-
-                        {/* PRO */}
-                        <button
-                          onClick={() => handleActivateClientPlan(store.id, 'PRO')}
-                          disabled={updatingStoreId === store.id || plan === 'PRO'}
-                          className={`px-4 py-2.5 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-                            plan === 'PRO'
-                              ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30'
-                              : 'text-amber-500 hover:bg-amber-500/10'
-                          }`}
-                        >
-                          <Crown className="w-3.5 h-3.5" />
-                          <span>PRO</span>
-                          {plan === 'PRO' && <Check className="w-3.5 h-3.5" />}
-                        </button>
-
-                        {/* PREMIUM */}
-                        <button
-                          onClick={() => handleActivateClientPlan(store.id, 'PREMIUM')}
-                          disabled={updatingStoreId === store.id || plan === 'PREMIUM'}
-                          className={`px-4 py-2.5 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-                            plan === 'PREMIUM'
-                              ? 'bg-purple-600 text-white shadow-md shadow-purple-500/30'
-                              : 'text-purple-500 hover:bg-purple-600/10'
-                          }`}
-                        >
-                          <Award className="w-3.5 h-3.5" />
-                          <span>PREMIUM</span>
-                          {plan === 'PREMIUM' && <Check className="w-3.5 h-3.5" />}
-                        </button>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className={`text-sm font-bold truncate ${c.textPrimary}`}>{store.name || 'Boutique Sans Nom'}</h3>
+                            <span className={`text-[11px] font-black uppercase px-2 py-0.5 rounded-md ${planStyles[plan] || planStyles.NORMAL}`}>
+                              {plan}
+                            </span>
+                          </div>
+                          <p className={`text-xs truncate ${c.textMuted}`}>
+                            {store.domain || store.id.substring(0, 10)} · {personaLabel} · {ownerEmail}
+                          </p>
+                          <p className={`text-[11px] mt-0.5 ${c.textMuted2}`}>
+                            {lang === 'ar' ? `منذ ${createdDate}` : `Créé le ${createdDate}`}
+                            {trialEnd && (
+                              <span className={isTrialActive ? 'text-emerald-500 font-semibold' : 'text-rose-500 font-semibold'}>
+                                {' · '}
+                                {lang === 'ar'
+                                  ? `${isTrialActive ? 'تجربة حتى' : 'انتهت التجربة'} ${new Date(trialEnd).toLocaleDateString('ar-MA')}`
+                                  : `${isTrialActive ? 'essai jusqu\'au' : 'essai expiré'} ${new Date(trialEnd).toLocaleDateString('fr-FR')}`}
+                              </span>
+                            )}
+                          </p>
+                        </div>
                       </div>
 
-                      {/* Separate +7 Days Trial Button */}
-                      <button
-                        onClick={() => handleActivateClientPlan(store.id, plan as any, 7)}
-                        disabled={updatingStoreId === store.id}
-                        className="px-4 py-3 rounded-xl text-xs font-black bg-sky-500/10 text-sky-500 border border-sky-500/30 hover:bg-sky-500 hover:text-white transition-all flex items-center justify-center gap-2"
-                        title={lang === 'ar' ? 'تمديد الصلاحية التجريبية 7 أيام إضافية' : "Prolonger l'essai de 7 jours"}
-                      >
-                        <Calendar className="w-4 h-4" />
-                        <span>{lang === 'ar' ? '+7 يوم تجريبي' : '+7j Essai'}</span>
-                      </button>
+                      {/* Right Controls: compact plan select + trial extend */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <select
+                          value={plan}
+                          disabled={updatingStoreId === store.id}
+                          onChange={(e) => handleActivateClientPlan(store.id, e.target.value as any)}
+                          className={`text-xs font-bold border rounded-lg px-3 py-2 focus:outline-none transition-colors ${c.input}`}
+                          title={lang === 'ar' ? 'تغيير الخطة' : 'Changer le plan'}
+                        >
+                          <option value="NORMAL">NORMAL</option>
+                          <option value="PRO">PRO</option>
+                          <option value="PREMIUM">PREMIUM</option>
+                        </select>
 
-                      {/* Separate +30 Days Trial Button */}
-                      <button
-                        onClick={() => handleActivateClientPlan(store.id, plan as any, 30)}
-                        disabled={updatingStoreId === store.id}
-                        className="px-4 py-3 rounded-xl text-xs font-black bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white transition-all flex items-center justify-center gap-2"
-                        title={lang === 'ar' ? 'تمديد الصلاحية التجريبية 30 يوماً إضافية' : "Prolonger l'essai de 30 jours"}
-                      >
-                        <Calendar className="w-4 h-4" />
-                        <span>{lang === 'ar' ? '+30 يوم تجريبي' : '+30j Essai'}</span>
-                      </button>
+                        <button
+                          onClick={() => handleActivateClientPlan(store.id, plan as any, 7)}
+                          disabled={updatingStoreId === store.id}
+                          className={`px-2.5 py-2 rounded-lg text-xs font-bold border transition-colors ${c.chipInactive} border-transparent`}
+                          title={lang === 'ar' ? 'تمديد الصلاحية التجريبية 7 أيام' : "Prolonger l'essai de 7 jours"}
+                        >
+                          +7j
+                        </button>
+                        <button
+                          onClick={() => handleActivateClientPlan(store.id, plan as any, 30)}
+                          disabled={updatingStoreId === store.id}
+                          className={`px-2.5 py-2 rounded-lg text-xs font-bold border transition-colors ${c.chipInactive} border-transparent`}
+                          title={lang === 'ar' ? 'تمديد الصلاحية التجريبية 30 يوماً' : "Prolonger l'essai de 30 jours"}
+                        >
+                          +30j
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
