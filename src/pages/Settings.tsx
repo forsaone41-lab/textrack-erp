@@ -719,17 +719,6 @@ export default function Settings() {
                 className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
-            <div className="md:col-span-2">
-              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-2">
-                {isAr ? 'سعر باقة AGENCY للوكالات (درهم/شهر)' : 'Prix plan AGENCY (MAD/mois)'}
-              </label>
-              <input
-                type="number"
-                value={profile.storeAgencyPrice || '999'}
-                onChange={e => handleChange('storeAgencyPrice', e.target.value)}
-                className="w-full px-4 py-2 bg-indigo-50 border border-indigo-200 rounded-xl text-sm font-bold text-indigo-700 outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
           </div>
         </div>
 

@@ -9,7 +9,6 @@ export default function StoreLanding() {
   const company = loadCompanyProfile();
   const proPrice = company.storeProPrice || '299';
   const premiumPrice = company.storePremiumPrice || '499';
-  const agencyPrice = company.storeAgencyPrice || '999';
   
   const whatsappUrl = `https://wa.me/${company.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
     isAr ? 'مرحباً BEYA CREATIVE، أريد الاستفسار عن خدمة تصميم وبناء متجر إلكتروني احترافي.' : 'Bonjour BEYA CREATIVE, je suis intéressé par la création d\'une boutique en ligne professionnelle.'
