@@ -809,8 +809,9 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
            }
            let { data, error } = await query.single();
            
-           // Fallback for SaaS mockup: if domain not found, grab the latest saved store
-           if (!data) {
+           // Fallback for SaaS local previews ONLY: if domain not found and NOT a production domain, grab the latest saved store
+           const isCustomProductionDomain = currentDomain !== 'localhost' && !currentDomain.includes('vercel.app') && !currentDomain.includes('127.0.0.1');
+           if (!data && !isCustomProductionDomain) {
               const fallback = await supabase
                  .from('stores')
                  .select('config_json')
@@ -1235,13 +1236,15 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
           updated_at: new Date()
        }, { onConflict: 'domain' });
 
-       // Fallback for SaaS local previews
-       await supabase.from('stores').upsert({
-          domain: 'latest_saved_store',
-          config_json: storeConfig,
-          name: storeName,
-          updated_at: new Date()
-       }, { onConflict: 'domain' });
+       // Only update latest_saved_store if no custom domain is set, preventing cross-tenant contamination
+       if (!customDomain) {
+          await supabase.from('stores').upsert({
+             domain: 'latest_saved_store',
+             config_json: storeConfig,
+             name: storeName,
+             updated_at: new Date()
+          }, { onConflict: 'domain' });
+       }
 
        
 
