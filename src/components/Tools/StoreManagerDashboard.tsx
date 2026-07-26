@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 // Vercel deployment trigger
-import { Plus, Settings, ExternalLink, Crown, ArrowRight, ArrowLeft, TrendingUp, Sparkles, LayoutDashboard, Loader2, Trash2, AlertTriangle, X, Lock, User } from 'lucide-react';
+import { Plus, Settings, ExternalLink, Crown, ArrowRight, ArrowLeft, TrendingUp, Sparkles, LayoutDashboard, Loader2, Trash2, AlertTriangle, X, Lock, User, LogOut } from 'lucide-react';
 import { supabase } from '../../supabase';
 
 export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIsAr }: any) {
@@ -137,108 +137,42 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                  })}
                </div>
 
-               {/* Rich Account Pill Button */}
-               <div className="relative">
+               {/* Sleek Unified Account Pill Button */}
+               <div className="flex items-center bg-white border border-slate-200/80 hover:border-indigo-300 rounded-2xl p-1.5 shadow-sm hover:shadow-md transition-all">
                   <button 
-                     onClick={() => setIsProfileMenuOpen(prev => !prev)}
-                     className="flex items-center gap-2.5 bg-white border border-slate-200 hover:border-indigo-300 text-slate-700 px-3 py-1.5 rounded-xl transition-all shadow-sm active:scale-95 group"
-                     title={storeIsAr ? 'حسابك في BEYA STORE' : 'Votre compte BEYA STORE'}
+                     onClick={() => setIsProfileModalOpen(true)}
+                     className="flex items-center gap-2.5 px-2.5 py-1 hover:bg-slate-50 rounded-xl transition-all text-left"
+                     title={storeIsAr ? 'معلومات الحساب والاشتراك' : 'Mon compte & Abonnement'}
                   >
-                     <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-600 to-slate-900 text-white flex items-center justify-center font-black text-xs shadow-inner shrink-0">
-                        {(userProfile?.name || currentUser?.email || 'M').charAt(0).toUpperCase()}
-                     </div>
-                     <div className="text-left">
-                        <div className="flex items-center gap-1.5">
-                           <span className="text-xs font-black text-slate-900 truncate max-w-[140px]">
-                              {userProfile?.name || currentUser?.user_metadata?.full_name || currentUser?.email?.split('@')[0] || (storeIsAr ? 'تاجر BEYA' : 'Marchand')}
-                           </span>
+                     <div>
+                        <p className="text-xs font-black text-slate-900 leading-tight">
+                           {userProfile?.name || currentUser?.user_metadata?.full_name || currentUser?.email?.split('@')[0] || (storeIsAr ? 'تاجر' : 'Merchant')}
+                        </p>
+                        <p className="text-[10px] font-black uppercase tracking-wider text-indigo-600 mt-0.5 leading-none">
                            {(() => {
                               const hasProStore = stores.some(s => s.plan === 'PRO');
-                              const isAdmin = currentUser?.email === '00.emaily.zero@gmail.com' || currentUser?.role === 'admin';
-                              return (
-                                 <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
-                                    isAdmin ? 'bg-purple-100 text-purple-700 border border-purple-200' :
-                                    hasProStore ? 'bg-amber-100 text-amber-800 border border-amber-200' : 
-                                    'bg-slate-100 text-slate-600 border border-slate-200'
-                                 }`}>
-                                    {isAdmin ? 'ADMIN' : hasProStore ? 'PRO' : 'NORMAL'}
-                                 </span>
-                              );
+                              const isAdmin = currentUser?.email === '00.emaily.zero@gmail.com' || currentUser?.email === 'fashlow@gmail.com' || currentUser?.role === 'admin';
+                              if (isAdmin) return storeIsAr ? 'مدير النظام (ADMIN)' : 'ADMIN / GÉRANT';
+                              if (hasProStore) return storeIsAr ? 'تاجر PRO' : 'GÉRANT (PRO)';
+                              return storeIsAr ? 'تاجر (GÉRANT)' : 'GÉRANT';
                            })()}
-                        </div>
-                        <p className="text-[10px] text-slate-400 truncate max-w-[140px] font-mono leading-none mt-0.5">
-                           {currentUser?.email || (storeIsAr ? 'غير متصل' : 'Non connecté')}
                         </p>
                      </div>
-                  </button>
-
-                  {/* Profile Menu Dropdown */}
-                  {isProfileMenuOpen && (
-                     <div className="absolute right-0 top-12 z-50 bg-white border border-slate-200/80 rounded-2xl shadow-2xl overflow-hidden w-72 text-slate-800 animate-in fade-in slide-in-from-top-2 duration-200">
-                        {/* Header Banner */}
-                        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 p-4 text-white">
-                           <div className="flex items-center gap-3">
-                              <div className="w-11 h-11 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-base font-black text-white shrink-0 shadow-inner">
-                                 {(userProfile?.name || currentUser?.email || 'M').charAt(0).toUpperCase()}
-                              </div>
-                              <div className="overflow-hidden">
-                                 <p className="text-xs font-black truncate text-white">
-                                    {userProfile?.name || currentUser?.user_metadata?.full_name || currentUser?.email?.split('@')[0] || (storeIsAr ? 'تاجر BEYA' : 'Marchand BEYA')}
-                                 </p>
-                                 <p className="text-[10px] text-slate-300 truncate font-mono mt-0.5">
-                                    {currentUser?.email || (storeIsAr ? 'حساب محلي' : 'Compte local')}
-                                 </p>
-                              </div>
-                           </div>
-                           <div className="mt-3 pt-2 border-t border-white/10 flex items-center justify-between">
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
-                                 {(() => {
-                                    const hasProStore = stores.some(s => s.plan === 'PRO');
-                                    const isAdmin = currentUser?.email === '00.emaily.zero@gmail.com' || currentUser?.role === 'admin';
-                                    if (isAdmin) return storeIsAr ? '👑 مدير النظام (Admin)' : '👑 Administrateur BEYA';
-                                    if (hasProStore) return storeIsAr ? '👑 حساب تاجر PRO' : '👑 Marchand BEYA (PRO)';
-                                    return storeIsAr ? '🏪 حساب تاجر (العادية)' : '🏪 Marchand BEYA (NORMAL)';
-                                 })()}
-                              </span>
-                              <span className="text-[9px] font-bold text-emerald-400 flex items-center gap-1">
-                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                                 {storeIsAr ? 'متصل' : 'Actif'}
-                              </span>
-                           </div>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="p-2 space-y-1 bg-white">
-                           <button
-                              onClick={() => { setIsProfileModalOpen(true); setIsProfileMenuOpen(false); }}
-                              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-indigo-600 rounded-xl transition-all"
-                           >
-                              <User className="w-4 h-4 text-slate-400" />
-                              <span>{storeIsAr ? 'معلومات الحساب والاشتراك' : 'Mon compte & Abonnement'}</span>
-                           </button>
-                           <button
-                              onClick={() => { window.location.href = '/'; }}
-                              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-indigo-600 rounded-xl transition-all"
-                           >
-                              <LayoutDashboard className="w-4 h-4 text-slate-400" />
-                              <span>{storeIsAr ? 'الرجوع للوحة التحكم الرئيسية' : 'Retour au portail principal BEYA'}</span>
-                           </button>
-
-                           <div className="h-px bg-slate-100 my-1" />
-
-                           <button
-                              onClick={async () => {
-                                 await supabase.auth.signOut();
-                                 window.location.href = '/';
-                              }}
-                              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-rose-600 hover:bg-rose-50/80 rounded-xl transition-all"
-                           >
-                              <X className="w-4 h-4 text-rose-500" />
-                              <span>{storeIsAr ? 'تسجيل الخروج' : 'Déconnexion'}</span>
-                           </button>
-                        </div>
+                     <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 via-purple-600 to-indigo-500 text-white flex items-center justify-center font-black text-xs shadow-md shadow-indigo-500/20 shrink-0">
+                        {(userProfile?.name || currentUser?.email || 'M').charAt(0).toUpperCase()}
                      </div>
-                  )}
+                  </button>
+                  <div className="w-px h-6 bg-slate-200 mx-1" />
+                  <button
+                     onClick={async () => {
+                        await supabase.auth.signOut();
+                        window.location.href = '/';
+                     }}
+                     className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                     title={storeIsAr ? 'تسجيل الخروج' : 'Déconnexion'}
+                  >
+                     <LogOut className="w-4 h-4" />
+                  </button>
                </div>
 
                <button onClick={onSelectStore} className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 h-11 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 active:scale-95">
