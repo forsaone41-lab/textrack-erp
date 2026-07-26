@@ -38,6 +38,7 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
   const [storeStats, setStoreStats] = useState({ visitors: 0, revenue: 0, orders: 0, convRate: 0 });
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [trialDaysLeft, setTrialDaysLeft] = useState(14);
+  const [subscriptionTier, setSubscriptionTier] = useState('NORMAL');
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   
@@ -48,11 +49,15 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
   React.useEffect(() => {
      if(currentUser?.id) {
        supabase.from('stores')
-         .select('config_json, created_at')
+         .select('config_json, created_at, subscription_tier')
          .eq('config_json->>owner_id', currentUser.id)
          .then(({data, error}) => {
             if (data && data.length > 0) {
                setStoreCount(data.length);
+               const highestTier = data.some(st => st.subscription_tier === 'PREMIUM') ? 'PREMIUM'
+                  : data.some(st => st.subscription_tier === 'PRO') ? 'PRO'
+                  : 'NORMAL';
+               setSubscriptionTier(highestTier);
                if (data[0].created_at) {
                   const createdAt = new Date(data[0].created_at);
                   const diffDays = Math.floor(Math.abs(new Date().getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
@@ -234,7 +239,8 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         
-        {/* Trial Banner */}
+        {/* Trial Banner - only shown for accounts still on the free NORMAL plan */}
+        {subscriptionTier === 'NORMAL' && (
         <div className="mb-8 bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
            <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
@@ -251,6 +257,7 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
               {t('Mettre à niveau', 'Upgrade Now', 'ترقية الحساب الآن')}
            </button>
         </div>
+        )}
 
         {/* Welcome Section */}
         <div className="mb-10">

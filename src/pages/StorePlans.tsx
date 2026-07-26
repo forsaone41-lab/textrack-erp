@@ -3,12 +3,12 @@ import { Store, Loader2, ShieldCheck } from 'lucide-react';
 import { supabase } from '../supabase';
 import { useLang } from '../contexts/LangContext';
 
-const TIERS = ['NORMAL', 'PRO', 'PREMIER'] as const;
+const TIERS = ['NORMAL', 'PRO', 'PREMIUM'] as const;
 
 const TIER_STYLES: Record<string, string> = {
    NORMAL: 'bg-slate-100 text-slate-600',
    PRO: 'bg-amber-100 text-amber-700',
-   PREMIER: 'bg-indigo-100 text-indigo-700',
+   PREMIUM: 'bg-indigo-100 text-indigo-700',
 };
 
 export default function StorePlans() {
@@ -47,8 +47,8 @@ export default function StorePlans() {
                <h1 className="text-xl font-black text-slate-900">{isAr ? 'باقات المتاجر' : 'Plans des Boutiques'}</h1>
                <p className="text-xs font-semibold text-slate-500">
                   {isAr
-                     ? 'حدد باقة كل متجر (Normal / PRO / Premier). التغيير هنا فقط، التاجر ما يقدرش يبدلها بروحو.'
-                     : "Définit le plan de chaque boutique (Normal / PRO / Premier). Seul un admin peut le changer ici — le marchand ne peut plus le faire lui-même."}
+                     ? 'حدد باقة كل متجر (Normal / PRO / Premium). التغيير هنا فقط، التاجر ما يقدرش يبدلها بروحو.'
+                     : "Définit le plan de chaque boutique (Normal / PRO / Premium). Seul un admin peut le changer ici — le marchand ne peut plus le faire lui-même."}
                </p>
             </div>
          </div>
@@ -81,7 +81,7 @@ export default function StorePlans() {
                               <td className="px-5 py-3">
                                  <div className="flex items-center gap-2">
                                     <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${TIER_STYLES[tier] || TIER_STYLES.NORMAL}`}>
-                                       {savingDomain === store.domain ? <Loader2 className="w-3 h-3 animate-spin inline" /> : (tier === 'PREMIER' ? (isAr ? 'بريميير' : 'Premier') : tier)}
+                                       {savingDomain === store.domain ? <Loader2 className="w-3 h-3 animate-spin inline" /> : (tier === 'PREMIUM' ? (isAr ? 'بريميوم' : 'Premium') : tier)}
                                     </span>
                                     <select
                                        value={tier}
@@ -89,7 +89,7 @@ export default function StorePlans() {
                                        disabled={savingDomain === store.domain}
                                        className="text-xs font-bold border border-slate-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:border-indigo-400"
                                     >
-                                       {TIERS.map(t => <option key={t} value={t}>{t === 'PREMIER' ? (isAr ? 'بريميير' : 'Premier') : t === 'PRO' ? 'PRO' : (isAr ? 'عادي' : 'Normal')}</option>)}
+                                       {TIERS.map(t => <option key={t} value={t}>{t === 'PREMIUM' ? (isAr ? 'بريميوم' : 'Premium') : t === 'PRO' ? 'PRO' : (isAr ? 'عادي' : 'Normal')}</option>)}
                                     </select>
                                  </div>
                               </td>
@@ -104,8 +104,8 @@ export default function StorePlans() {
          <div className="mt-6 flex items-start gap-2 text-xs text-slate-400 font-semibold">
             <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
             <p>{isAr
-               ? 'باقة Normal: تصميمين فقط. PRO و Premier: كل التصاميم مفتوحة.'
-               : 'Plan Normal : 2 thèmes seulement. PRO et Premier : tous les thèmes débloqués.'}</p>
+               ? 'باقة Normal: تصميمين فقط. PRO و Premium: كل التصاميم مفتوحة.'
+               : 'Plan Normal : 2 thèmes seulement. PRO et Premium : tous les thèmes débloqués.'}</p>
          </div>
       </div>
    );

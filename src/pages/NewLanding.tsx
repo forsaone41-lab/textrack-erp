@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Building2, User, Sparkles, ShoppingCart, Rocket, ChevronRight, CheckCircle2, ArrowRight, X, Phone, Mail, ImageIcon, MousePointerClick, MessageSquareText, PhoneCall, Sun, Moon, ChevronDown } from 'lucide-react';
+import { Building2, User, Sparkles, ShoppingCart, Rocket, ChevronRight, CheckCircle2, ArrowRight, X, Phone, Mail, ImageIcon, MousePointerClick, MessageSquareText, PhoneCall, Sun, Moon, ChevronDown, Globe } from 'lucide-react';
 import { saveRecord, TarifService, loadData } from '../types';
 import { useLang } from '../contexts/LangContext';
 
@@ -369,9 +369,32 @@ export default function NewLanding() {
           <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-8 leading-[1.1]">
             {isAr ? 'أعطِ الحياة لعلامتك التجارية مع' : 'Donnez vie à votre marque avec'} <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">Beya Creative</span>
           </h1>
-          <p className={`text-lg md:text-xl mb-12 max-w-2xl mx-auto leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+          <p className={`text-lg md:text-xl mb-6 max-w-2xl mx-auto leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
             {isAr ? 'من الفكرة إلى الإنتاج النهائي. نرافق الشركات والماركات والمصممين في تحقيق تشكيلاتهم بجودة استثنائية.' : "De l'idée à la production finale. Nous accompagnons les entreprises, les marques et les créateurs dans la réalisation de leurs collections de vêtements avec une qualité premium."}
           </p>
+
+          {/* SMART E-COMMERCE WEBSITE SOLUTION BADGE / CARD */}
+          <div className={`mb-8 p-4 md:p-5 rounded-3xl border backdrop-blur-md max-w-xl mx-auto text-left flex items-start gap-4 shadow-xl transition-all ${isDark ? 'bg-gradient-to-r from-indigo-950/60 to-slate-900/80 border-indigo-500/30 text-indigo-100' : 'bg-gradient-to-r from-indigo-50/90 via-blue-50/80 to-slate-50 border-indigo-200 text-slate-800'}`}>
+             <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/30">
+                <Globe className="w-6 h-6" />
+             </div>
+             <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                   <h4 className="text-xs md:text-sm font-black tracking-tight flex items-center gap-1.5">
+                      {isAr ? '🌐 معندكش موقع إلكتروني للبيع؟' : '🌐 Pas encore de site E-commerce pour vendre ?'}
+                   </h4>
+                   <span className="px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0">
+                      {isAr ? 'حل متكامل 100%' : 'Clés en main'}
+                   </span>
+                </div>
+                <p className="text-xs leading-relaxed opacity-90 font-medium">
+                   {isAr 
+                     ? 'ماشي غير كنصاوبو ليك الملابس! كنصاوبو ليك حتى المتجر الإلكتروني الاحترافي (Beya Store) لتتبع المبيعات والطلبات فورياً.' 
+                     : 'Nous ne confectionnons pas seulement vos vêtements ! Nous créons également votre boutique en ligne (Beya Store) clés en main pour vendre et gérer vos commandes.'}
+                </p>
+             </div>
+          </div>
+
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button 
               onClick={() => setIsModalOpen(true)}
@@ -475,7 +498,7 @@ export default function NewLanding() {
                   )}
 
                   <a 
-                    href={`https://wa.me/212624465962?text=${encodeURIComponent(isAr ? `مرحباً BEYA CREATIVE، لقد سجلت طلبي للتو باسم ${formData.name}. الرمز السري الخاص بي هو: ${newClientCode?.code}.\n\n*تفاصيل مشروعي:*\n- النوع: ${clientTypes.find(c => c.id === formData.clientType)?.labelAr || formData.clientType}\n${formData.companyName ? `- الشركة: ${formData.companyName}\n` : ''}${formData.companySector ? `- المجال: ${sectors.find(s => s.id === formData.companySector)?.labelAr || formData.companySector}\n` : ''}${formData.budget ? `- الميزانية: ${budgets.find(b => b.id === formData.budget)?.labelAr || formData.budget}\n` : ''}${formData.intent ? `- الهدف: ${formData.intent}\n` : ''}${formData.deadline ? `- الوقت: ${deadlines.find(d => d.id === formData.deadline)?.labelAr || formData.deadline}\n` : ''}\nأريد تأكيد الطلب.` : `Bonjour BEYA CREATIVE, je viens de passer ma commande sous le nom ${formData.name}. Mon code secret est : ${newClientCode?.code}.\n\n*Détails de mon projet:*\n- Type: ${clientTypes.find(c => c.id === formData.clientType)?.labelFr || formData.clientType}\n${formData.companyName ? `- Société: ${formData.companyName}\n` : ''}${formData.companySector ? `- Secteur: ${sectors.find(s => s.id === formData.companySector)?.labelFr || formData.companySector}\n` : ''}${formData.budget ? `- Budget: ${budgets.find(b => b.id === formData.budget)?.labelFr || formData.budget}\n` : ''}${formData.intent ? `- Objectif: ${formData.intent}\n` : ''}${formData.deadline ? `- Délai: ${deadlines.find(d => d.id === formData.deadline)?.labelFr || formData.deadline}\n` : ''}\nJe souhaite confirmer ma commande.`)}`}
+                    href={`https://wa.me/212624465962?text=${encodeURIComponent(isAr ? `مرحباً BEYA CREATIVE، لقد سجلت طلبي للتو باسم ${formData.name}. الرمز السري الخاص بي هو: ${newClientCode?.code}.\n\n*تفاصيل مشروعي:*\n- النوع: ${clientTypes.find(c => c.id === formData.clientType)?.labelAr || formData.clientType}\n${formData.companyName ? `- الشركة: ${formData.companyName}\n` : ''}${formData.companySector ? `- المجال: ${sectors.find(s => s.id === formData.companySector)?.labelAr || formData.companySector}\n` : ''}${formData.budget ? `- الميزانية: ${budgets.find(b => b.id === formData.budget)?.labelAr || formData.budget}\n` : ''}${formData.intent ? `- الهدف: ${formData.intent}\n` : ''}${formData.deadline ? `- الوقت: ${deadlines.find(d => d.id === formData.deadline)?.labelAr || formData.deadline}\n` : ''}${formData.needWebsite ? `- إنشاء متجر إلكتروني: نعم، أحتاج موقعاً لتشكيلاتي 🌐\n` : ''}\nأريد تأكيد الطلب.` : `Bonjour BEYA CREATIVE, je viens de passer ma commande sous le nom ${formData.name}. Mon code secret est : ${newClientCode?.code}.\n\n*Détails de mon projet:*\n- Type: ${clientTypes.find(c => c.id === formData.clientType)?.labelFr || formData.clientType}\n${formData.companyName ? `- Société: ${formData.companyName}\n` : ''}${formData.companySector ? `- Secteur: ${sectors.find(s => s.id === formData.companySector)?.labelFr || formData.companySector}\n` : ''}${formData.budget ? `- Budget: ${budgets.find(b => b.id === formData.budget)?.labelFr || formData.budget}\n` : ''}${formData.intent ? `- Objectif: ${formData.intent}\n` : ''}${formData.deadline ? `- Délai: ${deadlines.find(d => d.id === formData.deadline)?.labelFr || formData.deadline}\n` : ''}${formData.needWebsite ? `- Création Site E-commerce: Oui 🌐\n` : ''}\nJe souhaite confirmer ma commande.`)}`}
                     target="_blank"
                     rel="noreferrer"
                     className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-base transition-all flex items-center justify-center gap-2 mb-4 shadow-lg shadow-emerald-600/20"
@@ -615,6 +638,31 @@ export default function NewLanding() {
                             <span className="block text-xs font-normal opacity-70">{isAr ? '(بدون صورة)' : '(Sans photo)'}</span>
                           </button>
                         </div>
+                      </div>
+
+                      {/* SMART WEBSITE CREATION OPTION */}
+                      <div className={`mb-6 p-4 rounded-2xl border transition-all ${formData.needWebsite ? 'border-indigo-500 bg-indigo-500/10' : isDark ? 'border-white/10 bg-slate-900' : 'border-slate-200 bg-slate-50'}`}>
+                         <label className="flex items-center justify-between cursor-pointer gap-3" dir={isAr ? 'rtl' : 'ltr'}>
+                            <div className="flex items-center gap-3">
+                               <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${formData.needWebsite ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
+                                  <Globe className="w-5 h-5" />
+                               </div>
+                               <div>
+                                  <p className={`text-xs md:text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                                     {isAr ? 'واش محتاج متجر إلكتروني / موقع لبيع تشكيلاتك؟' : 'Avez-vous besoin d\'un site E-commerce pour vendre ?'}
+                                  </p>
+                                  <p className="text-[11px] text-slate-400">
+                                     {isAr ? 'سننشئ لك متجراً إلكترونياً جاهزاً لاستقبال الطلبات وتتبعها (Beya Store)' : 'Nous créons votre boutique en ligne clés en main avec gestion des commandes'}
+                                  </p>
+                               </div>
+                            </div>
+                            <input 
+                               type="checkbox"
+                               checked={formData.needWebsite || false}
+                               onChange={(e) => setFormData({ ...formData, needWebsite: e.target.checked })}
+                               className="w-5 h-5 accent-indigo-600 rounded cursor-pointer shrink-0"
+                            />
+                         </label>
                       </div>
 
                       <div className="mb-6">

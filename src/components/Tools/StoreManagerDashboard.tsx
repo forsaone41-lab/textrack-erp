@@ -286,7 +286,11 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                                  </a>
                               </div>
                            </div>
-                           {store.plan === 'PRO' ? (
+                           {store.plan === 'PREMIUM' ? (
+                              <span className="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-black uppercase tracking-widest rounded-full flex items-center gap-1">
+                                 <Crown className="w-3 h-3" /> PREMIUM
+                              </span>
+                           ) : store.plan === 'PRO' ? (
                               <span className="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-black uppercase tracking-widest rounded-full flex items-center gap-1">
                                  <Crown className="w-3 h-3" /> PRO
                               </span>
