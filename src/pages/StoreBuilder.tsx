@@ -694,6 +694,7 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [customerUser, setCustomerUser] = useState<any>(null);
   const [customerProfile, setCustomerProfile] = useState<any>(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [requireAccountToOrder, setRequireAccountToOrder] = useState(config.requireAccountToOrder ?? false);
   const [showHeaderLang, setShowHeaderLang] = useState(config.showHeaderLang ?? true);
@@ -1639,13 +1640,65 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
               }}
             />
             {isAccountMenuOpen && customerUser && (
-              <div className="absolute right-0 top-8 z-50 whitespace-nowrap bg-white border border-slate-200 rounded-lg shadow-xl py-2 w-36 text-slate-800">
-                <button
-                  onClick={() => { handleCustomerLogout(); setIsAccountMenuOpen(false); }}
-                  className="w-full text-left px-3 py-2 text-xs font-bold text-rose-600 hover:bg-slate-50"
-                >
-                  {storeIsAr ? 'تسجيل الخروج' : storeLang === 'en' ? 'Log out' : 'Déconnexion'}
-                </button>
+              <div className="absolute right-0 top-9 z-50 bg-white border border-slate-200/80 rounded-2xl shadow-2xl overflow-hidden w-64 md:w-72 text-slate-800 animate-in fade-in slide-in-from-top-2 duration-200">
+                {/* Header Banner */}
+                <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 p-4 text-white">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-sm font-black text-white shrink-0">
+                      {(customerProfile?.name || customerUser?.email || 'U').charAt(0).toUpperCase()}
+                    </div>
+                    <div className="overflow-hidden">
+                      <p className="text-xs font-black truncate text-white">
+                        {customerProfile?.name || customerUser?.user_metadata?.full_name || customerUser?.email?.split('@')[0] || (storeIsAr ? 'مستخدم' : 'Utilisateur')}
+                      </p>
+                      <p className="text-[10px] text-slate-300 truncate font-mono mt-0.5">
+                        {customerUser?.email}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-2 border-t border-white/10 flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
+                      {(customerUser?.email === (config.owner_email || 'fashlow@gmail.com') || customerUser?.id === config.owner_id) 
+                        ? (storeIsAr ? '🏪 صاحب المتجر (Marchand)' : '🏪 Propriétaire du magasin') 
+                        : (storeIsAr ? '🛍️ زبون (Client e-commerce)' : '🛍️ Client e-commerce')}
+                    </span>
+                    <span className="text-[9px] font-bold text-emerald-400 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                      {storeIsAr ? 'نشط' : 'Actif'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="p-2 space-y-1 bg-white">
+                  <button
+                    onClick={() => { setIsProfileModalOpen(true); setIsAccountMenuOpen(false); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-indigo-600 rounded-xl transition-all"
+                  >
+                    <User className="w-4 h-4 text-slate-400" />
+                    <span>{storeIsAr ? 'الملف الشخصي والحساب' : storeLang === 'en' ? 'My Profile & Account' : 'Mon Profil et Compte'}</span>
+                  </button>
+                  <button
+                    onClick={() => { setIsProfileModalOpen(true); setIsAccountMenuOpen(false); }}
+                    className="w-full flex items-center justify-between px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-indigo-600 rounded-xl transition-all"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <ShoppingBag className="w-4 h-4 text-slate-400" />
+                      <span>{storeIsAr ? 'سجل الطلبات' : storeLang === 'en' ? 'Order History' : 'Mes Commandes'}</span>
+                    </div>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] bg-slate-100 text-slate-600 font-bold">0</span>
+                  </button>
+
+                  <div className="h-px bg-slate-100 my-1" />
+
+                  <button
+                    onClick={() => { handleCustomerLogout(); setIsAccountMenuOpen(false); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50/80 rounded-xl transition-all"
+                  >
+                    <LogOut className="w-4 h-4 text-rose-500" />
+                    <span>{storeIsAr ? 'تسجيل الخروج' : storeLang === 'en' ? 'Log out' : 'Déconnexion'}</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -4251,6 +4304,83 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                          storeName={storeName}
                          onAuthed={(user: any, profile: any) => { setCustomerUser(user); setCustomerProfile(profile); setIsAuthOpen(false); }}
                       />
+                   </div>
+                </div>
+             </div>
+          )}
+          {/* Profile Details Modal */}
+          {isProfileModalOpen && customerUser && (
+             <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 transition-opacity" onClick={() => setIsProfileModalOpen(false)}>
+                <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden transform transition-all border border-slate-100" onClick={e => e.stopPropagation()}>
+                   <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 p-6 text-white relative">
+                      <button onClick={() => setIsProfileModalOpen(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-white/10 rounded-full text-white hover:bg-white/20 transition-all">
+                         <X className="w-4 h-4" />
+                      </button>
+                      <div className="flex items-center gap-4">
+                         <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-xl font-black text-white shadow-inner">
+                            {(customerProfile?.name || customerUser?.email || 'U').charAt(0).toUpperCase()}
+                         </div>
+                         <div>
+                            <h3 className="text-lg font-black text-white">
+                               {customerProfile?.name || customerUser?.user_metadata?.full_name || customerUser?.email?.split('@')[0] || (storeIsAr ? 'مستخدم' : 'Utilisateur')}
+                            </h3>
+                            <p className="text-xs text-indigo-200 font-mono mt-0.5">{customerUser?.email}</p>
+                            <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
+                               {(customerUser?.email === (config.owner_email || 'fashlow@gmail.com') || customerUser?.id === config.owner_id) 
+                                 ? (storeIsAr ? '🏪 حساب تاجر (صاحب المتجر)' : '🏪 Propriétaire / Marchand') 
+                                 : (storeIsAr ? '🛍️ حساب زبون (عميل)' : '🛍️ Client e-commerce')}
+                            </div>
+                         </div>
+                      </div>
+                   </div>
+
+                   <div className="p-6 space-y-4">
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
+                         <div className="flex items-center justify-between text-xs">
+                            <span className="text-slate-500 font-semibold">{storeIsAr ? 'الاسم الكامل' : 'Nom complet'}</span>
+                            <span className="text-slate-800 font-bold">{customerProfile?.name || customerUser?.user_metadata?.full_name || 'Non spécifié'}</span>
+                         </div>
+                         <div className="h-px bg-slate-200/60" />
+                         <div className="flex items-center justify-between text-xs">
+                            <span className="text-slate-500 font-semibold">{storeIsAr ? 'البريد الإلكتروني' : 'Adresse e-mail'}</span>
+                            <span className="text-slate-800 font-mono font-bold">{customerUser?.email}</span>
+                         </div>
+                         <div className="h-px bg-slate-200/60" />
+                         <div className="flex items-center justify-between text-xs">
+                            <span className="text-slate-500 font-semibold">{storeIsAr ? 'نوع الحساب' : 'Type de compte'}</span>
+                            <span className="text-indigo-600 font-bold">
+                               {(customerUser?.email === (config.owner_email || 'fashlow@gmail.com') || customerUser?.id === config.owner_id) 
+                                 ? (storeIsAr ? 'تاجر — مدير المتجر' : 'Marchand (Admin)') 
+                                 : (storeIsAr ? 'عميل إلكتروني' : 'Client standard')}
+                            </span>
+                         </div>
+                         <div className="h-px bg-slate-200/60" />
+                         <div className="flex items-center justify-between text-xs">
+                            <span className="text-slate-500 font-semibold">{storeIsAr ? 'حالة الحساب' : 'Statut'}</span>
+                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
+                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                               {storeIsAr ? 'مفعل وموثق' : 'Vérifié'}
+                            </span>
+                         </div>
+                      </div>
+
+                      <div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100 flex items-center justify-between">
+                         <div>
+                            <p className="text-xs font-bold text-slate-800">{storeIsAr ? 'سجل المشتريات والطلبات' : 'Historique des commandes'}</p>
+                            <p className="text-[11px] text-slate-500 mt-0.5">{storeIsAr ? 'تتبع طلباتك وحالة الشحن' : 'Suivez vos colis et livraisons'}</p>
+                         </div>
+                         <span className="px-3 py-1 bg-white border border-indigo-200 text-indigo-700 font-black text-xs rounded-xl shadow-sm">0 {storeIsAr ? 'طلبات' : 'colis'}</span>
+                      </div>
+
+                      <div className="pt-2">
+                         <button
+                            onClick={() => { handleCustomerLogout(); setIsProfileModalOpen(false); }}
+                            className="w-full py-3 bg-rose-50 hover:bg-rose-100/80 text-rose-600 font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2"
+                         >
+                            <LogOut className="w-4 h-4" />
+                            <span>{storeIsAr ? 'تسجيل الخروج من الحساب' : 'Se déconnecter de ce compte'}</span>
+                         </button>
+                      </div>
                    </div>
                 </div>
              </div>
