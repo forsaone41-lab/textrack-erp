@@ -58,17 +58,25 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                      owner_id: st.config_json?.owner_id
                   }));
 
-               // STRICT MULTI-TENANT DATA ISOLATION:
-               // Only system admin or fashlow@gmail.com / 00.emaily.zero@gmail.com see all stores.
-               // Normal merchants MUST ONLY see their own stores!
-               if (!isAdminOrOwner && user) {
-                  const userEmailLower = user.email ? user.email.toLowerCase() : '';
-                  realStores = realStores.filter((st: any) => {
-                     const stEmailLower = st.config_json?.owner_email ? st.config_json.owner_email.toLowerCase() : '';
-                     const isOwnerByEmail = stEmailLower && stEmailLower === userEmailLower;
-                     const isOwnerById = (st.owner_id && st.owner_id === userId) || (st.config_json?.owner_id && st.config_json?.owner_id === userId);
-                     return isOwnerByEmail || isOwnerById;
-                  });
+               // STRICT MULTI-TENANT DATA ISOLATION (SECURITY HARDENED):
+               // 1. System administrators (00.emaily.zero@gmail.com, fashlow@gmail.com, role='admin') see all stores.
+               // 2. Logged-in merchants MUST ONLY see stores matching their email or user ID.
+               // 3. Anonymous/Local users (not logged in) MUST NEVER see other merchants' stores! They only see stores with no owner (local draft stores).
+               if (!isAdminOrOwner) {
+                  if (user && user.email) {
+                     const userEmailLower = user.email.toLowerCase();
+                     realStores = realStores.filter((st: any) => {
+                        const stEmailLower = st.config_json?.owner_email ? st.config_json.owner_email.toLowerCase() : '';
+                        const isOwnerByEmail = stEmailLower && stEmailLower === userEmailLower;
+                        const isOwnerById = (st.owner_id && st.owner_id === userId) || (st.config_json?.owner_id && st.config_json?.owner_id === userId);
+                        return isOwnerByEmail || isOwnerById;
+                     });
+                  } else {
+                     // Anonymous / Local account: ONLY show stores where owner_email is undefined/null and owner_id is undefined/null (local draft stores)
+                     realStores = realStores.filter((st: any) => 
+                        !st.owner_id && !st.config_json?.owner_id && !st.config_json?.owner_email
+                     );
+                  }
                }
 
                // Set to realStores.
