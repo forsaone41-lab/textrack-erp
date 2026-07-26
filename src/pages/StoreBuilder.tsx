@@ -614,10 +614,10 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [menuTextColor, setMenuTextColor] = useState(config.menuTextColor || '#64748b');
   const [menuActiveColor, setMenuActiveColor] = useState(config.menuActiveColor || '');
   const [menuStyle, setMenuStyle] = useState<'underline' | 'pill' | 'bold'>(config.menuStyle || 'underline');
-  // The store's plan (Normal/PRO/Premium) is admin-controlled, read from stores.subscription_tier
+  // The store's plan (Normal/PRO/Premier) is admin-controlled, read from stores.subscription_tier
   // (a real DB column, not the merchant-writable config_json) - see fetchSubscriptionTier below.
   const [subscriptionTier, setSubscriptionTier] = useState<string>('NORMAL');
-  const proThemesUnlocked = subscriptionTier === 'PRO' || subscriptionTier === 'PREMIUM';
+  const proThemesUnlocked = subscriptionTier === 'PRO' || subscriptionTier === 'PREMIER';
   const [proUpsellTheme, setProUpsellTheme] = useState<any>(null);
   const [quickBuyContext, setQuickBuyContext] = useState<any>(null);
   const [buyNowAsPopup, setBuyNowAsPopup] = useState<boolean>(config.buyNowAsPopup ?? true);
@@ -1256,16 +1256,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
        if (storeName.toLowerCase().includes('fashlow') || (storeSlug && storeSlug.toLowerCase().includes('fashlow'))) {
           domain = 'fashlow.store';
        }
-
-       // Preserve admin-managed trial_end_date: config_json is fully replaced below,
-       // so without this, saving from the builder would silently wipe out any trial
-       // extension the admin granted via SaaSGodModeAdminModal.
-       const { data: existingRow } = await supabase.from('stores').select('config_json').eq('domain', domain).single();
-       const existingTrialEndDate = existingRow?.config_json?.trial_end_date;
-       if (existingTrialEndDate) {
-          (storeConfig as any).trial_end_date = existingTrialEndDate;
-       }
-
+       
        // Update both exact domain AND a fallback to ensure changes apply immediately
        await supabase.from('stores').upsert({
           domain: domain,
@@ -4601,11 +4592,11 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
           <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
             <h1 className="text-2xl font-black text-slate-800 tracking-tight">BEYA STORE PRO</h1>
             <span className={`px-2 py-1 text-[10px] font-black rounded uppercase tracking-widest ${
-               subscriptionTier === 'PREMIUM' ? 'bg-amber-100 text-amber-700 border border-amber-200'
-               : subscriptionTier === 'PRO' ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
+               subscriptionTier === 'PREMIER' ? 'bg-amber-100 text-amber-700 border border-amber-200' 
+               : subscriptionTier === 'PRO' ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' 
                : 'bg-slate-100 text-slate-600 border border-slate-200'
             }`}>
-               {subscriptionTier === 'PREMIUM' ? (isAr ? 'بريميوم' : 'PREMIUM') : subscriptionTier === 'PRO' ? 'PRO' : (isAr ? 'أساسي' : 'NORMAL')}
+               {subscriptionTier === 'PREMIER' ? (isAr ? 'بريميير' : 'PREMIER') : subscriptionTier === 'PRO' ? 'PRO' : (isAr ? 'أساسي' : 'NORMAL')}
             </span>
             <span className="flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-black rounded uppercase tracking-widest" title="Connexion chiffrée de bout en bout et route protégée (Admin uniquement)"><ShieldCheck className="w-3 h-3" /> {isAr ? 'آمن' : 'Sécurisé'}</span>
           </div>
@@ -4755,6 +4746,95 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                               <BarChart3 className="w-6 h-6 text-white drop-shadow-md" />
                            </div>
                            <div>
+                              <h2 className="text-2xl font-black tracking-tight">{isAr ? 'لوحة التحكم' : 'Dashboard'}</h2>
+                              <p className="text-sm font-bold text-indigo-200 mt-1">{isAr ? 'تحليلات متجرك مدعومة بالبيانات.' : 'Des analyses pour votre boutique.'}</p>
+                           </div>
+                        </div>
+                     </div>
+                     
+                     {/* Analytics PRO Section */}
+                    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-6">
+                       <div className="flex items-center justify-between">
+                          <h3 className="text-sm font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                             <TrendingUp className="w-4 h-4 text-indigo-500" /> 
+                             {isAr ? 'تحليلات المبيعات' : 'Analytique des Ventes'}
+                          </h3>
+                          
+                       </div>
+                       
+                       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {/* Delivery & Returns Performance */}
+                          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col gap-4">
+                             <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+                                {isAr ? 'أداء التوصيل والشركات' : 'Performance Livraison'}
+                             </h4>
+                             
+                             <div className="space-y-3">
+                                <div className="bg-white p-3 rounded-lg border border-slate-100 shadow-sm flex items-center justify-between">
+                                   <div className="flex items-center gap-2">
+                                      <div className="w-8 h-8 bg-emerald-50 rounded-full flex items-center justify-center"><Truck className="w-4 h-4 text-emerald-500" /></div>
+                                      <div>
+                                         <p className="text-[9px] font-bold text-slate-400 uppercase">{isAr ? 'تم التوصيل' : 'Livrées'}</p>
+                                         <p className="text-sm font-black text-slate-800">{storeOrders.filter((o: any) => !o.deleted && ['Livrée', 'تم التوصيل', 'Delivered'].includes(o.status)).length}</p>
+                                      </div>
+                                   </div>
+                                </div>
+                                <div className="bg-white p-3 rounded-lg border border-slate-100 shadow-sm flex items-center justify-between">
+                                   <div className="flex items-center gap-2">
+                                      <div className="w-8 h-8 bg-rose-50 rounded-full flex items-center justify-center"><RotateCcw className="w-4 h-4 text-rose-500" /></div>
+                                      <div>
+                                         <p className="text-[9px] font-bold text-slate-400 uppercase">{isAr ? 'المرتجعات' : 'Retours'}</p>
+                                         <p className="text-sm font-black text-slate-800">{storeOrders.filter((o: any) => !o.deleted && ['Retour', 'Annulée'].includes(o.status)).length}</p>
+                                      </div>
+                                   </div>
+                                </div>
+                             </div>
+
+                             <div className="mt-2 pt-3 border-t border-slate-200">
+                                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-2">{isAr ? 'شركات التوصيل النشطة' : 'Livreurs Actifs'}</p>
+                                <div className="flex gap-2">
+                                   <span className="px-2 py-1 bg-white border border-slate-200 rounded text-[10px] font-bold text-slate-600">Amana</span>
+                                   <span className="px-2 py-1 bg-white border border-slate-200 rounded text-[10px] font-bold text-slate-600">Cathedis</span>
+                                </div>
+                             </div>
+                          </div>
+
+                          {/* Top Products */}
+                          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 lg:col-span-1">
+                             <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">
+                                {isAr ? 'المنتجات الأكثر مبيعاً' : 'Top Produits Vendus'}
+                             </h4>
+                             <div className="space-y-3">
+                                {(() => {
+                                   const productCounts: Record<string, any> = {};
+                                   storeOrders.filter((o: any) => !o.deleted && !REFUSED_STATUSES.includes(o.status)).forEach((o: any) => {
+                                      try {
+                                         const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
+                                         if (Array.isArray(items)) {
+                                            items.forEach((item: any) => {
+                                               const pid = item.productId || item.name;
+                                               if (!productCounts[pid]) productCounts[pid] = { name: item.name, count: 0, image: item.image || item.photo };
+                                               productCounts[pid].count += (item.qty || item.quantity || 1);
+                                            });
+                                         }
+                                      } catch(e) {}
+                                   });
+                                   const topProducts = Object.values(productCounts).sort((a: any, b: any) => b.count - a.count).slice(0, 3);
+                                   return topProducts.length > 0 ? topProducts.map((tp: any, idx) => (
+                                      <div key={idx} className="flex items-center gap-3 bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm relative overflow-hidden">
+                                         {idx === 0 && <div className="absolute top-0 right-0 w-8 h-8 bg-amber-100 rotate-45 translate-x-4 -translate-y-4"></div>}
+                                         {tp.image ? <img src={tp.image} className="w-10 h-10 rounded-md object-cover" /> : <div className="w-10 h-10 bg-slate-100 rounded-md flex items-center justify-center"><Box className="w-4 h-4 text-slate-400" /></div>}
+                                         <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-bold text-slate-800 truncate">{tp.name}</p>
+                                            <p className="text-[10px] text-emerald-600 font-black">{tp.count} {isAr ? 'مبيعات' : 'Ventes'}</p>
+                                         </div>
+                                      </div>
+                                   )) : <p className="text-xs text-slate-400">{isAr ? 'لا توجد مبيعات بعد' : 'Pas encore de ventes'}</p>;
+                                })()}
+                             </div>
+                          </div>
+
+                          {/* Inventory & Sizes Analysis */}
                           <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col gap-4 lg:col-span-1">
                              <div>
                                 <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">
@@ -5703,7 +5783,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                               <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{isAr ? 'باقتي الحالية' : 'Mon Plan Actuel'}</h4>
                            </div>
                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${proThemesUnlocked ? 'bg-amber-400 text-white' : 'bg-slate-300 text-slate-700'}`}>
-                              {subscriptionTier === 'PREMIUM' ? (isAr ? 'بريميوم' : 'Premium') : subscriptionTier === 'PRO' ? 'PRO' : (isAr ? 'عادي' : 'Normal')}
+                              {subscriptionTier === 'PREMIER' ? (isAr ? 'بريميير' : 'Premier') : subscriptionTier === 'PRO' ? 'PRO' : (isAr ? 'عادي' : 'Normal')}
                            </span>
                         </div>
                         <p className="text-[11px] text-slate-500 font-semibold">
