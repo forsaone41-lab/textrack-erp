@@ -319,7 +319,10 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
 
           {/* Action: Track Orders */}
           <div 
-            onClick={() => alert(t('Cette fonctionnalité sera bientôt disponible.', 'This feature will be available soon.', 'هذه الخاصية قيد التطوير وستكون متاحة قريباً!'))}
+            onClick={() => {
+              localStorage.setItem('beya_active_tab', 'orders');
+              window.location.hash = '#/store-builder';
+            }}
             className="group cursor-pointer bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-200 transition-all duration-300 relative overflow-hidden"
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-full blur-2xl -mr-16 -mt-16 transition-all group-hover:bg-blue-100/50"></div>
@@ -352,7 +355,10 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
               {t('Aperçu de votre boutique', 'Store overview', 'نظرة عامة على متجرك')}
             </h2>
             <button 
-              onClick={() => alert(t('Cette fonctionnalité sera bientôt disponible.', 'This feature will be available soon.', 'هذه الخاصية قيد التطوير وستكون متاحة قريباً!'))}
+              onClick={() => {
+                localStorage.setItem('beya_active_tab', 'orders');
+                window.location.hash = '#/store-builder';
+              }}
               className="text-sm font-bold text-indigo-600 hover:text-indigo-700"
             >
               {t('Voir les détails', 'View details', 'عرض التفاصيل')}
