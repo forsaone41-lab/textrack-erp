@@ -71,6 +71,7 @@ const StoreLanding    = lazy(() => import('./pages/StoreLanding'));
 const StoreSignup     = lazy(() => import('./pages/StoreSignup'));
 const MerchantDashboard = lazy(() => import('./pages/MerchantDashboard'));
 const Terms           = lazy(() => import('./pages/Terms'));
+const Partners        = lazy(() => import('./pages/Partners'));
 const Privacy         = lazy(() => import('./pages/Privacy'));
 const SaaSAdminPage   = lazy(() => import('./pages/SaaSAdminPage'));
 import { PageLoader } from './components/PageLoader';
