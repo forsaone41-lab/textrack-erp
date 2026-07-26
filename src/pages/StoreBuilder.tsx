@@ -616,8 +616,19 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   const [menuStyle, setMenuStyle] = useState<'underline' | 'pill' | 'bold'>(config.menuStyle || 'underline');
   // The store's plan (Normal/PRO/Premier) is admin-controlled, read from stores.subscription_tier
   // (a real DB column, not the merchant-writable config_json) - see fetchSubscriptionTier below.
-  const [subscriptionTier, setSubscriptionTier] = useState<string>('NORMAL');
-  const proThemesUnlocked = subscriptionTier === 'PRO' || subscriptionTier === 'PREMIER';
+  const [subscriptionTier, setSubscriptionTierState] = useState<string>(() => {
+    // God-Mode simulation: admin can preview any plan's experience from the SaaS panel
+    const simulated = localStorage.getItem('beya_godmode_simulated_plan');
+    if (simulated && simulated !== 'REAL') return simulated;
+    return 'NORMAL';
+  });
+  // Wrap setter to also respect God-Mode simulations in real-time
+  const setSubscriptionTier = (tier: string) => {
+    const simulated = localStorage.getItem('beya_godmode_simulated_plan');
+    if (simulated && simulated !== 'REAL') return; // simulation is active, don't override
+    setSubscriptionTierState(tier);
+  };
+  const proThemesUnlocked = subscriptionTier === 'PRO' || subscriptionTier === 'PREMIER' || subscriptionTier === 'PREMIUM';
   const [proUpsellTheme, setProUpsellTheme] = useState<any>(null);
   const [quickBuyContext, setQuickBuyContext] = useState<any>(null);
   const [buyNowAsPopup, setBuyNowAsPopup] = useState<boolean>(config.buyNowAsPopup ?? true);

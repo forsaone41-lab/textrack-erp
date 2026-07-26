@@ -335,24 +335,31 @@ export default function NewLanding() {
               className={`h-12 md:h-14 object-contain transition-all duration-300 ${isDark ? 'invert hue-rotate-180 brightness-110' : ''}`} 
             />
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Link
+              to="/store-landing"
+              className={`inline-flex items-center gap-1.5 px-3.5 sm:px-5 py-2 sm:py-2.5 font-bold rounded-full transition-all text-xs sm:text-sm shadow-sm hover:shadow-md ${isDark ? 'bg-gradient-to-r from-indigo-500/20 to-cyan-500/20 border border-indigo-400/40 text-indigo-300 hover:text-white hover:border-indigo-400' : 'bg-gradient-to-r from-indigo-50 to-cyan-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100/80'}`}
+            >
+              <Globe className="w-4 h-4 shrink-0 text-indigo-500 animate-pulse" />
+              <span>{isAr ? 'إنشاء متجر Store' : 'Beya Store'}</span>
+            </Link>
             <button
               onClick={() => setIsDark(!isDark)}
-              className={`w-10 h-10 flex items-center justify-center rounded-xl transition-colors border ${isDark ? 'bg-white/5 hover:bg-white/10 border-white/5 text-white' : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-800'}`}
+              className={`w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl transition-colors border ${isDark ? 'bg-white/5 hover:bg-white/10 border-white/5 text-white' : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-800'}`}
               title={isDark ? 'Mode Jour' : 'Mode Nuit'}
             >
               {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
             <button
               onClick={toggle}
-              className={`w-10 h-10 flex items-center justify-center rounded-xl transition-colors border text-[10px] font-black ${isDark ? 'bg-white/5 hover:bg-white/10 border-white/5 text-white' : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-800'}`}
+              className={`w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl transition-colors border text-[10px] font-black ${isDark ? 'bg-white/5 hover:bg-white/10 border-white/5 text-white' : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-800'}`}
               title={isAr ? 'Français' : 'عربية'}
             >
               {isAr ? 'FR' : 'ع'}
             </button>
             <button 
               onClick={() => setIsModalOpen(true)}
-              className={`px-6 py-2.5 font-semibold rounded-full transition-colors text-sm ${isDark ? 'bg-white text-black hover:bg-indigo-50' : 'bg-slate-900 text-white hover:bg-indigo-600'}`}
+              className={`px-5 sm:px-6 py-2 sm:py-2.5 font-semibold rounded-full transition-colors text-xs sm:text-sm ${isDark ? 'bg-white text-black hover:bg-indigo-50' : 'bg-slate-900 text-white hover:bg-indigo-600'}`}
             >
               {isAr ? 'ابدأ مشروعك' : 'Démarrer un projet'}
             </button>
