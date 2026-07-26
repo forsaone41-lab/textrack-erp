@@ -71,8 +71,8 @@ const StoreLanding    = lazy(() => import('./pages/StoreLanding'));
 const StoreSignup     = lazy(() => import('./pages/StoreSignup'));
 const MerchantDashboard = lazy(() => import('./pages/MerchantDashboard'));
 const Terms           = lazy(() => import('./pages/Terms'));
-const Partners        = lazy(() => import('./pages/Partners'));
 const Privacy         = lazy(() => import('./pages/Privacy'));
+const SaaSAdminPage   = lazy(() => import('./pages/SaaSAdminPage'));
 import { PageLoader } from './components/PageLoader';
 
 import { initMockData, User, loadPermissions, AppPage, loadCompanyProfile, syncCompanyProfile, loadData, saveRecord } from './types';
@@ -515,6 +515,16 @@ function AppContent() {
             <Privacy />
           </Suspense>
         } />
+        <Route path="/saas-admin" element={
+          <Suspense fallback={<PageLoader />}>
+            <SaaSAdminPage />
+          </Suspense>
+        } />
+        <Route path="/godmode" element={
+          <Suspense fallback={<PageLoader />}>
+            <SaaSAdminPage />
+          </Suspense>
+        } />
         <Route path="/" element={<LandingPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -567,6 +577,16 @@ function AppContent() {
         <Route path="/portal" element={
           <Suspense fallback={<PageLoader />}>
             <PortailClient currentUser={currentUser} onLogout={handleLogout} />
+          </Suspense>
+        } />
+        <Route path="/saas-admin" element={
+          <Suspense fallback={<PageLoader />}>
+            <SaaSAdminPage />
+          </Suspense>
+        } />
+        <Route path="/godmode" element={
+          <Suspense fallback={<PageLoader />}>
+            <SaaSAdminPage />
           </Suspense>
         } />
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -688,6 +708,8 @@ function AppContent() {
       {/* Standalone SaaS Route for BEYA STORE Builder (Accessible by admin via this specific route) */}
       <Route path="/store-builder" element={(currentUser?.role === 'admin') ? <div className="min-h-screen bg-white"><StoreBuilder /></div> : <Navigate to="/" replace />} />
       <Route path="/store/:storeNameUrl" element={<div className="min-h-screen bg-white"><StoreBuilder isLiveStore={true} /></div>} />
+      <Route path="/saas-admin" element={<Suspense fallback={<PageLoader />}><SaaSAdminPage /></Suspense>} />
+      <Route path="/godmode" element={<Suspense fallback={<PageLoader />}><SaaSAdminPage /></Suspense>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

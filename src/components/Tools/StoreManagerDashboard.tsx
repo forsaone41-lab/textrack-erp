@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 // Vercel deployment trigger
 import { Plus, Settings, ExternalLink, Crown, ArrowRight, ArrowLeft, TrendingUp, Sparkles, LayoutDashboard, Loader2, Trash2, AlertTriangle, X, Lock, User, LogOut } from 'lucide-react';
 import { supabase } from '../../supabase';
+import SaaSGodModeAdminModal from './SaaSGodModeAdminModal';
 
 export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIsAr }: any) {
    const [stores, setStores] = useState<any[]>([]);
@@ -12,6 +13,7 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
    const [userProfile, setUserProfile] = useState<any>(null);
    const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+   const [isGodModeOpen, setIsGodModeOpen] = useState(false);
 
    useEffect(() => {
       const fetchStores = async () => {
@@ -50,7 +52,9 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                      id: st.id,
                      name: st.name || 'Boutique Sans Nom',
                      url: st.domain || `${st.id}.beyacreative.com`,
-                     plan: st.subscription_tier || st.config_json?.plan || 'NORMAL',
+                     plan: (isAdminOrOwner && localStorage.getItem('beya_godmode_simulated_plan'))
+                           ? localStorage.getItem('beya_godmode_simulated_plan')!
+                           : (st.subscription_tier || st.config_json?.plan || 'NORMAL'),
                      status: 'Active',
                      visitors: st.config_json?.stats?.visitors || 0,
                      revenue: st.config_json?.stats?.revenue ? `${st.config_json.stats.revenue} MAD` : '0 MAD',
@@ -185,6 +189,18 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                      <LogOut className="w-4 h-4" />
                   </button>
                </div>
+
+               {/* 👑 SUPER-ADMIN GOD-MODE CONTROL PANEL BUTTON */}
+               {(currentUser?.email === '00.emaily.zero@gmail.com' || currentUser?.email === 'fashlow@gmail.com' || currentUser?.role === 'admin' || currentUser?.role === 'superadmin') && (
+                  <button
+                     onClick={() => setIsGodModeOpen(true)}
+                     className="flex items-center gap-2 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 text-slate-950 px-5 py-3 h-11 rounded-xl font-black shadow-lg shadow-amber-500/25 hover:scale-105 transition-all active:scale-95 border border-amber-300"
+                     title={storeIsAr ? 'فتح لوحة التحكم العليا (SaaS Admin)' : 'Ouvrir le Panneau God-Mode SaaS'}
+                  >
+                     <Crown className="w-5 h-5 animate-pulse" />
+                     <span className="hidden sm:inline">{storeIsAr ? 'لوحة التحكم العليا' : 'GOD-MODE SAAS'}</span>
+                  </button>
+               )}
 
                <button onClick={onSelectStore} className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 h-11 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 active:scale-95">
                   <Plus className="w-5 h-5" />
@@ -444,6 +460,16 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                </div>
             </div>
          )}
+
+         {/* GOD-MODE SAAS SUPER-ADMIN PANEL */}
+         <SaaSGodModeAdminModal
+            isOpen={isGodModeOpen}
+            onClose={() => setIsGodModeOpen(false)}
+            currentUser={currentUser}
+            stores={stores}
+            onRefreshStores={() => window.location.reload()}
+            isAr={storeIsAr}
+         />
       </div>
    );
 }
