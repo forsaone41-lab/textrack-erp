@@ -346,74 +346,89 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
             </div>
          )}
 
-         {/* Merchant Account Details Modal */}
+         {/* Sleek Premium Merchant Account Details Modal */}
          {isProfileModalOpen && (
             <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm" onClick={() => setIsProfileModalOpen(false)}>
-               <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
-                  <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 p-6 text-white relative">
-                     <button onClick={() => setIsProfileModalOpen(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-white/10 rounded-full text-white hover:bg-white/20 transition-all">
+               <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+                  {/* Elegant Light-Mode Header */}
+                  <div className="bg-gradient-to-br from-indigo-50/90 via-purple-50/40 to-white p-7 border-b border-slate-100 relative">
+                     <button 
+                        onClick={() => setIsProfileModalOpen(false)} 
+                        className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center bg-white hover:bg-slate-100 text-slate-400 hover:text-slate-700 rounded-full transition-all shadow-sm border border-slate-200/60"
+                     >
                         <X className="w-4 h-4" />
                      </button>
+
                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-xl font-black text-white shadow-inner">
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-indigo-500 text-white flex items-center justify-center text-2xl font-black shadow-lg shadow-indigo-500/25 shrink-0 border-2 border-white">
                            {(userProfile?.name || currentUser?.email || 'M').charAt(0).toUpperCase()}
                         </div>
                         <div>
-                           <h3 className="text-lg font-black text-white">
+                           <h3 className="text-xl font-black text-slate-900 tracking-tight">
                               {userProfile?.name || currentUser?.user_metadata?.full_name || currentUser?.email?.split('@')[0] || (storeIsAr ? 'تاجر BEYA' : 'Marchand BEYA')}
                            </h3>
-                           <p className="text-xs text-indigo-200 font-mono mt-0.5">{currentUser?.email || (storeIsAr ? 'حساب محلي' : 'Compte local')}</p>
-                           <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
+                           <p className="text-xs text-slate-500 font-mono mt-0.5">{currentUser?.email || (storeIsAr ? 'حساب محلي' : 'Compte local')}</p>
+                           <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-indigo-600 text-white shadow-sm shadow-indigo-500/20">
                               {(() => {
                                  const hasProStore = stores.some(s => s.plan === 'PRO');
-                                 const isAdmin = currentUser?.email === '00.emaily.zero@gmail.com' || currentUser?.role === 'admin';
-                                 if (isAdmin) return storeIsAr ? '👑 مدير النظام (Admin)' : '👑 Administrateur BEYA';
-                                 if (hasProStore) return storeIsAr ? '👑 حساب تاجر PRO' : '👑 Marchand BEYA (PRO)';
-                                 return storeIsAr ? '🏪 حساب تاجر (العادية)' : '🏪 Marchand BEYA (NORMAL)';
+                                 const isAdmin = currentUser?.email === '00.emaily.zero@gmail.com' || currentUser?.email === 'fashlow@gmail.com' || currentUser?.role === 'admin';
+                                 if (isAdmin) return storeIsAr ? '👑 مدير النظام (ADMIN)' : '👑 GÉRANT (ADMIN)';
+                                 if (hasProStore) return storeIsAr ? '👑 حساب تاجر PRO' : '👑 MARCHAND (PRO)';
+                                 return storeIsAr ? '🏪 حساب تاجر (العادية)' : '🏪 MARCHAND (NORMAL)';
                               })()}
                            </div>
                         </div>
                      </div>
                   </div>
 
-                  <div className="p-6 space-y-4">
-                     <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
-                        <div className="flex items-center justify-between text-xs">
-                           <span className="text-slate-500 font-semibold">{storeIsAr ? 'اسم التاجر / الحساب' : 'Nom du compte'}</span>
-                           <span className="text-slate-800 font-bold">{userProfile?.name || currentUser?.user_metadata?.full_name || currentUser?.email?.split('@')[0] || 'Marchand BEYA'}</span>
-                        </div>
-                        <div className="h-px bg-slate-200/60" />
-                        <div className="flex items-center justify-between text-xs">
-                           <span className="text-slate-500 font-semibold">{storeIsAr ? 'البريد الإلكتروني المتصل' : 'Email de connexion'}</span>
-                           <span className="text-slate-800 font-mono font-bold">{currentUser?.email || 'Non connecté'}</span>
-                        </div>
-                        <div className="h-px bg-slate-200/60" />
-                        <div className="flex items-center justify-between text-xs">
-                           <span className="text-slate-500 font-semibold">{storeIsAr ? 'نوع الاشتراك في BEYA STORE' : 'Plan BEYA STORE'}</span>
-                           <span className="text-indigo-600 font-bold flex items-center gap-1">
-                              {(() => {
+                  {/* Modern Stats Grid & Details */}
+                  <div className="p-6 space-y-5">
+                     <div className="grid grid-cols-2 gap-3">
+                        <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-100">
+                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{storeIsAr ? 'خطة الاشتراك' : 'Plan BEYA STORE'}</p>
+                           <p className="text-sm font-black text-indigo-600 flex items-center gap-1.5">
+                              <span>{(() => {
                                  const hasProStore = stores.some(s => s.plan === 'PRO');
-                                 if (hasProStore) return storeIsAr ? '👑 المتجر الاحترافي (PRO)' : '👑 Abonnement PRO';
-                                 return storeIsAr ? 'الخطة العادية (NORMAL)' : 'Plan NORMAL';
-                              })()}
-                           </span>
+                                 if (hasProStore) return storeIsAr ? '👑 المتجر PRO' : '👑 Plan PRO';
+                                 return storeIsAr ? 'الخطة العادية' : 'Plan NORMAL';
+                              })()}</span>
+                           </p>
                         </div>
-                        <div className="h-px bg-slate-200/60" />
-                        <div className="flex items-center justify-between text-xs">
-                           <span className="text-slate-500 font-semibold">{storeIsAr ? 'عدد المتاجر التابعة لك' : 'Nombre de boutiques'}</span>
-                           <span className="px-2 py-0.5 rounded-full text-xs font-black bg-indigo-100 text-indigo-700">{stores.length}</span>
+
+                        <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-100">
+                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{storeIsAr ? 'المتاجر النشطة' : 'Boutiques actives'}</p>
+                           <div className="flex items-center gap-2">
+                              <span className="text-lg font-black text-slate-900">{stores.length}</span>
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-700">
+                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                 {storeIsAr ? 'نشط' : 'Actif'}
+                              </span>
+                           </div>
                         </div>
                      </div>
 
-                     <div className="pt-2">
+                     {/* Info List */}
+                     <div className="p-4 bg-slate-50/60 rounded-2xl border border-slate-100 space-y-3">
+                        <div className="flex items-center justify-between text-xs">
+                           <span className="text-slate-500 font-semibold">{storeIsAr ? 'اسم التاجر / الحساب' : 'Nom du compte'}</span>
+                           <span className="text-slate-900 font-bold">{userProfile?.name || currentUser?.user_metadata?.full_name || currentUser?.email?.split('@')[0] || 'Marchand BEYA'}</span>
+                        </div>
+                        <div className="h-px bg-slate-200/50" />
+                        <div className="flex items-center justify-between text-xs">
+                           <span className="text-slate-500 font-semibold">{storeIsAr ? 'البريد الإلكتروني المتصل' : 'Email de connexion'}</span>
+                           <span className="text-slate-900 font-mono font-bold truncate max-w-[200px]">{currentUser?.email || 'Non connecté'}</span>
+                        </div>
+                     </div>
+
+                     <div className="pt-1">
                         <button
                            onClick={async () => {
                               await supabase.auth.signOut();
                               window.location.href = '/';
                            }}
-                           className="w-full py-3 bg-rose-50 hover:bg-rose-100/80 text-rose-600 font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2"
+                           className="w-full py-3.5 bg-slate-900 hover:bg-rose-600 text-white font-bold text-xs rounded-2xl transition-all duration-300 shadow-md hover:shadow-rose-500/25 flex items-center justify-center gap-2 group"
                         >
-                           <X className="w-4 h-4" />
+                           <LogOut className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
                            <span>{storeIsAr ? 'تسجيل الخروج من الحساب' : 'Se déconnecter'}</span>
                         </button>
                      </div>
