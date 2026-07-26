@@ -11,8 +11,21 @@ export default function SaaSAdminPage() {
   useEffect(() => {
     const init = async () => {
       try {
-        const { data: sessionData } = await supabase.auth.getSession();
-        const user = sessionData?.session?.user || null;
+        // 1. Try BEYA ERP local auth storage first
+        let user: any = null;
+        try {
+          const s = localStorage.getItem('textrack_auth');
+          if (s) user = JSON.parse(s);
+        } catch (e) {
+          console.warn('Error reading textrack_auth:', e);
+        }
+
+        // 2. If not found, check Supabase session
+        if (!user) {
+          const { data: sessionData } = await supabase.auth.getSession();
+          user = sessionData?.session?.user || null;
+        }
+
         setCurrentUser(user);
 
         const { data: storesData } = await supabase

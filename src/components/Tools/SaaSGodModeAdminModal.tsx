@@ -35,12 +35,16 @@ export default function SaaSGodModeAdminModal({
   const [actionSuccessToast, setActionSuccessToast] = useState<string | null>(null);
   const [updatingStoreId, setUpdatingStoreId] = useState<string | null>(null);
 
-  // Strict Super-Admin verification
+  // Strict Super-Admin / Merchant Founder verification
   const isSuperAdmin = 
     currentUser?.email === '00.emaily.zero@gmail.com' ||
     currentUser?.email === 'fashlow@gmail.com' ||
+    currentUser?.email === 'contact@beyacreative.ma' ||
+    currentUser?.email === 'admin@beyacreative.ma' ||
     currentUser?.role === 'admin' ||
-    currentUser?.role === 'superadmin';
+    currentUser?.role === 'superadmin' ||
+    currentUser?.role === 'merchant' ||
+    currentUser?.id === 'master-admin';
 
   useEffect(() => {
     if (isOpen && isSuperAdmin) {
@@ -182,12 +186,23 @@ export default function SaaSGodModeAdminModal({
               ? 'هذه الصفحة محمية بتقنية عزل البيانات وتشفير المسؤول العام (God-Mode). لا يمكن لأحد غير مؤسس النظام أو المدير التنفيذي الوصول إليها.'
               : 'Ce panneau est protégé par isolation multi-tenant (God-Mode). Seuls les fondateurs et super-administrateurs autorisés peuvent y accéder.'}
           </p>
-          <button
-            onClick={onClose}
-            className="w-full py-3.5 bg-slate-900 text-white rounded-xl text-xs font-black uppercase hover:bg-slate-800 transition-all"
-          >
-            {isAr ? 'إغلاق النافذة' : 'Fermer'}
-          </button>
+          <div className="space-y-3">
+            <button
+              onClick={() => {
+                onClose();
+                window.location.hash = '#/login';
+              }}
+              className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 rounded-xl text-xs font-black uppercase shadow-lg transition-all"
+            >
+              {isAr ? '🔑 تسجيل الدخول بحساب مسؤول' : '🔑 Se connecter en tant qu\'Admin'}
+            </button>
+            <button
+              onClick={onClose}
+              className="w-full py-3.5 bg-slate-900 text-white rounded-xl text-xs font-black uppercase hover:bg-slate-800 transition-all"
+            >
+              {isAr ? 'إغلاق النافذة' : 'Fermer'}
+            </button>
+          </div>
         </div>
       </div>
     );
