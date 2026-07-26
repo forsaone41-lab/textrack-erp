@@ -396,6 +396,9 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                      </div>
                   </div>
                </div>
+            </div>
+         )}
+
          {/* Merchant Account Details Modal */}
          {isProfileModalOpen && (
             <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm" onClick={() => setIsProfileModalOpen(false)}>
