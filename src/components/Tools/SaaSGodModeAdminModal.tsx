@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, Crown, Users, TrendingUp, Sparkles, AlertTriangle, 
   CheckCircle, RefreshCw, X, Search, Filter, Calendar, Award, 
-  Zap, Lock, Unlock, Eye, Store, Scissors, Briefcase, ChevronRight, Check
+  Zap, Lock, Unlock, Eye, Store, Scissors, Briefcase, ChevronRight, 
+  Check, Globe, ArrowUpRight, Layers, Clock, ShieldAlert
 } from 'lucide-react';
 import { supabase } from '../../supabase';
 
@@ -23,6 +24,13 @@ export default function SaaSGodModeAdminModal({
   onRefreshStores,
   isAr = false
 }: SaaSGodModeAdminModalProps) {
+  // Single-language switcher state: 'ar' or 'fr'
+  const [lang, setLang] = useState<'ar' | 'fr'>(() => {
+    const saved = localStorage.getItem('beya_godmode_lang');
+    if (saved === 'ar' || saved === 'fr') return saved;
+    return isAr ? 'ar' : 'fr';
+  });
+
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [allStoresData, setAllStoresData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,7 +43,7 @@ export default function SaaSGodModeAdminModal({
   const [actionSuccessToast, setActionSuccessToast] = useState<string | null>(null);
   const [updatingStoreId, setUpdatingStoreId] = useState<string | null>(null);
 
-  // Strict Super-Admin / Merchant Founder verification
+  // Strict Super-Admin / Founder verification
   const isSuperAdmin = 
     currentUser?.email === '00.emaily.zero@gmail.com' ||
     currentUser?.email === 'fashlow@gmail.com' ||
@@ -55,7 +63,6 @@ export default function SaaSGodModeAdminModal({
   const fetchAllSaaSData = async () => {
     setIsLoading(true);
     try {
-      // 1. Fetch all stores across Fashlow/BEYA platform
       const { data: storesData, error: storesError } = await supabase
         .from('stores')
         .select('*')
@@ -67,7 +74,6 @@ export default function SaaSGodModeAdminModal({
         setAllStoresData(stores);
       }
 
-      // 2. Fetch users from users table if accessible
       try {
         const { data: usersData } = await supabase
           .from('users')
@@ -86,16 +92,21 @@ export default function SaaSGodModeAdminModal({
     }
   };
 
+  const handleToggleLang = (newLang: 'ar' | 'fr') => {
+    setLang(newLang);
+    localStorage.setItem('beya_godmode_lang', newLang);
+  };
+
   const handleSimulatePlan = (plan: 'REAL' | 'NORMAL' | 'PRO' | 'PREMIUM') => {
     setSimulatedPlan(plan);
     if (plan === 'REAL') {
       localStorage.removeItem('beya_godmode_simulated_plan');
-      showToast(isAr ? 'تم إلغاء المحاكاة (الوضع الحقيقي)' : 'Simulation désactivée (Mode Réel)');
+      showToast(lang === 'ar' ? 'تم العودة إلى الوضع الحقيقي بنجاح' : 'Simulation désactivée (Mode Réel)');
     } else {
       localStorage.setItem('beya_godmode_simulated_plan', plan);
       showToast(
-        isAr 
-          ? `⚡ تم تفعيل وضع التجربة لخطة ${plan} بنجاح!`
+        lang === 'ar'
+          ? `⚡ تم تفعيل وضع المحاكاة لخطة ${plan} بنجاح!`
           : `⚡ Simulation du plan ${plan} activée avec succès !`
       );
     }
@@ -144,7 +155,6 @@ export default function SaaSGodModeAdminModal({
         if (error) throw error;
       }
 
-      // Update local state instantly
       setAllStoresData(prev => 
         prev.map(st => st.id === storeId ? { 
           ...st, 
@@ -156,13 +166,13 @@ export default function SaaSGodModeAdminModal({
       if (onRefreshStores) onRefreshStores();
 
       showToast(
-        isAr
-          ? `✅ تم تفعيل خطة ${newPlan} بنجاح للمتجر ${targetStore.name}!`
-          : `✅ Plan ${newPlan} activé avec succès pour ${targetStore.name} !`
+        lang === 'ar'
+          ? `✅ تم تفعيل خطة ${newPlan} بنجاح للمتجر: ${targetStore.name}`
+          : `✅ Plan ${newPlan} activé avec succès pour : ${targetStore.name}`
       );
     } catch (err) {
       console.error('Error updating store plan:', err);
-      alert(isAr ? 'حدث خطأ أثناء تحديث خطة العميل.' : 'Erreur lors de la mise à jour du plan client.');
+      alert(lang === 'ar' ? 'حدث خطأ أثناء تحديث الخطة' : 'Erreur lors de la mise à jour du plan');
     } finally {
       setUpdatingStoreId(null);
     }
@@ -173,17 +183,17 @@ export default function SaaSGodModeAdminModal({
   // Protect Modal against unauthorized access
   if (!isSuperAdmin) {
     return (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-        <div className="bg-white rounded-3xl p-8 max-w-md text-center shadow-2xl border border-rose-200">
-          <div className="w-16 h-16 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4">
-            <Lock className="w-8 h-8" />
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+        <div className="bg-slate-900 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl border border-rose-500/30">
+          <div className="w-20 h-20 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-500 flex items-center justify-center mx-auto mb-6">
+            <Lock className="w-10 h-10" />
           </div>
-          <h3 className="text-xl font-black text-slate-900 mb-2">
-            {isAr ? 'حماية أمنية: تم رفض الوصول' : 'Sécurité : Accès Refusé'}
+          <h3 className="text-2xl font-black text-white mb-3">
+            {lang === 'ar' ? 'حماية أمنية: تم رفض الوصول' : 'Sécurité : Accès Refusé'}
           </h3>
-          <p className="text-xs font-bold text-slate-500 mb-6 leading-relaxed">
-            {isAr 
-              ? 'هذه الصفحة محمية بتقنية عزل البيانات وتشفير المسؤول العام (God-Mode). لا يمكن لأحد غير مؤسس النظام أو المدير التنفيذي الوصول إليها.'
+          <p className="text-sm text-slate-400 mb-8 leading-relaxed">
+            {lang === 'ar'
+              ? 'هذه اللوحة محمية بتقنية عزل البيانات وتشفير المسؤول العام (God-Mode). لا يمكن الوصول إليها إلا للمدير العام أو مؤسس النظام.'
               : 'Ce panneau est protégé par isolation multi-tenant (God-Mode). Seuls les fondateurs et super-administrateurs autorisés peuvent y accéder.'}
           </p>
           <div className="space-y-3">
@@ -192,15 +202,16 @@ export default function SaaSGodModeAdminModal({
                 onClose();
                 window.location.hash = '#/login';
               }}
-              className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 rounded-xl text-xs font-black uppercase shadow-lg transition-all"
+              className="w-full py-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 rounded-2xl text-xs font-black uppercase tracking-wider shadow-lg transition-all flex items-center justify-center gap-2"
             >
-              {isAr ? '🔑 تسجيل الدخول بحساب مسؤول' : '🔑 Se connecter en tant qu\'Admin'}
+              <Lock className="w-4 h-4" />
+              <span>{lang === 'ar' ? 'تسجيل الدخول بحساب مسؤول' : 'Se connecter en tant qu\'Admin'}</span>
             </button>
             <button
               onClick={onClose}
-              className="w-full py-3.5 bg-slate-900 text-white rounded-xl text-xs font-black uppercase hover:bg-slate-800 transition-all"
+              className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl text-xs font-black uppercase tracking-wider transition-all"
             >
-              {isAr ? 'إغلاق النافذة' : 'Fermer'}
+              {lang === 'ar' ? 'إغلاق النافذة' : 'Fermer la fenêtre'}
             </button>
           </div>
         </div>
@@ -217,6 +228,11 @@ export default function SaaSGodModeAdminModal({
     const end = s.config_json?.trial_end_date;
     return end && new Date(end) >= new Date();
   }).length;
+
+  const pctNormal = totalStores > 0 ? Math.round((countNormal / totalStores) * 100) : 0;
+  const pctPro = totalStores > 0 ? Math.round((countPro / totalStores) * 100) : 0;
+  const pctPremium = totalStores > 0 ? Math.round((countPremium / totalStores) * 100) : 0;
+  const pctTrial = totalStores > 0 ? Math.round((countTrial / totalStores) * 100) : 0;
 
   // Filtered Stores List
   const filteredStores = allStoresData.filter(st => {
@@ -242,338 +258,491 @@ export default function SaaSGodModeAdminModal({
   });
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto" onClick={onClose}>
-      <div 
-        className={`w-full max-w-6xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] text-white animate-in fade-in zoom-in-95 duration-200 ${isAr ? 'text-right' : 'text-left'}`}
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Security Toast / Notification */}
-        {actionSuccessToast && (
-          <div className="bg-emerald-600 text-white px-6 py-3 font-bold text-xs flex items-center justify-between shadow-lg animate-bounce">
-            <span className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4" /> {actionSuccessToast}
-            </span>
-            <button onClick={() => setActionSuccessToast(null)}>
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        )}
+    <div 
+      className="fixed inset-0 z-[9999] bg-[#090d16] overflow-y-auto text-white flex flex-col"
+      dir={lang === 'ar' ? 'rtl' : 'ltr'}
+    >
+      {/* SECURITY TOAST */}
+      {actionSuccessToast && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[10000] bg-emerald-600 text-white px-6 py-3.5 rounded-2xl font-bold text-sm flex items-center gap-3 shadow-2xl border border-emerald-400 animate-in fade-in slide-in-from-top-4 duration-300">
+          <CheckCircle className="w-5 h-5 shrink-0" />
+          <span>{actionSuccessToast}</span>
+          <button onClick={() => setActionSuccessToast(null)} className="ml-2 opacity-80 hover:opacity-100">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
-        {/* TOP GOD-MODE EXECUTIVE BAR */}
-        <div className="bg-gradient-to-r from-indigo-900 via-purple-900 to-slate-900 p-6 border-b border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className={`flex items-center gap-4 ${isAr ? 'flex-row-reverse' : ''}`}>
-            <div className="w-12 h-12 rounded-2xl bg-amber-400/20 border border-amber-400/40 text-amber-300 flex items-center justify-center shadow-lg shrink-0">
-              <Crown className="w-6 h-6 animate-pulse" />
+      {/* HEADER BAR (Enterprise SaaS Style) */}
+      <header className="sticky top-0 z-50 bg-[#0f172a]/90 backdrop-blur-xl border-b border-white/10 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+          {/* Brand & Title */}
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 flex items-center justify-center shadow-lg shadow-amber-500/20 shrink-0">
+              <Crown className="w-8 h-8" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-amber-400 text-slate-950">
-                  🛡️ {isAr ? 'وضع التحكم الفائق' : 'GOD-MODE ADMIN'}
+              <div className="flex items-center gap-2.5">
+                <span className="px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400 text-slate-950">
+                  {lang === 'ar' ? '👑 التحكم الفائق SAAS' : '👑 GOD-MODE SAAS'}
                 </span>
                 <span className="text-xs text-emerald-400 font-bold flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5" /> {isAr ? 'مشفر ومؤمن 100%' : 'Chiffré & Sécurisé'}
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  {lang === 'ar' ? 'اتصال مشفر ومؤمن' : 'Connexion chiffrée'}
                 </span>
               </div>
-              <h2 className="text-xl sm:text-2xl font-black tracking-tight mt-1">
-                {isAr ? 'لوحة القيادة العليا لإدارة المنصة والاشتراكات (SaaS)' : 'Panneau de Contrôle Suprême SaaS'}
-              </h2>
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight mt-1 text-white">
+                {lang === 'ar' ? 'مركز التحكم القيادي للمنصة (SaaS God-Mode)' : 'Centre de Commandement SaaS (God-Mode)'}
+              </h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          {/* Right Actions: AR/FR Toggle + Refresh + Close */}
+          <div className="flex items-center gap-3 self-end md:self-auto">
+            {/* AR / FR Switcher */}
+            <div className="flex items-center bg-slate-800/80 p-1 rounded-2xl border border-white/10">
+              <button
+                onClick={() => handleToggleLang('ar')}
+                className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+                  lang === 'ar'
+                    ? 'bg-amber-400 text-slate-950 shadow-md'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <span>🇲🇦</span>
+                <span>العربية</span>
+              </button>
+              <button
+                onClick={() => handleToggleLang('fr')}
+                className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+                  lang === 'fr'
+                    ? 'bg-amber-400 text-slate-950 shadow-md'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <span>🇫🇷</span>
+                <span>Français</span>
+              </button>
+            </div>
+
+            {/* Refresh Button */}
             <button
               onClick={fetchAllSaaSData}
-              className="p-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-colors flex items-center gap-2 text-xs font-bold"
-              title={isAr ? 'تحديث البيانات' : 'Actualiser'}
+              className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl transition-colors flex items-center gap-2 text-xs font-bold border border-white/10"
+              title={lang === 'ar' ? 'تحديث البيانات' : 'Actualiser'}
             >
               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline">{isAr ? 'تحديث الفوري' : 'Actualiser'}</span>
+              <span className="hidden sm:inline">{lang === 'ar' ? 'تحديث الفوري' : 'Actualiser'}</span>
             </button>
+
+            {/* Close Button */}
             <button
               onClick={onClose}
-              className="w-10 h-10 rounded-xl bg-white/10 hover:bg-rose-500/20 hover:text-rose-400 text-slate-400 flex items-center justify-center transition-colors"
+              className="w-11 h-11 rounded-2xl bg-rose-500/10 hover:bg-rose-500 hover:text-white text-rose-400 border border-rose-500/20 flex items-center justify-center transition-all shadow-sm"
+              title={lang === 'ar' ? 'إغلاق النافذة' : 'Fermer'}
             >
               <X className="w-5 h-5" />
             </button>
           </div>
         </div>
+      </header>
 
-        {/* SELF-TESTING GOD-MODE PLAN SIMULATOR BAR ("Njrb les plan kamlin bala mnhl hisbat tjribya") */}
-        <div className="bg-slate-950/80 p-4 border-b border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Zap className="w-4 h-4 text-amber-400" />
-            <span className="text-xs font-bold text-slate-300">
-              {isAr ? 'تفعيل محاكاة الخطة لاختبار المميزات بدون حساب تجريبي:' : 'Simulation de plan (Test de toutes les fonctionnalités par l\'Admin) :'}
-            </span>
+      {/* PLAN SIMULATOR BANNER */}
+      <div className="bg-[#111827] border-b border-white/10 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-400/10 border border-amber-400/20 text-amber-400 flex items-center justify-center shrink-0">
+              <Zap className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-xs font-bold text-white">
+                {lang === 'ar'
+                  ? 'محاكي الخطط الإداري (اختبار صلاحيات الخطط دون إنشاء حساب تجريبي)'
+                  : 'Simulateur de plan (Testez les fonctionnalités sans compte d\'essai)'}
+              </h3>
+              <p className="text-[11px] text-slate-400">
+                {lang === 'ar'
+                  ? 'اختر خطة أدناه لتشغيل المنصة بهذه الصلاحيات فوراً في متصفحك'
+                  : 'Sélectionnez un plan pour simuler son interface instantanément dans votre navigateur'}
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
             {[
-              { id: 'REAL', label: isAr ? '🟢 الوضع الحقيقي' : '🟢 Mode Réel', color: 'bg-slate-800 text-slate-300' },
-              { id: 'NORMAL', label: isAr ? '⚡ محاكاة NORMAL' : '⚡ Test NORMAL', color: 'bg-indigo-900/60 text-indigo-200' },
-              { id: 'PRO', label: isAr ? '🔥 محاكاة PRO' : '🔥 Test PRO', color: 'bg-amber-500/20 text-amber-300' },
-              { id: 'PREMIUM', label: isAr ? '👑 محاكاة PREMIUM' : '👑 Test PREMIUM', color: 'bg-purple-600/30 text-purple-200' },
-            ].map((sim) => (
-              <button
-                key={sim.id}
-                onClick={() => handleSimulatePlan(sim.id as any)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all border ${simulatedPlan === sim.id ? 'border-amber-400 ring-2 ring-amber-400/30 scale-105 ' + sim.color : 'border-white/5 bg-slate-900/60 text-slate-400 hover:bg-slate-800'}`}
-              >
-                {sim.label}
-              </button>
-            ))}
+              { id: 'REAL', label: lang === 'ar' ? '🟢 الوضع الحقيقي' : '🟢 Mode Réel' },
+              { id: 'NORMAL', label: lang === 'ar' ? '⚡ محاكاة NORMAL' : '⚡ Test NORMAL' },
+              { id: 'PRO', label: lang === 'ar' ? '🔥 محاكاة PRO' : '🔥 Test PRO' },
+              { id: 'PREMIUM', label: lang === 'ar' ? '👑 محاكاة PREMIUM' : '👑 Test PREMIUM' },
+            ].map((sim) => {
+              const isActive = simulatedPlan === sim.id;
+              return (
+                <button
+                  key={sim.id}
+                  onClick={() => handleSimulatePlan(sim.id as any)}
+                  className={`px-4 py-2 rounded-xl text-xs font-black transition-all border ${
+                    isActive
+                      ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-lg shadow-amber-400/20 scale-105'
+                      : 'bg-slate-800/80 text-slate-300 border-white/10 hover:bg-slate-800 hover:text-white'
+                  }`}
+                >
+                  {sim.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* MAIN DASHBOARD CONTENT */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8 space-y-8">
+        {/* KPI METRIC CARDS (5 Spacious Cards) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {/* Total Stores */}
+          <div className="bg-[#111827] border border-white/10 rounded-3xl p-6 shadow-xl flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-400 uppercase">
+                {lang === 'ar' ? 'إجمالي المتاجر والعملاء' : 'Total Boutiques'}
+              </span>
+              <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
+                <Users className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <p className="text-3xl font-black text-white">{totalStores}</p>
+              <p className="text-xs text-slate-400 mt-1">
+                {lang === 'ar' ? 'حساب ومتجر مسجل' : 'Comptes enregistrés'}
+              </p>
+            </div>
+          </div>
+
+          {/* Normal Plan */}
+          <div className="bg-[#111827] border border-white/10 rounded-3xl p-6 shadow-xl flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-blue-400 uppercase">
+                {lang === 'ar' ? 'باقة NORMAL القياسية' : 'Abonnés NORMAL'}
+              </span>
+              <div className="w-10 h-10 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center">
+                <Store className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="flex items-baseline justify-between">
+                <p className="text-3xl font-black text-white">{countNormal}</p>
+                <span className="text-xs font-bold text-blue-400">{pctNormal}%</span>
+              </div>
+              <div className="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
+                <div className="bg-blue-500 h-full rounded-full transition-all" style={{ width: `${pctNormal}%` }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Pro Plan */}
+          <div className="bg-[#111827] border border-amber-500/30 rounded-3xl p-6 shadow-xl flex flex-col justify-between bg-gradient-to-br from-amber-500/5 to-transparent">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-amber-400 uppercase">
+                {lang === 'ar' ? 'باقة PRO المتقدمة' : 'Abonnés PRO'}
+              </span>
+              <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+                <Crown className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="flex items-baseline justify-between">
+                <p className="text-3xl font-black text-white">{countPro}</p>
+                <span className="text-xs font-bold text-amber-400">{pctPro}%</span>
+              </div>
+              <div className="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
+                <div className="bg-amber-400 h-full rounded-full transition-all" style={{ width: `${pctPro}%` }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Premium Plan */}
+          <div className="bg-[#111827] border border-purple-500/30 rounded-3xl p-6 shadow-xl flex flex-col justify-between bg-gradient-to-br from-purple-500/5 to-transparent">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-purple-400 uppercase">
+                {lang === 'ar' ? 'باقة PREMIUM الملكية' : 'Abonnés PREMIUM'}
+              </span>
+              <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
+                <Award className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="flex items-baseline justify-between">
+                <p className="text-3xl font-black text-white">{countPremium}</p>
+                <span className="text-xs font-bold text-purple-400">{pctPremium}%</span>
+              </div>
+              <div className="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
+                <div className="bg-purple-500 h-full rounded-full transition-all" style={{ width: `${pctPremium}%` }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Active Trials */}
+          <div className="bg-[#111827] border border-emerald-500/30 rounded-3xl p-6 shadow-xl flex flex-col justify-between bg-gradient-to-br from-emerald-500/5 to-transparent">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-emerald-400 uppercase">
+                {lang === 'ar' ? 'فترات تجريبية نشطة' : 'Essais Actifs'}
+              </span>
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                <Calendar className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="flex items-baseline justify-between">
+                <p className="text-3xl font-black text-white">{countTrial}</p>
+                <span className="text-xs font-bold text-emerald-400">{pctTrial}%</span>
+              </div>
+              <div className="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
+                <div className="bg-emerald-500 h-full rounded-full transition-all" style={{ width: `${pctTrial}%` }} />
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* LIVE METRICS / STATS GRID ("chehal mn wahd msjl o chehal mn wahd bagha normal...") */}
-        <div className="p-6 grid grid-cols-2 md:grid-cols-5 gap-4 border-b border-white/10 bg-slate-900/50">
-          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-400 uppercase">{isAr ? 'إجمالي المسجلين' : 'Inscrits Totals'}</span>
-              <Users className="w-4 h-4 text-indigo-400" />
-            </div>
-            <p className="text-2xl font-black text-white mt-2">{totalStores}</p>
-            <p className="text-[10px] text-indigo-300 mt-1">{isAr ? 'متجر وحساب على المنصة' : 'Méta-comptes & Boutiques'}</p>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-400 uppercase">{isAr ? 'مشتركو NORMAL' : 'Abonnés NORMAL'}</span>
-              <Store className="w-4 h-4 text-blue-400" />
-            </div>
-            <p className="text-2xl font-black text-blue-300 mt-2">{countNormal}</p>
-            <p className="text-[10px] text-slate-400 mt-1">{isAr ? 'الباقة العادية / القياسية' : 'Plan Standard'}</p>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/20 flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-amber-300 uppercase">{isAr ? 'مشتركو PRO' : 'Abonnés PRO'}</span>
-              <Crown className="w-4 h-4 text-amber-400" />
-            </div>
-            <p className="text-2xl font-black text-amber-300 mt-2">{countPro}</p>
-            <p className="text-[10px] text-amber-200/70 mt-1">{isAr ? 'أدوات الذكاء الاصطناعي' : 'Outils IA & Niches'}</p>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-500/10 to-indigo-600/5 border border-purple-500/20 flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-purple-300 uppercase">{isAr ? 'مشتركو PREMIUM' : 'Abonnés PREMIUM'}</span>
-              <Award className="w-4 h-4 text-purple-400" />
-            </div>
-            <p className="text-2xl font-black text-purple-300 mt-2">{countPremium}</p>
-            <p className="text-[10px] text-purple-200/70 mt-1">{isAr ? 'حساب VIP شامل' : 'VIP 360° Illimité'}</p>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex flex-col justify-between col-span-2 md:col-span-1">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-emerald-300 uppercase">{isAr ? 'الفترة التجريبية' : 'En Période d\'Essai'}</span>
-              <Calendar className="w-4 h-4 text-emerald-400" />
-            </div>
-            <p className="text-2xl font-black text-emerald-300 mt-2">{countTrial}</p>
-            <p className="text-[10px] text-emerald-200/70 mt-1">{isAr ? 'صلاحية تجريبية نشطة' : 'Essai actif non expiré'}</p>
-          </div>
-        </div>
-
-        {/* FILTER BAR FOR CLIENTS & PERSONA ANALYTICS ("Bachmn sifa wach commercial wach couturier bala sit") */}
-        <div className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 bg-slate-900">
-          <div className="flex flex-wrap items-center gap-2">
+        {/* ENTERPRISE TOOLBAR: FILTERS & SEARCH */}
+        <div className="bg-[#111827] border border-white/10 rounded-3xl p-6 shadow-xl space-y-4">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             {/* Filter by Plan */}
-            <span className="text-xs font-bold text-slate-400 mr-2">{isAr ? 'الخطة:' : 'Plan :'}</span>
-            {[
-              { id: 'ALL', label: isAr ? 'الكل (All)' : 'Tout' },
-              { id: 'NORMAL', label: 'NORMAL' },
-              { id: 'PRO', label: 'PRO' },
-              { id: 'PREMIUM', label: 'PREMIUM' },
-              { id: 'TRIAL', label: isAr ? 'تجريبي (Essai)' : 'Essai Actif' },
-            ].map((f) => (
-              <button
-                key={f.id}
-                onClick={() => setFilterPlan(f.id as any)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${filterPlan === f.id ? 'bg-indigo-600 text-white shadow-md' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}
-              >
-                {f.label}
-              </button>
-            ))}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-bold text-slate-400 mr-2">
+                {lang === 'ar' ? 'تصفية حسب الخطة:' : 'Filtrer par plan :'}
+              </span>
+              {[
+                { id: 'ALL', label: lang === 'ar' ? 'الكل' : 'Tous' },
+                { id: 'NORMAL', label: 'NORMAL' },
+                { id: 'PRO', label: 'PRO' },
+                { id: 'PREMIUM', label: 'PREMIUM' },
+                { id: 'TRIAL', label: lang === 'ar' ? 'تجريبي نشط' : 'Essai Actif' },
+              ].map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setFilterPlan(f.id as any)}
+                  className={`px-4 py-2 rounded-2xl text-xs font-black transition-all ${
+                    filterPlan === f.id
+                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
+                      : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
 
-            <div className="w-px h-6 bg-white/10 mx-2 hidden md:block" />
-
-            {/* Filter by User Intent / Persona */}
-            <span className="text-xs font-bold text-slate-400 mr-2">{isAr ? 'صفة العميل / الهدف:' : 'Profil client :'}</span>
-            {[
-              { id: 'ALL', label: isAr ? 'جميع الصفات' : 'Tous profils' },
-              { id: 'BOUTIQUE', label: isAr ? '🛍️ متجر / علامة تجارية' : '🛍️ Boutique e-com' },
-              { id: 'COUTURE', label: isAr ? '✂️ خياطة وإنتاج (بدون متجر)' : '✂️ Couture sans site' },
-              { id: 'COMMERCIAL', label: isAr ? '💼 مسوق / شريك تجاري' : '💼 Partenaire' },
-            ].map((p) => (
-              <button
-                key={p.id}
-                onClick={() => setFilterPersona(p.id as any)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${filterPersona === p.id ? 'bg-purple-600 text-white shadow-md' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}
-              >
-                {p.label}
-              </button>
-            ))}
+            {/* Filter by Persona */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-bold text-slate-400 mr-2">
+                {lang === 'ar' ? 'تصفية حسب النشاط:' : 'Profil client :'}
+              </span>
+              {[
+                { id: 'ALL', label: lang === 'ar' ? 'جميع الحسابات' : 'Tous les profils' },
+                { id: 'BOUTIQUE', label: lang === 'ar' ? '🛍️ متجر إلكتروني' : '🛍️ Boutique e-com' },
+                { id: 'COUTURE', label: lang === 'ar' ? '✂️ خياطة وإنتاج' : '✂️ Couture sans site' },
+                { id: 'COMMERCIAL', label: lang === 'ar' ? '💼 شريك مسوق' : '💼 Affilié' },
+              ].map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => setFilterPersona(p.id as any)}
+                  className={`px-4 py-2 rounded-2xl text-xs font-black transition-all ${
+                    filterPersona === p.id
+                      ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
+                      : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Search Box */}
-          <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={isAr ? 'ابحث باسم المتجر أو البريد...' : 'Rechercher par nom ou email...'}
-              className="pl-10 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 w-full sm:w-64"
-            />
+          <div className="relative pt-2 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <span className="text-xs font-bold text-slate-400">
+              {lang === 'ar'
+                ? `النتائج المعروضة: (${filteredStores.length} من أصل ${totalStores} متجر)`
+                : `Affichage : (${filteredStores.length} sur ${totalStores} boutiques)`}
+            </span>
+            <div className="relative w-full sm:w-80">
+              <Search className={`w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 ${lang === 'ar' ? 'right-4' : 'left-4'}`} />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder={lang === 'ar' ? 'ابحث باسم المتجر، الدومين أو البريد...' : 'Rechercher par nom, domaine ou email...'}
+                className={`w-full py-2.5 bg-slate-950 border border-slate-800 rounded-2xl text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 ${lang === 'ar' ? 'pr-11 pl-4' : 'pl-11 pr-4'}`}
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className={`absolute top-1/2 -translate-y-1/2 text-slate-400 hover:text-white ${lang === 'ar' ? 'left-3' : 'right-3'}`}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* CLIENTS LIST / TABLE WITH 1-CLICK PLAN ACTIVATOR ("kifach nqder nactive les plan lclient hit hadchi balia chwi m3qd") */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-bold text-slate-300">
-              {isAr ? `العملاء والمتاجر المسجلة (${filteredStores.length})` : `Clients & Boutiques enregistrées (${filteredStores.length})`}
-            </h3>
+        {/* CLIENTS TABLE & 1-CLICK PLAN ACTIVATOR */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-base font-black text-white">
+              {lang === 'ar' ? 'قائمة العملاء والمتاجر (1-Click Control)' : 'Liste des clients (Contrôle 1-Click)'}
+            </h2>
             <span className="text-xs text-indigo-400 font-bold">
-              {isAr ? '👉 انقر على أي زر خِطة لتفعيلها للعميل في الحال (1-Click Activation)' : '👉 Cliquez pour changer le plan du client instantanément'}
+              {lang === 'ar' ? '👉 انقر على أي زر خِطة لتفعيلها للعميل في الحال' : '👉 Cliquez sur un plan pour l\'activer instantanément'}
             </span>
           </div>
 
           {filteredStores.length === 0 ? (
-            <div className="p-12 text-center bg-slate-950/40 border border-slate-800/80 rounded-2xl">
-              <Users className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-              <p className="text-sm font-bold text-slate-400">
-                {isAr ? 'لا توجد نتائج مطابقة لبحثك في هذا الفلتر' : 'Aucun client ne correspond à ces critères'}
+            <div className="bg-[#111827] border border-white/10 rounded-3xl p-16 text-center">
+              <Users className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+              <p className="text-base font-bold text-slate-400">
+                {lang === 'ar' ? 'لا توجد متاجر تطابق معايير البحث الحالية' : 'Aucun client ne correspond à vos filtres'}
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {filteredStores.map((store) => {
                 const plan = store.subscription_tier || store.config_json?.plan || 'NORMAL';
-                const ownerEmail = store.config_json?.owner_email || store.owner_id || (isAr ? 'حساب محلي غير متصل' : 'Compte local');
+                const ownerEmail = store.config_json?.owner_email || store.owner_id || (lang === 'ar' ? 'حساب محلي غير متصل' : 'Compte local');
                 const persona = store.config_json?.persona || store.config_json?.intent || 'BOUTIQUE';
-                const createdDate = store.created_at ? new Date(store.created_at).toLocaleDateString(isAr ? 'ar-MA' : 'fr-FR') : 'N/A';
+                const createdDate = store.created_at ? new Date(store.created_at).toLocaleDateString(lang === 'ar' ? 'ar-MA' : 'fr-FR') : 'N/A';
                 const trialEnd = store.config_json?.trial_end_date;
                 const isTrialActive = trialEnd && new Date(trialEnd) >= new Date();
 
                 return (
                   <div 
                     key={store.id} 
-                    className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800/80 hover:border-slate-700 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+                    className="bg-[#111827] border border-white/10 hover:border-indigo-500/50 rounded-3xl p-6 shadow-xl transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-6"
                   >
-                    {/* Left: Store info & persona */}
-                    <div className="flex items-start gap-3.5">
-                      <div className="w-11 h-11 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
+                    {/* Left Info */}
+                    <div className="flex items-start gap-4">
+                      <div className="w-14 h-14 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
                         {persona === 'COUTURE' ? (
-                          <Scissors className="w-5 h-5 text-purple-400" />
+                          <Scissors className="w-6 h-6 text-purple-400" />
                         ) : persona === 'COMMERCIAL' ? (
-                          <Briefcase className="w-5 h-5 text-blue-400" />
+                          <Briefcase className="w-6 h-6 text-blue-400" />
                         ) : (
-                          <Store className="w-5 h-5 text-indigo-400" />
+                          <Store className="w-6 h-6 text-indigo-400" />
                         )}
                       </div>
 
                       <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h4 className="text-sm font-black text-white">{store.name || 'Boutique Sans Nom'}</h4>
-                          <span className="text-[10px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
-                            {store.domain || store.id.substring(0, 8)}
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <h3 className="text-lg font-black text-white">{store.name || 'Boutique Sans Nom'}</h3>
+                          
+                          <span className="text-xs font-mono text-slate-300 bg-slate-950 px-3 py-1 rounded-xl border border-slate-800">
+                            {store.domain || store.id.substring(0, 10)}
                           </span>
 
                           {/* Persona Badge */}
-                          <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
+                          <span className={`text-[11px] font-black uppercase px-3 py-1 rounded-full ${
                             persona === 'COUTURE' 
-                              ? 'bg-purple-900/50 text-purple-300 border border-purple-700/50'
+                              ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
                               : persona === 'COMMERCIAL'
-                              ? 'bg-blue-900/50 text-blue-300 border border-blue-700/50'
-                              : 'bg-indigo-900/50 text-indigo-300 border border-indigo-700/50'
+                              ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
+                              : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
                           }`}>
                             {persona === 'COUTURE' 
-                              ? (isAr ? '✂️ خياطة فقط (بدون متجر)' : '✂️ Couture sans site')
+                              ? (lang === 'ar' ? '✂️ خياطة وإنتاج فقط' : '✂️ Couture & Atelier')
                               : persona === 'COMMERCIAL'
-                              ? (isAr ? '💼 شريك مسوق' : '💼 Affilié')
-                              : (isAr ? '🛍️ متجر إلكتروني' : '🛍️ Marque / Boutique')}
+                              ? (lang === 'ar' ? '💼 شريك مسوق' : '💼 Affilié Commercial')
+                              : (lang === 'ar' ? '🛍️ متجر إلكتروني' : '🛍️ Marque / Boutique')}
                           </span>
                         </div>
 
-                        <p className="text-xs text-slate-400 font-mono mt-1">{ownerEmail}</p>
+                        <p className="text-xs text-slate-400 font-mono mt-2">{ownerEmail}</p>
 
-                        <div className="flex items-center gap-3 mt-2 text-[10px] text-slate-400">
-                          <span>{isAr ? `تاريخ التسجيل: ${createdDate}` : `Créé le: ${createdDate}`}</span>
+                        <div className="flex items-center gap-4 mt-3 text-xs text-slate-400 flex-wrap">
+                          <span className="flex items-center gap-1.5">
+                            <Clock className="w-3.5 h-3.5 text-slate-500" />
+                            <span>{lang === 'ar' ? `تاريخ التسجيل: ${createdDate}` : `Créé le : ${createdDate}`}</span>
+                          </span>
+
                           <span>•</span>
+
                           {trialEnd ? (
-                            <span className={isTrialActive ? 'text-emerald-400 font-bold' : 'text-rose-400'}>
-                              {isAr 
-                                ? `${isTrialActive ? '🟢 فترة تجريبية حتى:' : '🔴 انتهت التجربة في:'} ${new Date(trialEnd).toLocaleDateString(isAr ? 'ar-MA' : 'fr-FR')}` 
-                                : `${isTrialActive ? '🟢 Essai jusqu\'au:' : '🔴 Essai expiré:'} ${new Date(trialEnd).toLocaleDateString('fr-FR')}`}
+                            <span className={`flex items-center gap-1.5 font-bold ${isTrialActive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                              <Calendar className="w-3.5 h-3.5" />
+                              <span>
+                                {lang === 'ar'
+                                  ? `${isTrialActive ? '🟢 تجربة نشطة حتى:' : '🔴 انتهت التجربة:'} ${new Date(trialEnd).toLocaleDateString('ar-MA')}`
+                                  : `${isTrialActive ? '🟢 Essai actif au :' : '🔴 Essai expiré :'} ${new Date(trialEnd).toLocaleDateString('fr-FR')}`}
+                              </span>
                             </span>
                           ) : (
-                            <span className="text-slate-500">{isAr ? 'بدون فترة تجريبية محددة' : 'Sans date d\'essai'}</span>
+                            <span className="text-slate-500">
+                              {lang === 'ar' ? 'بدون تاريخ انتهاء تجريبية' : 'Sans date d\'essai'}
+                            </span>
                           )}
                         </div>
                       </div>
                     </div>
 
-                    {/* Right: 1-Click Plan Activator Controls */}
-                    <div className="flex flex-wrap items-center gap-2 bg-slate-900 p-2.5 rounded-2xl border border-slate-800/80">
-                      <span className="text-[10px] font-bold text-slate-400 mr-1 hidden sm:inline">
-                        {isAr ? 'تفعيل فوري:' : 'Activer Plan :'}
+                    {/* Right Controls: Segmented Plan Selector + Trial Extender */}
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-slate-950 p-3 rounded-2xl border border-slate-800">
+                      <span className="text-xs font-bold text-slate-400 px-2 hidden xl:inline">
+                        {lang === 'ar' ? 'الخطة الحالية:' : 'Plan :'}
                       </span>
 
-                      {/* NORMAL BUTTON */}
-                      <button
-                        onClick={() => handleActivateClientPlan(store.id, 'NORMAL')}
-                        disabled={updatingStoreId === store.id || plan === 'NORMAL'}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
-                          plan === 'NORMAL'
-                            ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20 ring-2 ring-blue-400/40 cursor-default'
-                            : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
-                        }`}
-                      >
-                        <span>NORMAL</span>
-                        {plan === 'NORMAL' && <Check className="w-3.5 h-3.5" />}
-                      </button>
+                      {/* Segmented Button Group */}
+                      <div className="grid grid-cols-3 gap-1.5 bg-slate-900 p-1 rounded-xl border border-white/5">
+                        {/* NORMAL */}
+                        <button
+                          onClick={() => handleActivateClientPlan(store.id, 'NORMAL')}
+                          disabled={updatingStoreId === store.id || plan === 'NORMAL'}
+                          className={`px-4 py-2.5 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                            plan === 'NORMAL'
+                              ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30'
+                              : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                          }`}
+                        >
+                          <span>NORMAL</span>
+                          {plan === 'NORMAL' && <Check className="w-3.5 h-3.5" />}
+                        </button>
 
-                      {/* PRO BUTTON */}
-                      <button
-                        onClick={() => handleActivateClientPlan(store.id, 'PRO')}
-                        disabled={updatingStoreId === store.id || plan === 'PRO'}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
-                          plan === 'PRO'
-                            ? 'bg-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/20 ring-2 ring-amber-300 cursor-default'
-                            : 'bg-slate-800 text-amber-300 hover:bg-amber-500/20'
-                        }`}
-                      >
-                        <Crown className="w-3.5 h-3.5" />
-                        <span>PRO</span>
-                        {plan === 'PRO' && <Check className="w-3.5 h-3.5" />}
-                      </button>
+                        {/* PRO */}
+                        <button
+                          onClick={() => handleActivateClientPlan(store.id, 'PRO')}
+                          disabled={updatingStoreId === store.id || plan === 'PRO'}
+                          className={`px-4 py-2.5 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                            plan === 'PRO'
+                              ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30'
+                              : 'text-amber-400 hover:bg-amber-500/10'
+                          }`}
+                        >
+                          <Crown className="w-3.5 h-3.5" />
+                          <span>PRO</span>
+                          {plan === 'PRO' && <Check className="w-3.5 h-3.5" />}
+                        </button>
 
-                      {/* PREMIUM BUTTON */}
-                      <button
-                        onClick={() => handleActivateClientPlan(store.id, 'PREMIUM')}
-                        disabled={updatingStoreId === store.id || plan === 'PREMIUM'}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
-                          plan === 'PREMIUM'
-                            ? 'bg-purple-600 text-white shadow-md shadow-purple-500/20 ring-2 ring-purple-400 cursor-default'
-                            : 'bg-slate-800 text-purple-300 hover:bg-purple-600/30'
-                        }`}
-                      >
-                        <Award className="w-3.5 h-3.5" />
-                        <span>PREMIUM</span>
-                        {plan === 'PREMIUM' && <Check className="w-3.5 h-3.5" />}
-                      </button>
+                        {/* PREMIUM */}
+                        <button
+                          onClick={() => handleActivateClientPlan(store.id, 'PREMIUM')}
+                          disabled={updatingStoreId === store.id || plan === 'PREMIUM'}
+                          className={`px-4 py-2.5 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                            plan === 'PREMIUM'
+                              ? 'bg-purple-600 text-white shadow-md shadow-purple-500/30'
+                              : 'text-purple-400 hover:bg-purple-600/10'
+                          }`}
+                        >
+                          <Award className="w-3.5 h-3.5" />
+                          <span>PREMIUM</span>
+                          {plan === 'PREMIUM' && <Check className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
 
-                      <div className="w-px h-6 bg-slate-800 mx-1 hidden sm:block" />
-
-                      {/* +30 Days Trial Extender */}
+                      {/* Separate +30 Days Trial Button */}
                       <button
                         onClick={() => handleActivateClientPlan(store.id, plan as any, 30)}
                         disabled={updatingStoreId === store.id}
-                        className="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 hover:bg-emerald-900 transition-colors flex items-center gap-1"
-                        title={isAr ? 'تمديد الصلاحية التجريبية للعميل 30 يوماً إضافية' : 'Prolonger l\'essai de 30 jours'}
+                        className="px-4 py-3 rounded-xl text-xs font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500 hover:text-slate-950 transition-all flex items-center justify-center gap-2"
+                        title={lang === 'ar' ? 'تمديد الصلاحية التجريبية 30 يوماً إضافية' : 'Prolonger l\'essai de 30 jours'}
                       >
-                        <Calendar className="w-3.5 h-3.5" />
-                        <span>+30j {isAr ? 'تجريبي' : 'Essai'}</span>
+                        <Calendar className="w-4 h-4" />
+                        <span>{lang === 'ar' ? '+30 يوم تجريبي' : '+30j Essai'}</span>
                       </button>
                     </div>
                   </div>
@@ -582,22 +751,27 @@ export default function SaaSGodModeAdminModal({
             </div>
           )}
         </div>
+      </main>
 
-        {/* BOTTOM FOOTER INFO */}
-        <div className="p-4 bg-slate-950 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500">
-          <p>
-            {isAr 
-              ? '🛡️ تم حماية هذه اللوحة بتقنيات التشفير وعزل الحسابات. لا تتم مشاركة هذه البيانات مع أي مستخدم آخر.'
-              : '🛡️ Données isolées en temps réel. Protégé par contrôle d\'accès Fondateur / Super-Admin.'}
+      {/* FOOTER BAR */}
+      <footer className="border-t border-white/10 bg-[#0f172a] px-6 py-4 mt-8">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+          <p className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <span>
+              {lang === 'ar'
+                ? 'نظام عزل البيانات وتشفير الحسابات يعمل في الوقت الفعلي (Real-time Multi-tenant Security)'
+                : 'Isolation des données en temps réel. Protégé par contrôle Fondateur / Super-Admin.'}
+            </span>
           </p>
           <button
             onClick={onClose}
-            className="mt-2 sm:mt-0 px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition-colors"
+            className="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition-colors"
           >
-            {isAr ? 'إغلاق اللوحة العليا' : 'Fermer le panneau'}
+            {lang === 'ar' ? 'إغلاق مركز التحكم' : 'Fermer le panneau'}
           </button>
         </div>
-      </div>
+      </footer>
     </div>
   );
 }
