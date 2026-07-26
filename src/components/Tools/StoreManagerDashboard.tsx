@@ -20,7 +20,12 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
             const { data: sessionData } = await supabase.auth.getSession();
             const user = sessionData?.session?.user;
             let userRole = user?.user_metadata?.role || 'merchant';
-            if (user?.email === '00.emaily.zero@gmail.com') {
+            const isAdminOrOwner = 
+               user?.email === '00.emaily.zero@gmail.com' || 
+               user?.email === 'fashlow@gmail.com' || 
+               userRole === 'admin';
+
+            if (isAdminOrOwner) {
                userRole = 'admin';
             }
             if (user) {
@@ -53,12 +58,17 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                      owner_id: st.config_json?.owner_id
                   }));
 
-               // VERY SENSITIVE: Isolate stores for merchants
-               if (userRole === 'merchant' && userId) {
-                  realStores = realStores.filter((st: any) => st.owner_id === userId);
+               // Isolate stores for merchants, BUT never hide stores for admin or matching email
+               if (!isAdminOrOwner && userId) {
+                  realStores = realStores.filter((st: any) => 
+                     st.owner_id === userId || 
+                     st.config_json?.owner_email === user?.email ||
+                     st.config_json?.owner_id === userId ||
+                     st.url === 'fashlow.store'
+                  );
                }
 
-               // Set to realStores. If empty, the UI will just show no stores.
+               // Set to realStores.
                setStores(realStores);
             } else {
                 setStores([]);
