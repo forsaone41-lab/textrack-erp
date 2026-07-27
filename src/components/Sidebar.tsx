@@ -18,7 +18,8 @@ import {
   Target,
   Store,
   ChevronDown,
-  Briefcase
+  Briefcase,
+  Crown
 } from 'lucide-react';
 
 import { User, CompanyProfile, loadPermissions, AppPage, syncCompanyProfile } from '../types';
@@ -203,6 +204,13 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
                        <Globe className="w-4 h-4" />
                      </div>
                      <span className="text-[10px] font-bold text-white leading-tight">BEYA PORTAL</span>
+                   </NavLink>
+                   <div className="h-px bg-white/5" />
+                   <NavLink to="/saas-admin" onClick={() => { setWorkspaceDropdownOpen(false); closeMobile(); }} className="flex items-center gap-3 px-3 py-3 hover:bg-white/5 transition-colors group">
+                     <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors shrink-0">
+                       <Crown className="w-4 h-4" />
+                     </div>
+                     <span className="text-[10px] font-bold text-white leading-tight">SAAS APP</span>
                    </NavLink>
                 </div>
               )}

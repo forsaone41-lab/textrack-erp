@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { ShieldCheck, Mail, AlertCircle, Lock, User as UserIcon, CheckCircle, Store, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react';
+import { ShieldCheck, Mail, AlertCircle, Lock, User as UserIcon, CheckCircle, Store, ArrowRight, Loader2, Eye, EyeOff, Crown, MessageCircle } from 'lucide-react';
 import { supabase } from '../supabase';
 import { loadCompanyProfile } from '../types';
 import { useLang } from '../contexts/LangContext';
@@ -10,15 +10,18 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const initialMode = queryParams.get('mode') === 'login' ? 'login' : 'signup';
+  const selectedPlan = queryParams.get('plan') === 'PREMIUM' ? 'PREMIUM' : queryParams.get('plan') === 'PRO' ? 'PRO' : null;
 
   const { isAr } = useLang();
   const company = loadCompanyProfile();
+  const premiumPrice = company.storePremiumPrice || '499';
 
   const [mode, setMode] = useState<'signup' | 'login' | 'recovery'>(initialMode);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [pendingUser, setPendingUser] = useState<any>(null);
 
   // Form State
   const [email, setEmail] = useState('');
@@ -68,8 +71,13 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
             role: 'merchant',
             email: data.user.email || email
           };
-          if (onLogin) onLogin(userObj);
-          navigate('/store-builder');
+          if (selectedPlan === 'PREMIUM') {
+            // PREMIUM is a paid plan, not a free trial: collect payment before handing over the dashboard.
+            setPendingUser(userObj);
+          } else {
+            if (onLogin) onLogin(userObj);
+            navigate('/store-builder');
+          }
         } else {
           // Email confirmation is required
           setSuccess(isAr 
@@ -113,6 +121,72 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
       setLoading(false);
     }
   };
+
+  if (pendingUser) {
+    const whatsappUrl = `https://wa.me/${(company.phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(
+      isAr
+        ? `مرحباً، أنشأت حسابي (${pendingUser.email}) وأريد تفعيل باقة PREMIUM (${premiumPrice} درهم/شهر).`
+        : `Bonjour, j'ai créé mon compte (${pendingUser.email}) et je souhaite activer le plan PREMIUM (${premiumPrice} MAD/mois).`
+    )}`;
+
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4" dir={isAr ? 'rtl' : 'ltr'}>
+        <div className="w-full max-w-xl">
+          <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+            <div className="p-8 bg-slate-900 text-white text-center">
+              <div className="w-16 h-16 bg-amber-500/20 border border-amber-400/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Crown className="w-8 h-8 text-amber-400" />
+              </div>
+              <h1 className="text-2xl font-black mb-1">
+                {isAr ? 'خطوة واحدة قبل التفعيل' : 'Une dernière étape avant l\'activation'}
+              </h1>
+              <p className="text-slate-400 text-sm">
+                {isAr ? `تم إنشاء حسابك بنجاح. باقة PREMIUM هي باقة مدفوعة (${premiumPrice} درهم/شهر).` : `Votre compte a été créé. PREMIUM est un plan payant (${premiumPrice} MAD/mois).`}
+              </p>
+            </div>
+
+            <div className="p-8 space-y-5">
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5">
+                <h3 className="font-black text-slate-900 mb-3 text-sm">
+                  {isAr ? 'طرق الدفع المتاحة (المغرب)' : 'Moyens de paiement (Maroc)'}
+                </h3>
+                <div className="flex flex-col sm:flex-row gap-3 text-xs font-semibold text-slate-600">
+                  <div className="flex-1 flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-slate-200">
+                    🏦 {isAr ? 'تحويل بنكي (CIH، التجاري وفا...)' : 'Virement bancaire (CIH, Attijari...)'}
+                  </div>
+                  <div className="flex-1 flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-slate-200">
+                    💸 Cash Plus / Wafacash
+                  </div>
+                </div>
+                <p className="text-[11px] text-slate-500 mt-3 leading-relaxed">
+                  {isAr
+                    ? 'بعد إرسال وصل الدفع عبر واتساب، سيقوم فريقنا بتفعيل باقة PREMIUM على حسابك يدوياً خلال دقائق.'
+                    : 'Après envoi du reçu de paiement via WhatsApp, notre équipe active manuellement votre plan PREMIUM en quelques minutes.'}
+                </p>
+              </div>
+
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm transition-all shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2"
+              >
+                <MessageCircle className="w-4 h-4" />
+                {isAr ? 'تأكيد الدفع عبر واتساب' : 'Confirmer le paiement via WhatsApp'}
+              </a>
+
+              <button
+                onClick={() => { if (onLogin) onLogin(pendingUser); navigate('/store-builder'); }}
+                className="w-full py-3 text-slate-500 hover:text-slate-700 text-xs font-bold transition-colors"
+              >
+                {isAr ? 'المتابعة إلى لوحة التحكم (سأدفع لاحقاً)' : 'Continuer vers mon tableau de bord (je paierai plus tard)'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4" dir={isAr ? 'rtl' : 'ltr'}>

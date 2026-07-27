@@ -5,6 +5,10 @@
   --font-sans: "Plus Jakarta Sans", "Outfit", "Cairo", "system-ui", "sans-serif";
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 @layer utilities {
   .scrollbar-hide {
     -ms-overflow-style: none;

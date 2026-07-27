@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Store, Package, ShoppingBag, Plus, Bell, Settings, LogOut, ChevronRight, BarChart3, TrendingUp, Users, Smartphone, Zap, X, Send, Crown } from 'lucide-react';
+import { Store, Package, ShoppingBag, Plus, Bell, Settings, LogOut, ChevronRight, BarChart3, TrendingUp, Users, Smartphone, Zap, X, Send, Crown, Globe } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { supabase } from '../supabase';
 import { loadCompanyProfile } from '../types';
@@ -158,6 +158,14 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
             </div>
 
             <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate('/portal')}
+                className="hidden sm:flex items-center gap-2 px-3.5 py-2 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-xl text-xs font-black hover:bg-emerald-100 transition-colors"
+                title={t('Aller sur BEYA Portal', 'Go to BEYA Portal', 'الانتقال إلى بيا بورتال')}
+              >
+                <Globe className="w-4 h-4" />
+                {t('BEYA Portal', 'BEYA Portal', 'بيا بورتال')}
+              </button>
               <div className="flex items-center bg-slate-100 rounded-full p-1 gap-0.5">
                 {(['fr', 'en', 'ar'] as const).map(langOption => (
                   <button
@@ -325,11 +333,8 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
           </div>
 
           {/* Action: Track Orders */}
-          <div 
-            onClick={() => {
-              localStorage.setItem('beya_active_tab', 'orders');
-              window.location.hash = '#/store-builder';
-            }}
+          <div
+            onClick={() => navigate('/store-analytics')}
             className="group cursor-pointer bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-200 transition-all duration-300 relative overflow-hidden"
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-full blur-2xl -mr-16 -mt-16 transition-all group-hover:bg-blue-100/50"></div>

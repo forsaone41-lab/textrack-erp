@@ -38,9 +38,12 @@ export default function StoreLanding() {
             <Link to="/store-signup?mode=login" className="px-6 py-2.5 text-slate-600 hover:text-slate-900 text-sm font-bold transition-colors">
               {isAr ? 'تسجيل الدخول' : 'Connexion'}
             </Link>
-            <Link to="/store-signup" className="px-6 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all shadow-[0_4px_10px_rgba(37,99,235,0.2)]">
-              {isAr ? 'أنشئ حساباً' : 'Créer un compte'}
-            </Link>
+            <button
+              onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+              className="px-6 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all shadow-[0_4px_10px_rgba(37,99,235,0.2)]"
+            >
+              {isAr ? 'إنشاء حساب' : 'Créer un compte'}
+            </button>
           </div>
         </div>
       </nav>
@@ -188,7 +191,7 @@ export default function StoreLanding() {
                   </li>
                 ))}
               </ul>
-              <Link to="/store-signup" className="block w-full py-4 text-center rounded-2xl font-black uppercase tracking-widest text-xs bg-slate-100 text-slate-700 hover:bg-indigo-600 hover:text-white transition-all">
+              <Link to="/store-signup?plan=PRO" className="block w-full py-4 text-center rounded-2xl font-black uppercase tracking-widest text-xs bg-slate-100 text-slate-700 hover:bg-indigo-600 hover:text-white transition-all">
                 {isAr ? 'ابدأ تجربتك المجانية' : 'Commencer l\'essai gratuit'}
               </Link>
             </div>
@@ -220,7 +223,7 @@ export default function StoreLanding() {
                   </li>
                 ))}
               </ul>
-              <Link to="/store-signup" className="block w-full py-4 text-center rounded-2xl font-black uppercase tracking-widest text-xs bg-indigo-500 text-white hover:bg-indigo-400 transition-all shadow-[0_10px_20px_rgba(99,102,241,0.2)] hover:shadow-[0_15px_30px_rgba(99,102,241,0.4)] relative z-10">
+              <Link to="/store-signup?plan=PREMIUM" className="block w-full py-4 text-center rounded-2xl font-black uppercase tracking-widest text-xs bg-indigo-500 text-white hover:bg-indigo-400 transition-all shadow-[0_10px_20px_rgba(99,102,241,0.2)] hover:shadow-[0_15px_30px_rgba(99,102,241,0.4)] relative z-10">
                 {isAr ? 'اشترك الآن' : 'S\'abonner maintenant'}
               </Link>
             </div>

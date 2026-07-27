@@ -159,7 +159,7 @@ const IframePreview = ({ children, isMobile, className }: any) => {
 };
 
 
-export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: boolean }) {
+export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { isLiveStore?: boolean; appCurrentUser?: any }) {
   const { storeNameUrl } = useParams<{storeNameUrl: string}>();
   const config = getSavedConfig();
   const { isAr: adminIsAr, toggleLang } = useLang();
@@ -167,6 +167,22 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setMerchantUser(data.user));
   }, []);
+
+  // Beya Designer runs inside an <iframe> (public/beya-designer.html) and can't
+  // reach app state directly - it asks the host to trigger the upgrade flow via postMessage.
+  useEffect(() => {
+    const handler = (event: MessageEvent) => {
+      if (event?.data?.source === 'beya-designer' && event.data.type === 'upgrade-request') {
+        const company = loadCompanyProfile();
+        const msg = adminIsAr
+          ? `مرحباً، بغيت نرقّي متجري "${storeName || config.storeName || ''}" باش نفتح Beya Designer (توليد اللوغو بالذكاء الاصطناعي).`
+          : `Bonjour, je souhaite mettre à niveau ma boutique "${storeName || config.storeName || ''}" pour débloquer Beya Designer (génération de logo IA).`;
+        window.open(`https://wa.me/${(company.phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
+      }
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, [adminIsAr]);
   const [platformMode, setPlatformModeState] = useState<'gestion'|'builder'>(
      (localStorage.getItem('beya_platform_mode') as any) || (config.storeName ? 'gestion' : 'builder')
   );
@@ -764,8 +780,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
       'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=900&auto=format&fit=crop',
       'https://images.unsplash.com/photo-1445205170230-053b83016050?w=900&auto=format&fit=crop',
       'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=900&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=900&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1550614000-4b95d415dc14?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1489987707023-afc7f93c6508?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1551028719-0c124a1119ce?w=900&auto=format&fit=crop',
       'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=900&auto=format&fit=crop',
     ]},
   ];
@@ -4674,7 +4690,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
              }
              setBuilderMode('editor');
              window.location.reload(); // Force all state to re-initialize with new config
-         }} onOpenAI={() => setBuilderMode('pro_ai')} isAr={isAr} />
+         }} onOpenAI={() => setBuilderMode('pro_ai')} isAr={isAr} appCurrentUser={appCurrentUser} />
        </div>
      );
   }
@@ -4809,7 +4825,8 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                  { id: 'products', icon: ShoppingBag, label: isAr ? 'المنتجات' : 'Produits' },
                  { id: 'customers', icon: Users, label: isAr ? 'الزبائن' : 'Clients' },
                  { id: 'payments', icon: CreditCard, label: isAr ? 'الأداء' : 'Paiements' },
-                 { id: 'delivery', icon: Truck, label: isAr ? 'التوصيل' : 'Livraison' }
+                 { id: 'delivery', icon: Truck, label: isAr ? 'التوصيل' : 'Livraison' },
+                 { id: 'beya-designer', icon: Sparkles, label: isAr ? 'مصمم بيا' : 'Beya Designer' }
            ] : [
                  { id: 'themes', icon: LayoutTemplate, label: isAr ? 'القوالب' : 'Thèmes' },
                  { id: 'design', icon: Paintbrush, label: isAr ? 'التصميم' : 'Design' },
@@ -5060,7 +5077,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                           <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-blue-400 opacity-20 rounded-full blur-xl group-hover:translate-x-4 transition-transform duration-700"></div>
                           
                           <div className="flex items-center justify-between mb-4 relative z-10">
-                             <span className="text-[10px] font-black text-indigo-100 uppercase tracking-widest drop-shadow-sm">Commandes</span>
+                             <span className="text-[10px] font-black text-indigo-100 uppercase tracking-widest drop-shadow-sm">{isAr ? 'الطلبات' : 'Commandes'}</span>
                              <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/20 shadow-inner"><ShoppingBag className="w-4 h-4 text-white" /></div>
                           </div>
                           <div className="relative z-10">
@@ -5081,7 +5098,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                           <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-teal-200 opacity-20 rounded-full blur-xl group-hover:-translate-y-4 transition-transform duration-700"></div>
                           
                           <div className="flex items-center justify-between mb-4 relative z-10">
-                             <span className="text-[10px] font-black text-emerald-50 uppercase tracking-widest drop-shadow-sm">Revenus</span>
+                             <span className="text-[10px] font-black text-emerald-50 uppercase tracking-widest drop-shadow-sm">{isAr ? 'الإيرادات' : 'Revenus'}</span>
                              <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/20 shadow-inner"><CreditCard className="w-4 h-4 text-white" /></div>
                           </div>
                           <div className="relative z-10">
@@ -5126,9 +5143,9 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                     <div>
                        <div className="flex justify-between items-center mb-3">
                           <div className="flex gap-4 items-center">
-                            <h3 className={`text-xs font-black uppercase tracking-wider cursor-pointer transition-colors ${!showTrash ? 'text-slate-800' : 'text-slate-400 hover:text-slate-600'}`} onClick={() => { setShowTrash(false); setSelectedOrderIds([]); }}>Récentes</h3>
+                            <h3 className={`text-xs font-black uppercase tracking-wider cursor-pointer transition-colors ${!showTrash ? 'text-slate-800' : 'text-slate-400 hover:text-slate-600'}`} onClick={() => { setShowTrash(false); setSelectedOrderIds([]); }}>{isAr ? 'الأخيرة' : 'Récentes'}</h3>
                             <h3 className={`text-xs font-black uppercase tracking-wider cursor-pointer flex items-center gap-1 transition-colors ${showTrash ? 'text-rose-600' : 'text-slate-400 hover:text-rose-400'}`} onClick={() => { setShowTrash(true); setSelectedOrderIds([]); }}>
-                               <Trash2 className="w-3 h-3" /> Poubelle
+                               <Trash2 className="w-3 h-3" /> {isAr ? 'سلة المهملات' : 'Poubelle'}
                             </h3>
                             <button onClick={handleManualRefreshOrders} disabled={isRefreshingOrders} title={isAr ? 'تحديث الطلبات' : 'Actualiser les commandes'} className="text-slate-400 hover:text-indigo-600 transition-colors disabled:opacity-50">
                                <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingOrders ? 'animate-spin' : ''}`} />
@@ -5147,7 +5164,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                 {orderStatusFilter === 'confirmed' ? (isAr ? 'مؤكدة' : 'Confirmées') : (isAr ? 'مرفوضة' : 'Refusées')} <X className="w-3 h-3" />
                              </button>
                           ) : (
-                             <span className="text-[10px] text-indigo-600 font-bold cursor-pointer hover:underline">Voir tout</span>
+                             <span className="text-[10px] text-indigo-600 font-bold cursor-pointer hover:underline">{isAr ? 'عرض الكل' : 'Voir tout'}</span>
                           )}
                        </div>
                        <div className="space-y-3">
@@ -5268,6 +5285,18 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                            </div>
                         ))}
                      </div>
+                 </div>
+              )}
+
+              {/* BEYA DESIGNER (AI Logo Studio & Mockup Generator) */}
+              {activeTab === 'beya-designer' && (
+                 <div className="space-y-4 -m-6 sm:-m-0">
+                    <iframe
+                       title="Beya Designer"
+                       src={`/beya-designer.html?plan=${encodeURIComponent(subscriptionTier)}&lang=${isAr ? 'ar' : 'fr'}`}
+                       className="w-full rounded-2xl border border-slate-200 shadow-sm"
+                       style={{ height: '900px', background: '#0b0d14' }}
+                    />
                  </div>
               )}
 
@@ -5737,19 +5766,23 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                          { id: 'Facebook Pixel', name: 'Facebook Pixel', desc: isAr ? 'تتبع زوار المتجر وحملات فيسبوك' : 'Suivi des conversions Facebook', icon: Monitor, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
                          { id: 'TikTok Pixel', name: 'TikTok Pixel', desc: isAr ? 'تتبع تحويلات حملات تيك توك' : 'Suivi des conversions TikTok', icon: Video, color: 'text-slate-900', bg: 'bg-slate-100', border: 'border-slate-300' },
                          { id: 'Google Analytics 4', name: 'Google Analytics 4', desc: isAr ? 'إحصائيات دقيقة لزوار متجرك' : 'Statistiques détaillées des visiteurs', icon: Globe, color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200' },
-                         { id: 'AI Auto-Builder', name: 'AI Product Builder', desc: isAr ? 'Premium: توليد تفاصيل المنتجات والـ SEO بالذكاء الاصطناعي من الصور' : 'Premium: Génération IA des détails et SEO via image', icon: Sparkles, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200' }
+                         { id: 'AI Auto-Builder', name: 'AI Product Builder', desc: isAr ? 'Premium: توليد تفاصيل المنتجات والـ SEO بالذكاء الاصطناعي من الصور' : 'Premium: Génération IA des détails et SEO via image', icon: Sparkles, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200' },
+                         { id: 'Beya Designer', name: 'Beya Designer', desc: isAr ? 'استوديو تصميم اللوغو والـ Mockup بالذكاء الاصطناعي' : 'Studio de logo IA & générateur de mockups', icon: Sparkles, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-200', isLink: true }
                        ].map(app => (
-                          <div key={app.id} className={`bg-white border ${appsConfig[app.id] ? app.border : 'border-slate-200'} rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group cursor-pointer`} onClick={() => { setAppInputValue(appsConfig[app.id] || ''); setActiveAppModal(app.id); }}>
-                             {appsConfig[app.id] && <div className="absolute top-3 right-3 bg-green-100 text-green-700 text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider">{isAr ? 'نشط' : 'Actif'}</div>}
-                             <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${appsConfig[app.id] ? app.bg : 'bg-slate-50'}`}>
-                                <app.icon className={`w-6 h-6 ${appsConfig[app.id] ? app.color : 'text-slate-400'}`} />
+                          <div key={app.id} className={`bg-white border ${appsConfig[app.id] || (app as any).isLink ? app.border : 'border-slate-200'} rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group cursor-pointer`} onClick={() => { if ((app as any).isLink) { setPlatformMode('gestion'); setActiveTab('beya-designer' as any); } else { setAppInputValue(appsConfig[app.id] || ''); setActiveAppModal(app.id); } }}>
+                             {appsConfig[app.id] && !(app as any).isLink && <div className="absolute top-3 right-3 bg-green-100 text-green-700 text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider">{isAr ? 'نشط' : 'Actif'}</div>}
+                             {(app as any).isLink && <div className="absolute top-3 right-3 bg-indigo-100 text-indigo-700 text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider">{isAr ? 'جديد' : 'NEW'}</div>}
+                             <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${appsConfig[app.id] || (app as any).isLink ? app.bg : 'bg-slate-50'}`}>
+                                <app.icon className={`w-6 h-6 ${appsConfig[app.id] || (app as any).isLink ? app.color : 'text-slate-400'}`} />
                              </div>
                              <h4 className="font-black text-slate-800 mb-1">{app.name}</h4>
                              <p className="text-xs font-bold text-slate-500 line-clamp-2">{app.desc}</p>
                              <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
-                                <span className={`text-[10px] font-black uppercase tracking-wider ${appsConfig[app.id] ? 'text-indigo-600' : 'text-slate-400'}`}>{appsConfig[app.id] ? (isAr ? 'تعديل الإعدادات' : 'Modifier Config') : (isAr ? 'تثبيت التطبيق' : 'Installer l\'App')}</span>
-                                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${appsConfig[app.id] ? 'bg-indigo-50 group-hover:bg-indigo-100' : 'bg-slate-50 group-hover:bg-slate-200'} transition-colors`}>
-                                   <Plus className={`w-3 h-3 ${appsConfig[app.id] ? 'text-indigo-600' : 'text-slate-400'}`} />
+                                <span className={`text-[10px] font-black uppercase tracking-wider ${appsConfig[app.id] || (app as any).isLink ? 'text-indigo-600' : 'text-slate-400'}`}>
+                                   {(app as any).isLink ? (isAr ? 'فتح الأداة' : 'Ouvrir l\'outil') : appsConfig[app.id] ? (isAr ? 'تعديل الإعدادات' : 'Modifier Config') : (isAr ? 'تثبيت التطبيق' : 'Installer l\'App')}
+                                </span>
+                                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${appsConfig[app.id] || (app as any).isLink ? 'bg-indigo-50 group-hover:bg-indigo-100' : 'bg-slate-50 group-hover:bg-slate-200'} transition-colors`}>
+                                   <Plus className={`w-3 h-3 ${appsConfig[app.id] || (app as any).isLink ? 'text-indigo-600' : 'text-slate-400'}`} />
                                 </div>
                              </div>
                           </div>

@@ -450,51 +450,51 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
             {/* Store Builder Service - Light version */}
-            <div className="bg-white border border-slate-100 rounded-[3rem] p-10 lg:p-14 hover:border-blue-200 transition-all group relative overflow-hidden flex flex-col justify-between shadow-[0_20px_60px_rgba(0,0,0,0.03)] hover:shadow-[0_40px_100px_rgba(59,130,246,0.1)]">
+            <div className="bg-white border border-slate-100 rounded-[2rem] p-7 lg:p-9 hover:border-blue-200 transition-all group relative overflow-hidden flex flex-col justify-between shadow-[0_20px_60px_rgba(0,0,0,0.03)] hover:shadow-[0_40px_100px_rgba(59,130,246,0.1)]">
               <div className="absolute top-0 right-0 w-64 h-64 bg-blue-400 rounded-full blur-[120px] opacity-0 group-hover:opacity-20 transition-opacity" />
               <div>
-                <div className="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center mb-8 border border-blue-100 group-hover:scale-110 transition-transform">
-                  <Globe className="w-10 h-10 text-blue-500" />
+                <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 border border-blue-100 group-hover:scale-110 transition-transform">
+                  <Globe className="w-7 h-7 text-blue-500" />
                 </div>
-                <h3 className="text-2xl lg:text-3xl font-extrabold uppercase tracking-tight mb-6 text-slate-900 leading-tight">
+                <h3 className="text-lg lg:text-xl font-extrabold uppercase tracking-tight mb-3 text-slate-900 leading-tight">
                   {isAr ? '1. بناء متجر إلكتروني احترافي' : '1. Création de Boutique Pro'}
                 </h3>
-                <p className="text-slate-500 text-lg mb-10 leading-relaxed font-medium">
-                  {isAr 
-                    ? 'ليس لديك موقع؟ نحن نبني لك متجراً مستقلاً بتصميم عصري وأدوات تسويقية مدمجة لرفع نسبة التحويل (Conversion Rate) ومنافسة كبار السوق بقوة.' 
+                <p className="text-slate-500 text-sm mb-6 leading-relaxed font-medium">
+                  {isAr
+                    ? 'ليس لديك موقع؟ نحن نبني لك متجراً مستقلاً بتصميم عصري وأدوات تسويقية مدمجة لرفع نسبة التحويل (Conversion Rate) ومنافسة كبار السوق بقوة.'
                     : 'Vous n\'avez pas de site ? Nous construisons une boutique indépendante (sans commissions) avec un design moderne et des outils marketing intégrés pour maximiser vos ventes.'}
                 </p>
               </div>
-              <Link 
+              <Link
                 to="/store-landing"
-                className="inline-flex items-center justify-center gap-3 w-full px-8 py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 hover:shadow-blue-600/40 hover:-translate-y-1 relative z-10"
+                className="inline-flex items-center justify-center gap-2 w-full px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 hover:shadow-blue-600/40 hover:-translate-y-1 relative z-10"
               >
                 {isAr ? 'اطلب تصميم متجرك' : 'Commander ma boutique'}
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
 
             {/* Manufacturing Service - Light version */}
-            <div className="bg-white border border-slate-100 rounded-[3rem] p-10 lg:p-14 hover:border-purple-200 transition-all group relative overflow-hidden flex flex-col justify-between shadow-[0_20px_60px_rgba(0,0,0,0.03)] hover:shadow-[0_40px_100px_rgba(168,85,247,0.1)]">
+            <div className="bg-white border border-slate-100 rounded-[2rem] p-7 lg:p-9 hover:border-purple-200 transition-all group relative overflow-hidden flex flex-col justify-between shadow-[0_20px_60px_rgba(0,0,0,0.03)] hover:shadow-[0_40px_100px_rgba(168,85,247,0.1)]">
               <div className="absolute top-0 right-0 w-64 h-64 bg-purple-400 rounded-full blur-[120px] opacity-0 group-hover:opacity-20 transition-opacity" />
               <div>
-                <div className="w-20 h-20 bg-purple-50 rounded-3xl flex items-center justify-center mb-8 border border-purple-100 group-hover:scale-110 transition-transform">
-                  <Factory className="w-10 h-10 text-purple-600" />
+                <div className="w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center mb-6 border border-purple-100 group-hover:scale-110 transition-transform">
+                  <Factory className="w-7 h-7 text-purple-600" />
                 </div>
-                <h3 className="text-2xl lg:text-3xl font-extrabold uppercase tracking-tight mb-6 text-slate-900 leading-tight">
+                <h3 className="text-lg lg:text-xl font-extrabold uppercase tracking-tight mb-3 text-slate-900 leading-tight">
                   {isAr ? '2. تصنيع الملابس الجاهزة (Confection)' : '2. Confection & Production'}
                 </h3>
-                <p className="text-slate-500 text-lg mb-10 leading-relaxed font-medium">
-                  {isAr 
-                    ? 'لديك موقع مسبقاً وتحتاج فقط إلى سلع ذات جودة عالية؟ نحن نقدم لك تصنيعاً مخصصاً بدقة متناهية، مع التغليف والخدمات اللوجستية المتكاملة.' 
+                <p className="text-slate-500 text-sm mb-6 leading-relaxed font-medium">
+                  {isAr
+                    ? 'لديك موقع مسبقاً وتحتاج فقط إلى سلع ذات جودة عالية؟ نحن نقدم لك تصنيعاً مخصصاً بدقة متناهية، مع التغليف والخدمات اللوجستية المتكاملة.'
                     : 'Vous avez déjà votre site et cherchez des produits premium ? Nous fabriquons vos vêtements sur-mesure avec une précision extrême et un packaging soigné.'}
                 </p>
               </div>
-              <a href="/#/devis-express" className="inline-flex items-center justify-center gap-3 w-full px-8 py-5 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl font-black uppercase tracking-widest transition-all shadow-lg shadow-purple-600/20 hover:shadow-purple-600/40 hover:-translate-y-1 relative z-10">
+              <a href="/#/devis-express" className="inline-flex items-center justify-center gap-2 w-full px-6 py-3.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-purple-600/20 hover:shadow-purple-600/40 hover:-translate-y-1 relative z-10">
                 {isAr ? 'اطلب تصنيع منتجاتك' : 'Commander mes produits'}
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-4 h-4" />
               </a>
             </div>
           </div>
