@@ -278,6 +278,12 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   // silently matches nothing and orders placed by real customers never show up here.
   const effectiveStoreName = storeName || config.storeName;
 
+  // Safety net: storeOrders can carry stale/cross-store entries from cache or merge edge-cases.
+  // Every KPI/list in the orders tab must only ever reflect the store currently being managed.
+  const myStoreOrders = effectiveStoreName
+    ? storeOrders.filter((o: any) => !o.storeName || o.storeName === effectiveStoreName)
+    : storeOrders;
+
   const fetchStoreOrdersNow = useRef<() => Promise<void>>(async () => {});
   const handleManualRefreshOrders = async () => {
      setIsRefreshingOrders(true);
@@ -703,6 +709,66 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
   };
 
   const [heroImage, setHeroImage] = useState(config.heroImage || THEMES[0].previewImg);
+  const [isHeroImagePickerOpen, setIsHeroImagePickerOpen] = useState(false);
+  const [heroPickerCategory, setHeroPickerCategory] = useState('femme');
+  const HERO_PHOTO_CATEGORIES = [
+    { id: 'femme', label: '👗 Femme', photos: [
+      'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1581044777550-4cfa60707c03?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1601924994987-69e26d50dc26?w=900&auto=format&fit=crop',
+    ]},
+    { id: 'homme', label: '👔 Homme', photos: [
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?w=900&auto=format&fit=crop',
+    ]},
+    { id: 'sport', label: '🏃 Sport', photos: [
+      'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1527933053326-89d1746b76b9?w=900&auto=format&fit=crop',
+    ]},
+    { id: 'abaya', label: '🌙 Abaya', photos: [
+      'https://images.unsplash.com/photo-1589465885857-44edb59bbff2?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1545291730-faff8ca1d4b0?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1567016432779-094069958ea5?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=900&auto=format&fit=crop',
+    ]},
+    { id: 'kids', label: '🧒 Enfants', photos: [
+      'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1471286174890-9c112ffca5b4?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1472457897821-70d3819a0e24?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?w=900&auto=format&fit=crop',
+    ]},
+    { id: 'accessoires', label: '👜 Accessoires', photos: [
+      'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1575032617751-6ddec2089882?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1434056886845-dac89ffe9b56?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=900&auto=format&fit=crop',
+    ]},
+    { id: 'collection', label: '🛍️ Collection', photos: [
+      'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1445205170230-053b83016050?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1489987707023-afc7f93c6508?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1551028719-0c124a1119ce?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=900&auto=format&fit=crop',
+    ]},
+  ];
   
   // Theme Inline Texts
   const [heroTitle, setHeroTitle] = useState(config.heroTitle || 'New Collection');
@@ -1442,16 +1508,98 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
    const HeroBackgroundEditor = ({ children, className, style }: any) => {
       if (isLiveStore) return <div className={className} style={style}>{children}</div>;
       return (
+         <>
          <div className={`relative group ${className}`} style={style}>
             {children}
-            <label className="absolute top-4 right-4 bg-white/90 backdrop-blur text-slate-800 px-4 py-2 rounded-full text-xs font-bold shadow-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center gap-2 z-50 hover:bg-white border border-slate-200">
+            <button
+               onClick={(e) => { e.stopPropagation(); setIsHeroImagePickerOpen(true); }}
+               className="absolute top-4 right-4 bg-white/90 backdrop-blur text-slate-800 px-4 py-2 rounded-full text-xs font-bold shadow-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center gap-2 z-50 hover:bg-white border border-slate-200"
+            >
                <ImageIcon className="w-4 h-4" />{storeIsAr ? 'تغيير الصورة' : "Changer l'image"}
-               <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (file) setHeroImage(await readFileAsBase64(file));
-               }} />
-            </label>
+            </button>
          </div>
+
+         {/* HERO IMAGE PICKER MODAL */}
+         {isHeroImagePickerOpen && (
+            <div className="fixed inset-0 z-[9999] bg-slate-900/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-6" onClick={() => setIsHeroImagePickerOpen(false)}>
+               <div className="bg-white w-full sm:max-w-3xl rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()} style={{ maxHeight: '90vh' }}>
+                  {/* Header */}
+                  <div className="flex items-center justify-between p-5 border-b border-slate-100">
+                     <div>
+                        <h3 className="text-base font-black text-slate-900">{storeIsAr ? 'اختر صورة الخلفية' : "Choisir l'image d'arrière-plan"}</h3>
+                        <p className="text-[11px] text-slate-400 mt-0.5">{storeIsAr ? 'من جهازك أو من مكتبة الصور' : 'Depuis votre appareil ou la bibliothèque de photos'}</p>
+                     </div>
+                     <button onClick={() => setIsHeroImagePickerOpen(false)} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-colors"><X className="w-5 h-5" /></button>
+                  </div>
+
+                  {/* Upload from PC */}
+                  <div className="px-5 pt-4">
+                     <label className="flex items-center gap-3 w-full p-4 bg-indigo-50 border-2 border-dashed border-indigo-200 rounded-2xl cursor-pointer hover:border-indigo-500 hover:bg-indigo-100/50 transition-all group">
+                        <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                           <ImageIcon className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                           <p className="text-sm font-black text-slate-800">{storeIsAr ? '📁 رفع من جهازك (PC / Téléphone)' : '📁 Importer depuis mon appareil'}</p>
+                           <p className="text-[11px] text-slate-500">{storeIsAr ? 'JPG, PNG, WEBP — جودة عالية مُوصى بها' : 'JPG, PNG, WEBP — Haute résolution recommandée'}</p>
+                        </div>
+                        <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                           const file = e.target.files?.[0];
+                           if (file) { setHeroImage(await readFileAsBase64(file)); setIsHeroImagePickerOpen(false); }
+                        }} />
+                     </label>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="flex items-center gap-3 px-5 py-3">
+                     <div className="h-px flex-1 bg-slate-100" />
+                     <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider">{storeIsAr ? 'أو اختر من المكتبة' : 'ou choisir depuis la bibliothèque'}</span>
+                     <div className="h-px flex-1 bg-slate-100" />
+                  </div>
+
+                  {/* Category Tabs */}
+                  <div className="px-5">
+                     <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                        {HERO_PHOTO_CATEGORIES.map(cat => (
+                           <button
+                              key={cat.id}
+                              onClick={() => setHeroPickerCategory(cat.id)}
+                              className={`shrink-0 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+                                 heroPickerCategory === cat.id
+                                    ? 'bg-indigo-600 text-white shadow-md'
+                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                              }`}
+                           >
+                              {cat.label}
+                           </button>
+                        ))}
+                     </div>
+                  </div>
+
+                  {/* Photo Grid */}
+                  <div className="p-5 overflow-y-auto" style={{ maxHeight: '40vh' }}>
+                     <div className="grid grid-cols-3 gap-2">
+                        {(HERO_PHOTO_CATEGORIES.find(c => c.id === heroPickerCategory)?.photos || []).map((url, idx) => (
+                           <div
+                              key={idx}
+                              onClick={() => { setHeroImage(url); setIsHeroImagePickerOpen(false); }}
+                              className={`relative aspect-video rounded-xl overflow-hidden cursor-pointer border-2 transition-all hover:scale-[1.02] hover:shadow-lg ${
+                                 heroImage === url ? 'border-indigo-600 ring-2 ring-indigo-300' : 'border-transparent'
+                              }`}
+                           >
+                              <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                              {heroImage === url && (
+                                 <div className="absolute inset-0 bg-indigo-600/20 flex items-center justify-center">
+                                    <div className="w-7 h-7 bg-indigo-600 rounded-full flex items-center justify-center"><Check className="w-4 h-4 text-white" /></div>
+                                 </div>
+                              )}
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+               </div>
+            </div>
+         )}
+         </>
       );
    };
 
@@ -4787,7 +4935,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                       <div className="w-8 h-8 bg-emerald-50 rounded-full flex items-center justify-center"><Truck className="w-4 h-4 text-emerald-500" /></div>
                                       <div>
                                          <p className="text-[9px] font-bold text-slate-400 uppercase">{isAr ? 'تم التوصيل' : 'Livrées'}</p>
-                                         <p className="text-sm font-black text-slate-800">{storeOrders.filter((o: any) => !o.deleted && ['Livrée', 'تم التوصيل', 'Delivered'].includes(o.status)).length}</p>
+                                         <p className="text-sm font-black text-slate-800">{myStoreOrders.filter((o: any) => !o.deleted && ['Livrée', 'تم التوصيل', 'Delivered'].includes(o.status)).length}</p>
                                       </div>
                                    </div>
                                 </div>
@@ -4796,7 +4944,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                       <div className="w-8 h-8 bg-rose-50 rounded-full flex items-center justify-center"><RotateCcw className="w-4 h-4 text-rose-500" /></div>
                                       <div>
                                          <p className="text-[9px] font-bold text-slate-400 uppercase">{isAr ? 'المرتجعات' : 'Retours'}</p>
-                                         <p className="text-sm font-black text-slate-800">{storeOrders.filter((o: any) => !o.deleted && ['Retour', 'Annulée'].includes(o.status)).length}</p>
+                                         <p className="text-sm font-black text-slate-800">{myStoreOrders.filter((o: any) => !o.deleted && ['Retour', 'Annulée'].includes(o.status)).length}</p>
                                       </div>
                                    </div>
                                 </div>
@@ -4819,7 +4967,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                              <div className="space-y-3">
                                 {(() => {
                                    const productCounts: Record<string, any> = {};
-                                   storeOrders.filter((o: any) => !o.deleted && !REFUSED_STATUSES.includes(o.status)).forEach((o: any) => {
+                                   myStoreOrders.filter((o: any) => !o.deleted && !REFUSED_STATUSES.includes(o.status)).forEach((o: any) => {
                                       try {
                                          const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
                                          if (Array.isArray(items)) {
@@ -4871,7 +5019,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                 <div className="flex flex-wrap gap-2">
                                    {(() => {
                                       const sizeCounts: Record<string, number> = {};
-                                      storeOrders.filter((o: any) => !o.deleted).forEach((o: any) => {
+                                      myStoreOrders.filter((o: any) => !o.deleted).forEach((o: any) => {
                                          try {
                                             const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
                                             if (Array.isArray(items)) {
@@ -4916,7 +5064,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                              <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/20 shadow-inner"><ShoppingBag className="w-4 h-4 text-white" /></div>
                           </div>
                           <div className="relative z-10">
-                             <h4 className="text-3xl font-black text-white tracking-tight drop-shadow-md">{storeOrders.filter((o: any) => !o.deleted).length.toLocaleString('fr-FR')}</h4>
+                             <h4 className="text-3xl font-black text-white tracking-tight drop-shadow-md">{myStoreOrders.filter((o: any) => !o.deleted).length.toLocaleString('fr-FR')}</h4>
                              <div className="flex items-center gap-1 mt-1">
                                <div className="bg-emerald-400/20 px-1.5 py-0.5 rounded flex items-center gap-1 backdrop-blur-sm">
                                  <TrendingUp className="w-2.5 h-2.5 text-emerald-300" />
@@ -4937,7 +5085,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                              <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/20 shadow-inner"><CreditCard className="w-4 h-4 text-white" /></div>
                           </div>
                           <div className="relative z-10">
-                             <h4 className="text-2xl font-black text-white tracking-tight drop-shadow-md">{storeOrders.filter((o: any) => !o.deleted).reduce((sum: number, ord: any) => sum + (parseFloat(ord.amount) || 0), 0).toLocaleString('fr-FR')} <span className="text-[10px] font-bold text-emerald-100">MAD</span></h4>
+                             <h4 className="text-2xl font-black text-white tracking-tight drop-shadow-md">{myStoreOrders.filter((o: any) => !o.deleted).reduce((sum: number, ord: any) => sum + (parseFloat(ord.amount) || 0), 0).toLocaleString('fr-FR')} <span className="text-[10px] font-bold text-emerald-100">MAD</span></h4>
                              <div className="flex items-center gap-1 mt-1">
                                <div className="bg-white/20 px-1.5 py-0.5 rounded flex items-center gap-1 backdrop-blur-sm">
                                  <TrendingUp className="w-2.5 h-2.5 text-white" />
@@ -4955,7 +5103,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                           <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-green-400 group-hover:w-2 transition-all"></div>
                           <div className="pl-2">
                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'مؤكدة' : 'Confirmées'}</p>
-                             <h4 className="text-xl font-black text-slate-800 tracking-tight">{storeOrders.filter((ord: any) => !ord.deleted && CONFIRMED_STATUSES.includes(ord.status)).length.toLocaleString('fr-FR')}</h4>
+                             <h4 className="text-xl font-black text-slate-800 tracking-tight">{myStoreOrders.filter((ord: any) => !ord.deleted && CONFIRMED_STATUSES.includes(ord.status)).length.toLocaleString('fr-FR')}</h4>
                           </div>
                           <div className="w-10 h-10 bg-green-50 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:bg-green-100 transition-all"><CheckCircle className="w-5 h-5 text-green-500" /></div>
                        </div>
@@ -4967,7 +5115,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                           <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-400 group-hover:w-2 transition-all"></div>
                           <div className="pl-2">
                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? 'مرفوضة' : 'Refusées'}</p>
-                             <h4 className="text-xl font-black text-slate-800 tracking-tight">{storeOrders.filter((ord: any) => !ord.deleted && REFUSED_STATUSES.includes(ord.status)).length.toLocaleString('fr-FR')}</h4>
+                             <h4 className="text-xl font-black text-slate-800 tracking-tight">{myStoreOrders.filter((ord: any) => !ord.deleted && REFUSED_STATUSES.includes(ord.status)).length.toLocaleString('fr-FR')}</h4>
                           </div>
                           <div className="w-10 h-10 bg-rose-50 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:bg-rose-100 transition-all"><X className="w-5 h-5 text-rose-500" /></div>
                        </div>
@@ -5003,7 +5151,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                           )}
                        </div>
                        <div className="space-y-3">
-                          {storeOrders.filter(matchesOrderFilter).length === 0 ? (
+                          {myStoreOrders.filter(matchesOrderFilter).length === 0 ? (
                              <div className="border-2 border-dashed border-slate-100 rounded-3xl p-10 flex flex-col items-center justify-center text-center bg-gradient-to-b from-slate-50/50 to-white shadow-sm mt-4">
                                 <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-4 shadow-sm border border-slate-100 relative">
                                    <div className="absolute inset-0 bg-indigo-50 rounded-2xl animate-ping opacity-20"></div>
@@ -5012,7 +5160,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                 <h4 className="text-sm font-black text-slate-700 mb-1">{showTrash ? (isAr ? 'سلة المهملات فارغة' : 'Corbeille vide') : (isAr ? 'لا توجد طلبات بعد' : 'Aucune commande pour le moment')}</h4>
                                 <p className="text-[10px] font-bold text-slate-400 max-w-[200px] leading-relaxed">{showTrash ? '' : (isAr ? 'ستظهر طلباتك هنا بمجرد أن يقوم عملاؤك بالشراء' : 'Vos commandes apparaîtront ici dès que vos clients commenceront à acheter')}</p>
                              </div>
-                          ) : storeOrders.filter(matchesOrderFilter).map(order => (
+                          ) : myStoreOrders.filter(matchesOrderFilter).map(order => (
                              <div key={order.id} onClick={() => setSelectedOrder(order)} className={`p-3 border rounded-2xl bg-white shadow-sm cursor-pointer transition-colors hover:shadow-md group flex gap-3 items-start ${selectedOrderIds.includes(order.id) ? 'border-indigo-500 ring-2 ring-indigo-100' : 'border-slate-200 hover:border-indigo-500'}`}>
                                 <button
                                    onClick={(e) => { e.stopPropagation(); toggleOrderSelected(order.id); }}
