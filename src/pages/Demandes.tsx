@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Fragment, type ReactElement } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Phone, Calendar, Package, Trash2, CheckCircle, MessageSquare, UserPlus, Users, X, AlertTriangle, Calculator, PhoneCall, Eye, FileText, Download, Settings, Save, RefreshCw, Scissors, MapPin, Upload, Image as ImageIcon, Copy, Edit2, Search, Globe, Briefcase, CheckCircle2, ChevronLeft, ChevronRight, UserCheck } from 'lucide-react';
 import { Lead, loadLeads, loadLeadPhoto, loadLeadPhotos, saveRecord, User, genId, deleteRecord, loadData, loadCompanyProfile, Facture, StockTissu } from '../types';
@@ -23,6 +23,65 @@ const DEFAULT_TEMPLATES = {
     devisPdf: "Bonjour *{name}*, ici *BEYA CREATIVE*. 😊\n\nNous avons le plaisir de vous transmettre votre devis. Nous avons étudié votre demande avec soin pour vous garantir la meilleure qualité pour vos *{type}*.\n\nNous attendons votre confirmation pour lancer la production. Merci de votre confiance !"
   }
 };
+
+function renderInlineText(text: string) {
+  const cleaned = text.replace(/\|/g, ' ');
+  const parts = cleaned.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i} className="font-black text-slate-900">{part.slice(2, -2)}</strong>;
+    }
+    return <Fragment key={i}>{part}</Fragment>;
+  });
+}
+
+// Lightweight Markdown -> JSX renderer (headers, bold, bullet/numbered lists, dividers)
+// so AI-generated notes render readably instead of showing raw **/##/| characters.
+function renderFormattedText(text: string) {
+  const lines = text.split('\n');
+  const blocks: ReactElement[] = [];
+  let listBuffer: string[] = [];
+
+  const flushList = (key: string) => {
+    if (listBuffer.length) {
+      blocks.push(
+        <ul key={key} className="list-disc pr-5 space-y-1 my-2">
+          {listBuffer.map((item, i) => <li key={i}>{renderInlineText(item)}</li>)}
+        </ul>
+      );
+      listBuffer = [];
+    }
+  };
+
+  lines.forEach((raw, idx) => {
+    const line = raw.trim();
+    if (!line) { flushList(`ul-${idx}`); return; }
+    if (/^-{3,}$/.test(line)) { flushList(`ul-${idx}`); blocks.push(<hr key={idx} className="my-3 border-slate-200" />); return; }
+
+    const headerMatch = line.match(/^(#{1,4})\s+(.*)$/);
+    if (headerMatch) {
+      flushList(`ul-${idx}`);
+      const level = headerMatch[1].length;
+      const content = headerMatch[2].replace(/\*\*/g, '');
+      blocks.push(
+        <p key={idx} className={`font-black text-indigo-700 mt-3 mb-1 ${level <= 2 ? 'text-sm' : 'text-xs'}`}>
+          {content}
+        </p>
+      );
+      return;
+    }
+
+    const bulletMatch = line.match(/^[-*]\s+(.*)$/);
+    if (bulletMatch) { listBuffer.push(bulletMatch[1]); return; }
+    const numberedMatch = line.match(/^\d+\.\s+(.*)$/);
+    if (numberedMatch) { listBuffer.push(numberedMatch[1]); return; }
+
+    flushList(`ul-${idx}`);
+    blocks.push(<p key={idx} className="mb-1">{renderInlineText(line)}</p>);
+  });
+  flushList('ul-end');
+  return blocks;
+}
 
 export default function Demandes() {
   const { isAr } = useLang();
@@ -114,8 +173,7 @@ export default function Demandes() {
       }
     } catch { /* ignore */ }
 
-    // If we have cache, hide loader immediately
-    if (hasCached) setLoading(false);
+    // We no longer hide the loader here. It will hide when the live refresh() completes.
 
     // 2. Refresh from network
     async function refresh() {
@@ -990,8 +1048,8 @@ export default function Demandes() {
       {/* Details & Tailles Modal */}
       {detailsLead && (
         <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl border border-slate-100 overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl border border-slate-100 overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center">
                   <MessageSquare className="w-4 h-4 text-slate-500" />
@@ -1005,7 +1063,7 @@ export default function Demandes() {
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="p-5 space-y-4">
+            <div className="p-5 space-y-4 overflow-y-auto custom-scrollbar">
               {detailsLead.details && (
                 <div>
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
@@ -1056,10 +1114,8 @@ export default function Demandes() {
                   <p className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-2 flex items-center justify-between">
                     <span className="flex items-center gap-1.5"><MessageSquare className="w-3 h-3" /> {isAr ? 'تقرير الذكاء الاصطناعي' : 'Rapport IA'}</span>
                   </p>
-                  <div className="bg-gradient-to-br from-indigo-50 to-slate-50 rounded-xl p-4 border border-indigo-100/50 shadow-sm">
-                    <p dir={isAr ? 'rtl' : 'ltr'} className={`text-xs text-slate-700 font-bold leading-relaxed whitespace-pre-wrap ${isAr ? 'text-right' : 'text-left'}`}>
-                      {detailsLead.aiNotes}
-                    </p>
+                  <div dir={isAr ? 'rtl' : 'ltr'} className={`bg-gradient-to-br from-indigo-50 to-slate-50 rounded-xl p-4 border border-indigo-100/50 shadow-sm text-xs text-slate-700 font-bold leading-relaxed max-h-[50vh] overflow-y-auto custom-scrollbar ${isAr ? 'text-right' : 'text-left'}`}>
+                    {renderFormattedText(detailsLead.aiNotes)}
                   </div>
                 </div>
               )}
