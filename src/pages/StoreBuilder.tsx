@@ -764,8 +764,8 @@ export default function StoreBuilder({ isLiveStore = false }: { isLiveStore?: bo
       'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=900&auto=format&fit=crop',
       'https://images.unsplash.com/photo-1445205170230-053b83016050?w=900&auto=format&fit=crop',
       'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=900&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1489987707023-afc7f93c6508?w=900&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1551028719-0c124a1119ce?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=900&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1550614000-4b95d415dc14?w=900&auto=format&fit=crop',
       'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=900&auto=format&fit=crop',
     ]},
   ];
