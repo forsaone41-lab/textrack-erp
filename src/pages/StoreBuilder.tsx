@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown, TrendingUp, Package, RefreshCw, Undo2, Menu, Home, Heart, SlidersHorizontal, ArrowRight, ArrowLeft, Grid, User, Ruler, Crown, RotateCcw, BarChart3, LogOut } from 'lucide-react';
 
 
@@ -161,6 +161,7 @@ const IframePreview = ({ children, isMobile, className }: any) => {
 
 export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { isLiveStore?: boolean; appCurrentUser?: any }) {
   const { storeNameUrl } = useParams<{storeNameUrl: string}>();
+  const navigate = useNavigate();
   const config = getSavedConfig();
   const { isAr: adminIsAr, toggleLang } = useLang();
   const [merchantUser, setMerchantUser] = useState<any>(null);
@@ -4833,9 +4834,15 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                  { id: 'apps', icon: Box, label: isAr ? 'تطبيقات' : 'Apps' },
                  { id: 'settings', icon: Settings, label: isAr ? 'إعدادات' : 'Config' }
            ]).map(tab => (
-                 <button 
+                 <button
                    key={tab.id}
-                   onClick={() => setActiveTab(tab.id as any)}
+                   onClick={() => {
+                      if (tab.id === 'beya-designer') {
+                         navigate(`/beya-designer?plan=${encodeURIComponent(subscriptionTier)}&lang=${isAr ? 'ar' : 'fr'}`);
+                      } else {
+                         setActiveTab(tab.id as any);
+                      }
+                   }}
                    className={`w-full py-4 px-2 text-[10px] font-bold flex flex-col items-center justify-center gap-2 rounded-2xl transition-all border ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-lg scale-105 border-indigo-600' : 'bg-white text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 border-slate-200 shadow-sm'}`}
                  >
                    <tab.icon className="w-5 h-5" /> <span className="text-center leading-tight">{tab.label}</span>
@@ -5288,17 +5295,6 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                  </div>
               )}
 
-              {/* BEYA DESIGNER (AI Logo Studio & Mockup Generator) */}
-              {activeTab === 'beya-designer' && (
-                 <div className="space-y-4 -m-6 sm:-m-0">
-                    <iframe
-                       title="Beya Designer"
-                       src={`/beya-designer.html?plan=${encodeURIComponent(subscriptionTier)}&lang=${isAr ? 'ar' : 'fr'}`}
-                       className="w-full rounded-2xl border border-slate-200 shadow-sm"
-                       style={{ height: '900px', background: '#0b0d14' }}
-                    />
-                 </div>
-              )}
 
               {/* PAYMENTS TAB (NEW!) */}
               {activeTab === 'payments' && (
@@ -5769,7 +5765,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                          { id: 'AI Auto-Builder', name: 'AI Product Builder', desc: isAr ? 'Premium: توليد تفاصيل المنتجات والـ SEO بالذكاء الاصطناعي من الصور' : 'Premium: Génération IA des détails et SEO via image', icon: Sparkles, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200' },
                          { id: 'Beya Designer', name: 'Beya Designer', desc: isAr ? 'استوديو تصميم اللوغو والـ Mockup بالذكاء الاصطناعي' : 'Studio de logo IA & générateur de mockups', icon: Sparkles, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-200', isLink: true }
                        ].map(app => (
-                          <div key={app.id} className={`bg-white border ${appsConfig[app.id] || (app as any).isLink ? app.border : 'border-slate-200'} rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group cursor-pointer`} onClick={() => { if ((app as any).isLink) { setPlatformMode('gestion'); setActiveTab('beya-designer' as any); } else { setAppInputValue(appsConfig[app.id] || ''); setActiveAppModal(app.id); } }}>
+                          <div key={app.id} className={`bg-white border ${appsConfig[app.id] || (app as any).isLink ? app.border : 'border-slate-200'} rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group cursor-pointer`} onClick={() => { if ((app as any).isLink) { navigate(`/beya-designer?plan=${encodeURIComponent(subscriptionTier)}&lang=${isAr ? 'ar' : 'fr'}`); } else { setAppInputValue(appsConfig[app.id] || ''); setActiveAppModal(app.id); } }}>
                              {appsConfig[app.id] && !(app as any).isLink && <div className="absolute top-3 right-3 bg-green-100 text-green-700 text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider">{isAr ? 'نشط' : 'Actif'}</div>}
                              {(app as any).isLink && <div className="absolute top-3 right-3 bg-indigo-100 text-indigo-700 text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider">{isAr ? 'جديد' : 'NEW'}</div>}
                              <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${appsConfig[app.id] || (app as any).isLink ? app.bg : 'bg-slate-50'}`}>
@@ -6297,14 +6293,13 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                             {homeBlocks.map((blockId, index) => {
                                const def = blockDefs.find(b => b.id === blockId);
                                if (!def) return null;
-                               const Icon = def.icon;
                                const isActive = activeSidebarSection === blockId;
+                               const borderColorMap = { hero: '#6366f1', slider: '#10b981', collections: '#f59e0b', products: '#f43f5e', features: '#3b82f6', newsletter: '#a855f7' };
                                return (
-                                  <div key={blockId} className={`bg-white border ${isActive ? def.activeClasses : 'border-slate-200'} rounded-lg p-2.5 flex items-center gap-3 transition-all group relative`}>
-                                     <div onClick={() => setActiveSidebarSection(blockId)} className="flex-1 flex items-center gap-3 cursor-pointer">
-                                        <div className={`w-8 h-8 rounded ${def.bgClasses} flex items-center justify-center group-hover:scale-110 transition-transform`}><Icon className="w-4 h-4" /></div>
-                                        <span className="text-[11px] font-bold text-slate-700">{def.name}</span>
-                                        <CheckCircle className={`w-3.5 h-3.5 ${def.checkClass} ml-auto mr-2`} />
+                                  <div key={blockId} className={`bg-white border ${isActive ? def.activeClasses : 'border-slate-200'} rounded-lg p-2.5 flex items-center gap-2 transition-all group relative`} style={{ borderLeftWidth: '3px', borderLeftColor: borderColorMap[blockId] || '#94a3b8' }}>
+                                     <div onClick={() => setActiveSidebarSection(blockId)} className="flex-1 flex items-center gap-2 cursor-pointer">
+                                        <span className={`text-[11px] font-black ${isActive ? 'text-slate-900' : 'text-slate-600'}`}>{def.name}</span>
+                                        <CheckCircle className={`w-3.5 h-3.5 ${def.checkClass} ml-auto mr-1`} />
                                      </div>
                                      <div className="flex flex-col border-l border-slate-100 pl-2">
                                         <button disabled={index === 0} onClick={() => { const newB = [...homeBlocks]; newB[index] = newB[index-1]; newB[index-1] = blockId; setHomeBlocks(newB); }} className="p-0.5 text-slate-400 hover:text-indigo-600 disabled:opacity-30"><ChevronUp className="w-3 h-3" /></button>
@@ -6317,10 +6312,8 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                             
                             {/* INACTIVE BLOCKS */}
                             {blockDefs.filter(b => !homeBlocks.includes(b.id)).map(def => {
-                               const Icon = def.icon;
                                return (
-                                  <div key={def.id} onClick={() => { setHomeBlocks([...homeBlocks, def.id]); setActiveSidebarSection(def.id); }} className={`bg-slate-50/50 border border-slate-200 border-dashed rounded-lg p-2.5 flex items-center gap-3 cursor-pointer hover:bg-white transition-all opacity-60 hover:opacity-100`}>
-                                     <div className="w-8 h-8 rounded bg-slate-100 text-slate-400 flex items-center justify-center"><Icon className="w-4 h-4" /></div>
+                                   <div key={def.id} onClick={() => { setHomeBlocks([...homeBlocks, def.id]); setActiveSidebarSection(def.id); }} className={`bg-slate-50/50 border border-slate-200 border-dashed rounded-lg p-2.5 flex items-center gap-2 cursor-pointer hover:bg-white transition-all opacity-60 hover:opacity-100`}>
                                      <span className="text-[11px] font-bold text-slate-500 flex-1">{def.name}</span>
                                      <Plus className="w-4 h-4 text-slate-400 mr-2" />
                                   </div>
@@ -6350,7 +6343,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                        </div>
                        <div>
                           <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'صورة الغلاف' : 'Image de Couverture'}</label>
-                          <label className="w-full h-24 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors group relative overflow-hidden">
+                           <div onClick={() => setIsHeroImagePickerOpen(true)} className="w-full h-24 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors group relative overflow-hidden">
                              {heroImage ? (
                                 <img src={heroImage} className="w-full h-full object-cover opacity-50 group-hover:opacity-30 transition-opacity" />
                              ) : null}
@@ -6358,11 +6351,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                 <ImageIcon className="w-5 h-5 text-slate-400 mb-1" />
                                 <span className="text-[10px] font-bold text-slate-500">{isAr ? 'تغيير الصورة' : 'Changer l\'image'}</span>
                              </div>
-                             <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
-                                const file = e.target.files?.[0];
-                                if (file) setHeroImage(await readFileAsBase64(file));
-                             }} />
-                          </label>
+                           </div>
                        </div>
                        </>
                     )}
