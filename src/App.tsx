@@ -231,10 +231,19 @@ function AppContent() {
       }
     });
 
-    // Also check hash manually for React Router Hash compatibility
-    if (window.location.hash.includes('type=recovery')) {
+    // Check ALL possible locations where Supabase may put recovery tokens:
+    // 1. Hash fragment (default PKCE flow): #access_token=...&type=recovery
+    // 2. Search params (some email clients strip the hash): ?type=recovery&access_token=...
+    // 3. Inside the HashRouter hash: #/...?type=recovery  or  #type=recovery
+    const fullUrl = window.location.href;
+    const hash = window.location.hash || '';
+    const search = window.location.search || '';
+    const isRecovery = hash.includes('type=recovery') || search.includes('type=recovery') || fullUrl.includes('type=recovery');
+    
+    if (isRecovery) {
       setShowRecoveryModal(true);
-      window.history.replaceState(null, '', window.location.pathname);
+      // Clean the URL so the token doesn't linger
+      window.history.replaceState(null, '', window.location.pathname + '#/');
     }
 
     return () => {

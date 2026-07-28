@@ -110,8 +110,11 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
         if (onLogin) onLogin(userObj);
         navigate('/store-builder');
       } else if (mode === 'recovery') {
-        // PASSWORD RECOVERY
-        const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email);
+        // PASSWORD RECOVERY - redirect back to the app root so AppContent can show the new-password modal
+        const siteUrl = window.location.origin + window.location.pathname;
+        const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: siteUrl
+        });
         if (resetErr) throw resetErr;
         setSuccess(isAr ? 'تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني' : 'Un lien de réinitialisation a été envoyé à votre email');
       }
