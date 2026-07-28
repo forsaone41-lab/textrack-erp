@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beya Designer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;900&family=Poppins:wght@600;700;800;900&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+
+<!-- Fabric.js (canvas editor engine) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+<!-- ImageTracer.js (raster -> SVG vectorization) -->
+<script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.min.js"></script>
+
+<style>
+  :root{
+    --bg:#0b0d14;
+    --bg-soft:#10131c;
+    --panel:#141826;
+    --panel-2:#171c2c;
+    --border:rgba(255,255,255,0.08);
+    --border-strong:rgba(255,255,255,0.14);
+    --text:#f4f5f9;
+    --text-dim:#9298ab;
+    --text-faint:#5c6274;
+    --accent:#7c5cff;
+    --accent-2:#22d3ee;
+    --accent-grad:linear-gradient(135deg,#7c5cff 0%,#22d3ee 100%);
+    --radius:18px;
+    --radius-sm:12px;
+    --shadow:0 20px 60px rgba(0,0,0,0.45);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:'Inter',system-ui,sans-serif;
+    background:
+      radial-gradient(1200px 600px at 85% -10%, rgba(124,92,255,0.16), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(34,211,238,0.10), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+  }
+  button{font-family:inherit;}
+
+  .studio{padding:24px;max-width:1400px;width:100%;margin:0 auto;}
+  .studio-head{margin-bottom:20px;}
+  .studio-head h1{margin:0 0 6px;font-size:22px;font-weight:900;letter-spacing:-.3px;display:flex;align-items:center;gap:10px;}
+  .studio-head p{margin:0;color:var(--text-dim);font-size:13px;max-width:640px;line-height:1.5;}
+  .sparkle{color:var(--accent-2);}
+
+  .plan-pill{
+    display:inline-flex;align-items:center;gap:7px;
+    font-size:11px;font-weight:800;padding:6px 12px;border-radius:999px;
+    border:1px solid var(--border-strong);color:var(--text-dim);margin-top:10px;
+  }
+  .plan-pill.is-premium{color:#0b0d14;background:var(--accent-grad);border:none;}
+
+  .studio-grid{
+    display:grid;
+    grid-template-columns:380px 1fr;
+    gap:20px;
+    align-items:start;
+  }
+  @media (max-width:1000px){ .studio-grid{grid-template-columns:1fr;} }
+
+  .panel{
+    background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    position:relative;
+    overflow:hidden;
+  }
+  .panel-head{
+    padding:16px 18px 12px;
+    border-bottom:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .panel-title{font-size:13px;font-weight:800;display:flex;align-items:center;gap:8px;}
+  .panel-title .dot{width:7px;height:7px;border-radius:50%;background:var(--accent-2);box-shadow:0 0 10px var(--accent-2);}
+  .panel-body{padding:18px;}
+
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block;font-size:11px;font-weight:800;color:var(--text-dim);
+    text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px;
+  }
+  .field input, .field textarea{
+    width:100%;background:var(--bg-soft);border:1px solid var(--border-strong);
+    border-radius:var(--radius-sm);padding:11px 12px;color:var(--text);
+    font-size:13px;font-family:inherit;resize:vertical;transition:.15s;
+  }
+  .field textarea{min-height:76px;line-height:1.5;}
+  .field input:focus, .field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,92,255,0.18);}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    border:none;cursor:pointer;font-weight:800;font-size:12.5px;
+    border-radius:var(--radius-sm);padding:11px 16px;transition:.15s;letter-spacing:.2px;
+  }
+  .btn:disabled{opacity:.55;cursor:not-allowed;}
+  .btn-primary{background:var(--accent-grad);color:#0b0d14;width:100%;box-shadow:0 10px 26px rgba(124,92,255,0.28);}
+  .btn-primary:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px);}
+  .btn-ghost{background:rgba(255,255,255,0.05);color:var(--text);border:1px solid var(--border-strong);}
+  .btn-ghost:hover:not(:disabled){background:rgba(255,255,255,0.09);}
+  .btn-sm{padding:8px 12px;font-size:11.5px;}
+
+  .spinner{
+    width:14px;height:14px;border-radius:50%;
+    border:2.5px solid rgba(11,13,20,0.25);border-top-color:#0b0d14;
+    animation:spin .7s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .results-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;
+  }
+  .result-slot{
+    aspect-ratio:1/1;border-radius:var(--radius-sm);
+    background:repeating-conic-gradient(#1b1f2d 0% 25%, #16192500 0% 50%) 50% / 16px 16px;
+    background-color:#12151f;
+    border:1.5px solid var(--border);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;position:relative;overflow:hidden;transition:.15s;
+  }
+  .result-slot:hover{border-color:var(--accent);transform:translateY(-2px);}
+  .result-slot.selected{border-color:var(--accent-2);box-shadow:0 0 0 3px rgba(34,211,238,0.22);}
+  .result-slot img{width:100%;height:100%;object-fit:contain;padding:9px;}
+  .result-slot .empty-ic{color:var(--text-faint);font-size:10.5px;font-weight:700;text-align:center;padding:10px;}
+  .result-slot .pick-badge{
+    position:absolute;top:6px;right:6px;background:var(--accent-2);color:#0b0d14;
+    font-size:9px;font-weight:900;padding:2px 6px;border-radius:6px;opacity:0;transition:.15s;
+  }
+  .result-slot.selected .pick-badge{opacity:1;}
+
+  .paywall-overlay{
+    position:absolute;inset:0;z-index:30;
+    display:none;
+    flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:26px;
+    background:rgba(10,12,19,0.72);
+    backdrop-filter:blur(9px);
+  }
+  .panel.locked .panel-body{filter:blur(6px);pointer-events:none;user-select:none;}
+  .panel.locked .paywall-overlay{display:flex;}
+  .lock-ic{
+    width:52px;height:52px;border-radius:15px;
+    background:var(--accent-grad);
+    display:flex;align-items:center;justify-content:center;margin-bottom:14px;
+    box-shadow:0 12px 30px rgba(124,92,255,0.4);
+  }
+  .paywall-overlay h3{margin:0 0 8px;font-size:16px;font-weight:900;}
+  .paywall-overlay p{margin:0 0 16px;color:var(--text-dim);font-size:12.5px;max-width:270px;line-height:1.55;}
+  .upgrade-btn{
+    background:var(--accent-grad);color:#0b0d14;border:none;font-weight:900;
+    font-size:12.5px;padding:12px 22px;border-radius:999px;cursor:pointer;
+    box-shadow:0 14px 34px rgba(124,92,255,0.45);transition:.15s;
+  }
+  .upgrade-btn:hover{transform:translateY(-2px) scale(1.02);}
+
+  .tabs{display:flex;gap:6px;padding:0 18px;border-bottom:1px solid var(--border);}
+  .tab-btn{
+    background:none;border:none;color:var(--text-faint);font-weight:700;font-size:12px;
+    padding:13px 6px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:.15s;
+  }
+  .tab-btn.active{color:var(--text);border-color:var(--accent-2);}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  .editor-toolbar{
+    display:flex;flex-wrap:wrap;gap:8px;padding:14px 18px;border-bottom:1px solid var(--border);
+    background:rgba(255,255,255,0.015);
+  }
+  .canvas-stage{
+    padding:20px;display:flex;align-items:center;justify-content:center;
+    background:repeating-conic-gradient(#171a26 0% 25%, #12151f 0% 50%) 50% / 18px 18px;
+    min-height:400px;
+  }
+  #fabricCanvas-wrap{box-shadow:0 20px 50px rgba(0,0,0,0.5);border-radius:10px;overflow:hidden;background:transparent;}
+  .hint-row{
+    display:flex;align-items:center;gap:8px;padding:10px 18px 16px;color:var(--text-faint);font-size:11px;
+  }
+  .kbd{
+    background:rgba(255,255,255,0.07);border:1px solid var(--border-strong);
+    border-radius:5px;padding:1px 6px;font-size:10px;font-weight:800;
+  }
+
+  .mockup-controls{display:flex;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border);}
+  .garment-btn{
+    display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.05);
+    border:1px solid var(--border-strong);color:var(--text-dim);font-weight:700;font-size:12px;
+    padding:8px 13px;border-radius:999px;cursor:pointer;transition:.15s;
+  }
+  .garment-btn.active{background:var(--accent-grad);color:#0b0d14;border:none;}
+  .mockup-stage{
+    min-height:400px;display:flex;align-items:center;justify-content:center;
+    background:#0d0f17;position:relative;overflow:hidden;
+  }
+  .mockup-garment{max-height:380px;max-width:100%;object-fit:contain;filter:drop-shadow(0 20px 40px rgba(0,0,0,0.5));}
+  .mockup-overlay-img{position:absolute;pointer-events:none;}
+  .mockup-empty{color:var(--text-faint);font-size:12.5px;font-weight:600;text-align:center;padding:26px;}
+
+  .export-suite{
+    padding:16px 18px 20px;border-top:1px solid var(--border);
+    display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+  }
+  @media (max-width:700px){.export-suite{grid-template-columns:1fr 1fr;}}
+  .export-btn{
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    background:rgba(255,255,255,0.04);border:1px solid var(--border-strong);
+    border-radius:var(--radius-sm);padding:12px 8px;cursor:pointer;
+    color:var(--text);font-weight:700;font-size:11px;text-align:center;transition:.15s;
+  }
+  .export-btn:hover{background:rgba(124,92,255,0.14);border-color:var(--accent);transform:translateY(-2px);}
+  .export-btn svg{width:18px;height:18px;color:var(--accent-2);}
+  .export-btn small{display:block;color:var(--text-faint);font-weight:600;font-size:9.5px;margin-top:1px;}
+
+  .toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:#171b28;border:1px solid var(--border-strong);color:var(--text);
+    padding:11px 18px;border-radius:12px;font-size:12.5px;font-weight:700;
+    box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.25s;z-index:100;
+    display:flex;align-items:center;gap:9px;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast .tdot{width:8px;height:8px;border-radius:50%;background:#2ee6a6;}
+</style>
+</head>
+<body>
+
+<div class="studio">
+  <div class="studio-head">
+    <h1><span class="sparkle">✨</span> Beya Designer</h1>
+    <p id="studioDesc">Generate a brand-ready logo, clean it up in the vector editor, preview it on real garments, and export production-grade files.</p>
+    <div class="plan-pill" id="planPill">Free plan</div>
+  </div>
+
+  <div class="studio-grid">
+
+    <!-- ================= GENERATION PANEL ================= -->
+    <section class="panel" id="generationPanel">
+      <div class="panel-head">
+        <div class="panel-title"><span class="dot"></span><span id="generateLabel">Generate</span></div>
+      </div>
+      <div class="panel-body">
+        <div class="field">
+          <label id="lblBrandName">Brand Name</label>
+          <input type="text" id="brandNameInput" placeholder="e.g. Atlas Denim Co." value="Atlas Denim Co.">
+        </div>
+        <div class="field">
+          <label id="lblVision">Describe your vision</label>
+          <textarea id="brandVisionInput" placeholder="Minimalist mountain emblem, bold serif type, earthy tones...">Minimalist mountain emblem, bold serif type, rugged outdoor feel</textarea>
+        </div>
+        <button class="btn btn-primary" id="generateBtn" onclick="generateLogos()">
+          <span id="generateBtnLabel">Generate Logo ✨</span>
+        </button>
+
+        <div class="results-grid" id="resultsGrid">
+          <div class="result-slot"><div class="empty-ic">Result 1</div></div>
+          <div class="result-slot"><div class="empty-ic">Result 2</div></div>
+          <div class="result-slot"><div class="empty-ic">Result 3</div></div>
+          <div class="result-slot"><div class="empty-ic">Result 4</div></div>
+        </div>
+      </div>
+
+      <div class="paywall-overlay">
+        <div class="lock-ic">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0b0d14" stroke-width="2.4"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        </div>
+        <h3 id="lockTitle">Premium feature</h3>
+        <p id="lockDesc">Logo generation is reserved for PRO / PREMIUM stores. Upgrade to unlock unlimited generations, vectorization, and mockup exports.</p>
+        <button class="upgrade-btn" onclick="requestUpgrade()" id="upgradeBtn">Upgrade to unlock</button>
+      </div>
+    </section>
+
+    <!-- ================= EDITOR / MOCKUP PANEL ================= -->
+    <section class="panel">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="editor" onclick="switchTab('editor')" id="tabBtnEditor">Vector Editor</button>
+        <button class="tab-btn" data-tab="mockup" onclick="switchTab('mockup')" id="tabBtnMockup">Mockup Preview</button>
+      </div>
+
+      <div class="tab-panel active" id="tab-editor">
+        <div class="editor-toolbar">
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('uploadImageInput').click()" id="btnUpload">📤 <span id="btnUploadLabel">Upload Image</span></button>
+          <input type="file" id="uploadImageInput" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
+          <button class="btn btn-ghost btn-sm" onclick="vectorizeAndClean()" id="btnVectorize">🩹 Vectorize &amp; Clean</button>
+          <button class="btn btn-ghost btn-sm" onclick="deleteSelected()" id="btnDelete">🗑 Delete Selected</button>
+          <button class="btn btn-ghost btn-sm" onclick="canvas && canvas.discardActiveObject().requestRenderAll()" id="btnDeselect">◻ Deselect</button>
+          <button class="btn btn-ghost btn-sm" onclick="resetCanvas()" id="btnReset">↺ Reset</button>
+        </div>
+        <div class="canvas-stage">
+          <div id="fabricCanvas-wrap">
+            <canvas id="fabricCanvas" width="420" height="360"></canvas>
+          </div>
+        </div>
+        <div class="hint-row" id="hintRow">
+          Select a shape and press <span class="kbd">Delete</span> or <span class="kbd">Backspace</span> to remove it · drag a corner handle to scale symmetrically.
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-mockup">
+        <div class="mockup-controls">
+          <button class="garment-btn active" data-garment="tshirt" onclick="selectGarment('tshirt')" id="garmentTshirt">👕 T-Shirt</button>
+          <button class="garment-btn" data-garment="pants" onclick="selectGarment('pants')" id="garmentPants">👖 Pants</button>
+          <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="refreshMockup()" id="btnRefreshMockup">⟳ Refresh preview</button>
+        </div>
+        <div class="mockup-stage" id="mockupStage">
+          <div class="mockup-empty" id="mockupEmpty">Add a logo to the canvas to preview it on this garment.</div>
+        </div>
+      </div>
+
+      <div class="export-suite">
+        <div class="export-btn" onclick="exportSVG()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5a2 2 0 0 1 2-2h8l6 6v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M14 3v6h6"/></svg>
+          Export SVG
+          <small>Factory production</small>
+        </div>
+        <div class="export-btn" onclick="exportPNG()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          Export PNG
+          <small>Transparent, trimmed</small>
+        </div>
+        <div class="export-btn" onclick="exportInstagram()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>
+          Instagram 1080×1080
+          <small>Centered square</small>
+        </div>
+        <div class="export-btn" onclick="downloadMockup()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+          Download Mockup
+          <small>Garment JPG</small>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"><span class="tdot"></span><span id="toastMsg">Done</span></div>
+
+<script>
+/* =========================================================================
+   This page is embedded via <iframe> inside the real BEYA STORE app
+   (StoreBuilder.tsx). The host page passes the merchant's real plan and
+   language through the iframe's query string:
+     beya-designer.html?plan=PREMIUM&lang=ar
+   plan: NORMAL | PRO | PREMIUM   (NORMAL/PRO without AI logo unlocked... see below)
+   lang: fr | en | ar
+   ========================================================================= */
+const params = new URLSearchParams(window.location.search);
+const planParam = (params.get('plan') || 'NORMAL').toUpperCase();
+const lang = (params.get('lang') || 'fr').toLowerCase();
+const isUnlocked = planParam === 'PRO' || planParam === 'PREMIUM';
+
+const STRINGS = {
+  fr: {
+    desc: 'Générez un logo professionnel, nettoyez-le dans l\'éditeur vectoriel, prévisualisez-le sur de vrais vêtements, et exportez des fichiers prêts pour la production.',
+    generate: 'Générer', brandName: 'Nom de la marque', vision: 'Décrivez votre vision',
+    generateBtn: 'Générer le logo ✨', generating: 'Génération…',
+    lockTitle: 'Fonctionnalité Premium', lockDesc: 'La génération de logo est réservée aux boutiques PRO / PREMIUM. Passez à un plan supérieur pour débloquer les générations illimitées, la vectorisation et les exports mockup.',
+    upgrade: 'Passer à PRO / PREMIUM', vectorize: '🩹 Vectoriser & Nettoyer', del: '🗑 Supprimer', deselect: '◻ Désélectionner', reset: '↺ Réinitialiser',
+    editorTab: 'Éditeur Vectoriel', mockupTab: 'Aperçu Mockup',
+    hint: 'Sélectionnez une forme et appuyez sur Suppr ou Retour arrière pour la supprimer · glissez un coin pour redimensionner de façon symétrique.',
+    mockupEmpty: 'Ajoutez un logo au canvas pour le prévisualiser sur ce vêtement.',
+    generated4: '4 concepts de logo générés', vectorized: 'Vectorisé — chaque forme est maintenant modifiable individuellement',
+    needLogo: 'Ajoutez ou générez un logo d\'abord', cleared: 'Canvas réinitialisé',
+    svgOk: 'SVG exporté pour la production', pngOk: 'PNG transparent exporté', igOk: 'Carré Instagram exporté', mockOk: 'Mockup JPG téléchargé',
+    uploadBtn: 'Importer une image', uploaded: 'Image importée sur le canvas'
+  },
+  en: {
+    desc: 'Generate a brand-ready logo, clean it up in the vector editor, preview it on real garments, and export production-grade files.',
+    generate: 'Generate', brandName: 'Brand Name', vision: 'Describe your vision',
+    generateBtn: 'Generate Logo ✨', generating: 'Generating…',
+    lockTitle: 'Premium feature', lockDesc: 'Logo generation is reserved for PRO / PREMIUM stores. Upgrade to unlock unlimited generations, vectorization, and mockup exports.',
+    upgrade: 'Upgrade to PRO / PREMIUM', vectorize: '🩹 Vectorize & Clean', del: '🗑 Delete Selected', deselect: '◻ Deselect', reset: '↺ Reset',
+    editorTab: 'Vector Editor', mockupTab: 'Mockup Preview',
+    hint: 'Select a shape and press Delete or Backspace to remove it · drag a corner handle to scale symmetrically.',
+    mockupEmpty: 'Add a logo to the canvas to preview it on this garment.',
+    generated4: '4 logo concepts generated', vectorized: 'Vectorized — every shape is now individually editable',
+    needLogo: 'Add or generate a logo first', cleared: 'Canvas cleared',
+    svgOk: 'SVG exported for production', pngOk: 'Transparent PNG exported', igOk: 'Instagram-ready square exported', mockOk: 'Mockup JPG downloaded',
+    uploadBtn: 'Upload Image', uploaded: 'Image uploaded to the canvas'
+  },
+  ar: {
+    desc: 'ولّد لوغو احترافي، نظّفه فمحرر الأشكال، شوفه على ملابس حقيقية، وصدّر ملفات جاهزة للمصنع.',
+    generate: 'توليد', brandName: 'اسم العلامة', vision: 'وصف الفكرة',
+    generateBtn: 'توليد اللوغو ✨', generating: 'جاري التوليد…',
+    lockTitle: 'ميزة Premium', lockDesc: 'توليد اللوغو محجوز لخطة PRO أو PREMIUM. رقّي حسابك باش تفتح التوليد الغير محدود، التفريغ للأشكال، وتصدير الـ mockup.',
+    upgrade: 'الترقية إلى PRO / PREMIUM', vectorize: '🩹 تفريغ وتنظيف', del: '🗑 حذف المحدد', deselect: '◻ إلغاء التحديد', reset: '↺ إعادة تعيين',
+    editorTab: 'محرر الأشكال', mockupTab: 'معاينة على الملابس',
+    hint: 'اختر شكل ودوس Delete باش تحذفه · جر الزاوية باش تكبر/تصغر بتناسق.',
+    mockupEmpty: 'زيد لوغو للـ canvas باش تشوف المعاينة على هاد اللباس.',
+    generated4: 'تولدو 4 اقتراحات ديال اللوغو', vectorized: 'تفرّغ — كل شكل دابا يتبدل بوحدو',
+    needLogo: 'زيد أو ولّد لوغو أولاً', cleared: 'تفرّغ الـ canvas',
+    svgOk: 'SVG جاهز للمصنع', pngOk: 'PNG شفاف صدر', igOk: 'مربع Instagram صدر', mockOk: 'Mockup JPG تحمّل',
+    uploadBtn: 'رفع صورة', uploaded: 'الصورة تزادت للـ canvas'
+  }
+};
+const S = STRINGS[lang] || STRINGS.fr;
+
+let canvas = null;
+let generatedLogos = [];
+const GARMENT_IMAGES = {
+  tshirt: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=900&auto=format&fit=crop',
+  pants:  'https://images.unsplash.com/photo-1602293589930-45821bd39fc0?q=80&w=900&auto=format&fit=crop'
+};
+let currentGarment = 'tshirt';
+
+function applyStrings() {
+  document.getElementById('studioDesc').textContent = S.desc;
+  document.getElementById('generateLabel').textContent = S.generate;
+  document.getElementById('lblBrandName').textContent = S.brandName;
+  document.getElementById('lblVision').textContent = S.vision;
+  document.getElementById('generateBtnLabel').textContent = S.generateBtn;
+  document.getElementById('lockTitle').textContent = S.lockTitle;
+  document.getElementById('lockDesc').textContent = S.lockDesc;
+  document.getElementById('upgradeBtn').textContent = S.upgrade;
+  document.getElementById('btnVectorize').textContent = S.vectorize;
+  document.getElementById('btnDelete').textContent = S.del;
+  document.getElementById('btnDeselect').textContent = S.deselect;
+  document.getElementById('btnReset').textContent = S.reset;
+  document.getElementById('btnUploadLabel').textContent = S.uploadBtn;
+  document.getElementById('tabBtnEditor').textContent = S.editorTab;
+  document.getElementById('tabBtnMockup').textContent = S.mockupTab;
+  document.getElementById('hintRow').textContent = S.hint;
+  document.getElementById('mockupEmpty').textContent = S.mockupEmpty;
+  if (lang === 'ar') document.documentElement.setAttribute('dir', 'rtl');
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  applyStrings();
+  canvas = new fabric.Canvas('fabricCanvas', { backgroundColor: null, preserveObjectStacking: true, uniformScaling: true });
+
+  const panel = document.getElementById('generationPanel');
+  const pill = document.getElementById('planPill');
+  if (isUnlocked) {
+    panel.classList.remove('locked');
+    pill.textContent = planParam + ' plan';
+    pill.classList.add('is-premium');
+  } else {
+    panel.classList.add('locked');
+    pill.textContent = planParam + ' plan';
+  }
+
+  document.addEventListener('keydown', (e) => {
+    const tag = (document.activeElement && document.activeElement.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    if ((e.key === 'Delete' || e.key === 'Backspace') && canvas) { e.preventDefault(); deleteSelected(); }
+  });
+
+  canvas.on('object:modified', () => { if (document.getElementById('tab-mockup').classList.contains('active')) refreshMockup(); });
+});
+
+function requestUpgrade() {
+  // Let the parent app (StoreBuilder.tsx) decide how to handle upgrades
+  // (open the WhatsApp confirmation flow, same as the rest of the app).
+  window.parent.postMessage({ source: 'beya-designer', type: 'upgrade-request' }, '*');
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'mockup') refreshMockup();
+}
+
+/* =========================================================================
+   TEMPLATE-BASED LOGO GENERATOR
+   A pool of distinct visual templates (badge, shield, hexagon, wordmark,
+   ribbon, abstract mark, line-art...) x a pool of curated color palettes,
+   so each generation yields genuinely different-looking concepts instead
+   of one shape re-colored 4 times (Looka / Design.com style variety).
+   ========================================================================= */
+const PALETTES = [
+  { bg:'#0f172a', accent:'#f43f5e', text:'#ffffff' },
+  { bg:'#3a1a0a', accent:'#f59e0b', text:'#ffffff' },
+  { bg:'#062e26', accent:'#2dd4bf', text:'#ffffff' },
+  { bg:'#2e1065', accent:'#c084fc', text:'#ffffff' },
+  { bg:'#052e16', accent:'#4ade80', text:'#ffffff' },
+  { bg:'#111827', accent:'#facc15', text:'#ffffff' },
+  { bg:'#0c1f4a', accent:'#38bdf8', text:'#ffffff' },
+  { bg:'#500724', accent:'#f472b6', text:'#ffffff' },
+  { bg:'#ffffff', accent:'#0f172a', text:'#0f172a' },
+  { bg:'#fef3c7', accent:'#92400e', text:'#78350f' }
+];
+const FONTS = ['Inter', 'Playfair Display', 'Poppins', 'Oswald'];
+
+function getInitials(brand) {
+  return brand.split(/\s+/).filter(Boolean).slice(0,2).map(w => w[0].toUpperCase()).join('') || 'BR';
+}
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i+1)); [a[i],a[j]] = [a[j],a[i]]; }
+  return a;
+}
+function newCanvas() {
+  const c = document.createElement('canvas');
+  c.width = 500; c.height = 500;
+  return c;
+}
+function drawStarPath(ctx, cx, cy, outerR, innerR, points) {
+  ctx.beginPath();
+  for (let i = 0; i < points * 2; i++) {
+    const r = i % 2 === 0 ? outerR : innerR;
+    const a = (Math.PI / points) * i - Math.PI / 2;
+    ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
+  }
+  ctx.closePath();
+}
+function drawHexPath(ctx, cx, cy, r) {
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const a = (Math.PI / 3) * i - Math.PI / 2;
+    const px = cx + r * Math.cos(a), py = cy + r * Math.sin(a);
+    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+}
+
+// --- Template 1: circular ring badge with monogram + geometric accent ---
+function tplCircleBadge(ctx, brand, initials, p, font) {
+  ctx.fillStyle = p.bg; ctx.fillRect(0,0,500,500);
+  ctx.save(); ctx.translate(250,250);
+  ctx.strokeStyle = p.accent; ctx.lineWidth = 10;
+  ctx.beginPath(); ctx.arc(0,0,150,0,Math.PI*2); ctx.stroke();
+  ctx.fillStyle = p.accent;
+  ctx.beginPath(); ctx.moveTo(0,-190); ctx.lineTo(28,-152); ctx.lineTo(-28,-152); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = p.text;
+  ctx.font = `900 130px "${font}", sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(initials, 0, 10);
+  ctx.restore();
+}
+
+// --- Template 2: shield / crest ---
+function tplShieldCrest(ctx, brand, initials, p, font) {
+  ctx.fillStyle = p.bg; ctx.fillRect(0,0,500,500);
+  ctx.save(); ctx.translate(250,240);
+  ctx.strokeStyle = p.accent; ctx.lineWidth = 8; ctx.fillStyle = 'transparent';
+  ctx.beginPath();
+  ctx.moveTo(-110,-140); ctx.lineTo(110,-140); ctx.lineTo(110,40);
+  ctx.quadraticCurveTo(110,150, 0,190);
+  ctx.quadraticCurveTo(-110,150, -110,40);
+  ctx.closePath(); ctx.stroke();
+  ctx.fillStyle = p.accent;
+  ctx.font = `900 120px "${font}", sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(initials, 0, -20);
+  ctx.strokeStyle = p.accent; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(-70,40); ctx.lineTo(70,40); ctx.stroke();
+  ctx.fillStyle = p.text; ctx.font = `700 26px "${font}", sans-serif`;
+  ctx.fillText(brand.split(/\s+/)[0].toUpperCase(), 0, 90);
+  ctx.restore();
+}
+
+// --- Template 3: hexagon badge with star glyph ---
+function tplHexIcon(ctx, brand, initials, p, font) {
+  ctx.fillStyle = p.bg; ctx.fillRect(0,0,500,500);
+  ctx.save(); ctx.translate(250,190);
+  ctx.fillStyle = p.accent;
+  drawHexPath(ctx, 0, 0, 105); ctx.fill();
+  ctx.fillStyle = p.bg === '#ffffff' ? '#ffffff' : p.bg;
+  drawStarPath(ctx, 0, 0, 46, 20, 5); ctx.fill();
+  ctx.restore();
+  ctx.fillStyle = p.text;
+  ctx.font = `800 68px "${font}", sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(brand.split(/\s+/)[0], 250, 350);
+}
+
+// --- Template 4: bold centered wordmark, no icon ---
+function tplWordmark(ctx, brand, initials, p, font) {
+  ctx.fillStyle = p.bg; ctx.fillRect(0,0,500,500);
+  ctx.fillStyle = p.accent;
+  ctx.font = `900 80px "${font}", sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const first = brand.split(/\s+/)[0] || brand;
+  ctx.fillText(first, 250, 235);
+  const rest = brand.split(/\s+/).slice(1).join(' ');
+  if (rest) {
+    ctx.fillStyle = p.text; ctx.font = `600 30px "${font}", sans-serif`;
+    ctx.fillText(rest.toUpperCase(), 250, 285);
+  }
+  ctx.strokeStyle = p.accent; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(150,310); ctx.lineTo(350,310); ctx.stroke();
+}
+
+// --- Template 5: ribbon banner under a circle icon (est. style) ---
+function tplRibbonBanner(ctx, brand, initials, p, font) {
+  ctx.fillStyle = p.bg; ctx.fillRect(0,0,500,500);
+  ctx.save(); ctx.translate(250,170);
+  ctx.strokeStyle = p.accent; ctx.lineWidth = 7;
+  ctx.beginPath(); ctx.arc(0,0,90,0,Math.PI*2); ctx.stroke();
+  ctx.fillStyle = p.accent; ctx.font = `900 90px "${font}", sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(initials, 0, 8);
+  ctx.restore();
+  ctx.fillStyle = p.text;
+  ctx.font = `800 46px "${font}", sans-serif`;
+  ctx.fillText(brand.split(/\s+/)[0].toUpperCase(), 250, 330);
+  ctx.font = `500 18px "${font}", sans-serif`;
+  ctx.fillStyle = p.accent;
+  ctx.fillText('— EST. 2026 —', 250, 368);
+}
+
+// --- Template 6: abstract overlapping geometric mark + wordmark below ---
+function tplAbstractMark(ctx, brand, initials, p, font) {
+  ctx.fillStyle = p.bg; ctx.fillRect(0,0,500,500);
+  ctx.save(); ctx.translate(250,190); ctx.globalAlpha = 0.85;
+  ctx.fillStyle = p.accent;
+  ctx.beginPath(); ctx.arc(-25,-10,70,0,Math.PI*2); ctx.fill();
+  ctx.globalAlpha = 1; ctx.fillStyle = p.text === p.bg ? p.accent : p.text;
+  ctx.beginPath();
+  ctx.moveTo(45,-70); ctx.lineTo(90,10); ctx.lineTo(45,90); ctx.lineTo(0,10); ctx.closePath(); ctx.fill();
+  ctx.restore();
+  ctx.fillStyle = p.text;
+  ctx.font = `800 60px "${font}", sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(brand.split(/\s+/)[0], 250, 340);
+}
+
+// --- Template 7: monogram in rounded square box ---
+function tplMonogramBox(ctx, brand, initials, p, font) {
+  ctx.fillStyle = p.bg; ctx.fillRect(0,0,500,500);
+  ctx.save(); ctx.translate(250,215);
+  const s = 160, r = 34;
+  ctx.fillStyle = p.accent;
+  ctx.beginPath();
+  ctx.moveTo(-s/2+r,-s/2);
+  ctx.arcTo(s/2,-s/2, s/2,s/2, r);
+  ctx.arcTo(s/2,s/2, -s/2,s/2, r);
+  ctx.arcTo(-s/2,s/2, -s/2,-s/2, r);
+  ctx.arcTo(-s/2,-s/2, s/2,-s/2, r);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = p.bg === '#ffffff' ? '#ffffff' : p.bg;
+  ctx.font = `900 110px "${font}", sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(initials, 0, 6);
+  ctx.restore();
+  ctx.fillStyle = p.text;
+  ctx.font = `700 34px "${font}", sans-serif`;
+  ctx.fillText(brand.split(/\s+/)[0], 250, 345);
+}
+
+// --- Template 8: minimalist line-art circle + light wordmark ---
+function tplLineArtMinimal(ctx, brand, initials, p, font) {
+  ctx.fillStyle = p.bg; ctx.fillRect(0,0,500,500);
+  ctx.save(); ctx.translate(250,200);
+  ctx.strokeStyle = p.accent; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(0,0,95,0,Math.PI*1.5); ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,0,60,0,Math.PI*2); ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle = p.text;
+  ctx.font = `600 46px "${font}", sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(brand.split(/\s+/)[0].toUpperCase(), 250, 350);
+  ctx.strokeStyle = p.accent; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(190,375); ctx.lineTo(310,375); ctx.stroke();
+}
+
+// --- Template 9: gradient blob with white wordmark overlay ---
+function tplGradientBlob(ctx, brand, initials, p, font) {
+  ctx.fillStyle = p.bg; ctx.fillRect(0,0,500,500);
+  const grad = ctx.createLinearGradient(80,80,420,420);
+  grad.addColorStop(0, p.accent); grad.addColorStop(1, p.bg === '#ffffff' ? '#0f172a' : p.bg);
+  ctx.fillStyle = grad;
+  ctx.beginPath(); ctx.arc(250,250,175,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `900 64px "${font}", sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(brand.split(/\s+/)[0], 250, 250);
+}
+
+// --- Template 10: underline wordmark with corner accent dots ---
+function tplUnderlineWordmark(ctx, brand, initials, p, font) {
+  ctx.fillStyle = p.bg; ctx.fillRect(0,0,500,500);
+  ctx.fillStyle = p.accent;
+  [[90,90],[410,90],[90,410],[410,410]].forEach(([x,y]) => { ctx.beginPath(); ctx.arc(x,y,8,0,Math.PI*2); ctx.fill(); });
+  ctx.fillStyle = p.text;
+  ctx.font = `700 64px "${font}", sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(brand.split(/\s+/)[0], 250, 235);
+  ctx.strokeStyle = p.accent; ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.moveTo(160,280); ctx.lineTo(340,280); ctx.stroke();
+  const rest = brand.split(/\s+/).slice(1).join(' ');
+  ctx.font = `500 22px "${font}", sans-serif`;
+  ctx.fillStyle = p.accent;
+  ctx.fillText(rest ? rest.toUpperCase() : 'SINCE 2026', 250, 320);
+}
+
+const TEMPLATE_POOL = [tplCircleBadge, tplShieldCrest, tplHexIcon, tplWordmark, tplRibbonBanner, tplAbstractMark, tplMonogramBox, tplLineArtMinimal, tplGradientBlob, tplUnderlineWordmark];
+
+function generateLogos() {
+  if (!isUnlocked) return;
+  const brand = document.getElementById('brandNameInput').value.trim() || 'Brand';
+  const btn = document.getElementById('generateBtn');
+  const label = document.getElementById('generateBtnLabel');
+  btn.disabled = true;
+  label.innerHTML = '<span class="spinner"></span> ' + S.generating;
+
+  setTimeout(() => {
+    const templates = shuffle(TEMPLATE_POOL).slice(0, 4);
+    const palettes = shuffle(PALETTES).slice(0, 4);
+    const fonts = [FONTS[Math.floor(Math.random()*FONTS.length)], FONTS[Math.floor(Math.random()*FONTS.length)], FONTS[Math.floor(Math.random()*FONTS.length)], FONTS[Math.floor(Math.random()*FONTS.length)]];
+    generatedLogos = templates.map((tpl, i) => renderPlaceholderLogo(brand, tpl, palettes[i], fonts[i]));
+    const grid = document.getElementById('resultsGrid');
+    grid.innerHTML = generatedLogos.map((src, i) => `
+      <div class="result-slot" onclick="pickResult(${i})" id="slot-${i}">
+        <span class="pick-badge">✓</span>
+        <img src="${src}" alt="Logo option ${i+1}">
+      </div>
+    `).join('');
+    btn.disabled = false;
+    label.textContent = S.generateBtn;
+    showToast(S.generated4);
+  }, 1400);
+}
+
+function renderPlaceholderLogo(brand, templateFn, palette, font) {
+  const initials = getInitials(brand);
+  const c = newCanvas();
+  const ctx = c.getContext('2d');
+  templateFn(ctx, brand, initials, palette, font);
+  return c.toDataURL('image/png');
+}
+
+function pickResult(i) {
+  document.querySelectorAll('.result-slot').forEach((el, idx) => el.classList.toggle('selected', idx === i));
+  loadImageOntoCanvas(generatedLogos[i]);
+}
+
+function handleImageUpload(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    loadImageOntoCanvas(e.target.result);
+    showToast(S.uploaded);
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+
+function loadImageOntoCanvas(dataUrl) {
+  canvas.clear();
+  fabric.Image.fromURL(dataUrl, (img) => {
+    const scale = Math.min(280 / img.width, 280 / img.height);
+    img.set({ left: canvas.getWidth()/2, top: canvas.getHeight()/2, originX: 'center', originY: 'center', scaleX: scale, scaleY: scale, lockUniScaling: true });
+    canvas.add(img);
+    canvas.setActiveObject(img);
+    canvas.requestRenderAll();
+  }, { crossOrigin: 'anonymous' });
+}
+
+function resetCanvas() { canvas.clear(); showToast(S.cleared); }
+
+function deleteSelected() {
+  if (!canvas) return;
+  const active = canvas.getActiveObjects();
+  if (!active.length) return;
+  active.forEach(obj => canvas.remove(obj));
+  canvas.discardActiveObject();
+  canvas.requestRenderAll();
+}
+
+function vectorizeAndClean() {
+  const objects = canvas.getObjects();
+  if (!objects.length) { showToast(S.needLogo); return; }
+  const sourceDataUrl = objects[0].toDataURL({ format: 'png' });
+
+  ImageTracer.imageToSVG(sourceDataUrl, function (svgstring) {
+    fabric.loadSVGFromString(svgstring, function (parsedObjects, options) {
+      const group = fabric.util.groupSVGElements(parsedObjects, options);
+      const targetSize = 280;
+      const scale = Math.min(targetSize / group.width, targetSize / group.height);
+      group.set({ left: canvas.getWidth()/2, top: canvas.getHeight()/2, originX: 'center', originY: 'center', scaleX: scale, scaleY: scale });
+
+      canvas.clear();
+      canvas.add(group);
+      canvas.setActiveObject(group);
+      const active = canvas.getActiveObject();
+      if (active && active.type === 'group') {
+        const items = active._objects.slice();
+        active._restoreObjectsState();
+        canvas.remove(active);
+        items.forEach(o => { o.lockUniScaling = true; canvas.add(o); });
+      }
+      canvas.discardActiveObject();
+      canvas.requestRenderAll();
+      showToast(S.vectorized);
+    }, options, { crossOrigin: 'anonymous' });
+  }, { ltres: 1, qtres: 1, pathomit: 8, numberofcolors: 8, strokewidth: 0, scale: 1 });
+}
+
+function selectGarment(name) {
+  currentGarment = name;
+  document.querySelectorAll('.garment-btn').forEach(b => b.classList.toggle('active', b.dataset.garment === name));
+  refreshMockup();
+}
+
+function refreshMockup() {
+  const stage = document.getElementById('mockupStage');
+  const objects = canvas ? canvas.getObjects() : [];
+  if (!objects.length) { stage.innerHTML = '<div class="mockup-empty">' + S.mockupEmpty + '</div>'; return; }
+  const trimmed = getTrimmedCanvasDataUrl();
+  stage.innerHTML = `
+    <img class="mockup-garment" src="${GARMENT_IMAGES[currentGarment]}" crossorigin="anonymous">
+    <img class="mockup-overlay-img" src="${trimmed}"
+         style="top:${currentGarment === 'tshirt' ? '34%' : '18%'}; left:50%; transform:translate(-50%,-50%); width:${currentGarment === 'tshirt' ? '17%' : '30%'};">
+  `;
+}
+
+function trimCanvasElement(srcCanvas) {
+  const ctx = srcCanvas.getContext('2d');
+  const { width, height } = srcCanvas;
+  const data = ctx.getImageData(0, 0, width, height).data;
+  let top = height, left = width, right = 0, bottom = 0;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const alpha = data[(y * width + x) * 4 + 3];
+      if (alpha > 10) { if (x < left) left = x; if (x > right) right = x; if (y < top) top = y; if (y > bottom) bottom = y; }
+    }
+  }
+  if (right <= left || bottom <= top) return { canvas: srcCanvas, w: width, h: height };
+  const w = right - left + 1, h = bottom - top + 1;
+  const out = document.createElement('canvas');
+  out.width = w; out.height = h;
+  out.getContext('2d').drawImage(srcCanvas, left, top, w, h, 0, 0, w, h);
+  return { canvas: out, w, h };
+}
+
+function getTrimmedCanvasDataUrl() {
+  const raw = canvas.toCanvasElement(2);
+  const { canvas: trimmed } = trimCanvasElement(raw);
+  return trimmed.toDataURL('image/png');
+}
+
+function triggerDownload(url, filename) {
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+function requireContent() {
+  if (!canvas || !canvas.getObjects().length) { showToast(S.needLogo); return false; }
+  return true;
+}
+
+function exportSVG() {
+  if (!requireContent()) return;
+  const svg = canvas.toSVG();
+  const blob = new Blob([svg], { type: 'image/svg+xml' });
+  triggerDownload(URL.createObjectURL(blob), 'beya-logo.svg');
+  showToast(S.svgOk);
+}
+
+function exportPNG() {
+  if (!requireContent()) return;
+  triggerDownload(getTrimmedCanvasDataUrl(), 'beya-logo-transparent.png');
+  showToast(S.pngOk);
+}
+
+function exportInstagram() {
+  if (!requireContent()) return;
+  const raw = canvas.toCanvasElement(2);
+  const { canvas: trimmed, w, h } = trimCanvasElement(raw);
+  const FRAME = 1080, PADDING = 0.72;
+  const out = document.createElement('canvas');
+  out.width = FRAME; out.height = FRAME;
+  const ctx = out.getContext('2d');
+  ctx.clearRect(0, 0, FRAME, FRAME);
+  const maxDim = FRAME * PADDING;
+  const scale = Math.min(maxDim / w, maxDim / h);
+  const dw = w * scale, dh = h * scale;
+  ctx.drawImage(trimmed, (FRAME - dw) / 2, (FRAME - dh) / 2, dw, dh);
+  triggerDownload(out.toDataURL('image/png'), 'beya-logo-instagram-1080x1080.png');
+  showToast(S.igOk);
+}
+
+function downloadMockup() {
+  if (!requireContent()) return;
+  const garmentImg = new Image();
+  garmentImg.crossOrigin = 'anonymous';
+  garmentImg.onload = () => {
+    const out = document.createElement('canvas');
+    out.width = garmentImg.naturalWidth; out.height = garmentImg.naturalHeight;
+    const ctx = out.getContext('2d');
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, out.width, out.height);
+    ctx.drawImage(garmentImg, 0, 0);
+    const raw = canvas.toCanvasElement(2);
+    const { canvas: trimmed, w, h } = trimCanvasElement(raw);
+    const targetW = out.width * (currentGarment === 'tshirt' ? 0.17 : 0.30);
+    const scale = targetW / w;
+    const dw = w * scale, dh = h * scale;
+    const cx = out.width * 0.5;
+    const cy = out.height * (currentGarment === 'tshirt' ? 0.34 : 0.18);
+    ctx.drawImage(trimmed, cx - dw / 2, cy - dh / 2, dw, dh);
+    triggerDownload(out.toDataURL('image/jpeg', 0.95), 'beya-mockup-' + currentGarment + '.jpg');
+    showToast(S.mockOk);
+  };
+  garmentImg.src = GARMENT_IMAGES[currentGarment];
+}
+
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+</script>
+</body>
+</html>

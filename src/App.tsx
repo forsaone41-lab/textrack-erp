@@ -11,6 +11,7 @@ import { CompanyProfile } from './types';
 // ✅ Lazy load all pages - each page loads only when visited
 const Dashboard        = lazy(() => import('./pages/Dashboard'));
 const StoreAnalytics   = lazy(() => import('./pages/StoreAnalytics'));
+const BeyaDesignerPage = lazy(() => import('./pages/BeyaDesignerPage'));
 const Demandes         = lazy(() => import('./pages/Demandes'));
 const Pipeline         = lazy(() => import('./pages/Pipeline'));
 const FichesTechniques = lazy(() => import('./pages/FichesTechniques'));
@@ -586,6 +587,11 @@ function AppContent() {
             <StoreAnalytics currentUser={currentUser} />
           </Suspense>
         } />
+        <Route path="/beya-designer" element={
+          <Suspense fallback={<PageLoader />}>
+            <BeyaDesignerPage />
+          </Suspense>
+        } />
         <Route path="/saas-admin" element={
           <Suspense fallback={<PageLoader />}>
             <SaaSAdminPage />
@@ -715,6 +721,7 @@ function AppContent() {
       {/* Standalone SaaS Route for BEYA STORE Builder (Accessible by admin via this specific route) */}
       <Route path="/store-builder" element={(currentUser?.role === 'admin') ? <div className="min-h-screen bg-white"><StoreBuilder appCurrentUser={currentUser} /></div> : <Navigate to="/" replace />} />
       <Route path="/store-analytics" element={<Suspense fallback={<PageLoader />}><StoreAnalytics currentUser={currentUser} /></Suspense>} />
+      <Route path="/beya-designer" element={<Suspense fallback={<PageLoader />}><BeyaDesignerPage /></Suspense>} />
       <Route path="/store/:storeNameUrl" element={<div className="min-h-screen bg-white"><StoreBuilder isLiveStore={true} /></div>} />
       <Route path="/saas-admin" element={<Suspense fallback={<PageLoader />}><SaaSAdminPage /></Suspense>} />
       <Route path="/godmode" element={<Suspense fallback={<PageLoader />}><SaaSAdminPage /></Suspense>} />
