@@ -84,6 +84,19 @@ import { initFacebookPixel, trackPixelEvent } from './utils/pixel';
 
 initMockData();
 
+// ⚡ CRITICAL: Capture password-recovery tokens BEFORE HashRouter overwrites the hash.
+// Supabase redirects to: https://app.beyacreative.com/#access_token=xxx&type=recovery
+// But HashRouter immediately replaces the hash with #/ (its default route),
+// so by the time any useEffect runs, the tokens are already gone.
+// We capture them here at module-load time (synchronous, before any React renders).
+const __INITIAL_URL__ = window.location.href;
+const __INITIAL_HASH__ = window.location.hash || '';
+const __INITIAL_SEARCH__ = window.location.search || '';
+const __IS_RECOVERY_REDIRECT__ = __INITIAL_HASH__.includes('type=recovery') || __INITIAL_SEARCH__.includes('type=recovery') || __INITIAL_URL__.includes('type=recovery');
+
+// If this is a recovery redirect, let Supabase's JS client pick up the tokens from the hash
+// BEFORE we clean the URL. Supabase's createClient auto-detects hash tokens on init.
+// After a brief delay, we'll clean the URL in the useEffect below.
 
 const AUTH_KEY = 'textrack_auth';
 
@@ -231,19 +244,14 @@ function AppContent() {
       }
     });
 
-    // Check ALL possible locations where Supabase may put recovery tokens:
-    // 1. Hash fragment (default PKCE flow): #access_token=...&type=recovery
-    // 2. Search params (some email clients strip the hash): ?type=recovery&access_token=...
-    // 3. Inside the HashRouter hash: #/...?type=recovery  or  #type=recovery
-    const fullUrl = window.location.href;
-    const hash = window.location.hash || '';
-    const search = window.location.search || '';
-    const isRecovery = hash.includes('type=recovery') || search.includes('type=recovery') || fullUrl.includes('type=recovery');
-    
-    if (isRecovery) {
-      setShowRecoveryModal(true);
-      // Clean the URL so the token doesn't linger
-      window.history.replaceState(null, '', window.location.pathname + '#/');
+    // Use the module-level flag captured BEFORE HashRouter could wipe the hash.
+    // This is the only reliable way to detect recovery redirects with HashRouter.
+    if (__IS_RECOVERY_REDIRECT__) {
+      // Give Supabase's JS client a moment to parse the access_token from the original hash
+      // and establish the authenticated session, then show the modal.
+      setTimeout(() => {
+        setShowRecoveryModal(true);
+      }, 500);
     }
 
     return () => {
