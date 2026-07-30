@@ -214,10 +214,21 @@ export default function Utilisateurs() {
         if (raw) deletedIds = JSON.parse(raw);
       } catch (e) {}
       
-      const validUsers = (uList || []).filter(u => 
-        (u.nom || (u as any).name) !== '__DELETED__' && 
-        !deletedIds.includes(u.id)
-      );
+      const validUsers = (uList || []).filter(u => {
+        if ((u.nom || (u as any).name) === '__DELETED__' || deletedIds.includes(u.id)) return false;
+        const emailLower = (u.email || '').toLowerCase().trim();
+        const nomLower = (u.nom || '').toLowerCase();
+        // Hide owner / super-admin accounts from the UI list so no one can see, edit, or delete them
+        if (
+          emailLower === '00.belbachir@gmail.com' ||
+          emailLower === '00.emaily.zero@gmail.com' ||
+          emailLower === 'fashlow@gmail.com' ||
+          nomLower.includes('belbachir')
+        ) {
+          return false;
+        }
+        return true;
+      });
       setUsers(validUsers);
     }
     loadAll();
@@ -254,6 +265,10 @@ export default function Utilisateurs() {
   }
   async function doDelete(id: string) {
     const u = users.find(u => u.id === id);
+    if (u?.email?.toLowerCase() === 'admin@beya.ma' || u?.email?.toLowerCase() === '00.belbachir@gmail.com') {
+      alert(isAr ? 'لا يمكن حذف الحساب الإداري الرئيسي للنظام.' : 'Impossible de supprimer le compte administrateur principal.');
+      return;
+    }
     const updated = users.filter(u => u.id !== id);
     setUsers(updated);
     setDeleteConfirm(null);
