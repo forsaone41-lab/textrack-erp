@@ -1,0 +1,13 @@
+const fs = require('fs');
+let c = fs.readFileSync('src/pages/StoreBuilder.tsx', 'utf8');
+
+c = c.replace('<Crown className="w-6 h-6 text-amber-400 drop-shadow-md" />', '<BarChart3 className="w-6 h-6 text-white drop-shadow-md" />');
+c = c.replace(`{isAr ? 'لوحة التحكم الاحترافية' : 'Dashboard Premium'}`, `{isAr ? 'لوحة التحكم' : 'Dashboard'}`);
+c = c.replace(`{isAr ? 'تحليلات ذكية لمتجرك مدعومة بالبيانات.' : 'Des analyses intelligentes pour votre boutique.'}`, `{isAr ? 'تحليلات متجرك مدعومة بالبيانات.' : 'Des analyses pour votre boutique.'}`);
+
+c = c.replace('<Sparkles className="w-4 h-4 text-amber-500" />', '<TrendingUp className="w-4 h-4 text-indigo-500" />');
+c = c.replace(`{isAr ? 'تحليلات المبيعات الذكية (PRO)' : 'Analytique des Ventes (PRO)'}`, `{isAr ? 'تحليلات المبيعات' : 'Analytique des Ventes'}`);
+
+c = c.replace(/<span className="px-2\.5 py-1 bg-amber-100 text-amber-700 text-\[9px\] font-black uppercase tracking-widest rounded-full flex items-center gap-1 shadow-sm">[\s\S]*?<Crown className="w-3 h-3" \/> Premium[\s\S]*?<\/span>/, '');
+
+fs.writeFileSync('src/pages/StoreBuilder.tsx', c);

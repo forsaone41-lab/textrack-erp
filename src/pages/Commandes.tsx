@@ -13,6 +13,7 @@ import { useLang } from '../contexts/LangContext';
 import { t, T, TKey } from '../i18n';
 import { supabase } from '../supabase';
 import { PageLoader } from '../components/PageLoader';
+import AtelierCalculator from './AtelierCalculator';
 
 export default function Commandes() {
   const { lang, isAr } = useLang();
@@ -37,6 +38,15 @@ export default function Commandes() {
   const [deleteConfirm, setDeleteConfirm] = useState<Commande | null>(null);
   const [sendToCoupeConfirm, setSendToCoupeConfirm] = useState<Commande | null>(null);
   const [showSuccess, setShowSuccess] = useState<string | null>(null);
+  const [showCalculatorModal, setShowCalculatorModal] = useState(false);
+
+  const isAdminUser = useMemo(() => {
+    try {
+      const s = localStorage.getItem('textrack_auth');
+      const u = s ? JSON.parse(s) : null;
+      return u?.role === 'admin' || u?.email === 'admin@beyacreative.com';
+    } catch { return false; }
+  }, []);
 
   // Quick Sample State
   const [quickSampleModal, setQuickSampleModal] = useState(false);
@@ -307,6 +317,15 @@ export default function Commandes() {
         </div>
         
         <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+          {isAdminUser && (
+            <button 
+              onClick={() => setShowCalculatorModal(true)}
+              className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-4 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.1em] hover:bg-emerald-600 hover:text-white transition-all shadow-sm active:scale-95 group"
+            >
+              <Calculator className="w-4 h-4" />
+              {isAr ? 'حاسبة أرباح الإنتاج (VIP)' : 'Calculateur Atelier (VIP)'}
+            </button>
+          )}
           <button 
             onClick={() => setQuickSampleModal(true)}
             className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-4 bg-fuchsia-50 text-fuchsia-600 border border-fuchsia-100 rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.2em] hover:bg-fuchsia-600 hover:text-white transition-all shadow-sm active:scale-95 group"
@@ -597,6 +616,22 @@ export default function Commandes() {
               )}
               {isAr ? 'تأكيد وإطلاق العينة السريعة' : 'Confirmer et Lancer l\'Échantillon'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* VIP Atelier Calculator Modal */}
+      {showCalculatorModal && (
+        <div className="fixed inset-0 z-[1100] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2.5rem] max-w-4xl w-full shadow-2xl relative overflow-hidden">
+            <AtelierCalculator
+              isModal={true}
+              onClose={() => setShowCalculatorModal(false)}
+              onProceedToOrder={(data) => {
+                setShowCalculatorModal(false);
+                navigate(`/commandes/manage?modele=${encodeURIComponent(data.modele)}&quantite=${data.quantite}&prix=${data.prix}`);
+              }}
+            />
           </div>
         </div>
       )}

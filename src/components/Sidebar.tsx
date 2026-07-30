@@ -19,7 +19,8 @@ import {
   Store,
   ChevronDown,
   Briefcase,
-  Crown
+  Crown,
+  Calculator
 } from 'lucide-react';
 
 import { User, CompanyProfile, loadPermissions, AppPage, syncCompanyProfile } from '../types';
@@ -283,6 +284,9 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
             {can('commandes') && (
               <>
                 <NavItem to="/commandes" icon={ShoppingCart} label={isAr ? 'الطلبيات' : 'Commandes'} />
+                {currentUser?.role === 'admin' && (
+                  <NavItem to="/atelier-calculator" icon={Calculator} label={isAr ? 'حاسبة أرباح الإنتاج (VIP)' : 'Calculateur Atelier (VIP)'} />
+                )}
                 {can('agenda') && <NavItem to="/agenda" icon={CalendarDays} label={isAr ? 'الأجندة' : 'Agenda'} />}
                 <NavItem to="/commandes/manage" icon={Sparkles} label={isAr ? 'إعداد طلبية (PRO)' : 'Master Setup (PRO)'} pro />
               </>
