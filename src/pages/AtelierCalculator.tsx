@@ -532,6 +532,18 @@ function isSupportRole(e: Employe): boolean {
         {/* Smart Actions Toolbar */}
         <div className="flex items-center gap-2 no-print flex-wrap">
           <button
+            type="button"
+            onClick={() => {
+              setFichePickerMode('direct');
+              setIsFichePickerOpen(true);
+            }}
+            className="px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-2xs border border-indigo-100 active:scale-95 group"
+          >
+            <FileText className="w-3.5 h-3.5 text-indigo-600 group-hover:text-white" />
+            {isAr ? '📋 اختيار من الفيش تكنيك' : '📋 Fiches Tech'}
+          </button>
+
+          <button
             onClick={() => setShowWorkersModal(true)}
             className="px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-2xs border border-indigo-100 active:scale-95"
           >
@@ -830,22 +842,9 @@ function isSupportRole(e: Employe): boolean {
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-[11px] font-bold text-slate-600">
-                    {isAr ? 'نوع البياسة / الموديل' : 'Article / Modèle'}
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFichePickerMode('direct');
-                      setIsFichePickerOpen(true);
-                    }}
-                    className="px-2 py-0.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-lg text-[10px] font-black transition-all flex items-center gap-1 shadow-2xs border border-indigo-200 active:scale-95"
-                  >
-                    <FileText className="w-3 h-3 text-indigo-600 group-hover:text-white" />
-                    {isAr ? '📋 اختيار من الفيش تكنيك' : '📋 Fiche Tech'}
-                  </button>
-                </div>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  {isAr ? 'نوع البياسة / الموديل' : 'Article / Modèle'}
+                </label>
                 <input
                   type="text"
                   value={itemName}
