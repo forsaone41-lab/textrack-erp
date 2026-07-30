@@ -752,36 +752,54 @@ function isAtelierProductionWorker(e: Employe): boolean {
             <div className="p-5 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-2.5 flex-1">
               {allWorkers.map((emp) => {
                 const isSelected = selectedWorkerIds.includes(emp.id);
+                const monthlySalary = emp.salaireMensuel && emp.salaireMensuel > 0 ? emp.salaireMensuel : 3556.80;
+                const hourlyRate = (monthlySalary / 208).toFixed(2);
+                const isDefaultSmig = !emp.salaireMensuel || emp.salaireMensuel <= 0;
+
                 return (
                   <div
                     key={emp.id}
                     onClick={() => toggleWorker(emp.id)}
                     className={`p-3 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${
                       isSelected
-                        ? 'bg-indigo-50/70 border-indigo-300 text-indigo-950 shadow-xs'
+                        ? 'bg-indigo-50/70 border-indigo-300 text-indigo-950 shadow-2xs'
                         : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
                         isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-600'
                       }`}>
                         {emp.prenom[0]}
                       </div>
-                      <div>
-                        <div className="font-black text-xs">
+                      <div className="min-w-0">
+                        <div className="font-black text-xs truncate">
                           {emp.prenom} {emp.nom}
                         </div>
-                        <div className="text-[10px] font-bold text-slate-400">
+                        <div className="text-[10px] font-bold text-slate-400 truncate">
                           {emp.poste || (isAr ? 'عامل إنتاج' : 'Ouvrier')}
                         </div>
                       </div>
                     </div>
 
-                    <div className={`w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 ${
-                      isSelected ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300 bg-white'
-                    }`}>
-                      {isSelected && <Check className="w-3.5 h-3.5" />}
+                    <div className="flex items-center gap-2.5 shrink-0">
+                      <div className="text-right">
+                        <div className="text-[11px] font-black text-emerald-600 flex items-center justify-end gap-1">
+                          <span>{hourlyRate} DH/h</span>
+                          {isDefaultSmig && (
+                            <span className="text-[8px] px-1 py-0.2 bg-amber-100 text-amber-800 rounded font-black">SMIG</span>
+                          )}
+                        </div>
+                        <div className="text-[9px] font-bold text-slate-400">
+                          {Math.round(monthlySalary).toLocaleString()} DH/{isAr ? 'شهر' : 'mois'}
+                        </div>
+                      </div>
+
+                      <div className={`w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 ${
+                        isSelected ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300 bg-white'
+                      }`}>
+                        {isSelected && <Check className="w-3.5 h-3.5" />}
+                      </div>
                     </div>
                   </div>
                 );
