@@ -23,8 +23,10 @@ const DEFAULT_WORKERS: Employe[] = [
   { id: 'emp-6', nom: 'المنصوري', prenom: 'سناء', poste: 'خياطة (Confection)', type: 'atelier', telephone: '0600000006', email: '', actif: true },
   { id: 'emp-7', nom: 'الهلالي', prenom: 'كريم', poste: 'مساعد إنتاج', type: 'atelier', telephone: '0600000007', email: '', actif: true },
   { id: 'emp-8', nom: 'الشاوي', prenom: 'مريم', poste: 'كّي وتغليف (Repassage)', type: 'atelier', telephone: '0600000008', email: '', actif: true },
-  { id: 'emp-9', nom: 'المرابط', prenom: 'عمر', poste: 'خياط (Confection)', type: 'atelier', telephone: '0600000009', email: '', actif: true },
-  { id: 'emp-10', nom: 'البرنوصي', prenom: 'هند', poste: 'خياطة (Confection)', type: 'atelier', telephone: '0600000010', email: '', actif: true }
+  { id: 'emp-9', nom: 'المرابط', prenom: 'عمر', poste: 'خياط (Confection)', type: 'atelier', telephone: '0600000009', email: '', actif: true, salaireMensuel: 3900 },
+  { id: 'emp-10', nom: 'البرنوصي', prenom: 'هند', poste: 'خياطة (Confection)', type: 'atelier', telephone: '0600000010', email: '', actif: true, salaireMensuel: 3700 },
+  { id: 'emp-11', nom: 'الريوس', prenom: 'فاطمة الزهراء', poste: 'Responsable RH', type: 'atelier', telephone: '0600000011', email: '', actif: true, salaireMensuel: 6500 },
+  { id: 'emp-12', nom: 'أبو الفاتح', prenom: 'محمد', poste: 'Modéliste', type: 'atelier', telephone: '0600000012', email: '', actif: true, salaireMensuel: 7000 }
 ];
 
 interface AiPreset {
@@ -84,13 +86,13 @@ export default function AtelierCalculator({
     }
   }, []);
 
-// Filter ONLY employees working INSIDE the atelier (production workers)
-function isAtelierProductionWorker(e: Employe): boolean {
+// Filter employees working INSIDE the company (Production MOD + Support/Admin MOI)
+function isAtelierEmployee(e: Employe): boolean {
   if (!e.actif) return false;
   if (e.type === 'sous_traitance') return false;
 
   const poste = (e.poste || '').toLowerCase();
-  // Exclude external service providers (Prestataire, Impression, Broderie, DTF, Sérigraphie, etc.)
+  // Exclude ONLY external subcontractors & printing/embroidery providers (Prestataire, Impression, Broderie, DTF, etc.)
   if (
     poste.includes('prestataire') ||
     poste.includes('impression') ||
@@ -103,30 +105,34 @@ function isAtelierProductionWorker(e: Employe): boolean {
     return false;
   }
 
-  // Exclude non-production administrative / design roles (RH, Modéliste, Commercial, Comptable, Admin)
-  if (
+  return true;
+}
+
+// Check if role is Indirect Labor / Overhead Support (RH, Modéliste, Admin, etc.)
+function isSupportRole(e: Employe): boolean {
+  const poste = (e.poste || '').toLowerCase();
+  return (
     poste.includes('rh') ||
     poste.includes('ressources humaines') ||
     poste.includes('modéliste') ||
     poste.includes('modeliste') ||
     poste.includes('commercial') ||
     poste.includes('comptable') ||
-    poste.includes('admin')
-  ) {
-    return false;
-  }
-
-  return true;
+    poste.includes('admin') ||
+    poste.includes('directeur') ||
+    poste.includes('responsable')
+  );
 }
 
-  // Real Atelier Workers Connection (Smart Feature 1 - Filtered for INSIDE ATELIER ONLY)
+  // Real Atelier Workers Connection (Smart Feature 1 - All Internal Staff MOD + MOI)
   const [allWorkers, setAllWorkers] = useState<Employe[]>(DEFAULT_WORKERS);
   const [selectedWorkerIds, setSelectedWorkerIds] = useState<string[]>(DEFAULT_WORKERS.map(w => w.id));
   const [showWorkersModal, setShowWorkersModal] = useState(false);
+  const [workerTab, setWorkerTab] = useState<'all' | 'mod' | 'moi'>('all');
 
   useEffect(() => {
     loadData<Employe>('employes').then((data: Employe[]) => {
-      const activeAtelier = (data || []).filter(isAtelierProductionWorker);
+      const activeAtelier = (data || []).filter(isAtelierEmployee);
       if (activeAtelier.length > 0) {
         setAllWorkers(activeAtelier);
         setSelectedWorkerIds(activeAtelier.map((e: Employe) => e.id));
@@ -717,20 +723,51 @@ function isAtelierProductionWorker(e: Employe): boolean {
               </button>
             </div>
 
-            {/* Filter Notice Banner */}
-            <div className="px-5 py-2 bg-emerald-500/10 border-b border-emerald-500/20 text-emerald-800 text-[11px] font-bold flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-              <span>
-                {isAr 
-                  ? '✨ القائمة تعرض حصرياً عمال الإنتاج داخل الأتوليي (تم استبعاد مزودي الخدمات الخارجية والإدارة)' 
-                  : '✨ Liste filtrée : uniquement les ouvriers de production en atelier (sans prestataires ni admin)'}
-              </span>
+            {/* Filter Notice Banner & Tabs */}
+            <div className="px-5 py-2.5 bg-indigo-500/10 border-b border-indigo-500/20 text-indigo-950 text-[11px] font-bold flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-indigo-600 shrink-0" />
+                <span>
+                  {isAr 
+                    ? '✨ قائمة موظفي الأتوليي والإدارة (MOD + MOI). تم استبعاد مزودي الخدمات الخارجية.' 
+                    : '✨ Liste interne complète (MOD + MOI Admin/RH), sans prestataires'}
+                </span>
+              </div>
+              <div className="flex items-center gap-1 bg-white/80 p-0.5 rounded-lg border border-indigo-100 self-end sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => setWorkerTab('all')}
+                  className={`px-2 py-0.5 rounded text-[9px] font-black transition-all ${
+                    workerTab === 'all' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  {isAr ? 'الكل' : 'Tous'} ({allWorkers.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setWorkerTab('mod')}
+                  className={`px-2 py-0.5 rounded text-[9px] font-black transition-all ${
+                    workerTab === 'mod' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  ✂️ {isAr ? 'إنتاج (MOD)' : 'MOD'} ({allWorkers.filter(w => !isSupportRole(w)).length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setWorkerTab('moi')}
+                  className={`px-2 py-0.5 rounded text-[9px] font-black transition-all ${
+                    workerTab === 'moi' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  👔 {isAr ? 'إدارة (MOI)' : 'Admin/RH'} ({allWorkers.filter(isSupportRole).length})
+                </button>
+              </div>
             </div>
 
             {/* Quick action buttons */}
             <div className="px-5 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
               <span className="text-xs font-bold text-slate-600">
-                {isAr ? `المحددون: ${selectedWorkerIds.length} من أصل ${allWorkers.length} عامل` : `Sélectionnés: ${selectedWorkerIds.length} / ${allWorkers.length}`}
+                {isAr ? `المحددون: ${selectedWorkerIds.length} من أصل ${allWorkers.length} موظف` : `Sélectionnés: ${selectedWorkerIds.length} / ${allWorkers.length}`}
               </span>
               <div className="flex items-center gap-2">
                 <button
@@ -750,60 +787,76 @@ function isAtelierProductionWorker(e: Employe): boolean {
 
             {/* Workers Grid */}
             <div className="p-5 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-2.5 flex-1">
-              {allWorkers.map((emp) => {
-                const isSelected = selectedWorkerIds.includes(emp.id);
-                const monthlySalary = emp.salaireMensuel && emp.salaireMensuel > 0 ? emp.salaireMensuel : 3556.80;
-                const hourlyRate = (monthlySalary / 208).toFixed(2);
-                const isDefaultSmig = !emp.salaireMensuel || emp.salaireMensuel <= 0;
+              {allWorkers
+                .filter((emp) => {
+                  if (workerTab === 'mod') return !isSupportRole(emp);
+                  if (workerTab === 'moi') return isSupportRole(emp);
+                  return true;
+                })
+                .map((emp) => {
+                  const isSelected = selectedWorkerIds.includes(emp.id);
+                  const monthlySalary = emp.salaireMensuel && emp.salaireMensuel > 0 ? emp.salaireMensuel : 3556.80;
+                  const hourlyRate = (monthlySalary / 208).toFixed(2);
+                  const isDefaultSmig = !emp.salaireMensuel || emp.salaireMensuel <= 0;
+                  const isSupport = isSupportRole(emp);
 
-                return (
-                  <div
-                    key={emp.id}
-                    onClick={() => toggleWorker(emp.id)}
-                    className={`p-3 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${
-                      isSelected
-                        ? 'bg-indigo-50/70 border-indigo-300 text-indigo-950 shadow-2xs'
-                        : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
-                        isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-600'
-                      }`}>
-                        {emp.prenom[0]}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="font-black text-xs truncate">
-                          {emp.prenom} {emp.nom}
+                  return (
+                    <div
+                      key={emp.id}
+                      onClick={() => toggleWorker(emp.id)}
+                      className={`p-3 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${
+                        isSelected
+                          ? 'bg-indigo-50/70 border-indigo-300 text-indigo-950 shadow-2xs'
+                          : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
+                          isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-600'
+                        }`}>
+                          {emp.prenom[0]}
                         </div>
-                        <div className="text-[10px] font-bold text-slate-400 truncate">
-                          {emp.poste || (isAr ? 'عامل إنتاج' : 'Ouvrier')}
+                        <div className="min-w-0">
+                          <div className="font-black text-xs truncate">
+                            {emp.prenom} {emp.nom}
+                          </div>
+                          <div className="text-[10px] font-bold text-slate-400 truncate flex items-center gap-1.5 mt-0.5">
+                            <span>{emp.poste || (isAr ? 'عامل إنتاج' : 'Ouvrier')}</span>
+                            {isSupport ? (
+                              <span className="px-1.5 py-0.2 bg-purple-100 text-purple-800 rounded text-[8px] font-black shrink-0">
+                                {isAr ? '👔 إدارة/دعم MOI' : '👔 Admin/MOI'}
+                              </span>
+                            ) : (
+                              <span className="px-1.5 py-0.2 bg-blue-100 text-blue-800 rounded text-[8px] font-black shrink-0">
+                                {isAr ? '✂️ إنتاج MOD' : '✂️ MOD'}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2.5 shrink-0">
+                        <div className="text-right">
+                          <div className="text-[11px] font-black text-emerald-600 flex items-center justify-end gap-1">
+                            <span>{hourlyRate} DH/h</span>
+                            {isDefaultSmig && (
+                              <span className="text-[8px] px-1 py-0.2 bg-amber-100 text-amber-800 rounded font-black">SMIG</span>
+                            )}
+                          </div>
+                          <div className="text-[9px] font-bold text-slate-400">
+                            {Math.round(monthlySalary).toLocaleString()} DH/{isAr ? 'شهر' : 'mois'}
+                          </div>
+                        </div>
+
+                        <div className={`w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 ${
+                          isSelected ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300 bg-white'
+                        }`}>
+                          {isSelected && <Check className="w-3.5 h-3.5" />}
                         </div>
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-2.5 shrink-0">
-                      <div className="text-right">
-                        <div className="text-[11px] font-black text-emerald-600 flex items-center justify-end gap-1">
-                          <span>{hourlyRate} DH/h</span>
-                          {isDefaultSmig && (
-                            <span className="text-[8px] px-1 py-0.2 bg-amber-100 text-amber-800 rounded font-black">SMIG</span>
-                          )}
-                        </div>
-                        <div className="text-[9px] font-bold text-slate-400">
-                          {Math.round(monthlySalary).toLocaleString()} DH/{isAr ? 'شهر' : 'mois'}
-                        </div>
-                      </div>
-
-                      <div className={`w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 ${
-                        isSelected ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300 bg-white'
-                      }`}>
-                        {isSelected && <Check className="w-3.5 h-3.5" />}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
 
             {/* Footer */}
