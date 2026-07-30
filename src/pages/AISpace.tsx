@@ -114,7 +114,7 @@ function getFabricInfo(fabricName: string = '') {
 }
 
 export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, onClose?: () => void }) {
-  const { isAr } = useLang();
+  const { isAr, toggle } = useLang();
   const company = loadCompanyProfile();
   const [pdfChatText, setPdfChatText] = useState('');
   const [aiLangOverride, setAiLangOverride] = useState<'ar' | 'fr' | null>(null);
@@ -716,17 +716,70 @@ RÃ©ponds UNIQUEMENT au format JSON sans texte additionnel :
         setActiveTab('fiche');
         setAnalyzing(false);
 
-        // Build rich chat message
-        let chatMsg = isAr ? 'âœ… ØªÙ… ØªØ­Ù„ÙŠÙ„ Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„ Ø¨Ù†Ø¬Ø§Ø­ Ø¨Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„Ø§ØµØ·Ù†Ø§Ø¹ÙŠ!\n\n' : 'âœ… Analyse IA terminÃ©e !\n\n';
-        if (result.pieces.length > 0) {
-          result.pieces.forEach((p: any, i: number) => {
-            chatMsg += `ðŸ“¦ ${i + 1}. ${p.name}\n`;
-            chatMsg += `   ðŸ§µ ${isAr ? 'Ø§Ù„Ø«ÙˆØ¨' : 'Tissu'}: ${p.consumption}\n`;
-            chatMsg += `   ðŸ“ ${isAr ? 'Ø§Ù„ÙÙŠØª' : 'Fit'}: ${p.fit}\n`;
-            chatMsg += `   ðŸ’° ${isAr ? 'Ø§Ù„ØªÙƒÙ„ÙØ©' : 'CoÃ»t'}: ${p.costEstimate}\n\n`;
-          });
+        // Build rich chat message (mktoba mzn martba)
+        const suggestedFabricName = result.fabricSuggested || (result.pieces?.[0]?.fabricSuggested) || '';
+        const fabInfo = getFabricInfo(suggestedFabricName);
+
+        let chatMsg = '';
+        if (isAr) {
+          chatMsg = `✅ تقرير التحليل التقني والتسعير للموديل (BEYA EXPERT)\n`;
+          chatMsg += `────────────────────────────\n\n`;
+          chatMsg += `🎯 التصنيف العام: [ ${result.category || 'موديل'} ] | درجة الصعوبة: [ ${result.complexity || 'متوسطة'} ]\n\n`;
+          chatMsg += `🧵 الثوب الموصى به للموديل:\n`;
+          chatMsg += `   • نوع الثوب: ${fabInfo.arName}\n`;
+          chatMsg += `   • ثمن الجملة في المغرب: ${fabInfo.pricePerMeterMAD}\n`;
+          chatMsg += `   • أماكن الشراء المعتمدة: ${fabInfo.markets}\n\n`;
+          chatMsg += `💰 التكلفة التقديرية للبياسة (Prix de revient):\n`;
+          chatMsg += `   • الإجمالي المقترح: ${result.costEstimate || '150 - 250 MAD'}\n`;
+          chatMsg += `   • (يشمل ثمن القماش + الخياطة واليد العاملة بالورشة)\n\n`;
+          chatMsg += `📏 استهلاك الثوب والقصة (المتراج):\n`;
+          chatMsg += `   • ${result.consumption || 'عرض 1.50م: 1.80m | عرض 1.80م: 1.50m'}\n\n`;
+          chatMsg += `📦 قائمة قطع الموديل ومكوناتها:\n`;
+          if (result.pieces && result.pieces.length > 0) {
+            result.pieces.forEach((p: any, idx: number) => {
+              chatMsg += `   ${idx + 1}. ${p.name} (الفيت: ${p.fit || 'سليم/عادي'}) — التكلفة: ${p.costEstimate || '—'}\n`;
+              if (p.components && p.components.length > 0) {
+                chatMsg += `      ▪️ أجزاء الباترون: ${p.components.join('، ')}\n`;
+              }
+            });
+          } else {
+            chatMsg += `   • قطعة واحدة متكاملة للموديل\n`;
+          }
+          chatMsg += `\n✂️ توجيهات الورشة (الفصّال والخيّاط):\n`;
+          chatMsg += `   • يُنصح بضبط جدول المقاسات S-XXL في التبويب المجاور قبل بدء التفصيل.\n`;
+          chatMsg += `   • ميزة الثوب: ${fabInfo.pros}\n`;
+          chatMsg += `────────────────────────────\n`;
+          chatMsg += `⚡ يمكنك الآن استخدام أزرار التوزيع الفوري أدناه لإرسال التقرير لـ Devis PRO، الورشة، أو المشتريات!`;
+        } else {
+          chatMsg = `✅ RAPPORT D'ANALYSE TECHNIQUE & SOURCING (BEYA EXPERT)\n`;
+          chatMsg += `────────────────────────────\n\n`;
+          chatMsg += `🎯 Catégorie : [ ${result.category || 'Modèle'} ] | Complexité : [ ${result.complexity || 'Moyenne'} ]\n\n`;
+          chatMsg += `🧵 Tissu recommandé & Sourcing Maroc :\n`;
+          chatMsg += `   • Type de tissu : ${fabInfo.frName}\n`;
+          chatMsg += `   • Prix de gros estimé : ${fabInfo.pricePerMeterMAD}\n`;
+          chatMsg += `   • Marchés de référence : ${fabInfo.markets}\n\n`;
+          chatMsg += `💰 Estimation du coût unitaire (Prix de revient) :\n`;
+          chatMsg += `   • Coût total : ${result.costEstimate || '150 - 250 MAD'}\n`;
+          chatMsg += `   • (Inclus : tissu + façon atelier de confection)\n\n`;
+          chatMsg += `📏 Consommation de tissu par laize :\n`;
+          chatMsg += `   • ${result.consumption || 'Laize 1.50m: 1.80m | Laize 1.80m: 1.50m'}\n\n`;
+          chatMsg += `📦 Composition & Pièces du modèle :\n`;
+          if (result.pieces && result.pieces.length > 0) {
+            result.pieces.forEach((p: any, idx: number) => {
+              chatMsg += `   ${idx + 1}. ${p.name} (Fit: ${p.fit || 'Regular'}) — Coût: ${p.costEstimate || '—'}\n`;
+              if (p.components && p.components.length > 0) {
+                chatMsg += `      ▪️ Patronage : ${p.components.join(', ')}\n`;
+              }
+            });
+          } else {
+            chatMsg += `   • Pièce complète et intégrée\n`;
+          }
+          chatMsg += `\n✂️ Conseils de confection Atelier :\n`;
+          chatMsg += `   • Vérifiez le tableau des mesures S-XXL dans l'onglet voisin avant la coupe.\n`;
+          chatMsg += `   • Propriété du tissu : ${fabInfo.pros}\n`;
+          chatMsg += `────────────────────────────\n`;
+          chatMsg += `⚡ Utilisez les boutons d'export rapide en bas pour envoyer vers Devis PRO, l'Atelier ou les Achats !`;
         }
-        chatMsg += isAr ? 'â¬‡ï¸ Ø´ÙˆÙ Ø§Ù„ØªÙØ§ØµÙŠÙ„ Ø§Ù„ÙƒØ§Ù…Ù„Ø© ÙÙŠ Ø§Ù„Ø£Ø³ÙÙ„ â€” ÙŠÙ…ÙƒÙ†Ùƒ ØªØ¨Ø¯ÙŠÙ„ Ø¨ÙŠÙ† Ø§Ù„Ù‚Ø·Ø¹!' : 'â¬‡ï¸ Voir les dÃ©tails complets ci-dessous.';
         setChat(prev => [...prev, { role: 'ai', text: chatMsg }]);
 
       } catch (parseErr) {
@@ -1105,7 +1158,11 @@ RÃ©ponds UNIQUEMENT au format JSON sans texte additionnel :
                   if (analysisResult) {
                     sendToDevis(analysisResult.rawAnalysis || JSON.stringify(analysisResult));
                   } else {
-                    alert(isAr ? 'يرجى تحليل موديل أولاً!' : 'Veuillez analyser un modèle d\'abord !');
+                    setCustomAlert({
+                      title: isAr ? 'تنبيه' : 'Attention',
+                      message: isAr ? 'يرجى تحليل موديل أولاً من الصورة!' : 'Veuillez analyser un modèle d\'abord !',
+                      isError: true
+                    });
                   }
                 }}
                 className="flex items-center justify-center gap-2 px-3 py-2.5 bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-200/60 text-emerald-700 rounded-xl font-black text-xs transition-all shadow-sm group"
@@ -1119,7 +1176,11 @@ RÃ©ponds UNIQUEMENT au format JSON sans texte additionnel :
                   if (analysisResult) {
                     exportToFicheTechnique();
                   } else {
-                    alert(isAr ? 'يرجى تحليل موديل أولاً!' : 'Veuillez analyser un modèle d\'abord !');
+                    setCustomAlert({
+                      title: isAr ? 'تنبيه' : 'Attention',
+                      message: isAr ? 'يرجى تحليل موديل أولاً من الصورة!' : 'Veuillez analyser un modèle d\'abord !',
+                      isError: true
+                    });
                   }
                 }}
                 className="flex items-center justify-center gap-2 px-3 py-2.5 bg-indigo-50 hover:bg-indigo-100/80 border border-indigo-200/60 text-indigo-700 rounded-xl font-black text-xs transition-all shadow-sm group"
@@ -1132,16 +1193,27 @@ RÃ©ponds UNIQUEMENT au format JSON sans texte additionnel :
                 onClick={() => {
                   if (analysisResult) {
                     const atelierData = {
-                      modelName: analysisResult.category || 'Moudel',
+                      modelName: analysisResult.category || 'Modèle Atelier',
                       tissuMetrage: analysisResult.consumption || '2.0m',
                       complexity: analysisResult.complexity || 'Moyenne',
                       prixEstimation: analysisResult.costEstimate || '150 MAD',
+                      pieces: analysisResult.pieces || [],
                       timestamp: Date.now()
                     };
                     localStorage.setItem('beya_atelier_import', JSON.stringify(atelierData));
-                    alert(isAr ? '✅ تم إرسال البيانات إلى الورشة (Atelier)' : '✅ Envoyé à l\'Atelier');
+                    setCustomAlert({
+                      title: isAr ? "تم إرسال الموديل لورشة الإنتاج ✂️" : "Transmis à l'Atelier ✂️",
+                      message: isAr 
+                        ? "تم تسجيل بيانات القص والخياطة (المتراج، الصعوبة، وقطع الموديل) لعمال الورشة. هل تريد فتح حاسبة الورشة الآن؟"
+                        : "Instructions de coupe et confection transmises à l'Atelier. Ouvrir le calculateur atelier ?",
+                      onConfirm: () => navigate('/atelier-calculator')
+                    });
                   } else {
-                    alert(isAr ? 'يرجى تحليل موديل أولاً!' : 'Veuillez analyser un modèle d\'abord !');
+                    setCustomAlert({
+                      title: isAr ? 'تنبيه' : 'Attention',
+                      message: isAr ? 'يرجى تحليل موديل أولاً من الصورة!' : 'Veuillez analyser un modèle d\'abord !',
+                      isError: true
+                    });
                   }
                 }}
                 className="flex items-center justify-center gap-2 px-3 py-2.5 bg-amber-50 hover:bg-amber-100/80 border border-amber-200/60 text-amber-800 rounded-xl font-black text-xs transition-all shadow-sm group"
@@ -1154,14 +1226,25 @@ RÃ©ponds UNIQUEMENT au format JSON sans texte additionnel :
                 onClick={() => {
                   if (analysisResult) {
                     const achData = {
-                      tissuSuggested: currentFabricSuggested || analysisResult.fabricSuggested || '',
+                      tissuSuggested: analysisResult.fabricSuggested || '',
                       consumption: analysisResult.consumption || '',
+                      modelName: analysisResult.category || '',
                       timestamp: Date.now()
                     };
                     localStorage.setItem('beya_achats_import', JSON.stringify(achData));
-                    alert(isAr ? '✅ تم إرسال معلومات الثوب إلى المشتريات (Achats)' : '✅ Envoyé aux Achats');
+                    setCustomAlert({
+                      title: isAr ? "تم إرسال الطلب لقسم المشتريات 📦" : "Transmis aux Achats 📦",
+                      message: isAr 
+                        ? "تم توجيه توصية القماش المطلوب وسعر الجملة (درب عمر / القريعة) والكمية لمسؤول الشراء. هل تريد الانتقال للمشتريات؟"
+                        : "Demande de tissu et prix de gros Maroc transmise aux achats. Ouvrir la page Achats ?",
+                      onConfirm: () => navigate('/achats')
+                    });
                   } else {
-                    alert(isAr ? 'يرجى تحليل موديل أولاً!' : 'Veuillez analyser un modèle d\'abord !');
+                    setCustomAlert({
+                      title: isAr ? 'تنبيه' : 'Attention',
+                      message: isAr ? 'يرجى تحليل موديل أولاً من الصورة!' : 'Veuillez analyser un modèle d\'abord !',
+                      isError: true
+                    });
                   }
                 }}
                 className="flex items-center justify-center gap-2 px-3 py-2.5 bg-purple-50 hover:bg-purple-100/80 border border-purple-200/60 text-purple-700 rounded-xl font-black text-xs transition-all shadow-sm group"
@@ -1212,6 +1295,15 @@ RÃ©ponds UNIQUEMENT au format JSON sans texte additionnel :
               >
                 <MessageSquare className="w-3.5 h-3.5" />
                 <span>{isAr ? '💬 المستشار الذكي' : 'Chat IA'}</span>
+              </button>
+
+              <button
+                onClick={toggle}
+                className="px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 border border-slate-200/80 transition-all flex items-center gap-1.5 shadow-sm"
+                title={isAr ? "التبديل إلى الفرنسية" : "Basculer en Arabe (Darija)"}
+              >
+                <span className="font-bold">🌐</span>
+                <span>{isAr ? 'Français' : 'الدارجة 🇲🇦'}</span>
               </button>
             </div>
 
@@ -1427,6 +1519,73 @@ RÃ©ponds UNIQUEMENT au format JSON sans texte additionnel :
           )}
         </div>
       </div>
+
+      {/* DEMANDES PROSPECTS MODAL */}
+      {showLeadsModal && (
+        <div className="fixed inset-0 z-[180] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setShowLeadsModal(false)}>
+          <div className="bg-white rounded-3xl border border-slate-200/80 w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+            <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+                  <Package className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black tracking-wide">{isAr ? 'طلبات الزبائن والمشاريع (DEMANDES PROSPECTS)' : 'Demandes & Prospects'}</h3>
+                  <p className="text-[10px] text-slate-400 font-bold">{isAr ? 'اختر موديل من طلبات العملاء لتحليله فوراً' : 'Sélectionnez un modèle client pour l\'analyser'}</p>
+                </div>
+              </div>
+              <button onClick={() => setShowLeadsModal(false)} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
+                <X className="w-5 h-5 text-slate-400 hover:text-white" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto flex-1 space-y-3">
+              {leads && leads.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {leads.map((l, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => selectLeadModel(l)}
+                      className="p-3 bg-slate-50 hover:bg-indigo-50/50 border border-slate-200 hover:border-indigo-300 rounded-2xl transition-all cursor-pointer flex items-center gap-3.5 group shadow-sm hover:shadow-md"
+                    >
+                      <img
+                        src={l.photo}
+                        alt={l.name}
+                        className="w-16 h-16 rounded-xl object-cover border border-slate-200 flex-shrink-0 group-hover:scale-105 transition-transform"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <span className="font-black text-xs text-slate-900 truncate">{l.name}</span>
+                          <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded-md">{l.type}</span>
+                        </div>
+                        <p className="text-[11px] font-medium text-slate-500 truncate mb-1">{l.details || (isAr ? 'طلب خياطة وتفصيل' : 'Demande confection')}</p>
+                        <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold">
+                          <span>{l.phone}</span>
+                          <span className="text-indigo-600 font-black group-hover:underline">{isAr ? 'تحليل الموديل →' : 'Analyser →'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-12 text-center text-slate-400">
+                  <Package className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                  <p className="text-xs font-bold">{isAr ? 'لا توجد طلبات تحتوي على صور حالياً' : 'Aucune demande avec photo disponible.'}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-200/80 flex justify-end">
+              <button
+                onClick={() => setShowLeadsModal(false)}
+                className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-black text-xs transition-all"
+              >
+                {isAr ? 'إغلاق' : 'Fermer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Full image overlay modal */}
       {showFullImage && image && (
