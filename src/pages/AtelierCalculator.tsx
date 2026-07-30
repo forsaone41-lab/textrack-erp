@@ -3,15 +3,65 @@ import { useLang } from '../contexts/LangContext';
 import { 
   Calculator, Printer, CheckCircle2, AlertTriangle, 
   Clock, Package, Users, Scissors, ShoppingCart, ArrowLeft,
-  DollarSign, Sparkles
+  DollarSign, Sparkles, Check, X, Bot, Wand2, RefreshCw, UserCheck
 } from 'lucide-react';
 import { useNavigate, Navigate } from 'react-router-dom';
+import { loadData, Employe } from '../types';
 
 interface AtelierCalculatorProps {
   isModal?: boolean;
   onClose?: () => void;
   onProceedToOrder?: (data: { modele: string; quantite: number; prix: number }) => void;
 }
+
+const DEFAULT_WORKERS: Employe[] = [
+  { id: 'emp-1', nom: 'العلوي', prenom: 'أحمد', poste: 'خياط رئيسي (Confection)', type: 'atelier', telephone: '0600000001', email: '', actif: true },
+  { id: 'emp-2', nom: 'بنعلي', prenom: 'فاطمة', poste: 'فصالة وباترون (Coupe)', type: 'atelier', telephone: '0600000002', email: '', actif: true },
+  { id: 'emp-3', nom: 'التازي', prenom: 'ياسين', poste: 'ماكينة Overlock', type: 'atelier', telephone: '0600000003', email: '', actif: true },
+  { id: 'emp-4', nom: 'العزوزي', prenom: 'خديجة', poste: 'فني تشطيب (Finition)', type: 'atelier', telephone: '0600000004', email: '', actif: true },
+  { id: 'emp-5', nom: 'صابر', prenom: 'رشيد', poste: 'مراقب جودة (Contrôle)', type: 'atelier', telephone: '0600000005', email: '', actif: true },
+  { id: 'emp-6', nom: 'المنصوري', prenom: 'سناء', poste: 'خياطة (Confection)', type: 'atelier', telephone: '0600000006', email: '', actif: true },
+  { id: 'emp-7', nom: 'الهلالي', prenom: 'كريم', poste: 'مساعد إنتاج', type: 'atelier', telephone: '0600000007', email: '', actif: true },
+  { id: 'emp-8', nom: 'الشاوي', prenom: 'مريم', poste: 'كّي وتغليف (Repassage)', type: 'atelier', telephone: '0600000008', email: '', actif: true },
+  { id: 'emp-9', nom: 'المرابط', prenom: 'عمر', poste: 'خياط (Confection)', type: 'atelier', telephone: '0600000009', email: '', actif: true },
+  { id: 'emp-10', nom: 'البرنوصي', prenom: 'هند', poste: 'خياطة (Confection)', type: 'atelier', telephone: '0600000010', email: '', actif: true }
+];
+
+interface AiPreset {
+  title: string;
+  desc: string;
+  aiText: string;
+  recommendedPrice: number;
+  materialPerPiece: number;
+  recommendedDays: number;
+}
+
+const AI_PRESETS: AiPreset[] = [
+  {
+    title: '👕 Ensemble تيشرت وشورت صيفي مع زخرفة (Galon)',
+    desc: 'تيشرت وشورت صيفي بشريط مزخرف (bande/galon) ستايل شبابي كلاس',
+    aiText: 'تبارك الله عليك، هاد Ensemble تيشرت وشورت صيفي مطلوب بزاف هاد الأيام في السوق المغربية. بفضل ديك (Class) وستايل شبابي و كلاص اللي عاطياه (bande/galon) السلسلة المزخرفة لمسة زوينة. الكميات اللي غتحتاج وتكلفة الإنتاج بالتفصيل الممل مناسبة جداً للطلبيات المتوسطة والكبيرة.',
+    recommendedPrice: 45.00,
+    materialPerPiece: 18.50,
+    recommendedDays: 2
+  },
+  {
+    title: '👗 عباية مغربية كريب فاخرة مع تطريز سفيفة',
+    desc: 'عباية كريب جودة عالية مع سفيفة وعقاد في الصدر والأكمام',
+    aiText: 'برافو، العباية المغربية بالكريب الفاخر والسفيفة هي الأكثر طلباً طول السنة. التكلفة ديال الثمن والقماش كتعطي هامش ربح ممتاز جداً للأتوليي، خصوصاً مع دقة الخياطة المغربية.',
+    recommendedPrice: 120.00,
+    materialPerPiece: 55.00,
+    recommendedDays: 3
+  },
+  {
+    title: '🎽 هودي وبنطلون رياضي Over-size (Cotton Fleece)',
+    desc: 'طقم رياضي شتوي/خريفي قطن ثقيل بقصة واسعة Over-size',
+    aiText: 'ستايل Over-size الرياضي عندو إقبال كبير من الشباب والبراندات المحلية. استهلاك القماش كيكون شوية زايد (حوالي 1.8 متر للطقم)، ولكن سرعة التجميع في الماكينة كتعوض الوقت.',
+    recommendedPrice: 85.00,
+    materialPerPiece: 38.00,
+    recommendedDays: 2
+  }
+];
 
 export default function AtelierCalculator({
   isModal = false,
@@ -34,6 +84,26 @@ export default function AtelierCalculator({
     }
   }, []);
 
+  // Real Atelier Workers Connection (Smart Feature 1)
+  const [allWorkers, setAllWorkers] = useState<Employe[]>(DEFAULT_WORKERS);
+  const [selectedWorkerIds, setSelectedWorkerIds] = useState<string[]>(DEFAULT_WORKERS.map(w => w.id));
+  const [showWorkersModal, setShowWorkersModal] = useState(false);
+
+  useEffect(() => {
+    loadData<Employe>('employes').then((data: Employe[]) => {
+      const activeAtelier = (data || []).filter((e: Employe) => e.actif);
+      if (activeAtelier.length > 0) {
+        setAllWorkers(activeAtelier);
+        setSelectedWorkerIds(activeAtelier.map((e: Employe) => e.id));
+        setWorkers(activeAtelier.length);
+      } else {
+        setAllWorkers(DEFAULT_WORKERS);
+        setSelectedWorkerIds(DEFAULT_WORKERS.map(e => e.id));
+        setWorkers(DEFAULT_WORKERS.length);
+      }
+    }).catch(() => {});
+  }, []);
+
   // Form State
   const [itemName, setItemName] = useState('SAK');
   const [quantity, setQuantity] = useState(1000);
@@ -47,6 +117,13 @@ export default function AtelierCalculator({
   const [materials, setMaterials] = useState(300);
   const [totalMachines, setTotalMachines] = useState(7);
   const [monthlyOther, setMonthlyOther] = useState(3000);
+
+  // AI Cost Estimator Modal (Smart Feature 2)
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [selectedAiPreset, setSelectedAiPreset] = useState<AiPreset>(AI_PRESETS[0]);
+  const [aiCustomText, setAiCustomText] = useState('');
+  const [isAiAnalyzing, setIsAiAnalyzing] = useState(false);
+  const [aiAnalysisDone, setAiAnalysisDone] = useState(true);
 
   if (!isAdmin) {
     if (isModal) {
@@ -101,6 +178,35 @@ export default function AtelierCalculator({
 
   const resultStatus = difference > 0 ? 'profit' : difference < 0 ? 'loss' : 'neutral';
 
+  // Toggle worker selection
+  const toggleWorker = (id: string) => {
+    setSelectedWorkerIds(prev => {
+      const next = prev.includes(id) ? prev.filter(wId => wId !== id) : [...prev, id];
+      setWorkers(Math.max(1, next.length));
+      return next;
+    });
+  };
+
+  const selectAllWorkers = () => {
+    const allIds = allWorkers.map(w => w.id);
+    setSelectedWorkerIds(allIds);
+    setWorkers(allIds.length);
+  };
+
+  const deselectAllWorkers = () => {
+    setSelectedWorkerIds([]);
+    setWorkers(1);
+  };
+
+  // Apply AI estimation values to calculator
+  const applyAiEstimation = (preset: AiPreset) => {
+    setItemName(preset.title.replace(/^[^\s]+\s+/, ''));
+    setPricePerPiece(preset.recommendedPrice);
+    setMaterials(Math.round(preset.materialPerPiece * qty));
+    setDays(preset.recommendedDays);
+    setShowAiModal(false);
+  };
+
   const handleCreateCommand = () => {
     if (onProceedToOrder) {
       onProceedToOrder({
@@ -145,13 +251,13 @@ export default function AtelierCalculator({
         }
       `}</style>
 
-      {/* COMPACT TOP HEADER */}
-      <div className="flex items-center justify-between bg-white px-5 py-3 rounded-2xl border border-slate-100 shadow-sm print-border">
+      {/* COMPACT TOP HEADER WITH SMART ACTIONS (QDIA DKYA) */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between bg-white px-5 py-3 rounded-2xl border border-slate-100 shadow-sm print-border gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-emerald-200">
+          <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-emerald-200 shrink-0">
             <Calculator className="w-5 h-5" />
           </div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 flex-wrap">
             <h1 className="text-lg font-black text-slate-900 tracking-tight">
               {isAr ? 'حاسبة أرباح وتكلفة الإنتاج' : 'Calculateur de Rentabilité Atelier'}
             </h1>
@@ -162,14 +268,32 @@ export default function AtelierCalculator({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 no-print">
+        {/* Smart Actions Toolbar */}
+        <div className="flex items-center gap-2 no-print flex-wrap">
+          <button
+            onClick={() => setShowWorkersModal(true)}
+            className="px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-2xs border border-indigo-100 active:scale-95"
+          >
+            <Users className="w-3.5 h-3.5" />
+            {isAr ? `👷 عمال الأتوليي (${selectedWorkerIds.length})` : `👷 Ouvriers (${selectedWorkerIds.length})`}
+          </button>
+
+          <button
+            onClick={() => setShowAiModal(true)}
+            className="px-3.5 py-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-sm shadow-indigo-200 active:scale-95"
+          >
+            <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+            {isAr ? '🤖 الذكاء الاصطناعي (AI Expert)' : '🤖 Estimation IA'}
+          </button>
+
           <button
             onClick={() => window.print()}
             className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
           >
             <Printer className="w-3.5 h-3.5" />
-            {isAr ? 'طباعة / PDF' : 'Imprimer / PDF'}
+            {isAr ? 'طباعة / PDF' : 'Imprimer'}
           </button>
+
           {!isModal && (
             <button
               onClick={() => navigate('/commandes')}
@@ -179,6 +303,7 @@ export default function AtelierCalculator({
               {isAr ? 'الطلبيات' : 'Commandes'}
             </button>
           )}
+
           {isModal && onClose && (
             <button
               onClick={onClose}
@@ -350,24 +475,33 @@ export default function AtelierCalculator({
             </div>
           </div>
 
-          {/* Card 2: Labor & Time (4 cols tight grid) */}
+          {/* Card 2: Labor & Time (4 cols tight grid with clickable worker count) */}
           <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm print-border">
-            <h3 className="text-xs font-black text-slate-800 flex items-center gap-2 pb-2 mb-2 border-b border-slate-100">
-              <Users className="w-3.5 h-3.5 text-indigo-600" />
-              {isAr ? '👷 اليد العاملة والوقت' : '👷 Main-d\'œuvre & Temps'}
-            </h3>
+            <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
+              <h3 className="text-xs font-black text-slate-800 flex items-center gap-2">
+                <Users className="w-3.5 h-3.5 text-indigo-600" />
+                {isAr ? '👷 اليد العاملة والوقت' : '👷 Main-d\'œuvre & Temps'}
+              </h3>
+              <button
+                onClick={() => setShowWorkersModal(true)}
+                className="text-[10px] font-black text-indigo-600 hover:text-indigo-800 flex items-center gap-1 bg-indigo-50 px-2 py-0.5 rounded-md"
+              >
+                <UserCheck className="w-3 h-3" />
+                {isAr ? 'تحديد أسماء العمال' : 'Sélectionner ouvriers'}
+              </button>
+            </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               <div>
                 <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                  {isAr ? 'عدد العمال' : 'Ouvriers'}
+                  {isAr ? 'عدد العمال (أتوليي)' : 'Ouvriers'}
                 </label>
                 <input
                   type="number"
                   min="1"
                   value={workers}
                   onChange={(e) => setWorkers(Number(e.target.value))}
-                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-indigo-600 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
+                  className="w-full px-3 py-1.5 bg-indigo-50 border border-indigo-200 rounded-xl font-black text-indigo-700 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
                 />
               </div>
 
@@ -466,6 +600,235 @@ export default function AtelierCalculator({
         </div>
 
       </div>
+
+      {/* MODAL 1: ATELIER WORKERS SELECTION (Smart Feature 1) */}
+      {showWorkersModal && (
+        <div className="fixed inset-0 z-[1200] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[85vh]">
+            {/* Header */}
+            <div className="p-5 bg-slate-900 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <Users className="w-5 h-5 text-indigo-400" />
+                <div>
+                  <h3 className="font-black text-sm">
+                    {isAr ? 'تحديد عمال الأتوليي لهاد الطلبية' : 'Sélection des ouvriers d\'atelier'}
+                  </h3>
+                  <p className="text-[10px] text-slate-400">
+                    {isAr ? 'عدد العمال المحدد كيتحسب مباشرة في تكلفة اليد العاملة والروطار' : 'Le nombre d\'ouvriers sélectionnés s\'applique au calcul de main-d\'œuvre'}
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowWorkersModal(false)}
+                className="p-1.5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-all"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Quick action buttons */}
+            <div className="px-5 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-600">
+                {isAr ? `المحددون: ${selectedWorkerIds.length} من أصل ${allWorkers.length} عامل` : `Sélectionnés: ${selectedWorkerIds.length} / ${allWorkers.length}`}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={selectAllWorkers}
+                  className="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-[10px] font-bold"
+                >
+                  {isAr ? 'تحديد الكل' : 'Tout sélectionner'}
+                </button>
+                <button
+                  onClick={deselectAllWorkers}
+                  className="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-[10px] font-bold"
+                >
+                  {isAr ? 'إلغاء التحديد' : 'Tout désélectionner'}
+                </button>
+              </div>
+            </div>
+
+            {/* Workers Grid */}
+            <div className="p-5 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-2.5 flex-1">
+              {allWorkers.map((emp) => {
+                const isSelected = selectedWorkerIds.includes(emp.id);
+                return (
+                  <div
+                    key={emp.id}
+                    onClick={() => toggleWorker(emp.id)}
+                    className={`p-3 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${
+                      isSelected
+                        ? 'bg-indigo-50/70 border-indigo-300 text-indigo-950 shadow-xs'
+                        : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
+                        isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {emp.prenom[0]}
+                      </div>
+                      <div>
+                        <div className="font-black text-xs">
+                          {emp.prenom} {emp.nom}
+                        </div>
+                        <div className="text-[10px] font-bold text-slate-400">
+                          {emp.poste || (isAr ? 'عامل إنتاج' : 'Ouvrier')}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className={`w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 ${
+                      isSelected ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300 bg-white'
+                    }`}>
+                      {isSelected && <Check className="w-3.5 h-3.5" />}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+              <button
+                onClick={() => setShowWorkersModal(false)}
+                className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-xs transition-all shadow-md shadow-indigo-200"
+              >
+                {isAr ? `✓ اعتماد (${selectedWorkerIds.length} عامل) في الحاسبة` : `✓ Valider (${selectedWorkerIds.length} ouvriers)`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: AI COST ESTIMATOR FROM MODEL (Smart Feature 2) */}
+      {showAiModal && (
+        <div className="fixed inset-0 z-[1200] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-3xl w-full shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
+            {/* Header */}
+            <div className="p-5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-violet-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-violet-400/20">
+                  <Bot className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-black text-sm flex items-center gap-2">
+                    {isAr ? 'مساعد BEYA الذكي لتقدير تكلفة الإنتاج (Expert IA)' : 'Assistant Expert BEYA - Estimation IA'}
+                    <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-full text-[9px] border border-emerald-500/30">
+                      TOUJOURS ACTIF
+                    </span>
+                  </h3>
+                  <p className="text-[10px] text-slate-300">
+                    {isAr ? 'تحليل الموديل أو الصورة وإعطاء تقدير التكلفة وسعر القماش في السوق المغربية' : 'Analyse du modèle et estimation du coût matière en DH'}
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowAiModal(false)}
+                className="p-1.5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-all"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Presets selector */}
+            <div className="p-4 bg-slate-50 border-b border-slate-200">
+              <label className="block text-xs font-black text-slate-700 mb-2">
+                {isAr ? 'اختَر موديل أو مثال جاهز للتحليل (أو اكتب وصفك الخاص):' : 'Sélectionnez un modèle ou cas pratique :'}
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {AI_PRESETS.map((preset, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setSelectedAiPreset(preset);
+                      setIsAiAnalyzing(true);
+                      setTimeout(() => setIsAiAnalyzing(false), 500);
+                    }}
+                    className={`p-2.5 rounded-xl border text-left transition-all ${
+                      selectedAiPreset.title === preset.title
+                        ? 'bg-white border-violet-500 shadow-sm ring-2 ring-violet-200'
+                        : 'bg-white/60 border-slate-200 hover:bg-white'
+                    }`}
+                  >
+                    <div className="font-black text-xs text-slate-900 truncate">{preset.title}</div>
+                    <div className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">{preset.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* AI Conversation & Breakdown */}
+            <div className="p-6 overflow-y-auto flex-1 space-y-4">
+              {isAiAnalyzing ? (
+                <div className="py-12 text-center space-y-3">
+                  <div className="w-10 h-10 border-4 border-violet-600 border-t-transparent rounded-full animate-spin mx-auto" />
+                  <p className="text-xs font-bold text-slate-600">
+                    {isAr ? 'جاري تحليل الموديل وحساب أسعار القماش في السوق المغربية...' : 'Analyse du modèle en cours...'}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {/* AI Response Box (moroccan style as in user screenshot) */}
+                  <div className="p-5 bg-gradient-to-br from-violet-50 to-indigo-50/50 rounded-3xl border border-violet-200/80 space-y-3">
+                    <div className="flex items-center gap-2 text-violet-900 font-black text-xs">
+                      <Sparkles className="w-4 h-4 text-violet-600" />
+                      <span>{isAr ? 'تحليل الخبير (Expert BEYA)' : 'Expert BEYA Analyse'}</span>
+                    </div>
+
+                    <p className="text-sm font-bold text-slate-800 leading-relaxed">
+                      {selectedAiPreset.aiText}
+                    </p>
+
+                    <div className="grid grid-cols-3 gap-3 pt-3 border-t border-violet-200/60 text-center">
+                      <div className="bg-white/80 p-2.5 rounded-2xl border border-violet-100">
+                        <span className="text-[10px] font-bold text-slate-500 block">{isAr ? 'القماش واللوازم (للقطعة)' : 'Matière / pièce'}</span>
+                        <strong className="text-sm font-black text-violet-700">{selectedAiPreset.materialPerPiece.toFixed(2)} DH</strong>
+                      </div>
+                      <div className="bg-white/80 p-2.5 rounded-2xl border border-violet-100">
+                        <span className="text-[10px] font-bold text-slate-500 block">{isAr ? 'سعر البيع المقترح' : 'Prix de vente rec.'}</span>
+                        <strong className="text-sm font-black text-emerald-600">{selectedAiPreset.recommendedPrice.toFixed(2)} DH</strong>
+                      </div>
+                      <div className="bg-white/80 p-2.5 rounded-2xl border border-violet-100">
+                        <span className="text-[10px] font-bold text-slate-500 block">{isAr ? 'وقت الإنتاج المقدر' : 'Jours estimés'}</span>
+                        <strong className="text-sm font-black text-indigo-600">{selectedAiPreset.recommendedDays} {isAr ? 'أيام' : 'Jours'}</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Summary of what will change in calculator */}
+                  <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-emerald-900 text-xs font-bold">
+                    <strong>{isAr ? '🎯 عند تطبيق هذا التقدير على الحاسبة:' : '🎯 En appliquant cette estimation :'}</strong>
+                    <ul className="mt-1 space-y-1 list-disc list-inside text-[11px]">
+                      <li>{isAr ? `سيتم تعيين الموديل إلى:` : `Article / Modèle :`} <strong>{selectedAiPreset.title.replace(/^[^\s]+\s+/, '')}</strong></li>
+                      <li>{isAr ? `سعر البيع للبياسة:` : `Prix de vente :`} <strong>{selectedAiPreset.recommendedPrice.toFixed(2)} DH</strong></li>
+                      <li>{isAr ? `إجمالي ثمن القماش واللوازم (لـ ${quantity} بياسة):` : `Matière première totale :`} <strong>{(selectedAiPreset.materialPerPiece * qty).toFixed(2)} DH</strong></li>
+                      <li>{isAr ? `أيام العمل المقترحة:` : `Jours travaillés :`} <strong>{selectedAiPreset.recommendedDays} {isAr ? 'أيام' : 'Jours'}</strong></li>
+                    </ul>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+              <button
+                onClick={() => setShowAiModal(false)}
+                className="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-xs hover:bg-slate-100 transition-all"
+              >
+                {isAr ? 'إغلاق' : 'Fermer'}
+              </button>
+              
+              <button
+                onClick={() => applyAiEstimation(selectedAiPreset)}
+                className="px-6 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-black text-xs transition-all shadow-md shadow-violet-200 flex items-center gap-2"
+              >
+                <Wand2 className="w-4 h-4" />
+                {isAr ? '🚀 تطبيق هذه الأرقام في الحاسبة الآن' : '🚀 Appliquer l\'estimation IA'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
