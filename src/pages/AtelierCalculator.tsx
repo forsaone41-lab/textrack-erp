@@ -65,6 +65,53 @@ const AI_PRESETS: AiPreset[] = [
   }
 ];
 
+function CostTooltip({
+  title,
+  children,
+  content,
+  align = 'center'
+}: {
+  title: string;
+  children: React.ReactNode;
+  content: React.ReactNode;
+  align?: 'left' | 'center' | 'right';
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div 
+      className="relative inline-block group cursor-help"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onClick={() => setOpen(!open)}
+    >
+      <div className="inline-flex items-center gap-1">
+        {children}
+        <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-black shrink-0 border border-indigo-200 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+          ?
+        </span>
+      </div>
+      
+      {open && (
+        <div 
+          className={`absolute z-[2000] bottom-full mb-2 w-64 sm:w-72 p-3.5 bg-slate-900/95 text-white rounded-2xl shadow-2xl border border-slate-700 backdrop-blur-md text-right text-xs transition-all animate-in fade-in duration-150 ${
+            align === 'left' ? 'left-0' : align === 'right' ? 'right-0' : 'left-1/2 -translate-x-1/2'
+          }`}
+          style={{ pointerEvents: 'none' }}
+        >
+          <div className="font-black text-indigo-300 border-b border-white/10 pb-1.5 mb-2 flex items-center justify-between">
+            <span>{title}</span>
+            <span className="text-[10px] text-slate-400">ℹ️ توضيح</span>
+          </div>
+          <div className="space-y-1.5 text-[11px] leading-relaxed text-slate-200">
+            {content}
+          </div>
+          <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-900 border-r border-b border-slate-700 transform rotate-45" />
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AtelierCalculator({
   isModal = false,
   onClose,
@@ -403,42 +450,188 @@ function isSupportRole(e: Employe): boolean {
                   )}
                 </div>
 
-                <div className="px-2.5 py-1 bg-white/90 rounded-xl border border-black/5 text-xs font-black text-indigo-700 shadow-2xs">
-                  {isAr ? 'البياسة الواحدة:' : 'Coût/pièce :'} {costPerPiece.toFixed(2)} {isAr ? 'درهم' : 'DH'}
-                </div>
+                <CostTooltip
+                  title={isAr ? "📊 تفكيك تكلفة البياسة الواحدة" : "📊 Coût unitaire détaillé"}
+                  align="left"
+                  content={
+                    <>
+                      <div className="flex justify-between">
+                        <span>🧵 قماش ولوازم للبياسة:</span>
+                        <strong className="text-white">{(materials / (quantity || 1)).toFixed(2)} DH</strong>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>👷 خياطة ويد عاملة للبياسة:</span>
+                        <strong className="text-white">{(totalLaborCost / (quantity || 1)).toFixed(2)} DH</strong>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>🏢 نصيب البياسة من مصاريف الأتوليي:</span>
+                        <strong className="text-white">{(allocatedExpenses / (quantity || 1)).toFixed(2)} DH</strong>
+                      </div>
+                      <div className="border-t border-white/10 pt-1 mt-1 flex justify-between font-black text-emerald-400">
+                        <span>✅ المجموع الإجمالي:</span>
+                        <span>{costPerPiece.toFixed(2)} DH</span>
+                      </div>
+                      <div className="text-[10px] text-slate-400 pt-0.5">
+                        {isAr ? "• نعم! هذا الثمن شامل لكل شيء (خياطة، قماش، كرا، ضو، إدارة)." : "• Oui ! Ce coût inclut TOUT (tissu, MOD, MOI, frais fixes)."}
+                      </div>
+                    </>
+                  }
+                >
+                  <div className="px-2.5 py-1 bg-white/90 rounded-xl border border-black/5 text-xs font-black text-indigo-700 shadow-2xs hover:bg-white transition-all">
+                    {isAr ? 'البياسة الواحدة:' : 'Coût/pièce :'} {costPerPiece.toFixed(2)} {isAr ? 'درهم' : 'DH'}
+                  </div>
+                </CostTooltip>
               </div>
 
               {/* Huge Amount Display */}
               <div className="my-3 text-center">
-                <div
-                  className={`text-4xl xl:text-5xl font-black tracking-tight leading-none ${
-                    resultStatus === 'profit' ? 'text-emerald-600' : resultStatus === 'loss' ? 'text-rose-600' : 'text-slate-700'
-                  }`}
+                <CostTooltip
+                  title={isAr ? "💰 معادلة الربح والإيرادات" : "💰 Équation de Rentabilité"}
+                  align="center"
+                  content={
+                    <>
+                      <div className="flex justify-between">
+                        <span>📈 إيرادات البيع ({quantity} × {pricePerPiece} DH):</span>
+                        <strong className="text-emerald-400">+{(quantity * pricePerPiece).toLocaleString()} DH</strong>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>📉 التكلفة الإجمالية (سلعة + عمال + أتوليي):</span>
+                        <strong className="text-rose-300">-{realCost.toLocaleString()} DH</strong>
+                      </div>
+                      <div className="border-t border-white/10 pt-1 mt-1 flex justify-between font-black text-indigo-300">
+                        <span>✅ هامش الربح الصافي:</span>
+                        <span>{pricePerPiece > 0 && costPerPiece > 0 ? (((pricePerPiece - costPerPiece) / pricePerPiece) * 100).toFixed(1) : 0}% ({isAr ? 'ربح صافي' : 'Marge'})</span>
+                      </div>
+                    </>
+                  }
                 >
-                  {Math.abs(difference).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{' '}
-                  <span className="text-xl font-bold">{isAr ? 'درهم' : 'DH'}</span>
-                </div>
+                  <div
+                    className={`text-4xl xl:text-5xl font-black tracking-tight leading-none inline-block ${
+                      resultStatus === 'profit' ? 'text-emerald-600' : resultStatus === 'loss' ? 'text-rose-600' : 'text-slate-700'
+                    }`}
+                  >
+                    {Math.abs(difference).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{' '}
+                    <span className="text-xl font-bold">{isAr ? 'درهم' : 'DH'}</span>
+                  </div>
+                </CostTooltip>
+
                 <div className="text-xs font-bold text-slate-500 mt-1">
-                  {isAr ? 'التكلفة الإجمالية للإنتاج:' : 'Coût total de production :'}{' '}
-                  <span className="font-black text-slate-800">{realCost.toFixed(2)} {isAr ? 'درهم' : 'DH'}</span>
+                  <CostTooltip
+                    title={isAr ? "📉 التكلفة الإجمالية للإنتاج" : "📉 Coût Total"}
+                    align="center"
+                    content={
+                      <>
+                        <div className="flex justify-between">
+                          <span>• اليد العاملة:</span>
+                          <strong className="text-white">{totalLaborCost.toFixed(2)} DH</strong>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>• السلعة والقماش:</span>
+                          <strong className="text-white">{materials.toFixed(2)} DH</strong>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>• مصاريف الأتوليي الثابتة:</span>
+                          <strong className="text-white">{allocatedExpenses.toFixed(2)} DH</strong>
+                        </div>
+                        <div className="border-t border-white/10 pt-1 mt-1 flex justify-between font-black text-amber-300">
+                          <span>✅ إجمالي تكلفة الطلبية:</span>
+                          <span>{realCost.toFixed(2)} DH</span>
+                        </div>
+                      </>
+                    }
+                  >
+                    <span className="hover:text-slate-800 transition-colors">
+                      {isAr ? 'التكلفة الإجمالية للإنتاج:' : 'Coût total de production :'}{' '}
+                      <span className="font-black text-slate-800">{realCost.toFixed(2)} {isAr ? 'درهم' : 'DH'}</span>
+                    </span>
+                  </CostTooltip>
                 </div>
               </div>
             </div>
 
             {/* Tight 3-Column Cost Breakdown */}
             <div className="grid grid-cols-3 gap-2 pt-3 border-t border-black/10 text-center">
-              <div className="bg-white/70 p-2 rounded-xl border border-black/5">
-                <span className="text-[10px] font-bold text-slate-500 block leading-tight">{isAr ? 'اليد العاملة' : 'Main d\'œuvre'}</span>
-                <strong className="text-xs font-black text-slate-900">{totalLaborCost.toFixed(2)} DH</strong>
-              </div>
-              <div className="bg-white/70 p-2 rounded-xl border border-black/5">
-                <span className="text-[10px] font-bold text-slate-500 block leading-tight">{isAr ? 'السلعة' : 'Matière'}</span>
-                <strong className="text-xs font-black text-slate-900">{materials.toFixed(2)} DH</strong>
-              </div>
-              <div className="bg-white/70 p-2 rounded-xl border border-black/5">
-                <span className="text-[10px] font-bold text-slate-500 block leading-tight">{isAr ? 'مصاريف الأتوليي' : 'Frais atelier'}</span>
-                <strong className="text-xs font-black text-slate-900">{allocatedExpenses.toFixed(2)} DH</strong>
-              </div>
+              <CostTooltip
+                title={isAr ? "👷 تفكيك تكلفة اليد العاملة والرواتب" : "👷 Détail Main-d'œuvre"}
+                align="right"
+                content={
+                  <>
+                    <div className="flex justify-between">
+                      <span>👥 عدد العمال المختارين:</span>
+                      <strong className="text-white">{workers} {isAr ? 'عمال' : 'ouvriers'}</strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>⏱️ ساعات العمل ({days} أيام):</span>
+                      <strong className="text-white">{days * 8 * workers} {isAr ? 'ساعة خياطة' : 'heures'}</strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>💵 ثمن الساعة المعتمد ({rateMode.toUpperCase()}):</span>
+                      <strong className="text-white">{rate} DH/h</strong>
+                    </div>
+                    <div className="border-t border-white/10 pt-1 mt-1 flex justify-between font-black text-amber-400">
+                      <span>✅ إجمالي اليد العاملة:</span>
+                      <span>{totalLaborCost.toFixed(2)} DH</span>
+                    </div>
+                  </>
+                }
+              >
+                <div className="bg-white/70 p-2 rounded-xl border border-black/5 hover:bg-white hover:border-indigo-200 transition-all w-full">
+                  <span className="text-[10px] font-bold text-slate-500 block leading-tight">{isAr ? 'اليد العاملة' : 'Main d\'œuvre'}</span>
+                  <strong className="text-xs font-black text-slate-900">{totalLaborCost.toFixed(2)} DH</strong>
+                </div>
+              </CostTooltip>
+
+              <CostTooltip
+                title={isAr ? "🧵 تفكيك تكلفة القماش واللوازم" : "🧵 Détail Matière"}
+                align="center"
+                content={
+                  <>
+                    <div className="flex justify-between">
+                      <span>🧶 ثمن القماش للبياسة:</span>
+                      <strong className="text-white">{(materials / (quantity || 1)).toFixed(2)} DH/p</strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>📦 الكمية المطلوبة:</span>
+                      <strong className="text-white">{quantity} {isAr ? 'بياسة' : 'pièces'}</strong>
+                    </div>
+                    <div className="border-t border-white/10 pt-1 mt-1 flex justify-between font-black text-emerald-400">
+                      <span>✅ إجمالي القماش واللوازم:</span>
+                      <span>{materials.toFixed(2)} DH</span>
+                    </div>
+                  </>
+                }
+              >
+                <div className="bg-white/70 p-2 rounded-xl border border-black/5 hover:bg-white hover:border-indigo-200 transition-all w-full">
+                  <span className="text-[10px] font-bold text-slate-500 block leading-tight">{isAr ? 'السلعة' : 'Matière'}</span>
+                  <strong className="text-xs font-black text-slate-900">{materials.toFixed(2)} DH</strong>
+                </div>
+              </CostTooltip>
+
+              <CostTooltip
+                title={isAr ? "🏢 مصاريف الأتوليي والإدارة الثابتة" : "🏢 Frais d'Atelier & Admin (MOI)"}
+                align="left"
+                content={
+                  <>
+                    <div className="flex justify-between">
+                      <span>💡 مصاريف الأتوليي الشهرية:</span>
+                      <strong className="text-white">{monthlyOther.toLocaleString()} DH/شهر</strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>📆 نصيب الطلبية ({days} أيام من 26 يوم):</span>
+                      <strong className="text-white">{((days / 26) * 100).toFixed(1)}% من الشهر</strong>
+                    </div>
+                    <div className="border-t border-white/10 pt-1 mt-1 flex justify-between font-black text-purple-300">
+                      <span>✅ المحمل على هذه الطلبية:</span>
+                      <span>{allocatedExpenses.toFixed(2)} DH</span>
+                    </div>
+                  </>
+                }
+              >
+                <div className="bg-white/70 p-2 rounded-xl border border-black/5 hover:bg-white hover:border-indigo-200 transition-all w-full">
+                  <span className="text-[10px] font-bold text-slate-500 block leading-tight">{isAr ? 'مصاريف الأتوليي' : 'Frais atelier'}</span>
+                  <strong className="text-xs font-black text-slate-900">{allocatedExpenses.toFixed(2)} DH</strong>
+                </div>
+              </CostTooltip>
             </div>
           </div>
 
