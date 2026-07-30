@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useLang } from '../contexts/LangContext';
 import { 
-  Calculator, Printer, ArrowRight, TrendingUp, AlertTriangle, 
-  CheckCircle2, DollarSign, Users, Clock, Scissors, Package, 
-  ArrowLeft, ShoppingCart, ShieldAlert
+  Calculator, Printer, CheckCircle2, AlertTriangle, 
+  Clock, Package, Users, Scissors, ShoppingCart, ArrowLeft,
+  DollarSign, Sparkles
 } from 'lucide-react';
 import { useNavigate, Navigate } from 'react-router-dom';
 
@@ -34,7 +34,7 @@ export default function AtelierCalculator({
     }
   }, []);
 
-  // Form State (default values from original Atelier calculator)
+  // Form State
   const [itemName, setItemName] = useState('SAK');
   const [quantity, setQuantity] = useState(1000);
   const [pricePerPiece, setPricePerPiece] = useState(1.50);
@@ -51,7 +51,7 @@ export default function AtelierCalculator({
   if (!isAdmin) {
     if (isModal) {
       return (
-        <div className="p-8 text-center text-rose-600 font-black">
+        <div className="p-6 text-center text-rose-600 font-black">
           {isAr ? 'عذراً، هذه الحاسبة خاصة بمدير النظام (Admin) فقط.' : 'Accès réservé exclusivement aux administrateurs.'}
         </div>
       );
@@ -87,15 +87,15 @@ export default function AtelierCalculator({
   if (revenueAvailableForTime <= 0) {
     alertMessage = isAr 
       ? "⚠️ راك خاسر غير فالسلعة! (ثمن السلعة كبر من أو كيسوى ثمن البيع)"
-      : "⚠️ Perte directe sur matière première ! (Coût matière >= Prix de vente)";
+      : "⚠️ Perte sur matière première ! (Coût matière >= Prix de vente)";
     alertType = 'danger';
   } else if (totalCostPerHourOfWork > 0) {
     const maxTotalHoursPerWorker = revenueAvailableForTime / totalCostPerHourOfWork;
     maxDaysAllowed = Math.floor(maxTotalHoursPerWorker / 8);
     maxHoursAllowed = Math.floor(maxTotalHoursPerWorker % 8);
     alertMessage = isAr
-      ? `⏱️ رد البال للروطار: أقصى وقت مسموح باش ماتخسرش هو ${maxDaysAllowed} أيام و ${maxHoursAllowed} ساعات (لكل عامل).`
-      : `⏱️ Seuil limite avant perte : maximum ${maxDaysAllowed} jours et ${maxHoursAllowed}h (par ouvrier).`;
+      ? `⏱️ أقصى وقت بدون خسارة: ${maxDaysAllowed} أيام و ${maxHoursAllowed} ساعات (لكل عامل).`
+      : `⏱️ Seuil limite : max ${maxDaysAllowed}j et ${maxHoursAllowed}h (par ouvrier).`;
     alertType = 'warning';
   }
 
@@ -114,14 +114,16 @@ export default function AtelierCalculator({
   };
 
   const todayStr = new Date().toLocaleDateString(isAr ? 'ar-MA' : 'fr-FR', {
-    weekday: 'long',
     year: 'numeric',
-    month: 'long',
+    month: 'short',
     day: 'numeric'
   });
 
   return (
-    <div className={`w-full ${isModal ? 'max-h-[85vh] overflow-y-auto no-scrollbar p-2' : 'min-h-screen bg-slate-50/50 p-4 md:p-8'}`} dir={isAr ? 'rtl' : 'ltr'}>
+    <div 
+      className={`w-full ${isModal ? 'p-4' : 'p-4 md:p-6 min-h-[calc(100vh-1rem)] flex flex-col justify-between overflow-hidden bg-slate-50/50'}`} 
+      dir={isAr ? 'rtl' : 'ltr'}
+    >
       {/* Print styles */}
       <style>{`
         @media print {
@@ -137,169 +139,192 @@ export default function AtelierCalculator({
             display: none !important;
           }
           .print-border {
-            border: 2px solid #222 !important;
+            border: 1px solid #222 !important;
             box-shadow: none !important;
           }
         }
       `}</style>
 
-      <div className="max-w-3xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between bg-white p-6 rounded-3xl border border-slate-100 shadow-sm print-border">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-emerald-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-200">
-              <Calculator className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-                  {isAr ? 'تقرير تكلفة الإنتاج والأرباح' : 'Calculateur de Rentabilité Atelier'}
-                </h1>
-                <span className="px-2.5 py-0.5 bg-rose-100 text-rose-700 rounded-full text-[10px] font-black uppercase tracking-wider">
-                  Admin VIP
-                </span>
-              </div>
-              <p className="text-xs font-bold text-slate-400 mt-1">{todayStr}</p>
-            </div>
+      {/* COMPACT TOP HEADER */}
+      <div className="flex items-center justify-between bg-white px-5 py-3 rounded-2xl border border-slate-100 shadow-sm mb-4 print-border">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-emerald-200">
+            <Calculator className="w-5 h-5" />
           </div>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-lg font-black text-slate-900 tracking-tight">
+              {isAr ? 'حاسبة أرباح وتكلفة الإنتاج' : 'Calculateur de Rentabilité Atelier'}
+            </h1>
+            <span className="px-2 py-0.5 bg-rose-100 text-rose-700 rounded-lg text-[9px] font-black uppercase tracking-wider">
+              Admin VIP
+            </span>
+            <span className="text-xs font-bold text-slate-400">| {todayStr}</span>
+          </div>
+        </div>
 
-          <div className="flex items-center gap-2 no-print">
+        <div className="flex items-center gap-2 no-print">
+          <button
+            onClick={() => window.print()}
+            className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            {isAr ? 'طباعة / PDF' : 'Imprimer / PDF'}
+          </button>
+          {!isModal && (
             <button
-              onClick={() => window.print()}
-              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-2 transition-all"
+              onClick={() => navigate('/commandes')}
+              className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
             >
-              <Printer className="w-4 h-4" />
-              {isAr ? 'طباعة / PDF' : 'Imprimer / PDF'}
+              <ArrowLeft className="w-3.5 h-3.5" />
+              {isAr ? 'الطلبيات' : 'Commandes'}
             </button>
-            {isModal && onClose && (
-              <button
-                onClick={onClose}
-                className="p-2.5 bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl transition-all"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Result Card */}
-        <div
-          className={`p-6 md:p-8 rounded-3xl border-2 transition-all print-border ${
-            resultStatus === 'profit'
-              ? 'bg-emerald-50/70 border-emerald-200 text-emerald-900'
-              : resultStatus === 'loss'
-              ? 'bg-rose-50/70 border-rose-200 text-rose-900'
-              : 'bg-slate-50 border-slate-200 text-slate-800'
-          }`}
-        >
-          <div className="text-center space-y-3">
-            <div className="inline-flex items-center gap-2 font-black text-xl md:text-2xl">
-              {resultStatus === 'profit' ? (
-                <>
-                  <CheckCircle2 className="w-6 h-6 text-emerald-600" />
-                  <span className="text-emerald-700">{isAr ? 'النتيجة: ربح ✔' : 'Résultat : Profit ✔'}</span>
-                </>
-              ) : resultStatus === 'loss' ? (
-                <>
-                  <AlertTriangle className="w-6 h-6 text-rose-600" />
-                  <span className="text-rose-700">{isAr ? 'النتيجة: خسارة ✘' : 'Résultat : Perte ✘'}</span>
-                </>
-              ) : (
-                <span>{isAr ? 'تعادل (لا ربح لا خسارة)' : 'Résultat Neutre'}</span>
-              )}
-            </div>
-
-            <div
-              className={`text-4xl md:text-6xl font-black ${
-                resultStatus === 'profit' ? 'text-emerald-600' : resultStatus === 'loss' ? 'text-rose-600' : 'text-slate-600'
-              }`}
+          )}
+          {isModal && onClose && (
+            <button
+              onClick={onClose}
+              className="p-1.5 bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl transition-all"
             >
-              {Math.abs(difference).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{' '}
-              <span className="text-xl md:text-2xl font-bold">{isAr ? 'درهم' : 'DH'}</span>
+              ✕
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* MAIN SINGLE-SCREEN 2-COLUMN HUD (No Vertical Scroll) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+        
+        {/* LEFT COLUMN: RESULT DISPLAY HUD (4 cols on lg) */}
+        <div className="lg:col-span-5 flex flex-col justify-between gap-3">
+          
+          {/* Main Result Card */}
+          <div
+            className={`p-5 rounded-3xl border-2 flex-1 flex flex-col justify-between print-border ${
+              resultStatus === 'profit'
+                ? 'bg-gradient-to-br from-emerald-500/10 via-emerald-50 to-white border-emerald-300 text-emerald-950'
+                : resultStatus === 'loss'
+                ? 'bg-gradient-to-br from-rose-500/10 via-rose-50 to-white border-rose-300 text-rose-950'
+                : 'bg-white border-slate-200 text-slate-800'
+            }`}
+          >
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="inline-flex items-center gap-1.5 font-black text-sm uppercase tracking-wider">
+                  {resultStatus === 'profit' ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <span className="text-emerald-700">{isAr ? 'ربح صافي ✔' : 'Profit Net ✔'}</span>
+                    </>
+                  ) : resultStatus === 'loss' ? (
+                    <>
+                      <AlertTriangle className="w-4 h-4 text-rose-600" />
+                      <span className="text-rose-700">{isAr ? 'خسارة محققة ✘' : 'Perte Nette ✘'}</span>
+                    </>
+                  ) : (
+                    <span>{isAr ? 'تعادل' : 'Neutre'}</span>
+                  )}
+                </div>
+
+                <div className="px-2.5 py-1 bg-white/90 rounded-xl border border-black/5 text-xs font-black text-indigo-700 shadow-2xs">
+                  {isAr ? 'البياسة الواحدة:' : 'Coût/pièce :'} {costPerPiece.toFixed(2)} {isAr ? 'درهم' : 'DH'}
+                </div>
+              </div>
+
+              {/* Huge Amount Display */}
+              <div className="my-3 text-center">
+                <div
+                  className={`text-4xl xl:text-5xl font-black tracking-tight leading-none ${
+                    resultStatus === 'profit' ? 'text-emerald-600' : resultStatus === 'loss' ? 'text-rose-600' : 'text-slate-700'
+                  }`}
+                >
+                  {Math.abs(difference).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{' '}
+                  <span className="text-xl font-bold">{isAr ? 'درهم' : 'DH'}</span>
+                </div>
+                <div className="text-xs font-bold text-slate-500 mt-1">
+                  {isAr ? 'التكلفة الإجمالية للإنتاج:' : 'Coût total de production :'}{' '}
+                  <span className="font-black text-slate-800">{realCost.toFixed(2)} {isAr ? 'درهم' : 'DH'}</span>
+                </div>
+              </div>
             </div>
 
-            <div className="inline-block px-4 py-2 bg-white/80 backdrop-blur-sm rounded-xl font-bold text-sm text-slate-800 shadow-sm">
-              {isAr ? 'التكلفة الإجمالية للإنتاج:' : 'Coût total de production :'}{' '}
-              <span className="font-black text-indigo-600">{realCost.toFixed(2)} {isAr ? 'درهم' : 'DH'}</span>
+            {/* Tight 3-Column Cost Breakdown */}
+            <div className="grid grid-cols-3 gap-2 pt-3 border-t border-black/10 text-center">
+              <div className="bg-white/70 p-2 rounded-xl border border-black/5">
+                <span className="text-[10px] font-bold text-slate-500 block leading-tight">{isAr ? 'اليد العاملة' : 'Main d\'œuvre'}</span>
+                <strong className="text-xs font-black text-slate-900">{totalLaborCost.toFixed(2)} DH</strong>
+              </div>
+              <div className="bg-white/70 p-2 rounded-xl border border-black/5">
+                <span className="text-[10px] font-bold text-slate-500 block leading-tight">{isAr ? 'السلعة' : 'Matière'}</span>
+                <strong className="text-xs font-black text-slate-900">{materials.toFixed(2)} DH</strong>
+              </div>
+              <div className="bg-white/70 p-2 rounded-xl border border-black/5">
+                <span className="text-[10px] font-bold text-slate-500 block leading-tight">{isAr ? 'مصاريف الأتوليي' : 'Frais atelier'}</span>
+                <strong className="text-xs font-black text-slate-900">{allocatedExpenses.toFixed(2)} DH</strong>
+              </div>
             </div>
           </div>
 
-          {/* Cost breakdown 3 columns */}
-          <div className="grid grid-cols-3 gap-3 md:gap-6 mt-6 pt-6 border-t border-black/10 text-center">
-            <div className="bg-white/60 p-3.5 rounded-2xl border border-black/5">
-              <span className="text-xs font-bold text-slate-500 block mb-1">{isAr ? 'اليد العاملة:' : 'Main-d\'œuvre :'}</span>
-              <strong className="text-base md:text-lg font-black text-slate-900">{totalLaborCost.toFixed(2)} {isAr ? 'درهم' : 'DH'}</strong>
-            </div>
-            <div className="bg-white/60 p-3.5 rounded-2xl border border-black/5">
-              <span className="text-xs font-bold text-slate-500 block mb-1">{isAr ? 'السلعة:' : 'Matière première :'}</span>
-              <strong className="text-base md:text-lg font-black text-slate-900">{materials.toFixed(2)} {isAr ? 'درهم' : 'DH'}</strong>
-            </div>
-            <div className="bg-white/60 p-3.5 rounded-2xl border border-black/5">
-              <span className="text-xs font-bold text-slate-500 block mb-1">{isAr ? 'نصيب الأتوليي:' : 'Frais d\'atelier :'}</span>
-              <strong className="text-base md:text-lg font-black text-slate-900">{allocatedExpenses.toFixed(2)} {isAr ? 'درهم' : 'DH'}</strong>
-            </div>
+          {/* Max Time Alert Banner */}
+          <div
+            className={`p-3 rounded-2xl border font-bold text-xs flex items-center gap-2.5 print-border ${
+              alertType === 'danger'
+                ? 'bg-rose-100 border-rose-300 text-rose-800'
+                : 'bg-amber-50 border-amber-200 text-amber-800'
+            }`}
+          >
+            <Clock className="w-4 h-4 shrink-0 text-amber-600" />
+            <div className="leading-tight">{alertMessage}</div>
           </div>
 
-          {/* Cost per piece badge */}
-          <div className="mt-4 p-3 bg-white/90 rounded-2xl border border-indigo-100 text-center text-indigo-700 font-bold text-sm">
-            {isAr ? 'تكلفة البياسة الواحدة مقومة بـ:' : 'Coût unitaire par pièce :'}{' '}
-            <span className="font-black text-indigo-900 text-lg">{costPerPiece.toFixed(2)} {isAr ? 'درهم' : 'DH'}</span>
-          </div>
+          {/* Action Button */}
+          <button
+            onClick={handleCreateCommand}
+            className="w-full py-3.5 bg-slate-900 hover:bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-slate-300 flex items-center justify-center gap-2 no-print shrink-0"
+          >
+            <ShoppingCart className="w-4 h-4" />
+            {isAr ? '✓ اعتماد الحساب وإطلاق الطلبية الآن' : '✓ Valider le calcul et créer la commande'}
+          </button>
+
         </div>
 
-        {/* Max Time Alert (Retard / Rotar) */}
-        <div
-          className={`p-4 rounded-2xl border font-bold text-sm flex items-center gap-3 print-border ${
-            alertType === 'danger'
-              ? 'bg-rose-100 border-rose-300 text-rose-800'
-              : 'bg-amber-50 border-amber-200 text-amber-800'
-          }`}
-        >
-          <Clock className="w-6 h-6 shrink-0 text-amber-600" />
-          <div>{alertMessage}</div>
-        </div>
-
-        {/* Forms Section */}
-        <div className="bg-white p-6 md:p-8 rounded-3xl border border-slate-100 shadow-sm space-y-6 print-border">
-          {/* Group 1: Order info */}
-          <div className="p-5 bg-slate-50/70 rounded-2xl border border-slate-200/60 space-y-4">
-            <h3 className="text-sm font-black text-slate-800 flex items-center gap-2 pb-2 border-b border-slate-200">
-              <Package className="w-4 h-4 text-indigo-600" />
+        {/* RIGHT COLUMN: 3 COMPACT INPUT CARDS (7 cols on lg) */}
+        <div className="lg:col-span-7 flex flex-col justify-between gap-3">
+          
+          {/* Card 1: Order & Sale info (2x2 tight grid) */}
+          <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm print-border">
+            <h3 className="text-xs font-black text-slate-800 flex items-center gap-2 pb-2 mb-2 border-b border-slate-100">
+              <Package className="w-3.5 h-3.5 text-indigo-600" />
               {isAr ? '📦 معلومات الطلبية والبيع' : '📦 Infos Commande et Vente'}
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  {isAr ? 'نوع البياسة / الموديل' : 'Article / Modèle'}{' '}
-                  <span className="text-[10px] text-slate-400 font-normal">{isAr ? '(نص)' : '(texte)'}</span>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  {isAr ? 'نوع البياسة / الموديل' : 'Article / Modèle'}
                 </label>
                 <input
                   type="text"
                   value={itemName}
                   onChange={(e) => setItemName(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl font-bold text-slate-900 text-sm focus:border-indigo-600 outline-none"
+                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 text-xs focus:bg-white focus:border-indigo-600 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  {isAr ? 'الكمية' : 'Quantité'}{' '}
-                  <span className="text-[10px] text-slate-400 font-normal">{isAr ? '(شحال من بياسة)' : '(pièces)'}</span>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  {isAr ? 'الكمية (بياسة)' : 'Quantité (pcs)'}
                 </label>
                 <input
                   type="number"
                   min="1"
                   value={quantity}
                   onChange={(e) => setQuantity(Number(e.target.value))}
-                  className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl font-bold text-indigo-600 text-sm text-center focus:border-indigo-600 outline-none"
+                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-indigo-600 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  {isAr ? 'ثمن البيع للبياسة الواحدة' : 'Prix de vente unitaire'}{' '}
-                  <span className="text-[10px] text-slate-400 font-normal">{isAr ? '(درهم)' : '(DH)'}</span>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  {isAr ? 'ثمن البيع للبياسة' : 'Prix unitaire'}
                 </label>
                 <input
                   type="number"
@@ -307,82 +332,75 @@ export default function AtelierCalculator({
                   min="0"
                   value={pricePerPiece}
                   onChange={(e) => setPricePerPiece(Number(e.target.value))}
-                  className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl font-bold text-indigo-600 text-sm text-center focus:border-indigo-600 outline-none"
+                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-indigo-600 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  {isAr ? 'الثمن الإجمالي للطلبية' : 'Prix total client'}{' '}
-                  <span className="text-[10px] text-slate-400 font-normal">{isAr ? '(درهم)' : '(DH)'}</span>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  {isAr ? 'الثمن الإجمالي' : 'Total Vente (DH)'}
                 </label>
                 <input
                   type="text"
                   readOnly
                   value={totalPriceClient.toFixed(2)}
-                  className="w-full px-4 py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl font-black text-sm text-center cursor-not-allowed"
+                  className="w-full px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl font-black text-xs text-center cursor-not-allowed"
                 />
-                <span className="text-[11px] text-slate-400 mt-1 block">
-                  {isAr ? 'كيتحسب بوحدو (الكمية × ثمن البياسة).' : 'Calculé automatiquement (Qté × Prix)'}
-                </span>
               </div>
             </div>
           </div>
 
-          {/* Group 2: Labor & Time */}
-          <div className="p-5 bg-slate-50/70 rounded-2xl border border-slate-200/60 space-y-4">
-            <h3 className="text-sm font-black text-slate-800 flex items-center gap-2 pb-2 border-b border-slate-200">
-              <Users className="w-4 h-4 text-indigo-600" />
+          {/* Card 2: Labor & Time (4 cols tight grid) */}
+          <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm print-border">
+            <h3 className="text-xs font-black text-slate-800 flex items-center gap-2 pb-2 mb-2 border-b border-slate-100">
+              <Users className="w-3.5 h-3.5 text-indigo-600" />
               {isAr ? '👷 اليد العاملة والوقت' : '👷 Main-d\'œuvre & Temps'}
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  {isAr ? 'عدد العمال فهاد الطلبية' : 'Nombre d\'ouvriers'}{' '}
-                  <span className="text-[10px] text-slate-400 font-normal">{isAr ? '(عامل)' : ''}</span>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  {isAr ? 'عدد العمال' : 'Ouvriers'}
                 </label>
                 <input
                   type="number"
                   min="1"
                   value={workers}
                   onChange={(e) => setWorkers(Number(e.target.value))}
-                  className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-bold text-indigo-600 text-sm text-center focus:border-indigo-600 outline-none"
+                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-indigo-600 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  {isAr ? 'شحال من نهار خدمو؟' : 'Jours travaillés'}{' '}
-                  <span className="text-[10px] text-slate-400 font-normal">{isAr ? '(أيام)' : ''}</span>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  {isAr ? 'أيام العمل' : 'Jours travaillés'}
                 </label>
                 <input
                   type="number"
                   min="0"
                   value={days}
                   onChange={(e) => setDays(Number(e.target.value))}
-                  className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-bold text-indigo-600 text-sm text-center focus:border-indigo-600 outline-none"
+                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-indigo-600 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  {isAr ? 'ساعات إضافية' : 'Heures sup.'}{' '}
-                  <span className="text-[10px] text-slate-400 font-normal">{isAr ? '(ساعات)' : ''}</span>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  {isAr ? 'ساعات إضافية' : 'Heures sup.'}
                 </label>
                 <input
                   type="number"
                   min="0"
                   value={extraHours}
                   onChange={(e) => setExtraHours(Number(e.target.value))}
-                  className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-bold text-indigo-600 text-sm text-center focus:border-indigo-600 outline-none"
+                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-indigo-600 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
-                  {isAr ? 'ثمن الساعة للخدام' : 'Taux horaire'}
-                  <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded text-[9px] font-black">SMIG</span>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center justify-between">
+                  <span>{isAr ? 'ثمن الساعة' : 'Taux horaire'}</span>
+                  <span className="px-1 py-0.5 bg-amber-100 text-amber-800 rounded text-[8px] font-black">SMIG</span>
                 </label>
                 <input
                   type="number"
@@ -390,92 +408,63 @@ export default function AtelierCalculator({
                   min="0"
                   value={rate}
                   onChange={(e) => setRate(Number(e.target.value))}
-                  className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-bold text-indigo-600 text-sm text-center focus:border-indigo-600 outline-none"
+                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-indigo-600 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
                 />
               </div>
             </div>
           </div>
 
-          {/* Group 3: Materials & Atelier */}
-          <div className="p-5 bg-slate-50/70 rounded-2xl border border-slate-200/60 space-y-4">
-            <h3 className="text-sm font-black text-slate-800 flex items-center gap-2 pb-2 border-b border-slate-200">
-              <Scissors className="w-4 h-4 text-indigo-600" />
+          {/* Card 3: Materials & Atelier (3 cols tight grid) */}
+          <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm print-border">
+            <h3 className="text-xs font-black text-slate-800 flex items-center gap-2 pb-2 mb-2 border-b border-slate-100">
+              <Scissors className="w-3.5 h-3.5 text-indigo-600" />
               {isAr ? '🧵 السلعة ومصاريف الأتوليي' : '🧵 Matière & Frais d\'Atelier'}
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  {isAr ? 'ثمن القماش واللوازم (الإجمالي)' : 'Coût tissu & fournitures'}{' '}
-                  <span className="text-[10px] text-slate-400 font-normal">{isAr ? '(درهم)' : '(DH)'}</span>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  {isAr ? 'ثمن القماش واللوازم' : 'Coût tissu & fournitures (DH)'}
                 </label>
                 <input
                   type="number"
                   min="0"
                   value={materials}
                   onChange={(e) => setMaterials(Number(e.target.value))}
-                  className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-bold text-indigo-600 text-sm text-center focus:border-indigo-600 outline-none"
+                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-indigo-600 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  {isAr ? 'العدد الإجمالي لآلات الأتوليي' : 'Total machines atelier'}{' '}
-                  <span className="text-[10px] text-slate-400 font-normal">{isAr ? '(ماكينة)' : ''}</span>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  {isAr ? 'عدد آلات الأتوليي' : 'Machines atelier (total)'}
                 </label>
                 <input
                   type="number"
                   min="1"
                   value={totalMachines}
                   onChange={(e) => setTotalMachines(Number(e.target.value))}
-                  className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-bold text-indigo-600 text-sm text-center focus:border-indigo-600 outline-none"
+                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-indigo-600 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  {isAr ? 'مصاريف الشهر (الكرا، الضو...)' : 'Frais fixes mensuels'}{' '}
-                  <span className="text-[10px] text-slate-400 font-normal">{isAr ? '(درهم / شهر)' : '(DH/mois)'}</span>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  {isAr ? 'مصاريف الشهر (الكرا، الضو...)' : 'Frais fixes mensuels (DH)'}
                 </label>
                 <input
                   type="number"
                   min="0"
                   value={monthlyOther}
                   onChange={(e) => setMonthlyOther(Number(e.target.value))}
-                  className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-bold text-indigo-600 text-sm text-center focus:border-indigo-600 outline-none"
+                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-indigo-600 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
                 />
               </div>
             </div>
           </div>
+
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 no-print">
-          <button
-            onClick={handleCreateCommand}
-            className="flex-1 py-4 bg-slate-900 hover:bg-indigo-600 text-white rounded-2xl font-black text-sm uppercase tracking-wider transition-all shadow-xl shadow-slate-300 flex items-center justify-center gap-2"
-          >
-            <ShoppingCart className="w-5 h-5" />
-            {isAr ? '✓ اعتماد الحساب وإطلاق الطلبية الآن' : '✓ Valider le calcul et créer la commande'}
-          </button>
-          
-          <button
-            onClick={() => window.print()}
-            className="px-6 py-4 bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-700 rounded-2xl font-black text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2"
-          >
-            <Printer className="w-5 h-5" />
-            {isAr ? 'طباعة تقرير PDF' : 'Imprimer PDF'}
-          </button>
-
-          {!isModal && (
-            <button
-              onClick={() => navigate('/commandes')}
-              className="px-6 py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-black text-sm uppercase transition-all"
-            >
-              {isAr ? '← الرجوع للطلبيات' : '← Retour aux commandes'}
-            </button>
-          )}
-        </div>
       </div>
     </div>
   );
