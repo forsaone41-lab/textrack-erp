@@ -148,6 +148,19 @@ function isAtelierProductionWorker(e: Employe): boolean {
   const [days, setDays] = useState(2);
   const [extraHours, setExtraHours] = useState(0);
   const [rate, setRate] = useState(17.10); // SMIG rate per hour
+  const [rateMode, setRateMode] = useState<'smig' | 'rh'>('smig');
+
+  useEffect(() => {
+    if (rateMode === 'rh') {
+      const sel = allWorkers.filter(w => selectedWorkerIds.includes(w.id));
+      const sum = sel.reduce((acc, w) => {
+        const monthly = w.salaireMensuel && w.salaireMensuel > 0 ? w.salaireMensuel : 3556.80; // fallback statutory SMIG monthly
+        return acc + (monthly / 208); // 208 statutory working hours per month
+      }, 0);
+      const avg = sel.length > 0 ? Number((sum / sel.length).toFixed(2)) : 17.10;
+      setRate(avg);
+    }
+  }, [selectedWorkerIds, allWorkers, rateMode]);
   
   const [materials, setMaterials] = useState(300);
   const [totalMachines, setTotalMachines] = useState(7);
@@ -567,17 +580,60 @@ function isAtelierProductionWorker(e: Employe): boolean {
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center justify-between">
-                  <span>{isAr ? 'ثمن الساعة' : 'Taux horaire'}</span>
-                  <span className="px-1 py-0.5 bg-amber-100 text-amber-800 rounded text-[8px] font-black">SMIG</span>
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="block text-[11px] font-bold text-slate-600">{isAr ? 'ثمن الساعة' : 'Taux horaire'}</span>
+                  <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRateMode('smig');
+                        setRate(17.10);
+                      }}
+                      className={`px-1.5 py-0.5 rounded-md text-[9px] font-black transition-all ${
+                        rateMode === 'smig'
+                          ? 'bg-amber-500 text-white shadow-2xs'
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      SMIG
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRateMode('rh');
+                        const sel = allWorkers.filter(w => selectedWorkerIds.includes(w.id));
+                        const sum = sel.reduce((acc, w) => {
+                          const monthly = w.salaireMensuel && w.salaireMensuel > 0 ? w.salaireMensuel : 3556.80;
+                          return acc + (monthly / 208);
+                        }, 0);
+                        const avg = sel.length > 0 ? Number((sum / sel.length).toFixed(2)) : 17.10;
+                        setRate(avg);
+                      }}
+                      className={`px-1.5 py-0.5 rounded-md text-[9px] font-black transition-all flex items-center gap-0.5 ${
+                        rateMode === 'rh'
+                          ? 'bg-indigo-600 text-white shadow-2xs'
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                      title={isAr ? "حساب المتوسط الحقيقي لساعة العمل من رواتب العمال المحددين في RH" : "Calcul basé sur le salaire mensuel réel RH des ouvriers sélectionnés"}
+                    >
+                      👥 {isAr ? 'رواتب RH' : 'RH Data'}
+                    </button>
+                  </div>
+                </div>
                 <input
                   type="number"
                   step="0.01"
                   min="0"
                   value={rate}
-                  onChange={(e) => setRate(Number(e.target.value))}
-                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-indigo-600 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
+                  onChange={(e) => {
+                    setRate(Number(e.target.value));
+                    if (rateMode === 'rh') setRateMode('smig');
+                  }}
+                  className={`w-full px-3 py-1.5 rounded-xl font-bold text-xs text-center outline-none border transition-all ${
+                    rateMode === 'rh'
+                      ? 'bg-indigo-50/80 border-indigo-300 text-indigo-700 font-black'
+                      : 'bg-slate-50 border-slate-200 text-indigo-600 focus:bg-white focus:border-indigo-600'
+                  }`}
                 />
               </div>
             </div>
