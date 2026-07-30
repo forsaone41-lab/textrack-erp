@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useLang } from '../contexts/LangContext';
-import { 
-  Calculator, Printer, CheckCircle2, AlertTriangle, 
+import {
+  Calculator, Printer, CheckCircle2, AlertTriangle,
   Clock, Package, Users, Scissors, ShoppingCart, ArrowLeft,
-  DollarSign, Sparkles, Check, X, Bot, Wand2, RefreshCw, UserCheck
+  DollarSign, Sparkles, Check, X, Bot, Wand2, RefreshCw, UserCheck,
+  Ruler, Upload, Image as ImageIcon, Search, FileText
 } from 'lucide-react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { loadData, Employe } from '../types';
+import { loadData, Employe, FicheTechnique } from '../types';
 
 interface AtelierCalculatorProps {
   isModal?: boolean;
@@ -36,6 +37,7 @@ interface AiPreset {
   recommendedPrice: number;
   materialPerPiece: number;
   recommendedDays: number;
+  photo?: string;
 }
 
 const AI_PRESETS: AiPreset[] = [
@@ -62,6 +64,69 @@ const AI_PRESETS: AiPreset[] = [
     recommendedPrice: 85.00,
     materialPerPiece: 38.00,
     recommendedDays: 2
+  }
+];
+
+const DEFAULT_FICHES_TECHNIQUES: FicheTechnique[] = [
+  {
+    id: 'ft-101',
+    modele: 'Abaya Papillon Royal',
+    type: 'Abaya / Robe',
+    client: 'Marwa Collection',
+    tissuConsommation: 3.2,
+    tissuRecommande: 'Soie de Médine / Crêpe',
+    description: 'عباية واسعة بقصة فراشة مع تطريز خفيف على الأكمام',
+    tailles: ['S', 'M', 'L', 'XL'],
+    mesures: [],
+    createdAt: '2026-07-30'
+  },
+  {
+    id: 'ft-102',
+    modele: 'Ensemble Sport Cotton Fleece',
+    type: 'Sportswear / Ensemble',
+    client: 'Urban Wear MA',
+    tissuConsommation: 1.8,
+    tissuRecommande: 'Cotton Fleece 320g',
+    description: 'هودي وبنطلون رياضي واسع بقصة أوفَرسَايز شتوي',
+    tailles: ['M', 'L', 'XL', 'XXL'],
+    mesures: [],
+    createdAt: '2026-07-30'
+  },
+  {
+    id: 'ft-103',
+    modele: 'Caftan Moderne Jawhara',
+    type: 'Caftan / Beldi',
+    client: 'Boutique Yasmine',
+    tissuConsommation: 3.5,
+    tissuRecommande: 'Jawhara Soie + Satin',
+    description: 'قفطان جوهرة قطعتين مع سفيفة حرير وعقاد يدوي',
+    tailles: ['Standard 38-44'],
+    mesures: [],
+    createdAt: '2026-07-30'
+  },
+  {
+    id: 'ft-104',
+    modele: 'T-shirt Basic Premium Over-size',
+    type: 'T-shirt / Streetwear',
+    client: 'StreetBrand Casa',
+    tissuConsommation: 0.85,
+    tissuRecommande: '100% Coton Combed 240g',
+    description: 'تيشرت قطن ممتاز بوزن ثقيل وياقة دائرية مدعمة',
+    tailles: ['S', 'M', 'L', 'XL'],
+    mesures: [],
+    createdAt: '2026-07-30'
+  },
+  {
+    id: 'ft-105',
+    modele: 'Pantalon Cargo Multi-Poches',
+    type: 'Pantalon / Casual',
+    client: 'Atlas Fashion',
+    tissuConsommation: 1.4,
+    tissuRecommande: 'Gabardine Coton / Lycra',
+    description: 'بنطلون كارجو بـ 6 جيوب مع خياطة مزدوجة وقصة مريحة',
+    tailles: ['38', '40', '42', '44', '46'],
+    mesures: [],
+    createdAt: '2026-07-30'
   }
 ];
 
@@ -225,6 +290,101 @@ function isSupportRole(e: Employe): boolean {
   const [aiCustomText, setAiCustomText] = useState('');
   const [isAiAnalyzing, setIsAiAnalyzing] = useState(false);
   const [aiAnalysisDone, setAiAnalysisDone] = useState(true);
+
+  // Import a real model: either from the Beya Creative fiches techniques catalog, or a photo from the device
+  const [fichesList, setFichesList] = useState<FicheTechnique[]>([]);
+  const [isFichePickerOpen, setIsFichePickerOpen] = useState(false);
+  const [fichePickerSearch, setFichePickerSearch] = useState('');
+  const [selectedFiche, setSelectedFiche] = useState<FicheTechnique | null>(null);
+  const [fichePickerMode, setFichePickerMode] = useState<'direct' | 'ai'>('direct');
+
+  useEffect(() => {
+     loadData<FicheTechnique>('fiches').then(res => {
+       if (res && res.length > 0) {
+         setFichesList(res);
+       } else {
+         setFichesList(DEFAULT_FICHES_TECHNIQUES);
+       }
+     }).catch(() => setFichesList(DEFAULT_FICHES_TECHNIQUES));
+  }, []);
+
+  useEffect(() => {
+     if (selectedFiche) {
+       const cons = selectedFiche.tissuConsommation && selectedFiche.tissuConsommation > 0 ? selectedFiche.tissuConsommation : 1.5;
+       setMaterials(Math.round(cons * 35 * (quantity || 1)));
+     }
+  }, [selectedFiche, quantity]);
+
+  const selectAndApplyFicheDirectly = (f: FicheTechnique) => {
+     setSelectedFiche(f);
+     setItemName(`${f.modele}${f.type ? ` (${f.type})` : ''}`);
+     const cons = f.tissuConsommation && f.tissuConsommation > 0 ? f.tissuConsommation : 1.5;
+     const calcMaterials = Math.round(cons * 35 * (quantity || 1));
+     setMaterials(calcMaterials);
+     const calcPrice = Math.round((cons * 35 * 2.3) * 100) / 100;
+     setPricePerPiece(calcPrice);
+     setIsFichePickerOpen(false);
+  };
+
+  const filteredFiches = fichesList.filter(f => {
+     const q = fichePickerSearch.toLowerCase();
+     return (
+       f.modele.toLowerCase().includes(q) ||
+       (f.client && f.client.toLowerCase().includes(q)) ||
+       (f.type && f.type.toLowerCase().includes(q))
+     );
+  });
+
+  const estimateFromFiche = (f: FicheTechnique): AiPreset => {
+     const materialPerPiece = Math.round((f.tissuConsommation || 1.5) * 35 * 100) / 100;
+     return {
+        title: `📐 ${f.modele}`,
+        desc: f.description || f.type || '',
+        aiText: isAr
+           ? `تقدير أولي مبني على الفيش التقنية "${f.modele}"${f.client ? ` (${f.client})` : ''}. استهلاك القماش المسجل: ${f.tissuConsommation || 1.5} متر للقطعة${f.tissuRecommande ? ` (${f.tissuRecommande})` : ''}. عدّل الأرقام حسب سعر القماش الحقيقي عندك.`
+           : `Estimation basée sur la fiche technique "${f.modele}"${f.client ? ` (${f.client})` : ''}. Consommation : ${f.tissuConsommation || 1.5} m/pièce${f.tissuRecommande ? ` (${f.tissuRecommande})` : ''}. Ajustez selon votre prix tissu réel.`,
+        recommendedPrice: Math.round(materialPerPiece * 2.3 * 100) / 100,
+        materialPerPiece,
+        recommendedDays: 2,
+        photo: f.photo
+     };
+  };
+
+  const importFicheAsPreset = (f: FicheTechnique) => {
+     setSelectedAiPreset(estimateFromFiche(f));
+     setIsFichePickerOpen(false);
+     setIsAiAnalyzing(true);
+     setTimeout(() => setIsAiAnalyzing(false), 500);
+  };
+
+  const handleSelectFicheFromPicker = (f: FicheTechnique) => {
+     if (fichePickerMode === 'ai') {
+       importFicheAsPreset(f);
+     } else {
+       selectAndApplyFicheDirectly(f);
+     }
+  };
+
+  const handleUploadModelImage = async (file: File) => {
+     const reader = new FileReader();
+     reader.onload = () => {
+        const dataUrl = reader.result as string;
+        setSelectedAiPreset({
+           title: `📷 ${file.name.replace(/\.[^/.]+$/, '')}`,
+           desc: isAr ? 'موديل مستورد من الجهاز' : 'Modèle importé depuis votre appareil',
+           aiText: isAr
+              ? 'تصويرة تزادت. هاد الأرقام غير تقدير أولي عام (ماشي تحليل حقيقي ديال الصورة) - عدّلها حسب القماش والوقت الحقيقيين ديال هاد الموديل.'
+              : "Photo importée. Ces chiffres sont une estimation générale de départ (pas une analyse réelle de l'image) - ajustez-les selon le tissu et le temps réels de ce modèle.",
+           recommendedPrice: 60,
+           materialPerPiece: 25,
+           recommendedDays: 2,
+           photo: dataUrl
+        });
+        setIsAiAnalyzing(true);
+        setTimeout(() => setIsAiAnalyzing(false), 500);
+     };
+     reader.readAsDataURL(file);
+  };
 
   if (!isAdmin) {
     if (isModal) {
@@ -670,15 +830,42 @@ function isSupportRole(e: Employe): boolean {
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                  {isAr ? 'نوع البياسة / الموديل' : 'Article / Modèle'}
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[11px] font-bold text-slate-600">
+                    {isAr ? 'نوع البياسة / الموديل' : 'Article / Modèle'}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFichePickerMode('direct');
+                      setIsFichePickerOpen(true);
+                    }}
+                    className="px-2 py-0.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-lg text-[10px] font-black transition-all flex items-center gap-1 shadow-2xs border border-indigo-200 active:scale-95"
+                  >
+                    <FileText className="w-3 h-3 text-indigo-600 group-hover:text-white" />
+                    {isAr ? '📋 اختيار من الفيش تكنيك' : '📋 Fiche Tech'}
+                  </button>
+                </div>
                 <input
                   type="text"
                   value={itemName}
                   onChange={(e) => setItemName(e.target.value)}
                   className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 text-xs focus:bg-white focus:border-indigo-600 outline-none"
                 />
+                {selectedFiche && (
+                  <div className="mt-1.5 px-2 py-1 bg-indigo-50/90 border border-indigo-200 rounded-lg flex items-center justify-between text-[10px] text-indigo-800 font-bold">
+                    <span className="truncate" title={isAr ? `استهلاك المتر للبياسة: ${selectedFiche.tissuConsommation || 1.5}m` : `Consommation: ${selectedFiche.tissuConsommation || 1.5}m/p`}>
+                      ✨ {isAr ? `فيش: ${selectedFiche.modele} (${selectedFiche.tissuConsommation || 1.5}m/p)` : `Fiche: ${selectedFiche.modele} (${selectedFiche.tissuConsommation || 1.5}m/p)`}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedFiche(null)}
+                      className="ml-1 text-indigo-400 hover:text-rose-600 font-bold"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -1120,6 +1307,70 @@ function isSupportRole(e: Employe): boolean {
                   </button>
                 ))}
               </div>
+
+              <div className="mt-3 pt-2.5 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <span className="text-[11px] font-bold text-slate-600">
+                  {isAr ? 'أو استورد موديل حقيقي:' : 'Ou importez un modèle réel :'}
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFichePickerMode('ai');
+                      setIsFichePickerOpen(true);
+                    }}
+                    className="px-3 py-1.5 bg-violet-50 hover:bg-violet-600 text-violet-700 hover:text-white border border-violet-200 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-2xs"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    {isAr ? '📋 من الفيش تكنيك (BEYA)' : '📋 Fiche Technique (BEYA)'}
+                  </button>
+                  <label className="px-3 py-1.5 bg-slate-100 hover:bg-slate-800 text-slate-700 hover:text-white border border-slate-200 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                    <Upload className="w-3.5 h-3.5" />
+                    {isAr ? '💻 من جهازك (صورة)' : '💻 Depuis votre appareil'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleUploadModelImage(file);
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div className="mt-3 pt-3 border-t border-slate-200">
+                <label className="block text-[11px] font-bold text-slate-600 mb-1.5">
+                  {isAr ? 'أو اكتب وصف الموديل بكلماتك:' : 'Ou décrivez le modèle avec vos mots :'}
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={aiCustomText}
+                    onChange={(e) => setAiCustomText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && aiCustomText.trim()) {
+                        setSelectedAiPreset({
+                           title: `✍️ ${aiCustomText.trim()}`,
+                           desc: aiCustomText.trim(),
+                           aiText: isAr
+                              ? `تقدير أولي عام بناءً على الوصف "${aiCustomText.trim()}". عدّل الأرقام حسب القماش والوقت الحقيقيين ديال هاد الموديل.`
+                              : `Estimation générale de départ basée sur "${aiCustomText.trim()}". Ajustez selon le tissu et le temps réels de ce modèle.`,
+                           recommendedPrice: 60,
+                           materialPerPiece: 25,
+                           recommendedDays: 2
+                        });
+                        setIsAiAnalyzing(true);
+                        setTimeout(() => setIsAiAnalyzing(false), 500);
+                      }
+                    }}
+                    placeholder={isAr ? 'مثال: جيليه شتوي بجيوب وسحاب...' : 'Ex: Gilet hiver avec poches et zip...'}
+                    className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-violet-400"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* AI Conversation & Breakdown */}
@@ -1189,6 +1440,140 @@ function isSupportRole(e: Employe): boolean {
               >
                 <Wand2 className="w-4 h-4" />
                 {isAr ? '🚀 تطبيق هذه الأرقام في الحاسبة الآن' : '🚀 Appliquer l\'estimation IA'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: FICHE TECHNIQUE SELECTOR */}
+      {isFichePickerOpen && (
+        <div className="fixed inset-0 z-[1300] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-3xl w-full shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
+            {/* Header */}
+            <div className="p-5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+                  <FileText className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-black text-sm flex items-center gap-2">
+                    {isAr ? 'اختيار موديل من الفيش تكنيك (Fiches Techniques)' : 'Sélectionner une Fiche Technique'}
+                  </h3>
+                  <p className="text-[10px] text-slate-300">
+                    {isAr ? 'يتم استيراد اسم الموديل وحساب تكلفة القماش تلقائياً بناءً على استهلاك المتر للبياسة' : 'Importe le nom du modèle et calcule automatiquement la matière selon la consommation'}
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsFichePickerOpen(false)}
+                className="p-1.5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-all"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Search Bar */}
+            <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center gap-3">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 left-3" />
+                <input
+                  type="text"
+                  placeholder={isAr ? 'بحث عن موديل، زبون، أو نوع...' : 'Rechercher un modèle, client ou type...'}
+                  value={fichePickerSearch}
+                  onChange={(e) => setFichePickerSearch(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:border-indigo-600 outline-none"
+                />
+              </div>
+              <span className="text-xs font-bold text-slate-500">
+                {isAr ? `المتاح: ${filteredFiches.length} موديل` : `${filteredFiches.length} modèles`}
+              </span>
+            </div>
+
+            {/* Fiches List Grid */}
+            <div className="p-6 overflow-y-auto flex-1">
+              {filteredFiches.length === 0 ? (
+                <div className="py-12 text-center text-slate-400">
+                  <FileText className="w-12 h-12 mx-auto mb-2 opacity-20" />
+                  <p className="text-xs font-bold">{isAr ? 'لا توجد فيش تكنيك مطابقة للبحث' : 'Aucune fiche technique trouvée'}</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {filteredFiches.map((f) => {
+                    const cons = f.tissuConsommation && f.tissuConsommation > 0 ? f.tissuConsommation : 1.5;
+                    const estFabricCost = Math.round(cons * 35 * (quantity || 1));
+                    return (
+                      <div
+                        key={f.id}
+                        onClick={() => handleSelectFicheFromPicker(f)}
+                        className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 ${
+                          selectedFiche?.id === f.id
+                            ? 'bg-indigo-50/50 border-indigo-600 ring-2 ring-indigo-200 shadow-md'
+                            : 'bg-white border-slate-200 hover:border-indigo-300 hover:shadow-lg'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-3">
+                            {f.photo ? (
+                              <img
+                                src={f.photo}
+                                alt={f.modele}
+                                className="w-12 h-12 rounded-xl object-cover border border-slate-200 shrink-0"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-700 font-black flex items-center justify-center text-xs shrink-0">
+                                {f.modele.slice(0, 2).toUpperCase()}
+                              </div>
+                            )}
+                            <div>
+                              <h4 className="font-black text-slate-900 text-sm leading-tight">{f.modele}</h4>
+                              <p className="text-[11px] font-bold text-slate-500 mt-0.5">
+                                {f.client || 'Client BEYA'} {f.type ? `• ${f.type}` : ''}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="px-2 py-0.5 bg-slate-100 text-slate-600 font-black text-[10px] rounded-md">
+                            {f.id.slice(0, 6)}
+                          </span>
+                        </div>
+
+                        {f.description && (
+                          <p className="text-[11px] text-slate-600 line-clamp-1 italic">
+                            "{f.description}"
+                          </p>
+                        )}
+
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+                          <div className="flex items-center gap-1.5 text-slate-700 font-bold">
+                            <span className="text-indigo-600">🧵 استهلاك:</span>
+                            <span className="font-black">{cons}m/بياسة</span>
+                          </div>
+                          <div className="text-emerald-700 font-black">
+                            {estFabricCost} DH <span className="text-[10px] font-normal text-slate-400">({quantity} pcs)</span>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          className="w-full py-2 bg-slate-900 hover:bg-indigo-600 text-white rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          {isAr ? '✓ اختيار وتطبيق في الحاسبة' : '✓ Appliquer au calcul'}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+              <button
+                onClick={() => setIsFichePickerOpen(false)}
+                className="px-5 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold text-xs hover:bg-slate-100 transition-all"
+              >
+                {isAr ? 'إغلاق' : 'Fermer'}
               </button>
             </div>
           </div>

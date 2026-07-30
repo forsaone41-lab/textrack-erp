@@ -1400,10 +1400,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
        headerSticky,
        headerMenuAlign,
        headerBgColor,
-       headerTextColor,
-       headerPosition,
-       headerStyle,
-       topBarPosition
+       headerTextColor
     };
 
     // Add owner details for Multi-Tenant Data Isolation
