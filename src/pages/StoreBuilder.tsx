@@ -1060,6 +1060,9 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
               if (conf.headerMenuAlign) setHeaderMenuAlign(conf.headerMenuAlign);
               if (conf.headerBgColor) setHeaderBgColor(conf.headerBgColor);
               if (conf.headerTextColor) setHeaderTextColor(conf.headerTextColor);
+              if (conf.headerPosition) setHeaderPosition(conf.headerPosition);
+              if (conf.headerStyle) setHeaderStyle(conf.headerStyle);
+              if (conf.topBarPosition) setTopBarPosition(conf.topBarPosition);
            }
         } catch (err) {
            console.warn('No live config found in Supabase or table missing:', err);
@@ -1397,7 +1400,10 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
        headerSticky,
        headerMenuAlign,
        headerBgColor,
-       headerTextColor
+       headerTextColor,
+       headerPosition,
+       headerStyle,
+       topBarPosition
     };
 
     // Add owner details for Multi-Tenant Data Isolation
@@ -2040,7 +2046,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
     };
 
     return (
-      <header className={`w-full transition-all duration-300 ${containerStickyClass}`} style={bgStyle}>
+      <header className={`store-header-navbar w-full transition-all duration-300 ${containerStickyClass}`} style={bgStyle}>
         {showTopBar && topBarText && topBarPosition !== 'bottom' && (
           <div className="w-full py-2 px-4 text-center text-xs font-bold overflow-hidden shrink-0 border-b border-black/5" style={{ backgroundColor: topBarBgColor, color: topBarTextColor }}>
             {topBarAnimation === 'marquee' ? (
@@ -4525,13 +4531,16 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                 display: flex; flex-direction: column;
                 min-height: 100vh;
              }
-             .header-at-bottom > div:not(.shrink-0) > div:first-child { 
+             .header-at-bottom > div:not(.shrink-0) > *:first-child,
+             .header-at-bottom .store-header-navbar { 
                 order: 9999; border-top: 1px solid rgba(0,0,0,0.1); border-bottom: none !important; 
              }
-             .header-is-fixed > div:not(.shrink-0) > div:first-child {
+             .header-is-fixed > div:not(.shrink-0) > *:first-child,
+             .header-is-fixed .store-header-navbar {
                 position: sticky; top: 0; z-index: 50; background-color: inherit;
              }
-             .header-is-fixed.header-at-bottom > div:not(.shrink-0) > div:first-child {
+             .header-is-fixed.header-at-bottom > div:not(.shrink-0) > *:first-child,
+             .header-is-fixed.header-at-bottom .store-header-navbar {
                 top: auto; bottom: 0; border-top: 1px solid rgba(0,0,0,0.1);
              }
              @media (min-width: 768px) {
@@ -6590,6 +6599,15 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                              {isAr ? 'القائمة العلوية (Header)' : 'En-tête & Menu'}
                            </h4>
                            <div className="space-y-5">
+                              {/* Menu Alignment (Left / Center / Right) */}
+                              <div>
+                                 <label className="block text-[10px] font-bold text-slate-500 mb-2">{isAr ? 'محاذاة عناصر القائمة (يسار / وسط / يمين)' : 'Alignement du Menu'}</label>
+                                 <div className="flex bg-white rounded-lg border border-slate-200 p-1 shadow-sm">
+                                    <button onClick={() => setHeaderMenuAlign('left')} className={`flex-1 text-[11px] py-1.5 rounded-md font-bold transition-all ${headerMenuAlign === 'left' ? 'bg-indigo-50 text-indigo-700 shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}>{isAr ? 'يسار (Left)' : 'Gauche'}</button>
+                                    <button onClick={() => setHeaderMenuAlign('center')} className={`flex-1 text-[11px] py-1.5 rounded-md font-bold transition-all ${headerMenuAlign === 'center' ? 'bg-indigo-50 text-indigo-700 shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}>{isAr ? 'وسط (Center)' : 'Centre'}</button>
+                                    <button onClick={() => setHeaderMenuAlign('right')} className={`flex-1 text-[11px] py-1.5 rounded-md font-bold transition-all ${headerMenuAlign === 'right' ? 'bg-indigo-50 text-indigo-700 shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}>{isAr ? 'يمين (Right)' : 'Droite'}</button>
+                                 </div>
+                              </div>
                               {/* Menu Placement */}
                               <div>
                                  <label className="block text-[10px] font-bold text-slate-500 mb-2">{isAr ? 'مكان القائمة (أسفل / أعلى)' : 'Position'}</label>
