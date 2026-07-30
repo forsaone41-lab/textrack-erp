@@ -48,10 +48,11 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
 
   React.useEffect(() => {
      if(currentUser?.id) {
+       const email = (currentUser?.email || '').toLowerCase();
        supabase.from('stores')
-         .select('config_json, created_at, subscription_tier')
-         .eq('config_json->>owner_id', currentUser.id)
-         .then(({data, error}) => {
+         .select('name, domain, config_json, created_at, subscription_tier')
+         .or(`config_json->>owner_id.eq.${currentUser.id}${email ? `,config_json->>owner_email.eq.${email}` : ''}`)
+         .then(async ({data, error}) => {
             if (data && data.length > 0) {
                setStoreCount(data.length);
                const highestTier = data.some(st => st.subscription_tier === 'PREMIUM') ? 'PREMIUM'
@@ -63,19 +64,31 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
                   const diffDays = Math.floor(Math.abs(new Date().getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
                   setTrialDaysLeft(Math.max(0, 14 - diffDays));
                }
-               let totalVisitors = 0;
+
+               // Real sales/orders come from the "commandes" table (actual customer orders),
+               // scoped strictly to this merchant's own store names - never mixed with other stores.
+               const storeNames = [...new Set(data.map((st: any) => st.name).filter(Boolean))];
                let totalRevenue = 0;
                let totalOrders = 0;
-               
-               data.forEach(st => {
-                 const stats = st.config_json?.stats || {};
-                 totalVisitors += (parseInt(stats.visitors) || 0);
-                 totalRevenue += (parseFloat(stats.revenue) || 0);
-                 totalOrders += (parseInt(stats.orders) || 0);
-               });
-               
+               let totalVisitors = 0;
+               data.forEach((st: any) => { totalVisitors += (parseInt(st.config_json?.stats?.visitors) || 0); });
+
+               if (storeNames.length > 0) {
+                  const orClause = storeNames.map((n: string) => `tissu.ilike.Store: ${n}%`).join(',');
+                  const { data: commandes } = await supabase
+                     .from('commandes')
+                     .select('prix, statut')
+                     .or(orClause);
+                  (commandes || []).forEach((c: any) => {
+                     const st = (c.statut || '').toLowerCase();
+                     if (['annulée','annulation_demandee','refusé','refusée'].includes(st)) return;
+                     totalRevenue += parseFloat(c.prix) || 0;
+                     totalOrders += 1;
+                  });
+               }
+
                const convRate = totalVisitors > 0 ? ((totalOrders / totalVisitors) * 100).toFixed(1) : 0;
-               
+
                setStoreStats({
                  visitors: totalVisitors,
                  revenue: totalRevenue,
@@ -332,9 +345,11 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
             </div>
           </div>
 
-          {/* Action: Track Orders */}
+          {/* Action: Track Orders - opens the store's own internal dashboard tab
+              (not the separate /store-analytics page) so there is a single source
+              of truth for the numbers instead of two dashboards that can drift apart. */}
           <div
-            onClick={() => navigate('/store-analytics')}
+            onClick={() => { localStorage.setItem('beya_active_tab', 'analytics'); localStorage.setItem('beya_platform_mode', 'gestion'); navigate('/store-builder'); }}
             className="group cursor-pointer bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-200 transition-all duration-300 relative overflow-hidden"
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-full blur-2xl -mr-16 -mt-16 transition-all group-hover:bg-blue-100/50"></div>
@@ -366,9 +381,10 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
             <h2 className="text-xl font-black text-slate-900 tracking-tight">
               {t('Aperçu de votre boutique', 'Store overview', 'نظرة عامة على متجرك')}
             </h2>
-            <button 
+            <button
               onClick={() => {
-                localStorage.setItem('beya_active_tab', 'orders');
+                localStorage.setItem('beya_active_tab', 'analytics');
+                localStorage.setItem('beya_platform_mode', 'gestion');
                 window.location.hash = '#/store-builder';
               }}
               className="text-sm font-bold text-indigo-600 hover:text-indigo-700"

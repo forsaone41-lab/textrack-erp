@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ShoppingBag, TrendingUp, Users, Package, Crown, Loader2, Megaphone } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, TrendingUp, Users, Package, Crown, Loader2, Megaphone, Store } from 'lucide-react';
 import { supabase } from '../supabase';
 
 interface StoreAnalyticsProps {
@@ -18,6 +18,7 @@ export default function StoreAnalytics({ currentUser }: StoreAnalyticsProps) {
   const [totalOrders, setTotalOrders] = useState(0);
   const [topProducts, setTopProducts] = useState<{ name: string; qty: number; revenue: number }[]>([]);
   const [topClients, setTopClients] = useState<{ name: string; phone: string; orders: number; total: number }[]>([]);
+  const [storeBreakdown, setStoreBreakdown] = useState<{ name: string; domain: string; revenue: number; orders: number }[]>([]);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -43,8 +44,12 @@ export default function StoreAnalytics({ currentUser }: StoreAnalyticsProps) {
           setTotalOrders(0);
           setTopProducts([]);
           setTopClients([]);
+          setStoreBreakdown([]);
           return;
         }
+
+        const domainByName: Record<string, string> = {};
+        myStores.forEach((s: any) => { if (s.name) domainByName[s.name] = s.domain || ''; });
 
         const orClause = storeNames.map(n => `tissu.ilike.Store: ${n}%`).join(',');
         const { data: commandes } = await supabase
@@ -60,6 +65,10 @@ export default function StoreAnalytics({ currentUser }: StoreAnalyticsProps) {
         let revenue = 0;
         const productMap: Record<string, { qty: number; revenue: number }> = {};
         const clientMap: Record<string, { phone: string; orders: number; total: number }> = {};
+        // Per-store breakdown - each order is attributed strictly to the store name parsed
+        // from its own "tissu" field, never merged/guessed across stores.
+        const storeMap: Record<string, { revenue: number; orders: number }> = {};
+        storeNames.forEach(n => { storeMap[n] = { revenue: 0, orders: 0 }; });
 
         rows.forEach((c: any) => {
           const price = parseFloat(c.prix) || 0;
@@ -79,10 +88,21 @@ export default function StoreAnalytics({ currentUser }: StoreAnalyticsProps) {
           if (!clientMap[clientKey]) clientMap[clientKey] = { phone: clientPhone, orders: 0, total: 0 };
           clientMap[clientKey].orders += 1;
           clientMap[clientKey].total += price;
+
+          const tissuRaw = c.tissu || '';
+          const storeNameMatch = tissuRaw.match(/^Store:\s*([^-]+)/);
+          const orderStoreName = storeNameMatch ? storeNameMatch[1].trim() : null;
+          if (orderStoreName && storeMap[orderStoreName]) {
+            storeMap[orderStoreName].revenue += price;
+            storeMap[orderStoreName].orders += 1;
+          }
         });
 
         setTotalRevenue(revenue);
         setTotalOrders(rows.length);
+        setStoreBreakdown(
+          storeNames.map(n => ({ name: n, domain: domainByName[n] || '', revenue: storeMap[n].revenue, orders: storeMap[n].orders }))
+        );
         setTopProducts(
           Object.entries(productMap)
             .map(([name, v]) => ({ name, qty: v.qty, revenue: v.revenue }))
@@ -163,6 +183,36 @@ export default function StoreAnalytics({ currentUser }: StoreAnalyticsProps) {
                 <p className="text-2xl font-black text-slate-900">{topClients.length > 0 ? new Set(topClients.map(c => c.name)).size : 0}+</p>
               </div>
             </div>
+
+            {/* Per-store breakdown - only shown when the merchant owns more than one store,
+                so each site's own numbers stay visible instead of a single merged total. */}
+            {storeBreakdown.length > 1 && (
+              <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 mb-8">
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide mb-5 flex items-center gap-2">
+                  <Store className="w-4 h-4 text-indigo-500" /> {t('Détail par boutique', 'Breakdown by store', 'التفاصيل حسب المتجر')}
+                </h3>
+                <div className="space-y-2">
+                  {storeBreakdown.map((s, idx) => (
+                    <div key={idx} className="flex items-center justify-between gap-3 bg-slate-50 rounded-xl p-3.5 border border-slate-100">
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-slate-800 truncate">{s.name}</p>
+                        {s.domain && <p className="text-xs text-slate-400 truncate">{s.domain}</p>}
+                      </div>
+                      <div className="flex items-center gap-6 shrink-0 text-right">
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">{t('Commandes', 'Orders', 'الطلبات')}</p>
+                          <p className="text-sm font-black text-slate-900">{s.orders}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">{t('Ventes', 'Sales', 'المبيعات')}</p>
+                          <p className="text-sm font-black text-emerald-600">{s.revenue.toLocaleString('fr-FR')} MAD</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="grid lg:grid-cols-2 gap-6 mb-8">
               {/* Top Products */}

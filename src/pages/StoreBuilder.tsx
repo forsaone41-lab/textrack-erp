@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown, TrendingUp, Package, RefreshCw, Undo2, Menu, Home, Heart, SlidersHorizontal, ArrowRight, ArrowLeft, Grid, User, Ruler, Crown, RotateCcw, BarChart3, LogOut } from 'lucide-react';
+import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown, TrendingUp, Package, RefreshCw, Undo2, Menu, Home, Heart, SlidersHorizontal, ArrowRight, ArrowLeft, Grid, User, Ruler, Crown, RotateCcw, BarChart3, LogOut, Clock } from 'lucide-react';
 
 
 const ReadMoreDescription = ({ text, className, isAr }: any) => {
@@ -215,10 +215,16 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
   const [topBarTextColor, setTopBarTextColor] = useState(config.topBarTextColor || '#0f172a');
   const [topBarPosition, setTopBarPosition] = useState(config.topBarPosition || 'top');
   const [topBarAnimation, setTopBarAnimation] = useState(config.topBarAnimation || 'static');
+  const [headerSticky, setHeaderSticky] = useState<boolean>(config.headerSticky ?? true);
+  const [headerMenuAlign, setHeaderMenuAlign] = useState<'left' | 'center' | 'right' | 'top' | 'bottom'>(config.headerMenuAlign || 'center');
+  const [headerBgColor, setHeaderBgColor] = useState<string>(config.headerBgColor || '#ffffff');
+  const [headerTextColor, setHeaderTextColor] = useState<string>(config.headerTextColor || '#0f172a');
+  const [editorTab, setEditorTab] = useState<'header' | 'sections' | 'design' | 'store' | 'footer'>('header');
 
   const [storeName, setStoreName] = useState(config.storeName || '');
   const [storeSlug, setStoreSlug] = useState(config.storeSlug || '');
   const [showPreview, setShowPreview] = useState(false);
+  const [isPreviewFullscreen, setIsPreviewFullscreen] = useState(false);
   const [previewProductId, setPreviewProductId] = useState<number | null>(null);
   const [previewDevice, setPreviewDevice] = useState<'desktop'|'mobile'>('desktop');
   const [isControlsCollapsed, setIsControlsCollapsed] = useState(false);
@@ -638,6 +644,8 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
   const [menuTextColor, setMenuTextColor] = useState(config.menuTextColor || '#64748b');
   const [menuActiveColor, setMenuActiveColor] = useState(config.menuActiveColor || '');
   const [menuStyle, setMenuStyle] = useState<'underline' | 'pill' | 'bold'>(config.menuStyle || 'underline');
+  const [headerPosition, setHeaderPosition] = useState<'top' | 'bottom'>(config.headerPosition || 'top');
+  const [headerStyle, setHeaderStyle] = useState<'normal' | 'fixed'>(config.headerStyle || 'normal');
   // The store's plan (Normal/PRO/Premier) is admin-controlled, read from stores.subscription_tier
   // (a real DB column, not the merchant-writable config_json) - see fetchSubscriptionTier below.
   const [subscriptionTier, setSubscriptionTierState] = useState<string>(() => {
@@ -701,9 +709,9 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
   const isRestoringDesign = useRef(false);
   useEffect(() => {
      if (isRestoringDesign.current) { isRestoringDesign.current = false; return; }
-     setDesignHistory(prev => [...prev, { primaryColor, secondaryColor, borderColor, buttonStyle, cardStyle, footerBgColor, footerTextColor, fontFamily, heroHeight, heroImagePosX, heroImagePosY }].slice(-20));
+     setDesignHistory(prev => [...prev, { primaryColor, secondaryColor, borderColor, buttonStyle, cardStyle, footerBgColor, footerTextColor, fontFamily, heroHeight, heroImagePosX, heroImagePosY, headerSticky, headerMenuAlign, headerBgColor, headerTextColor }].slice(-20));
      // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [primaryColor, secondaryColor, borderColor, buttonStyle, cardStyle, footerBgColor, footerTextColor, fontFamily, heroHeight, heroImagePosX, heroImagePosY]);
+  }, [primaryColor, secondaryColor, borderColor, buttonStyle, cardStyle, footerBgColor, footerTextColor, fontFamily, heroHeight, heroImagePosX, heroImagePosY, headerSticky, headerMenuAlign, headerBgColor, headerTextColor]);
 
   const handleUndoDesign = () => {
      setDesignHistory(prev => {
@@ -721,6 +729,10 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
         setHeroHeight(target.heroHeight);
         setHeroImagePosX(target.heroImagePosX);
         setHeroImagePosY(target.heroImagePosY);
+        setHeaderSticky(target.headerSticky ?? true);
+        setHeaderMenuAlign(target.headerMenuAlign || 'center');
+        setHeaderBgColor(target.headerBgColor || '#ffffff');
+        setHeaderTextColor(target.headerTextColor || '#0f172a');
         return prev.slice(0, -1);
      });
   };
@@ -728,6 +740,30 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
   const [heroImage, setHeroImage] = useState(config.heroImage || THEMES[0].previewImg);
   const [isHeroImagePickerOpen, setIsHeroImagePickerOpen] = useState(false);
   const [heroPickerCategory, setHeroPickerCategory] = useState('femme');
+  const [heroSearchQuery, setHeroSearchQuery] = useState('');
+  const [heroSearchResults, setHeroSearchResults] = useState<string[]>([]);
+  const [isSearchingHero, setIsSearchingHero] = useState(false);
+  const [heroSearchError, setHeroSearchError] = useState('');
+  const UNSPLASH_ACCESS_KEY = '-9T6_bObqAOMmPEAo_lhLYpyYXeyDrmhNNuCSxBpCM8';
+
+  const searchUnsplashPhotos = async (query: string) => {
+     if (!query.trim()) { setHeroSearchResults([]); setHeroSearchError(''); return; }
+     setIsSearchingHero(true);
+     setHeroSearchError('');
+     try {
+        const res = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=24&orientation=landscape`, {
+           headers: { Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}` }
+        });
+        if (!res.ok) throw new Error('Unsplash request failed');
+        const data = await res.json();
+        setHeroSearchResults((data.results || []).map((p: any) => p.urls?.regular).filter(Boolean));
+     } catch (e) {
+        setHeroSearchError(storeIsAr ? 'تعذر البحث، حاول مرة أخرى' : 'Recherche indisponible, réessayez');
+        setHeroSearchResults([]);
+     } finally {
+        setIsSearchingHero(false);
+     }
+  };
   const HERO_PHOTO_CATEGORIES = [
     { id: 'femme', label: '👗 Femme', photos: [
       'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=900&auto=format&fit=crop',
@@ -787,6 +823,10 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
     ]},
   ];
   
+  // Coming Soon mode: shows a placeholder page to visitors while the merchant builds the store
+  const [comingSoonMode, setComingSoonMode] = useState(config.comingSoonMode ?? false);
+  const [comingSoonMessage, setComingSoonMessage] = useState(config.comingSoonMessage || '');
+
   // Theme Inline Texts
   const [heroTitle, setHeroTitle] = useState(config.heroTitle || 'New Collection');
   const [heroSubtitle, setHeroSubtitle] = useState(config.heroSubtitle || 'Discover our latest premium quality garments.');
@@ -963,6 +1003,8 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
               if (conf.storeLogo) setStoreLogo(conf.storeLogo);
               if (conf.storeFavicon) setStoreFavicon(conf.storeFavicon);
               if (conf.seoDescription) setSeoDescription(conf.seoDescription);
+              if (conf.comingSoonMode !== undefined) setComingSoonMode(conf.comingSoonMode);
+              if (conf.comingSoonMessage) setComingSoonMessage(conf.comingSoonMessage);
               if (conf.activeTheme) setActiveTheme(conf.activeTheme);
               if (conf.primaryColor) setPrimaryColor(conf.primaryColor);
               if (conf.fontFamily) setFontFamily(conf.fontFamily);
@@ -1014,6 +1056,10 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
               if (conf.showHeaderLang !== undefined) setShowHeaderLang(conf.showHeaderLang);
               if (conf.showHeaderSearch !== undefined) setShowHeaderSearch(conf.showHeaderSearch);
               if (conf.showHeaderAccount !== undefined) setShowHeaderAccount(conf.showHeaderAccount);
+              if (conf.headerSticky !== undefined) setHeaderSticky(conf.headerSticky);
+              if (conf.headerMenuAlign) setHeaderMenuAlign(conf.headerMenuAlign);
+              if (conf.headerBgColor) setHeaderBgColor(conf.headerBgColor);
+              if (conf.headerTextColor) setHeaderTextColor(conf.headerTextColor);
            }
         } catch (err) {
            console.warn('No live config found in Supabase or table missing:', err);
@@ -1183,15 +1229,23 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
   const [isLinkingSubdomain, setIsLinkingSubdomain] = useState(false);
   const [domainError, setDomainError] = useState('');
 
+  // Single source of truth for "what domain does this store live at" - every place that
+  // used to recompute this independently (Save, Visiter, share link, subscription lookup...)
+  // could drift out of sync with each other, so a Save could write to one domain while
+  // "Visiter" opened a different one and never showed the change.
+  const getStoreDomain = () => {
+     if (customDomain) return customDomain;
+     if (storeName.toLowerCase().includes('fashlow') || (storeSlug && storeSlug.toLowerCase().includes('fashlow'))) return 'fashlow.store';
+     if (storeSlug) return `${storeSlug}.beyacreative.com`;
+     return `${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`;
+  };
+
   // Plan (Normal/PRO/Premier) comes straight from the stores table so it can only be
   // changed by an admin, never by the merchant editing their own store config_json.
   // Runs for both the editor and the live storefront.
   useEffect(() => {
      if (!storeName) return;
-     let domain = customDomain || (storeSlug ? `${storeSlug}.beyacreative.com` : `${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`);
-     if (storeName.toLowerCase().includes('fashlow') || (storeSlug && storeSlug.toLowerCase().includes('fashlow'))) {
-        domain = 'fashlow.store';
-     }
+     const domain = getStoreDomain();
      supabase.from('stores').select('subscription_tier').eq('domain', domain).single()
         .then(({ data }: any) => {
            if (data?.subscription_tier) setSubscriptionTier(data.subscription_tier);
@@ -1279,6 +1333,16 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
        storeFavicon,
        seoDescription,
        customDomain,
+       comingSoonMode,
+       comingSoonMessage,
+       showTopBar,
+       topBarText,
+       topBarBgColor,
+       topBarTextColor,
+       topBarPosition,
+       topBarAnimation,
+       headerPosition,
+       headerStyle,
        activeTheme,
        primaryColor,
        fontFamily,
@@ -1329,7 +1393,11 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
        requireAccountToOrder,
        showHeaderLang,
        showHeaderSearch,
-       showHeaderAccount
+       showHeaderAccount,
+       headerSticky,
+       headerMenuAlign,
+       headerBgColor,
+       headerTextColor
     };
 
     // Add owner details for Multi-Tenant Data Isolation
@@ -1347,11 +1415,8 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
     
     // Sync to Supabase for cross-domain live preview (SaaS mode)
     try {
-       let domain = customDomain || (storeSlug ? `${storeSlug}.beyacreative.com` : `${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`);
-       if (storeName.toLowerCase().includes('fashlow') || (storeSlug && storeSlug.toLowerCase().includes('fashlow'))) {
-          domain = 'fashlow.store';
-       }
-       
+       const domain = getStoreDomain();
+
        // Update both exact domain AND a fallback to ensure changes apply immediately
        await supabase.from('stores').upsert({
           domain: domain,
@@ -1479,6 +1544,11 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
      if (isLiveStore) return <Tag className={className} style={mergedStyle} {...props}>{displayText}</Tag>;
      return (
         <Tag
+           // React never re-renders the text inside a contentEditable node once mounted (to avoid
+           // fighting the user's cursor), so editing the same field from the sidebar input instead
+           // of typing directly on the canvas would silently fail to update the preview. Keying on
+           // the current value forces a remount whenever the text changes from that external source.
+           key={displayText}
            className={`${className} cursor-text hover:outline hover:outline-2 hover:outline-indigo-500 hover:outline-dashed hover:bg-black/10 transition-all px-1 rounded min-w-[20px] inline-block empty:before:content-['${storeIsAr ? "فارغ" : "Vide"}'] empty:before:text-slate-400`}
            style={mergedStyle}
            contentEditable
@@ -1525,7 +1595,6 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
    const HeroBackgroundEditor = ({ children, className, style }: any) => {
       if (isLiveStore) return <div className={className} style={style}>{children}</div>;
       return (
-         <>
          <div className={`relative group ${className}`} style={style}>
             {children}
             <button
@@ -1535,8 +1604,16 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                <ImageIcon className="w-4 h-4" />{storeIsAr ? 'تغيير الصورة' : "Changer l'image"}
             </button>
          </div>
+      );
+   };
 
-         {/* HERO IMAGE PICKER MODAL */}
+   // Hero image picker modal was moved out of HeroBackgroundEditor (which is redefined on every
+   // render since it's declared inside this component). It's kept as a plain JSX value (not a
+   // nested component function) and inserted directly via {heroImagePickerModal} - rendering it as
+   // <HeroImagePickerModal /> would still remount the whole subtree (and drop input focus) on every
+   // keystroke, because React treats a changed function reference as a different component type.
+   const heroImagePickerModal = (
+      <>
          {isHeroImagePickerOpen && (
             <div className="fixed inset-0 z-[9999] bg-slate-900/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-6" onClick={() => setIsHeroImagePickerOpen(false)}>
                <div className="bg-white w-full sm:max-w-3xl rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()} style={{ maxHeight: '90vh' }}>
@@ -1573,7 +1650,31 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                      <div className="h-px flex-1 bg-slate-100" />
                   </div>
 
-                  {/* Category Tabs */}
+                  {/* Live Unsplash Search */}
+                  <div className="px-5 pb-3">
+                     <div className="relative">
+                        <Search className={`w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 ${storeIsAr ? 'right-3' : 'left-3'}`} />
+                        <input
+                           type="text"
+                           value={heroSearchQuery}
+                           onChange={(e) => setHeroSearchQuery(e.target.value)}
+                           onKeyDown={(e) => { if (e.key === 'Enter') searchUnsplashPhotos(heroSearchQuery); }}
+                           placeholder={storeIsAr ? 'ابحث عن أي صورة (مثال: منتجات جلدية)...' : 'Rechercher une image (ex: sac en cuir)...'}
+                           className={`w-full py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-indigo-400 ${storeIsAr ? 'pr-9 pl-20' : 'pl-9 pr-20'}`}
+                        />
+                        <button
+                           onClick={() => searchUnsplashPhotos(heroSearchQuery)}
+                           disabled={isSearchingHero || !heroSearchQuery.trim()}
+                           className={`absolute top-1/2 -translate-y-1/2 px-3 py-1.5 bg-indigo-600 text-white text-xs font-black rounded-lg disabled:opacity-40 ${storeIsAr ? 'left-1.5' : 'right-1.5'}`}
+                        >
+                           {isSearchingHero ? '...' : (storeIsAr ? 'بحث' : 'Chercher')}
+                        </button>
+                     </div>
+                     {heroSearchError && <p className="text-[11px] text-rose-500 font-bold mt-1.5">{heroSearchError}</p>}
+                  </div>
+
+                  {/* Category Tabs - hidden while a search is active */}
+                  {heroSearchQuery.trim() === '' && (
                   <div className="px-5">
                      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                         {HERO_PHOTO_CATEGORIES.map(cat => (
@@ -1591,11 +1692,17 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                         ))}
                      </div>
                   </div>
+                  )}
 
                   {/* Photo Grid */}
                   <div className="p-5 overflow-y-auto" style={{ maxHeight: '40vh' }}>
+                     {isSearchingHero ? (
+                        <div className="flex items-center justify-center py-10">
+                           <Loader2 className="w-6 h-6 text-indigo-500 animate-spin" />
+                        </div>
+                     ) : (
                      <div className="grid grid-cols-3 gap-2">
-                        {(HERO_PHOTO_CATEGORIES.find(c => c.id === heroPickerCategory)?.photos || []).map((url, idx) => (
+                        {(heroSearchQuery.trim() !== '' ? heroSearchResults : (HERO_PHOTO_CATEGORIES.find(c => c.id === heroPickerCategory)?.photos || [])).map((url, idx) => (
                            <div
                               key={idx}
                               onClick={() => { setHeroImage(url); setIsHeroImagePickerOpen(false); }}
@@ -1612,13 +1719,13 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                            </div>
                         ))}
                      </div>
+                     )}
                   </div>
                </div>
             </div>
          )}
          </>
       );
-   };
 
 
 
@@ -1911,6 +2018,87 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
     );
   };
 
+  const StoreHeaderNavbar = ({ variant = 'light', page, setPage, isModal = false }: any) => {
+    const isDark = variant === 'dark';
+    const bgStyle = headerBgColor && headerBgColor !== '#ffffff' 
+      ? { backgroundColor: headerBgColor, color: headerTextColor || (isDark ? '#ffffff' : '#0f172a') }
+      : (isDark ? { backgroundColor: '#111', color: '#f5f5f5' } : { backgroundColor: '#ffffff', color: headerTextColor || '#0f172a' });
+
+    const containerStickyClass = headerSticky 
+      ? 'sticky top-0 z-[100] backdrop-blur-xl shadow-sm'
+      : 'relative z-30';
+
+    const getLinkStyleClass = (isActive: boolean) => {
+      const base = "transition-all cursor-pointer ";
+      if (menuStyle === 'pill') {
+        return base + (isActive ? "px-4 py-1.5 rounded-full font-black text-white shadow-sm " : "px-4 py-1.5 rounded-full hover:bg-black/5 ");
+      }
+      if (menuStyle === 'bold') {
+        return base + (isActive ? "font-black tracking-wider " : "font-medium hover:opacity-75 ");
+      }
+      return base + (isActive ? "font-black border-b-2 pb-0.5 " : "font-medium hover:opacity-75 ");
+    };
+
+    return (
+      <header className={`w-full transition-all duration-300 ${containerStickyClass}`} style={bgStyle}>
+        {showTopBar && topBarText && topBarPosition !== 'bottom' && (
+          <div className="w-full py-2 px-4 text-center text-xs font-bold overflow-hidden shrink-0 border-b border-black/5" style={{ backgroundColor: topBarBgColor, color: topBarTextColor }}>
+            {topBarAnimation === 'marquee' ? (
+               <div className="whitespace-nowrap inline-block" style={{ animation: 'beya-topbar-marquee 14s linear infinite' }}>{topBarText}</div>
+            ) : (
+               <span>{topBarText}</span>
+            )}
+          </div>
+        )}
+
+        {headerMenuAlign === 'top' && (
+          <div className={`hidden md:flex justify-center items-center gap-8 py-3 px-6 border-b text-xs font-bold ${isDark ? 'border-white/10 bg-white/5' : 'border-slate-100 bg-slate-50/50'}`}>
+            {storePages.map((p: any) => (
+               <span key={p.id} onClick={() => setPage(p.id)} className={getLinkStyleClass(page === p.id)} style={page === p.id ? (menuActiveColor ? { color: menuActiveColor, borderColor: menuActiveColor, backgroundColor: menuStyle === 'pill' ? (menuActiveColor || primaryColor) : undefined } : { borderColor: primaryColor, backgroundColor: menuStyle === 'pill' ? primaryColor : undefined }) : (menuTextColor ? { color: menuTextColor } : {})}>{tr(p.title || p.label || p.id)}</span>
+            ))}
+          </div>
+        )}
+
+        <div className="px-6 py-4 flex items-center justify-between gap-4 border-b border-black/5">
+          <div className="flex items-center gap-4 w-full md:w-auto justify-between">
+             <LogoEditor onClick={() => setPage('home')} className={`text-2xl font-black uppercase tracking-tighter ${isDark ? 'text-white' : ''}`} style={{ color: primaryColor }} />
+             <MobileMenuButton />
+          </div>
+
+          {['center', 'left', 'right'].includes(headerMenuAlign) && (
+            <div className={`hidden md:flex items-center gap-6 text-sm ${headerMenuAlign === 'left' ? 'ml-8 mr-auto' : headerMenuAlign === 'right' ? 'ml-auto mr-8' : 'mx-auto'}`}>
+              {storePages.map((p: any) => (
+                 <span key={p.id} onClick={() => setPage(p.id)} className={getLinkStyleClass(page === p.id)} style={page === p.id ? (menuActiveColor ? { color: menuActiveColor, borderColor: menuActiveColor, backgroundColor: menuStyle === 'pill' ? (menuActiveColor || primaryColor) : undefined } : { borderColor: primaryColor, backgroundColor: menuStyle === 'pill' ? primaryColor : undefined }) : (menuTextColor ? { color: menuTextColor } : {})}>{tr(p.title || p.label || p.id)}</span>
+              ))}
+            </div>
+          )}
+
+          <div className="hidden md:flex items-center gap-4">
+             <HeaderIconsCluster variant={variant} />
+          </div>
+        </div>
+
+        {headerMenuAlign === 'bottom' && (
+          <div className={`hidden md:flex justify-center items-center gap-8 py-3 px-6 border-b text-sm font-bold ${isDark ? 'border-white/10 bg-white/5' : 'border-slate-100 bg-slate-50/50'}`}>
+            {storePages.map((p: any) => (
+               <span key={p.id} onClick={() => setPage(p.id)} className={getLinkStyleClass(page === p.id)} style={page === p.id ? (menuActiveColor ? { color: menuActiveColor, borderColor: menuActiveColor, backgroundColor: menuStyle === 'pill' ? (menuActiveColor || primaryColor) : undefined } : { borderColor: primaryColor, backgroundColor: menuStyle === 'pill' ? primaryColor : undefined }) : (menuTextColor ? { color: menuTextColor } : {})}>{tr(p.title || p.label || p.id)}</span>
+            ))}
+          </div>
+        )}
+
+        {showTopBar && topBarText && topBarPosition === 'bottom' && (
+          <div className="w-full py-2 px-4 text-center text-xs font-bold overflow-hidden shrink-0 border-b border-black/5" style={{ backgroundColor: topBarBgColor, color: topBarTextColor }}>
+            {topBarAnimation === 'marquee' ? (
+               <div className="whitespace-nowrap inline-block" style={{ animation: 'beya-topbar-marquee 14s linear infinite' }}>{topBarText}</div>
+            ) : (
+               <span>{topBarText}</span>
+            )}
+          </div>
+        )}
+      </header>
+    );
+  };
+
   const LayoutHeroCenter = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, setIsCartOpen, submitGlobalOrder, storeProducts }: any) => {
     const [selectedSize, setSelectedSize] = useState<string>('');
     const [selectedColor, setSelectedColor] = useState<string>('');
@@ -1943,18 +2131,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
 
     return (
     <div className={`w-full min-h-full bg-white text-slate-900 ${fontFamily} flex flex-col`}>
-      <div className={`p-6 flex justify-between items-center border-b border-slate-100 ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4' : 'flex-col md:flex-row gap-4 md:gap-0'}`}>
-         <div className="flex items-center gap-3 w-full md:w-auto justify-between">
-            <LogoEditor onClick={() => setPage('home')} className="text-2xl font-black uppercase tracking-tighter" />
-            <MobileMenuButton />
-         </div>
-         <div className={`flex gap-6 text-sm font-bold ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
-            {storePages.map(p => (
-               <NavLink key={p.id} p={p} currentPage={page} setPage={setPage} />
-            ))}
-         </div>
-         <HeaderIconsCluster variant="light" />
-      </div>
+      <StoreHeaderNavbar variant="light" page={page} setPage={setPage} isModal={isModal} />
       <MobileNavPanel page={page} setPage={setPage} />
 
       <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
@@ -2396,18 +2573,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
 
     return (
     <div className={`w-full min-h-full bg-[#f8f9fa] text-[#212529] ${fontFamily} flex flex-col`}>
-      <div className={`px-8 py-6 flex justify-between items-center bg-white ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4' : 'flex-col md:flex-row gap-4 md:gap-0'}`}>
-         <div className={`flex gap-8 text-sm ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
-            {storePages.map(p => (
-               <NavLink key={p.id} p={p} currentPage={page} setPage={setPage} />
-            ))}
-         </div>
-         <div className="flex items-center gap-3 w-full md:w-auto justify-between">
-            <LogoEditor onClick={() => setPage('home')} className="text-3xl font-normal tracking-wide" style={{ color: primaryColor }} />
-            <MobileMenuButton />
-         </div>
-         <HeaderIconsCluster variant="light" />
-      </div>
+      <StoreHeaderNavbar variant="light" page={page} setPage={setPage} isModal={isModal} />
       <MobileNavPanel page={page} setPage={setPage} />
 
       <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
@@ -2646,22 +2812,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
 
     return (
     <div className={`w-full min-h-full bg-[#111] text-[#f5f5f5] ${fontFamily} flex flex-col`}>
-      <div className={`p-8 flex flex-col items-center gap-6 border-b border-white/10 ${previewDevice === 'mobile' && !isModal ? 'p-4' : 'p-4 md:p-8'}`}>
-         <div className="flex items-center gap-4 w-full justify-between md:justify-center md:relative">
-            <div className="w-5 md:hidden" />
-            <LogoEditor onClick={() => setPage('home')} className="text-4xl font-serif tracking-widest" style={{ color: primaryColor }} />
-            <MobileMenuButton />
-         </div>
-         <div className={`flex gap-12 text-xs tracking-widest uppercase ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
-            {storePages.map(p => (
-               <NavLink key={p.id} p={p} currentPage={page} setPage={setPage} />
-            ))}
-            <HeaderIconsCluster variant="dark" />
-         </div>
-         <div className="md:hidden">
-            <HeaderIconsCluster variant="dark" />
-         </div>
-      </div>
+      <StoreHeaderNavbar variant="dark" page={page} setPage={setPage} isModal={isModal} />
       <MobileNavPanel bgClass="bg-[#111]" textClass="text-[#f5f5f5]" page={page} setPage={setPage} />
 
       <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
@@ -2894,20 +3045,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
 
     return (
     <div className={`w-full min-h-full bg-white text-slate-900 ${fontFamily} flex flex-col`}>
-      <div className={`p-4 mx-4 mt-4 bg-slate-100 rounded-full flex justify-between items-center ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4 rounded-3xl' : 'flex-col md:flex-row gap-4 rounded-3xl md:rounded-full'}`}>
-         <div className="flex items-center gap-3 w-full md:w-auto justify-between">
-            <LogoEditor onClick={() => setPage('home')} className="text-2xl font-black tracking-tight px-4" style={{ color: primaryColor }} />
-            <MobileMenuButton />
-         </div>
-         <div className={`flex gap-2 text-sm font-bold ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
-            {storePages.map(p => (
-               <NavLink key={p.id} p={p} currentPage={page} setPage={setPage} />
-            ))}
-         </div>
-         <div className="p-2 bg-white rounded-full shadow-sm mr-1">
-            <HeaderIconsCluster variant="light" />
-         </div>
-      </div>
+      <StoreHeaderNavbar variant="light" page={page} setPage={setPage} isModal={isModal} />
       <MobileNavPanel page={page} setPage={setPage} />
 
       <div className="flex-1 overflow-y-auto pt-6 pb-16 md:pb-0">
@@ -2917,8 +3055,8 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                <HeroBackgroundEditor className="rounded-[2rem] flex flex-col items-center justify-center text-center p-8 bg-cover relative overflow-hidden" style={{ backgroundImage: `url(${heroImage})`, height: `${isModal ? heroHeight + 50 : heroHeight - 150}px`, backgroundPosition: `${heroImagePosX}% ${heroImagePosY}%` }}>
                   <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px]"></div>
                   <div className="relative z-10 flex flex-col items-center p-8 bg-white/90 rounded-[2rem] shadow-xl border-4 border-white">
-                     <h1 className={`${isModal ? 'text-6xl' : 'text-4xl'} font-black tracking-tight mb-2`} style={{ color: primaryColor }}>{storeLang === 'ar' ? 'مرح وحيوية!' : storeLang === 'en' ? 'Fun & Fresh!' : 'Fun & Frais !'}</h1>
-                     <p className="text-slate-600 font-medium mb-6 max-w-sm">{storeLang === 'ar' ? 'ملونة ومريحة وصُنعت للمرح.' : storeLang === 'en' ? 'Colorful, comfortable, and made for play.' : 'Coloré, confortable, et fait pour jouer.'}</p>
+                     <EditableText as="h1" text={heroTitle || (storeLang === 'ar' ? 'مرح وحيوية!' : storeLang === 'en' ? 'Fun & Fresh!' : 'Fun & Frais !')} onTextChange={setHeroTitle} isLiveStore={isLiveStore} className={`${isModal ? 'text-6xl' : 'text-4xl'} font-black tracking-tight mb-2`} style={{ color: primaryColor }} styleKey="heroTitle" />
+                     <EditableText as="p" text={heroSubtitle || (storeLang === 'ar' ? 'ملونة ومريحة وصُنعت للمرح.' : storeLang === 'en' ? 'Colorful, comfortable, and made for play.' : 'Coloré, confortable, et fait pour jouer.')} onTextChange={setHeroSubtitle} isLiveStore={isLiveStore} className="text-slate-600 font-medium mb-6 max-w-sm" styleKey="heroSubtitle" />
                      <button onClick={() => setPage('collections')} className="px-8 py-4 text-white font-black tracking-wide text-sm hover:scale-110 transition-transform rounded-full shadow-lg" style={{ backgroundColor: primaryColor }}>{storeLang === 'ar' ? 'تسوق الآن 🎈' : storeLang === 'en' ? "LET'S SHOP 🎈" : 'ON Y VA 🎈'}</button>
                   </div>
                </HeroBackgroundEditor>
@@ -3175,7 +3313,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
        setPage('success');
     };
 
-    const props = { isModal, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, storeLang, isCartOpen, setIsCartOpen, submitGlobalOrder: handleGlobalSubmit, storeProducts, primaryColor, secondaryColor, buttonStyle, fontFamily };
+    const props = { isModal, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, sortBy, setSortBy, storeLang, isCartOpen, setIsCartOpen, submitGlobalOrder: handleGlobalSubmit, storeProducts, primaryColor, secondaryColor, buttonStyle, fontFamily, headerPosition, headerStyle };
 
 
   
@@ -3186,18 +3324,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
 
     return (
     <div className={`w-full min-h-full bg-[#e8e2d7] text-[#1a1a1a] ${fontFamily} flex flex-col`}>
-      <div className={`px-8 py-6 flex justify-between items-center ${previewDevice === 'mobile' && !isModal ? 'flex-col gap-4' : 'flex-col md:flex-row gap-4 md:gap-0'}`}>
-         <div className="flex items-center gap-3 w-full md:w-auto justify-between">
-            <LogoEditor onClick={() => setPage('home')} className="text-2xl font-black uppercase tracking-widest text-[#1a1a1a]" style={{ color: primaryColor }} />
-            <MobileMenuButton />
-         </div>
-         <div className={`flex gap-8 text-sm font-medium text-[#4a4a4a] ${previewDevice === 'mobile' && !isModal ? 'hidden' : 'hidden md:flex'}`}>
-            {storePages.map(p => (
-               <NavLink key={p.id} p={p} currentPage={page} setPage={setPage} />
-            ))}
-         </div>
-         <HeaderIconsCluster variant="light" />
-      </div>
+      <StoreHeaderNavbar variant="light" page={page} setPage={setPage} isModal={isModal} />
       <MobileNavPanel bgClass="bg-[#e8e2d7]" textClass="text-[#1a1a1a]" page={page} setPage={setPage} />
 
       <div className="flex-1 overflow-y-auto bg-white pb-16 md:pb-0">
@@ -3382,22 +3509,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
 
     return (
     <div className={`w-full min-h-full bg-white text-slate-800 flex flex-col font-sans`}>
-      {/* Header */}
-      <div className={`flex justify-between items-center bg-white border-b border-slate-100 relative ${previewDevice === 'mobile' && !isModal ? 'p-4' : 'px-8 py-6'}`}>
-         {/* Navigation - Left on desktop */}
-         <div className={`hidden md:flex items-center gap-6 text-[11px] font-bold uppercase tracking-wider text-slate-500`}>
-            {storePages.map(p => (
-               <NavLink key={p.id} p={p} currentPage={page} setPage={setPage} />
-            ))}
-         </div>
-         <MobileMenuButton colorClass="text-slate-800" />
-         {/* Logo - Center */}
-         <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
-            <LogoEditor onClick={() => setPage('home')} className={`text-2xl font-black tracking-tighter text-slate-900 ${fontFamily}`} style={{ color: primaryColor }} />
-         </div>
-         {/* Icons - Right */}
-         <HeaderIconsCluster variant="light" />
-      </div>
+      <StoreHeaderNavbar variant="light" page={page} setPage={setPage} isModal={isModal} />
       <MobileNavPanel page={page} setPage={setPage} />
 
       {page === 'home' && (
@@ -4407,14 +4519,38 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
     };
 
     return (
-       <div className="store-preview-wrapper min-h-screen w-full relative flex flex-col" onClick={() => setActiveStyleKey(null)}>
+       <div className={`store-preview-wrapper min-h-screen w-full relative flex flex-col ${headerPosition === 'bottom' ? 'header-at-bottom' : ''} ${headerStyle === 'fixed' ? 'header-is-fixed' : ''}`} onClick={() => setActiveStyleKey(null)}>
           <style>{`
+             .header-at-bottom > div:not(.shrink-0) {
+                display: flex; flex-direction: column;
+                min-height: 100vh;
+             }
+             .header-at-bottom > div:not(.shrink-0) > div:first-child { 
+                order: 9999; border-top: 1px solid rgba(0,0,0,0.1); border-bottom: none !important; 
+             }
+             .header-is-fixed > div:not(.shrink-0) > div:first-child {
+                position: sticky; top: 0; z-index: 50; background-color: inherit;
+             }
+             .header-is-fixed.header-at-bottom > div:not(.shrink-0) > div:first-child {
+                top: auto; bottom: 0; border-top: 1px solid rgba(0,0,0,0.1);
+             }
              @media (min-width: 768px) {
                 .pdp-img-col { flex: 0 0 var(--pdp-img-pct, 50%) !important; max-width: var(--pdp-img-pct, 50%); }
                 .pdp-details-col { flex: 0 0 calc(100% - var(--pdp-img-pct, 50%)) !important; max-width: calc(100% - var(--pdp-img-pct, 50%)); }
              }
+             @keyframes beya-topbar-marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
           `}</style>
+          {/* TopBar is handled inside StoreHeaderNavbar */}
           <Layout />
+          {showTopBar && topBarText && topBarPosition === 'bottom' && (
+             <div className="w-full py-2 px-4 text-center text-xs font-bold overflow-hidden shrink-0" style={{ backgroundColor: topBarBgColor, color: topBarTextColor }}>
+                {topBarAnimation === 'marquee' ? (
+                   <div className="whitespace-nowrap inline-block" style={{ animation: 'beya-topbar-marquee 14s linear infinite' }}>{topBarText}</div>
+                ) : (
+                   <span>{topBarText}</span>
+                )}
+             </div>
+          )}
           {appsConfig && appsConfig['WhatsApp Chat'] && (
              <a href={'https://wa.me/' + appsConfig['WhatsApp Chat'].replace(/[^0-9]/g, '')} target="_blank" rel="noreferrer" className="fixed bottom-[85px] md:bottom-6 right-4 md:right-6 z-[998] w-12 h-12 md:w-14 md:h-14 bg-green-500 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform hover:bg-green-600">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 md:w-7 md:h-7" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.88-.788-1.472-1.761-1.645-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.347-.272.297-1.04 1.016-1.04 2.479 0 1.463 1.065 2.876 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
@@ -4499,7 +4635,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                          storeLang={storeLang}
                          mode={authMode}
                          onModeChange={setAuthMode}
-                         storeDomain={customDomain || `${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`}
+                         storeDomain={getStoreDomain()}
                          storeName={storeName}
                          onAuthed={(user: any, profile: any) => { setCustomerUser(user); setCustomerProfile(profile); setIsAuthOpen(false); }}
                       />
@@ -4672,6 +4808,31 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
           </div>
        );
     }
+
+    if (comingSoonMode) {
+       return (
+          <div className="w-full h-screen flex flex-col items-center justify-center text-center px-6 bg-gradient-to-br from-slate-900 via-slate-950 to-black text-white" dir={storeLang === 'ar' ? 'rtl' : 'ltr'}>
+             <div className="w-16 h-16 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center mb-6">
+                <Clock className="w-8 h-8 text-amber-400" />
+             </div>
+             {storeLogo ? (
+                <img src={storeLogo} alt={storeName} className="h-10 object-contain mb-6" />
+             ) : (
+                <h2 className="text-lg font-black tracking-widest uppercase mb-6 text-white/70">{storeName || 'Beya Store'}</h2>
+             )}
+             <h1 className="text-3xl sm:text-5xl font-black tracking-tight mb-4">
+                {storeLang === 'ar' ? 'قريباً' : storeLang === 'en' ? 'Coming Soon' : 'Bientôt disponible'}
+             </h1>
+             <p className="text-slate-300 text-base sm:text-lg max-w-md leading-relaxed">
+                {comingSoonMessage || (storeLang === 'ar'
+                   ? 'متجرنا كيتصاوب دابا، رجعو لينا قريبا!'
+                   : storeLang === 'en'
+                   ? "We're putting the final touches on our store. Check back soon!"
+                   : 'Notre boutique arrive très bientôt, revenez nous voir !')}
+             </p>
+          </div>
+       );
+    }
     
     return (
       <div className="w-full min-h-screen bg-white">
@@ -4796,7 +4957,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
           </button>
           <button
              onClick={() => {
-                const url = customDomain ? `https://${customDomain}` : (storeSlug ? `https://${storeSlug}.beyacreative.com` : `https://${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`);
+                const url = `https://${getStoreDomain()}`;
                 window.open(url, '_blank');
              }}
              disabled={!config.storeName}
@@ -4935,15 +5096,81 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                            </div>
                         </div>
                      </div>
-                     
+
+                     {/* Real KPI Row + Top Clients - computed from this store's own orders (myStoreOrders), same
+                         data source as the rest of this dashboard so numbers never drift between sections. */}
+                     {(() => {
+                        const validOrders = myStoreOrders.filter((o: any) => !o.deleted);
+                        const countedOrders = validOrders.filter((o: any) => !REFUSED_STATUSES.includes(o.status));
+                        const totalRevenue = countedOrders.reduce((sum: number, o: any) => sum + (parseFloat(o.amount) || 0), 0);
+                        const totalOrders = countedOrders.length;
+                        const avgOrder = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+                        const clientMap: Record<string, { phone: string; orders: number; total: number }> = {};
+                        countedOrders.forEach((o: any) => {
+                           const key = o.phone || o.customer || (isAr ? 'زبون غير معروف' : 'Client inconnu');
+                           if (!clientMap[key]) clientMap[key] = { phone: o.phone || '', orders: 0, total: 0 };
+                           clientMap[key].orders += 1;
+                           clientMap[key].total += (parseFloat(o.amount) || 0);
+                        });
+                        const topClients = Object.entries(clientMap)
+                           .map(([name, v]) => ({ name, ...v }))
+                           .sort((a, b) => b.total - a.total)
+                           .slice(0, 5);
+
+                        return (
+                        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-6">
+                           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{isAr ? 'إجمالي المبيعات' : 'Ventes Totales'}</p>
+                                 <p className="text-xl font-black text-slate-900">{totalRevenue.toLocaleString('fr-FR')} <span className="text-xs text-slate-400">MAD</span></p>
+                              </div>
+                              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{isAr ? 'الطلبات' : 'Commandes'}</p>
+                                 <p className="text-xl font-black text-slate-900">{totalOrders}</p>
+                              </div>
+                              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{isAr ? 'متوسط الطلب' : 'Panier Moyen'}</p>
+                                 <p className="text-xl font-black text-slate-900">{Math.round(avgOrder).toLocaleString('fr-FR')} <span className="text-xs text-slate-400">MAD</span></p>
+                              </div>
+                              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{isAr ? 'الزبناء' : 'Clients'}</p>
+                                 <p className="text-xl font-black text-slate-900">{Object.keys(clientMap).length}</p>
+                              </div>
+                           </div>
+
+                           <div>
+                              <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">{isAr ? 'أفضل الزبناء' : 'Meilleurs Clients'}</h4>
+                              {topClients.length === 0 ? (
+                                 <p className="text-xs text-slate-400 text-center py-6">{isAr ? 'لا يوجد زبناء بعد' : 'Pas encore de clients'}</p>
+                              ) : (
+                                 <div className="space-y-2">
+                                    {topClients.map((c, idx) => (
+                                       <div key={idx} className="flex items-center justify-between gap-3 bg-slate-50 rounded-lg p-3 border border-slate-100">
+                                          <div className="flex items-center gap-3 min-w-0">
+                                             <div className={`w-6 h-6 rounded-md flex items-center justify-center font-black text-[10px] shrink-0 ${idx === 0 ? 'bg-amber-400 text-white' : 'bg-slate-200 text-slate-600'}`}>{idx + 1}</div>
+                                             <div className="min-w-0">
+                                                <p className="text-xs font-bold text-slate-800 truncate">{c.name}</p>
+                                                <p className="text-[10px] text-slate-400">{c.orders} {isAr ? 'طلب' : 'commande(s)'}</p>
+                                             </div>
+                                          </div>
+                                          <p className="text-xs font-black text-emerald-600 shrink-0">{c.total.toLocaleString('fr-FR')} MAD</p>
+                                       </div>
+                                    ))}
+                                 </div>
+                              )}
+                           </div>
+                        </div>
+                        );
+                     })()}
+
                      {/* Analytics PRO Section */}
                     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-6">
                        <div className="flex items-center justify-between">
                           <h3 className="text-sm font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
-                             <TrendingUp className="w-4 h-4 text-indigo-500" /> 
+                             <TrendingUp className="w-4 h-4 text-indigo-500" />
                              {isAr ? 'تحليلات المبيعات' : 'Analytique des Ventes'}
                           </h3>
-                          
+
                        </div>
                        
                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -5069,10 +5296,9 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                           </div>
                        </div>
                     </div>
-\n                    
                   </div>
               )}
-              
+
               {activeTab === 'orders' && (
                  <div className="space-y-6">
                     {/* Dashboard KPIs */}
@@ -5809,6 +6035,40 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                         </p>
                      </div>
 
+                     <div className={`p-4 rounded-xl border space-y-3 ${comingSoonMode ? 'bg-amber-50 border-amber-300' : 'bg-slate-50 border-slate-200'}`}>
+                        <div className="flex items-center justify-between">
+                           <div className="flex items-center gap-2">
+                              <Clock className={`w-4 h-4 ${comingSoonMode ? 'text-amber-500' : 'text-slate-400'}`} />
+                              <div>
+                                 <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{isAr ? 'وضع "قريباً" (Coming Soon)' : 'Mode "Bientôt disponible"'}</h4>
+                                 <p className="text-[11px] text-slate-500 font-semibold mt-0.5">
+                                    {isAr
+                                       ? 'إلا فعّلتيه، الزوار غايشوفو صفحة "قريباً" بلا ما يشوفو المتجر لي مازال كتصاوبو.'
+                                       : "Si activé, vos visiteurs verront une page « Bientôt disponible » au lieu du site en construction."}
+                                 </p>
+                              </div>
+                           </div>
+                           <button
+                              onClick={() => setComingSoonMode(!comingSoonMode)}
+                              className={`shrink-0 w-12 h-7 rounded-full transition-colors relative ${comingSoonMode ? 'bg-amber-500' : 'bg-slate-300'}`}
+                           >
+                              <span className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${comingSoonMode ? 'translate-x-6' : 'translate-x-1'}`} />
+                           </button>
+                        </div>
+                        {comingSoonMode && (
+                           <div>
+                              <label className="text-[10px] font-black text-amber-700 uppercase tracking-wider mb-1.5 block">{isAr ? 'رسالة مخصصة (اختياري)' : 'Message personnalisé (optionnel)'}</label>
+                              <textarea
+                                 value={comingSoonMessage}
+                                 onChange={(e) => setComingSoonMessage(e.target.value)}
+                                 placeholder={isAr ? 'متجرنا كيتصاوب دابا، رجعو لينا قريبا!' : 'Notre boutique arrive très bientôt, revenez nous voir !'}
+                                 rows={2}
+                                 className="w-full text-sm font-medium bg-white border border-amber-200 rounded-lg px-3 py-2 resize-none"
+                              />
+                           </div>
+                        )}
+                     </div>
+
                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
                         <div>
                            <h4 className="text-xs font-black text-slate-800 mb-2 uppercase tracking-wider">{isAr ? 'لغة المتجر' : 'Langue de la boutique'}</h4>
@@ -6264,17 +6524,17 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
       {showPreview && (
         <div className="fixed inset-0 z-[200] bg-slate-100 flex overflow-hidden">
           {/* VISUAL BUILDER SIDEBAR (LEFT) */}
-          <div className="w-[320px] bg-white border-r border-slate-200 flex flex-col shrink-0 z-20 shadow-2xl">
-             <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+          <div className={`bg-white border-r border-slate-200 flex flex-col shrink-0 z-20 shadow-2xl transition-all duration-300 overflow-hidden ${isPreviewFullscreen ? 'w-0 border-0' : 'w-[320px]'}`}>
+             <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50 shrink-0">
                 <div className="flex items-center gap-2 text-indigo-700">
                    <LayoutTemplate className="w-5 h-5" />
                    <span className="font-black tracking-tight">{isAr ? 'المحرر المرئي' : 'Éditeur Visuel PRO'}</span>
                 </div>
-                <button onClick={() => setShowPreview(false)} className="w-8 h-8 flex items-center justify-center bg-white border border-slate-200 text-slate-400 rounded hover:text-rose-500 transition-colors">
+                <button onClick={() => setShowPreview(false)} className="w-8 h-8 flex items-center justify-center bg-white border border-slate-200 text-slate-400 rounded hover:text-rose-500 transition-colors shrink-0">
                    <X className="w-4 h-4" />
                 </button>
              </div>
-             
+
              <div className="flex-1 overflow-y-auto p-4 space-y-6">
                 <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
                    <h4 className="text-xs font-bold text-indigo-900 uppercase tracking-wider mb-3">{isAr ? 'العناصر الأساسية' : 'Éléments de Base'}</h4>
@@ -6288,6 +6548,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                          { id: 'products', name: isAr ? 'منتجات' : 'Produits', icon: LayoutGrid, activeClasses: 'border-rose-500 shadow-md ring-2 ring-rose-100', bgClasses: 'bg-rose-50 text-rose-500', checkClass: 'text-rose-500' }
                       ];
                       return (
+                         <>
                          <div className="space-y-2">
                             {/* ACTIVE BLOCKS (SORTABLE) */}
                             {homeBlocks.map((blockId, index) => {
@@ -6320,6 +6581,34 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                );
                             })}
                          </div>
+
+                        {/* HEADER BAR & MENU SETTINGS */}
+                        <div className="mt-6 bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                           <div className="absolute top-0 right-0 w-16 h-16 bg-white opacity-50 rounded-full blur-xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+                           <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider mb-4 flex items-center gap-2">
+                             <LayoutTemplate className="w-4 h-4 text-slate-500" />
+                             {isAr ? 'القائمة العلوية (Header)' : 'En-tête & Menu'}
+                           </h4>
+                           <div className="space-y-5">
+                              {/* Menu Placement */}
+                              <div>
+                                 <label className="block text-[10px] font-bold text-slate-500 mb-2">{isAr ? 'مكان القائمة (أسفل / أعلى)' : 'Position'}</label>
+                                 <div className="flex bg-white rounded-lg border border-slate-200 p-1 shadow-sm">
+                                    <button onClick={() => setHeaderPosition('top')} className={`flex-1 text-[11px] py-1.5 rounded-md font-bold transition-all ${headerPosition === 'top' ? 'bg-indigo-50 text-indigo-700 shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}>{isAr ? 'أعلى الصفحة (Top)' : 'Haut'}</button>
+                                    <button onClick={() => setHeaderPosition('bottom')} className={`flex-1 text-[11px] py-1.5 rounded-md font-bold transition-all ${headerPosition === 'bottom' ? 'bg-indigo-50 text-indigo-700 shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}>{isAr ? 'أسفل الصفحة (Bottom)' : 'Bas'}</button>
+                                 </div>
+                              </div>
+                              {/* Fixed or normal */}
+                              <div>
+                                 <label className="block text-[10px] font-bold text-slate-500 mb-2">{isAr ? 'حالة التثبيت (Fixed / Normal)' : 'Comportement'}</label>
+                                 <div className="flex bg-white rounded-lg border border-slate-200 p-1 shadow-sm">
+                                    <button onClick={() => setHeaderStyle('normal')} className={`flex-1 text-[11px] py-1.5 rounded-md font-bold transition-all ${headerStyle === 'normal' ? 'bg-indigo-50 text-indigo-700 shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}>{isAr ? 'عادي (Normal)' : 'Normal'}</button>
+                                    <button onClick={() => setHeaderStyle('fixed')} className={`flex-1 text-[11px] py-1.5 rounded-md font-bold transition-all ${headerStyle === 'fixed' ? 'bg-indigo-50 text-indigo-700 shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}>{isAr ? 'ثابت (Fixed)' : 'Fixe'}</button>
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+                        </>
                       );
                    })()}
                 </div>
@@ -6371,7 +6660,12 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                              <span className="text-xs font-bold flex items-center gap-1"><Plus className="w-3 h-3"/> {isAr ? 'إضافة صورة' : 'Ajouter une image'}</span>
                              <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
                                 const file = e.target.files?.[0];
-                                if (file) setSliderImages([...sliderImages, await readFileAsBase64(file)]);
+                                if (file) {
+                                   setSliderImages([...sliderImages, await readFileAsBase64(file)]);
+                                   // Adding the first image should turn Slider into a real, visible section
+                                   // in "Éléments de Base" instead of leaving it silently inactive.
+                                   if (!homeBlocks.includes('slider')) setHomeBlocks([...homeBlocks, 'slider']);
+                                }
                              }} />
                           </label>
                        </div>
@@ -6544,18 +6838,30 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                 <div className="w-px h-4 bg-slate-200 mx-2"></div>
                 <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
                    <Globe className="w-3 h-3" />
-                   {customDomain || `${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`}
+                   {getStoreDomain()}
                 </div>
+                <div className="w-px h-4 bg-slate-200 mx-2"></div>
+                <button
+                   onClick={() => setIsPreviewFullscreen(!isPreviewFullscreen)}
+                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 transition-colors"
+                   title={isAr ? 'تكبير المعاينة باش تبان بحال عند الزوار' : 'Agrandir pour voir comme un visiteur'}
+                >
+                   {isPreviewFullscreen ? <><Minimize2 className="w-3.5 h-3.5" /> {isAr ? 'تصغير' : 'Réduire'}</> : <><Maximize2 className="w-3.5 h-3.5" /> {isAr ? 'تكبير' : 'Agrandir'}</>}
+                </button>
              </div>
-             
-             <div className="flex-1 overflow-y-auto p-4 md:p-8 flex justify-center items-start">
-                <div className={`bg-white shadow-2xl rounded-b-2xl overflow-hidden transition-all duration-300 ring-1 ring-slate-900/5 ${previewDevice === 'mobile' ? 'w-[375px] rounded-t-3xl min-h-[812px]' : 'w-full max-w-5xl'}`}>
+
+             <div className={`flex-1 overflow-y-auto flex justify-center items-start transition-all duration-300 ${isPreviewFullscreen ? 'p-0' : 'p-4 md:p-8'}`}>
+                <div className={`bg-white transition-all duration-300 ${isPreviewFullscreen ? 'w-full min-h-full rounded-none ring-0 shadow-none' : `overflow-hidden shadow-2xl rounded-b-2xl ring-1 ring-slate-900/5 ${previewDevice === 'mobile' ? 'w-[375px] rounded-t-3xl min-h-[812px]' : 'w-full max-w-5xl'}`}`}>
                   <StorePreviewWrapper isModal={true} initialProductId={previewProductId} />
                 </div>
              </div>
           </div>
         </div>
       )}
+
+      {/* HERO IMAGE PICKER MODAL - rendered at the top level (see heroImagePickerModal above) so
+          typing in its search field doesn't remount the whole modal and drop focus. */}
+      {heroImagePickerModal}
 
       {/* PAGE EDIT MODAL */}
       {isPageModalOpen && pageForm && (
@@ -7347,7 +7653,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                      </div>
                      <button 
                         onClick={() => {
-                           navigator.clipboard.writeText(`https://${storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com`);
+                           navigator.clipboard.writeText(`https://${getStoreDomain()}`);
                         }} 
                         className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 text-slate-600 transition-colors" 
                         title="Copier le lien"
@@ -7366,7 +7672,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
       )}
 
     
-       {!isLiveStore && platformMode === 'builder' && ['themes', 'design'].includes(activeTab) && (
+       {!isLiveStore && !showPreview && platformMode === 'builder' && ['themes', 'design'].includes(activeTab) && (
           <div className="fixed bottom-6 right-6 z-[300] flex flex-col items-end gap-2">
              <div className="bg-white p-2 rounded-full shadow-2xl flex items-center gap-3 border-2 border-slate-200 hover:scale-105 transition-transform">
                 <span className="text-xs font-black text-slate-700 pl-2 uppercase tracking-wider">{isAr ? 'اللون:' : 'Couleur:'}</span>

@@ -68,6 +68,7 @@ const Tarifs          = lazy(() => import('./pages/Tarifs'));
 const Reglement       = lazy(() => import('./pages/Reglement'));
 const ValidationBoard = lazy(() => import('./pages/ValidationBoard'));
 const HPGLViewer      = lazy(() => import('./pages/HPGLViewer'));
+const KMLViewer       = lazy(() => import('./pages/KMLViewer'));
 const StoreBuilder    = lazy(() => import('./pages/StoreBuilder'));
 const StoreLanding    = lazy(() => import('./pages/StoreLanding'));
 const StoreSignup     = lazy(() => import('./pages/StoreSignup'));
@@ -683,6 +684,7 @@ function AppContent() {
         <Route path="pilotage-chaine" element={can('pilotage') ? <ChaineDetaillee /> : <Navigate to="/" replace />} />
         <Route path="scan-production" element={can('scan_production') ? <ProductionScanner /> : <Navigate to="/" replace />} />
         <Route path="hpgl-viewer" element={(can('ordres') || can('fiches')) ? <HPGLViewer /> : <Navigate to="/" replace />} />
+        <Route path="kml-viewer" element={(can('ordres') || can('fiches')) ? <KMLViewer /> : <Navigate to="/" replace />} />
         <Route path="worker-portal" element={<WorkerPortal currentUser={currentUser} onLogout={handleLogout} />} />
         <Route path="chef-portal" element={<ChefChainePortal currentUser={currentUser} onLogout={handleLogout} />} />
         <Route path="partenaire-portal" element={<PartenairePortal currentUser={currentUser} onLogout={handleLogout} />} />
