@@ -84,14 +84,49 @@ export default function AtelierCalculator({
     }
   }, []);
 
-  // Real Atelier Workers Connection (Smart Feature 1)
+// Filter ONLY employees working INSIDE the atelier (production workers)
+function isAtelierProductionWorker(e: Employe): boolean {
+  if (!e.actif) return false;
+  if (e.type === 'sous_traitance') return false;
+
+  const poste = (e.poste || '').toLowerCase();
+  // Exclude external service providers (Prestataire, Impression, Broderie, DTF, Sérigraphie, etc.)
+  if (
+    poste.includes('prestataire') ||
+    poste.includes('impression') ||
+    poste.includes('broderie') ||
+    poste.includes('dtf') ||
+    poste.includes('sérigraphie') ||
+    poste.includes('serigraphie') ||
+    poste.includes('sublimation')
+  ) {
+    return false;
+  }
+
+  // Exclude non-production administrative / design roles (RH, Modéliste, Commercial, Comptable, Admin)
+  if (
+    poste.includes('rh') ||
+    poste.includes('ressources humaines') ||
+    poste.includes('modéliste') ||
+    poste.includes('modeliste') ||
+    poste.includes('commercial') ||
+    poste.includes('comptable') ||
+    poste.includes('admin')
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+  // Real Atelier Workers Connection (Smart Feature 1 - Filtered for INSIDE ATELIER ONLY)
   const [allWorkers, setAllWorkers] = useState<Employe[]>(DEFAULT_WORKERS);
   const [selectedWorkerIds, setSelectedWorkerIds] = useState<string[]>(DEFAULT_WORKERS.map(w => w.id));
   const [showWorkersModal, setShowWorkersModal] = useState(false);
 
   useEffect(() => {
     loadData<Employe>('employes').then((data: Employe[]) => {
-      const activeAtelier = (data || []).filter((e: Employe) => e.actif);
+      const activeAtelier = (data || []).filter(isAtelierProductionWorker);
       if (activeAtelier.length > 0) {
         setAllWorkers(activeAtelier);
         setSelectedWorkerIds(activeAtelier.map((e: Employe) => e.id));
@@ -611,7 +646,7 @@ export default function AtelierCalculator({
                 <Users className="w-5 h-5 text-indigo-400" />
                 <div>
                   <h3 className="font-black text-sm">
-                    {isAr ? 'تحديد عمال الأتوليي لهاد الطلبية' : 'Sélection des ouvriers d\'atelier'}
+                    {isAr ? 'تحديد عمال الأتوليي (الإنتاج الداخلي فقط)' : 'Sélection des ouvriers d\'atelier (Production interne)'}
                   </h3>
                   <p className="text-[10px] text-slate-400">
                     {isAr ? 'عدد العمال المحدد كيتحسب مباشرة في تكلفة اليد العاملة والروطار' : 'Le nombre d\'ouvriers sélectionnés s\'applique au calcul de main-d\'œuvre'}
@@ -624,6 +659,16 @@ export default function AtelierCalculator({
               >
                 ✕
               </button>
+            </div>
+
+            {/* Filter Notice Banner */}
+            <div className="px-5 py-2 bg-emerald-500/10 border-b border-emerald-500/20 text-emerald-800 text-[11px] font-bold flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+              <span>
+                {isAr 
+                  ? '✨ القائمة تعرض حصرياً عمال الإنتاج داخل الأتوليي (تم استبعاد مزودي الخدمات الخارجية والإدارة)' 
+                  : '✨ Liste filtrée : uniquement les ouvriers de production en atelier (sans prestataires ni admin)'}
+              </span>
             </div>
 
             {/* Quick action buttons */}
