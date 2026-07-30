@@ -121,7 +121,7 @@ export default function AtelierCalculator({
 
   return (
     <div 
-      className={`w-full ${isModal ? 'p-4' : 'p-4 md:p-6 min-h-[calc(100vh-1rem)] flex flex-col justify-between overflow-hidden bg-slate-50/50'}`} 
+      className={`w-full ${isModal ? 'p-4' : 'p-4 md:p-6 flex flex-col gap-4 bg-slate-50/50'}`} 
       dir={isAr ? 'rtl' : 'ltr'}
     >
       {/* Print styles */}
@@ -146,7 +146,7 @@ export default function AtelierCalculator({
       `}</style>
 
       {/* COMPACT TOP HEADER */}
-      <div className="flex items-center justify-between bg-white px-5 py-3 rounded-2xl border border-slate-100 shadow-sm mb-4 print-border">
+      <div className="flex items-center justify-between bg-white px-5 py-3 rounded-2xl border border-slate-100 shadow-sm print-border">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-emerald-200">
             <Calculator className="w-5 h-5" />
