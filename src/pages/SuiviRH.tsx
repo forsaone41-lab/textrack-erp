@@ -195,16 +195,24 @@ export default function SuiviRH() {
   const availableMois = useMemo(() => {
     try {
       const months = new Set<string>();
-      const years = [2025, 2026, 2027, 2028];
-      years.forEach(year => {
-        for (let m = 1; m <= 12; m++) {
-          months.add(`${year}-${String(m).padStart(2, '0')}`);
+      const currentMonthStr = new Date().toISOString().slice(0, 7);
+      const [currentYear, currentMonth] = currentMonthStr.split('-').map(Number);
+      for (let y = 2025; y <= currentYear; y++) {
+        const maxMonth = (y === currentYear) ? currentMonth : 12;
+        for (let m = 1; m <= maxMonth; m++) {
+          months.add(`${y}-${String(m).padStart(2, '0')}`);
         }
-      });
-      if (Array.isArray(paiements)) {
-        paiements.forEach(p => p && p.mois && months.add(p.mois));
       }
-      if (selectedMois) months.add(selectedMois);
+      if (Array.isArray(paiements)) {
+        paiements.forEach(p => {
+          if (p && p.mois && p.mois <= currentMonthStr) {
+            months.add(p.mois);
+          }
+        });
+      }
+      if (selectedMois && selectedMois <= currentMonthStr) {
+        months.add(selectedMois);
+      }
       return [...months].sort().reverse();
     } catch (e) {
       console.error("Error computing available months:", e);

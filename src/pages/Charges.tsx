@@ -103,13 +103,19 @@ export default function Charges() {
 
   const availableMois = useMemo(() => {
     const months = new Set<string>();
-    const years = [2025, 2026, 2027, 2028];
-    years.forEach(year => {
-      for (let m = 1; m <= 12; m++) {
-        months.add(`${year}-${String(m).padStart(2, '0')}`);
+    const currentMonthStr = new Date().toISOString().slice(0, 7);
+    const [currentYear, currentMonth] = currentMonthStr.split('-').map(Number);
+    for (let y = 2025; y <= currentYear; y++) {
+      const maxMonth = (y === currentYear) ? currentMonth : 12;
+      for (let m = 1; m <= maxMonth; m++) {
+        months.add(`${y}-${String(m).padStart(2, '0')}`);
+      }
+    }
+    charges.forEach(c => {
+      if (c.date && c.date.substring(0, 7) <= currentMonthStr) {
+        months.add(c.date.substring(0, 7));
       }
     });
-    charges.forEach(c => c.date && months.add(c.date.substring(0, 7)));
     return [...months].sort().reverse();
   }, [charges]);
 
