@@ -4,7 +4,7 @@ import {
   Calculator, Printer, CheckCircle2, AlertTriangle,
   Clock, Package, Users, Scissors, ShoppingCart, ArrowLeft,
   DollarSign, Sparkles, Check, X, Bot, Wand2, RefreshCw, UserCheck,
-  Ruler, Upload, Image as ImageIcon, Search, FileText, Wrench, Trash2, RotateCcw
+  Ruler, Upload, Image as ImageIcon, Search, FileText, Wrench, Trash2, RotateCcw, Maximize2, Minimize2
 } from 'lucide-react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { loadData, Employe, FicheTechnique } from '../types';
@@ -471,6 +471,7 @@ function isSupportRole(e: Employe): boolean {
   const [totalMachines, setTotalMachines] = useState(7);
   const [monthlyOther, setMonthlyOther] = useState(3000);
   const [customPostes, setCustomPostes] = useState<PosteTravail[] | null>(null);
+  const [isPostesBoxExpanded, setIsPostesBoxExpanded] = useState(false);
 
   // AI Cost Estimator Modal (Smart Feature 2)
   const [showAiModal, setShowAiModal] = useState(false);
@@ -782,6 +783,7 @@ function isSupportRole(e: Employe): boolean {
               setSelectedModelCategory(undefined);
               setSelectedFiche(null);
               setCustomPostes(null);
+              setIsPostesBoxExpanded(false);
             }}
             title={isAr ? 'مسح وإفراغ جميع الخانات للبدء من جديد' : 'Vider tous les champs'}
             className="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-2xs border border-rose-200 active:scale-95 group"
@@ -1048,13 +1050,35 @@ function isSupportRole(e: Employe): boolean {
             const activePostes = customPostes || breakdown.postesTravail;
             const activeTotalMin = activePostes.reduce((acc, p) => acc + (Number(p.tempsMin) || 0), 0);
             return (
-              <div className="p-4 bg-slate-900 text-white rounded-3xl border border-slate-700 shadow-xl space-y-3 print-border">
+              <div className={`p-4 bg-slate-900 text-white rounded-3xl border ${isPostesBoxExpanded ? 'border-amber-400/60 shadow-2xl shadow-amber-500/10 ring-2 ring-amber-400/30' : 'border-slate-700 shadow-xl'} space-y-3 print-border transition-all duration-300`}>
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-black">
                   <span className="flex items-center gap-2 text-indigo-300">
                     <Wrench className="w-4 h-4 text-emerald-400" />
                     {isAr ? `🏭 بوستات العمل الفنية ومراحل الخياطة (تعديل مباشر)` : `🏭 Gamme de Montage (Éditable)`}
                   </span>
                   <div className="flex items-center gap-1.5 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => setIsPostesBoxExpanded(!isPostesBoxExpanded)}
+                      title={isAr ? (isPostesBoxExpanded ? 'تصغير الصندوق للوضع العادي' : 'تكبير صندوق بوستات العمل لعرض جميع المراحل براحة') : 'Agrandir / Réduire'}
+                      className={`px-2.5 py-0.5 rounded-lg text-[10px] font-black border transition-all flex items-center gap-1.5 active:scale-95 ${
+                        isPostesBoxExpanded
+                          ? 'bg-amber-500 text-white border-amber-400 shadow-md'
+                          : 'bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-white border-amber-500/30'
+                      }`}
+                    >
+                      {isPostesBoxExpanded ? (
+                        <>
+                          <Minimize2 className="w-3.5 h-3.5 shrink-0" />
+                          {isAr ? 'تصغير الصندوق' : 'Réduire'}
+                        </>
+                      ) : (
+                        <>
+                          <Maximize2 className="w-3.5 h-3.5 shrink-0" />
+                          {isAr ? 'تكبير الصندوق' : 'Agrandir'}
+                        </>
+                      )}
+                    </button>
                     <button
                       type="button"
                       onClick={() => setWorkers(activePostes.length)}
@@ -1078,7 +1102,7 @@ function isSupportRole(e: Employe): boolean {
                   </div>
                 </div>
 
-                <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
+                <div className={`space-y-1.5 ${isPostesBoxExpanded ? 'max-h-[700px]' : 'max-h-56'} overflow-y-auto pr-1 custom-scrollbar transition-all duration-300`}>
                   {activePostes.map((poste, idx) => (
                     <div key={idx} className="p-2 bg-white/10 rounded-xl border border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs">
                       <div className="flex items-center gap-2 flex-1 min-w-[180px]">
