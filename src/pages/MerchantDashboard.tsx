@@ -179,17 +179,15 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
                 <Globe className="w-4 h-4" />
                 {t('BEYA Portal', 'BEYA Portal', 'بيا بورتال')}
               </button>
-              <div className="flex items-center bg-slate-100 rounded-full p-1 gap-0.5">
-                {(['fr', 'en', 'ar'] as const).map(langOption => (
-                  <button
-                    key={langOption}
-                    onClick={() => setLang(langOption)}
-                    className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${dashLang === langOption ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                  >
-                    {langOption}
-                  </button>
-                ))}
-              </div>
+              {/* Language Switcher (Small Icon FR/AR Toggle) */}
+              <button
+                onClick={() => setLang(dashLang === 'ar' ? 'fr' : 'ar')}
+                className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-slate-700 hover:text-indigo-600 rounded-full font-black text-xs uppercase tracking-wider transition-all shrink-0 cursor-pointer"
+                title={dashLang === 'ar' ? 'Passer en Français (FR)' : 'التغيير إلى العربية (AR)'}
+              >
+                <Globe className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                <span>{dashLang === 'ar' ? 'FR' : 'AR'}</span>
+              </button>
               <div className="relative">
                 <button 
                   onClick={() => setShowNotifications(!showNotifications)}

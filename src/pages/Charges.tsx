@@ -102,7 +102,15 @@ export default function Charges() {
   }, []);
 
   const availableMois = useMemo(() => {
-    return [...new Set(charges.map(c => c.date.substring(0, 7)))].sort().reverse();
+    const months = new Set<string>();
+    const years = [2025, 2026, 2027, 2028];
+    years.forEach(year => {
+      for (let m = 1; m <= 12; m++) {
+        months.add(`${year}-${String(m).padStart(2, '0')}`);
+      }
+    });
+    charges.forEach(c => c.date && months.add(c.date.substring(0, 7)));
+    return [...months].sort().reverse();
   }, [charges]);
 
   const filtered = charges.filter(c => {

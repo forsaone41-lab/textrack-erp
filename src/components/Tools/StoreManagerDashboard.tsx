@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 // Vercel deployment trigger
-import { Plus, Settings, ExternalLink, Crown, ArrowRight, ArrowLeft, TrendingUp, Sparkles, LayoutDashboard, Loader2, Trash2, AlertTriangle, X, Lock, User, LogOut } from 'lucide-react';
+import { Plus, Settings, ExternalLink, Crown, ArrowRight, ArrowLeft, TrendingUp, Sparkles, LayoutDashboard, Loader2, Trash2, AlertTriangle, X, Lock, User, LogOut, Globe } from 'lucide-react';
 import { supabase } from '../../supabase';
 import SaaSGodModeAdminModal from './SaaSGodModeAdminModal';
 
@@ -175,21 +175,15 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                </div>
             </div>
             <div className={`flex flex-wrap items-center gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
-               {/* Language Switcher */}
-               <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
-                 {(['fr', 'en', 'ar'] as const).map(langOption => {
-                   const isActive = dashLang === langOption;
-                   return (
-                     <button
-                       key={langOption}
-                       onClick={() => setLang(langOption)}
-                       className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all ${isActive ? 'bg-indigo-50 text-indigo-700' : 'text-slate-500 hover:bg-slate-50'}`}
-                     >
-                       {langOption}
-                     </button>
-                   );
-                 })}
-               </div>
+               {/* Language Switcher (Small Icon FR/AR Toggle) */}
+               <button
+                  onClick={() => setLang(dashLang === 'ar' ? 'fr' : 'ar')}
+                  className="flex items-center justify-center gap-1.5 px-3 py-2 bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-slate-700 hover:text-indigo-600 rounded-xl font-black text-xs uppercase tracking-wider transition-all shadow-sm shrink-0 cursor-pointer"
+                  title={dashLang === 'ar' ? 'Passer en Français (FR)' : 'التغيير إلى العربية (AR)'}
+               >
+                  <Globe className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <span>{dashLang === 'ar' ? 'FR' : 'AR'}</span>
+               </button>
 
                {/* Sleek Unified Account Pill Button */}
                <div className="flex items-center bg-white border border-slate-200/80 hover:border-indigo-300 rounded-2xl p-1.5 shadow-sm hover:shadow-md transition-all">

@@ -195,6 +195,12 @@ export default function SuiviRH() {
   const availableMois = useMemo(() => {
     try {
       const months = new Set<string>();
+      const years = [2025, 2026, 2027, 2028];
+      years.forEach(year => {
+        for (let m = 1; m <= 12; m++) {
+          months.add(`${year}-${String(m).padStart(2, '0')}`);
+        }
+      });
       if (Array.isArray(paiements)) {
         paiements.forEach(p => p && p.mois && months.add(p.mois));
       }

@@ -661,6 +661,38 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
     setSubscriptionTierState(tier);
   };
   const proThemesUnlocked = subscriptionTier === 'PRO' || subscriptionTier === 'PREMIUM';
+  const [showUpgradeModal, setShowUpgradeModal] = useState<boolean>(false);
+  const [selectedUpgradeTier, setSelectedUpgradeTier] = useState<'PRO' | 'PREMIUM'>('PRO');
+  const [upgradeStep, setUpgradeStep] = useState<'plans' | 'form' | 'success'>('plans');
+  const [upgradeForm, setUpgradeForm] = useState({
+    fullName: '',
+    phone: '',
+    paymentMethod: 'تحويل بنكي (CIH / Attijari / BMCE)',
+    notes: ''
+  });
+  const [isSubmittingUpgrade, setIsSubmittingUpgrade] = useState<boolean>(false);
+
+  const handleUpgradeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmittingUpgrade(true);
+    try {
+      await supabase.from('demandes').insert({
+        client: upgradeForm.fullName || 'Marchand BEYA',
+        telephone: upgradeForm.phone,
+        article: `[ترقية متجر] باقة ${selectedUpgradeTier} - ${storeName}`,
+        quantite: 1,
+        budget_unitaire: selectedUpgradeTier === 'PRO' ? '299 MAD/شهر' : '499 MAD/شهر',
+        notes: `طلب ترقية الباقة لمتجر: ${storeName} (${getStoreDomain()})\nالباقة المطلوبة: ${selectedUpgradeTier}\nطريقة الدفع: ${upgradeForm.paymentMethod}\nملاحظات: ${upgradeForm.notes || 'لا يوجد'}`,
+        source: 'StoreBuilder - Talb Baqa Pro'
+      });
+    } catch (err: any) {
+      console.error('Upgrade request error:', err);
+    } finally {
+      setIsSubmittingUpgrade(false);
+      setUpgradeStep('success');
+    }
+  };
+
   const [proUpsellTheme, setProUpsellTheme] = useState<any>(null);
   const [quickBuyContext, setQuickBuyContext] = useState<any>(null);
   const [buyNowAsPopup, setBuyNowAsPopup] = useState<boolean>(config.buyNowAsPopup ?? true);
@@ -1328,6 +1360,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
 
   const handleSave = async (overrideProducts?: any[]) => {
     setIsSaving(true);
+    const validOverride = Array.isArray(overrideProducts) ? overrideProducts : undefined;
     const storeConfig = {
        storeLang,
        storeName,
@@ -1363,7 +1396,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
        newsletterSubtitle,
        featuresData,
        videoUrl,
-       storeProducts: overrideProducts || storeProducts,
+       storeProducts: validOverride || storeProducts,
        appsConfig,
        deliveryCompanies,
        secondaryColor,
@@ -1414,7 +1447,13 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
        console.error("Could not fetch session for owner_id", e);
     }
 
-    localStorage.setItem('beya_store_config', JSON.stringify(storeConfig));
+    try {
+       localStorage.setItem('beya_store_config', JSON.stringify(storeConfig));
+       window.dispatchEvent(new Event('storage'));
+       window.dispatchEvent(new CustomEvent('beya_store_config_saved', { detail: storeConfig }));
+    } catch (storageErr) {
+       console.error("Failed to save to localStorage:", storageErr);
+    }
     
     // Sync to Supabase for cross-domain live preview (SaaS mode)
     try {
@@ -1442,9 +1481,9 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
 
     } catch (err) {
        console.warn("Supabase sync failed (Table 'stores' might not exist yet):", err);
+    } finally {
+       setTimeout(() => setIsSaving(false), 1500);
     }
-    
-    setTimeout(() => setIsSaving(false), 1000);
   };
 
   const handleLinkDomain = async () => {
@@ -4894,18 +4933,19 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
          {/* Profile / Logout */}
          {!isLiveStore && (
             <div className="flex items-center gap-3">
-               {/* Language Switcher */}
-               <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm h-[44px]">
-                 {(['fr', 'en', 'ar'] as const).map(langOption => (
-                   <button 
-                     key={langOption}
-                     onClick={() => { localStorage.setItem('beya_dash_lang', langOption); setDashLang(langOption); }} 
-                     className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all ${dashLang === langOption ? 'bg-indigo-50 text-indigo-700 shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}
-                   >
-                     {langOption}
-                   </button>
-                 ))}
-               </div>
+               {/* Language Switcher (Small Icon FR/AR Toggle) */}
+               <button
+                  onClick={() => {
+                     const nextLang = dashLang === 'ar' ? 'fr' : 'ar';
+                     localStorage.setItem('beya_dash_lang', nextLang);
+                     setDashLang(nextLang);
+                  }}
+                  className="flex items-center justify-center gap-1.5 px-3 h-[44px] bg-white border border-slate-200 hover:border-indigo-500 text-slate-700 hover:text-indigo-600 rounded-2xl font-black text-xs uppercase tracking-wider transition-all shadow-sm shrink-0 cursor-pointer"
+                  title={dashLang === 'ar' ? 'Passer en Français (FR)' : 'التغيير إلى العربية (AR)'}
+               >
+                  <Globe className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <span>{dashLang === 'ar' ? 'FR' : 'AR'}</span>
+               </button>
                
                <div className="flex items-center gap-2 bg-white px-2 py-1.5 rounded-2xl shadow-sm border border-slate-200 h-[44px]">
                   <div className="hidden sm:block text-right pr-2 pl-3">
@@ -4935,13 +4975,23 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
         <div className={isAr ? 'text-right' : 'text-left'}>
           <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
             <h1 className="text-2xl font-black text-slate-800 tracking-tight">BEYA STORE PRO</h1>
-            <span className={`px-2 py-1 text-[10px] font-black rounded uppercase tracking-widest ${
+             <span className={`px-2 py-1 text-[10px] font-black rounded uppercase tracking-widest ${
                subscriptionTier === 'PREMIUM' ? 'bg-amber-100 text-amber-700 border border-amber-200'
                : subscriptionTier === 'PRO' ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
                : 'bg-slate-100 text-slate-600 border border-slate-200'
             }`}>
                {subscriptionTier === 'PREMIUM' ? (isAr ? 'بريميوم' : 'PREMIUM') : subscriptionTier === 'PRO' ? 'PRO' : (isAr ? 'أساسي' : 'NORMAL')}
             </span>
+            {subscriptionTier === 'NORMAL' && (
+               <button
+                  onClick={() => { setShowUpgradeModal(true); setUpgradeStep('plans'); }}
+                  className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg text-xs font-black hover:opacity-95 transition-all shadow-sm cursor-pointer animate-pulse"
+                  title={isAr ? 'ترقية الباقة الآن' : 'Passer au plan PRO'}
+               >
+                  <Crown className="w-3.5 h-3.5" />
+                  {isAr ? 'ترقية الباقة ⚡' : 'Upgrade ⚡'}
+               </button>
+            )}
             <span className="flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-black rounded uppercase tracking-widest" title="Connexion chiffrée de bout en bout et route protégée (Admin uniquement)"><ShieldCheck className="w-3 h-3" /> {isAr ? 'آمن' : 'Sécurisé'}</span>
           </div>
           <div className="flex bg-slate-100 p-1 rounded-xl w-max mt-4 shadow-inner">
@@ -4955,7 +5005,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                <span className="text-sm font-black text-indigo-900">{config.storeName}</span>
              </div>
           )}
-          <button onClick={handleSave} disabled={isSaving} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${isSaving ? 'bg-green-500 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
+          <button onClick={() => handleSave()} disabled={isSaving} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${isSaving ? 'bg-green-500 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
             {isSaving ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />} {isSaving ? (isAr ? 'تم الحفظ' : 'Enregistré') : (isAr ? 'حفظ' : 'Enregistrer')}
           </button>
           <button onClick={() => { setPreviewProductId(null); setShowPreview(true); }} className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 px-4 py-2 rounded-xl text-sm font-black hover:bg-indigo-100 hover:scale-105 transition-all shadow-sm" title={isAr ? 'محرر الموقع الاحترافي' : 'Éditeur Visuel PRO'}>
@@ -5053,7 +5103,17 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                     </div>
                   </div>
                   <div className="pt-4 border-t border-slate-100">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Catalogue de Thèmes</label>
+                    <div className="flex items-center justify-between mb-3">
+                       <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">{isAr ? 'كتالوج التصاميم' : 'Catalogue de Thèmes'}</label>
+                       {subscriptionTier === 'NORMAL' && (
+                          <button
+                             onClick={() => { setShowUpgradeModal(true); setUpgradeStep('plans'); }}
+                             className="flex items-center gap-1 text-[10px] font-black text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-full transition-colors border border-amber-200"
+                          >
+                             <Crown className="w-3 h-3" /> {isAr ? 'ترقية لفتح كل التصاميم ⚡' : 'Débloquer tout ⚡'}
+                          </button>
+                       )}
+                    </div>
                     <div className="grid grid-cols-2 gap-3">
                       {THEMES.filter(t => t.id !== activeTheme.id).map(t => {
                          const isLocked = t.tier === 'pro' && !proThemesUnlocked;
@@ -6835,8 +6895,17 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
              </div>
 
              <div className="p-4 border-t border-slate-100 bg-slate-50">
-                <button onClick={handleSave} className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 flex items-center justify-center gap-2">
-                   <Save className="w-4 h-4" /> {isAr ? 'حفظ التغييرات' : 'Sauvegarder'}
+                <button
+                   onClick={() => handleSave()}
+                   disabled={isSaving}
+                   className={`w-full font-bold py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 ${
+                     isSaving
+                       ? 'bg-emerald-600 text-white shadow-emerald-200'
+                       : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200'
+                   }`}
+                >
+                   {isSaving ? <CheckCircle className="w-5 h-5 animate-pulse" /> : <Save className="w-5 h-5" />}
+                   {isSaving ? (isAr ? 'تم حفظ التغييرات بنجاح !' : 'Modifications enregistrées !') : (isAr ? 'حفظ التغييرات' : 'Sauvegarder')}
                 </button>
              </div>
           </div>
@@ -7641,11 +7710,261 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                   </p>
                   <div className="flex gap-3">
                      <button onClick={() => setProUpsellTheme(null)} className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors text-sm">{isAr ? 'إغلاق' : 'Fermer'}</button>
-                     <button onClick={() => { setProUpsellTheme(null); setActiveTab('settings'); }} className="flex-1 py-3 bg-amber-400 text-slate-900 font-bold rounded-xl hover:bg-amber-500 transition-colors text-sm flex items-center justify-center gap-2">
+                     <button onClick={() => { setProUpsellTheme(null); setShowUpgradeModal(true); setUpgradeStep('plans'); }} className="flex-1 py-3 bg-amber-400 text-slate-900 font-bold rounded-xl hover:bg-amber-500 transition-colors text-sm flex items-center justify-center gap-2">
                         <ShieldCheck className="w-4 h-4" /> {isAr ? 'ترقية' : 'Upgrade'}
                      </button>
                   </div>
                </div>
+            </div>
+         </div>
+      )}
+
+      {/* DEDICATED UPGRADE & PLAN ORDER MODAL (TALB LBAQA) */}
+      {showUpgradeModal && (
+         <div className="fixed inset-0 z-[650] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-300 my-8">
+               {/* Header Banner */}
+               <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
+                  <div className="flex items-start justify-between relative z-10">
+                     <div>
+                        <div className="flex items-center gap-2 mb-2">
+                           <span className="px-2.5 py-1 bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-black rounded-full uppercase tracking-widest flex items-center gap-1">
+                              <Crown className="w-3 h-3" /> {isAr ? 'ترقية وتطوير المتجر' : 'UPGRADE STORE'}
+                           </span>
+                        </div>
+                        <h2 className="text-2xl sm:text-3xl font-black tracking-tight mb-1">
+                           {upgradeStep === 'plans' && (isAr ? 'ترقية باقة متجرك ⚡' : 'Choisissez votre plan PRO ⚡')}
+                           {upgradeStep === 'form' && (isAr ? `طلب تفعيل باقة ${selectedUpgradeTier} ⭐` : `Commande du plan ${selectedUpgradeTier} ⭐`)}
+                           {upgradeStep === 'success' && (isAr ? 'تم تسجيل طلبك بنجاح! 🎉' : 'Demande enregistrée ! 🎉')}
+                        </h2>
+                        <p className="text-slate-300 text-xs sm:text-sm font-medium">
+                           {upgradeStep === 'plans' && (isAr ? 'اختر الباقة المناسبة لتفعيل جميع التصاميم المميزة والعديد من المزايا الاحترافية.' : 'Débloquez tous les thèmes premium et profitez de fonctionnalités exclusives.')}
+                           {upgradeStep === 'form' && (isAr ? 'قم بتعبئة معلوماتك لاختيار طريقة الدفع وتفعيل الباقة لمتجرك.' : 'Remplissez vos informations pour commander votre plan et l\'activer.')}
+                           {upgradeStep === 'success' && (isAr ? 'خطوة واحدة أخيرة لتفعيل باقتك فوراً عبر واتساب.' : 'Une dernière étape pour activer votre plan immédiatement.')}
+                        </p>
+                     </div>
+                     <button
+                        onClick={() => { setShowUpgradeModal(false); setUpgradeStep('plans'); }}
+                        className="p-2 text-slate-400 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-colors backdrop-blur-md"
+                     >
+                        <X className="w-5 h-5" />
+                     </button>
+                  </div>
+               </div>
+
+               {/* Step 1: Choose Plan */}
+               {upgradeStep === 'plans' && (
+                  <div className="p-6 sm:p-8">
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+                        {/* PRO CARD */}
+                        <div className="border-2 border-slate-200 hover:border-indigo-500 rounded-3xl p-6 transition-all relative flex flex-col group bg-white shadow-sm hover:shadow-md">
+                           <div className="flex items-center justify-between mb-3">
+                              <span className="text-lg font-black text-slate-900">PRO</span>
+                              <span className="px-2.5 py-0.5 bg-indigo-50 text-indigo-700 font-bold text-[10px] rounded-full uppercase">{isAr ? 'الأكثر طلباً ⭐' : 'Populaire ⭐'}</span>
+                           </div>
+                           <div className="flex items-end gap-1 mb-5">
+                              <span className="text-3xl font-black text-slate-900">299</span>
+                              <span className="text-slate-500 font-bold text-xs mb-1">MAD / {isAr ? 'شهر' : 'mois'}</span>
+                           </div>
+                           <ul className="space-y-3 mb-6 flex-1 text-xs sm:text-sm font-medium text-slate-700">
+                              <li className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0"><Check className="w-3 h-3 text-emerald-600" /></div> {isAr ? 'فتح جميع التصاميم المميزة PRO' : 'Tous les thèmes PRO débloqués'}</li>
+                              <li className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0"><Check className="w-3 h-3 text-emerald-600" /></div> {isAr ? 'منتجات وطلبات غير محدودة' : 'Produits et commandes illimités'}</li>
+                              <li className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0"><Check className="w-3 h-3 text-emerald-600" /></div> {isAr ? 'ربط الدومين الخاص (.com / .ma)' : 'Domaine personnalisé'}</li>
+                              <li className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0"><Check className="w-3 h-3 text-emerald-600" /></div> {isAr ? 'دعم فني وتحديثات مستمرة' : 'Support technique en continu'}</li>
+                           </ul>
+                           <button
+                              onClick={() => { setSelectedUpgradeTier('PRO'); setUpgradeStep('form'); }}
+                              className="w-full py-3.5 bg-slate-900 hover:bg-indigo-600 text-white font-bold rounded-xl transition-all shadow-md text-sm"
+                           >
+                              {isAr ? 'اختيار باقة PRO ⚡' : 'Choisir le plan PRO ⚡'}
+                           </button>
+                        </div>
+
+                        {/* PREMIUM CARD */}
+                        <div className="border-2 border-amber-400 bg-amber-50/20 hover:bg-amber-50/40 rounded-3xl p-6 transition-all relative flex flex-col shadow-md shadow-amber-500/10">
+                           <div className="flex items-center justify-between mb-3">
+                              <span className="text-lg font-black text-amber-700 flex items-center gap-1"><Crown className="w-4 h-4" /> PREMIUM</span>
+                              <span className="px-2.5 py-0.5 bg-amber-500 text-white font-bold text-[10px] rounded-full uppercase">VIP 👑</span>
+                           </div>
+                           <div className="flex items-end gap-1 mb-5">
+                              <span className="text-3xl font-black text-slate-900">499</span>
+                              <span className="text-slate-500 font-bold text-xs mb-1">MAD / {isAr ? 'شهر' : 'mois'}</span>
+                           </div>
+                           <ul className="space-y-3 mb-6 flex-1 text-xs sm:text-sm font-medium text-slate-700">
+                              <li className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center shrink-0"><Check className="w-3 h-3 text-amber-600" /></div> {isAr ? 'جميع مزايا باقة PRO' : 'Tous les avantages PRO'}</li>
+                              <li className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center shrink-0"><Check className="w-3 h-3 text-amber-600" /></div> {isAr ? 'أولوية قصوى في تصنيع الملابس' : 'Priorité en fabrication (Usine BEYA)'}</li>
+                              <li className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center shrink-0"><Check className="w-3 h-3 text-amber-600" /></div> {isAr ? 'مدير حساب مخصص لمساعدتك' : 'Account manager dédié'}</li>
+                              <li className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center shrink-0"><Check className="w-3 h-3 text-amber-600" /></div> {isAr ? 'تحليلات متقدمة للأداء والمبيعات' : 'Analyses et rapports avancés'}</li>
+                           </ul>
+                           <button
+                              onClick={() => { setSelectedUpgradeTier('PREMIUM'); setUpgradeStep('form'); }}
+                              className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold rounded-xl transition-all shadow-md shadow-amber-500/20 text-sm"
+                           >
+                              {isAr ? 'اختيار باقة PREMIUM 👑' : 'Choisir le plan PREMIUM 👑'}
+                           </button>
+                        </div>
+                     </div>
+
+                     <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
+                        <div className="flex items-center gap-2 font-bold">
+                           <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                           <span>{isAr ? 'طرق الدفع المتاحة في المغرب:' : 'Moyens de paiement disponibles au Maroc :'}</span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 font-semibold">
+                           <span className="px-2 py-1 bg-white border border-slate-200 rounded-lg">🏦 تحويل بنكي</span>
+                           <span className="px-2 py-1 bg-white border border-slate-200 rounded-lg">💸 Cash Plus / وفاكاش</span>
+                           <span className="px-2 py-1 bg-white border border-slate-200 rounded-lg">💵 الدفع عند المقر</span>
+                        </div>
+                     </div>
+                  </div>
+               )}
+
+               {/* Step 2: Dedicated Order Form (Page dial talb lbaqa) */}
+               {upgradeStep === 'form' && (
+                  <form onSubmit={handleUpgradeSubmit} className="p-6 sm:p-8 space-y-6">
+                     <div className="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-4 flex items-center justify-between">
+                        <div>
+                           <p className="text-[10px] font-black text-indigo-500 uppercase tracking-wider">{isAr ? 'ملخص الترقية' : 'Résumé du Plan'}</p>
+                           <p className="text-base font-black text-indigo-950">
+                              {isAr ? `باقة ${selectedUpgradeTier} - متجر ${storeName}` : `Plan ${selectedUpgradeTier} - ${storeName}`}
+                           </p>
+                        </div>
+                        <div className="text-right">
+                           <span className="text-lg font-black text-indigo-700">{selectedUpgradeTier === 'PRO' ? '299' : '499'} MAD</span>
+                           <span className="text-xs text-indigo-500 block font-bold">/{isAr ? 'شهر' : 'mois'}</span>
+                        </div>
+                     </div>
+
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                           <label className="block text-xs font-bold text-slate-700 mb-2">{isAr ? 'الاسم الكامل *' : 'Nom complet *'}</label>
+                           <input
+                              type="text"
+                              required
+                              value={upgradeForm.fullName}
+                              onChange={e => setUpgradeForm({ ...upgradeForm, fullName: e.target.value })}
+                              placeholder={isAr ? 'الاسم أو اسم المؤسسة...' : 'Nom complet ou entreprise...'}
+                              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
+                           />
+                        </div>
+                        <div>
+                           <label className="block text-xs font-bold text-slate-700 mb-2">{isAr ? 'رقم الهاتف / الواتساب *' : 'Téléphone / WhatsApp *'}</label>
+                           <input
+                              type="tel"
+                              required
+                              value={upgradeForm.phone}
+                              onChange={e => setUpgradeForm({ ...upgradeForm, phone: e.target.value })}
+                              placeholder="ex: 0612345678"
+                              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
+                           />
+                        </div>
+                     </div>
+
+                     <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-2">{isAr ? 'طريقة الدفع المفضلة *' : 'Moyen de paiement *'}</label>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                           {[
+                              { id: 'bank', label: isAr ? 'تحويل بنكي' : 'Virement Bancaire', desc: 'CIH / Attijari / BMCE', icon: '🏦' },
+                              { id: 'cash', label: 'Cash Plus / Wafacash', desc: isAr ? 'وكالات تحويل الأموال' : 'Agences de transfert', icon: '💸' },
+                              { id: 'office', label: isAr ? 'الدفع عند المقر' : 'Paiement au siège', desc: 'BEYA Creative', icon: '💵' }
+                           ].map(opt => {
+                              const isSelected = upgradeForm.paymentMethod.includes(opt.label);
+                              return (
+                                 <div
+                                    key={opt.id}
+                                    onClick={() => setUpgradeForm({ ...upgradeForm, paymentMethod: `${opt.label} (${opt.desc})` })}
+                                    className={`p-3 rounded-2xl border-2 cursor-pointer transition-all flex flex-col items-center text-center ${isSelected ? 'border-indigo-600 bg-indigo-50/50 shadow-sm' : 'border-slate-200 hover:border-slate-300 bg-white'}`}
+                                 >
+                                    <span className="text-xl mb-1">{opt.icon}</span>
+                                    <span className="text-xs font-bold text-slate-900">{opt.label}</span>
+                                    <span className="text-[10px] text-slate-500 font-medium">{opt.desc}</span>
+                                 </div>
+                              );
+                           })}
+                        </div>
+                     </div>
+
+                     <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-2">{isAr ? 'ملاحظات أو طلبات إضافية (اختياري)' : 'Notes optionnelles'}</label>
+                        <textarea
+                           rows={2}
+                           value={upgradeForm.notes}
+                           onChange={e => setUpgradeForm({ ...upgradeForm, notes: e.target.value })}
+                           placeholder={isAr ? 'أي ملاحظة حول الدفع أو استفسار للفريق...' : 'Toute question ou note pour l\'équipe BEYA...'}
+                           className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all resize-none"
+                        ></textarea>
+                     </div>
+
+                     <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+                        <button
+                           type="button"
+                           onClick={() => setUpgradeStep('plans')}
+                           className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition-colors"
+                        >
+                           {isAr ? 'رجوع' : 'Retour'}
+                        </button>
+                        <button
+                           type="submit"
+                           disabled={isSubmittingUpgrade || !upgradeForm.fullName || !upgradeForm.phone}
+                           className="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-600/20 text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                           {isSubmittingUpgrade ? (
+                              <><Loader2 className="w-4 h-4 animate-spin" /> {isAr ? 'جاري إرسال الطلب...' : 'Envoi en cours...'}</>
+                           ) : (
+                              <>{isAr ? 'تأكيد وإرسال طلب الترقية 🚀' : 'Confirmer la commande 🚀'}</>
+                           )}
+                        </button>
+                     </div>
+                  </form>
+               )}
+
+               {/* Step 3: Success & WhatsApp activation */}
+               {upgradeStep === 'success' && (
+                  <div className="p-8 text-center">
+                     <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                        <CheckCircle className="w-10 h-10 text-emerald-600" />
+                     </div>
+                     <h3 className="text-2xl font-black text-slate-900 mb-2">
+                        {isAr ? 'تم تسجيل طلب ترقية باقتك بنجاح! 🎉' : 'Votre commande a été enregistrée avec succès ! 🎉'}
+                     </h3>
+                     <p className="text-slate-600 text-sm max-w-md mx-auto mb-6 font-medium">
+                        {isAr
+                           ? `فريق BEYA توصل بطلب تفعيل باقة ${selectedUpgradeTier} لمتجر "${storeName}".`
+                           : `L'équipe BEYA a reçu votre demande pour le plan ${selectedUpgradeTier}.`}
+                     </p>
+
+                     <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 max-w-lg mx-auto mb-6 text-left">
+                        <p className="text-xs font-bold text-amber-900 mb-1 flex items-center gap-1.5">
+                           <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
+                           {isAr ? 'خطوة واحدة أخيرة لتفعيل باقتك فوراً:' : 'Une dernière étape pour activer votre plan :'}
+                        </p>
+                        <p className="text-xs text-amber-800">
+                           {isAr
+                              ? 'اضغط على زر الواتساب أدناه للتواصل مع خدمة العملاء وإرسال وصل الدفع (Reçu) حتى يتم فتح جميع التصاميم المميزة لحسابك مباشرة.'
+                              : 'Cliquez sur le bouton WhatsApp ci-dessous pour envoyer votre reçu de paiement à l\'équipe BEYA et débloquer immédiatement vos thèmes.'}
+                        </p>
+                     </div>
+
+                     <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
+                        <button
+                           onClick={() => {
+                              const waText = `السلام عليكم، قمت بطلب ترقية متجري "${storeName}" إلى باقة ${selectedUpgradeTier}.\nالدومين: ${getStoreDomain()}\nالاسم: ${upgradeForm.fullName}\nالهاتف: ${upgradeForm.phone}\nطريقة الدفع: ${upgradeForm.paymentMethod}\nأرغب في إتمام التفعيل وإرسال الوصل.`;
+                              window.open(`https://wa.me/212684252575?text=${encodeURIComponent(waText)}`, '_blank');
+                           }}
+                           className="flex-1 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/25 text-sm flex items-center justify-center gap-2"
+                        >
+                           <span>📲</span> {isAr ? 'تفعيل عبر واتساب وإرسال الوصل' : 'Envoyer le reçu sur WhatsApp'}
+                        </button>
+                        <button
+                           onClick={() => { setShowUpgradeModal(false); setUpgradeStep('plans'); }}
+                           className="px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition-colors"
+                        >
+                           {isAr ? 'إغلاق النافذة' : 'Fermer'}
+                        </button>
+                     </div>
+                  </div>
+               )}
             </div>
          </div>
       )}

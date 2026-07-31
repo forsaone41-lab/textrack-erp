@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check, Languages, Maximize2, Minimize2, Download, FileText, Printer } from 'lucide-react';
+import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check, Languages, Maximize2, Minimize2, Download, FileText, Printer, Settings, KeyRound } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { saveRecord, genId, FicheTechnique, loadLeads, Lead, loadCompanyProfile } from '../types';
@@ -42,57 +42,85 @@ const FABRIC_CATALOG: Record<string, {
   arName: string;
   frName: string;
   pricePerMeterMAD: string;
+  pricePerMeterMADFr: string;
   markets: string;
+  marketsFr: string;
   pros: string;
+  prosFr: string;
   cons: string;
+  consFr: string;
 }> = {
   'crêpe': {
     arName: 'كريب دي شين / كريب جورجيت (Crêpe)',
     frName: 'Crêpe de Chine / Georgette',
     pricePerMeterMAD: '25 - 45 درهم/متر (جملة)',
+    pricePerMeterMADFr: '25 - 45 MAD/mètre (gros)',
     markets: 'درب عمر (الدار البيضاء)، سوق القريعة، القيساريات الكبرى',
+    marketsFr: 'Derb Omar (Casablanca), Souk Griaa, grandes Kissariat',
     pros: 'طايح وخفيف، مريح في اللبس، ما كيتكمش بسهولة، ممتاز للفساتين والعبايات',
-    cons: 'كيتطلب عناية خاصة في الخياطة باش ما يزلقش في الماكينة'
+    prosFr: 'Fluide et léger, confortable, ne se froisse pas facilement, excellent pour robes et abayas',
+    cons: 'كيتطلب عناية خاصة في الخياطة باش ما يزلقش في الماكينة',
+    consFr: 'Nécessite un soin particulier à la couture pour éviter le glissement sous la machine'
   },
   'satin': {
     arName: 'ساتان حرير / ساتان دوتشيس (Satin)',
     frName: 'Satin de Soie / Satin Duchesse',
     pricePerMeterMAD: '30 - 65 درهم/متر (جملة)',
+    pricePerMeterMADFr: '30 - 65 MAD/mètre (gros)',
     markets: 'درب عمر (الدار البيضاء)، سوق القريعة، سوق الأثواب',
+    marketsFr: 'Derb Omar (Casablanca), Souk Griaa, Souk des tissus',
     pros: 'لمعة فاخرة، ملمس ناعم، يعطي قيمة عالية للبياسة في السهرات والمناسبات',
-    cons: 'حساس للحرارة والماء، كيبين عيوب الخياطة إذا ما كانتش متقنة 100%'
+    prosFr: 'Brillance luxueuse, toucher doux, apporte une haute valeur pour les tenues de soirée',
+    cons: 'حساس للحرارة والماء، كيبين عيوب الخياطة إذا ما كانتش متقنة 100%',
+    consFr: 'Sensible à la chaleur et à l\'eau, révèle les défauts de couture si non parfaitement exécutée'
   },
   'dentelle': {
     arName: 'دانتيلا / كيبير فرنسي (Dentelle / Guipure)',
     frName: 'Dentelle / Guipure de luxe',
     pricePerMeterMAD: '60 - 180 درهم/متر',
+    pricePerMeterMADFr: '60 - 180 MAD/mètre',
     markets: 'درب عمر (شارع القصور)، محلات الأثواب المستوردة',
+    marketsFr: 'Derb Omar (rue des palais), boutiques de tissus importés',
     pros: 'مظهر راقي جداً، يضيف لمسة كوتور (Couture) وتفاصيل فاخرة للبياسة',
-    cons: 'سعر مرتفع، يحتاج تبطين (Doublure) ودقة عالية في التفصيل والقص'
+    prosFr: 'Aspect très raffiné, apporte une touche couture et des détails luxueux',
+    cons: 'سعر مرتفع، يحتاج تبطين (Doublure) ودقة عالية في التفصيل والقص',
+    consFr: 'Prix élevé, nécessite une doublure et une grande précision de coupe'
   },
   'lin': {
     arName: 'كتان طبيعي / لينن ممتاز (Lin)',
     frName: 'Lin naturel de qualité',
     pricePerMeterMAD: '40 - 75 درهم/متر (جملة)',
+    pricePerMeterMADFr: '40 - 75 MAD/mètre (gros)',
     markets: 'درب عمر، القيساريات التجارية بالمغرب',
+    marketsFr: 'Derb Omar, Kissariat commerciales du Maroc',
     pros: 'بارد وممتاز للصيف، متين جداً، موضة مطلوبة بكثرة في السوق المغربي',
-    cons: 'كيتكمش بسرعة وكيتطلب التحديد (الحديد) المستمر'
+    prosFr: 'Frais et idéal pour l\'été, très résistant, forte demande sur le marché marocain',
+    cons: 'كيتكمش بسرعة وكيتطلب التحديد (الحديد) المستمر',
+    consFr: 'Se froisse rapidement et nécessite un repassage fréquent'
   },
   'brocart': {
     arName: 'بروكار مغربي / بهجة ملكية (Brocart)',
     frName: 'Brocart / Bahja Traditionnelle',
     pricePerMeterMAD: '120 - 350 درهم/متر',
+    pricePerMeterMADFr: '120 - 350 MAD/mètre',
     markets: 'سوق الغزل بفاس، درب السلطان والدرب الكبير بالدار البيضاء',
+    marketsFr: 'Souk Ghezel à Fès, Derb Sultan et Derb Kebir à Casablanca',
     pros: 'فخامة مغربية أصيلة، قوام واقف ومناسب للقفطان والتكشيطة والمناسبات الكبرى',
-    cons: 'ثقيل في اللبس، مكلف من ناحية السلع والخياطة اليدوية (المعلم)'
+    prosFr: 'Luxe marocain authentique, tenue rigide idéale pour caftan, takchita et grandes occasions',
+    cons: 'ثقيل في اللبس، مكلف من ناحية السلع والخياطة اليدوية (المعلم)',
+    consFr: 'Lourd à porter, coûteux en matière et en couture artisanale (maalem)'
   },
   'mousseline': {
     arName: 'موسلين / شيفون شفاف (Mousseline / Chiffon)',
     frName: 'Mousseline / Chiffon',
     pricePerMeterMAD: '15 - 35 درهم/متر (جملة)',
+    pricePerMeterMADFr: '15 - 35 MAD/mètre (gros)',
     markets: 'درب عمر، القريعة، قيسارية الأثواب',
+    marketsFr: 'Derb Omar, Griaa, Kissariat des tissus',
     pros: 'خفيف جداً، انسيابي ورومانسي، رائع للطبقات والفساتين الصيفية',
-    cons: 'شفاف يحتاج بطانة، حساس جداً للتمزق في الخياطة'
+    prosFr: 'Très léger, fluide et romantique, parfait pour les superpositions et robes d\'été',
+    cons: 'شفاف يحتاج بطانة، حساس جداً للتمزق في الخياطة',
+    consFr: 'Transparent, nécessite une doublure, très sensible à la déchirure à la couture'
   }
 };
 
@@ -107,10 +135,93 @@ function getFabricInfo(fabricName: string = '') {
     arName: fabricName || 'ثوب مناسب للموديل (توصية عامة)',
     frName: fabricName || 'Tissu adapté au modèle',
     pricePerMeterMAD: '25 - 55 درهم/متر (تقديري حسب الجودة)',
+    pricePerMeterMADFr: '25 - 55 MAD/mètre (estimatif selon qualité)',
     markets: 'درب عمر (الدار البيضاء)، سوق القريعة، القيساريات المحلية',
+    marketsFr: 'Derb Omar (Casablanca), Souk Griaa, Kissariat locales',
     pros: 'جودة ممتازة وسهل في التفصيل والخياطة بالورشة',
-    cons: 'يجب التأكد من جودة الغزل وغسله أو تجربته قبل القص النهائي'
+    prosFr: 'Excellente qualité et facile à travailler à l\'atelier',
+    cons: 'يجب التأكد من جودة الغزل وغسله أو تجربته قبل القص النهائي',
+    consFr: 'Vérifier la qualité du fil et le tester avant la coupe finale'
   };
+}
+
+// Keeps only the fabric consumption for a single 1.50m laize (drops any "Laize 1.50m: X | Laize 1.80m: Y" style label/alt-width text the AI may still return)
+function simplifyConsumption(raw?: string): string {
+  if (!raw) return '';
+  let s = raw.split('|')[0];
+  if (s.includes(':')) {
+    s = s.split(':').pop() || s;
+  }
+  return s.trim();
+}
+
+// Builds the full technical report chat message in the requested language, so it can be (re)generated
+// both right after analysis and again whenever the user toggles the app language.
+function buildRapportText(result: any, arLang: boolean): string {
+  const suggestedFabricName = result.fabricSuggested || (result.pieces?.[0]?.fabricSuggested) || '';
+  const fabInfo = getFabricInfo(suggestedFabricName);
+
+  let chatMsg = '';
+  if (arLang) {
+    chatMsg = `✅ تقرير التحليل التقني والتسعير للموديل (BEYA EXPERT)\n`;
+    chatMsg += `────────────────────────────\n\n`;
+    chatMsg += `🎯 التصنيف العام: [ ${result.category || 'موديل'} ] | درجة الصعوبة: [ ${result.complexity || 'متوسطة'} ]\n\n`;
+    chatMsg += `🧵 الثوب الموصى به للموديل:\n`;
+    chatMsg += `   • نوع الثوب: ${fabInfo.arName}\n`;
+    chatMsg += `   • ثمن الجملة في المغرب: ${fabInfo.pricePerMeterMAD}\n`;
+    chatMsg += `   • أماكن الشراء المعتمدة: ${fabInfo.markets}\n\n`;
+    chatMsg += `💰 التكلفة التقديرية للبياسة (Prix de revient):\n`;
+    chatMsg += `   • الإجمالي المقترح: ${result.costEstimate || '150 - 250 MAD'}\n`;
+    chatMsg += `   • (يشمل ثمن القماش + الخياطة واليد العاملة بالورشة)\n\n`;
+    chatMsg += `📏 استهلاك الثوب (لعرض 1.50م):\n`;
+    chatMsg += `   • ${result.consumption || '1.80m'}\n\n`;
+    chatMsg += `📦 قائمة قطع الموديل ومكوناتها:\n`;
+    if (result.pieces && result.pieces.length > 0) {
+      result.pieces.forEach((p: any, idx: number) => {
+        chatMsg += `   ${idx + 1}. ${p.name} (الفيت: ${p.fit || 'سليم/عادي'}) — التكلفة: ${p.costEstimate || '—'}\n`;
+        if (p.components && p.components.length > 0) {
+          chatMsg += `      ▪️ أجزاء الباترون: ${p.components.join('، ')}\n`;
+        }
+      });
+    } else {
+      chatMsg += `   • قطعة واحدة متكاملة للموديل\n`;
+    }
+    chatMsg += `\n✂️ توجيهات الورشة (الفصّال والخيّاط):\n`;
+    chatMsg += `   • يُنصح بضبط جدول المقاسات S-XXL في التبويب المجاور قبل بدء التفصيل.\n`;
+    chatMsg += `   • ميزة الثوب: ${fabInfo.pros}\n`;
+    chatMsg += `────────────────────────────\n`;
+    chatMsg += `⚡ يمكنك الآن استخدام أزرار التوزيع الفوري أدناه لإرسال التقرير لـ Devis PRO، الورشة، أو المشتريات!`;
+  } else {
+    chatMsg = `✅ RAPPORT D'ANALYSE TECHNIQUE & SOURCING (BEYA EXPERT)\n`;
+    chatMsg += `────────────────────────────\n\n`;
+    chatMsg += `🎯 Catégorie : [ ${result.category || 'Modèle'} ] | Complexité : [ ${result.complexity || 'Moyenne'} ]\n\n`;
+    chatMsg += `🧵 Tissu recommandé & Sourcing Maroc :\n`;
+    chatMsg += `   • Type de tissu : ${fabInfo.frName}\n`;
+    chatMsg += `   • Prix de gros estimé : ${fabInfo.pricePerMeterMADFr}\n`;
+    chatMsg += `   • Marchés de référence : ${fabInfo.marketsFr}\n\n`;
+    chatMsg += `💰 Estimation du coût unitaire (Prix de revient) :\n`;
+    chatMsg += `   • Coût total : ${result.costEstimate || '150 - 250 MAD'}\n`;
+    chatMsg += `   • (Inclus : tissu + façon atelier de confection)\n\n`;
+    chatMsg += `📏 Consommation de tissu (laize 1.50m) :\n`;
+    chatMsg += `   • ${result.consumption || '1.80m'}\n\n`;
+    chatMsg += `📦 Composition & Pièces du modèle :\n`;
+    if (result.pieces && result.pieces.length > 0) {
+      result.pieces.forEach((p: any, idx: number) => {
+        chatMsg += `   ${idx + 1}. ${p.name} (Fit: ${p.fit || 'Regular'}) — Coût: ${p.costEstimate || '—'}\n`;
+        if (p.components && p.components.length > 0) {
+          chatMsg += `      ▪️ Patronage : ${p.components.join(', ')}\n`;
+        }
+      });
+    } else {
+      chatMsg += `   • Pièce complète et intégrée\n`;
+    }
+    chatMsg += `\n✂️ Conseils de confection Atelier :\n`;
+    chatMsg += `   • Vérifiez le tableau des mesures S-XXL dans l'onglet voisin avant la coupe.\n`;
+    chatMsg += `   • Propriété du tissu : ${fabInfo.prosFr}\n`;
+    chatMsg += `────────────────────────────\n`;
+    chatMsg += `⚡ Utilisez les boutons d'export rapide en bas pour envoyer vers Devis PRO, l'Atelier ou les Achats !`;
+  }
+  return chatMsg;
 }
 
 export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, onClose?: () => void }) {
@@ -175,6 +286,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
 
   // Prospects Integration States
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [leadsLoading, setLeadsLoading] = useState(true);
   const [showLeadsModal, setShowLeadsModal] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
@@ -182,7 +294,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     setApiKeyInput((import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key')) || '');
     loadLeads().then(data => {
       setLeads(data.filter(l => l.photo));
-    });
+    }).finally(() => setLeadsLoading(false));
   }, []);
 
   const selectLeadModel = (lead: Lead) => {
@@ -246,10 +358,21 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     }
   };
 
+  const [piecesMesures, setPiecesMesures] = useState<any[][]>([]);
+
   const handleCellChange = (rowIndex: number, size: string, value: number) => {
     const updated = [...customMesures];
     updated[rowIndex].valeurs[size] = value;
     setCustomMesures(updated);
+  };
+
+  const handlePieceCellChange = (pieceIdx: number, rowIndex: number, size: string, value: number) => {
+    setPiecesMesures(prev => prev.map((rows, idx) => {
+      if (idx !== pieceIdx) return rows;
+      const updated = rows.map(r => ({ ...r, valeurs: { ...r.valeurs } }));
+      updated[rowIndex].valeurs[size] = value;
+      return updated;
+    }));
   };
 
   const exportToFicheTechnique = async (mode: 'current' | 'complete' = 'current') => {
@@ -271,7 +394,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
       const compStr = analysisResult.complexity || '';
 
       const extrasAr = ` | Ø§Ù„Ù‚ØµØ©: ${fitStr || 'Ø¹Ø§Ø¯ÙŠ'} | Ø§Ù„ØµØ¹ÙˆØ¨Ø©: ${compStr || 'Ù…ØªÙˆØ³Ø·'}`;
-      const extrasFr = ` | Coupe: ${fitStr || 'Regular'} | ComplexitÃ©: ${compStr || 'Moyenne'}`;
+      const extrasFr = ` | Coupe: ${fitStr || 'Regular'} | Complexité: ${compStr || 'Moyenne'}`;
 
       let ftDescription = isAr
         ? `Ø§Ù„Ù…ÙƒÙˆÙ†Ø§Øª: ${analysisResult.components.join('ØŒ ')}${extrasAr}`
@@ -285,11 +408,11 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
           const pFit = p.fit || fitStr;
           const pComp = p.complexity || compStr;
           const pExtAr = ` | Ø§Ù„Ù‚ØµØ©: ${pFit || 'Ø¹Ø§Ø¯ÙŠ'} | Ø§Ù„ØµØ¹ÙˆØ¨Ø©: ${pComp || 'Ù…ØªÙˆØ³Ø·'}`;
-          const pExtFr = ` | Coupe: ${pFit || 'Regular'} | ComplexitÃ©: ${pComp || 'Moyenne'}`;
+          const pExtFr = ` | Coupe: ${pFit || 'Regular'} | Complexité: ${pComp || 'Moyenne'}`;
 
           ftModele = p.name;
           ftDescription = isAr ? `Ø§Ù„Ù…ÙƒÙˆÙ†Ø§Øª: ${(p.components || []).join('ØŒ ')}${pExtAr}` : `Composants: ${(p.components || []).join(', ')}${pExtFr}`;
-          ftMesures = customMesures; // The active table
+          ftMesures = piecesMesures[activePieceIdx] || customMesures; // The active table (with any manual edits)
           ftConso = parseConso(p.consumption) || ftConso;
         }
       } else if (mode === 'complete') {
@@ -300,7 +423,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
           const combinedMesures: any[] = [];
           let totalConso = 0;
 
-          analysisResult.pieces.forEach((p: any) => {
+          analysisResult.pieces.forEach((p: any, pIdx: number) => {
             const prefix = p.name.trim();
             const pConso = parseConso(p.consumption);
             if (pConso > 0) {
@@ -310,8 +433,9 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
             if (p.components && Array.isArray(p.components)) {
               allComps.push(...p.components);
             }
-            if (p.mesures && Array.isArray(p.mesures)) {
-              p.mesures.forEach((m: any) => {
+            const pMesures = piecesMesures[pIdx] || p.mesures;
+            if (pMesures && Array.isArray(pMesures)) {
+              pMesures.forEach((m: any) => {
                 combinedMesures.push({
                   nom: `${prefix} - ${m.nom}`,
                   valeurs: { ...m.valeurs }
@@ -364,7 +488,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
         title: isAr ? "ØªØµØ¯ÙŠØ± Ù†Ø§Ø¬Ø­ Ù„Ù„Ø¨Ø·Ø§Ù‚Ø© Ø§Ù„ØªÙ‚Ù†ÙŠØ© ðŸŽ‰" : "Exportation RÃ©ussie ðŸŽ‰",
         message: isAr
           ? `ØªÙ… Ø¨Ù†Ø¬Ø§Ø­ ØªØµØ¯ÙŠØ± "${ftModele}" Ø¥Ù„Ù‰ Ø§Ù„Ø¨Ø·Ø§Ù‚Ø§Øª Ø§Ù„ØªÙ‚Ù†ÙŠØ©! ÙŠÙ…ÙƒÙ†Ùƒ Ø§Ù„Ø¢Ù† Ø¥ÙƒÙ…Ø§Ù„ Ø§Ù„Ø¨Ø§Ø·Ø±ÙˆÙ† ÙˆØ§Ù„Ù‚ÙŠØ§Ø³Ø§Øª Ù‡Ù†Ø§Ùƒ.`
-          : `Le modÃ¨le "${ftModele}" a Ã©tÃ© exportÃ© avec succÃ¨s vers les Fiches Techniques !`,
+          : `Le modèle "${ftModele}" a été exporté avec succès vers les Fiches Techniques !`,
         onConfirm: () => navigate('/fiches-techniques')
       });
     } catch (err) {
@@ -414,7 +538,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
         title: isAr ? "ØªÙ… Ø§Ù„Ø­ÙØ¸ Ø¨Ù†Ø¬Ø§Ø­ ðŸŽ‰" : "SauvegardÃ© avec succÃ¨s ðŸŽ‰",
         message: isAr 
           ? (initialLead ? "ØªÙ… Ø­ÙØ¸ Ø§Ù„ØªÙ‚Ø±ÙŠØ± ÙˆØ¥Ø±ÙØ§Ù‚Ù‡ Ø¨ØªÙØ§ØµÙŠÙ„ Ø§Ù„Ø·Ù„Ø¨ØŒ ÙˆØªÙ… ØªØµØ¯ÙŠØ±Ù‡ ÙƒÙ…Ù„Ù PDF Ø§Ø­ØªØ±Ø§ÙÙŠ." : "ØªÙ… Ø­ÙØ¸ Ø§Ù„ØªÙ‚Ø±ÙŠØ± ÙÙŠ 'Ø§Ù„Ø¨Ø·Ø§Ù‚Ø§Øª Ø§Ù„ØªÙ‚Ù†ÙŠØ©' ÙˆØªØµØ¯ÙŠØ±Ù‡ ÙƒÙ…Ù„Ù PDF Ø§Ø­ØªØ±Ø§ÙÙŠ.")
-          : (initialLead ? "Le rapport a Ã©tÃ© attachÃ© aux dÃ©tails du lead et exportÃ© en PDF." : "Le rapport a Ã©tÃ© sauvegardÃ© dans les Fiches Techniques et exportÃ© en PDF."),
+          : (initialLead ? "Le rapport a été attaché aux détails du lead et exporté en PDF." : "Le rapport a été sauvegardé dans les Fiches Techniques et exporté en PDF."),
       });
     }, 500);
   };
@@ -512,87 +636,87 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
       const mimeType = image.split(';')[0].split(':')[1];
 
       const analysisPrompt = isAr 
-        ? `Ø£Ù†Øª Ø®Ø¨ÙŠØ± Ù†Ø³ÙŠØ¬ ÙˆØ®ÙŠØ§Ø·Ø© Ù…Ø­ØªØ±Ù ÙÙŠ Ù…ØµÙ†Ø¹ Ù…ØºØ±Ø¨ÙŠ. Ø­Ù„Ù„ Ù‡Ø°Ù‡ Ø§Ù„ØµÙˆØ±Ø© Ø¨Ø¯Ù‚Ø© Ø¹Ø§Ù„ÙŠØ© Ø¬Ø¯Ø§Ù‹.
+        ? `أنت خبير نسيج وخياطة محترف في مصنع مغربي. حلل هذه الصورة بدقة عالية جداً.
 
-Ø£Ø±ÙŠØ¯ Ù…Ù†Ùƒ ØªØ­Ù„ÙŠÙ„ ÙƒÙ„ Ù‚Ø·Ø¹Ø© Ù…Ù„Ø§Ø¨Ø³ ÙÙŠ Ø§Ù„ØµÙˆØ±Ø© Ø¨Ø´ÙƒÙ„ Ù…Ù†ÙØµÙ„ (Ù…Ø«Ù„Ø§Ù‹ Ø¥Ø°Ø§ ÙÙŠ Ø§Ù„ØµÙˆØ±Ø© ØªÙŠØ´Ø±Øª ÙˆØ³Ø±ÙˆØ§Ù„ØŒ Ø­Ù„Ù„ ÙƒÙ„ ÙˆØ§Ø­Ø¯ Ù„ÙˆØ­Ø¯Ùˆ).
+أريد منك تحليل كل قطعة ملابس في الصورة بشكل منفصل (مثلاً إذا في الصورة تيشرت وسروال، حلل كل واحد لوحدو).
 
-Ù„ÙƒÙ„ Ù‚Ø·Ø¹Ø© Ø£Ø¹Ø·ÙŠÙ†ÙŠ:
-1. Ø§Ø³Ù… Ø§Ù„Ù‚Ø·Ø¹Ø© (Ø¨Ø§Ù„Ø¹Ø±Ø¨ÙŠØ© ÙˆØ§Ù„ÙØ±Ù†Ø³ÙŠØ©)
-2. ÙƒÙ…ÙŠØ© Ø§Ù„Ø«ÙˆØ¨ Ø§Ù„Ù…Ø·Ù„ÙˆØ¨Ø© Ø¨Ø§Ù„Ù…ØªØ±. Ø£Ø¹Ø·Ù†ÙŠ Ø§Ù„Ù‚ÙŠØ§Ø³ Ø¨Ø¯Ù‚Ø© Ù„Ø¹Ø±Ø¶ÙŠÙ† Ù…Ø®ØªÙ„ÙÙŠÙ† Ù„Ù„Ø«ÙˆØ¨: Ø¹Ø±Ø¶ 1.50Ù… ÙˆØ¹Ø±Ø¶ 1.80Ù….
-3. Ù†ÙˆØ¹ Ø§Ù„ÙÙŠØª (Ù„Ø§ØµÙ‚/Ø¶ÙŠÙ‚ØŒ Ø¹Ø§Ø¯ÙŠ/Ø±ÙŠÙƒÙŠÙ„Ø§Ø±ØŒ ÙˆØ§Ø³Ø¹/Ù„Ø§Ø±Ø¬) - Ø­Ù„Ù„ Ù…Ù† Ø§Ù„ØµÙˆØ±Ø© ÙˆØ§Ø´ Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„ Ù„Ø§ØµÙ‚ ÙˆÙ„Ø§ ÙˆØ§Ø³Ø¹
-4. Ù…Ø³ØªÙˆÙ‰ Ø§Ù„ØªØ¹Ù‚ÙŠØ¯ (Ø¨Ø³ÙŠØ·ØŒ Ù…ØªÙˆØ³Ø·ØŒ Ù…Ø¹Ù‚Ø¯)
-5. Ø§Ù„ØªÙƒÙ„ÙØ© Ø§Ù„ØªÙ‚Ø¯ÙŠØ±ÙŠØ© Ù„Ù„Ø®ÙŠØ§Ø·Ø© Ø¨Ø§Ù„Ø¯Ø±Ù‡Ù…
-6. Ù…ÙƒÙˆÙ†Ø§Øª Ø§Ù„Ù‚Ø·Ø¹Ø© (Ø§Ù„Ø£Ø¬Ø²Ø§Ø¡: ØµØ¯Ø±ØŒ Ø¸Ù‡Ø±ØŒ Ø£ÙƒÙ…Ø§Ù…ØŒ ÙŠØ§Ù‚Ø©ØŒ Ø¬ÙŠÙˆØ¨...)
-7. Ø¬Ø¯ÙˆÙ„ Ø§Ù„Ù‚ÙŠØ§Ø³Ø§Øª Ù„ÙƒÙ„ Ù…Ù‚Ø§Ø³ (S, M, L, XL, XXL) - Ø£Ø¹Ø·ÙŠ Ù‚ÙŠØ§Ø³Ø§Øª ÙˆØ§Ù‚Ø¹ÙŠØ©:
-   - Ù„Ù„Ø¬Ø²Ø¡ Ø§Ù„Ø¹Ù„ÙˆÙŠ: Ø§Ù„ØµØ¯Ø±ØŒ Ø§Ù„ÙƒØªÙØŒ Ø§Ù„Ø·ÙˆÙ„ØŒ Ø§Ù„ÙƒÙ…ØŒ Ø§Ù„Ø®ØµØ±.
-   - ØªÙ†Ø¨ÙŠÙ‡ Ù‡Ø§Ù… Ø¬Ø¯Ø§Ù‹: Ø¥Ø°Ø§ ÙƒØ§Ù†Øª Ø§Ù„Ù‚Ø·Ø¹Ø© Ø§Ù„Ø¹Ù„ÙˆÙŠØ© Ø·ÙˆÙŠÙ„Ø© (ØªØµÙ„ Ø£Ùˆ ØªØªØ¬Ø§ÙˆØ² Ù…Ù†Ø·Ù‚Ø© Ø§Ù„Ø£Ø±Ø¯Ø§Ù/Ø§Ù„ÙˆØ±ÙƒØŒ Ù…Ø«Ù„ Ø§Ù„ÙØ³ØªØ§Ù†ØŒ Ø§Ù„Ø¬Ù„Ø§Ø¨Ø©ØŒ Ø§Ù„Ù‚ÙØ·Ø§Ù†ØŒ Ø£Ùˆ Ø§Ù„Ø¨Ù„ÙˆØ²Ø© Ø§Ù„Ø·ÙˆÙŠÙ„Ø© Tunique)ØŒ ÙŠØ¬Ø¨ Ø¹Ù„ÙŠÙƒ Ø¥Ø¶Ø§ÙØ© Ù‚ÙŠØ§Ø³ "Ø§Ù„ÙˆØ±Ùƒ (Hanches)" ÙƒÙ‚ÙŠØ§Ø³ Ø³Ø§Ø¯Ø³ Ø£Ø³Ø§Ø³ÙŠ ÙÙŠ Ø¬Ø¯ÙˆÙ„ Ù‡Ø°Ù‡ Ø§Ù„Ù‚Ø·Ø¹Ø©!
-   - Ù„Ù„Ø³Ø±ÙˆØ§Ù„: Ø§Ù„Ø®ØµØ±ØŒ Ø§Ù„ÙˆØ±ÙƒØŒ Ø§Ù„Ø·ÙˆÙ„ØŒ Ø§Ù„ÙØ®Ø°ØŒ Ø£Ø³ÙÙ„ Ø§Ù„Ø±Ø¬Ù„.
-8. Ù†ÙˆØ¹ Ø§Ù„Ø«ÙˆØ¨ Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠ Ø§Ù„Ù…Ù‚ØªØ±Ø­ Ù„ØµÙ†Ø§Ø¹Ø© Ù‡Ø°Ù‡ Ø§Ù„Ù‚Ø·Ø¹Ø© Ù…Ø¹ Ø§Ù‚ØªØ±Ø§Ø­ÙŠÙ† Ø¨Ø¯ÙŠÙ„ÙŠÙ† Ù„Ù„Ø«ÙˆØ¨ØŒ Ù…Ø¹ Ø°ÙƒØ± Ø§Ù„Ù…Ø²Ø§ÙŠØ§ ÙˆØ§Ù„Ø¹ÙŠÙˆØ¨ Ù„ÙƒÙ„ Ø¨Ø¯ÙŠÙ„ Ø¨Ø§Ù„Ø¯Ø§Ø±Ø¬Ø© Ø§Ù„Ù…ØºØ±Ø¨ÙŠØ© Ø¨Ø´ÙƒÙ„ Ù…Ø®ØªØµØ± ÙˆÙ…ÙÙŠØ¯ Ù„Ù„Ù…ØµÙ†Ø¹.
+لكل قطعة أعطيني:
+1. اسم القطعة (بالعربية والفرنسية)
+2. كمية الثوب المطلوبة بالمتر، لعرض ثوب واحد فقط 1.50م (أعطني رقم دقيق فقط مثلاً "1.80m"، بدون أي نص إضافي).
+3. نوع الفيت (لاصق/ضيق، عادي/ريكيلار، واسع/لارج) - حلل من الصورة واش الموديل لاصق ولا واسع
+4. مستوى التعقيد (بسيط، متوسط، معقد)
+5. التكلفة التقديرية للخياطة بالدرهم
+6. مكونات القطعة (الأجزاء: صدر، ظهر، أكمام، ياقة، جيوب...)
+7. جدول القياسات لكل مقاس (S, M, L, XL, XXL) - أعطي قياسات واقعية:
+   - للجزء العلوي: الصدر، الكتف، الطول، الكم، الخصر.
+   - تنبيه هام جداً: إذا كانت القطعة العلوية طويلة (تصل أو تتجاوز منطقة الأرداف/الورك، مثل الفستان، الجلابة، القفطان، أو البلوزة الطويلة Tunique)، يجب عليك إضافة قياس "الورك (Hanches)" كقياس سادس أساسي في جدول هذه القطعة!
+   - للسروال: الخصر، الورك، الطول، الفخذ، أسفل الرجل.
+8. نوع الثوب الرئيسي المقترح لصناعة هذه القطعة مع اقتراحين بديلين للثوب، مع ذكر المزايا والعيوب لكل بديل بالدارجة المغربية بشكل مختصر ومفيد للمصنع.
 
-Ø£Ø¬Ø¨ Ø¨ØµÙŠØºØ© JSON ÙÙ‚Ø· Ø¨Ø¯ÙˆÙ† Ø£ÙŠ Ù†Øµ Ø¥Ø¶Ø§ÙÙŠØŒ Ø¨Ù‡Ø°Ø§ Ø§Ù„Ø´ÙƒÙ„:
+أجب بصيغة JSON فقط بدون أي نص إضافي، بهذا الشكل:
 {
-  "category": "Ø§Ø³Ù… Ø¹Ø§Ù… Ù„Ù„Ù…ÙˆØ¯ÙŠÙ„",
-  "totalConsumption": "Ø¹Ø±Ø¶ 1.50Ù…: X.XXm | Ø¹Ø±Ø¶ 1.80Ù…: X.XXm",
+  "category": "اسم عام للموديل",
+  "totalConsumption": "X.XXm",
   "totalCost": "XX - XX MAD",
-  "complexity": "Ù…ØªÙˆØ³Ø·Ø©",
-  "fabricSuggested": "Ù†ÙˆØ¹ Ø§Ù„Ø«ÙˆØ¨ Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠ Ø§Ù„Ù…Ù‚ØªØ±Ø­ Ù„Ù„Ù…ÙˆØ¯ÙŠÙ„ ÙƒØ§Ù…Ù„",
+  "complexity": "متوسطة",
+  "fabricSuggested": "نوع الثوب الرئيسي المقترح للموديل كامل",
   "fabricAlternatives": [
     {
-      "name": "ÙƒØ±ÙŠØ¨ Ø±ÙŠØ­Ø§Ù†Ø© / CrÃªpe Rayhana",
-      "pros": "Ø·Ø§ÙŠØ­ØŒ Ù…ÙƒÙŠØªØ¨ÙŠÙ†Ø´ØŒ ÙˆØ³Ø§Ù‡Ù„ ÙÙŠ Ø§Ù„Ø®ÙŠØ§Ø·Ø© ÙˆÙ…Ø±ÙŠØ­",
-      "cons": "ÙƒÙŠØ´Ø±Ø¨ Ø´ÙˆÙŠØ© ÙÙŠ Ø§Ù„Ù…ØµÙ„ÙˆØ­"
+      "name": "كريب ريحانة / Crêpe Rayhana",
+      "pros": "طايح، مكيتبينش، وساهل في الخياطة ومريح",
+      "cons": "كيشرب شوية في المصلوح"
     }
   ],
   "pieces": [
     {
-      "name": "ØªÙŠØ´Ø±Øª / T-Shirt",
-      "consumption": "Ø¹Ø±Ø¶ 1.50Ù…: 1.50m | Ø¹Ø±Ø¶ 1.80Ù…: 1.20m",
-      "fit": "Ø¹Ø§Ø¯ÙŠ (Regular)",
-      "complexity": "Ø¨Ø³ÙŠØ·",
+      "name": "تيشرت / T-Shirt",
+      "consumption": "1.50m",
+      "fit": "عادي (Regular)",
+      "complexity": "بسيط",
       "costEstimate": "25 - 40 MAD",
-      "components": ["ØµØ¯Ø± Ø£Ù…Ø§Ù…ÙŠ", "Ø¸Ù‡Ø±", "Ø£ÙƒÙ…Ø§Ù… Ù‚ØµÙŠØ±Ø©", "ÙŠØ§Ù‚Ø© Ø¯Ø§Ø¦Ø±ÙŠØ©"],
-      "fabricSuggested": "Ù‚Ø·Ù† Ù„ÙŠÙƒØ±Ø§ / Coton Lycra",
+      "components": ["صدر أمامي", "ظهر", "أكمام قصيرة", "ياقة دائرية"],
+      "fabricSuggested": "قطن ليكرا / Coton Lycra",
       "fabricAlternatives": [],
       "mesures": [
-        {"nom": "Ø§Ù„ØµØ¯Ø± (Poitrine)", "valeurs": {"S": 90, "M": 96, "L": 102, "XL": 108, "XXL": 114}}
+        {"nom": "الصدر (Poitrine)", "valeurs": {"S": 90, "M": 96, "L": 102, "XL": 108, "XXL": 114}}
       ]
     }
   ]
 }`
-        : `Tu es un expert textile et confection professionnel. Analyse cette image avec une trÃ¨s haute prÃ©cision.
+        : `Tu es un expert textile et confection professionnel. Analyse cette image avec une très haute précision.
 
-Je veux une analyse de chaque vÃªtement prÃ©sent sur l'image sÃ©parÃ©ment.
+Je veux une analyse de chaque vêtement présent sur l'image séparément.
 
-Pour chaque piÃ¨ce, donne-moi :
-1. Nom de la piÃ¨ce (en FranÃ§ais)
-2. Consommation de tissu en mÃ¨tres. Donne la mesure pour deux laizes : 1.50m et 1.80m.
-3. Type de Fit (Slim, Regular, Loose/Large) - analyse si le modÃ¨le est serrÃ© ou large d'aprÃ¨s la photo.
-4. Niveau de complexitÃ© (Simple, Moyen, Complexe)
-5. CoÃ»t estimÃ© de confection en MAD
-6. Composants de la piÃ¨ce (Buste, dos, manches, col, poches...)
+Pour chaque pièce, donne-moi :
+1. Nom de la pièce (en Français)
+2. Consommation de tissu en mètres, pour une laize unique de 1.50m (donne un chiffre précis uniquement, ex: "1.80m", sans texte additionnel).
+3. Type de Fit (Slim, Regular, Loose/Large) - analyse si le modèle est serré ou large d'après la photo.
+4. Niveau de complexité (Simple, Moyen, Complexe)
+5. Coût estimé de confection en MAD
+6. Composants de la pièce (Buste, dos, manches, col, poches...)
 7. Tableau des mesures pour chaque taille (S, M, L, XL, XXL) :
-   - Haut : Poitrine, Ã‰paules, Longueur, Manche, Taille. (Ajoute Hanches si c'est une piÃ¨ce longue comme une robe).
+   - Haut : Poitrine, Épaules, Longueur, Manche, Taille. (Ajoute Hanches si c'est une pièce longue comme une robe).
    - Pantalon : Taille, Hanches, Longueur, Cuisse, Bas.
-8. Type de tissu principal suggÃ©rÃ© et deux alternatives avec avantages/inconvÃ©nients.
+8. Type de tissu principal suggéré et deux alternatives avec avantages/inconvénients.
 
-RÃ©ponds UNIQUEMENT au format JSON sans texte additionnel :
+Réponds UNIQUEMENT au format JSON sans texte additionnel :
 {
-  "category": "Nom gÃ©nÃ©ral du modÃ¨le",
-  "totalConsumption": "Laize 1.50m : X.XXm | Laize 1.80m : X.XXm",
+  "category": "Nom général du modèle",
+  "totalConsumption": "X.XXm",
   "totalCost": "XX - XX MAD",
   "complexity": "Moyenne",
-  "fabricSuggested": "Tissu suggÃ©rÃ©",
+  "fabricSuggested": "Tissu suggéré",
   "fabricAlternatives": [
     {
       "name": "Nom du tissu",
       "pros": "Avantages",
-      "cons": "InconvÃ©nients"
+      "cons": "Inconvénients"
     }
   ],
   "pieces": [
     {
       "name": "T-Shirt",
-      "consumption": "Laize 1.50m : 1.50m | Laize 1.80m : 1.20m",
+      "consumption": "1.50m",
       "fit": "Regular",
       "complexity": "Simple",
       "costEstimate": "25 - 40 MAD",
@@ -672,25 +796,25 @@ RÃ©ponds UNIQUEMENT au format JSON sans texte additionnel :
       try {
         const parsed = JSON.parse(jsonStr);
         const result: any = {
-          category: parsed.category || 'Ù…ÙˆØ¯ÙŠÙ„',
-          consumption: parsed.totalConsumption || parsed.consumption || 'â€”',
-          fit: parsed.fit || (parsed.pieces?.[0]?.fit) || 'Ø¹Ø§Ø¯ÙŠ',
-          complexity: parsed.complexity || 'Ù…ØªÙˆØ³Ø·Ø©',
-          costEstimate: parsed.totalCost || parsed.costEstimate || 'â€”',
+          category: parsed.category || 'موديل',
+          consumption: simplifyConsumption(parsed.totalConsumption || parsed.consumption) || '—',
+          fit: parsed.fit || (parsed.pieces?.[0]?.fit) || 'عادي',
+          complexity: parsed.complexity || 'متوسطة',
+          costEstimate: parsed.totalCost || parsed.costEstimate || '—',
           components: [],
           pieces: [],
-          fabricSuggested: parsed.fabricSuggested || 'â€”',
+          fabricSuggested: parsed.fabricSuggested || '—',
           fabricAlternatives: parsed.fabricAlternatives || [],
           rawAnalysis: rawText
         };
 
         if (parsed.pieces && Array.isArray(parsed.pieces)) {
           result.pieces = parsed.pieces.map((p: any) => ({
-            name: p.name || 'Ù‚Ø·Ø¹Ø©',
-            consumption: p.consumption || 'â€”',
-            fit: p.fit || 'Ø¹Ø§Ø¯ÙŠ',
-            complexity: p.complexity || 'Ù…ØªÙˆØ³Ø·',
-            costEstimate: p.costEstimate || 'â€”',
+            name: p.name || 'قطعة',
+            consumption: simplifyConsumption(p.consumption) || '—',
+            fit: p.fit || 'عادي',
+            complexity: p.complexity || 'متوسط',
+            costEstimate: p.costEstimate || '—',
             components: p.components || [],
             fabricSuggested: p.fabricSuggested || '',
             fabricAlternatives: p.fabricAlternatives || [],
@@ -708,6 +832,17 @@ RÃ©ponds UNIQUEMENT au format JSON sans texte additionnel :
           setCustomMesures(result.pieces[0].mesures);
         }
 
+        // Build one editable measurements table per piece (so every piece gets its own S-XXL table)
+        if (result.pieces.length > 0) {
+          setPiecesMesures(result.pieces.map((p: any) =>
+            p.mesures && p.mesures.length > 0
+              ? JSON.parse(JSON.stringify(p.mesures))
+              : JSON.parse(JSON.stringify(STANDARD_MESURES['Robe']))
+          ));
+        } else {
+          setPiecesMesures([]);
+        }
+
         // AUTO-TRANSLATE result labels if they are standard but in wrong language
         if (!isAr && result.category === 'Ù…ÙˆØ¯ÙŠÙ„') result.category = 'ModÃ¨le';
         if (isAr && result.category === 'ModÃ¨le') result.category = 'Ù…ÙˆØ¯ÙŠÙ„';
@@ -717,70 +852,7 @@ RÃ©ponds UNIQUEMENT au format JSON sans texte additionnel :
         setAnalyzing(false);
 
         // Build rich chat message (mktoba mzn martba)
-        const suggestedFabricName = result.fabricSuggested || (result.pieces?.[0]?.fabricSuggested) || '';
-        const fabInfo = getFabricInfo(suggestedFabricName);
-
-        let chatMsg = '';
-        if (isAr) {
-          chatMsg = `✅ تقرير التحليل التقني والتسعير للموديل (BEYA EXPERT)\n`;
-          chatMsg += `────────────────────────────\n\n`;
-          chatMsg += `🎯 التصنيف العام: [ ${result.category || 'موديل'} ] | درجة الصعوبة: [ ${result.complexity || 'متوسطة'} ]\n\n`;
-          chatMsg += `🧵 الثوب الموصى به للموديل:\n`;
-          chatMsg += `   • نوع الثوب: ${fabInfo.arName}\n`;
-          chatMsg += `   • ثمن الجملة في المغرب: ${fabInfo.pricePerMeterMAD}\n`;
-          chatMsg += `   • أماكن الشراء المعتمدة: ${fabInfo.markets}\n\n`;
-          chatMsg += `💰 التكلفة التقديرية للبياسة (Prix de revient):\n`;
-          chatMsg += `   • الإجمالي المقترح: ${result.costEstimate || '150 - 250 MAD'}\n`;
-          chatMsg += `   • (يشمل ثمن القماش + الخياطة واليد العاملة بالورشة)\n\n`;
-          chatMsg += `📏 استهلاك الثوب والقصة (المتراج):\n`;
-          chatMsg += `   • ${result.consumption || 'عرض 1.50م: 1.80m | عرض 1.80م: 1.50m'}\n\n`;
-          chatMsg += `📦 قائمة قطع الموديل ومكوناتها:\n`;
-          if (result.pieces && result.pieces.length > 0) {
-            result.pieces.forEach((p: any, idx: number) => {
-              chatMsg += `   ${idx + 1}. ${p.name} (الفيت: ${p.fit || 'سليم/عادي'}) — التكلفة: ${p.costEstimate || '—'}\n`;
-              if (p.components && p.components.length > 0) {
-                chatMsg += `      ▪️ أجزاء الباترون: ${p.components.join('، ')}\n`;
-              }
-            });
-          } else {
-            chatMsg += `   • قطعة واحدة متكاملة للموديل\n`;
-          }
-          chatMsg += `\n✂️ توجيهات الورشة (الفصّال والخيّاط):\n`;
-          chatMsg += `   • يُنصح بضبط جدول المقاسات S-XXL في التبويب المجاور قبل بدء التفصيل.\n`;
-          chatMsg += `   • ميزة الثوب: ${fabInfo.pros}\n`;
-          chatMsg += `────────────────────────────\n`;
-          chatMsg += `⚡ يمكنك الآن استخدام أزرار التوزيع الفوري أدناه لإرسال التقرير لـ Devis PRO، الورشة، أو المشتريات!`;
-        } else {
-          chatMsg = `✅ RAPPORT D'ANALYSE TECHNIQUE & SOURCING (BEYA EXPERT)\n`;
-          chatMsg += `────────────────────────────\n\n`;
-          chatMsg += `🎯 Catégorie : [ ${result.category || 'Modèle'} ] | Complexité : [ ${result.complexity || 'Moyenne'} ]\n\n`;
-          chatMsg += `🧵 Tissu recommandé & Sourcing Maroc :\n`;
-          chatMsg += `   • Type de tissu : ${fabInfo.frName}\n`;
-          chatMsg += `   • Prix de gros estimé : ${fabInfo.pricePerMeterMAD}\n`;
-          chatMsg += `   • Marchés de référence : ${fabInfo.markets}\n\n`;
-          chatMsg += `💰 Estimation du coût unitaire (Prix de revient) :\n`;
-          chatMsg += `   • Coût total : ${result.costEstimate || '150 - 250 MAD'}\n`;
-          chatMsg += `   • (Inclus : tissu + façon atelier de confection)\n\n`;
-          chatMsg += `📏 Consommation de tissu par laize :\n`;
-          chatMsg += `   • ${result.consumption || 'Laize 1.50m: 1.80m | Laize 1.80m: 1.50m'}\n\n`;
-          chatMsg += `📦 Composition & Pièces du modèle :\n`;
-          if (result.pieces && result.pieces.length > 0) {
-            result.pieces.forEach((p: any, idx: number) => {
-              chatMsg += `   ${idx + 1}. ${p.name} (Fit: ${p.fit || 'Regular'}) — Coût: ${p.costEstimate || '—'}\n`;
-              if (p.components && p.components.length > 0) {
-                chatMsg += `      ▪️ Patronage : ${p.components.join(', ')}\n`;
-              }
-            });
-          } else {
-            chatMsg += `   • Pièce complète et intégrée\n`;
-          }
-          chatMsg += `\n✂️ Conseils de confection Atelier :\n`;
-          chatMsg += `   • Vérifiez le tableau des mesures S-XXL dans l'onglet voisin avant la coupe.\n`;
-          chatMsg += `   • Propriété du tissu : ${fabInfo.pros}\n`;
-          chatMsg += `────────────────────────────\n`;
-          chatMsg += `⚡ Utilisez les boutons d'export rapide en bas pour envoyer vers Devis PRO, l'Atelier ou les Achats !`;
-        }
-        setChat(prev => [...prev, { role: 'ai', text: chatMsg }]);
+        setChat(prev => [...prev, { role: 'ai', text: buildRapportText(result, isAr) }]);
 
       } catch (parseErr) {
         // JSON parsing failed, show raw text
@@ -853,7 +925,7 @@ RÃ©ponds UNIQUEMENT au format JSON sans texte additionnel :
         : 'ðŸ­ Ã‰tapes de production standard :\n1ï¸âƒ£ Patronage - CrÃ©ation du patron\n2ï¸âƒ£ Coupe - DÃ©coupe du tissu\n3ï¸âƒ£ Montage - Assemblage des piÃ¨ces\n4ï¸âƒ£ Finition - DÃ©tails et retouches\n5ï¸âƒ£ Repassage\n6ï¸âƒ£ ContrÃ´le QualitÃ©\n7ï¸âƒ£ Emballage\n\nUploadez la photo du modÃ¨le et je dÃ©taillerai les Ã©tapes spÃ©cifiques !';
     }
     // Thanks
-    if (/(merci|Ø´ÙƒØ±|Ø¨Ø§Ø±Ùƒ|thanks|thank|chokran|jazak)/i.test(m)) {
+    if (/(merci|شكرا|شكر|بارك|thanks|thank|chokran|jazak)/i.test(m)) {
       return speakAr
         ? 'Ø¨Ù„Ø§ Ø¬Ù…ÙŠÙ„! ðŸ˜Š Ø£Ù†Ø§ Ù‡Ù†Ø§ Ø¯Ø§Ø¦Ù…Ø§Ù‹ Ù„Ù…Ø³Ø§Ø¹Ø¯ØªÙƒ. Ø¥Ø°Ø§ Ø§Ø­ØªØ¬Øª Ø£ÙŠ Ø´ÙŠØ¡ Ø¢Ø®Ø± Ù„Ø§ ØªØªØ±Ø¯Ø¯!'
         : 'Avec plaisir ! ðŸ˜Š Je suis toujours lÃ  pour vous aider. N\'hÃ©sitez pas si vous avez d\'autres questions !';
@@ -955,14 +1027,14 @@ RÃ©ponds UNIQUEMENT au format JSON sans texte additionnel :
           } else if (errMsg.includes('API key not valid')) {
             aiText = "âš ï¸ Ø®Ø·Ø£: Ø§Ù„Ù…ÙØªØ§Ø­ (API Key) Ø§Ù„Ù„ÙŠ Ø¯Ø®Ù„ØªÙŠ ØºÙŠØ± ØµØ­ÙŠØ­.";
           } else {
-            aiText = "Ø®Ø·Ø£: " + errMsg;
+            aiText = "خطأ: " + errMsg;
           }
         } else {
           aiText = 'Ù„Ù… Ø£Ø³ØªØ·Ø¹ ÙÙ‡Ù… Ø§Ù„Ø±Ø¯.';
         }
         setChat(prev => { const n = [...prev]; n.pop(); return [...n, { role: 'ai', text: aiText }]; });
       } catch (e: any) {
-        setChat(prev => { const n = [...prev]; n.pop(); return [...n, { role: 'ai', text: 'Ø®Ø·Ø£: ' + e.message }]; });
+        setChat(prev => { const n = [...prev]; n.pop(); return [...n, { role: 'ai', text: 'خطأ: ' + e.message }]; });
       }
     } else {
       setChat(prev => [...prev, { role: 'ai', text: getSmartReply(userMessage) }]);
@@ -1068,9 +1140,6 @@ RÃ©ponds UNIQUEMENT au format JSON sans texte additionnel :
     }
   };
 
-  const activePiece = analysisResult?.pieces?.[activePieceIdx] || null;
-  const currentFabricSuggested = activePiece?.fabricSuggested || analysisResult?.fabricSuggested || '';
-  const fabInfo = getFabricInfo(currentFabricSuggested);
 
   return (
     <div className="flex flex-col h-[calc(100vh-80px)] max-w-7xl mx-auto px-4 pb-4 overflow-hidden select-none">
@@ -1100,6 +1169,13 @@ RÃ©ponds UNIQUEMENT au format JSON sans texte additionnel :
           </button>
           <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1.5 bg-indigo-600 text-white px-3.5 py-2 rounded-xl font-black text-xs uppercase hover:bg-indigo-700 transition-all shadow-sm">
             <Upload className="w-3.5 h-3.5" /> <span>{isAr ? 'رفع صورة' : 'Uploader Image'}</span>
+          </button>
+          <button
+            onClick={() => setShowApiKeyModal(true)}
+            title={isAr ? 'إعدادات مفتاح الذكاء الاصطناعي' : 'Paramètres clé API'}
+            className="p-2 bg-slate-100 border border-slate-200 text-slate-500 hover:text-indigo-700 hover:bg-indigo-50 hover:border-indigo-100 rounded-xl transition-all shadow-sm"
+          >
+            <Settings className="w-4 h-4" />
           </button>
           <input type="file" ref={fileInputRef} onChange={handleUpload} className="hidden" accept="image/*" />
         </div>
@@ -1298,7 +1374,21 @@ RÃ©ponds UNIQUEMENT au format JSON sans texte additionnel :
               </button>
 
               <button
-                onClick={toggle}
+                onClick={() => {
+                  const nextIsAr = !isAr;
+                  toggle();
+                  if (analysisResult) {
+                    const newReport = buildRapportText(analysisResult, nextIsAr);
+                    setChat(prev => {
+                      const lastAiIdx = [...prev].reverse().findIndex(c => c.role === 'ai' && c.text.includes('BEYA EXPERT'));
+                      if (lastAiIdx === -1) return [...prev, { role: 'ai', text: newReport }];
+                      const idx = prev.length - 1 - lastAiIdx;
+                      const updated = [...prev];
+                      updated[idx] = { role: 'ai', text: newReport };
+                      return updated;
+                    });
+                  }
+                }}
                 className="px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 border border-slate-200/80 transition-all flex items-center gap-1.5 shadow-sm"
                 title={isAr ? "التبديل إلى الفرنسية" : "Basculer en Arabe (Darija)"}
               >
@@ -1342,77 +1432,89 @@ RÃ©ponds UNIQUEMENT au format JSON sans texte additionnel :
                     </div>
                   )}
 
-                  {/* Moroccan Fabric & Sourcing Card (كتالوج الأثواب المغربي) */}
-                  <div className="bg-gradient-to-br from-indigo-950/5 to-slate-50 rounded-3xl p-5 border border-indigo-100/60 shadow-sm space-y-4">
-                    <div className={`flex items-center justify-between ${isAr ? 'flex-row-reverse' : ''}`}>
-                      <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
-                        <div className="p-2.5 bg-indigo-600 text-white rounded-2xl shadow-sm">
-                          <Package className="w-5 h-5" />
+                  {/* Fabric & Cost Cards — one block per piece so info is shown for ALL pieces, not just the active one */}
+                  {(analysisResult.pieces && analysisResult.pieces.length > 0 ? analysisResult.pieces : [{ ...analysisResult, name: analysisResult.category }]).map((p, pIdx) => {
+                    const pFabInfo = getFabricInfo(p.fabricSuggested || analysisResult.fabricSuggested || '');
+                    return (
+                      <div key={pIdx} className="space-y-3">
+                        {analysisResult.pieces && analysisResult.pieces.length > 1 && (
+                          <h4 className="text-sm font-black text-indigo-700 flex items-center gap-2">📦 {p.name}</h4>
+                        )}
+
+                        {/* Moroccan Fabric & Sourcing Card (كتالوج الأثواب المغربي) */}
+                        <div className="bg-gradient-to-br from-indigo-950/5 to-slate-50 rounded-3xl p-5 border border-indigo-100/60 shadow-sm space-y-4">
+                          <div className={`flex items-center justify-between ${isAr ? 'flex-row-reverse' : ''}`}>
+                            <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                              <div className="p-2.5 bg-indigo-600 text-white rounded-2xl shadow-sm">
+                                <Package className="w-5 h-5" />
+                              </div>
+                              <div>
+                                <h3 className="font-black text-sm text-slate-900">{isAr ? 'كتالوج الأثواب المغربي و أماكن الشراء' : 'Catalogue Tissus & Marchés Marocains'}</h3>
+                                <p className="text-[10px] text-slate-500 font-bold">{isAr ? 'توصيات الثوب المثالي + أثمنة أسواق الجملة (درب عمر / القريعة)' : 'Prix gros au mètre et sourcing au Maroc'}</p>
+                              </div>
+                            </div>
+                            <span className="px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-black rounded-full">
+                              {isAr ? 'سوق المغرب' : 'Marché MA'}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-1">
+                              <span className="text-[10px] font-black text-slate-400 uppercase">{isAr ? 'الثوب المقترح للموديل:' : 'Tissu Suggéré :'}</span>
+                              <p className="text-base font-black text-slate-900">{pFabInfo.arName}</p>
+                              <p className="text-xs font-bold text-indigo-600">{pFabInfo.frName}</p>
+                            </div>
+                            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-1">
+                              <span className="text-[10px] font-black text-slate-400 uppercase">{isAr ? 'ثمن الجملة التقديري:' : 'Prix Gros au Mètre :'}</span>
+                              <p className="text-base font-black text-emerald-600">{isAr ? pFabInfo.pricePerMeterMAD : pFabInfo.pricePerMeterMADFr}</p>
+                              <p className="text-[10px] font-bold text-slate-500">{isAr ? pFabInfo.markets : pFabInfo.marketsFr}</p>
+                            </div>
+                          </div>
+
+                          <div className="bg-white/80 p-4 rounded-2xl border border-slate-200/60 space-y-2 text-xs">
+                            <div className={`flex items-start gap-2 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                              <span className="text-emerald-600 font-black">✔</span>
+                              <p className="text-slate-700 font-medium"><strong className="text-emerald-700 font-bold">{isAr ? 'المزايا: ' : 'Avantages : '}</strong>{isAr ? pFabInfo.pros : pFabInfo.prosFr}</p>
+                            </div>
+                            <div className={`flex items-start gap-2 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                              <span className="text-rose-600 font-black">✖</span>
+                              <p className="text-slate-700 font-medium"><strong className="text-rose-700 font-bold">{isAr ? 'العيوب: ' : 'Inconvénients : '}</strong>{isAr ? pFabInfo.cons : pFabInfo.consFr}</p>
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-black text-sm text-slate-900">{isAr ? 'كتالوج الأثواب المغربي و أماكن الشراء' : 'Catalogue Tissus & Marchés Marocains'}</h3>
-                          <p className="text-[10px] text-slate-500 font-bold">{isAr ? 'توصيات الثوب المثالي + أثمنة أسواق الجملة (درب عمر / القريعة)' : 'Prix gros au mètre et sourcing au Maroc'}</p>
+
+                        {/* Cost Breakdown & Complexity Card */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
+                            <span className="text-[10px] font-black text-slate-400 uppercase block mb-1">{isAr ? 'استهلاك الثوب (لعرض 1.50م)' : 'Consommation (laize 1.50m)'}</span>
+                            <p className="text-sm font-black text-slate-900">{p.consumption || '2.00 - 2.50m'}</p>
+                          </div>
+                          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
+                            <span className="text-[10px] font-black text-slate-400 uppercase block mb-1">{isAr ? 'نوع القصة (Fit)' : 'Coupe & Fit'}</span>
+                            <p className="text-sm font-black text-slate-900">{p.fit || 'Regular / عادي'}</p>
+                          </div>
+                          <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-200">
+                            <span className="text-[10px] font-black text-emerald-600 uppercase block mb-1">{isAr ? 'التكلفة التقديرية للقطعة' : 'Coût Estimé'}</span>
+                            <p className="text-base font-black text-emerald-700">{p.costEstimate || '—'}</p>
+                          </div>
                         </div>
-                      </div>
-                      <span className="px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-black rounded-full">
-                        {isAr ? 'سوق المغرب' : 'Marché MA'}
-                      </span>
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-1">
-                        <span className="text-[10px] font-black text-slate-400 uppercase">{isAr ? 'الثوب المقترح للموديل:' : 'Tissu Suggéré :'}</span>
-                        <p className="text-base font-black text-slate-900">{fabInfo.arName}</p>
-                        <p className="text-xs font-bold text-indigo-600">{fabInfo.frName}</p>
+                        {/* Components List */}
+                        {p.components && p.components.length > 0 && (
+                          <div className="bg-white p-4 rounded-2xl border border-slate-200">
+                            <span className="text-xs font-black text-slate-500 uppercase block mb-2">{isAr ? 'مكونات وأجزاء البياسة:' : 'Composants :'}</span>
+                            <div className="flex flex-wrap gap-2">
+                              {p.components.map((comp, ci) => (
+                                <span key={ci} className="px-3 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded-xl border border-slate-200/60">
+                                  ✂️ {comp}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-1">
-                        <span className="text-[10px] font-black text-slate-400 uppercase">{isAr ? 'ثمن الجملة التقديري:' : 'Prix Gros au Mètre :'}</span>
-                        <p className="text-base font-black text-emerald-600">{fabInfo.pricePerMeterMAD}</p>
-                        <p className="text-[10px] font-bold text-slate-500">{fabInfo.markets}</p>
-                      </div>
-                    </div>
-
-                    <div className="bg-white/80 p-4 rounded-2xl border border-slate-200/60 space-y-2 text-xs">
-                      <div className={`flex items-start gap-2 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
-                        <span className="text-emerald-600 font-black">✔</span>
-                        <p className="text-slate-700 font-medium"><strong className="text-emerald-700 font-bold">{isAr ? 'المزايا: ' : 'Avantages : '}</strong>{fabInfo.pros}</p>
-                      </div>
-                      <div className={`flex items-start gap-2 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
-                        <span className="text-rose-600 font-black">✖</span>
-                        <p className="text-slate-700 font-medium"><strong className="text-rose-700 font-bold">{isAr ? 'العيوب: ' : 'Inconvénients : '}</strong>{fabInfo.cons}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Cost Breakdown & Complexity Card */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
-                      <span className="text-[10px] font-black text-slate-400 uppercase block mb-1">{isAr ? 'استهلاك الثوب (المتراج)' : 'Consommation'}</span>
-                      <p className="text-sm font-black text-slate-900">{activePiece?.consumption || analysisResult.consumption || '2.00 - 2.50m'}</p>
-                    </div>
-                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
-                      <span className="text-[10px] font-black text-slate-400 uppercase block mb-1">{isAr ? 'نوع القصة (Fit)' : 'Coupe & Fit'}</span>
-                      <p className="text-sm font-black text-slate-900">{activePiece?.fit || analysisResult.fit || 'Regular / عادي'}</p>
-                    </div>
-                    <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-200">
-                      <span className="text-[10px] font-black text-emerald-600 uppercase block mb-1">{isAr ? 'التكلفة التقديرية للقطعة' : 'Coût Estimé'}</span>
-                      <p className="text-base font-black text-emerald-700">{activePiece?.costEstimate || analysisResult.costEstimate || '—'}</p>
-                    </div>
-                  </div>
-
-                  {/* Components List */}
-                  {((activePiece?.components && activePiece.components.length > 0) || (analysisResult.components && analysisResult.components.length > 0)) && (
-                    <div className="bg-white p-4 rounded-2xl border border-slate-200">
-                      <span className="text-xs font-black text-slate-500 uppercase block mb-2">{isAr ? 'مكونات وأجزاء البياسة:' : 'Composants :'}</span>
-                      <div className="flex flex-wrap gap-2">
-                        {(activePiece?.components || analysisResult.components).map((comp, ci) => (
-                          <span key={ci} className="px-3 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded-xl border border-slate-200/60">
-                            ✂️ {comp}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                    );
+                  })}
 
                   {/* Print / Export Report Button */}
                   <div className="pt-2 flex justify-end">
@@ -1439,7 +1541,7 @@ RÃ©ponds UNIQUEMENT au format JSON sans texte additionnel :
 
           {/* TAB 2: TABLEAU DE MESURES S-XXL (activeTab === 'mesures') */}
           {activeTab === 'mesures' && (
-            <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0">
+            <div className="flex-1 overflow-y-auto p-6 space-y-8 min-h-0">
               <div className={`flex items-center justify-between ${isAr ? 'flex-row-reverse' : ''}`}>
                 <div>
                   <h3 className="font-black text-base text-slate-900">{isAr ? 'جدول المقاسات الكامل (S - XXL)' : 'Tableau de Mesures Complet (S - XXL)'}</h3>
@@ -1447,35 +1549,74 @@ RÃ©ponds UNIQUEMENT au format JSON sans texte additionnel :
                 </div>
               </div>
 
-              <div className="overflow-x-auto border border-slate-200 rounded-2xl shadow-sm">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-100 border-b border-slate-200">
-                      <th className="p-3 text-xs font-black text-slate-700 uppercase tracking-wider">{isAr ? 'القياس' : 'Mesure'}</th>
-                      {selectedTailles.map(size => (
-                        <th key={size} className="p-3 text-xs font-black text-slate-700 uppercase tracking-wider text-center">{size}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 bg-white">
-                    {customMesures.map((row, rowIndex) => (
-                      <tr key={rowIndex} className="hover:bg-slate-50 transition-colors">
-                        <td className="p-3 text-xs font-black text-slate-800">{row.nom}</td>
+              {analysisResult?.pieces && analysisResult.pieces.length > 0 && piecesMesures.length > 0 ? (
+                analysisResult.pieces.map((p, pIdx) => (
+                  <div key={pIdx} className="space-y-2">
+                    {analysisResult.pieces && analysisResult.pieces.length > 1 && (
+                      <h4 className="text-sm font-black text-indigo-700 flex items-center gap-2">📦 {p.name}</h4>
+                    )}
+                    <div className="overflow-x-auto border border-slate-200 rounded-2xl shadow-sm">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-slate-100 border-b border-slate-200">
+                            <th className="p-3 text-xs font-black text-slate-700 uppercase tracking-wider">{isAr ? 'القياس' : 'Mesure'}</th>
+                            {selectedTailles.map(size => (
+                              <th key={size} className="p-3 text-xs font-black text-slate-700 uppercase tracking-wider text-center">{size}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 bg-white">
+                          {(piecesMesures[pIdx] || []).map((row, rowIndex) => (
+                            <tr key={rowIndex} className="hover:bg-slate-50 transition-colors">
+                              <td className="p-3 text-xs font-black text-slate-800">{row.nom}</td>
+                              {selectedTailles.map(size => (
+                                <td key={size} className="p-3 text-center">
+                                  <input
+                                    type="number"
+                                    value={row.valeurs[size] || ''}
+                                    onChange={e => handlePieceCellChange(pIdx, rowIndex, size, Number(e.target.value))}
+                                    className="w-16 p-1.5 text-center text-xs font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-indigo-600 focus:outline-none"
+                                  />
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="overflow-x-auto border border-slate-200 rounded-2xl shadow-sm">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-100 border-b border-slate-200">
+                        <th className="p-3 text-xs font-black text-slate-700 uppercase tracking-wider">{isAr ? 'القياس' : 'Mesure'}</th>
                         {selectedTailles.map(size => (
-                          <td key={size} className="p-3 text-center">
-                            <input
-                              type="number"
-                              value={row.valeurs[size] || ''}
-                              onChange={e => handleCellChange(rowIndex, size, Number(e.target.value))}
-                              className="w-16 p-1.5 text-center text-xs font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-indigo-600 focus:outline-none"
-                            />
-                          </td>
+                          <th key={size} className="p-3 text-xs font-black text-slate-700 uppercase tracking-wider text-center">{size}</th>
                         ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 bg-white">
+                      {customMesures.map((row, rowIndex) => (
+                        <tr key={rowIndex} className="hover:bg-slate-50 transition-colors">
+                          <td className="p-3 text-xs font-black text-slate-800">{row.nom}</td>
+                          {selectedTailles.map(size => (
+                            <td key={size} className="p-3 text-center">
+                              <input
+                                type="number"
+                                value={row.valeurs[size] || ''}
+                                onChange={e => handleCellChange(rowIndex, size, Number(e.target.value))}
+                                className="w-16 p-1.5 text-center text-xs font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-indigo-600 focus:outline-none"
+                              />
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
 
@@ -1520,6 +1661,67 @@ RÃ©ponds UNIQUEMENT au format JSON sans texte additionnel :
         </div>
       </div>
 
+      {/* API KEY SETTINGS MODAL */}
+      {showApiKeyModal && (
+        <div className="fixed inset-0 z-[190] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setShowApiKeyModal(false)}>
+          <div className="bg-white rounded-3xl border border-slate-200/80 w-full max-w-md flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+            <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+                  <KeyRound className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black tracking-wide">{isAr ? 'إعدادات مفتاح Gemini API' : 'Paramètres clé Gemini API'}</h3>
+                  <p className="text-[10px] text-slate-400 font-bold">{isAr ? 'خاص بالتحليل الذكي الحقيقي للصور' : 'Requis pour l\'analyse IA réelle des images'}</p>
+                </div>
+              </div>
+              <button onClick={() => setShowApiKeyModal(false)} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
+                <X className="w-5 h-5 text-slate-400 hover:text-white" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <label className="block text-xs font-black text-slate-700">
+                {isAr ? 'مفتاح Google Gemini API الخاص بك:' : 'Votre clé Google Gemini API :'}
+              </label>
+              <input
+                type="text"
+                value={apiKeyInput}
+                onChange={e => setApiKeyInput(e.target.value)}
+                placeholder="AIzaSy..."
+                dir="ltr"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white focus:border-indigo-600 focus:outline-none"
+              />
+              <p className="text-[11px] text-slate-400 font-bold leading-relaxed">
+                {isAr
+                  ? 'كيتخزن المفتاح فقط فالمتصفح ديالك (localStorage)، ماشي كيتبعث لأي سيرفر آخر. يمكنك الحصول عليه من Google AI Studio مجاناً.'
+                  : 'La clé est stockée uniquement dans votre navigateur (localStorage), jamais envoyée à un autre serveur. Vous pouvez l\'obtenir gratuitement sur Google AI Studio.'}
+              </p>
+            </div>
+
+            <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-200/80 flex justify-end gap-2">
+              {apiKeyInput && (
+                <button
+                  onClick={() => { localStorage.removeItem('beya_gemini_api_key'); setApiKeyInput(''); }}
+                  className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl font-black text-xs transition-all"
+                >
+                  {isAr ? 'حذف المفتاح' : 'Supprimer'}
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  if (apiKeyInput.trim()) localStorage.setItem('beya_gemini_api_key', apiKeyInput.trim());
+                  setShowApiKeyModal(false);
+                }}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-xs transition-all"
+              >
+                {isAr ? 'حفظ' : 'Enregistrer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* DEMANDES PROSPECTS MODAL */}
       {showLeadsModal && (
         <div className="fixed inset-0 z-[180] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setShowLeadsModal(false)}>
@@ -1540,7 +1742,12 @@ RÃ©ponds UNIQUEMENT au format JSON sans texte additionnel :
             </div>
 
             <div className="p-6 overflow-y-auto flex-1 space-y-3">
-              {leads && leads.length > 0 ? (
+              {leadsLoading ? (
+                <div className="py-12 text-center flex flex-col items-center gap-3">
+                  <RefreshCw className="w-8 h-8 text-indigo-400 animate-spin" />
+                  <p className="text-xs font-bold text-slate-400">{isAr ? 'جاري التحميل...' : 'Chargement...'}</p>
+                </div>
+              ) : leads && leads.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {leads.map((l, idx) => (
                     <div

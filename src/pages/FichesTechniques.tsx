@@ -10,7 +10,7 @@ import { useLang } from '../contexts/LangContext';
 import { t } from '../i18n';
 import { PageLoader } from '../components/PageLoader';
 
-function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onViewMesures, onLaunchSample, onCreateProduct, isSampleWaiting, isSampleValidated, onImageClick }: {
+function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onViewMesures, onLaunchSample, onCreateProduct, isSampleWaiting, isSampleValidated, onImageClick, isAdmin }: {
   f: FicheTechnique;
   openEdit: (f: FicheTechnique) => void;
   remove: (id: string) => void;
@@ -22,8 +22,17 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
   onImageClick?: (img: string) => void;
   isSampleWaiting?: boolean;
   isSampleValidated?: boolean;
+  isAdmin?: boolean;
 }) {
   const { lang, isAr } = useLang();
+  const currentUser = JSON.parse(localStorage.getItem('textrack_auth') || '{}') as User;
+  const isAdminUser = isAdmin !== undefined ? isAdmin : (
+    currentUser?.role === 'admin' ||
+    currentUser?.role === 'superadmin' ||
+    currentUser?.email === 'admin@beyacreative.com' ||
+    currentUser?.email === '00.emaily.zero@gmail.com' ||
+    currentUser?.email === 'fashlow@gmail.com'
+  );
   return (
     <div className={`bg-white rounded-3xl border transition-all duration-300 overflow-hidden group flex flex-col ${isAr ? 'text-right' : 'text-left'} ${
       isSampleWaiting 
@@ -246,12 +255,14 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
                 >
                   <Ruler className="w-3.5 h-3.5" /> {t('voir_mesures', lang)}
                 </button>
-                <button
-                  onClick={() => onCreateProduct(f)}
-                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-white border border-emerald-200 text-emerald-600 rounded-xl text-[10px] font-bold hover:bg-emerald-50 hover:border-emerald-500 transition-all shadow-sm"
-                >
-                  <ShoppingBag className="w-3.5 h-3.5" /> {isAr ? 'إنشاء منتج في المتجر' : 'CRÉER UN PRODUIT DANS LA BOUTIQUE'}
-                </button>
+                {isAdminUser && (
+                  <button
+                    onClick={() => onCreateProduct(f)}
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-white border border-emerald-200 text-emerald-600 rounded-xl text-[10px] font-bold hover:bg-emerald-50 hover:border-emerald-500 transition-all shadow-sm"
+                  >
+                    <ShoppingBag className="w-3.5 h-3.5" /> {isAr ? 'إنشاء منتج في المتجر' : 'CRÉER UN PRODUIT DANS LA BOUTIQUE'}
+                  </button>
+                )}
                 {/* Button 'ENVOYER AU CLIENT' removed as per user request */}
                 {(() => {
                   if (isSampleValidated) {
@@ -359,6 +370,12 @@ function FicheCard({ f, openEdit, remove, downloadFile, printFicheTechnique, onV
 
 export default function FichesTechniques() {
   const currentUser = JSON.parse(localStorage.getItem('textrack_auth') || '{}') as User;
+  const isAdmin =
+    currentUser?.role === 'admin' ||
+    currentUser?.role === 'superadmin' ||
+    currentUser?.email === 'admin@beyacreative.com' ||
+    currentUser?.email === '00.emaily.zero@gmail.com' ||
+    currentUser?.email === 'fashlow@gmail.com';
   const { lang, isAr } = useLang();
   const navigate = useNavigate();
   const [fiches, setFiches] = useState<FicheTechnique[]>([]);
@@ -834,6 +851,7 @@ export default function FichesTechniques() {
                   printFicheTechnique={printFT} 
                   onViewMesures={setViewMesuresFiche}
                   onCreateProduct={createProductFromFiche}
+                  isAdmin={isAdmin}
                   onLaunchSample={(fiche) => {
                     setConfirmFiche(fiche);
                     setConfirmDetails({
@@ -878,6 +896,7 @@ export default function FichesTechniques() {
                   printFicheTechnique={printFT} 
                   onViewMesures={setViewMesuresFiche}
                   onCreateProduct={createProductFromFiche}
+                  isAdmin={isAdmin}
                   onLaunchSample={(fiche) => {
                     setConfirmFiche(fiche);
                     setConfirmDetails(prev => ({
