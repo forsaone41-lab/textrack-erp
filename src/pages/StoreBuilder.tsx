@@ -6050,6 +6050,51 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                     <div className="flex justify-between items-center mb-6">
                        <h3 className="text-xl font-black text-slate-800">{isAr ? 'تطبيقات المتجر' : 'Applications (Apps)'}</h3>
                     </div>
+
+                     {/* eGrow Official Partnership & Affiliate Promotion Banner */}
+                     <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 text-white p-6 sm:p-7 rounded-3xl border border-indigo-500/30 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                        <div className="absolute -right-10 -top-10 w-48 h-48 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                        <div className="space-y-3 max-w-2xl relative z-10">
+                           <div className="flex items-center gap-2 flex-wrap">
+                              <span className="px-3 py-1 bg-indigo-500/20 border border-indigo-400/30 rounded-full text-indigo-300 text-[10px] font-black tracking-wider uppercase">
+                                 {isAr ? '✨ شريك BEYA المعتمد — أتمتة الدفع عند الاستلام' : '✨ Partenaire Officiel — COD Automation'}
+                              </span>
+                              <span className="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-lg text-[10px] font-black">
+                                 {isAr ? 'تكامل فوري 100%' : 'Intégration 1-Clic'}
+                              </span>
+                           </div>
+                           <h4 className="text-xl sm:text-2xl font-black text-white leading-tight">
+                              {isAr
+                                 ? 'ضاعف نسبة تأكيد طلبياتك وقلل المرتجعات مع eGrow COD Automation'
+                                 : 'Maximisez votre taux de livraison COD via WhatsApp avec eGrow'}
+                           </h4>
+                           <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed">
+                              {isAr
+                                 ? 'هل ترغب في تأكيد طلبيات متجرك آلياً عبر واتساب وتقليل المرتجعات؟ متجر BEYA يوفر لك ربطاً مباشراً مع منصة eGrow بضغطة زر واحدة لمزامنة حالات الطلبات تلقائياً.'
+                                 : 'Automatisez la confirmation de vos commandes Cash on Delivery par WhatsApp et réduisez vos retours. eGrow synchronise les statuts en temps réel avec votre boutique BEYA.'}
+                           </p>
+                        </div>
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto shrink-0 relative z-10">
+                           <button
+                              type="button"
+                              onClick={() => {
+                                 setAppInputValue(appsConfig['eGrow COD Automation'] || '');
+                                 setActiveAppModal('eGrow COD Automation');
+                              }}
+                              className="px-5 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs rounded-xl shadow-lg shadow-indigo-500/30 transition-all flex items-center justify-center gap-2"
+                           >
+                              <RefreshCw className="w-4 h-4" />
+                              {isAr ? 'تثبيت تطبيق eGrow' : 'Installer eGrow'}
+                           </button>
+                           <button
+                              type="button"
+                              onClick={() => window.open('https://www.egrow.com', '_blank')}
+                              className="px-5 py-3 bg-white/10 hover:bg-white/20 text-white border border-white/20 font-black text-xs rounded-xl transition-all flex items-center justify-center gap-2"
+                           >
+                              <span>{isAr ? '🔗 إنشاء حساب eGrow' : '🔗 Créer un compte eGrow'}</span>
+                           </button>
+                        </div>
+                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                        {[
                          { id: 'eGrow COD Automation', name: 'eGrow COD Automation', desc: isAr ? 'أتمتة تأكيد طلبيات الدفع عند الاستلام عبر منصة eGrow' : 'Automatisation de confirmation COD eGrow & Webhooks', icon: RefreshCw, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-200' },
