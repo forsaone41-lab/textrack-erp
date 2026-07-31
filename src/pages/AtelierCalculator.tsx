@@ -1840,36 +1840,6 @@ function isSupportRole(e: Employe): boolean {
                             </span>
                           </div>
 
-                          {/* Garment Category Override Selector */}
-                          <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                            <span className="text-[10px] font-black text-slate-500 mr-1">{isAr ? 'تغيير تصنيف الموديل:' : 'Catégorie :'}</span>
-                            {[
-                              { id: 'abaya_beldi', labelAr: '👗 عباية / قفطان', labelFr: '👗 Abaya / Beldi' },
-                              { id: 'sportswear_hoodie', labelAr: '🎽 هودي / رياضي', labelFr: '🎽 Sportswear' },
-                              { id: 'veste_manteau', labelAr: '🧥 جاكيت / معطف', labelFr: '🧥 Veste / Manteau' },
-                              { id: 'tshirt_summer', labelAr: '👕 تيشرت / صيفي', labelFr: '👕 T-shirt / Été' },
-                              { id: 'pantalon_cargo', labelAr: '👖 سروال / كارجو', labelFr: '👖 Pantalon' },
-                              { id: 'default_modele', labelAr: '👔 موديل عام', labelFr: '👔 Standard' }
-                            ].map((cat) => (
-                              <button
-                                key={cat.id}
-                                type="button"
-                                onClick={() => setSelectedModelCategory(cat.id)}
-                                className={`px-2.5 py-1 rounded-lg font-black text-[11px] transition-all border ${
-                                  (selectedModelCategory || (breakdown.categorie.includes('عباية') ? 'abaya_beldi' :
-                                   breakdown.categorie.includes('رياضي') ? 'sportswear_hoodie' :
-                                   breakdown.categorie.includes('جاكيت') ? 'veste_manteau' :
-                                   breakdown.categorie.includes('صيفي') ? 'tshirt_summer' :
-                                   breakdown.categorie.includes('سروال') ? 'pantalon_cargo' : 'default_modele')) === cat.id
-                                    ? 'bg-violet-600 text-white border-violet-700 shadow-sm'
-                                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                                }`}
-                              >
-                                {isAr ? cat.labelAr : cat.labelFr}
-                              </button>
-                            ))}
-                          </div>
-
                           <p className="text-sm font-bold text-slate-800 leading-relaxed">
                             {selectedAiPreset.aiText}
                           </p>
