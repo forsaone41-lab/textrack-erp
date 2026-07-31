@@ -7135,281 +7135,375 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
         </div>
       )}
 
-      {activeAppModal === 'eGrow COD Automation' ? (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 sm:p-6 overflow-y-auto">
-          <div className="bg-slate-100/95 rounded-[2.5rem] shadow-2xl w-full max-w-4xl overflow-hidden border border-slate-200/80 flex flex-col max-h-[94vh] my-auto animate-in fade-in zoom-in-95 duration-200">
-            {/* Header / Back navigation */}
-            <div className="px-8 py-5 border-b border-slate-200/80 bg-white flex items-center justify-between sticky top-0 z-10">
-              <button
-                type="button"
-                onClick={() => setActiveAppModal(null)}
-                className="flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors"
-              >
-                <span>‹</span>
-                <span>{isAr ? 'العودة إلى متجر التطبيقات' : 'Back to App Marketplace'}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveAppModal(null)}
-                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors"
-              >
-                ✕
-              </button>
-            </div>
+      {activeAppModal && (
+        (() => {
+          const appMeta: Record<string, {
+            title: string;
+            logoText: string;
+            logoBg: string;
+            badge: string;
+            tags: string[];
+            desc: string;
+            label: string;
+            placeholder: string;
+            helper: string;
+            guide: { step1: string; step2: string; step3: string };
+          }> = {
+            'eGrow COD Automation': {
+              title: 'eGrow — COD Automation',
+              logoText: 'eG',
+              logoBg: 'bg-gradient-to-br from-indigo-600 to-blue-600 text-white shadow-lg shadow-indigo-500/20',
+              badge: isAr ? '✓ شريك معتمد' : '✓ Verified Partner',
+              tags: ['Orders', 'WhatsApp', 'Automation', isAr ? 'باقة مجانية متاحة' : 'Free plan available'],
+              desc: isAr
+                ? 'أتمتة تأكيد طلبيات الدفع عند الاستلام عبر واتساب وتقليل نسبة المرتجعات. eGrow يتصل بعملائك آلياً، يؤكد الطلبات، ويزامن حالات التأكيد مباشرة مع متجر BEYA.'
+                : 'Automate your Cash on Delivery confirmations via WhatsApp and reduce return rates. eGrow calls your customers automatically, confirms orders, and syncs confirmed statuses straight back to Beya Store.',
+              label: 'eGrow API Key *',
+              placeholder: 'egrow_live_••••••••••••••••••••',
+              helper: isAr ? 'تجد هذا المفتاح في حسابك على eGrow تحت قائمة Settings ← API Access.' : 'Find this key in your eGrow dashboard under Settings → API Access.',
+              guide: {
+                step1: isAr ? 'سجل دخولك إلى حساب eGrow وانتقل إلى Settings ← API Access.' : 'Log in to your eGrow account and go to Settings → API Access.',
+                step2: isAr ? 'اضغط على Generate New Key، انسخ المفتاح، ثم الصقه في الخانة بالأعلى.' : 'Click Generate New Key, copy it, and paste it into the key field above.',
+                step3: isAr ? 'انسخ رابط Beya Store Webhook URL بالأعلى وضعه في eGrow تحت Integrations ← Beya Store، ثم اضغط على حفظ واتصال.' : 'Copy the Beya Store Webhook URL above and paste it into eGrow under Integrations → Beya Store, then click Save & Connect.'
+              }
+            },
+            'WhatsApp Chat': {
+              title: 'WhatsApp Chat Integration',
+              logoText: 'WA',
+              logoBg: 'bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-lg shadow-emerald-500/20',
+              badge: isAr ? '✓ تطبيق معتمد' : '✓ Verified Integration',
+              tags: ['Chat', 'Customer Support', 'Conversion', isAr ? 'مجاني بالكامل' : 'Free'],
+              desc: isAr
+                ? 'إضافة زر واتساب تفاعلي وعائم في متجرك. اسمح للعملاء بالتواصل معك فوراً للاستفسار عن الطلبيات والمقاسات أو تأكيد الشراء السريع.'
+                : 'Add an interactive WhatsApp floating chat button to your store. Let customers contact you instantly for order questions, custom sizing, or instant COD verification.',
+              label: isAr ? 'رقم الواتساب (مثال: +212600000000) *' : 'WhatsApp Phone Number (+212...) *',
+              placeholder: '+212600000000',
+              helper: isAr ? 'أدخل رقم الهاتف مسبوقاً برمز الدولة بالصيغة الدولية (+212 للمغرب).' : 'Enter your international phone number starting with +212 or country code.',
+              guide: {
+                step1: isAr ? 'أدخل رقم الواتساب التجاري أو الشخصي الفعّال في الخانة بالأعلى.' : 'Enter your active WhatsApp Business phone number above.',
+                step2: isAr ? 'تأكد من كتابة الرقم برمز الدولة (مثال: 212600000000+).' : 'Make sure to include your international prefix (+212...).',
+                step3: isAr ? 'اضغط على "حفظ واتصال" لتفعيل زر الدردشة العائم في جميع صفحات متجرك فوراً.' : 'Click "Save & Connect" to display the floating chat icon across your store immediately.'
+              }
+            },
+            'Facebook Pixel': {
+              title: 'Meta / Facebook Pixel',
+              logoText: 'f',
+              logoBg: 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-lg shadow-blue-500/20',
+              badge: isAr ? '✓ شريك إعلاني' : '✓ Marketing Partner',
+              tags: ['Analytics', 'Meta Ads', 'Conversion API', 'Tracking'],
+              desc: isAr
+                ? 'تتبع نشاط الزوار، أحداث الإضافة للسلة (Add to Cart)، وإتمام الشراء (Purchase). حسن أداء حملاتك على فيسبوك وإنستغرام وأعد استهداف العملاء بدقة.'
+                : 'Track visitor activity, Add to Cart events, and completed purchases. Optimize your Meta Ad campaigns and retarget shoppers automatically.',
+              label: isAr ? 'معرف بيكسل فيسبوك (Pixel ID) *' : 'Facebook Pixel ID *',
+              placeholder: '123456789012345',
+              helper: isAr ? 'تجد رقم البيكسل المكون من 15 رقماً في مدير أحداث ميتا (Meta Events Manager).' : 'Find your 15-digit Pixel ID in Meta Events Manager under Data Sources.',
+              guide: {
+                step1: isAr ? 'ادخل إلى Meta Events Manager وحدد البيكسل الخاص بمتجرك.' : 'Go to Meta Events Manager and select your Pixel data source.',
+                step2: isAr ? 'انسخ رقم البيكسل (Pixel ID) المكون من أرقام فقط والصقه بالأعلى.' : 'Copy your numeric Pixel ID and paste it in the box above.',
+                step3: isAr ? 'اضغط على "حفظ واتصال" لبدء تتبع التحويلات والمبيعات لحظياً في متجرك.' : 'Click "Save & Connect" to enable real-time event tracking on your store.'
+              }
+            },
+            'TikTok Pixel': {
+              title: 'TikTok Ads Pixel',
+              logoText: 'TT',
+              logoBg: 'bg-gradient-to-br from-slate-900 to-black text-white border border-slate-700 shadow-lg shadow-slate-900/20',
+              badge: isAr ? '✓ تكامل إعلاني' : '✓ Ads Integration',
+              tags: ['TikTok Ads', 'Analytics', 'Conversion Tracking'],
+              desc: isAr
+                ? 'تتبع تحويلات ومبيعات حملات تيك توك الإعلانية، وقم بقياس عائد الإعلان وبناء جماهير مخصصة للإعلانات عالية التحويل.'
+                : 'Measure your TikTok campaign performance, track checkout conversions, and build custom audiences for high-converting video ads.',
+              label: isAr ? 'معرف بيكسل تيك توك (TikTok Pixel ID) *' : 'TikTok Pixel ID *',
+              placeholder: 'C123456789ABCDEF00',
+              helper: isAr ? 'تجد معرف البيكسل في مدير إعلانات تيك توك تحت Tools ← Events ← Web Events.' : 'Find your Pixel ID in TikTok Ads Manager under Tools → Events → Web Events.',
+              guide: {
+                step1: isAr ? 'افتح حساب مدير إعلانات تيك توك (TikTok Ads Manager).' : 'Open your TikTok Ads Manager dashboard.',
+                step2: isAr ? 'انتقل إلى Tools ← Events ← Web Events وانسخ معرف الـ Pixel ID.' : 'Navigate to Tools → Events → Web Events and copy your Pixel ID.',
+                step3: isAr ? 'الصق المعرف في الخانة بالأعلى واضغط على "حفظ واتصال".' : 'Paste it above and click "Save & Connect".'
+              }
+            },
+            'Google Analytics 4': {
+              title: 'Google Analytics 4 (GA4)',
+              logoText: 'GA4',
+              logoBg: 'bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/20',
+              badge: isAr ? '✓ شريك رسمي' : '✓ Official Partner',
+              tags: ['Google', 'Analytics', 'Traffic Insights', 'SEO'],
+              desc: isAr
+                ? 'احصل على إحصائيات وتقارير شاملة عن حركة الزوار وأداء منتجاتك ومراحل مسار المبيعات بدقة عالية مع تتبع GA4 e-commerce.'
+                : 'Get comprehensive insights into store traffic, user behavior, and sales funnels with advanced GA4 e-commerce tracking.',
+              label: isAr ? 'معرف القياس (G-XXXXXXXXXX) *' : 'Measurement ID (G-XXXXXXXXXX) *',
+              placeholder: 'G-ABC1234567',
+              helper: isAr ? 'تجد معرف القياس في إعدادات Google Analytics تحت Admin ← Data Streams.' : 'Find your Measurement ID in GA4 Admin → Data Streams.',
+              guide: {
+                step1: isAr ? 'سجل دخولك إلى حسابك في Google Analytics 4.' : 'Log in to your Google Analytics 4 property.',
+                step2: isAr ? 'انتقل إلى Admin ← Data Streams وحدد تيار الويب لنسخ Measurement ID.' : 'Go to Admin → Data Streams and select your web stream to copy the Measurement ID.',
+                step3: isAr ? 'الصق المعرف في الخانة بالأعلى واضغط على "حفظ واتصال".' : 'Paste it above and click "Save & Connect".'
+              }
+            },
+            'AI Auto-Builder': {
+              title: 'Beya AI Product Builder',
+              logoText: 'AI',
+              logoBg: 'bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/20',
+              badge: isAr ? '✓ BEYA Premium' : '✓ BEYA Premium',
+              tags: ['AI Powered', 'SEO Generator', 'Product Description', 'Automated'],
+              desc: isAr
+                ? 'توليد عناوين منتجات محسنة لمحركات البحث (SEO)، ونصوص بيع مقنعة، ومميزات تفصيلية تلقائياً من صور المنتجات بالذكاء الاصطناعي.'
+                : 'Automatically generate SEO-optimized product titles, persuasive descriptions, and benefit bullet points directly from product photos using advanced AI.',
+              label: isAr ? 'مفتاح أو كود التفعيل *' : 'Activation Key / Status *',
+              placeholder: 'ACTIF',
+              helper: isAr ? 'اكتب كلمة "ACTIF" لتفعيل ميزات الذكاء الاصطناعي في صفحات منتجاتك.' : 'Type "ACTIF" to enable AI Auto-Builder on your product creation forms.',
+              guide: {
+                step1: isAr ? 'اكتب كلمة "ACTIF" في الخانة المخصصة بالأعلى.' : 'Type ACTIF in the activation box above.',
+                step2: isAr ? 'اضغط على "حفظ واتصال" لتفعيل أزرار الذكاء الاصطناعي في لوحة التحكم.' : 'Click "Save & Connect" to unlock AI generation buttons across your store dashboard.',
+                step3: isAr ? 'عند إنشاء أو تعديل أي منتج، اضغط على زر "توليد بالذكاء الاصطناعي" لكتابة الوصف فوراً.' : 'When creating or editing any product, click "Generate with AI" to write instant sales copy.'
+              }
+            }
+          };
 
-            {/* Scrollable container with the 3 cards exactly like the screenshot */}
-            <div className="p-6 sm:p-8 overflow-y-auto space-y-6">
-              
-              {/* CARD 1: Hero App Banner Card */}
-              <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row items-start justify-between gap-6">
-                <div className="flex items-start gap-5">
-                  <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-blue-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-lg shadow-indigo-500/20 shrink-0">
-                    eG
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <h3 className="text-xl sm:text-2xl font-black text-slate-900">
-                        eGrow — COD Automation
-                      </h3>
-                      <span className="bg-blue-50 text-blue-600 border border-blue-200/70 px-3 py-0.5 rounded-full text-xs font-black flex items-center gap-1">
-                        ✓ {isAr ? 'شريك معتمد' : 'Verified Partner'}
+          const current = appMeta[activeAppModal] || {
+            title: activeAppModal,
+            logoText: activeAppModal.substring(0, 2).toUpperCase(),
+            logoBg: 'bg-gradient-to-br from-indigo-600 to-blue-600 text-white shadow-lg shadow-indigo-500/20',
+            badge: isAr ? '✓ تطبيق معتمد' : '✓ Verified App',
+            tags: ['Integration', 'Store App', 'BEYA'],
+            desc: isAr ? 'ربط وإعداد التطبيق مع متجر BEYA لمزامنة البيانات وتحسين أداء متجرك.' : 'Connect and configure this app with your BEYA Store.',
+            label: isAr ? 'رقم التعريف / المفتاح *' : 'ID / API Key *',
+            placeholder: '...',
+            helper: isAr ? 'أدخل المفتاح أو رقم التعريف لتفعيل الربط.' : 'Enter your credentials to enable integration.',
+            guide: {
+              step1: isAr ? 'احصل على المفتاح أو معرف الربط من إعدادات حسابك في المنصة المزودة.' : 'Get your API key or ID from your provider settings.',
+              step2: isAr ? 'الصق المفتاح في الخانة المخصصة بالأعلى.' : 'Paste the key into the field above.',
+              step3: isAr ? 'اضغط على زر "حفظ واتصال" لتفعيل الربط.' : 'Click "Save & Connect" to activate.'
+            }
+          };
+
+          return (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 sm:p-6 overflow-y-auto">
+              <div className="bg-slate-100/95 rounded-[2.5rem] shadow-2xl w-full max-w-4xl overflow-hidden border border-slate-200/80 flex flex-col max-h-[94vh] my-auto animate-in fade-in zoom-in-95 duration-200">
+                {/* Header / Back navigation */}
+                <div className="px-8 py-5 border-b border-slate-200/80 bg-white flex items-center justify-between sticky top-0 z-10">
+                  <button
+                    type="button"
+                    onClick={() => setActiveAppModal(null)}
+                    className="flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors"
+                  >
+                    <span>‹</span>
+                    <span>{isAr ? "العودة إلى متجر التطبيقات" : "Retour à l'App Store"}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveAppModal(null)}
+                    className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Scrollable container with 3 Shopify-style cards for WHICHEVER app is open */}
+                <div className="p-6 sm:p-8 overflow-y-auto space-y-6">
+                  {/* CARD 1: Hero App Banner Card */}
+                  <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row items-start justify-between gap-6">
+                    <div className="flex items-start gap-5">
+                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center font-black text-2xl shrink-0 ${current.logoBg}`}>
+                        {current.logoText}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <h3 className="text-xl sm:text-2xl font-black text-slate-900">
+                            {current.title}
+                          </h3>
+                          <span className="bg-blue-50 text-blue-600 border border-blue-200/70 px-3 py-0.5 rounded-full text-xs font-black flex items-center gap-1">
+                            {current.badge}
+                          </span>
+                        </div>
+                        <p className="text-xs sm:text-sm text-slate-600 font-medium mt-2 leading-relaxed max-w-2xl">
+                          {current.desc}
+                        </p>
+                        <div className="flex items-center gap-2 mt-4 flex-wrap">
+                          {current.tags.map((t, idx) => (
+                            <span key={idx} className="px-3 py-1 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold">
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:items-end w-full sm:w-auto pt-4 sm:pt-0 border-t sm:border-0 border-slate-100 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (appInputValue) {
+                            setAppInputValue('');
+                            setAppsConfig(prev => ({ ...prev, [activeAppModal]: '' }));
+                          }
+                        }}
+                        className={`px-5 py-2.5 rounded-xl font-black text-xs transition-all border ${
+                          appInputValue
+                            ? 'border-rose-300 text-rose-600 hover:bg-rose-50'
+                            : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-500/20'
+                        }`}
+                      >
+                        {appInputValue ? (isAr ? 'إلغاء التثبيت (Uninstall)' : 'Uninstall') : (isAr ? "تثبيت التطبيق" : "Installer l'App")}
+                      </button>
+                      <span className="text-[11px] text-slate-400 font-medium mt-1.5">
+                        {appInputValue ? (isAr ? 'مثبت في متجرك' : 'Installed on your store') : (isAr ? 'جاهز للتثبيت' : 'Ready to install')}
                       </span>
                     </div>
-                    <p className="text-xs sm:text-sm text-slate-600 font-medium mt-2 leading-relaxed max-w-2xl">
-                      {isAr
-                        ? 'أتمتة تأكيد طلبيات الدفع عند الاستلام عبر واتساب وتقليل نسبة المرتجعات. eGrow يتصل بعملائك آلياً، يؤكد الطلبات، ويزامن حالات التأكيد مباشرة مع متجر BEYA.'
-                        : 'Automate your Cash on Delivery confirmations via WhatsApp and reduce return rates. eGrow calls your customers automatically, confirms orders, and syncs confirmed statuses straight back to Beya Store.'}
-                    </p>
-                    <div className="flex items-center gap-2 mt-4 flex-wrap">
-                      <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold">Orders</span>
-                      <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold">WhatsApp</span>
-                      <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold">Automation</span>
-                      <span className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold">
-                        {isAr ? 'باقة مجانية متاحة' : 'Free plan available'}
-                      </span>
-                    </div>
                   </div>
-                </div>
 
-                <div className="flex flex-col sm:items-end w-full sm:w-auto pt-4 sm:pt-0 border-t sm:border-0 border-slate-100 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (appInputValue) {
-                        setAppInputValue('');
-                        setAppsConfig(prev => ({ ...prev, ['eGrow COD Automation']: '' }));
-                      }
-                    }}
-                    className={`px-5 py-2.5 rounded-xl font-black text-xs transition-all border ${
-                      appInputValue
-                        ? 'border-rose-300 text-rose-600 hover:bg-rose-50'
-                        : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-500/20'
-                    }`}
-                  >
-                    {appInputValue ? (isAr ? 'إلغاء التثبيت (Uninstall)' : 'Uninstall') : (isAr ? 'تثبيت التطبيق (Install)' : 'Install App')}
-                  </button>
-                  <span className="text-[11px] text-slate-400 font-medium mt-1.5">
-                    {appInputValue ? (isAr ? 'مثبت في متجرك' : 'Installed on your store') : (isAr ? 'جاهز للتثبيت' : 'Ready to install')}
-                  </span>
-                </div>
-              </div>
-
-              {/* CARD 2: Connection Settings Card */}
-              <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm space-y-6">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                  <h4 className="text-lg font-black text-slate-900">
-                    {isAr ? 'إعدادات الاتصال والمفتاح' : 'Connection settings'}
-                  </h4>
-                  <span className={`px-3 py-1 rounded-full text-xs font-black flex items-center gap-1.5 border ${
-                    appInputValue
-                      ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
-                      : 'bg-rose-50 text-rose-600 border-rose-200'
-                  }`}>
-                    <span className="w-2 h-2 rounded-full bg-current"></span>
-                    {appInputValue ? (isAr ? 'متصل بنجاح' : 'Connected') : (isAr ? 'غير متصل' : 'Disconnected')}
-                  </span>
-                </div>
-
-                {/* API Key field */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-black text-slate-800">
-                    eGrow API Key <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showApiKey ? 'text' : 'password'}
-                      value={appInputValue}
-                      onChange={(e) => setAppInputValue(e.target.value)}
-                      placeholder="egrow_live_••••••••••••••••••••"
-                      className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:border-indigo-600 focus:outline-none font-mono text-sm text-slate-800 transition-all"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowApiKey(!showApiKey)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
-                    >
-                      {showApiKey ? '👁️‍🗨️' : '👁️'}
-                    </button>
-                  </div>
-                  <p className="text-xs text-slate-400 font-medium">
-                    {isAr
-                      ? 'تجد هذا المفتاح في حسابك على eGrow تحت قائمة Settings ← API Access.'
-                      : 'Find this key in your eGrow dashboard under Settings → API Access.'}
-                  </p>
-                </div>
-
-                {/* Webhook URL field */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-black text-slate-800">
-                    {isAr ? 'رابط الويب هوك لمتجر BEYA (Beya Store Webhook URL)' : 'Beya Store Webhook URL'}
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      readOnly
-                      value={`https://api.beyastore.com/webhooks/egrow/${storeSlug || 'store_84213'}`}
-                      className="w-full px-4 py-3.5 bg-slate-100 border border-slate-200 rounded-2xl font-mono text-xs text-slate-600 select-all"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        navigator.clipboard.writeText(`https://api.beyastore.com/webhooks/egrow/${storeSlug || 'store_84213'}`);
-                      }}
-                      className="px-4 py-3.5 bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-slate-700 hover:text-indigo-600 rounded-2xl font-black text-xs shrink-0 transition-all flex items-center gap-2 shadow-sm"
-                    >
-                      <Copy className="w-4 h-4" />
-                      {isAr ? 'نسخ' : 'Copy'}
-                    </button>
-                  </div>
-                  <p className="text-xs text-slate-400 font-medium">
-                    {isAr
-                      ? 'انسخ هذا الرابط وضعه في حساب eGrow تحت Integrations ← Beya Store لاستقبال حالات تأكيد الطلبيات.'
-                      : 'Paste this URL into eGrow → Integrations → Beya Store to receive order confirmations back.'}
-                  </p>
-                </div>
-
-                {/* Toggle auto sync box */}
-                <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center justify-between gap-4">
-                  <div>
-                    <h5 className="text-sm font-black text-slate-900">
-                      {isAr ? 'تفعيل المزامنة التلقائية للطلبيات' : 'Enable Automatic Order Sync'}
-                    </h5>
-                    <p className="text-xs text-slate-500 font-medium mt-0.5">
-                      {isAr
-                        ? 'إرسال بيانات الطلبية إلى eGrow آلياً وفور إتمام العميل للشراء في متجرك.'
-                        : 'Send order data to eGrow instantly whenever a customer completes a purchase.'}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setEgrowAutoSync(!egrowAutoSync)}
-                    className={`w-14 h-8 rounded-full p-1 transition-colors flex items-center ${
-                      egrowAutoSync ? 'bg-indigo-600 justify-end' : 'bg-slate-300 justify-start'
-                    }`}
-                  >
-                    <span className="w-6 h-6 rounded-full bg-white shadow-md block transition-transform"></span>
-                  </button>
-                </div>
-
-                {/* Save & Connect button */}
-                <div className="pt-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAppsConfig(prev => ({ ...prev, ['eGrow COD Automation']: appInputValue || 'egrow_live_connected' }));
-                      setActiveAppModal(null);
-                    }}
-                    className="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-2"
-                  >
-                    <span>{isAr ? 'حفظ واتصال (Save & Connect)' : 'Save & Connect'}</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* CARD 3: How to connect accordion/guide */}
-              <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 font-black text-sm flex items-center justify-center border border-indigo-100">
-                      ?
-                    </div>
-                    <div>
-                      <h4 className="text-base font-black text-slate-900">
-                        {isAr ? 'كيفية الربط بخطوات بسيطة' : 'How to connect'}
+                  {/* CARD 2: Connection Settings Card */}
+                  <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm space-y-6">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                      <h4 className="text-lg font-black text-slate-900">
+                        {isAr ? 'إعدادات الاتصال والمفتاح' : 'Connection settings'}
                       </h4>
-                      <p className="text-xs text-slate-500 font-medium">
-                        {isAr ? '3 خطوات سريعة لربط حسابك على eGrow بمتجر BEYA' : '3 quick steps to link your eGrow account'}
+                      <span className={`px-3 py-1 rounded-full text-xs font-black flex items-center gap-1.5 border ${
+                        appInputValue
+                          ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                          : 'bg-rose-50 text-rose-600 border-rose-200'
+                      }`}>
+                        <span className="w-2 h-2 rounded-full bg-current"></span>
+                        {appInputValue ? (isAr ? 'متصل بنجاح' : 'Connected') : (isAr ? 'غير متصل' : 'Disconnected')}
+                      </span>
+                    </div>
+
+                    {/* Main Input field */}
+                    <div className="space-y-2">
+                      <label className="block text-sm font-black text-slate-800">
+                        {current.label}
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showApiKey || activeAppModal === 'WhatsApp Chat' || activeAppModal === 'AI Auto-Builder' ? 'text' : 'password'}
+                          value={appInputValue}
+                          onChange={(e) => setAppInputValue(e.target.value)}
+                          placeholder={current.placeholder}
+                          className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:border-indigo-600 focus:outline-none font-mono text-sm text-slate-800 transition-all"
+                        />
+                        {activeAppModal !== 'WhatsApp Chat' && activeAppModal !== 'AI Auto-Builder' && (
+                          <button
+                            type="button"
+                            onClick={() => setShowApiKey(!showApiKey)}
+                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                          >
+                            {showApiKey ? '👁️‍🗨️' : '👁️'}
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-400 font-medium">
+                        {current.helper}
                       </p>
                     </div>
-                  </div>
-                </div>
 
-                <div className="space-y-3 pt-2 border-t border-slate-100 text-xs sm:text-sm text-slate-700 font-medium">
-                  <div className="flex items-start gap-3">
-                    <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-800 font-black text-xs flex items-center justify-center shrink-0 mt-0.5">1</span>
-                    <p className="leading-relaxed">
-                      {isAr ? 'سجل دخولك إلى حساب eGrow وانتقل إلى ' : 'Log in to your eGrow account and go to '}
-                      <code className="px-2 py-0.5 bg-slate-100 text-indigo-600 font-bold rounded-lg text-xs">Settings → API Access</code>.
-                    </p>
+                    {/* If activeAppModal is eGrow COD Automation, render the Webhook URL & Auto Sync Box! */}
+                    {activeAppModal === 'eGrow COD Automation' && (
+                      <>
+                        <div className="space-y-2">
+                          <label className="block text-sm font-black text-slate-800">
+                            {isAr ? 'رابط الويب هوك لمتجر BEYA (Beya Store Webhook URL)' : 'Beya Store Webhook URL'}
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              readOnly
+                              value={`https://api.beyastore.com/webhooks/egrow/${storeSlug || 'store_84213'}`}
+                              className="w-full px-4 py-3.5 bg-slate-100 border border-slate-200 rounded-2xl font-mono text-xs text-slate-600 select-all"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(`https://api.beyastore.com/webhooks/egrow/${storeSlug || 'store_84213'}`);
+                              }}
+                              className="px-4 py-3.5 bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-slate-700 hover:text-indigo-600 rounded-2xl font-black text-xs shrink-0 transition-all flex items-center gap-2 shadow-sm"
+                            >
+                              <Copy className="w-4 h-4" />
+                              {isAr ? 'نسخ' : 'Copy'}
+                            </button>
+                          </div>
+                          <p className="text-xs text-slate-400 font-medium">
+                            {isAr
+                              ? 'انسخ هذا الرابط وضعه في حساب eGrow تحت Integrations ← Beya Store لاستقبال حالات تأكيد الطلبيات.'
+                              : 'Paste this URL into eGrow → Integrations → Beya Store to receive order confirmations back.'}
+                          </p>
+                        </div>
+
+                        <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center justify-between gap-4">
+                          <div>
+                            <h5 className="text-sm font-black text-slate-900">
+                              {isAr ? 'تفعيل المزامنة التلقائية للطلبيات' : 'Enable Automatic Order Sync'}
+                            </h5>
+                            <p className="text-xs text-slate-500 font-medium mt-0.5">
+                              {isAr
+                                ? 'إرسال بيانات الطلبية إلى eGrow آلياً وفور إتمام العميل للشراء في متجرك.'
+                                : 'Send order data to eGrow instantly whenever a customer completes a purchase.'}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setEgrowAutoSync(!egrowAutoSync)}
+                            className={`w-14 h-8 rounded-full p-1 transition-colors flex items-center ${
+                              egrowAutoSync ? 'bg-indigo-600 justify-end' : 'bg-slate-300 justify-start'
+                            }`}
+                          >
+                            <span className="w-6 h-6 rounded-full bg-white shadow-md block transition-transform"></span>
+                          </button>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Save & Connect button */}
+                    <div className="pt-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAppsConfig(prev => ({ ...prev, [activeAppModal]: appInputValue || (activeAppModal === 'eGrow COD Automation' ? 'egrow_live_connected' : 'connected_active') }));
+                          setActiveAppModal(null);
+                        }}
+                        className="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-2"
+                      >
+                        <span>{isAr ? "حفظ واتصال" : "Enregistrer et Connecter"}</span>
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-800 font-black text-xs flex items-center justify-center shrink-0 mt-0.5">2</span>
-                    <p className="leading-relaxed">
-                      {isAr ? 'اضغط على ' : 'Click '}
-                      <code className="px-2 py-0.5 bg-slate-100 text-indigo-600 font-bold rounded-lg text-xs">Generate New Key</code>
-                      {isAr ? '، انسخ المفتاح، ثم الصقه في خانة "eGrow API Key" بالأعلى.' : ', copy it, and paste it into the "eGrow API Key" field above.'}
-                    </p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-800 font-black text-xs flex items-center justify-center shrink-0 mt-0.5">3</span>
-                    <p className="leading-relaxed">
-                      {isAr ? 'انسخ رابط "Beya Store Webhook URL" بالأعلى وضعه في eGrow تحت ' : 'Copy the "Beya Store Webhook URL" above and paste it into eGrow under '}
-                      <code className="px-2 py-0.5 bg-slate-100 text-indigo-600 font-bold rounded-lg text-xs">Integrations → Beya Store</code>
-                      {isAr ? '، ثم اضغط على زر ' : ', then click '}
-                      <strong className="text-slate-900">Save & Connect</strong>.
-                    </p>
+
+                  {/* CARD 3: How to connect accordion/guide */}
+                  <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 font-black text-sm flex items-center justify-center border border-indigo-100">
+                          ?
+                        </div>
+                        <div>
+                          <h4 className="text-base font-black text-slate-900">
+                            {isAr ? 'كيفية الربط بخطوات بسيطة' : 'How to connect'}
+                          </h4>
+                          <p className="text-xs text-slate-500 font-medium">
+                            {isAr ? '3 خطوات سريعة لربط حسابك بمتجر BEYA' : '3 quick steps to link your account'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 pt-2 border-t border-slate-100 text-xs sm:text-sm text-slate-700 font-medium">
+                      <div className="flex items-start gap-3">
+                        <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-800 font-black text-xs flex items-center justify-center shrink-0 mt-0.5">1</span>
+                        <p className="leading-relaxed">{current.guide.step1}</p>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-800 font-black text-xs flex items-center justify-center shrink-0 mt-0.5">2</span>
+                        <p className="leading-relaxed">{current.guide.step2}</p>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-800 font-black text-xs flex items-center justify-center shrink-0 mt-0.5">3</span>
+                        <p className="leading-relaxed">{current.guide.step3}</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-
             </div>
-          </div>
-        </div>
-      ) : activeAppModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-               <h3 className="text-lg font-black text-slate-800">{isAr ? 'إعداد' : 'Configurer'} {activeAppModal}</h3>
-               <button onClick={() => setActiveAppModal(null)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400"><X className="w-5 h-5"/></button>
-            </div>
-            <div className="p-6 space-y-4">
-               <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
-                     {activeAppModal === 'WhatsApp Chat' ? (isAr ? 'رقم الواتساب (مثال: +212600000000)' : 'Numéro WhatsApp (ex: +212600000000)') :
-                      activeAppModal === 'Facebook Pixel' ? (isAr ? 'معرف بيكسل فيسبوك' : 'ID Pixel Facebook') :
-                      activeAppModal === 'TikTok Pixel' ? (isAr ? 'معرف بيكسل تيك توك' : 'ID Pixel TikTok') :
-                      activeAppModal === 'Google Analytics 4' ? (isAr ? 'معرف التتبع (G-XXXXXXX)' : 'ID de suivi (G-XXXXXXX)') :
-                      activeAppModal === 'AI Auto-Builder' ? (isAr ? 'اكتب "ACTIF" لتفعيل الميزة' : 'Tapez "ACTIF" pour activer cette option') :
-                      (isAr ? 'رقم التعريف / المفتاح' : 'ID / Clé d\'API')}
-                  </label>
-                  <input 
-                     type="text" 
-                     value={appInputValue}
-                     onChange={(e) => setAppInputValue(e.target.value)}
-                     className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 font-medium"
-                     placeholder="..."
-                  />
-               </div>
-            </div>
-            <div className="p-6 border-t border-slate-100 bg-slate-50 flex gap-3">
-               <button onClick={() => setActiveAppModal(null)} className="flex-1 py-3 font-bold text-slate-600 hover:bg-slate-200 bg-slate-100 rounded-xl transition-colors">{isAr ? 'إلغاء' : 'Annuler'}</button>
-               <button onClick={() => {
-                  setAppsConfig(prev => ({ ...prev, [activeAppModal]: appInputValue }));
-                  setActiveAppModal(null);
-               }} className="flex-1 py-3 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md transition-colors">{isAr ? 'حفظ التغييرات' : 'Enregistrer'}</button>
-            </div>
-          </div>
-        </div>
+          );
+        })()
       )}
       
       {isProductModalOpen && (
