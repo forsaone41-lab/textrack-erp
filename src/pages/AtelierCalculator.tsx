@@ -38,34 +38,200 @@ interface AiPreset {
   materialPerPiece: number;
   recommendedDays: number;
   photo?: string;
+  stitchingMin?: number;
 }
 
 const AI_PRESETS: AiPreset[] = [
   {
     title: '👕 Ensemble تيشرت وشورت صيفي مع زخرفة (Galon)',
     desc: 'تيشرت وشورت صيفي بشريط مزخرف (bande/galon) ستايل شبابي كلاس',
-    aiText: 'تبارك الله عليك، هاد Ensemble تيشرت وشورت صيفي مطلوب بزاف هاد الأيام في السوق المغربية. بفضل ديك (Class) وستايل شبابي و كلاص اللي عاطياه (bande/galon) السلسلة المزخرفة لمسة زوينة. الكميات اللي غتحتاج وتكلفة الإنتاج بالتفصيل الممل مناسبة جداً للطلبيات المتوسطة والكبيرة.',
+    aiText: 'تحليل تقني دقيق: طقم صيفي بمتوسط خياطة قياسي 22 دقيقة للقطعة. استهلاك القماش واللوازم (Galon) مقدر بـ 18.50 درهم للقطعة.',
     recommendedPrice: 45.00,
     materialPerPiece: 18.50,
-    recommendedDays: 2
+    recommendedDays: 2,
+    stitchingMin: 22
   },
   {
     title: '👗 عباية مغربية كريب فاخرة مع تطريز سفيفة',
     desc: 'عباية كريب جودة عالية مع سفيفة وعقاد في الصدر والأكمام',
-    aiText: 'برافو، العباية المغربية بالكريب الفاخر والسفيفة هي الأكثر طلباً طول السنة. التكلفة ديال الثمن والقماش كتعطي هامش ربح ممتاز جداً للأتوليي، خصوصاً مع دقة الخياطة المغربية.',
+    aiText: 'تحليل تقني دقيق: عباية كريب مع سفيفة وعقاد بمتوسط خياطة قياسي 45 دقيقة للقطعة. استهلاك القماش والتطريز مقدر بـ 55.00 درهم للقطعة.',
     recommendedPrice: 120.00,
     materialPerPiece: 55.00,
-    recommendedDays: 3
+    recommendedDays: 3,
+    stitchingMin: 45
   },
   {
     title: '🎽 هودي وبنطلون رياضي Over-size (Cotton Fleece)',
     desc: 'طقم رياضي شتوي/خريفي قطن ثقيل بقصة واسعة Over-size',
-    aiText: 'ستايل Over-size الرياضي عندو إقبال كبير من الشباب والبراندات المحلية. استهلاك القماش كيكون شوية زايد (حوالي 1.8 متر للطقم)، ولكن سرعة التجميع في الماكينة كتعوض الوقت.',
+    aiText: 'تحليل تقني دقيق: طقم قطن Over-size بمتوسط خياطة قياسي 35 دقيقة للقطعة. استهلاك القماش (حوالي 1.8 متر) مقدر بـ 38.00 درهم للقطعة.',
     recommendedPrice: 85.00,
     materialPerPiece: 38.00,
-    recommendedDays: 2
+    recommendedDays: 2,
+    stitchingMin: 35
   }
 ];
+
+interface PosteTravail {
+  nomAr: string;
+  nomFr: string;
+  machine: string;
+  tempsMin: number;
+  roleOuvrier: string;
+}
+
+interface TechnicalOperationBreakdown {
+  categorie: string;
+  tissuType: string;
+  consommationMetrage: number;
+  prixMetreEstime: number;
+  fournituresEstimees: number;
+  postesTravail: PosteTravail[];
+  totalMinutesConfection: number;
+  coutRevientEstime: number;
+  prixVenteConseille: number;
+  recommandationAtelier: string;
+}
+
+const getGarmentTechnicalBreakdown = (
+  itemNameOrDesc: string,
+  customConsommation?: number,
+  customPrice?: number,
+  categoryOverride?: string
+): TechnicalOperationBreakdown => {
+  const text = (itemNameOrDesc || '').toLowerCase();
+  let catKey = categoryOverride;
+  if (!catKey) {
+    if (text.includes('abaya') || text.includes('caftan') || text.includes('robe') || text.includes('عباية') || text.includes('قفطان')) {
+      catKey = 'abaya_beldi';
+    } else if (text.includes('sport') || text.includes('hoodie') || text.includes('over') || text.includes('هودي') || text.includes('رياضي') || text.includes('gilet')) {
+      catKey = 'sportswear_hoodie';
+    } else if (text.includes('veste') || text.includes('manteau') || text.includes('جاكيت') || text.includes('معطف') || text.includes('فيست')) {
+      catKey = 'veste_manteau';
+    } else if (text.includes('shirt') || text.includes('short') || text.includes('t-shirt') || text.includes('تيشرت') || text.includes('صيفي')) {
+      catKey = 'tshirt_summer';
+    } else if (text.includes('cargo') || text.includes('pantalon') || text.includes('سروال') || text.includes('بنطلون')) {
+      catKey = 'pantalon_cargo';
+    } else {
+      catKey = 'default_modele';
+    }
+  }
+
+  const consommation = customConsommation || (
+    catKey === 'abaya_beldi' ? 3.2 :
+    catKey === 'sportswear_hoodie' ? 1.8 :
+    catKey === 'veste_manteau' ? 2.0 :
+    catKey === 'tshirt_summer' ? 0.85 :
+    catKey === 'pantalon_cargo' ? 1.4 : 1.5
+  );
+
+  const prixMetre = customPrice || (
+    catKey === 'abaya_beldi' ? 15.0 :
+    catKey === 'sportswear_hoodie' ? 18.0 :
+    catKey === 'veste_manteau' ? 22.0 :
+    catKey === 'tshirt_summer' ? 15.0 :
+    catKey === 'pantalon_cargo' ? 17.0 : 16.0
+  );
+
+  let fournitures = 6.0;
+  let postes: PosteTravail[] = [];
+  let recommendation = '';
+  let categorieName = '';
+  let tissuName = '';
+
+  if (catKey === 'abaya_beldi') {
+    categorieName = 'لباس تقليدي / عباية (Abaya / Beldi)';
+    tissuName = 'كريب فاخر / حرير / جوهرة (Crêpe / Soie)';
+    fournitures = 7.0;
+    postes = [
+      { nomAr: 'فصالة وتحضير الأجزاء', nomFr: 'Coupe & Tracé', machine: 'Ciseaux électriques / Table', tempsMin: 6, roleOuvrier: 'فصالة وباترون' },
+      { nomAr: 'خياطة الهيكل والكتف والأكمام', nomFr: 'Assemblage Corps', machine: 'Piqueuse Plate', tempsMin: 14, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'سرفلة وحماية الحواف', nomFr: 'Surfilage', machine: 'Surjeteuse 4/5 Fils', tempsMin: 8, roleOuvrier: 'ماكينة Overlock' },
+      { nomAr: 'تركيب السفيفة والعقاد أو التطريز', nomFr: 'Pose Sfifa / Broderie', machine: 'Piqueuse Guide Sfifa / Main', tempsMin: 12, roleOuvrier: 'خياطة متخصصة' },
+      { nomAr: 'كّي نهائي، تشطيب وفحص الجودة', nomFr: 'Repassage & Contrôle', machine: 'Fer Vapeur / Table Aspirante', tempsMin: 5, roleOuvrier: 'مراقب جودة وتشطيب' }
+    ];
+    recommendation = 'ينصح بتخصيص عامل خبير لبوست تركيب السفيفة لضمان الجودة العالية وتجنب التأخير في خط الإنتاج.';
+  } else if (catKey === 'sportswear_hoodie') {
+    categorieName = 'لباس رياضي / كاجوال (Sportswear / Hoodie)';
+    tissuName = 'قطن ثقيل 320g / Fleece (Coton lourd)';
+    fournitures = 5.6;
+    postes = [
+      { nomAr: 'فصالة قماش القطن الثقيل', nomFr: 'Coupe Coton Fleece', machine: 'Ciseaux Lame', tempsMin: 5, roleOuvrier: 'فصالة وباترون' },
+      { nomAr: 'تجميع الأكتاف والجوانب والأكمام', nomFr: 'Assemblage Overlock', machine: 'Surjeteuse 4 Fils', tempsMin: 12, roleOuvrier: 'ماكينة Overlock' },
+      { nomAr: 'خياطة الجيب (الكَنغَر) والقب', nomFr: 'Montage Capuche & Poche', machine: 'Piqueuse Plate', tempsMin: 9, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'حبكة وتثبيت الأساور والياقة', nomFr: 'Finition Bord-Côte', machine: 'Recouvreuse 3 Aiguilles', tempsMin: 6, roleOuvrier: 'خياطة' },
+      { nomAr: 'تنظيف الخيوط والكيّ والتغليف', nomFr: 'Finition & Emballage', machine: 'Fer à Vapeur', tempsMin: 3, roleOuvrier: 'فني تشطيب' }
+    ];
+    recommendation = 'استخدام ماكينة الأوفيرلوك 4 خيوط في التجميع يختصر 30% من وقت الإنتاج الكلي للطقم الرياضي.';
+  } else if (catKey === 'veste_manteau') {
+    categorieName = 'جاكيت / فيست شتوي (Veste / Gilet / Manteau)';
+    tissuName = 'قماش شتوي / جاباردين / جوخ (Tissu hivernal)';
+    fournitures = 12.0;
+    postes = [
+      { nomAr: 'فصالة القماش الخارجي والبطانة', nomFr: 'Coupe Tissu & Doublure', machine: 'Ciseaux électriques', tempsMin: 8, roleOuvrier: 'فصالة وباترون' },
+      { nomAr: 'خياطة الجيوب والسحاب الأمامي', nomFr: 'Montage Poches & Zip', machine: 'Piqueuse Plate', tempsMin: 16, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'تجميع الهيكل والأكمام مع البطانة', nomFr: 'Assemblage avec Doublure', machine: 'Piqueuse Plate / Surjeteuse', tempsMin: 18, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'تركيب الياقة والتشطيب الداخلي', nomFr: 'Montage Col & Finitions', machine: 'Piqueuse Plate', tempsMin: 10, roleOuvrier: 'خياطة متخصصة' },
+      { nomAr: 'كّي بالبخار ومراقبة الجودة نهائية', nomFr: 'Repassage & Contrôle', machine: 'Fer Vapeur / Table Aspirante', tempsMin: 6, roleOuvrier: 'مراقب جودة وتشطيب' }
+    ];
+    recommendation = 'بوست خياطة الجيوب والسحاب هو الأكثر دقة في الخط، يجب تخصيص عامل متمرس له لضمان جودة الجاكيت.';
+  } else if (catKey === 'tshirt_summer') {
+    categorieName = 'طقم صيفي / تيشرت (T-shirt / Short été)';
+    tissuName = 'قطن مُمشط 100% (Coton Combed)';
+    fournitures = 5.75;
+    postes = [
+      { nomAr: 'فصالة الصدر والظهر والأكمام', nomFr: 'Coupe Pièces', machine: 'Ciseaux électrique', tempsMin: 3, roleOuvrier: 'فصالة وباترون' },
+      { nomAr: 'تجميع الأكتاف والجوانب', nomFr: 'Assemblage', machine: 'Surjeteuse 4 Fils', tempsMin: 7, roleOuvrier: 'ماكينة Overlock' },
+      { nomAr: 'تركيب الياقة والشريط المزخرف', nomFr: 'Pose Col & Galon', machine: 'Piqueuse Plate / Colleteuse', tempsMin: 6, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'ثني الأطراف والأكمام', nomFr: 'Ourlets Bas & Manches', machine: 'Recouvreuse', tempsMin: 4, roleOuvrier: 'خياطة' },
+      { nomAr: 'كيّ سريع ومراقبة', nomFr: 'Repassage Rapide', machine: 'Table Repassage', tempsMin: 2, roleOuvrier: 'فني تشطيب' }
+    ];
+    recommendation = 'خط إنتاج سريع ذو كفاءة عالية، يمكن للعامل الواحد في الأتوليي إنتاج أكثر من 22 قطعة في اليوم.';
+  } else if (catKey === 'pantalon_cargo') {
+    categorieName = 'سروال / بنطلون كارجو (Pantalon / Cargo)';
+    tissuName = 'جاباردين / جينز / قطن (Gabardine / Denim)';
+    fournitures = 8.5;
+    postes = [
+      { nomAr: 'فصالة القماش والجيوب الإضافية', nomFr: 'Coupe Pantalon & Poches', machine: 'Ciseaux électriques', tempsMin: 5, roleOuvrier: 'فصالة وباترون' },
+      { nomAr: 'خياطة الجيوب الكارجو والجانبية', nomFr: 'Montage Poches Cargo', machine: 'Piqueuse Plate 2 Aiguilles', tempsMin: 11, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'تجميع الساقين ومنطقة الحجر', nomFr: 'Assemblage Jambes & Fourche', machine: 'Surjeteuse 5 Fils', tempsMin: 9, roleOuvrier: 'ماكينة Overlock' },
+      { nomAr: 'تركيب الحزام المطاطي أو أزرار الخصر', nomFr: 'Montage Ceinture', machine: 'Piqueuse Ceinturière / Plate', tempsMin: 7, roleOuvrier: 'خياطة متخصصة' },
+      { nomAr: 'ثني الأسفل والكيّ النهائي', nomFr: 'Ourlet Bas & Repassage', machine: 'Recouvreuse / Fer', tempsMin: 3, roleOuvrier: 'فني تشطيب' }
+    ];
+    recommendation = 'استخدام ماكينة إبرتين في خياطة جيوب الكارجو يعطي متانة عالية ومظهراً احترافياً للمنتج.';
+  } else {
+    categorieName = 'موديل خياطة عام (Confection Textile)';
+    tissuName = 'قماش قياسي (Tissu standard)';
+    fournitures = 6.0;
+    postes = [
+      { nomAr: 'فصالة القماش والتحضير', nomFr: 'Coupe & Préparation', machine: 'Table de Coupe / Ciseaux', tempsMin: 5, roleOuvrier: 'فصالة وباترون' },
+      { nomAr: 'خياطة الهيكل الأساسي للأجزاء', nomFr: 'Assemblage Principal', machine: 'Piqueuse Plate', tempsMin: 12, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'سرفلة وتجميع الحواف', nomFr: 'Surfilage & Assemblage', machine: 'Surjeteuse 4/5 Fils', tempsMin: 8, roleOuvrier: 'ماكينة Overlock' },
+      { nomAr: 'ثني الأطراف والتشطيب الخارجي', nomFr: 'Ourlets & Finition', machine: 'Recouvreuse / Piqueuse', tempsMin: 5, roleOuvrier: 'خياطة' },
+      { nomAr: 'كّي بالبخار وفحص الجودة', nomFr: 'Repassage & Contrôle', machine: 'Fer Vapeur / Table Aspirante', tempsMin: 4, roleOuvrier: 'مراقب جودة وتشطيب' }
+    ];
+    recommendation = 'توزيع متوازن للمراحل على 5 بوستات عمل يضمن استمرارية خط الإنتاج دون تكدس في الأتوليي.';
+  }
+
+  const totalMinutes = postes.reduce((sum, p) => sum + p.tempsMin, 0);
+  const totalMatiere = (consommation * prixMetre) + fournitures;
+  const modUnit = (totalMinutes / 60) * 17.10;
+  const moiUnit = 4.50;
+  const coutRevient = totalMatiere + modUnit + moiUnit;
+  const prixVente = Math.round((coutRevient * 1.65) * 100) / 100;
+
+  return {
+    categorie: categorieName,
+    tissuType: tissuName,
+    consommationMetrage: consommation,
+    prixMetreEstime: prixMetre,
+    fournituresEstimees: fournitures,
+    postesTravail: postes,
+    totalMinutesConfection: totalMinutes,
+    coutRevientEstime: coutRevient,
+    prixVenteConseille: prixVente,
+    recommandationAtelier: recommendation
+  };
+};
 
 const DEFAULT_FICHES_TECHNIQUES: FicheTechnique[] = [
   {
@@ -311,6 +477,7 @@ function isSupportRole(e: Employe): boolean {
   const [aiCustomText, setAiCustomText] = useState('');
   const [isAiAnalyzing, setIsAiAnalyzing] = useState(false);
   const [aiAnalysisDone, setAiAnalysisDone] = useState(true);
+  const [selectedModelCategory, setSelectedModelCategory] = useState<string | undefined>(undefined);
 
   // Import a real model: either from the Beya Creative fiches techniques catalog, or a photo from the device
   const [fichesList, setFichesList] = useState<FicheTechnique[]>([]);
@@ -358,16 +525,19 @@ function isSupportRole(e: Employe): boolean {
 
   const estimateFromFiche = (f: FicheTechnique): AiPreset => {
      const materialPerPiece = Math.round((f.tissuConsommation || 1.5) * 35 * 100) / 100;
+     const isAbayaOrCaftan = (f.type || f.modele || '').toLowerCase().includes('abaya') || (f.type || f.modele || '').toLowerCase().includes('caftan') || (f.type || f.modele || '').toLowerCase().includes('robe');
+     const stitchingMin = isAbayaOrCaftan ? 45 : 30;
      return {
         title: `📐 ${f.modele}`,
         desc: f.description || f.type || '',
         aiText: isAr
-           ? `تقدير أولي مبني على الفيش التقنية "${f.modele}"${f.client ? ` (${f.client})` : ''}. استهلاك القماش المسجل: ${f.tissuConsommation || 1.5} متر للقطعة${f.tissuRecommande ? ` (${f.tissuRecommande})` : ''}. عدّل الأرقام حسب سعر القماش الحقيقي عندك.`
-           : `Estimation basée sur la fiche technique "${f.modele}"${f.client ? ` (${f.client})` : ''}. Consommation : ${f.tissuConsommation || 1.5} m/pièce${f.tissuRecommande ? ` (${f.tissuRecommande})` : ''}. Ajustez selon votre prix tissu réel.`,
+           ? `تحليل تقني للبطاقة "${f.modele}"${f.client ? ` (${f.client})` : ''}: استهلاك القماش المسجل ${f.tissuConsommation || 1.5} متر للقطعة (${f.tissuRecommande || 'قماش قياسي'}). متوسط وقت الخياطة القياسي مقدر بـ ${stitchingMin} دقيقة للقطعة.`
+           : `Analyse technique pour "${f.modele}"${f.client ? ` (${f.client})` : ''} : Consommation de ${f.tissuConsommation || 1.5} m/pièce (${f.tissuRecommande || 'tissu standard'}). Temps de confection standard estimé à ${stitchingMin} min/pièce.`,
         recommendedPrice: Math.round(materialPerPiece * 2.3 * 100) / 100,
         materialPerPiece,
         recommendedDays: 2,
-        photo: f.photo
+        photo: f.photo,
+        stitchingMin
      };
   };
 
@@ -390,16 +560,20 @@ function isSupportRole(e: Employe): boolean {
      const reader = new FileReader();
      reader.onload = () => {
         const dataUrl = reader.result as string;
+        const cleanName = file.name.replace(/\.[^/.]+$/, '');
+        const breakdown = getGarmentTechnicalBreakdown(cleanName);
+        setSelectedModelCategory(undefined);
         setSelectedAiPreset({
-           title: `📷 ${file.name.replace(/\.[^/.]+$/, '')}`,
-           desc: isAr ? 'موديل مستورد من الجهاز' : 'Modèle importé depuis votre appareil',
+           title: `📷 ${cleanName}`,
+           desc: isAr ? `موديل مستورد (${breakdown.categorie})` : `Modèle importé (${breakdown.categorie})`,
            aiText: isAr
-              ? 'تصويرة تزادت. هاد الأرقام غير تقدير أولي عام (ماشي تحليل حقيقي ديال الصورة) - عدّلها حسب القماش والوقت الحقيقيين ديال هاد الموديل.'
-              : "Photo importée. Ces chiffres sont une estimation générale de départ (pas une analyse réelle de l'image) - ajustez-les selon le tissu et le temps réels de ce modèle.",
-           recommendedPrice: 60,
-           materialPerPiece: 25,
+              ? `تحليل تقني للموديل المستورد "${cleanName}": تصنيف "${breakdown.categorie}" يتطلب ${breakdown.postesTravail.length} بوستات عمل (فصالة، خياطة، سرفلة، تشطيب وكيّ) بمتوسط خياطة ${breakdown.totalMinutesConfection} دقيقة للقطعة. استهلاك القماش المقدر: ${breakdown.consommationMetrage} متر (${breakdown.tissuType}).`
+              : `Analyse technique de l'image "${cleanName}" : Catégorie "${breakdown.categorie}" nécessitant ${breakdown.postesTravail.length} postes de travail pour ${breakdown.totalMinutesConfection} min de confection. Consommation estimée : ${breakdown.consommationMetrage} m (${breakdown.tissuType}).`,
+           recommendedPrice: breakdown.prixVenteConseille,
+           materialPerPiece: Math.round(((breakdown.consommationMetrage * breakdown.prixMetreEstime) + breakdown.fournituresEstimees) * 100) / 100,
            recommendedDays: 2,
-           photo: dataUrl
+           photo: dataUrl,
+           stitchingMin: breakdown.totalMinutesConfection
         });
         setIsAiAnalyzing(true);
         setTimeout(() => setIsAiAnalyzing(false), 500);
@@ -482,10 +656,16 @@ function isSupportRole(e: Employe): boolean {
 
   // Apply AI estimation values to calculator
   const applyAiEstimation = (preset: AiPreset) => {
+    const breakdown = getGarmentTechnicalBreakdown(preset.title, undefined, undefined, selectedModelCategory);
+    const aiStitchingMin = breakdown.totalMinutesConfection || preset.stitchingMin || 35;
+    const activeWorkersCount = Math.max(1, workers || selectedWorkerIds.length || 1);
+    const aiDailyPiecesOutput = Math.max(1, Math.floor((activeWorkersCount * 8 * 60) / aiStitchingMin));
+    const aiRealisticDays = Math.max(1, Math.ceil((qty || 1) / aiDailyPiecesOutput));
+
     setItemName(preset.title.replace(/^[^\s]+\s+/, ''));
-    setPricePerPiece(preset.recommendedPrice);
-    setMaterials(Math.round(preset.materialPerPiece * qty));
-    setDays(preset.recommendedDays);
+    setPricePerPiece(breakdown.prixVenteConseille || preset.recommendedPrice);
+    setMaterials(Math.round(((breakdown.consommationMetrage * breakdown.prixMetreEstime) + breakdown.fournituresEstimees) * qty));
+    setDays(aiRealisticDays);
     setShowAiModal(false);
   };
 
@@ -561,7 +741,7 @@ function isSupportRole(e: Employe): boolean {
             className="px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-2xs border border-indigo-100 active:scale-95 group"
           >
             <FileText className="w-3.5 h-3.5 text-indigo-600 group-hover:text-white" />
-            {isAr ? '📋 اختيار من الفيش تكنيك' : '📋 Fiches Tech'}
+            {isAr ? 'اختيار من الفيش تكنيك' : 'Fiches Tech'}
           </button>
 
           <button
@@ -569,7 +749,7 @@ function isSupportRole(e: Employe): boolean {
             className="px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-2xs border border-indigo-100 active:scale-95"
           >
             <Users className="w-3.5 h-3.5" />
-            {isAr ? `👷 عمال الأتوليي (${selectedWorkerIds.length})` : `👷 Ouvriers (${selectedWorkerIds.length})`}
+            {isAr ? `عمال الأتوليي (${selectedWorkerIds.length})` : `Ouvriers (${selectedWorkerIds.length})`}
           </button>
 
           <button
@@ -577,7 +757,7 @@ function isSupportRole(e: Employe): boolean {
             className="px-3.5 py-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-sm shadow-indigo-200 active:scale-95"
           >
             <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-            {isAr ? '🤖 الذكاء الاصطناعي (AI Expert)' : '🤖 Estimation IA'}
+            {isAr ? 'الذكاء الاصطناعي (AI Expert)' : 'Estimation IA'}
           </button>
 
           <button
@@ -840,6 +1020,54 @@ function isSupportRole(e: Employe): boolean {
             <div className="leading-tight">{alertMessage}</div>
           </div>
 
+          {/* Workstations & Technical Operations Gamme de Montage Card on Main Calculator Screen */}
+          {(() => {
+            const breakdown = getGarmentTechnicalBreakdown(itemName, (materials / qty) / 35, materials / qty);
+            return (
+              <div className="p-4 bg-slate-900 text-white rounded-3xl border border-slate-700 shadow-xl space-y-3 print-border">
+                <div className="flex items-center justify-between text-xs font-black">
+                  <span className="flex items-center gap-2 text-indigo-300">
+                    <Wrench className="w-4 h-4 text-emerald-400" />
+                    {isAr ? `🏭 بوستات العمل الفنية ومراحل الخياطة للموديل` : `🏭 Gamme de Montage & Postes Requis`}
+                  </span>
+                  <span className="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-lg text-[10px] border border-emerald-500/30">
+                    {breakdown.postesTravail.length} {isAr ? 'بوستات عمل' : 'Postes'} | {breakdown.totalMinutesConfection} {isAr ? 'دقيقة/بياسة' : 'min'}
+                  </span>
+                </div>
+
+                <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+                  {breakdown.postesTravail.map((poste, idx) => (
+                    <div key={idx} className="p-2.5 bg-white/10 rounded-xl border border-white/10 flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-lg bg-indigo-500/30 text-indigo-300 flex items-center justify-center font-black text-[10px] shrink-0">
+                          {idx + 1}
+                        </span>
+                        <div>
+                          <strong className="text-white block text-[11px]">
+                            {isAr ? poste.nomAr : poste.nomFr}
+                          </strong>
+                          <span className="text-[10px] text-slate-400">
+                            {poste.machine} ({poste.roleOuvrier})
+                          </span>
+                        </div>
+                      </div>
+                      <span className="px-2 py-1 bg-white/10 text-emerald-300 rounded-lg font-black text-[11px] shrink-0">
+                        {poste.tempsMin} {isAr ? 'د' : 'min'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="pt-2 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-300">
+                  <span>{isAr ? '🧵 التكلفة الدقيقة للبياسة (قماش + يد عاملة):' : 'Coût de revient estimé :'}</span>
+                  <strong className="text-emerald-400 font-black text-xs">
+                    {((materials / qty) + ((breakdown.totalMinutesConfection / 60) * rate)).toFixed(2)} DH / {isAr ? 'بياسة' : 'pièce'}
+                  </strong>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Action Button */}
           <button
             onClick={handleCreateCommand}
@@ -1041,6 +1269,25 @@ function isSupportRole(e: Employe): boolean {
                       : 'bg-slate-50 border-slate-200 text-indigo-600 focus:bg-white focus:border-indigo-600'
                   }`}
                 />
+              </div>
+            </div>
+
+            {/* Live Production Capacity Indicator (chella men byasa tqdr tkhrj) */}
+            <div className="mt-3 p-2.5 bg-indigo-50/80 rounded-2xl border border-indigo-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-indigo-600 shrink-0" />
+                <span className="font-bold text-slate-700">
+                  {isAr ? '⚡ القدرة الإنتاجية للعمال (الإنتاج المقدر):' : '⚡ Capacité de production des ouvriers :'}
+                </span>
+              </div>
+              <div className="flex items-center gap-3 font-black text-indigo-700">
+                <span>
+                  {Math.max(1, Math.floor((workers * 8 * 60) / (selectedAiPreset.stitchingMin || 35)))} {isAr ? 'بياسة/يوم' : 'pcs/j'}
+                </span>
+                <span className="text-slate-300">|</span>
+                <span className="text-emerald-700">
+                  {Math.max(1, Math.floor((workers * ((days * 8) + extraHours) * 60) / (selectedAiPreset.stitchingMin || 35)))} {isAr ? `بياسة في (${days} أيام)` : `pcs (${days}j)`}
+                </span>
               </div>
             </div>
           </div>
@@ -1376,11 +1623,12 @@ function isSupportRole(e: Employe): boolean {
                            title: `✍️ ${aiCustomText.trim()}`,
                            desc: aiCustomText.trim(),
                            aiText: isAr
-                              ? `تقدير أولي عام بناءً على الوصف "${aiCustomText.trim()}". عدّل الأرقام حسب القماش والوقت الحقيقيين ديال هاد الموديل.`
-                              : `Estimation générale de départ basée sur "${aiCustomText.trim()}". Ajustez selon le tissu et le temps réels de ce modèle.`,
+                              ? `تحليل تقني للوصف "${aiCustomText.trim()}": تقدير أولي لوقت خياطة قياسي 30 دقيقة للقطعة واستهلاك قماش 25.00 درهم للقطعة.`
+                              : `Analyse technique pour "${aiCustomText.trim()}" : Temps de confection standard estimé à 30 min/pièce et coût matière à 25.00 DH/pièce.`,
                            recommendedPrice: 60,
                            materialPerPiece: 25,
-                           recommendedDays: 2
+                           recommendedDays: 2,
+                           stitchingMin: 30
                         });
                         setIsAiAnalyzing(true);
                         setTimeout(() => setIsAiAnalyzing(false), 500);
@@ -1405,42 +1653,198 @@ function isSupportRole(e: Employe): boolean {
               ) : (
                 <>
                   {/* AI Response Box (moroccan style as in user screenshot) */}
-                  <div className="p-5 bg-gradient-to-br from-violet-50 to-indigo-50/50 rounded-3xl border border-violet-200/80 space-y-3">
-                    <div className="flex items-center gap-2 text-violet-900 font-black text-xs">
-                      <Sparkles className="w-4 h-4 text-violet-600" />
-                      <span>{isAr ? 'تحليل الخبير (Expert BEYA)' : 'Expert BEYA Analyse'}</span>
-                    </div>
+                  {(() => {
+                    const activeWorkersCount = Math.max(1, workers || selectedWorkerIds.length || 1);
+                    const breakdown = getGarmentTechnicalBreakdown(selectedAiPreset.title, undefined, undefined, selectedModelCategory);
+                    const aiStitchingMin = breakdown.totalMinutesConfection || selectedAiPreset.stitchingMin || 35;
+                    const aiDailyPiecesOutput = Math.max(1, Math.floor((activeWorkersCount * 8 * 60) / aiStitchingMin));
+                    const aiMonthlyPiecesOutput = aiDailyPiecesOutput * 26;
+                    const aiRealisticDays = Math.max(1, Math.ceil((quantity || 1) / aiDailyPiecesOutput));
 
-                    <p className="text-sm font-bold text-slate-800 leading-relaxed">
-                      {selectedAiPreset.aiText}
-                    </p>
+                    return (
+                      <>
+                        <div className="p-5 bg-gradient-to-br from-violet-50 to-indigo-50/50 rounded-3xl border border-violet-200/80 space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-violet-900 font-black text-xs">
+                              <Sparkles className="w-4 h-4 text-violet-600" />
+                              <span>{isAr ? 'تحليل الخبير (Expert BEYA)' : 'Expert BEYA Analyse'}</span>
+                            </div>
+                            <span className="px-2 py-0.5 bg-violet-100 text-violet-800 font-black text-[10px] rounded-md">
+                              {isAr ? 'تحليل تقني دقيق' : 'Analyse Technique'}
+                            </span>
+                          </div>
 
-                    <div className="grid grid-cols-3 gap-3 pt-3 border-t border-violet-200/60 text-center">
-                      <div className="bg-white/80 p-2.5 rounded-2xl border border-violet-100">
-                        <span className="text-[10px] font-bold text-slate-500 block">{isAr ? 'القماش واللوازم (للقطعة)' : 'Matière / pièce'}</span>
-                        <strong className="text-sm font-black text-violet-700">{selectedAiPreset.materialPerPiece.toFixed(2)} DH</strong>
-                      </div>
-                      <div className="bg-white/80 p-2.5 rounded-2xl border border-violet-100">
-                        <span className="text-[10px] font-bold text-slate-500 block">{isAr ? 'سعر البيع المقترح' : 'Prix de vente rec.'}</span>
-                        <strong className="text-sm font-black text-emerald-600">{selectedAiPreset.recommendedPrice.toFixed(2)} DH</strong>
-                      </div>
-                      <div className="bg-white/80 p-2.5 rounded-2xl border border-violet-100">
-                        <span className="text-[10px] font-bold text-slate-500 block">{isAr ? 'وقت الإنتاج المقدر' : 'Jours estimés'}</span>
-                        <strong className="text-sm font-black text-indigo-600">{selectedAiPreset.recommendedDays} {isAr ? 'أيام' : 'Jours'}</strong>
-                      </div>
-                    </div>
-                  </div>
+                          {/* Garment Category Override Selector */}
+                          <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                            <span className="text-[10px] font-black text-slate-500 mr-1">{isAr ? 'تغيير تصنيف الموديل:' : 'Catégorie :'}</span>
+                            {[
+                              { id: 'abaya_beldi', labelAr: '👗 عباية / قفطان', labelFr: '👗 Abaya / Beldi' },
+                              { id: 'sportswear_hoodie', labelAr: '🎽 هودي / رياضي', labelFr: '🎽 Sportswear' },
+                              { id: 'veste_manteau', labelAr: '🧥 جاكيت / معطف', labelFr: '🧥 Veste / Manteau' },
+                              { id: 'tshirt_summer', labelAr: '👕 تيشرت / صيفي', labelFr: '👕 T-shirt / Été' },
+                              { id: 'pantalon_cargo', labelAr: '👖 سروال / كارجو', labelFr: '👖 Pantalon' },
+                              { id: 'default_modele', labelAr: '👔 موديل عام', labelFr: '👔 Standard' }
+                            ].map((cat) => (
+                              <button
+                                key={cat.id}
+                                type="button"
+                                onClick={() => setSelectedModelCategory(cat.id)}
+                                className={`px-2.5 py-1 rounded-lg font-black text-[11px] transition-all border ${
+                                  (selectedModelCategory || (breakdown.categorie.includes('عباية') ? 'abaya_beldi' :
+                                   breakdown.categorie.includes('رياضي') ? 'sportswear_hoodie' :
+                                   breakdown.categorie.includes('جاكيت') ? 'veste_manteau' :
+                                   breakdown.categorie.includes('صيفي') ? 'tshirt_summer' :
+                                   breakdown.categorie.includes('سروال') ? 'pantalon_cargo' : 'default_modele')) === cat.id
+                                    ? 'bg-violet-600 text-white border-violet-700 shadow-sm'
+                                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                                }`}
+                              >
+                                {isAr ? cat.labelAr : cat.labelFr}
+                              </button>
+                            ))}
+                          </div>
 
-                  {/* Summary of what will change in calculator */}
-                  <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-emerald-900 text-xs font-bold">
-                    <strong>{isAr ? '🎯 عند تطبيق هذا التقدير على الحاسبة:' : '🎯 En appliquant cette estimation :'}</strong>
-                    <ul className="mt-1 space-y-1 list-disc list-inside text-[11px]">
-                      <li>{isAr ? `سيتم تعيين الموديل إلى:` : `Article / Modèle :`} <strong>{selectedAiPreset.title.replace(/^[^\s]+\s+/, '')}</strong></li>
-                      <li>{isAr ? `سعر البيع للبياسة:` : `Prix de vente :`} <strong>{selectedAiPreset.recommendedPrice.toFixed(2)} DH</strong></li>
-                      <li>{isAr ? `إجمالي ثمن القماش واللوازم (لـ ${quantity} بياسة):` : `Matière première totale :`} <strong>{(selectedAiPreset.materialPerPiece * qty).toFixed(2)} DH</strong></li>
-                      <li>{isAr ? `أيام العمل المقترحة:` : `Jours travaillés :`} <strong>{selectedAiPreset.recommendedDays} {isAr ? 'أيام' : 'Jours'}</strong></li>
-                    </ul>
-                  </div>
+                          <p className="text-sm font-bold text-slate-800 leading-relaxed">
+                            {selectedAiPreset.aiText}
+                          </p>
+
+                          <div className="grid grid-cols-3 gap-3 pt-3 border-t border-violet-200/60 text-center">
+                            <div className="bg-white/80 p-2.5 rounded-2xl border border-violet-100">
+                              <span className="text-[10px] font-bold text-slate-500 block">{isAr ? 'القماش واللوازم (للقطعة)' : 'Matière / pièce'}</span>
+                              <strong className="text-sm font-black text-violet-700">{((breakdown.consommationMetrage * breakdown.prixMetreEstime) + breakdown.fournituresEstimees).toFixed(2)} DH</strong>
+                            </div>
+                            <div className="bg-white/80 p-2.5 rounded-2xl border border-violet-100">
+                              <span className="text-[10px] font-bold text-slate-500 block">{isAr ? 'سعر البيع المقترح' : 'Prix de vente rec.'}</span>
+                              <strong className="text-sm font-black text-emerald-600">{breakdown.prixVenteConseille.toFixed(2)} DH</strong>
+                            </div>
+                            <div className="bg-white/80 p-2.5 rounded-2xl border border-violet-100">
+                              <span className="text-[10px] font-bold text-slate-500 block">{isAr ? 'وقت الخياطة للقطعة' : 'Temps / pièce'}</span>
+                              <strong className="text-sm font-black text-indigo-600">{aiStitchingMin} {isAr ? 'دقيقة' : 'min'}</strong>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* NEW: Workstations & Machines Breakdown Table ("chela ghai thtaj mn post") */}
+                        <div className="p-4 bg-white rounded-3xl border border-slate-200 shadow-sm space-y-3">
+                          <div className="flex items-center justify-between text-xs font-black">
+                            <span className="flex items-center gap-2 text-slate-800">
+                              <Wrench className="w-4 h-4 text-violet-600" />
+                              {isAr ? '🏭 بوستات العمل والماكينات المطلوبة لإنتاج الموديل' : '🏭 Gamme de Montage & Postes Requis'}
+                            </span>
+                            <span className="px-2.5 py-0.5 bg-violet-100 text-violet-800 rounded-lg text-[10px] font-black">
+                              {breakdown.postesTravail.length} {isAr ? 'بوستات عمل' : 'Postes'} | {aiStitchingMin} {isAr ? 'دقيقة' : 'min'}
+                            </span>
+                          </div>
+
+                          <div className="space-y-2">
+                            {breakdown.postesTravail.map((poste, idx) => (
+                              <div key={idx} className="p-2.5 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between text-xs">
+                                <div className="flex items-center gap-2.5">
+                                  <span className="w-6 h-6 rounded-xl bg-violet-600 text-white font-black text-xs flex items-center justify-center shrink-0">
+                                    {idx + 1}
+                                  </span>
+                                  <div>
+                                    <strong className="text-slate-800 block text-xs">
+                                      {isAr ? poste.nomAr : poste.nomFr}
+                                    </strong>
+                                    <span className="text-[10px] text-slate-500 font-medium">
+                                      {poste.machine} — {poste.roleOuvrier}
+                                    </span>
+                                  </div>
+                                </div>
+                                <span className="px-2.5 py-1 bg-violet-100 text-violet-800 rounded-xl font-black text-xs shrink-0">
+                                  {poste.tempsMin} {isAr ? 'دقيقة' : 'min'}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="pt-2 border-t border-slate-100 text-[11px] font-bold text-slate-600 flex items-center gap-1.5">
+                            <span className="text-amber-500">💡</span>
+                            <span>{breakdown.recommandationAtelier}</span>
+                          </div>
+                        </div>
+
+                        {/* NEW: Precision Cost Breakdown & Profit Margin Card ("chal tqdr tqam + taman o m3lomat dqiqa") */}
+                        <div className="p-4 bg-gradient-to-br from-emerald-900 to-slate-900 text-white rounded-3xl border border-emerald-700/80 shadow-xl space-y-3">
+                          <div className="flex items-center justify-between text-xs font-black border-b border-emerald-800/80 pb-2">
+                            <span className="text-emerald-300">💰 {isAr ? 'تفكيك التكلفة الدقيقة للبياسة (Coût de Revient)' : 'Coût de Revient Exact'}</span>
+                            <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-lg text-[10px]">
+                              {isAr ? 'حساب دقيق بالدرهم' : 'Calcul précis (DH)'}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div className="p-2 bg-white/10 rounded-xl">
+                              <span className="text-[10px] text-slate-300 block">{isAr ? '🧵 القماش واللوازم / بياسة' : 'Matière / pièce'}</span>
+                              <strong className="text-sm font-black text-white">{((breakdown.consommationMetrage * breakdown.prixMetreEstime) + breakdown.fournituresEstimees).toFixed(2)} DH</strong>
+                            </div>
+                            <div className="p-2 bg-white/10 rounded-xl">
+                              <span className="text-[10px] text-slate-300 block">{isAr ? '👷 تكلفة خياطة البياسة (MOD)' : 'Main d’œuvre (MOD)'}</span>
+                              <strong className="text-sm font-black text-emerald-300">{((aiStitchingMin / 60) * 17.10).toFixed(2)} DH</strong>
+                            </div>
+                          </div>
+
+                          <div className="pt-1 flex items-center justify-between text-xs font-black">
+                            <span className="text-slate-200">{isAr ? '✅ التكلفة الإجمالية للبياسة (شحال كتقام):' : 'Coût de revient total :'}</span>
+                            <strong className="text-base text-emerald-400">{breakdown.coutRevientEstime.toFixed(2)} DH</strong>
+                          </div>
+
+                          <div className="flex items-center justify-between text-xs font-black bg-white/10 p-2.5 rounded-2xl">
+                            <div>
+                              <span className="text-slate-300 block text-[10px]">{isAr ? '💵 سعر البيع المقترح للأتوليي:' : 'Prix de vente rec. :'}</span>
+                              <strong className="text-base text-white">{breakdown.prixVenteConseille.toFixed(2)} DH</strong>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-slate-300 block text-[10px]">{isAr ? '📈 هامش الربح الصافي / بياسة:' : 'Marge nette / pièce :'}</span>
+                              <strong className="text-sm text-emerald-400">
+                                +{(breakdown.prixVenteConseille - breakdown.coutRevientEstime).toFixed(2)} DH ({Math.round(((breakdown.prixVenteConseille - breakdown.coutRevientEstime) / breakdown.prixVenteConseille) * 100)}%)
+                              </strong>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Production Capacity Dashboard Box (chella men byasa tqdr tkhrj with real workers) */}
+                        <div className="p-4 bg-slate-900 text-white rounded-3xl border border-slate-700 shadow-xl space-y-3">
+                          <div className="flex items-center justify-between text-xs font-black">
+                            <span className="flex items-center gap-1.5 text-indigo-300">
+                              <Users className="w-4 h-4 text-emerald-400" />
+                              {isAr ? `القدرة الإنتاجية لـ (${activeWorkersCount}) عمال في الأتوليي` : `Capacité atelier (${activeWorkersCount} ouvriers)`}
+                            </span>
+                            <span className="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-lg text-[10px] border border-emerald-500/30">
+                              {isAr ? 'حساب حقيقي مباشر' : 'Calcul Réel & Précis'}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2.5 text-center">
+                            <div className="bg-white/10 p-2.5 rounded-2xl border border-white/10">
+                              <span className="text-[10px] text-slate-400 block mb-0.5">{isAr ? 'الإنتاج اليومي الممكن' : 'Prod. Journalière'}</span>
+                              <strong className="text-sm sm:text-base font-black text-emerald-400">{aiDailyPiecesOutput} {isAr ? 'بياسة/يوم' : 'pcs/j'}</strong>
+                            </div>
+                            <div className="bg-white/10 p-2.5 rounded-2xl border border-white/10">
+                              <span className="text-[10px] text-slate-400 block mb-0.5">{isAr ? 'الإنتاج الشهري (26 يوم)' : 'Prod. Mensuelle'}</span>
+                              <strong className="text-sm sm:text-base font-black text-white">{aiMonthlyPiecesOutput.toLocaleString()} {isAr ? 'بياسة' : 'pcs'}</strong>
+                            </div>
+                            <div className="bg-white/10 p-2.5 rounded-2xl border border-white/10">
+                              <span className="text-[10px] text-slate-400 block mb-0.5">{isAr ? `إنجاز (${quantity}) بياسة في` : `Délai (${quantity} pcs)`}</span>
+                              <strong className="text-sm sm:text-base font-black text-amber-300">{aiRealisticDays} {isAr ? 'أيام عمل' : 'Jours'}</strong>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Summary of what will change in calculator */}
+                        <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-emerald-900 text-xs font-bold">
+                          <strong>{isAr ? '🎯 عند تطبيق هذا التقدير على الحاسبة:' : '🎯 En appliquant cette estimation :'}</strong>
+                          <ul className="mt-1.5 space-y-1 list-disc list-inside text-[11px]">
+                            <li>{isAr ? `سيتم تعيين الموديل إلى:` : `Article / Modèle :`} <strong>{selectedAiPreset.title.replace(/^[^\s]+\s+/, '')}</strong></li>
+                            <li>{isAr ? `سعر البيع للبياسة:` : `Prix de vente :`} <strong>{breakdown.prixVenteConseille.toFixed(2)} DH</strong></li>
+                            <li>{isAr ? `إجمالي ثمن القماش واللوازم (لـ ${quantity} بياسة):` : `Matière première totale :`} <strong>{(((breakdown.consommationMetrage * breakdown.prixMetreEstime) + breakdown.fournituresEstimees) * qty).toFixed(2)} DH</strong></li>
+                            <li>{isAr ? `القدرة الإنتاجية مع (${activeWorkersCount} عمال):` : `Capacité avec (${activeWorkersCount} ouvriers) :`} <strong>{aiDailyPiecesOutput} {isAr ? 'بياسة/يوم' : 'pièces/jour'}</strong></li>
+                            <li>{isAr ? `أيام العمل الفعلية لإنجاز الطلبية:` : `Jours travaillés requis :`} <strong>{aiRealisticDays} {isAr ? 'أيام عمل' : 'Jours ouvrables'}</strong></li>
+                          </ul>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </>
               )}
             </div>

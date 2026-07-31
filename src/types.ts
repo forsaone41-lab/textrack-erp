@@ -404,17 +404,17 @@ export type AppPage =
   | 'rh' | 'commandes' | 'clients' | 'factures' | 'charges' | 'bilan' | 'fast_scanner'
   | 'pointage' | 'portail_client' | 'performance' | 'utilisateurs' | 'parametres' | 'demandes'
   | 'worker_portal' | 'controle_qualite' | 'partenaire_portal' | 'agenda' | 'notifications' | 'ai_space' | 'crm' | 'chef_chaine_portal' | 'validation'
-  | 'inbox' | 'gmail' | 'plaintes' | 'fournisseurs' | 'achats' | 'visio' | 'tarifs' | 'tarifs_edit' | 'devis' | 'recus' | 'evaluation_patronage' | 'commercial_portal' | 'store_plans';
+  | 'inbox' | 'gmail' | 'plaintes' | 'fournisseurs' | 'achats' | 'visio' | 'tarifs' | 'tarifs_edit' | 'devis' | 'recus' | 'evaluation_patronage' | 'commercial_portal' | 'store_plans' | 'atelier_calculator';
 
 export type RolePermMap = Record<'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire' | 'chef_chaine' | 'commercial', AppPage[]>;
 
 export const DEFAULT_PERMISSIONS: RolePermMap = {
-  admin: ['dashboard', 'demandes', 'crm', 'evaluation_patronage', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'stocks', 'rh', 'commandes', 'clients', 'factures', 'devis', 'recus', 'charges', 'bilan', 'fast_scanner', 'pointage', 'portail_client', 'performance', 'utilisateurs', 'parametres', 'worker_portal', 'controle_qualite', 'partenaire_portal', 'agenda', 'notifications', 'ai_space', 'chef_chaine_portal', 'inbox', 'gmail', 'plaintes', 'fournisseurs', 'achats', 'visio', 'tarifs', 'tarifs_edit', 'commercial_portal', 'store_plans'],
+  admin: ['dashboard', 'demandes', 'crm', 'evaluation_patronage', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'stocks', 'rh', 'commandes', 'clients', 'factures', 'devis', 'recus', 'charges', 'bilan', 'fast_scanner', 'pointage', 'portail_client', 'performance', 'utilisateurs', 'parametres', 'worker_portal', 'controle_qualite', 'partenaire_portal', 'agenda', 'notifications', 'ai_space', 'chef_chaine_portal', 'inbox', 'gmail', 'plaintes', 'fournisseurs', 'achats', 'visio', 'tarifs', 'tarifs_edit', 'commercial_portal', 'store_plans', 'atelier_calculator'],
   pointeur: ['dashboard', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'pointage', 'performance', 'worker_portal', 'controle_qualite'],
   client: ['portail_client'],
   worker: ['worker_portal'],
   coupeur: ['ordres'],
-  modeliste: ['evaluation_patronage', 'fiches', 'ai_space'],
+  modeliste: ['evaluation_patronage', 'fiches', 'ai_space', 'atelier_calculator'],
   controleur: ['scan_production', 'controle_qualite', 'worker_portal'],
   agent_pointage: ['pointage', 'rh'],
   partenaire: ['partenaire_portal'],
