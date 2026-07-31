@@ -684,6 +684,7 @@ function isSupportRole(e: Employe): boolean {
     if (current.length <= 1) return;
     current.splice(idx, 1);
     setCustomPostes(current);
+    setWorkers(prev => Math.max(1, prev - 1));
   };
 
   const handleModalAddPoste = () => {
@@ -697,6 +698,7 @@ function isSupportRole(e: Employe): boolean {
       roleOuvrier: isAr ? 'عامل خياطة' : 'Ouvrier Qualifié'
     });
     setCustomPostes(current);
+    setWorkers(prev => prev + 1);
   };
 
   const handleModalApplyAiSuggestion = () => {
@@ -710,6 +712,7 @@ function isSupportRole(e: Employe): boolean {
       roleOuvrier: isAr ? 'عامل خياطة' : 'Ouvrier Qualifié'
     });
     setCustomPostes(current);
+    setWorkers(prev => prev + 1);
     setAiSuggestionApplied(true);
   };
 
@@ -717,8 +720,11 @@ function isSupportRole(e: Employe): boolean {
   const applyAiEstimation = (preset: AiPreset) => {
     const breakdown = getGarmentTechnicalBreakdown(preset.title, undefined, undefined, selectedModelCategory);
     const activePostesModal = customPostes || breakdown.postesTravail;
-    const aiStitchingMin = activePostesModal.reduce((acc, p) => acc + (Number(p.tempsMin) || 0), 0) || breakdown.totalMinutesConfection || preset.stitchingMin || 35;
-    const activeWorkersCount = Math.max(1, workers || selectedWorkerIds.length || 1);
+    const basePostesCount = breakdown.postesTravail.length;
+    const basePostesMin = activePostesModal.slice(0, basePostesCount).reduce((acc, p) => acc + (Number(p.tempsMin) || 0), 0);
+    const aiStitchingMin = basePostesMin || breakdown.totalMinutesConfection || preset.stitchingMin || 35;
+    const extraPostesCount = Math.max(0, activePostesModal.length - basePostesCount);
+    const activeWorkersCount = Math.max(1, (workers || selectedWorkerIds.length || 1) + extraPostesCount);
     const aiDailyPiecesOutput = Math.max(1, Math.floor((activeWorkersCount * workHoursPerDay * 60) / aiStitchingMin));
     const aiRealisticDays = Math.max(1, Math.ceil((qty || 1) / aiDailyPiecesOutput));
 
@@ -1878,10 +1884,13 @@ function isSupportRole(e: Employe): boolean {
                 <>
                   {/* AI Response Box (moroccan style as in user screenshot) */}
                   {(() => {
-                    const activeWorkersCount = Math.max(1, workers || selectedWorkerIds.length || 1);
                     const breakdown = getGarmentTechnicalBreakdown(selectedAiPreset.title, undefined, undefined, selectedModelCategory);
                     const activePostesModal = customPostes || breakdown.postesTravail;
-                    const aiStitchingMin = activePostesModal.reduce((acc, p) => acc + (Number(p.tempsMin) || 0), 0) || breakdown.totalMinutesConfection || selectedAiPreset.stitchingMin || 35;
+                    const basePostesCount = breakdown.postesTravail.length;
+                    const basePostesMin = activePostesModal.slice(0, basePostesCount).reduce((acc, p) => acc + (Number(p.tempsMin) || 0), 0);
+                    const aiStitchingMin = basePostesMin || breakdown.totalMinutesConfection || selectedAiPreset.stitchingMin || 35;
+                    const extraPostesCount = Math.max(0, activePostesModal.length - basePostesCount);
+                    const activeWorkersCount = Math.max(1, (workers || selectedWorkerIds.length || 1) + extraPostesCount);
                     const aiDailyPiecesOutput = Math.max(1, Math.floor((activeWorkersCount * workHoursPerDay * 60) / aiStitchingMin));
                     const aiMonthlyPiecesOutput = aiDailyPiecesOutput * 26;
                     const aiRealisticDays = Math.max(1, Math.ceil((quantity || 1) / aiDailyPiecesOutput));
