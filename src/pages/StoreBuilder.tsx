@@ -5661,386 +5661,6 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                        </div>
                     </div>
 
-                    {/* PRIMARY COLOR */}
-                     <div className="pt-2 space-y-5">
-                        <div>
-                           <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'اللون الرئيسي' : 'Couleur Principale'}</label>
-                           <div className="flex items-center gap-3 mb-3">
-                              <label className="relative cursor-pointer">
-                                 <div className="w-10 h-10 rounded-xl border-2 border-white shadow-md ring-1 ring-slate-200 hover:scale-105 transition-transform" style={{ backgroundColor: primaryColor }} />
-                                 <input type="color" value={primaryColor} onChange={e => setPrimaryColor(e.target.value)} className="opacity-0 w-0 h-0 absolute" />
-                              </label>
-                              <div className="flex-1">
-                                 <span className="text-sm font-mono font-bold text-slate-700">{primaryColor.toUpperCase()}</span>
-                                 <p className="text-[10px] text-slate-400 mt-0.5">{isAr ? 'أزرار وروابط' : 'Boutons, liens & accents'}</p>
-                              </div>
-                           </div>
-                           <div className="flex gap-2 flex-wrap">
-                              {[
-                                 { color: '#0f172a', label: 'Noir' }, { color: '#1e3a8a', label: 'Marine' },
-                                 { color: '#7c3aed', label: 'Violet' }, { color: '#db2777', label: 'Rose' },
-                                 { color: '#dc2626', label: 'Rouge' }, { color: '#d97706', label: 'Ambre' },
-                                 { color: '#16a34a', label: 'Vert' }, { color: '#0891b2', label: 'Cyan' },
-                                 { color: '#b48a44', label: 'Or' }, { color: '#64748b', label: 'Ardoise' }
-                              ].map(({ color, label }) => (
-                                 <button key={color} onClick={() => setPrimaryColor(color)} title={label}
-                                    className={`w-7 h-7 rounded-full border-2 shadow-sm hover:scale-110 transition-transform ${primaryColor === color ? 'border-indigo-500 scale-110 ring-2 ring-indigo-300' : 'border-white'}`}
-                                    style={{ backgroundColor: color }} />
-                              ))}
-                           </div>
-                        </div>
-
-                        {/* Secondary Color */}
-                        <div className="pt-3 border-t border-slate-100">
-                           <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'لون الخلفية / الثانوي' : 'Couleur de Fond / Secondaire'}</label>
-                           <div className="flex items-center gap-3 mb-3">
-                              <label className="relative cursor-pointer">
-                                 <div className="w-10 h-10 rounded-xl border-2 shadow-md ring-1 ring-slate-200 hover:scale-105 transition-transform" style={{ backgroundColor: secondaryColor, borderColor: '#e2e8f0' }} />
-                                 <input type="color" value={secondaryColor} onChange={e => setSecondaryColor(e.target.value)} className="opacity-0 w-0 h-0 absolute" />
-                              </label>
-                              <div className="flex-1">
-                                 <span className="text-sm font-mono font-bold text-slate-700">{secondaryColor.toUpperCase()}</span>
-                                 <p className="text-[10px] text-slate-400 mt-0.5">{isAr ? 'خلفية البطاقات والأقسام' : 'Fond des cartes & sections'}</p>
-                              </div>
-                           </div>
-                           <div className="flex gap-2 flex-wrap">
-                              {[
-                                 { color: '#ffffff', label: 'Blanc' }, { color: '#f8fafc', label: 'Perle' },
-                                 { color: '#f1f5f9', label: 'Slate' }, { color: '#fef9f0', label: 'Crème' },
-                                 { color: '#f0fdf4', label: 'Menthe' }, { color: '#fdf4ff', label: 'Lilas' },
-                                 { color: '#111827', label: 'Nuit' }, { color: '#1a1a1a', label: 'Noir' }
-                              ].map(({ color, label }) => (
-                                 <button key={color} onClick={() => setSecondaryColor(color)} title={label}
-                                    className={`w-7 h-7 rounded-full border-2 shadow-sm hover:scale-110 transition-transform ${secondaryColor === color ? 'border-indigo-500 scale-110 ring-2 ring-indigo-300' : 'border-slate-200'}`}
-                                    style={{ backgroundColor: color }} />
-                              ))}
-                           </div>
-                        </div>
-
-                        <div className="pt-3 border-t border-slate-100">
-                           <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'لون الحدود والخطوط' : 'Couleur des Bordures & Lignes'}</label>
-                           <div className="flex items-center gap-3 mb-3">
-                              <label className="relative cursor-pointer">
-                                 <div className="w-10 h-10 rounded-xl border-2 shadow-md ring-1 ring-slate-200 hover:scale-105 transition-transform" style={{ backgroundColor: borderColor, borderColor: '#e2e8f0' }} />
-                                 <input type="color" value={borderColor} onChange={e => setBorderColor(e.target.value)} className="opacity-0 w-0 h-0 absolute" />
-                              </label>
-                              <div className="flex-1">
-                                 <span className="text-sm font-mono font-bold text-slate-700">{borderColor.toUpperCase()}</span>
-                                 <p className="text-[10px] text-slate-400 mt-0.5">{isAr ? 'حدود بطاقات المنتجات والفواصل' : 'Bordures des cartes produits & séparateurs'}</p>
-                              </div>
-                           </div>
-                           <div className="flex gap-2 flex-wrap">
-                              {[
-                                 { color: '#e2e8f0', label: 'Slate' }, { color: '#f1f5f9', label: 'Perle' },
-                                 { color: '#e5e7eb', label: 'Gris' }, { color: '#fde68a', label: 'Or' },
-                                 { color: '#000000', label: 'Noir' }, { color: '#ffffff', label: 'Blanc' }
-                              ].map(({ color, label }) => (
-                                 <button key={color} onClick={() => setBorderColor(color)} title={label}
-                                    className={`w-7 h-7 rounded-full border-2 shadow-sm hover:scale-110 transition-transform ${borderColor === color ? 'border-indigo-500 scale-110 ring-2 ring-indigo-300' : 'border-slate-200'}`}
-                                    style={{ backgroundColor: color }} />
-                              ))}
-                           </div>
-                        </div>
-
-                        {/* Live Preview Mini */}
-                        <div className="pt-3 border-t border-slate-100">
-                           <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">{isAr ? 'معاينة فورية' : 'Aperçu Instantané'}</label>
-                           <div className="rounded-xl overflow-hidden shadow-sm border border-slate-200" style={{ backgroundColor: secondaryColor }}>
-                              <div className="px-4 py-2 flex items-center justify-between border-b border-slate-100">
-                                 <div className="text-xs font-black" style={{ color: primaryColor }}>STORE</div>
-                                 <div className="flex gap-1">
-                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: primaryColor }} />
-                                    <div className="w-2 h-2 rounded-full opacity-30" style={{ backgroundColor: primaryColor }} />
-                                 </div>
-                              </div>
-                              <div className="p-3 flex items-center gap-2">
-                                 <div className="flex-1 h-5 rounded opacity-20" style={{ backgroundColor: primaryColor }} />
-                                 <button className={`px-3 py-1 text-white text-[10px] font-bold ${buttonStyle === 'pill' ? 'rounded-full' : buttonStyle === 'square' ? 'rounded-none' : 'rounded-md'}`} style={btnStyle}>
-                                    {isAr ? 'شراء' : 'Acheter'}
-                                 </button>
-                              </div>
-                           </div>
-                        </div>
-                     </div>
-
-                     {/* BUTTON STYLE */}
-                     <div className="pt-4 border-t border-slate-100">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'شكل الأزرار' : 'Style des Boutons'}</label>
-                        <div className="grid grid-cols-3 gap-2">
-                           {([
-                              { key: 'rounded', labelFr: 'Arrondi', labelAr: 'مستدير', radius: 'rounded-lg' },
-                              { key: 'pill', labelFr: 'Capsule', labelAr: 'كبسولة', radius: 'rounded-full' },
-                              { key: 'square', labelFr: 'Carré', labelAr: 'مربع', radius: 'rounded-none' }
-                           ] as const).map(({ key, labelFr, labelAr, radius }) => (
-                              <button key={key} onClick={() => setButtonStyle(key)}
-                                 className={`flex flex-col items-center gap-2 p-3 border-2 rounded-xl transition-all ${buttonStyle === key ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 hover:border-slate-300'}`}>
-                                 <div className={`px-3 py-1.5 text-white text-[10px] font-bold ${radius}`} style={{ backgroundColor: primaryColor }}>
-                                    {isAr ? 'زر' : 'Btn'}
-                                 </div>
-                                 <span className={`text-[10px] font-bold ${buttonStyle === key ? 'text-indigo-600' : 'text-slate-500'}`}>{isAr ? labelAr : labelFr}</span>
-                              </button>
-                           ))}
-                        </div>
-                     </div>
-                     
-                     {/* HERO SIZE & IMAGE POSITION */}
-                     <div className="pt-4 border-t border-slate-100">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'حجم صورة البانر (Hero)' : 'Taille de la Bannière (Hero)'}</label>
-                        <div className="flex items-center gap-3">
-                           <input
-                              type="range"
-                              min={250}
-                              max={800}
-                              step={10}
-                              value={heroHeight}
-                              onChange={e => setHeroHeight(parseInt(e.target.value))}
-                              className="flex-1 accent-indigo-600"
-                           />
-                           <span className="text-[10px] font-mono font-bold text-slate-600 w-12 text-right">{heroHeight}px</span>
-                        </div>
-                     </div>
-
-                     <div className="pt-4 border-t border-slate-100">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'موضع صورة البانر' : "Position de l'image"}</label>
-                        <div className="grid grid-cols-3 gap-1.5 w-32">
-                           {[0, 50, 100].map(y => (
-                              [0, 50, 100].map(x => (
-                                 <button
-                                    key={`${x}-${y}`}
-                                    onClick={() => { setHeroImagePosX(x); setHeroImagePosY(y); }}
-                                    className={`w-9 h-9 rounded-md border-2 flex items-center justify-center transition-all ${heroImagePosX === x && heroImagePosY === y ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 hover:border-slate-300 bg-white'}`}
-                                    title={`${x}% / ${y}%`}
-                                 >
-                                    <span className={`w-2 h-2 rounded-full ${heroImagePosX === x && heroImagePosY === y ? 'bg-indigo-600' : 'bg-slate-300'}`} />
-                                 </button>
-                              ))
-                           ))}
-                        </div>
-                     </div>
-
-                     {/* PDP IMAGE / DETAILS RATIO */}
-                     <div className="pt-4 border-t border-slate-100">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'نسبة الصورة/التفاصيل في صفحة المنتج' : 'Ratio Image / Détails (page produit)'}</label>
-                        <div className="flex items-center gap-3">
-                           <input
-                              type="range"
-                              min={30}
-                              max={70}
-                              step={5}
-                              value={pdpImageWidth}
-                              onChange={e => setPdpImageWidth(parseInt(e.target.value))}
-                              className="flex-1 accent-indigo-600"
-                           />
-                           <span className="text-[10px] font-mono font-bold text-slate-600 w-16 text-right">{pdpImageWidth}% / {100 - pdpImageWidth}%</span>
-                        </div>
-                     </div>
-
-                     {/* PDP IMAGE HEIGHT / ASPECT */}
-                     <div className="pt-4 border-t border-slate-100">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'ارتفاع صورة المنتج' : "Hauteur de l'image produit"}</label>
-                        <div className="grid grid-cols-4 gap-2">
-                           {([
-                              { key: '3/4', labelFr: 'Portrait', labelAr: 'طولي' },
-                              { key: '4/5', labelFr: 'Standard', labelAr: 'قياسي' },
-                              { key: '1/1', labelFr: 'Carré', labelAr: 'مربع' },
-                              { key: '4/3', labelFr: 'Large', labelAr: 'عريض' }
-                           ] as const).map(({ key, labelFr, labelAr }) => (
-                              <button key={key} onClick={() => setPdpImageAspect(key)}
-                                 className={`py-2 text-[9px] font-bold rounded-lg border ${pdpImageAspect === key ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-slate-200 text-slate-500'}`}>
-                                 {isAr ? labelAr : labelFr}
-                              </button>
-                           ))}
-                        </div>
-                     </div>
-
-                     {/* PDP CONTAINER WIDTH */}
-                     <div className="pt-4 border-t border-slate-100">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'عرض صفحة المنتج' : 'Largeur de la page produit'}</label>
-                        <div className="flex items-center gap-3">
-                           <input
-                              type="range"
-                              min={800}
-                              max={1600}
-                              step={50}
-                              value={pdpMaxWidth}
-                              onChange={e => setPdpMaxWidth(parseInt(e.target.value))}
-                              className="flex-1 accent-indigo-600"
-                           />
-                           <span className="text-[10px] font-mono font-bold text-slate-600 w-14 text-right">{pdpMaxWidth}px</span>
-                        </div>
-                     </div>
-
-                     {/* CARD STYLE */}
-                     <div className="pt-4 border-t border-slate-100">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'شكل بطاقات المنتجات' : 'Style des Cartes Produits'}</label>
-                        <div className="grid grid-cols-3 gap-2">
-                           {([
-                              { key: 'rounded', labelFr: 'Arrondi', labelAr: 'مستدير', radius: '12px' },
-                              { key: 'square', labelFr: 'Carré', labelAr: 'مربع', radius: '0px' },
-                              { key: 'arch', labelFr: 'Arche', labelAr: 'قوس', radius: '30px 30px 6px 6px' },
-                              { key: 'pill', labelFr: 'Pilule', labelAr: 'كبسولة', radius: '999px' }
-                           ] as const).map(({ key, labelFr, labelAr, radius }) => (
-                              <button key={key} onClick={() => setCardStyle(key)}
-                                 className={`flex flex-col items-center gap-2 p-3 border-2 rounded-xl transition-all ${cardStyle === key ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 hover:border-slate-300'}`}>
-                                 <div className="w-12 h-12 border" style={{ backgroundColor: secondaryColor, borderColor, borderRadius: radius }} />
-                                 <span className={`text-[10px] font-bold ${cardStyle === key ? 'text-indigo-600' : 'text-slate-500'}`}>{isAr ? labelAr : labelFr}</span>
-                              </button>
-                           ))}
-                           <button onClick={() => setCardStyle('trend')}
-                              className={`flex flex-col items-center gap-2 p-3 border-2 rounded-xl transition-all ${cardStyle === 'trend' ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 hover:border-slate-300'}`}>
-                              <div className="w-12 h-12 rounded-xl overflow-hidden flex flex-col shadow-sm" style={{ backgroundColor: '#fde8ef' }}>
-                                 <div className="flex-1 flex items-center justify-center"><Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" /></div>
-                                 <div className="h-2.5 bg-white" />
-                              </div>
-                              <span className={`text-[10px] font-bold ${cardStyle === 'trend' ? 'text-indigo-600' : 'text-slate-500'}`}>{isAr ? 'ترند' : 'Trendy'}</span>
-                           </button>
-                        </div>
-                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
-                           <span className="text-[10px] font-bold text-slate-500">{isAr ? 'إظهار شارة الفئة على الصورة' : 'Afficher un badge catégorie sur l\'image'}</span>
-                           <button onClick={() => setShowCardBadge(v => !v)} className={`relative w-9 h-5 rounded-full transition-colors shrink-0 ${showCardBadge ? 'bg-indigo-600' : 'bg-slate-300'}`}>
-                              <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${showCardBadge ? 'translate-x-4' : ''}`} />
-                           </button>
-                        </div>
-                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
-                           <span className="text-[10px] font-bold text-slate-500">{isAr ? 'اسم الفئة تحت الصورة (وليس فوقها)' : 'Nom de la collection en dessous de l\'image'}</span>
-                           <button onClick={() => setCollectionLabelBelow(v => !v)} className={`relative w-9 h-5 rounded-full transition-colors shrink-0 ${collectionLabelBelow || cardStyle === 'pill' || cardStyle === 'arch' ? 'bg-indigo-600' : 'bg-slate-300'}`} disabled={cardStyle === 'pill' || cardStyle === 'arch'}>
-                              <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${collectionLabelBelow || cardStyle === 'pill' || cardStyle === 'arch' ? 'translate-x-4' : ''}`} />
-                           </button>
-                        </div>
-                        {(cardStyle === 'pill' || cardStyle === 'arch') && (
-                           <p className="text-[9px] text-slate-400 mt-1.5">{isAr ? 'مفعّل تلقائيًا مع هذا الشكل' : 'Activé automatiquement avec cette forme de carte'}</p>
-                        )}
-                     </div>
-
-                     {/* PRODUCT CARD SIZE */}
-                     <div className="pt-4 border-t border-slate-100">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'حجم بطاقات المنتجات' : 'Taille des Cartes Produits'}</label>
-                        <div className="grid grid-cols-3 gap-2">
-                           {([
-                              { key: 'small', labelFr: 'Petites', labelAr: 'صغيرة', cols: 5 },
-                              { key: 'medium', labelFr: 'Moyennes', labelAr: 'متوسطة', cols: 4 },
-                              { key: 'large', labelFr: 'Grandes', labelAr: 'كبيرة', cols: 3 }
-                           ] as const).map(({ key, labelFr, labelAr, cols }) => (
-                              <button key={key} onClick={() => setProductCardSize(key)}
-                                 className={`flex flex-col items-center gap-2 p-3 border-2 rounded-xl transition-all ${productCardSize === key ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 hover:border-slate-300'}`}>
-                                 <div className="flex gap-0.5 w-12 h-8">
-                                    {Array.from({ length: cols > 4 ? 4 : cols }).map((_, i) => (
-                                       <div key={i} className="flex-1 bg-slate-300 rounded-sm" style={productCardSize === key ? { backgroundColor: primaryColor, opacity: 0.6 } : undefined} />
-                                    ))}
-                                 </div>
-                                 <span className={`text-[10px] font-bold ${productCardSize === key ? 'text-indigo-600' : 'text-slate-500'}`}>{isAr ? labelAr : labelFr}</span>
-                              </button>
-                           ))}
-                        </div>
-                     </div>
-
-                     {/* SITE WIDTH */}
-                     <div className="pt-4 border-t border-slate-100">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'عرض الموقع' : 'Largeur du Site'}</label>
-                        <div className="flex items-center gap-3">
-                           <input
-                              type="range"
-                              min={1000}
-                              max={1920}
-                              step={20}
-                              value={siteMaxWidth}
-                              onChange={e => setSiteMaxWidth(parseInt(e.target.value))}
-                              className="flex-1 accent-indigo-600"
-                           />
-                           <span className="text-[10px] font-mono font-bold text-slate-600 w-14 text-right">{siteMaxWidth}px</span>
-                        </div>
-                     </div>
-
-                     {/* FOOTER COLORS */}
-                     <div className="pt-4 border-t border-slate-100">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'ألوان التذييل (Footer)' : 'Couleurs du Footer'}</label>
-                        <div className="grid grid-cols-2 gap-3">
-                           <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                 <label className="relative cursor-pointer">
-                                    <div className="w-8 h-8 rounded-lg border-2 shadow-sm ring-1 ring-slate-200" style={{ backgroundColor: footerBgColor, borderColor: '#e2e8f0' }} />
-                                    <input type="color" value={footerBgColor} onChange={e => setFooterBgColor(e.target.value)} className="opacity-0 w-0 h-0 absolute" />
-                                 </label>
-                                 <span className="text-[10px] font-mono font-bold text-slate-600">{footerBgColor.toUpperCase()}</span>
-                              </div>
-                              <p className="text-[9px] text-slate-400">{isAr ? 'خلفية' : 'Fond'}</p>
-                           </div>
-                           <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                 <label className="relative cursor-pointer">
-                                    <div className="w-8 h-8 rounded-lg border-2 shadow-sm ring-1 ring-slate-200" style={{ backgroundColor: footerTextColor, borderColor: '#e2e8f0' }} />
-                                    <input type="color" value={footerTextColor} onChange={e => setFooterTextColor(e.target.value)} className="opacity-0 w-0 h-0 absolute" />
-                                 </label>
-                                 <span className="text-[10px] font-mono font-bold text-slate-600">{footerTextColor.toUpperCase()}</span>
-                              </div>
-                              <p className="text-[9px] text-slate-400">{isAr ? 'النص والشعار' : 'Texte & Logo'}</p>
-                           </div>
-                        </div>
-                     </div>
-
-                     {/* MENU STYLE */}
-                     <div className="pt-4 border-t border-slate-100">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'قائمة التنقل (Menu)' : 'Menu de Navigation'}</label>
-                        <div className="grid grid-cols-2 gap-3 mb-4">
-                           <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                 <label className="relative cursor-pointer">
-                                    <div className="w-8 h-8 rounded-lg border-2 shadow-sm ring-1 ring-slate-200" style={{ backgroundColor: menuTextColor, borderColor: '#e2e8f0' }} />
-                                    <input type="color" value={menuTextColor} onChange={e => setMenuTextColor(e.target.value)} className="opacity-0 w-0 h-0 absolute" />
-                                 </label>
-                                 <span className="text-[10px] font-mono font-bold text-slate-600">{menuTextColor.toUpperCase()}</span>
-                              </div>
-                              <p className="text-[9px] text-slate-400">{isAr ? 'لون غير نشط' : 'Lien inactif'}</p>
-                           </div>
-                           <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                 <label className="relative cursor-pointer">
-                                    <div className="w-8 h-8 rounded-lg border-2 shadow-sm ring-1 ring-slate-200" style={{ backgroundColor: menuActiveColor || primaryColor, borderColor: '#e2e8f0' }} />
-                                    <input type="color" value={menuActiveColor || primaryColor} onChange={e => setMenuActiveColor(e.target.value)} className="opacity-0 w-0 h-0 absolute" />
-                                 </label>
-                                 <span className="text-[10px] font-mono font-bold text-slate-600">{(menuActiveColor || primaryColor).toUpperCase()}</span>
-                              </div>
-                              <p className="text-[9px] text-slate-400">{isAr ? 'لون نشط' : 'Lien actif'}</p>
-                           </div>
-                        </div>
-                        <div className="grid grid-cols-3 gap-2">
-                           {([
-                              { key: 'underline', labelFr: 'Soulignement', labelAr: 'تسطير' },
-                              { key: 'pill', labelFr: 'Capsule', labelAr: 'كبسولة' },
-                              { key: 'bold', labelFr: 'Gras', labelAr: 'عريض' }
-                           ] as const).map(({ key, labelFr, labelAr }) => (
-                              <button key={key} onClick={() => setMenuStyle(key)}
-                                 className={`flex flex-col items-center gap-2 p-3 border-2 rounded-xl transition-all ${menuStyle === key ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 hover:border-slate-300'}`}>
-                                 <span
-                                    className={`text-[11px] font-bold ${key === 'pill' ? 'px-3 py-1 rounded-full text-white' : key === 'bold' ? 'font-black' : 'border-b-2'}`}
-                                    style={key === 'pill' ? { backgroundColor: primaryColor } : key === 'bold' ? { color: primaryColor } : { color: primaryColor, borderColor: primaryColor }}
-                                 >
-                                    {isAr ? 'قسم' : 'Item'}
-                                 </span>
-                                 <span className={`text-[10px] font-bold ${menuStyle === key ? 'text-indigo-600' : 'text-slate-500'}`}>{isAr ? labelAr : labelFr}</span>
-                              </button>
-                           ))}
-                        </div>
-                     </div>
-
-                     {/* TYPOGRAPHY */}
-                     <div className="pt-4 border-t border-slate-100">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{isAr ? 'الخط' : 'Typographie'}</label>
-                        <div className="space-y-2">
-                           <button onClick={() => setFontFamily('font-sans')} className={`w-full p-3 rounded-lg border text-left flex justify-between items-center ${fontFamily === 'font-sans' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
-                              <span className="font-sans font-medium">Inter / Roboto (Sans-serif)</span>
-                              {fontFamily === 'font-sans' && <Check className="w-4 h-4" />}
-                           </button>
-                           <button onClick={() => setFontFamily('font-serif')} className={`w-full p-3 rounded-lg border text-left flex justify-between items-center ${fontFamily === 'font-serif' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
-                              <span className="font-serif font-medium">Playfair / Merriweather (Serif)</span>
-                              {fontFamily === 'font-serif' && <Check className="w-4 h-4" />}
-                           </button>
-                           <button onClick={() => setFontFamily('font-mono')} className={`w-full p-3 rounded-lg border text-left flex justify-between items-center ${fontFamily === 'font-mono' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
-                              <span className="font-mono font-medium">Space Mono (Monospace)</span>
-                              {fontFamily === 'font-mono' && <Check className="w-4 h-4" />}
-                           </button>
-                        </div>
-                     </div>
                   </div>
                )}
 
@@ -6872,6 +6492,65 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                    {key === 'rounded' ? (isAr ? 'مستدير' : 'Arrondi') : key === 'square' ? (isAr ? 'مربع' : 'Carré') : key === 'arch' ? (isAr ? 'قوس' : 'Arche') : key === 'pill' ? (isAr ? 'كبسولة' : 'Pilule') : (isAr ? 'ترند' : 'Trendy')}
                                 </button>
                              ))}
+                          </div>
+                       </div>
+
+                       <div className="flex items-center justify-between">
+                          <span className="text-[9px] font-bold text-slate-500">{isAr ? 'شارة الفئة على الصورة' : 'Badge catégorie sur l\'image'}</span>
+                          <button onClick={() => setShowCardBadge(v => !v)} className={`relative w-9 h-5 rounded-full transition-colors shrink-0 ${showCardBadge ? 'bg-indigo-600' : 'bg-slate-300'}`}>
+                             <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${showCardBadge ? 'translate-x-4' : ''}`} />
+                          </button>
+                       </div>
+                       <div className="flex items-center justify-between">
+                          <span className="text-[9px] font-bold text-slate-500">{isAr ? 'اسم الفئة تحت الصورة' : 'Nom sous l\'image'}</span>
+                          <button onClick={() => setCollectionLabelBelow(v => !v)} disabled={cardStyle === 'pill' || cardStyle === 'arch'} className={`relative w-9 h-5 rounded-full transition-colors shrink-0 ${collectionLabelBelow || cardStyle === 'pill' || cardStyle === 'arch' ? 'bg-indigo-600' : 'bg-slate-300'}`}>
+                             <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${collectionLabelBelow || cardStyle === 'pill' || cardStyle === 'arch' ? 'translate-x-4' : ''}`} />
+                          </button>
+                       </div>
+
+                       <div>
+                          <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'حجم بطاقات المنتجات' : 'Taille des cartes'}</label>
+                          <div className="grid grid-cols-3 gap-1.5">
+                             {(['small', 'medium', 'large'] as const).map(key => (
+                                <button key={key} onClick={() => setProductCardSize(key)} className={`py-1.5 text-[9px] font-bold rounded-lg border ${productCardSize === key ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-slate-200 text-slate-500'}`}>
+                                   {key === 'small' ? (isAr ? 'صغيرة' : 'Petites') : key === 'medium' ? (isAr ? 'متوسطة' : 'Moyennes') : (isAr ? 'كبيرة' : 'Grandes')}
+                                </button>
+                             ))}
+                          </div>
+                       </div>
+
+                       <div>
+                          <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'عرض الموقع' : 'Largeur du site'}</label>
+                          <div className="flex items-center gap-2">
+                             <input type="range" min={1000} max={1920} step={20} value={siteMaxWidth} onChange={e => setSiteMaxWidth(parseInt(e.target.value))} className="flex-1 accent-indigo-600" />
+                             <span className="text-[9px] font-mono font-bold text-slate-500 w-9 text-right">{siteMaxWidth}px</span>
+                          </div>
+                       </div>
+
+                       <div>
+                          <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'نسبة الصورة/التفاصيل (صفحة المنتج)' : 'Ratio Image/Détails (produit)'}</label>
+                          <div className="flex items-center gap-2">
+                             <input type="range" min={30} max={70} step={5} value={pdpImageWidth} onChange={e => setPdpImageWidth(parseInt(e.target.value))} className="flex-1 accent-indigo-600" />
+                             <span className="text-[9px] font-mono font-bold text-slate-500 w-14 text-right">{pdpImageWidth}% / {100 - pdpImageWidth}%</span>
+                          </div>
+                       </div>
+
+                       <div>
+                          <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'ارتفاع صورة المنتج' : "Hauteur de l'image produit"}</label>
+                          <div className="grid grid-cols-4 gap-1.5">
+                             {(['3/4', '4/5', '1/1', '4/3'] as const).map(key => (
+                                <button key={key} onClick={() => setPdpImageAspect(key)} className={`py-1.5 text-[9px] font-bold rounded-lg border ${pdpImageAspect === key ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-slate-200 text-slate-500'}`}>
+                                   {key === '3/4' ? (isAr ? 'طولي' : 'Portrait') : key === '4/5' ? (isAr ? 'قياسي' : 'Standard') : key === '1/1' ? (isAr ? 'مربع' : 'Carré') : (isAr ? 'عريض' : 'Large')}
+                                </button>
+                             ))}
+                          </div>
+                       </div>
+
+                       <div>
+                          <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? 'عرض صفحة المنتج' : 'Largeur de la page produit'}</label>
+                          <div className="flex items-center gap-2">
+                             <input type="range" min={800} max={1600} step={50} value={pdpMaxWidth} onChange={e => setPdpMaxWidth(parseInt(e.target.value))} className="flex-1 accent-indigo-600" />
+                             <span className="text-[9px] font-mono font-bold text-slate-500 w-12 text-right">{pdpMaxWidth}px</span>
                           </div>
                        </div>
 
