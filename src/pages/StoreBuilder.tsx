@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown, TrendingUp, Package, RefreshCw, Undo2, Menu, Home, Heart, SlidersHorizontal, ArrowRight, ArrowLeft, Grid, User, Ruler, Crown, RotateCcw, BarChart3, LogOut, Clock } from 'lucide-react';
+import { ShoppingBag, Globe, Palette, Settings, Plus, Monitor, Smartphone, CheckCircle, ExternalLink, Box, X, Search, LayoutTemplate, Paintbrush, Image as ImageIcon, Check, ListOrdered, CreditCard, AlertCircle, ShieldCheck, Loader2, Copy, Save, Maximize2, Minimize2, Users, Truck, LayoutGrid, List as ListIcon, Trash2, Type, MousePointerClick, Mail, Star, Video, Sparkles, ChevronUp, ChevronDown, TrendingUp, Package, RefreshCw, Undo2, Menu, Home, Heart, SlidersHorizontal, ArrowRight, ArrowLeft, Grid, User, Ruler, Crown, RotateCcw, BarChart3, LogOut, Clock, PhoneCall } from 'lucide-react';
 
 
 const ReadMoreDescription = ({ text, className, isAr }: any) => {
@@ -7094,22 +7094,49 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                <h3 className="text-lg font-black text-slate-800">{isAr ? 'إعداد' : 'Configurer'} {activeAppModal}</h3>
                <button onClick={() => setActiveAppModal(null)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400"><X className="w-5 h-5"/></button>
             </div>
-            <div className="p-6">
-               <label className="block text-sm font-bold text-slate-700 mb-2">
-                  {activeAppModal === 'WhatsApp Chat' ? (isAr ? 'رقم الواتساب (مثال: +212600000000)' : 'Numéro WhatsApp (ex: +212600000000)') :
-                   activeAppModal === 'Facebook Pixel' ? (isAr ? 'معرف بيكسل فيسبوك' : 'ID Pixel Facebook') :
-                   activeAppModal === 'TikTok Pixel' ? (isAr ? 'معرف بيكسل تيك توك' : 'ID Pixel TikTok') :
-                   activeAppModal === 'Google Analytics 4' ? (isAr ? 'معرف التتبع (G-XXXXXXX)' : 'ID de suivi (G-XXXXXXX)') :
-                   activeAppModal === 'AI Auto-Builder' ? (isAr ? 'اكتب "ACTIF" لتفعيل الميزة' : 'Tapez "ACTIF" pour activer cette option') :
-                   (isAr ? 'رقم التعريف / المفتاح' : 'ID / Clé d\'API')}
-               </label>
-               <input 
-                  type="text" 
-                  value={appInputValue}
-                  onChange={(e) => setAppInputValue(e.target.value)}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 font-medium"
-                  placeholder="..."
-               />
+            <div className="p-6 space-y-4">
+               <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                     {activeAppModal === 'WhatsApp Chat' ? (isAr ? 'رقم الواتساب (مثال: +212600000000)' : 'Numéro WhatsApp (ex: +212600000000)') :
+                      activeAppModal === 'Facebook Pixel' ? (isAr ? 'معرف بيكسل فيسبوك' : 'ID Pixel Facebook') :
+                      activeAppModal === 'TikTok Pixel' ? (isAr ? 'معرف بيكسل تيك توك' : 'ID Pixel TikTok') :
+                      activeAppModal === 'Google Analytics 4' ? (isAr ? 'معرف التتبع (G-XXXXXXX)' : 'ID de suivi (G-XXXXXXX)') :
+                      activeAppModal === 'AI Auto-Builder' ? (isAr ? 'اكتب "ACTIF" لتفعيل الميزة' : 'Tapez "ACTIF" pour activer cette option') :
+                      activeAppModal === 'eGrow COD Automation' ? (isAr ? 'مفتاح API الخاص بـ eGrow (API Key)' : 'Clé API eGrow (API Key)') :
+                      (isAr ? 'رقم التعريف / المفتاح' : 'ID / Clé d\'API')}
+                  </label>
+                  <input 
+                     type="text" 
+                     value={appInputValue}
+                     onChange={(e) => setAppInputValue(e.target.value)}
+                     className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 font-medium"
+                     placeholder={activeAppModal === 'eGrow COD Automation' ? 'egrow_live_••••••••••••••••' : '...'}
+                  />
+                  {activeAppModal === 'eGrow COD Automation' && (
+                     <p className="text-[11px] text-slate-400 mt-1.5">{isAr ? 'تجد هذا المفتاح في حسابك على eGrow تحت Settings ← API Access.' : 'Trouvez cette clé dans votre tableau de bord eGrow sous Settings → API Access.'}</p>
+                  )}
+               </div>
+               {activeAppModal === 'eGrow COD Automation' && (
+                  <div className="pt-3 border-t border-slate-100 space-y-2">
+                     <label className="block text-xs font-bold text-slate-700">{isAr ? 'رابط الويب هوك (Beya Store Webhook URL)' : 'URL Webhook Beya Store'}</label>
+                     <div className="flex items-center gap-2">
+                        <input 
+                           type="text" 
+                           readOnly 
+                           value={`https://api.beyastore.com/webhooks/egrow/${storeSlug || 'store_live'}`}
+                           className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-600 select-all"
+                        />
+                        <button 
+                           type="button"
+                           onClick={() => navigator.clipboard.writeText(`https://api.beyastore.com/webhooks/egrow/${storeSlug || 'store_live'}`)}
+                           className="px-3 py-2 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 rounded-lg text-xs font-bold shrink-0 transition-colors flex items-center gap-1"
+                        >
+                           <Copy className="w-3.5 h-3.5" /> {isAr ? 'نسخ' : 'Copier'}
+                        </button>
+                     </div>
+                     <p className="text-[11px] text-slate-400 leading-relaxed">{isAr ? 'انسخ هذا الرابط وضعه في إعدادات eGrow تحت Integrations ← Beya Store لاستقبال تأكيدات الطلبيات تلقائياً.' : 'Collez cette URL dans eGrow → Integrations → Beya Store pour recevoir les confirmations de commande.'}</p>
+                  </div>
+               )}
             </div>
             <div className="p-6 border-t border-slate-100 bg-slate-50 flex gap-3">
                <button onClick={() => setActiveAppModal(null)} className="flex-1 py-3 font-bold text-slate-600 hover:bg-slate-200 bg-slate-100 rounded-xl transition-colors">{isAr ? 'إلغاء' : 'Annuler'}</button>

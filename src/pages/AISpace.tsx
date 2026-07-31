@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check, Languages, Maximize2, Minimize2, Download, FileText, Printer, Settings, KeyRound } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { saveRecord, genId, FicheTechnique, loadLeads, Lead, loadCompanyProfile } from '../types';
+import { saveRecord, genId, FicheTechnique, loadLeads, Lead, loadCompanyProfile, loadLeadPhoto } from '../types';
 import { printElement } from '../utils/pdf';
 import { printRapportIA } from '../utils/print';
 
@@ -293,11 +293,29 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   useEffect(() => {
     setApiKeyInput((import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key')) || '');
     loadLeads().then(data => {
-      setLeads(data.filter(l => l.photo));
+      const withPhotos = data.filter(l => l.photo || l.photoCount || (l.photos && l.photos.length > 0));
+      setLeads(withPhotos);
+      // Photos are stripped from the bulk load for performance; fetch them progressively.
+      const missing = withPhotos.filter(l => !l.photo);
+      (async () => {
+        for (let i = 0; i < missing.length; i += 5) {
+          const batch = missing.slice(i, i + 5);
+          const results = await Promise.allSettled(batch.map(l => loadLeadPhoto(l.id).then(photo => ({ id: l.id, photo }))));
+          const updates: Record<string, string> = {};
+          results.forEach(r => { if (r.status === 'fulfilled' && r.value.photo) updates[r.value.id] = r.value.photo; });
+          if (Object.keys(updates).length > 0) {
+            setLeads(prev => prev.map(l => updates[l.id] ? { ...l, photo: updates[l.id] } : l));
+          }
+        }
+      })();
     }).finally(() => setLeadsLoading(false));
   }, []);
 
-  const selectLeadModel = (lead: Lead) => {
+  const selectLeadModel = async (lead: Lead) => {
+    if (!lead.photo) {
+      const fetched = await loadLeadPhoto(lead.id);
+      if (fetched) lead = { ...lead, photo: fetched };
+    }
     if (lead.photo) {
       setImage(lead.photo);
       setAnalysisResult(null);
