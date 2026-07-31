@@ -4,7 +4,7 @@ import {
   Calculator, Printer, CheckCircle2, AlertTriangle,
   Clock, Package, Users, Scissors, ShoppingCart, ArrowLeft,
   DollarSign, Sparkles, Check, X, Bot, Wand2, RefreshCw, UserCheck,
-  Ruler, Upload, Image as ImageIcon, Search, FileText, Wrench, Trash2, RotateCcw, Maximize2, Minimize2
+  Ruler, Upload, Image as ImageIcon, Search, FileText, Wrench, Trash2, RotateCcw, Maximize2, Minimize2, Plus
 } from 'lucide-react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { loadData, Employe, FicheTechnique } from '../types';
