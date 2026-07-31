@@ -8,33 +8,33 @@ import { printRapportIA } from '../utils/print';
 
 const STANDARD_MESURES: Record<string, { nom: string; valeurs: Record<string, number> }[]> = {
   Robe: [
-    { nom: 'Ø§Ù„ØµØ¯Ø± (Poitrine)', valeurs: { S: 88, M: 92, L: 96, XL: 100, XXL: 104 } },
-    { nom: 'Ø§Ù„Ø®ØµØ± (Taille)', valeurs: { S: 70, M: 74, L: 78, XL: 82, XXL: 86 } },
-    { nom: 'Ø§Ù„ÙˆØ±Ùƒ (Hanches)', valeurs: { S: 94, M: 98, L: 102, XL: 106, XXL: 110 } },
-    { nom: 'Ø§Ù„Ø·ÙˆÙ„ (Longueur)', valeurs: { S: 138, M: 140, L: 142, XL: 144, XXL: 146 } }
+    { nom: 'الصدر (Poitrine)', valeurs: { S: 88, M: 92, L: 96, XL: 100, XXL: 104 } },
+    { nom: 'الخصر (Taille)', valeurs: { S: 70, M: 74, L: 78, XL: 82, XXL: 86 } },
+    { nom: 'الورك (Hanches)', valeurs: { S: 94, M: 98, L: 102, XL: 106, XXL: 110 } },
+    { nom: 'الطول (Longueur)', valeurs: { S: 138, M: 140, L: 142, XL: 144, XXL: 146 } }
   ],
   Caftan: [
-    { nom: 'Ø§Ù„ØµØ¯Ø± (Poitrine)', valeurs: { S: 92, M: 96, L: 100, XL: 104, XXL: 108 } },
-    { nom: 'Ø§Ù„ÙƒØªÙ (Ã‰paules)', valeurs: { S: 38, M: 39, L: 40, XL: 41, XXL: 42 } },
-    { nom: 'Ø§Ù„ÙˆØ±Ùƒ (Hanches)', valeurs: { S: 102, M: 106, L: 110, XL: 114, XXL: 118 } },
-    { nom: 'Ø§Ù„Ø·ÙˆÙ„ (Longueur)', valeurs: { S: 145, M: 147, L: 149, XL: 151, XXL: 153 } }
+    { nom: 'الصدر (Poitrine)', valeurs: { S: 92, M: 96, L: 100, XL: 104, XXL: 108 } },
+    { nom: 'الكتف (Épaules)', valeurs: { S: 38, M: 39, L: 40, XL: 41, XXL: 42 } },
+    { nom: 'الورك (Hanches)', valeurs: { S: 102, M: 106, L: 110, XL: 114, XXL: 118 } },
+    { nom: 'الطول (Longueur)', valeurs: { S: 145, M: 147, L: 149, XL: 151, XXL: 153 } }
   ],
   Djellaba: [
-    { nom: 'Ø§Ù„ØµØ¯Ø± (Poitrine)', valeurs: { S: 94, M: 98, L: 102, XL: 106, XXL: 110 } },
-    { nom: 'Ø§Ù„ÙƒØªÙ (Ã‰paules)', valeurs: { S: 39, M: 40, L: 41, XL: 42, XXL: 43 } },
-    { nom: 'Ø§Ù„ÙˆØ±Ùƒ (Hanches)', valeurs: { S: 104, M: 108, L: 112, XL: 116, XXL: 120 } },
-    { nom: 'Ø§Ù„Ø·ÙˆÙ„ (Longueur)', valeurs: { S: 135, M: 137, L: 139, XL: 141, XXL: 143 } }
+    { nom: 'الصدر (Poitrine)', valeurs: { S: 94, M: 98, L: 102, XL: 106, XXL: 110 } },
+    { nom: 'الكتف (Épaules)', valeurs: { S: 39, M: 40, L: 41, XL: 42, XXL: 43 } },
+    { nom: 'الورك (Hanches)', valeurs: { S: 104, M: 108, L: 112, XL: 116, XXL: 120 } },
+    { nom: 'الطول (Longueur)', valeurs: { S: 135, M: 137, L: 139, XL: 141, XXL: 143 } }
   ],
   Chemise: [
-    { nom: 'Ø§Ù„ØµØ¯Ø± (Poitrine)', valeurs: { S: 90, M: 94, L: 98, XL: 102, XXL: 106 } },
-    { nom: 'Ø§Ù„ÙƒØªÙ (Ã‰paules)', valeurs: { S: 38, M: 40, L: 42, XL: 44, XXL: 46 } },
-    { nom: 'Ø§Ù„Ø·ÙˆÙ„ (Longueur)', valeurs: { S: 68, M: 70, L: 72, XL: 74, XXL: 76 } },
-    { nom: 'Ø§Ù„ÙƒÙ… (Manche)', valeurs: { S: 58, M: 59, L: 60, XL: 61, XXL: 62 } }
+    { nom: 'الصدر (Poitrine)', valeurs: { S: 90, M: 94, L: 98, XL: 102, XXL: 106 } },
+    { nom: 'الكتف (Épaules)', valeurs: { S: 38, M: 40, L: 42, XL: 44, XXL: 46 } },
+    { nom: 'الطول (Longueur)', valeurs: { S: 68, M: 70, L: 72, XL: 74, XXL: 76 } },
+    { nom: 'الكم (Manche)', valeurs: { S: 58, M: 59, L: 60, XL: 61, XXL: 62 } }
   ],
   Pantalon: [
-    { nom: 'Ø§Ù„Ø®ØµØ± (Taille)', valeurs: { S: 72, M: 76, L: 80, XL: 84, XXL: 88 } },
-    { nom: 'Ø§Ù„ÙˆØ±Ùƒ (Hanches)', valeurs: { S: 92, M: 96, L: 100, XL: 104, XXL: 108 } },
-    { nom: 'Ø§Ù„Ø·ÙˆÙ„ (Longueur)', valeurs: { S: 100, M: 102, L: 104, XL: 106, XXL: 108 } }
+    { nom: 'الخصر (Taille)', valeurs: { S: 72, M: 76, L: 80, XL: 84, XXL: 88 } },
+    { nom: 'الورك (Hanches)', valeurs: { S: 92, M: 96, L: 100, XL: 104, XXL: 108 } },
+    { nom: 'الطول (Longueur)', valeurs: { S: 100, M: 102, L: 104, XL: 106, XXL: 108 } }
   ]
 };
 
@@ -256,7 +256,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   const [activePieceIdx, setActivePieceIdx] = useState(0);
   const [activeTab, setActiveTab] = useState<'fiche' | 'mesures' | 'chat'>('chat');
   const [chat, setChat] = useState<{ role: 'ai' | 'user'; text: string }[]>([
-    { role: 'ai', text: isAr ? 'Ù…Ø±Ø­Ø¨Ø§Ù‹ Ø¨Ùƒ ÙÙŠ Ù…Ø³Ø§Ø­Ø© Ø§Ù„ØªØ­Ù„ÙŠÙ„. Ø§Ø±ÙØ¹ ØµÙˆØ±Ø© Ù…ÙˆØ¯ÙŠÙ„ Ù„Ù„Ø¨Ø¯Ø¡ ÙÙŠ ØªØ­Ù„ÙŠÙ„Ù‡Ø§.' : 'Bienvenue dans l\'espace d\'analyse. Uploadez une photo de modÃ¨le pour commencer.' }
+    { role: 'ai', text: isAr ? 'مرحباً بك في المستشار الذكي لتحليل الموديلات. ارفع صورة الموديل للبدء في التحليل الفوري للثوب والتكلفة والقياسات.' : 'Bienvenue dans l\'espace d\'analyse. Uploadez une photo de modèle pour commencer.' }
   ]);
   const [msg, setMsg] = useState('');
   const [isChatMaximized, setIsChatMaximized] = useState(false);
@@ -489,7 +489,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
       console.error("Export Error:", err);
       setCustomAlert({
         title: isAr ? "Ø®Ø·Ø£ ÙÙŠ Ø§Ù„ØªØµØ¯ÙŠØ± âŒ" : "Erreur d'exportation âŒ",
-        message: isAr ? "Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ ØªØµØ¯ÙŠØ± Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„. ÙŠØ±Ø¬Ù‰ Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ù…Ø±Ø© Ø£Ø®Ø±Ù‰." : "Une erreur est survenue lors de l'exportation. Veuillez rÃ©essayer.",
+        message: isAr ? "حدث خطأ أثناء تصدير الموديل. يرجى المحاولة مرة أخرى." : "Une erreur est survenue lors de l'exportation. Veuillez réessayer.",
         isError: true
       });
     } finally {
@@ -634,10 +634,10 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
         setAnalysisResult({
           category: isAr ? 'ÙØ³ØªØ§Ù† Ø¹ØµØ±ÙŠ (Robe)' : 'Robe Moderne',
           consumption: '2.40m - 2.80m',
-          complexity: isAr ? 'Ù…ØªÙˆØ³Ø·Ø©' : 'Moyenne',
+          complexity: isAr ? 'متوسطة' : 'Moyenne',
           components: [
-            isAr ? 'ØµØ¯Ø± Ù…Ø¨Ø·Ù†' : 'Buste doublÃ©',
-            isAr ? 'Ø£ÙƒÙ…Ø§Ù… Ø·ÙˆÙŠÙ„Ø©' : 'Manches longues',
+            isAr ? 'صدر مبطن' : 'Buste doublé',
+            isAr ? 'أكمام طويلة' : 'Manches longues',
             isAr ? 'Ø³Ø­Ø§Ø¨ Ù…Ø®ÙÙŠ' : 'Fermeture invisible',
             isAr ? 'Ø­Ø²Ø§Ù… Ù…Ù†ÙØµÙ„' : 'Ceinture amovible'
           ],
@@ -1040,7 +1040,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
         } else if (data.error) {
           const errMsg = data.error.message || '';
           if (errMsg.includes('high demand')) {
-            aiText = "Ø¹Ø°Ø±Ø§Ù‹ØŒ Ø§Ù„Ø®ÙˆØ§Ø¯Ù… Ø¯ÙŠØ§Ù„ Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„Ø§ØµØ·Ù†Ø§Ø¹ÙŠ Ø¹Ù„ÙŠÙ‡Ø§ Ø¶ØºØ· ÙƒØ¨ÙŠØ± Ø¯Ø§Ø¨Ø§. â³ ØªØ³Ù†Ù‰ Ø´ÙˆÙŠØ© ÙˆØ¹Ø§ÙˆØ¯ Ø¬Ø±Ø¨ Ù…Ø±Ø© Ø®Ø±Ù‰!";
+            aiText = "عذراً، خوادم الذكاء الاصطناعي عليها ضغط كبير الآن. ⏳ انتظر قليلاً وحاول مرة أخرى!";
           } else if (errMsg.includes('limit: 0') || errMsg.includes('Quota exceeded')) {
             aiText = "âš ï¸ Ø®Ø·Ø£ ÙÙŠ Ø§Ù„Ù…ÙØªØ§Ø­ (API Key): Ù…ÙØªØ§Ø­Ùƒ Ù…Ø§Ø¹Ù†Ø¯Ùˆ Ø­ØªÙ‰ Ø±ØµÙŠØ¯ (Limit: 0). Ù‡Ø§Ø¯Ø´ÙŠ ÙƒÙŠÙˆÙ‚Ø¹ Ø­ÙŠØª Google ÙƒØªÙØ±Ø¶ ØªÙØ¹ÙŠÙ„ Ø§Ù„Ø¯ÙØ¹ (Billing) ÙÙŠ Ø­Ø³Ø§Ø¨ Google Cloud Ø¯ÙŠØ§Ù„Ùƒ Ø¨Ø§Ø´ ØªÙ‚Ø¯Ø± ØªØ®Ø¯Ù… Ø§Ù„Ù€ API ÙÙŠ Ø§Ù„Ù…ØºØ±Ø¨.";
           } else if (errMsg.includes('not found') || errMsg.includes('not supported')) {
@@ -1128,7 +1128,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
         } else if (data.error) {
           const errMsg = data.error.message || '';
           if (errMsg.includes('high demand')) {
-            aiResponseText = "Ø¹Ø°Ø±Ø§Ù‹ØŒ Ø§Ù„Ø®ÙˆØ§Ø¯Ù… Ø¯ÙŠØ§Ù„ Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„Ø§ØµØ·Ù†Ø§Ø¹ÙŠ (Google API) Ø¹Ù„ÙŠÙ‡Ø§ Ø¶ØºØ· ÙƒØ¨ÙŠØ± Ø¯Ø§Ø¨Ø§. â³ ØªØ³Ù†Ù‰ Ø´ÙˆÙŠØ© ÙˆØ¹Ø§ÙˆØ¯ Ø¬Ø±Ø¨ Ù…Ø±Ø© Ø®Ø±Ù‰!";
+            aiResponseText = "عذراً، خوادم الذكاء الاصطناعي عليها ضغط كبير الآن. ⏳ انتظر قليلاً وحاول مرة أخرى!";
           } else if (errMsg.includes('limit: 0') || errMsg.includes('Quota exceeded')) {
             aiResponseText = "âš ï¸ Ø®Ø·Ø£ ÙÙŠ Ø§Ù„Ù…ÙØªØ§Ø­ (API Key): Ù…ÙØªØ§Ø­Ùƒ Ù…Ø§Ø¹Ù†Ø¯Ùˆ Ø­ØªÙ‰ Ø±ØµÙŠØ¯ (Limit: 0). Ù‡Ø§Ø¯Ø´ÙŠ ÙƒÙŠÙˆÙ‚Ø¹ Ø­ÙŠØª Google ÙƒØªÙØ±Ø¶ ØªÙØ¹ÙŠÙ„ Ø§Ù„Ø¯ÙØ¹ (Billing) ÙˆØ¥Ø¶Ø§ÙØ© Ø¨Ø·Ø§Ù‚Ø© Ø¨Ù†ÙƒÙŠØ© ÙÙŠ Ø­Ø³Ø§Ø¨ Google Cloud Ø¯ÙŠØ§Ù„Ùƒ Ø¨Ø§Ø´ ØªÙ‚Ø¯Ø± ØªØ®Ø¯Ù… Ø§Ù„Ù€ API ÙÙŠ Ø§Ù„Ù…ØºØ±Ø¨ØŒ ÙˆØ§Ø®Ø§ Ù‡Ùˆ Ù…Ø¬Ø§Ù†ÙŠ.";
           } else if (errMsg.includes('not found') || errMsg.includes('not supported')) {
@@ -1347,39 +1347,39 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
           <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5 bg-slate-50/70 flex-shrink-0">
             <div className="flex items-center gap-1.5">
               <button
-                onClick={() => setActiveTab('fiche')}
-                className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 ${
-                  activeTab === 'fiche'
-                    ? 'bg-indigo-600 text-white shadow-md'
-                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80'
+                onClick={() => setActiveTab('chat')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  activeTab === 'chat'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70'
                 }`}
               >
-                <FileText className="w-3.5 h-3.5" />
-                <span>{isAr ? '📊 البطاقة التقنية و الأثمنة' : 'Fiche & Prix IA'}</span>
+                <MessageSquare className="w-3.5 h-3.5" />
+                <span>{isAr ? 'المستشار الذكي' : 'Chat IA'}</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('mesures')}
-                className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                   activeTab === 'mesures'
-                    ? 'bg-indigo-600 text-white shadow-md'
-                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70'
                 }`}
               >
                 <Ruler className="w-3.5 h-3.5" />
-                <span>{isAr ? '📏 جدول المقاسات S-XXL' : 'Tableau Mesures'}</span>
+                <span>{isAr ? 'جدول المقاسات' : 'Mesures'}</span>
               </button>
 
               <button
-                onClick={() => setActiveTab('chat')}
-                className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 ${
-                  activeTab === 'chat'
-                    ? 'bg-indigo-600 text-white shadow-md'
-                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80'
+                onClick={() => setActiveTab('fiche')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  activeTab === 'fiche'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70'
                 }`}
               >
-                <MessageSquare className="w-3.5 h-3.5" />
-                <span>{isAr ? '💬 المستشار الذكي' : 'Chat IA'}</span>
+                <FileText className="w-3.5 h-3.5" />
+                <span>{isAr ? 'البطاقة التقنية' : 'Fiche & Prix'}</span>
               </button>
 
               <button
@@ -1401,8 +1401,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
                 className="px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 border border-slate-200/80 transition-all flex items-center gap-1.5 shadow-sm"
                 title={isAr ? "التبديل إلى الفرنسية" : "Basculer en Arabe (Darija)"}
               >
-                <span className="font-bold">🌐</span>
-                <span>{isAr ? 'Français' : 'الدارجة 🇲🇦'}</span>
+                <span>{isAr ? 'Français' : 'العربية'}</span>
               </button>
             </div>
 
