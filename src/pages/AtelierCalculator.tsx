@@ -1880,8 +1880,9 @@ function isSupportRole(e: Employe): boolean {
                   {(() => {
                     const activeWorkersCount = Math.max(1, workers || selectedWorkerIds.length || 1);
                     const breakdown = getGarmentTechnicalBreakdown(selectedAiPreset.title, undefined, undefined, selectedModelCategory);
-                    const aiStitchingMin = breakdown.totalMinutesConfection || selectedAiPreset.stitchingMin || 35;
-                    const aiDailyPiecesOutput = Math.max(1, Math.floor((activeWorkersCount * 8 * 60) / aiStitchingMin));
+                    const activePostesModal = customPostes || breakdown.postesTravail;
+                    const aiStitchingMin = activePostesModal.reduce((acc, p) => acc + (Number(p.tempsMin) || 0), 0) || breakdown.totalMinutesConfection || selectedAiPreset.stitchingMin || 35;
+                    const aiDailyPiecesOutput = Math.max(1, Math.floor((activeWorkersCount * workHoursPerDay * 60) / aiStitchingMin));
                     const aiMonthlyPiecesOutput = aiDailyPiecesOutput * 26;
                     const aiRealisticDays = Math.max(1, Math.ceil((quantity || 1) / aiDailyPiecesOutput));
 
