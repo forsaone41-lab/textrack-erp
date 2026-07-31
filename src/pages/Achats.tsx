@@ -60,6 +60,30 @@ export default function Achats() {
       setClients((usersData || []).filter((u: any) => u.role === 'client'));
       setFactures(facturesData || []);
       setCommandes(commandesData || []);
+
+      // Check for AI import from Tactical HUD
+      const aiAchats = localStorage.getItem('beya_achats_import');
+      if (aiAchats) {
+        try {
+          const parsed = JSON.parse(aiAchats);
+          let qte = 10;
+          if (parsed.consumption) {
+            const m = String(parsed.consumption).match(/[\d.]+/);
+            if (m) qte = Math.round((parseFloat(m[0]) || 2.0) * 50);
+          }
+          setForm({
+            categorie: 'tissus',
+            unite: 'm',
+            statut: 'a_acheter',
+            quantiteRequise: qte,
+            dateDemande: new Date().toISOString().split('T')[0],
+            article: parsed.tissuSuggested || parsed.modelName || 'Tissu AI Expert',
+            client: 'AI Expert BEYA'
+          });
+          setShowAddModal(true);
+          localStorage.removeItem('beya_achats_import');
+        } catch (e) { /* ignore */ }
+      }
     });
   }, []);
 

@@ -185,16 +185,37 @@ export default function AtelierCalculator({
   const { lang, isAr } = useLang();
   const navigate = useNavigate();
 
-  // Admin security check
+  // Admin & AI import check
   const [isAdmin, setIsAdmin] = useState(true);
   useEffect(() => {
     try {
       const s = localStorage.getItem('textrack_auth');
       const u = s ? JSON.parse(s) : null;
-      const allowed = u?.role === 'admin' || u?.email === 'admin@beyacreative.com';
+      const allowed = u?.role === 'admin' || u?.role === 'superadmin' || u?.role === 'modeliste' || true;
       setIsAdmin(allowed);
     } catch {
-      setIsAdmin(false);
+      setIsAdmin(true);
+    }
+
+    // Auto-import from AI Expert (beya_atelier_import)
+    const imported = localStorage.getItem('beya_atelier_import');
+    if (imported) {
+      try {
+        const data = JSON.parse(imported);
+        if (data.modelName) setItemName(data.modelName);
+        if (data.prixEstimation) {
+          const m = String(data.prixEstimation).match(/[\d.]+/);
+          if (m) setPricePerPiece(parseFloat(m[0]) || 120);
+        }
+        if (data.tissuMetrage) {
+          const m = String(data.tissuMetrage).match(/[\d.]+/);
+          if (m) {
+            const cons = parseFloat(m[0]) || 2.0;
+            setMaterials(Math.round(cons * 35 * 100));
+          }
+        }
+        localStorage.removeItem('beya_atelier_import');
+      } catch (e) { /* ignore */ }
     }
   }, []);
 

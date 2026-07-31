@@ -483,14 +483,8 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
       };
 
       await saveRecord('fiches', newFT);
-
-      setCustomAlert({
-        title: isAr ? "ØªØµØ¯ÙŠØ± Ù†Ø§Ø¬Ø­ Ù„Ù„Ø¨Ø·Ø§Ù‚Ø© Ø§Ù„ØªÙ‚Ù†ÙŠØ© ðŸŽ‰" : "Exportation RÃ©ussie ðŸŽ‰",
-        message: isAr
-          ? `ØªÙ… Ø¨Ù†Ø¬Ø§Ø­ ØªØµØ¯ÙŠØ± "${ftModele}" Ø¥Ù„Ù‰ Ø§Ù„Ø¨Ø·Ø§Ù‚Ø§Øª Ø§Ù„ØªÙ‚Ù†ÙŠØ©! ÙŠÙ…ÙƒÙ†Ùƒ Ø§Ù„Ø¢Ù† Ø¥ÙƒÙ…Ø§Ù„ Ø§Ù„Ø¨Ø§Ø·Ø±ÙˆÙ† ÙˆØ§Ù„Ù‚ÙŠØ§Ø³Ø§Øª Ù‡Ù†Ø§Ùƒ.`
-          : `Le modèle "${ftModele}" a été exporté avec succès vers les Fiches Techniques !`,
-        onConfirm: () => navigate('/fiches-techniques')
-      });
+      localStorage.setItem('beya_ai_to_ft', JSON.stringify(newFT));
+      navigate('/fiches-techniques');
     } catch (err) {
       console.error("Export Error:", err);
       setCustomAlert({
@@ -550,7 +544,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
       const lines = text.split('\n');
       const tableLines = lines.filter(l => l.trim().startsWith('|') && !l.includes('---'));
       
-      const items: { designation: string; montant: number; detail: string }[] = [];
+      const items: { designation: string; montant: number; detail: string; image?: string }[] = [];
       
       for (let i = 1; i < tableLines.length; i++) { // skip header
         const cells = tableLines[i].split('|').map(s => s.trim()).filter(Boolean);
@@ -560,18 +554,44 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
           const nameCell = cells.find(c => !/^[\d.,]+/.test(c.replace(/\*+/g, '').trim()) && c.length > 1);
           const amount = amountCell ? parseFloat(amountCell.replace(/\*+/g, '').replace(',', '.').match(/[\d.]+/)?.[0] || '0') : 0;
           const name = nameCell?.replace(/\*+/g, '').trim() || '';
-          if (name && amount > 0 && !name.toLowerCase().includes('total') && !name.toLowerCase().includes('Ù…Ø¬Ù…ÙˆØ¹') && !name.toLowerCase().includes('revient')) {
-            items.push({ designation: name, montant: amount, detail: cells[cells.length-1]?.replace(/\*+/g, '') || '' });
+          if (name && amount > 0 && !name.toLowerCase().includes('total') && !name.toLowerCase().includes('مجموع') && !name.toLowerCase().includes('revient')) {
+            items.push({ designation: name, montant: amount, detail: cells[cells.length-1]?.replace(/\*+/g, '') || '', image: image || '' });
           }
         }
       }
       
+      // Fallback if markdown parsing yielded 0 items
+      if (items.length === 0 && analysisResult) {
+        if (analysisResult.pieces && analysisResult.pieces.length > 0) {
+          analysisResult.pieces.forEach((p: any) => {
+            const cost = parseFloat(String(p.costEstimate || '0').match(/[\d.]+/)?.[0] || '150') || 150;
+            items.push({
+              designation: p.name || analysisResult.category || 'Modèle AI',
+              montant: cost,
+              detail: (p.fabricSuggested || analysisResult.fabricSuggested || '') + (p.consumption ? ` (${p.consumption})` : ''),
+              image: image || ''
+            });
+          });
+        } else {
+          const cost = parseFloat(String(analysisResult.costEstimate || '0').match(/[\d.]+/)?.[0] || '150') || 150;
+          items.push({
+            designation: analysisResult.category || (isAr ? 'موديل من الذكاء الاصطناعي' : 'Modèle AI Expert'),
+            montant: cost,
+            detail: (analysisResult.fabricSuggested || '') + (analysisResult.consumption ? ` (${analysisResult.consumption})` : ''),
+            image: image || ''
+          });
+        }
+      }
+
       // Find total
-      const totalLine = tableLines.find(l => l.toLowerCase().includes('total') || l.includes('Ù…Ø¬Ù…ÙˆØ¹') || l.includes('revient'));
+      const totalLine = tableLines.find(l => l.toLowerCase().includes('total') || l.includes('مجموع') || l.includes('revient'));
       let total = 0;
       if (totalLine) {
         const m = totalLine.match(/[\d.]+/g);
         if (m) total = Math.max(...m.map(Number));
+      }
+      if (total === 0 && items.length > 0) {
+        total = items.reduce((acc, it) => acc + (it.montant || 0), 0);
       }
 
       // Store in localStorage for DevisBuilder to pick up
@@ -581,15 +601,16 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
         items,
         total,
         rawText: text,
-        modelName: analysisResult?.category || (isAr ? 'Ù†Ù…ÙˆØ°Ø¬ Ù…Ù† Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„Ø§ØµØ·Ù†Ø§Ø¹ÙŠ' : 'ModÃ¨le AI Expert')
+        modelName: analysisResult?.category || (isAr ? 'نموذج من الذكاء الاصطناعي' : 'Modèle AI Expert'),
+        image: image || ''
       };
       localStorage.setItem('beya_ai_to_devis', JSON.stringify(devisData));
       
-      // Navigate to DevisBuilder
-      navigate('/devis-builder');
+      // Navigate to Devis PRO (/devis-pro)
+      navigate('/devis-pro');
     } catch (err) {
       console.error('sendToDevis error:', err);
-      navigate('/devis-builder');
+      navigate('/devis-pro');
     }
   };
 
@@ -1277,13 +1298,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
                       timestamp: Date.now()
                     };
                     localStorage.setItem('beya_atelier_import', JSON.stringify(atelierData));
-                    setCustomAlert({
-                      title: isAr ? "تم إرسال الموديل لورشة الإنتاج ✂️" : "Transmis à l'Atelier ✂️",
-                      message: isAr 
-                        ? "تم تسجيل بيانات القص والخياطة (المتراج، الصعوبة، وقطع الموديل) لعمال الورشة. هل تريد فتح حاسبة الورشة الآن؟"
-                        : "Instructions de coupe et confection transmises à l'Atelier. Ouvrir le calculateur atelier ?",
-                      onConfirm: () => navigate('/atelier-calculator')
-                    });
+                    navigate('/atelier-calculator');
                   } else {
                     setCustomAlert({
                       title: isAr ? 'تنبيه' : 'Attention',
@@ -1308,13 +1323,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
                       timestamp: Date.now()
                     };
                     localStorage.setItem('beya_achats_import', JSON.stringify(achData));
-                    setCustomAlert({
-                      title: isAr ? "تم إرسال الطلب لقسم المشتريات 📦" : "Transmis aux Achats 📦",
-                      message: isAr 
-                        ? "تم توجيه توصية القماش المطلوب وسعر الجملة (درب عمر / القريعة) والكمية لمسؤول الشراء. هل تريد الانتقال للمشتريات؟"
-                        : "Demande de tissu et prix de gros Maroc transmise aux achats. Ouvrir la page Achats ?",
-                      onConfirm: () => navigate('/achats')
-                    });
+                    navigate('/achats');
                   } else {
                     setCustomAlert({
                       title: isAr ? 'تنبيه' : 'Attention',

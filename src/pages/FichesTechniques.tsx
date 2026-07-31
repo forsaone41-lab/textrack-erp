@@ -471,6 +471,17 @@ export default function FichesTechniques() {
         // Clear history state to avoid re-opening on refresh
         window.history.replaceState({}, document.title);
       }
+
+      // Check for AI pre-filling from Tactical HUD (One-Click Dispatch)
+      const aiFT = localStorage.getItem('beya_ai_to_ft');
+      if (aiFT) {
+        try {
+          const parsedFT = JSON.parse(aiFT);
+          setForm(parsedFT);
+          setShowModal(true);
+          localStorage.removeItem('beya_ai_to_ft');
+        } catch (e) { /* ignore */ }
+      }
       setLoading(false);
     });
   }, []);

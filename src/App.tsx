@@ -686,7 +686,7 @@ function AppContent() {
         <Route path="scan-production" element={can('scan_production') ? <ProductionScanner /> : <Navigate to="/" replace />} />
         <Route path="hpgl-viewer" element={(can('ordres') || can('fiches')) ? <HPGLViewer /> : <Navigate to="/" replace />} />
         <Route path="kml-viewer" element={(can('ordres') || can('fiches')) ? <KMLViewer /> : <Navigate to="/" replace />} />
-        <Route path="atelier-calculator" element={currentUser?.role === 'admin' ? <AtelierCalculator /> : <Navigate to="/" replace />} />
+        <Route path="atelier-calculator" element={(can('atelier_calculator') || can('fiches') || can('ai_space') || currentUser?.role === 'admin' || currentUser?.role === 'superadmin') ? <AtelierCalculator /> : <Navigate to="/" replace />} />
         <Route path="worker-portal" element={<WorkerPortal currentUser={currentUser} onLogout={handleLogout} />} />
         <Route path="chef-portal" element={<ChefChainePortal currentUser={currentUser} onLogout={handleLogout} />} />
         <Route path="partenaire-portal" element={<PartenairePortal currentUser={currentUser} onLogout={handleLogout} />} />
