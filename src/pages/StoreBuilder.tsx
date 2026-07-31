@@ -6050,7 +6050,8 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                        {[
-                         { id: 'WhatsApp Chat', name: 'WhatsApp', desc: isAr ? 'زر واتساب عائم للتواصل السريع' : 'Bouton flottant pour chat rapide', icon: Smartphone, color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+                         { id: 'eGrow COD Automation', name: 'eGrow COD Automation', desc: isAr ? 'أتمتة تأكيد طلبيات الدفع عند الاستلام عبر منصة eGrow' : 'Automatisation de confirmation COD eGrow & Webhooks', icon: RefreshCw, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-200' },
+                          { id: 'WhatsApp Chat', name: 'WhatsApp', desc: isAr ? 'زر واتساب عائم للتواصل السريع' : 'Bouton flottant pour chat rapide', icon: Smartphone, color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200' },
                          { id: 'Facebook Pixel', name: 'Facebook Pixel', desc: isAr ? 'تتبع زوار المتجر وحملات فيسبوك' : 'Suivi des conversions Facebook', icon: Monitor, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
                          { id: 'TikTok Pixel', name: 'TikTok Pixel', desc: isAr ? 'تتبع تحويلات حملات تيك توك' : 'Suivi des conversions TikTok', icon: Video, color: 'text-slate-900', bg: 'bg-slate-100', border: 'border-slate-300' },
                          { id: 'Google Analytics 4', name: 'Google Analytics 4', desc: isAr ? 'إحصائيات دقيقة لزوار متجرك' : 'Statistiques détaillées des visiteurs', icon: Globe, color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200' },
