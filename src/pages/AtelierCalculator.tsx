@@ -470,6 +470,7 @@ function isSupportRole(e: Employe): boolean {
   const [materials, setMaterials] = useState(300);
   const [totalMachines, setTotalMachines] = useState(7);
   const [monthlyOther, setMonthlyOther] = useState(3000);
+  const [customPostes, setCustomPostes] = useState<PosteTravail[] | null>(null);
 
   // AI Cost Estimator Modal (Smart Feature 2)
   const [showAiModal, setShowAiModal] = useState(false);
@@ -780,6 +781,7 @@ function isSupportRole(e: Employe): boolean {
               setMonthlyOther(0);
               setSelectedModelCategory(undefined);
               setSelectedFiche(null);
+              setCustomPostes(null);
             }}
             title={isAr ? 'مسح وإفراغ جميع الخانات للبدء من جديد' : 'Vider tous les champs'}
             className="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-2xs border border-rose-200 active:scale-95 group"
@@ -1043,46 +1045,152 @@ function isSupportRole(e: Employe): boolean {
           {/* Workstations & Technical Operations Gamme de Montage Card on Main Calculator Screen */}
           {(() => {
             const breakdown = getGarmentTechnicalBreakdown(itemName, (materials / qty) / 35, materials / qty);
+            const activePostes = customPostes || breakdown.postesTravail;
+            const activeTotalMin = activePostes.reduce((acc, p) => acc + (Number(p.tempsMin) || 0), 0);
             return (
               <div className="p-4 bg-slate-900 text-white rounded-3xl border border-slate-700 shadow-xl space-y-3 print-border">
-                <div className="flex items-center justify-between text-xs font-black">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-black">
                   <span className="flex items-center gap-2 text-indigo-300">
                     <Wrench className="w-4 h-4 text-emerald-400" />
-                    {isAr ? `🏭 بوستات العمل الفنية ومراحل الخياطة للموديل` : `🏭 Gamme de Montage & Postes Requis`}
+                    {isAr ? `🏭 بوستات العمل الفنية ومراحل الخياطة (تعديل مباشر)` : `🏭 Gamme de Montage (Éditable)`}
                   </span>
-                  <span className="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-lg text-[10px] border border-emerald-500/30">
-                    {breakdown.postesTravail.length} {isAr ? 'بوستات عمل' : 'Postes'} | {breakdown.totalMinutesConfection} {isAr ? 'دقيقة/بياسة' : 'min'}
-                  </span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => setWorkers(activePostes.length)}
+                      title={isAr ? "مطابقة عدد العمال مع عدد بوستات العمل في الموديل" : "Synchroniser ouvriers avec les postes"}
+                      className="px-2 py-0.5 bg-indigo-500/20 hover:bg-indigo-500 text-indigo-300 hover:text-white rounded-lg text-[10px] font-bold border border-indigo-500/30 transition-all flex items-center gap-1 active:scale-95"
+                    >
+                      🔄 {isAr ? `تعيين العمال = (${activePostes.length})` : `Ouvriers = ${activePostes.length}`}
+                    </button>
+                    {customPostes && (
+                      <button
+                        type="button"
+                        onClick={() => setCustomPostes(null)}
+                        className="px-2 py-0.5 bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white rounded-lg text-[10px] font-bold border border-rose-500/30 transition-all"
+                      >
+                        🔄 {isAr ? 'إعادة الافتراضي' : 'Défaut'}
+                      </button>
+                    )}
+                    <span className="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-lg text-[10px] border border-emerald-500/30">
+                      {activePostes.length} {isAr ? 'بوستات عمل' : 'Postes'} | {activeTotalMin} {isAr ? 'دقيقة/بياسة' : 'min'}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
-                  {breakdown.postesTravail.map((poste, idx) => (
-                    <div key={idx} className="p-2.5 bg-white/10 rounded-xl border border-white/10 flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
+                <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
+                  {activePostes.map((poste, idx) => (
+                    <div key={idx} className="p-2 bg-white/10 rounded-xl border border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-2 flex-1 min-w-[180px]">
                         <span className="w-5 h-5 rounded-lg bg-indigo-500/30 text-indigo-300 flex items-center justify-center font-black text-[10px] shrink-0">
                           {idx + 1}
                         </span>
-                        <div>
-                          <strong className="text-white block text-[11px]">
-                            {isAr ? poste.nomAr : poste.nomFr}
-                          </strong>
-                          <span className="text-[10px] text-slate-400">
-                            {poste.machine} ({poste.roleOuvrier})
-                          </span>
+                        <div className="flex flex-col flex-1 gap-0.5">
+                          <input
+                            type="text"
+                            value={isAr ? poste.nomAr : poste.nomFr}
+                            onChange={(e) => {
+                              const current = customPostes || [...breakdown.postesTravail];
+                              const updated = current.map((p, i) => i === idx ? { ...p, [isAr ? 'nomAr' : 'nomFr']: e.target.value } : p);
+                              setCustomPostes(updated);
+                            }}
+                            className="bg-transparent border-b border-transparent hover:border-white/30 focus:border-indigo-400 focus:bg-slate-800 text-white font-bold text-[11px] outline-none px-1 py-0.5 rounded transition-all w-full"
+                          />
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="text"
+                              value={poste.machine}
+                              onChange={(e) => {
+                                const current = customPostes || [...breakdown.postesTravail];
+                                const updated = current.map((p, i) => i === idx ? { ...p, machine: e.target.value } : p);
+                                setCustomPostes(updated);
+                              }}
+                              className="bg-transparent text-[10px] text-slate-400 hover:text-white border-b border-transparent hover:border-white/20 focus:border-indigo-400 outline-none px-1 rounded transition-all w-32"
+                            />
+                            <span className="text-[10px] text-slate-500">({poste.roleOuvrier})</span>
+                          </div>
                         </div>
                       </div>
-                      <span className="px-2 py-1 bg-white/10 text-emerald-300 rounded-lg font-black text-[11px] shrink-0">
-                        {poste.tempsMin} {isAr ? 'د' : 'min'}
-                      </span>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <div className="flex items-center gap-1 bg-black/20 p-1 rounded-lg border border-white/10">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const current = customPostes || [...breakdown.postesTravail];
+                              const newTime = Math.max(1, (Number(poste.tempsMin) || 1) - 1);
+                              setCustomPostes(current.map((p, i) => i === idx ? { ...p, tempsMin: newTime } : p));
+                            }}
+                            className="w-5 h-5 rounded bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-xs font-bold transition-all"
+                          >
+                            -
+                          </button>
+                          <input
+                            type="number"
+                            min="1"
+                            value={poste.tempsMin}
+                            onChange={(e) => {
+                              const current = customPostes || [...breakdown.postesTravail];
+                              const newTime = Math.max(1, Number(e.target.value) || 1);
+                              setCustomPostes(current.map((p, i) => i === idx ? { ...p, tempsMin: newTime } : p));
+                            }}
+                            className="w-10 py-0.5 bg-transparent text-center text-emerald-300 font-black text-[11px] outline-none"
+                          />
+                          <span className="text-[10px] text-emerald-300 font-bold">{isAr ? 'د' : 'min'}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const current = customPostes || [...breakdown.postesTravail];
+                              const newTime = (Number(poste.tempsMin) || 1) + 1;
+                              setCustomPostes(current.map((p, i) => i === idx ? { ...p, tempsMin: newTime } : p));
+                            }}
+                            className="w-5 h-5 rounded bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-xs font-bold transition-all"
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const current = customPostes || [...breakdown.postesTravail];
+                            const updated = current.filter((_, i) => i !== idx);
+                            setCustomPostes(updated);
+                          }}
+                          title={isAr ? "حذف هذه المرحلة" : "Supprimer ce poste"}
+                          className="p-1.5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 rounded-lg transition-all"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
 
-                <div className="pt-2 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-300">
-                  <span>{isAr ? '🧵 التكلفة الدقيقة للبياسة (قماش + يد عاملة):' : 'Coût de revient estimé :'}</span>
-                  <strong className="text-emerald-400 font-black text-xs">
-                    {((materials / qty) + ((breakdown.totalMinutesConfection / 60) * rate)).toFixed(2)} DH / {isAr ? 'بياسة' : 'pièce'}
-                  </strong>
+                <div className="pt-2 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-300">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const current = customPostes || [...breakdown.postesTravail];
+                      const newPoste: PosteTravail = {
+                        nomAr: 'مرحلة خياطة وتجميع جديدة',
+                        nomFr: 'Nouvelle étape de couture',
+                        machine: 'Piqueuse Plate',
+                        roleOuvrier: 'خياط / Couturier',
+                        tempsMin: 5
+                      };
+                      setCustomPostes([...current, newPoste]);
+                    }}
+                    className="px-2.5 py-1 bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-white rounded-lg text-[11px] font-black border border-emerald-500/30 transition-all flex items-center gap-1 active:scale-95"
+                  >
+                    + {isAr ? 'إضافة بوست / مرحلة خياطة جديدة' : 'Ajouter un poste de couture'}
+                  </button>
+                  <div className="flex items-center gap-1">
+                    <span>{isAr ? '🧵 التكلفة الدقيقة للبياسة (قماش + يد عاملة):' : 'Coût de revient estimé :'}</span>
+                    <strong className="text-emerald-400 font-black text-xs">
+                      {((materials / qty) + ((activeTotalMin / 60) * rate)).toFixed(2)} DH / {isAr ? 'بياسة' : 'pièce'}
+                    </strong>
+                  </div>
                 </div>
               </div>
             );
@@ -1195,9 +1303,23 @@ function isSupportRole(e: Employe): boolean {
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                  {isAr ? 'عدد العمال (أتوليي)' : 'Ouvriers'}
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[11px] font-bold text-slate-600">
+                    {isAr ? 'عدد العمال (أتوليي)' : 'Ouvriers'}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const bk = getGarmentTechnicalBreakdown(itemName, (materials / qty) / 35, materials / qty);
+                      const currentPostes = customPostes || bk.postesTravail;
+                      setWorkers(currentPostes.length);
+                    }}
+                    title={isAr ? "مطابقة عدد العمال مع عدد بوستات العمل في الموديل" : "Synchroniser avec les postes"}
+                    className="px-1.5 py-0.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-md text-[9px] font-bold transition-all"
+                  >
+                    = {customPostes ? customPostes.length : getGarmentTechnicalBreakdown(itemName, (materials / qty) / 35, materials / qty).postesTravail.length} {isAr ? 'بوستات' : 'postes'}
+                  </button>
+                </div>
                 <input
                   type="number"
                   min="1"
