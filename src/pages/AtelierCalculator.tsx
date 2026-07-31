@@ -480,6 +480,8 @@ function isSupportRole(e: Employe): boolean {
   const [isAiAnalyzing, setIsAiAnalyzing] = useState(false);
   const [aiAnalysisDone, setAiAnalysisDone] = useState(true);
   const [selectedModelCategory, setSelectedModelCategory] = useState<string | undefined>(undefined);
+  const [workHoursPerDay, setWorkHoursPerDay] = useState<number>(8);
+  const [aiSuggestionApplied, setAiSuggestionApplied] = useState<boolean>(false);
 
   // Import a real model: either from the Beya Creative fiches techniques catalog, or a photo from the device
   const [fichesList, setFichesList] = useState<FicheTechnique[]>([]);
@@ -656,12 +658,68 @@ function isSupportRole(e: Employe): boolean {
     setWorkers(1);
   };
 
+  // Gamme de Montage controls inside AI modal
+  const handleModalUpdatePosteName = (idx: number, newName: string) => {
+    const breakdown = getGarmentTechnicalBreakdown(selectedAiPreset.title, undefined, undefined, selectedModelCategory);
+    const current = customPostes ? [...customPostes] : [...breakdown.postesTravail];
+    if (current[idx]) {
+      current[idx] = { ...current[idx], nomAr: newName, nomFr: newName };
+      setCustomPostes(current);
+    }
+  };
+
+  const handleModalUpdatePosteMin = (idx: number, delta: number) => {
+    const breakdown = getGarmentTechnicalBreakdown(selectedAiPreset.title, undefined, undefined, selectedModelCategory);
+    const current = customPostes ? [...customPostes] : [...breakdown.postesTravail];
+    if (current[idx]) {
+      const updatedTime = Math.max(1, (Number(current[idx].tempsMin) || 1) + delta);
+      current[idx] = { ...current[idx], tempsMin: updatedTime };
+      setCustomPostes(current);
+    }
+  };
+
+  const handleModalDeletePoste = (idx: number) => {
+    const breakdown = getGarmentTechnicalBreakdown(selectedAiPreset.title, undefined, undefined, selectedModelCategory);
+    const current = customPostes ? [...customPostes] : [...breakdown.postesTravail];
+    if (current.length <= 1) return;
+    current.splice(idx, 1);
+    setCustomPostes(current);
+  };
+
+  const handleModalAddPoste = () => {
+    const breakdown = getGarmentTechnicalBreakdown(selectedAiPreset.title, undefined, undefined, selectedModelCategory);
+    const current = customPostes ? [...customPostes] : [...breakdown.postesTravail];
+    current.push({
+      nomAr: 'بوست خياطة / تجميع جديد',
+      nomFr: 'Nouveau Poste de Montage',
+      machine: 'Piqueuse Plate 1 Aiguille',
+      tempsMin: 5,
+      roleOuvrier: isAr ? 'عامل خياطة' : 'Ouvrier Qualifié'
+    });
+    setCustomPostes(current);
+  };
+
+  const handleModalApplyAiSuggestion = () => {
+    const breakdown = getGarmentTechnicalBreakdown(selectedAiPreset.title, undefined, undefined, selectedModelCategory);
+    const current = customPostes ? [...customPostes] : [...breakdown.postesTravail];
+    current.push({
+      nomAr: 'سرفلة (Surjeteuse) — لتخفيف الاختناق وزيادة الإنتاج',
+      nomFr: "Surjeteuse — renfort goulet d'étranglement (+25% prod)",
+      machine: 'Surjeteuse 4 Fils',
+      tempsMin: 4,
+      roleOuvrier: isAr ? 'عامل خياطة' : 'Ouvrier Qualifié'
+    });
+    setCustomPostes(current);
+    setAiSuggestionApplied(true);
+  };
+
   // Apply AI estimation values to calculator
   const applyAiEstimation = (preset: AiPreset) => {
     const breakdown = getGarmentTechnicalBreakdown(preset.title, undefined, undefined, selectedModelCategory);
-    const aiStitchingMin = breakdown.totalMinutesConfection || preset.stitchingMin || 35;
+    const activePostesModal = customPostes || breakdown.postesTravail;
+    const aiStitchingMin = activePostesModal.reduce((acc, p) => acc + (Number(p.tempsMin) || 0), 0) || breakdown.totalMinutesConfection || preset.stitchingMin || 35;
     const activeWorkersCount = Math.max(1, workers || selectedWorkerIds.length || 1);
-    const aiDailyPiecesOutput = Math.max(1, Math.floor((activeWorkersCount * 8 * 60) / aiStitchingMin));
+    const aiDailyPiecesOutput = Math.max(1, Math.floor((activeWorkersCount * workHoursPerDay * 60) / aiStitchingMin));
     const aiRealisticDays = Math.max(1, Math.ceil((qty || 1) / aiDailyPiecesOutput));
 
     setItemName(preset.title.replace(/^[^\s]+\s+/, ''));
@@ -1688,7 +1746,7 @@ function isSupportRole(e: Employe): boolean {
       {/* MODAL 2: AI COST ESTIMATOR FROM MODEL (Smart Feature 2) */}
       {showAiModal && (
         <div className="fixed inset-0 z-[1200] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-3xl w-full shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
+          <div className="bg-white rounded-3xl max-w-6xl w-[96vw] shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[94vh]">
             {/* Header */}
             <div className="p-5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -1860,44 +1918,177 @@ function isSupportRole(e: Employe): boolean {
                           </div>
                         </div>
 
-                        {/* NEW: Workstations & Machines Breakdown Table ("chela ghai thtaj mn post") */}
-                        <div className="p-4 bg-white rounded-3xl border border-slate-200 shadow-sm space-y-3">
-                          <div className="flex items-center justify-between text-xs font-black">
-                            <span className="flex items-center gap-2 text-slate-800">
-                              <Wrench className="w-4 h-4 text-violet-600" />
-                              {isAr ? '🏭 بوستات العمل والماكينات المطلوبة لإنتاج الموديل' : '🏭 Gamme de Montage & Postes Requis'}
-                            </span>
-                            <span className="px-2.5 py-0.5 bg-violet-100 text-violet-800 rounded-lg text-[10px] font-black">
-                              {breakdown.postesTravail.length} {isAr ? 'بوستات عمل' : 'Postes'} | {aiStitchingMin} {isAr ? 'دقيقة' : 'min'}
+                        {/* AI PRODUCTION ADVISOR: RECOMMENDATIONS FOR POSTES & WORKING HOURS ("WIALA KAN 3NDO CHI IQTIRAH BACH NZID LES POES OLA SA3A BACH NTKON INTAJAYA AFDL") */}
+                        <div className="p-4 bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-violet-500/10 rounded-3xl border border-amber-300/80 shadow-md space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 font-black text-xs text-amber-900">
+                              <Sparkles className="w-4 h-4 text-amber-600" />
+                              <span>{isAr ? '💡 إرشادات ومقترحات الخبير الذكي لرفع الإنتاجية في الأتوليي (IA Production Advisor)' : '💡 Recommandations IA : Optimisation & Productivité Atelier'}</span>
+                            </div>
+                            <span className="px-2 py-0.5 bg-amber-100 text-amber-800 font-black text-[10px] rounded-lg border border-amber-300">
+                              {isAr ? 'نصائح لزيادة الإنتاج +35%' : '+35% productivité'}
                             </span>
                           </div>
 
-                          <div className="space-y-2">
-                            {breakdown.postesTravail.map((poste, idx) => (
-                              <div key={idx} className="p-2.5 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between text-xs">
-                                <div className="flex items-center gap-2.5">
-                                  <span className="w-6 h-6 rounded-xl bg-violet-600 text-white font-black text-xs flex items-center justify-center shrink-0">
-                                    {idx + 1}
-                                  </span>
-                                  <div>
-                                    <strong className="text-slate-800 block text-xs">
-                                      {isAr ? poste.nomAr : poste.nomFr}
-                                    </strong>
-                                    <span className="text-[10px] text-slate-500 font-medium">
-                                      {poste.machine} — {poste.roleOuvrier}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                            {/* Suggestion 1: Add a workstation to relieve bottleneck */}
+                            <div className="p-3 bg-white/90 rounded-2xl border border-amber-200/80 flex flex-col justify-between gap-2 shadow-sm">
+                              <div>
+                                <span className="text-[10px] font-black text-amber-700 block mb-1">
+                                  {isAr ? '🏭 اقتراح بوست خياطة (إزالة الاختناق في الخط):' : '🏭 Recommandation Postes : Renfort Gamme'}
+                                </span>
+                                <p className="text-xs text-slate-700 font-bold leading-relaxed">
+                                  {isAr ? `⚠️ لتفادي الاختناق في موديل (${selectedAiPreset.title}) وتسريع وتيرة الخياطة، يقترح الذكاء الاصطناعي إضافة بوست [سرفلة (Surjeteuse) / تجميع] إضافي لتخفيف الضغط على العمال.` : `⚠️ Pour éviter le goulet d'étranglement sur ce modèle (${selectedAiPreset.title}), l'IA recommande d'ajouter un poste de Surjeteuse supplémentaire.`}
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={handleModalApplyAiSuggestion}
+                                disabled={aiSuggestionApplied}
+                                className={`w-full py-2 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm ${
+                                  aiSuggestionApplied
+                                    ? 'bg-emerald-600 text-white cursor-default'
+                                    : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white'
+                                }`}
+                              >
+                                <Sparkles className="w-3.5 h-3.5" />
+                                {aiSuggestionApplied ? (isAr ? '✓ تم تطبيق الاقتراح (+1 بوست خياطة ذكي)' : '✓ Recommandation appliquée (+1 Poste)') : (isAr ? '✨ تطبيق اقتراح زيادة الإنتاجية (+1 بوست خياطة)' : '✨ Appliquer la recommandation (+1 Poste)')}
+                              </button>
+                            </div>
+
+                            {/* Suggestion 2: Optimize Working Hours */}
+                            <div className="p-3 bg-white/90 rounded-2xl border border-amber-200/80 flex flex-col justify-between gap-2 shadow-sm">
+                              <div>
+                                <span className="text-[10px] font-black text-indigo-700 block mb-1">
+                                  {isAr ? '🕒 اقتراح ساعات العمل (لتعظيم الإنتاج اليومي):' : '🕒 Recommandation Horaires : Capacité Jour'}
+                                </span>
+                                <p className="text-xs text-slate-700 font-bold leading-relaxed">
+                                  {isAr ? `🕒 نصيحة الإنتاج: مع هذا الموديل (${aiStitchingMin} دقيقة/قطعة)، تشغيل الورشة (${workHoursPerDay} ساعات/يوم) يمنحك ${aiDailyPiecesOutput} قطعة يومياً. الانتقال إلى 9 أو 10 ساعات يضيف حتى +${Math.floor((activeWorkersCount * 2 * 60) / aiStitchingMin)} قطعة إضافية يومياً.` : `🕒 Astuce Production : Avec ${aiStitchingMin} min/pièce, passer de 8h à 9h/10h augmente votre rendement quotidien jusqu'à +${Math.floor((activeWorkersCount * 2 * 60) / aiStitchingMin)} pcs/jour.`}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                {[8, 9, 10].map(hrs => (
+                                  <button
+                                    key={hrs}
+                                    type="button"
+                                    onClick={() => setWorkHoursPerDay(hrs)}
+                                    className={`flex-1 py-1.5 rounded-xl font-black text-xs transition-all border ${
+                                      workHoursPerDay === hrs
+                                        ? 'bg-indigo-600 text-white border-indigo-700 shadow-sm'
+                                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                                    }`}
+                                  >
+                                    {hrs} {isAr ? 'ساعات/يوم' : 'h / j'}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* NEW: Gamme de Montage Studio Grid ("MSTBIN BDESGN WAJIHA HSN MNHAKA + BGHIT TKON 3NDI IMKANYA NTHKM F LAGAM") */}
+                        <div className="p-4 bg-white rounded-3xl border border-slate-200 shadow-sm space-y-3">
+                          <div className="flex items-center justify-between text-xs font-black flex-wrap gap-2">
+                            <span className="flex items-center gap-2 text-slate-800">
+                              <Wrench className="w-4 h-4 text-violet-600" />
+                              {isAr ? '🏭 بوستات العمل والماكينات (تحكم مباشر في مراحل الخياطة والتوقيت الدقيق)' : '🏭 Gamme de Montage et Contrôle des Postes'}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="px-2.5 py-1 bg-violet-100 text-violet-800 rounded-xl text-[11px] font-black">
+                                {activePostesModal.length} {isAr ? 'بوستات' : 'Postes'} | {aiStitchingMin} {isAr ? 'دقيقة (المجموع)' : 'min total'}
+                              </span>
+                              {customPostes && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setCustomPostes(null);
+                                    setAiSuggestionApplied(false);
+                                  }}
+                                  className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[10px] font-black transition-colors"
+                                >
+                                  {isAr ? '🔄 إعادة ضبط لاكام' : 'Réinitialiser'}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Beautiful Interactive Grid of Workstations ("mstfin bdesgn wajiha hsn mnhaka") */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {activePostesModal.map((poste, idx) => (
+                              <div key={idx} className="p-3 bg-gradient-to-br from-slate-50 to-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-2.5 relative group">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="w-6 h-6 rounded-xl bg-violet-600 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-sm">
+                                      {idx + 1}
+                                    </span>
+                                    <span className="text-[10px] font-bold px-2 py-0.5 bg-slate-200/70 text-slate-700 rounded-md truncate max-w-[120px]">
+                                      {poste.machine}
                                     </span>
                                   </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleModalDeletePoste(idx)}
+                                    className="text-slate-400 hover:text-red-500 p-1 rounded-lg hover:bg-red-50 transition-colors"
+                                    title={isAr ? 'حذف المرحلة' : 'Supprimer'}
+                                  >
+                                    🗑️
+                                  </button>
                                 </div>
-                                <span className="px-2.5 py-1 bg-violet-100 text-violet-800 rounded-xl font-black text-xs shrink-0">
-                                  {poste.tempsMin} {isAr ? 'دقيقة' : 'min'}
-                                </span>
+
+                                <div>
+                                  <input
+                                    type="text"
+                                    value={isAr ? (poste.nomAr || '') : (poste.nomFr || '')}
+                                    onChange={(e) => handleModalUpdatePosteName(idx, e.target.value)}
+                                    className="w-full font-black text-xs text-slate-800 bg-transparent border-b border-dashed border-slate-300 focus:border-violet-600 focus:outline-none py-0.5"
+                                    placeholder={isAr ? 'اسم المرحلة...' : 'Nom opération...'}
+                                  />
+                                  <span className="text-[10px] text-slate-500 font-medium block mt-1">
+                                    {poste.roleOuvrier}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center justify-between pt-1 border-t border-slate-100">
+                                  <span className="text-[10px] font-black text-slate-500">
+                                    {isAr ? 'التوقيت الدقيق:' : 'Temps min :'}
+                                  </span>
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleModalUpdatePosteMin(idx, -1)}
+                                      className="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs flex items-center justify-center transition-colors"
+                                    >
+                                      -
+                                    </button>
+                                    <span className="px-2.5 py-0.5 bg-violet-100 text-violet-800 font-black text-xs rounded-lg min-w-[48px] text-center">
+                                      {poste.tempsMin} {isAr ? 'د' : 'min'}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleModalUpdatePosteMin(idx, 1)}
+                                      className="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs flex items-center justify-center transition-colors"
+                                    >
+                                      +
+                                    </button>
+                                  </div>
+                                </div>
                               </div>
                             ))}
                           </div>
 
-                          <div className="pt-2 border-t border-slate-100 text-[11px] font-bold text-slate-600 flex items-center gap-1.5">
-                            <span className="text-amber-500">💡</span>
-                            <span>{breakdown.recommandationAtelier}</span>
+                          <div className="pt-2 border-t border-slate-100 flex items-center justify-between flex-wrap gap-2">
+                            <div className="text-[11px] font-bold text-slate-600 flex items-center gap-1.5">
+                              <span className="text-amber-500">💡</span>
+                              <span>{breakdown.recommandationAtelier}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={handleModalAddPoste}
+                              className="px-3.5 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-black text-xs transition-all shadow-sm flex items-center gap-1.5"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              {isAr ? '+ إضافة بوست خياطة جديد (Ajouter Poste)' : '+ Ajouter un poste'}
+                            </button>
                           </div>
                         </div>
 
