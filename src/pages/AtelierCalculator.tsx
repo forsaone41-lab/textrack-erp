@@ -4,7 +4,7 @@ import {
   Calculator, Printer, CheckCircle2, AlertTriangle,
   Clock, Package, Users, Scissors, ShoppingCart, ArrowLeft,
   DollarSign, Sparkles, Check, X, Bot, Wand2, RefreshCw, UserCheck,
-  Ruler, Upload, Image as ImageIcon, Search, FileText, Wrench
+  Ruler, Upload, Image as ImageIcon, Search, FileText, Wrench, Trash2, RotateCcw
 } from 'lucide-react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { loadData, Employe, FicheTechnique } from '../types';
@@ -768,6 +768,26 @@ function isSupportRole(e: Employe): boolean {
             {isAr ? 'طباعة / PDF' : 'Imprimer'}
           </button>
 
+          <button
+            type="button"
+            onClick={() => {
+              setItemName('');
+              setQuantity(0);
+              setPricePerPiece(0);
+              setMaterials(0);
+              setDays(0);
+              setExtraHours(0);
+              setMonthlyOther(0);
+              setSelectedModelCategory(undefined);
+              setSelectedFiche(null);
+            }}
+            title={isAr ? 'مسح وإفراغ جميع الخانات للبدء من جديد' : 'Vider tous les champs'}
+            className="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-2xs border border-rose-200 active:scale-95 group"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-rose-600 group-hover:text-white transition-transform duration-300 group-hover:scale-110" />
+            {isAr ? 'إفراغ الخانات' : 'Vider / Reset'}
+          </button>
+
           {!isModal && (
             <button
               onClick={() => navigate('/commandes')}
@@ -1122,9 +1142,9 @@ function isSupportRole(e: Employe): boolean {
                 </label>
                 <input
                   type="number"
-                  min="1"
-                  value={quantity}
-                  onChange={(e) => setQuantity(Number(e.target.value))}
+                  min="0"
+                  value={quantity === 0 ? '' : quantity}
+                  onChange={(e) => setQuantity(e.target.value === '' ? 0 : Number(e.target.value))}
                   className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-indigo-600 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
                 />
               </div>
@@ -1137,8 +1157,8 @@ function isSupportRole(e: Employe): boolean {
                   type="number"
                   step="0.01"
                   min="0"
-                  value={pricePerPiece}
-                  onChange={(e) => setPricePerPiece(Number(e.target.value))}
+                  value={pricePerPiece === 0 ? '' : pricePerPiece}
+                  onChange={(e) => setPricePerPiece(e.target.value === '' ? 0 : Number(e.target.value))}
                   className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-indigo-600 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
                 />
               </div>
@@ -1194,8 +1214,8 @@ function isSupportRole(e: Employe): boolean {
                 <input
                   type="number"
                   min="0"
-                  value={days}
-                  onChange={(e) => setDays(Number(e.target.value))}
+                  value={days === 0 ? '' : days}
+                  onChange={(e) => setDays(e.target.value === '' ? 0 : Number(e.target.value))}
                   className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-indigo-600 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
                 />
               </div>
@@ -1207,8 +1227,8 @@ function isSupportRole(e: Employe): boolean {
                 <input
                   type="number"
                   min="0"
-                  value={extraHours}
-                  onChange={(e) => setExtraHours(Number(e.target.value))}
+                  value={extraHours === 0 ? '' : extraHours}
+                  onChange={(e) => setExtraHours(e.target.value === '' ? 0 : Number(e.target.value))}
                   className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-indigo-600 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
                 />
               </div>
@@ -1307,8 +1327,8 @@ function isSupportRole(e: Employe): boolean {
                 <input
                   type="number"
                   min="0"
-                  value={materials}
-                  onChange={(e) => setMaterials(Number(e.target.value))}
+                  value={materials === 0 ? '' : materials}
+                  onChange={(e) => setMaterials(e.target.value === '' ? 0 : Number(e.target.value))}
                   className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-indigo-600 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
                 />
               </div>
@@ -1333,8 +1353,8 @@ function isSupportRole(e: Employe): boolean {
                 <input
                   type="number"
                   min="0"
-                  value={monthlyOther}
-                  onChange={(e) => setMonthlyOther(Number(e.target.value))}
+                  value={monthlyOther === 0 ? '' : monthlyOther}
+                  onChange={(e) => setMonthlyOther(e.target.value === '' ? 0 : Number(e.target.value))}
                   className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-indigo-600 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
                 />
               </div>
