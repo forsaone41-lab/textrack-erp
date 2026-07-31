@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 // Vercel deployment trigger
 import { Plus, Settings, ExternalLink, Crown, ArrowRight, ArrowLeft, TrendingUp, Sparkles, LayoutDashboard, Loader2, Trash2, AlertTriangle, X, Lock, User, LogOut, Globe } from 'lucide-react';
 import { supabase } from '../../supabase';
-import SaaSGodModeAdminModal from './SaaSGodModeAdminModal';
 
 export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIsAr, appCurrentUser }: any) {
    const [stores, setStores] = useState<any[]>([]);
@@ -12,7 +11,6 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
    const [currentUser, setCurrentUser] = useState<any>(null);
    const [userProfile, setUserProfile] = useState<any>(null);
    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-   const [isGodModeOpen, setIsGodModeOpen] = useState(false);
 
    // Self-contained dashboard language (FR/EN/AR), independent of the storefront's own language config.
    const [dashLang, setDashLang] = useState<'fr' | 'en' | 'ar'>(() => {
@@ -222,18 +220,6 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
                      <LogOut className="w-4 h-4" />
                   </button>
                </div>
-
-               {/* 👑 SUPER-ADMIN GOD-MODE CONTROL PANEL BUTTON */}
-               {(currentUser?.email === '00.emaily.zero@gmail.com' || currentUser?.email === 'fashlow@gmail.com' || currentUser?.role === 'admin' || currentUser?.role === 'superadmin') && (
-                  <button
-                     onClick={() => setIsGodModeOpen(true)}
-                     className="flex items-center gap-2 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 text-slate-950 px-5 py-3 h-11 rounded-xl font-black shadow-lg shadow-amber-500/25 hover:scale-105 transition-all active:scale-95 border border-amber-300"
-                     title={t('Ouvrir le Panneau God-Mode SaaS', 'Open the SaaS God-Mode Panel', 'فتح لوحة التحكم العليا (SaaS Admin)')}
-                  >
-                     <Crown className="w-5 h-5 animate-pulse" />
-                     <span className="hidden sm:inline">{t('GOD-MODE SAAS', 'GOD-MODE SAAS', 'لوحة التحكم العليا')}</span>
-                  </button>
-               )}
 
                <button
                   onClick={isLoading ? undefined : handleCreateStoreClick}
@@ -517,15 +503,6 @@ export default function StoreManagerDashboard({ onSelectStore, onOpenAI, storeIs
             </div>
          )}
 
-         {/* GOD-MODE SAAS SUPER-ADMIN PANEL */}
-         <SaaSGodModeAdminModal
-            isOpen={isGodModeOpen}
-            onClose={() => setIsGodModeOpen(false)}
-            currentUser={currentUser}
-            stores={stores}
-            onRefreshStores={() => window.location.reload()}
-            isAr={isRtl}
-         />
       </div>
    );
 }
