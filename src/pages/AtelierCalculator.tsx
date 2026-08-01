@@ -143,73 +143,86 @@ const getGarmentTechnicalBreakdown = (
     tissuName = 'كريب فاخر / حرير / جوهرة (Crêpe / Soie)';
     fournitures = 7.0;
     postes = [
-      { nomAr: 'فصالة وتحضير الأجزاء', nomFr: 'Coupe & Tracé', machine: 'Ciseaux électriques / Table', tempsMin: 6, roleOuvrier: 'فصالة وباترون' },
-      { nomAr: 'خياطة الهيكل والكتف والأكمام', nomFr: 'Assemblage Corps', machine: 'Piqueuse Plate', tempsMin: 14, roleOuvrier: 'خياط رئيسي' },
-      { nomAr: 'سرفلة وحماية الحواف', nomFr: 'Surfilage', machine: 'Surjeteuse 4/5 Fils', tempsMin: 8, roleOuvrier: 'ماكينة Overlock' },
-      { nomAr: 'تركيب السفيفة والعقاد أو التطريز', nomFr: 'Pose Sfifa / Broderie', machine: 'Piqueuse Guide Sfifa / Main', tempsMin: 12, roleOuvrier: 'خياطة متخصصة' },
+      { nomAr: 'فصالة وتحضير الأجزاء وباترون', nomFr: 'Coupe & Tracé', machine: 'Ciseaux électriques / Table', tempsMin: 6, roleOuvrier: 'فصالة وباترون' },
+      { nomAr: 'سرفلة وحماية حواف الثوب الفاخر', nomFr: 'Surfilage & Protection', machine: 'Surjeteuse 4/5 Fils', tempsMin: 6, roleOuvrier: 'ماكينة Overlock' },
+      { nomAr: 'تجميع الهيكل والأكتاف والجوانب', nomFr: 'Assemblage Corps', machine: 'Piqueuse Plate', tempsMin: 10, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'خياطة وتثبيت الأكمام', nomFr: 'Montage Manches', machine: 'Piqueuse Plate', tempsMin: 8, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'تطريز الصدر والأكمام (طرز / معلم)', nomFr: 'Broderie / Maâlem', machine: 'Machine Broderie / Main', tempsMin: 15, roleOuvrier: 'معلم طرز / تطريز' },
+      { nomAr: 'تركيب السفيفة والعقاد في الصدر', nomFr: 'Pose Sfifa & Aakad', machine: 'Piqueuse Guide Sfifa / Main', tempsMin: 14, roleOuvrier: 'خياطة متخصصة' },
+      { nomAr: 'ثني الأطراف السفلى واللمسات النهائية', nomFr: 'Ourlets & Finitions', machine: 'Recouvreuse / Main', tempsMin: 6, roleOuvrier: 'خياطة متخصصة' },
       { nomAr: 'كّي نهائي، تشطيب وفحص الجودة', nomFr: 'Repassage & Contrôle', machine: 'Fer Vapeur / Table Aspirante', tempsMin: 5, roleOuvrier: 'مراقب جودة وتشطيب' }
     ];
-    recommendation = 'ينصح بتخصيص عامل خبير لبوست تركيب السفيفة لضمان الجودة العالية وتجنب التأخير في خط الإنتاج.';
+    recommendation = 'ينصح بتخصيص عامل خبير لبوست تركيب السفيفة والتطريز لضمان الجودة العالية وتجنب التأخير في خط الإنتاج.';
   } else if (catKey === 'sportswear_hoodie') {
     categorieName = 'لباس رياضي / كاجوال (Sportswear / Hoodie)';
     tissuName = 'قطن ثقيل 320g / Fleece (Coton lourd)';
     fournitures = 5.6;
     postes = [
-      { nomAr: 'فصالة قماش القطن الثقيل', nomFr: 'Coupe Coton Fleece', machine: 'Ciseaux Lame', tempsMin: 5, roleOuvrier: 'فصالة وباترون' },
-      { nomAr: 'تجميع الأكتاف والجوانب والأكمام', nomFr: 'Assemblage Overlock', machine: 'Surjeteuse 4 Fils', tempsMin: 12, roleOuvrier: 'ماكينة Overlock' },
-      { nomAr: 'خياطة الجيب (الكَنغَر) والقب', nomFr: 'Montage Capuche & Poche', machine: 'Piqueuse Plate', tempsMin: 9, roleOuvrier: 'خياط رئيسي' },
-      { nomAr: 'حبكة وتثبيت الأساور والياقة', nomFr: 'Finition Bord-Côte', machine: 'Recouvreuse 3 Aiguilles', tempsMin: 6, roleOuvrier: 'خياطة' },
-      { nomAr: 'تنظيف الخيوط والكيّ والتغليف', nomFr: 'Finition & Emballage', machine: 'Fer à Vapeur', tempsMin: 3, roleOuvrier: 'فني تشطيب' }
+      { nomAr: 'فصالة القطن الثقيل للعلوي والبنطلون', nomFr: 'Coupe Coton Fleece', machine: 'Ciseaux Lame', tempsMin: 6, roleOuvrier: 'فصالة وباترون' },
+      { nomAr: 'تجميع هيكل الهودي وساقي البنطلون', nomFr: 'Assemblage Overlock Corps & Jambes', machine: 'Surjeteuse 4 Fils', tempsMin: 12, roleOuvrier: 'ماكينة Overlock' },
+      { nomAr: 'خياطة وتبطين القب (الكابيشون)', nomFr: 'Montage Capuche (Hoodie)', machine: 'Piqueuse Plate', tempsMin: 8, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'تركيب جيب الكنغر وجيوب البنطلون', nomFr: 'Montage Poche Kangourou & Poches', machine: 'Piqueuse Plate 2 Aiguilles', tempsMin: 9, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'تركيب حزام الخصر المطاطي للبنطلون', nomFr: 'Pose Ceinture & Élastique', machine: 'Piqueuse Ceinturière / Plate', tempsMin: 6, roleOuvrier: 'خياطة متخصصة' },
+      { nomAr: 'حبكة وتثبيت الأساور والياقة (بردكوت)', nomFr: 'Finition Bord-Côte', machine: 'Recouvreuse 3 Aiguilles', tempsMin: 6, roleOuvrier: 'خياطة' },
+      { nomAr: 'تنظيف الخيوط والكيّ بالبخار والتغليف', nomFr: 'Repassage, Nettoyage & Emballage', machine: 'Fer à Vapeur / Table Aspirante', tempsMin: 4, roleOuvrier: 'فني تشطيب' }
     ];
-    recommendation = 'استخدام ماكينة الأوفيرلوك 4 خيوط في التجميع يختصر 30% من وقت الإنتاج الكلي للطقم الرياضي.';
+    recommendation = 'هذا الطقم المكون من قطعتين يتطلب 7 محطات عمل فعلية. استخدام ماكينة الأوفيرلوك 4 خيوط في التجميع يختصر 30% من وقت الإنتاج الكلي.';
   } else if (catKey === 'veste_manteau') {
     categorieName = 'جاكيت / فيست شتوي (Veste / Gilet / Manteau)';
     tissuName = 'قماش شتوي / جاباردين / جوخ (Tissu hivernal)';
     fournitures = 12.0;
     postes = [
-      { nomAr: 'فصالة القماش الخارجي والبطانة', nomFr: 'Coupe Tissu & Doublure', machine: 'Ciseaux électriques', tempsMin: 8, roleOuvrier: 'فصالة وباترون' },
-      { nomAr: 'خياطة الجيوب والسحاب الأمامي', nomFr: 'Montage Poches & Zip', machine: 'Piqueuse Plate', tempsMin: 16, roleOuvrier: 'خياط رئيسي' },
-      { nomAr: 'تجميع الهيكل والأكمام مع البطانة', nomFr: 'Assemblage avec Doublure', machine: 'Piqueuse Plate / Surjeteuse', tempsMin: 18, roleOuvrier: 'خياط رئيسي' },
-      { nomAr: 'تركيب الياقة والتشطيب الداخلي', nomFr: 'Montage Col & Finitions', machine: 'Piqueuse Plate', tempsMin: 10, roleOuvrier: 'خياطة متخصصة' },
-      { nomAr: 'كّي بالبخار ومراقبة الجودة نهائية', nomFr: 'Repassage & Contrôle', machine: 'Fer Vapeur / Table Aspirante', tempsMin: 6, roleOuvrier: 'مراقب جودة وتشطيب' }
+      { nomAr: 'فصالة القماش الخارجي والبطانة الداخلي', nomFr: 'Coupe Tissu & Doublure', machine: 'Ciseaux électriques', tempsMin: 8, roleOuvrier: 'فصالة وباترون' },
+      { nomAr: 'لصق الفيزلين وتقوية الأجزاء', nomFr: 'Thermo-collage & Préparation', machine: 'Presse à Thermocoller', tempsMin: 6, roleOuvrier: 'مساعد فصالة' },
+      { nomAr: 'خياطة الجيوب الخارجية والجيب الداخلي', nomFr: 'Montage Poches Extérieures & Passepoil', machine: 'Piqueuse Plate', tempsMin: 14, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'تركيب السحاب الأمامي أو الأزرار', nomFr: 'Montage Fermeture Éclair (Zip / Boutons)', machine: 'Piqueuse Plate', tempsMin: 10, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'تجميع الهيكل والأكتاف', nomFr: 'Assemblage Corps & Épaules', machine: 'Piqueuse Plate', tempsMin: 12, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'تركيب الياقة والـ Revers', nomFr: 'Montage Col & Revers', machine: 'Piqueuse Plate', tempsMin: 10, roleOuvrier: 'خياطة متخصصة' },
+      { nomAr: 'تجميع الأكمام مع البطانة وربطها بالهيكل', nomFr: 'Montage Manches & Doublure', machine: 'Piqueuse Plate / Surjeteuse', tempsMin: 15, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'خياطة الزينة الخارجية (Surpiqûre)', nomFr: 'Surpiqûre & Finitions de Bord', machine: 'Piqueuse 2 Aiguilles', tempsMin: 8, roleOuvrier: 'خياطة متخصصة' },
+      { nomAr: 'كّي بالبخار ومراقبة الجودة نهائية', nomFr: 'Repassage Final & Contrôle Qualité', machine: 'Fer Vapeur / Table Aspirante', tempsMin: 6, roleOuvrier: 'مراقب جودة وتشطيب' }
     ];
-    recommendation = 'بوست خياطة الجيوب والسحاب هو الأكثر دقة في الخط، يجب تخصيص عامل متمرس له لضمان جودة الجاكيت.';
+    recommendation = 'هذا الجاكيت الشتوي موديل تقني متقدم يتطلب 9 محطات عمل متخصصة لضمان جودة استثنائية دون اختناقات.';
   } else if (catKey === 'tshirt_summer') {
     categorieName = 'طقم صيفي / تيشرت (T-shirt / Short été)';
     tissuName = 'قطن مُمشط 100% (Coton Combed)';
     fournitures = 5.75;
     postes = [
-      { nomAr: 'فصالة الصدر والظهر والأكمام', nomFr: 'Coupe Pièces', machine: 'Ciseaux électrique', tempsMin: 3, roleOuvrier: 'فصالة وباترون' },
-      { nomAr: 'تجميع الأكتاف والجوانب', nomFr: 'Assemblage', machine: 'Surjeteuse 4 Fils', tempsMin: 7, roleOuvrier: 'ماكينة Overlock' },
-      { nomAr: 'تركيب الياقة والشريط المزخرف', nomFr: 'Pose Col & Galon', machine: 'Piqueuse Plate / Colleteuse', tempsMin: 6, roleOuvrier: 'خياط رئيسي' },
-      { nomAr: 'ثني الأطراف والأكمام', nomFr: 'Ourlets Bas & Manches', machine: 'Recouvreuse', tempsMin: 4, roleOuvrier: 'خياطة' },
-      { nomAr: 'كيّ سريع ومراقبة', nomFr: 'Repassage Rapide', machine: 'Table Repassage', tempsMin: 2, roleOuvrier: 'فني تشطيب' }
+      { nomAr: 'فصالة تيشرت والشورت الصيفي', nomFr: 'Coupe T-shirt & Short', machine: 'Ciseaux électrique', tempsMin: 4, roleOuvrier: 'فصالة وباترون' },
+      { nomAr: 'تجميع صدر وظهر التيشرت والأكمام', nomFr: 'Assemblage T-shirt (Épaules & Côtés)', machine: 'Surjeteuse 4 Fils', tempsMin: 6, roleOuvrier: 'ماكينة Overlock' },
+      { nomAr: 'تجميع الشورت وتركيب مطاط الخصر', nomFr: 'Assemblage Short & Ceinture', machine: 'Surjeteuse / Piqueuse', tempsMin: 7, roleOuvrier: 'ماكينة Overlock' },
+      { nomAr: 'تركيب ياقة التيشرت وشريط النظافة', nomFr: 'Pose Col & Bande de Propreté', machine: 'Colleteuse / Piqueuse', tempsMin: 5, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'ثني أسفل التيشرت، الأكمام والشورت', nomFr: 'Ourlets Bas T-shirt, Manches & Short', machine: 'Recouvreuse 3 Aiguilles', tempsMin: 6, roleOuvrier: 'خياطة' },
+      { nomAr: 'كيّ سريع، فحص وتغليف', nomFr: 'Repassage Rapide & Triage', machine: 'Table Repassage', tempsMin: 3, roleOuvrier: 'فني تشطيب' }
     ];
-    recommendation = 'خط إنتاج سريع ذو كفاءة عالية، يمكن للعامل الواحد في الأتوليي إنتاج أكثر من 22 قطعة في اليوم.';
+    recommendation = 'طقم صيفي مكون من قطعتين يتطلب 6 محطات عمل متناسقة، يمكن للعامل الواحد إنتاج أكثر من 22 قطعة في اليوم.';
   } else if (catKey === 'pantalon_cargo') {
     categorieName = 'سروال / بنطلون كارجو (Pantalon / Cargo)';
     tissuName = 'جاباردين / جينز / قطن (Gabardine / Denim)';
     fournitures = 8.5;
     postes = [
-      { nomAr: 'فصالة القماش والجيوب الإضافية', nomFr: 'Coupe Pantalon & Poches', machine: 'Ciseaux électriques', tempsMin: 5, roleOuvrier: 'فصالة وباترون' },
-      { nomAr: 'خياطة الجيوب الكارجو والجانبية', nomFr: 'Montage Poches Cargo', machine: 'Piqueuse Plate 2 Aiguilles', tempsMin: 11, roleOuvrier: 'خياط رئيسي' },
-      { nomAr: 'تجميع الساقين ومنطقة الحجر', nomFr: 'Assemblage Jambes & Fourche', machine: 'Surjeteuse 5 Fils', tempsMin: 9, roleOuvrier: 'ماكينة Overlock' },
-      { nomAr: 'تركيب الحزام المطاطي أو أزرار الخصر', nomFr: 'Montage Ceinture', machine: 'Piqueuse Ceinturière / Plate', tempsMin: 7, roleOuvrier: 'خياطة متخصصة' },
-      { nomAr: 'ثني الأسفل والكيّ النهائي', nomFr: 'Ourlet Bas & Repassage', machine: 'Recouvreuse / Fer', tempsMin: 3, roleOuvrier: 'فني تشطيب' }
+      { nomAr: 'فصالة السروال والجيوب الإضافية', nomFr: 'Coupe Gabardine & Poches', machine: 'Ciseaux électriques', tempsMin: 5, roleOuvrier: 'فصالة وباترون' },
+      { nomAr: 'خياطة الجيوب الأمامية والخلفية', nomFr: 'Montage Poches Avant & Arrière', machine: 'Piqueuse Plate', tempsMin: 8, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'خياطة جيوب الكارجو الجانبية والأغطية', nomFr: 'Montage Poches Cargo Latérales', machine: 'Piqueuse Plate 2 Aiguilles', tempsMin: 10, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'تجميع الساقين ومنطقة الحجر', nomFr: 'Assemblage Jambes & Fourche', machine: 'Surjeteuse 5 Fils (Safety)', tempsMin: 9, roleOuvrier: 'ماكينة Overlock' },
+      { nomAr: 'تركيب حزام الخصر وعرى الحزام (Passants)', nomFr: 'Montage Ceinture & Passants', machine: 'Piqueuse Ceinturière / Plate', tempsMin: 8, roleOuvrier: 'خياطة متخصصة' },
+      { nomAr: 'ثني أسفل الساق وخياطة الدعم', nomFr: 'Ourlets Bas & Renforts', machine: 'Recouvreuse / Piqueuse', tempsMin: 5, roleOuvrier: 'خياطة' },
+      { nomAr: 'كيّ نهائي بالبخار وفحص الجودة', nomFr: 'Repassage & Contrôle Qualité', machine: 'Fer à Vapeur', tempsMin: 4, roleOuvrier: 'فني تشطيب' }
     ];
-    recommendation = 'استخدام ماكينة إبرتين في خياطة جيوب الكارجو يعطي متانة عالية ومظهراً احترافياً للمنتج.';
+    recommendation = 'هذا السروال الكارجو يتطلب 7 محطات عمل. استخدام ماكينة إبرتين في خياطة جيوب الكارجو يعطي متانة عالية ومظهراً احترافياً للمنتج.';
   } else {
     categorieName = 'موديل خياطة عام (Confection Textile)';
     tissuName = 'قماش قياسي (Tissu standard)';
     fournitures = 6.0;
     postes = [
-      { nomAr: 'فصالة القماش والتحضير', nomFr: 'Coupe & Préparation', machine: 'Table de Coupe / Ciseaux', tempsMin: 5, roleOuvrier: 'فصالة وباترون' },
-      { nomAr: 'خياطة الهيكل الأساسي للأجزاء', nomFr: 'Assemblage Principal', machine: 'Piqueuse Plate', tempsMin: 12, roleOuvrier: 'خياط رئيسي' },
-      { nomAr: 'سرفلة وتجميع الحواف', nomFr: 'Surfilage & Assemblage', machine: 'Surjeteuse 4/5 Fils', tempsMin: 8, roleOuvrier: 'ماكينة Overlock' },
-      { nomAr: 'ثني الأطراف والتشطيب الخارجي', nomFr: 'Ourlets & Finition', machine: 'Recouvreuse / Piqueuse', tempsMin: 5, roleOuvrier: 'خياطة' },
-      { nomAr: 'كّي بالبخار وفحص الجودة', nomFr: 'Repassage & Contrôle', machine: 'Fer Vapeur / Table Aspirante', tempsMin: 4, roleOuvrier: 'مراقب جودة وتشطيب' }
+      { nomAr: 'فصالة القماش وتحضير الأجزاء', nomFr: 'Coupe & Préparation', machine: 'Table de Coupe / Ciseaux', tempsMin: 5, roleOuvrier: 'فصالة وباترون' },
+      { nomAr: 'سرفلة وحماية الأطراف', nomFr: 'Surfilage des Bords', machine: 'Surjeteuse 3/4 Fils', tempsMin: 6, roleOuvrier: 'ماكينة Overlock' },
+      { nomAr: 'خياطة الهيكل وتجميع الأجزاء الرئيسية', nomFr: 'Assemblage Principal', machine: 'Piqueuse Plate', tempsMin: 12, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'تركيب الياقة، الجيوب أو السحاب', nomFr: 'Montage Accessoires (Col/Poches/Zip)', machine: 'Piqueuse Plate', tempsMin: 8, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'ثني الأطراف الخارجية والتشطيب', nomFr: 'Ourlets & Finition Extérieure', machine: 'Recouvreuse', tempsMin: 5, roleOuvrier: 'خياطة' },
+      { nomAr: 'كّي بالبخار ومراقبة الجودة نهائية', nomFr: 'Repassage Vapeur & Contrôle', machine: 'Fer Vapeur / Table Aspirante', tempsMin: 4, roleOuvrier: 'مراقب جودة وتشطيب' }
     ];
-    recommendation = 'توزيع متوازن للمراحل على 5 بوستات عمل يضمن استمرارية خط الإنتاج دون تكدس في الأتوليي.';
+    recommendation = 'توزيع متوازن للمراحل على 6 بوستات عمل يضمن استمرارية خط الإنتاج دون تكدس في الأتوليي.';
   }
 
   const totalMinutes = postes.reduce((sum, p) => sum + p.tempsMin, 0);
