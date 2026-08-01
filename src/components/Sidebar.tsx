@@ -20,7 +20,8 @@ import {
   ChevronDown,
   Briefcase,
   Crown,
-  Calculator
+  Calculator,
+  Bot
 } from 'lucide-react';
 
 import { User, CompanyProfile, loadPermissions, AppPage, syncCompanyProfile } from '../types';
@@ -285,7 +286,10 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
               <>
                 <NavItem to="/commandes" icon={ShoppingCart} label={isAr ? 'الطلبيات' : 'Commandes'} />
                 {currentUser?.role === 'admin' && (
-                  <NavItem to="/atelier-calculator" icon={Calculator} label={isAr ? 'حاسبة أرباح الإنتاج (VIP)' : 'Calculateur Atelier (VIP)'} />
+                  <>
+                    <NavItem to="/atelier-calculator" icon={Calculator} label={isAr ? 'حاسبة أرباح الإنتاج (VIP)' : 'Calculateur Atelier (VIP)'} />
+                    <NavItem to="/gamme-ai-pilot" icon={Bot} label={isAr ? 'خبير الغام والإنتاج (AI)' : 'Gamme & Pilotage AI'} pro />
+                  </>
                 )}
                 {can('agenda') && <NavItem to="/agenda" icon={CalendarDays} label={isAr ? 'الأجندة' : 'Agenda'} />}
                 <NavItem to="/commandes/manage" icon={Sparkles} label={isAr ? 'إعداد طلبية (PRO)' : 'Master Setup (PRO)'} pro />
@@ -310,6 +314,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
               <>
                 <NavItem to="/chaine-montage" icon={Activity} label={isAr ? 'تتبع التركيب' : 'Suivi Montage'} />
                 <NavItem to="/pilotage-chaine" icon={TrendingUp} label={isAr ? 'لوحة القيادة' : 'Pilotage'} />
+                <NavItem to="/gamme-ai-pilot" icon={Bot} label={isAr ? 'خبير الغام والإنتاج (AI)' : 'Gamme & Pilotage AI'} pro />
               </>
             )}
             </div>

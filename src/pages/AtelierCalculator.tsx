@@ -859,6 +859,15 @@ function isSupportRole(e: Employe): boolean {
         <div className="flex items-center gap-2 no-print flex-wrap">
           <button
             type="button"
+            onClick={() => navigate('/gamme-ai-pilot')}
+            className="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 hover:from-emerald-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-md shadow-emerald-600/30 border border-emerald-400 active:scale-95 group"
+          >
+            <Bot className="w-4 h-4 text-white animate-pulse" />
+            <span>{isAr ? '🤖 خبير الغام (صفحة مستقلة)' : '🤖 AI Gamme Pilot (Page)'}</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => {
               setFichePickerMode('direct');
               setIsFichePickerOpen(true);
