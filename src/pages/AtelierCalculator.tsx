@@ -520,6 +520,23 @@ function isSupportRole(e: Employe): boolean {
      }
   }, [selectedFiche, quantity]);
 
+  useEffect(() => {
+     try {
+       const exported = localStorage.getItem('beya_ai_gamme_pilot_export');
+       if (exported) {
+         const data = JSON.parse(exported);
+         if (data.itemName) setItemName(data.itemName);
+         if (data.customPostes && Array.isArray(data.customPostes)) {
+           setCustomPostes(data.customPostes);
+         }
+         if (data.workers) setWorkers(Number(data.workers) || 8);
+         localStorage.removeItem('beya_ai_gamme_pilot_export');
+       }
+     } catch (e) {
+       console.error(e);
+     }
+  }, []);
+
   const selectAndApplyFicheDirectly = (f: FicheTechnique) => {
      setSelectedFiche(f);
      setItemName(`${f.modele}${f.type ? ` (${f.type})` : ''}`);
@@ -1163,6 +1180,15 @@ function isSupportRole(e: Employe): boolean {
                     {isAr ? `🏭 بوستات العمل الفنية ومراحل الخياطة (تعديل مباشر)` : `🏭 Gamme de Montage (Éditable)`}
                   </span>
                   <div className="flex items-center gap-1.5 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => navigate('/gamme-ai-pilot')}
+                      title={isAr ? 'الانتقال لصفحة خبير الغام المستقلة لتحليل الصورة وتصدير Excel' : 'Ouvrir page AI Gamme Pilot standalone'}
+                      className="px-2.5 py-0.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg text-[10px] font-black border border-emerald-400/50 shadow-sm transition-all flex items-center gap-1 active:scale-95"
+                    >
+                      <Bot className="w-3.5 h-3.5" />
+                      {isAr ? '🤖 صفحة خبير الغام (Gamme Pilot)' : '🤖 Expert Gamme (Page)'}
+                    </button>
                     <button
                       type="button"
                       onClick={() => setIsPostesBoxExpanded(!isPostesBoxExpanded)}
