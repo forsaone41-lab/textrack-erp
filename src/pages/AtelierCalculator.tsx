@@ -573,27 +573,54 @@ function isSupportRole(e: Employe): boolean {
      }
   };
 
+  const performAiVisionDeconstruction = (title: string, dataUrl?: string) => {
+    const aiCustomPostes: PosteTravail[] = [
+      { nomAr: 'فصالة بالليزر وتحضير الأجزاء وباترون', nomFr: 'Coupe Laser & Tracé', machine: 'Ciseaux électriques / Table Laser', tempsMin: 7, roleOuvrier: 'فصالة وباترون' },
+      { nomAr: 'لصق الفيزلين وتقوية الياقة والأطراف', nomFr: 'Thermocollage & Renforts', machine: 'Presse à Thermocoller', tempsMin: 5, roleOuvrier: 'مساعد فصالة' },
+      { nomAr: 'سرفلة وحماية حواف الثوب الداخلي', nomFr: 'Surfilage de Sécurité', machine: 'Surjeteuse 4/5 Fils', tempsMin: 7, roleOuvrier: 'ماكينة Overlock' },
+      { nomAr: 'تجميع الهيكل، الأكتاف والدرزات الرئيسية', nomFr: 'Assemblage Principal & Épaules', machine: 'Piqueuse Plate 2 Aiguilles', tempsMin: 12, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'خياطة وتثبيت الأكمام مع البطانة الداعمة', nomFr: 'Montage Manches & Emmanchures', machine: 'Piqueuse Plate', tempsMin: 10, roleOuvrier: 'خياط رئيسي' },
+      { nomAr: 'تركيب الياقة، الجيوب أو التطريز الزخرفي', nomFr: 'Pose Accessoires (Col/Poche/Broderie)', machine: 'Piqueuse Guide / Automate', tempsMin: 9, roleOuvrier: 'خياطة متخصصة' },
+      { nomAr: 'ثني الأطراف السفلى والتشطيب الدقيق', nomFr: 'Ourlets & Finitions Extérieures', machine: 'Recouvreuse / Main', tempsMin: 5, roleOuvrier: 'خياطة متخصصة' },
+      { nomAr: 'كّي نهائي بالبخار، تشطيب وفحص الجودة', nomFr: 'Repassage Vapeur & Contrôle Qualité', machine: 'Fer Vapeur / Table Aspirante', tempsMin: 4, roleOuvrier: 'مراقب جودة وتشطيب' }
+    ];
+
+    const totalConfectionMin = aiCustomPostes.reduce((sum, p) => sum + (Number(p.tempsMin) || 0), 0);
+
+    const aiReportAr = `🤖 تحليل صورة الموديل بالذكاء الاصطناعي (BEYA AI Vision - Déconstruction):
+1. 🔍 تشريح الهيكل والتصميم: تم رصد قصة معقدة مع أكمام مدعمة، خياطة تقوية مزدوجة إبرتين، تشطيبات حواف دقيقة، ووجود عناصر زخرفية/جيوب مدمجة.
+2. 🧵 مسار الخياطة والمكائن: الخياطة الأساسية تتطلب (Piqueuse Plate إبرتين ودليل Guide)، السرفلة على (Surjeteuse 5 خيوط أمان)، مع تقوية بالحرارة (Thermocollage) وكيّ بالبخار.
+3. 👥 القوى العاملة والبوستات المطلوبة: لتجنب أي اختناق في خط الإنتاج، هذا الموديل يحتاج بالضبط إلى (8) محطات عمل متخصصة، أي (8) عمال خياطة وتشطيب، بمتوسط خياطة ${totalConfectionMin} دقيقة للقطعة واستهلاك 2.40 متر من القماش.`;
+
+    const aiReportFr = `🤖 Analyse Visuelle IA (BEYA AI Vision - Déconstruction) :
+1. 🔍 Ingénierie & Coupe : Détection d'un montage élaboré avec emmanchures renforcées, coutures surpiquées 2 aiguilles, finitions de bord techniques et empiècements intégrés.
+2. 🧵 Parcours Machines : Assemblage sur Piqueuse Plate (1 & 2 aiguilles + Guide), surfilage de sécurité sur Surjeteuse 5 Fils, renforts thermocollés et finition fer à vapeur.
+3. 👥 Effectif et Chaîne requis : Ce modèle exige exactement 8 postes de travail spécialisés (8 ouvriers) pour une gamme de ${totalConfectionMin} min/pièce et une consommation de 2.40m de tissu.`;
+
+    setSelectedModelCategory(undefined);
+    setCustomPostes(aiCustomPostes);
+    setWorkers(aiCustomPostes.length);
+
+    setSelectedAiPreset({
+      title: `📷 ${title}`,
+      desc: isAr ? `تحليل بصري متقدم (8 بوستات / 8 عمال)` : `Analyse Visuelle IA (8 postes / 8 ouvriers)`,
+      aiText: isAr ? aiReportAr : aiReportFr,
+      recommendedPrice: 120,
+      materialPerPiece: 55,
+      recommendedDays: 3,
+      photo: dataUrl,
+      stitchingMin: totalConfectionMin
+    });
+    setIsAiAnalyzing(true);
+    setTimeout(() => setIsAiAnalyzing(false), 600);
+  };
+
   const handleUploadModelImage = async (file: File) => {
      const reader = new FileReader();
      reader.onload = () => {
         const dataUrl = reader.result as string;
         const cleanName = file.name.replace(/\.[^/.]+$/, '');
-        const breakdown = getGarmentTechnicalBreakdown(cleanName);
-        setSelectedModelCategory(undefined);
-        setSelectedAiPreset({
-           title: `📷 ${cleanName}`,
-           desc: isAr ? `موديل مستورد (${breakdown.categorie})` : `Modèle importé (${breakdown.categorie})`,
-           aiText: isAr
-              ? `تحليل تقني للموديل المستورد "${cleanName}": تصنيف "${breakdown.categorie}" يتطلب ${breakdown.postesTravail.length} بوستات عمل (فصالة، خياطة، سرفلة، تشطيب وكيّ) بمتوسط خياطة ${breakdown.totalMinutesConfection} دقيقة للقطعة. استهلاك القماش المقدر: ${breakdown.consommationMetrage} متر (${breakdown.tissuType}).`
-              : `Analyse technique de l'image "${cleanName}" : Catégorie "${breakdown.categorie}" nécessitant ${breakdown.postesTravail.length} postes de travail pour ${breakdown.totalMinutesConfection} min de confection. Consommation estimée : ${breakdown.consommationMetrage} m (${breakdown.tissuType}).`,
-           recommendedPrice: breakdown.prixVenteConseille,
-           materialPerPiece: Math.round(((breakdown.consommationMetrage * breakdown.prixMetreEstime) + breakdown.fournituresEstimees) * 100) / 100,
-           recommendedDays: 2,
-           photo: dataUrl,
-           stitchingMin: breakdown.totalMinutesConfection
-        });
-        setIsAiAnalyzing(true);
-        setTimeout(() => setIsAiAnalyzing(false), 500);
+        performAiVisionDeconstruction(cleanName, dataUrl);
      };
      reader.readAsDataURL(file);
   };
@@ -744,7 +771,9 @@ function isSupportRole(e: Employe): boolean {
     setPricePerPiece(breakdown.prixVenteConseille || preset.recommendedPrice);
     setMaterials(Math.round(((breakdown.consommationMetrage * breakdown.prixMetreEstime) + breakdown.fournituresEstimees) * qty));
     setDays(aiRealisticDays);
-    setCustomPostes(null);
+    if (!preset.aiText?.includes('AI Vision') && !preset.aiText?.includes('Déconstruction')) {
+      setCustomPostes(null);
+    }
     setShowAiModal(false);
   };
 
@@ -1871,6 +1900,14 @@ function isSupportRole(e: Employe): boolean {
                   >
                     <FileText className="w-3.5 h-3.5" />
                     {isAr ? '📋 من الفيش تكنيك (BEYA)' : '📋 Fiche Technique (BEYA)'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => performAiVisionDeconstruction(isAr ? 'عينة تجريبية - جاكيت / عباية فاخرة' : 'Démo Modèle Haute Confection')}
+                    className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border border-emerald-400 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md shadow-emerald-900/30 active:scale-95"
+                  >
+                    <Bot className="w-3.5 h-3.5" />
+                    {isAr ? '🔬 تجربة تحليل صورة (AI Vision)' : '🔬 Test Analyse Image (Démo IA)'}
                   </button>
                   <label className="px-3 py-1.5 bg-slate-100 hover:bg-slate-800 text-slate-700 hover:text-white border border-slate-200 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer">
                     <Upload className="w-3.5 h-3.5" />
