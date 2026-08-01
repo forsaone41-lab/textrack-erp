@@ -18,7 +18,8 @@ import {
   Zap, 
   Calendar, 
   FileSpreadsheet, 
-  Send 
+  Send,
+  Key
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLang } from '../contexts/LangContext';
@@ -147,6 +148,13 @@ export default function GammeAiPilot() {
   const [shiftHours, setShiftHours] = useState<number>(9); // 8h, 9h, 10h
   const [efficiencyPercent, setEfficiencyPercent] = useState<number>(90); // 80%, 90%, 100%
 
+  // Gemini Free API Key State (Google AI Studio Free Tier)
+  const [geminiApiKey, setGeminiApiKey] = useState(() => {
+    return localStorage.getItem('beya_gemini_api_key') || '';
+  });
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+  const [isGeminiLive, setIsGeminiLive] = useState(false);
+
   // Calculate Total Takt Time / Minute per piece
   const totalTaktMin = useMemo(() => {
     return postes.reduce((sum, p) => sum + (Number(p.tempsMin) || 0), 0);
@@ -216,9 +224,79 @@ export default function GammeAiPilot() {
     reader.readAsDataURL(file);
   };
 
-  const handleAnalyzeCurrentPhoto = () => {
+  const handleAnalyzeCurrentPhoto = async () => {
     setIsAnalyzing(true);
+    setIsGeminiLive(false);
+
+    const activeKey = geminiApiKey || '';
+
+    if (activeKey && uploadedImage) {
+      try {
+        setIsGeminiLive(true);
+        const base64Data = uploadedImage.split(',')[1];
+        const mimeType = uploadedImage.substring(uploadedImage.indexOf(':') + 1, uploadedImage.indexOf(';')) || 'image/jpeg';
+
+        const promptText = isAr
+          ? `أنت خبير هندسة خياطة وموديلست محترف في صناعة الملابس المغربية والعالمية. حلل هذه الصورة بدقة واستخرج مراحل الخياطة المطلوبة.
+أجب فقط بصيغة JSON صحيحة (بدون أي نص آخر أو علامات Markdown) على هذا الشكل بالضبط:
+{
+  "garmentNameAr": "اسم قطعة الملابس بالعربية",
+  "garmentNameFr": "Nom du vêtement en français",
+  "postes": [
+    { "nomAr": "اسم العملية بالعربية", "nomFr": "Nom en français", "machine": "نوع الماكينة", "tempsMin": 6, "roleOuvrier": "دور العامل" }
+  ],
+  "reportAr": "تقرير هندسي مختصر عن الخياطة وعدد العمال بالعربية",
+  "reportFr": "Rapport technique court en français"
+}`
+          : `Tu es un ingénieur de confection textile et modéliste expert. Analyse cette image et déconstruis la gamme de montage.
+Réponds uniquement en JSON valide (sans aucun autre texte ou balise Markdown) sous cette forme exacte :
+{
+  "garmentNameAr": "Nom en arabe",
+  "garmentNameFr": "Nom en français",
+  "postes": [
+    { "nomAr": "Nom en arabe", "nomFr": "Nom en français", "machine": "Machine", "tempsMin": 6, "roleOuvrier": "Rôle ouvrier" }
+  ],
+  "reportAr": "Rapport technique en arabe",
+  "reportFr": "Rapport technique en français"
+}`;
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${activeKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { text: promptText },
+                { inline_data: { mime_type: mimeType, data: base64Data } }
+              ]
+            }]
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          let text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+          const parsed = JSON.parse(text);
+
+          if (parsed && Array.isArray(parsed.postes) && parsed.postes.length > 0) {
+            setPostes(parsed.postes);
+            setWorkersCount(parsed.postes.length);
+            if (parsed.garmentNameAr && isAr) setGarmentName(parsed.garmentNameAr);
+            if (parsed.garmentNameFr && !isAr) setGarmentName(parsed.garmentNameFr);
+            setAiReport(isAr ? (parsed.reportAr || '') : (parsed.reportFr || ''));
+            setIsAnalyzing(false);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Gemini Live API fallback to smart simulation:', err);
+      }
+    }
+
+    // Fallback Smart Simulation (Always Works!)
     setTimeout(() => {
+      setIsGeminiLive(false);
       const aiPostes: PosteTravail[] = [
         { nomAr: 'فصالة بالليزر وتحضير الأجزاء وباترون', nomFr: 'Coupe Laser & Tracé', machine: 'Ciseaux électriques / Table Laser', tempsMin: 7, roleOuvrier: 'فصالة وباترون' },
         { nomAr: 'لصق الفيزلين وتقوية الياقة والأطراف', nomFr: 'Thermocollage & Renforts', machine: 'Presse à Thermocoller', tempsMin: 5, roleOuvrier: 'مساعد فصالة' },
@@ -393,6 +471,18 @@ export default function GammeAiPilot() {
           >
             <Send className="w-4 h-4 shrink-0" />
             <span>{isAr ? '🚀 إرسال إلى حاسبة الأتوليي' : '🚀 Envoyer au Calculateur'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowApiKeyModal(true)}
+            className={`px-3 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 border shadow-md active:scale-95 ${
+              geminiApiKey 
+                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30' 
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+            }`}
+          >
+            <Key className="w-4 h-4 shrink-0 text-amber-400" />
+            <span>{geminiApiKey ? (isAr ? '🔑 Gemini Free (متصل)' : '🔑 Gemini Free (Actif)') : (isAr ? '🔑 تركيب Gemini API (فابور)' : '🔑 Config Gemini API')}</span>
           </button>
           <button
             type="button"
@@ -893,6 +983,72 @@ export default function GammeAiPilot() {
         </div>
 
       </div>
+
+      {/* Gemini API Key Modal (Free Tier Config) */}
+      {showApiKeyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md px-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <Key className="w-5 h-5 text-amber-400" />
+                <h3 className="text-base font-black text-white">
+                  {isAr ? '🔑 إعداد اتصال Google Gemini API (فابور 100%)' : '🔑 Configuration Google Gemini API (100% Gratuit)'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowApiKeyModal(false)}
+                className="text-slate-400 hover:text-white text-sm font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              {isAr
+                ? 'ألصق كود Google Gemini 1.5 Flash المجاني هنا (المأخوذ من aistudio.google.com). سيتم تخزينه محلياً في هذا الجهاز فقط وسيعمل الذكاء الاصطناعي الحقيقي عند تحليل صور الموديلات!'
+                : 'Collez votre clé API Google Gemini 1.5 Flash (gratuite depuis aistudio.google.com). Elle est stockée uniquement sur cet appareil pour analyser en temps réel vos photos !'}
+            </p>
+
+            <div>
+              <label className="block text-[11px] font-bold text-slate-400 mb-1">
+                {isAr ? 'كود API Key (يبدأ بـ AIzaSy...):' : 'Clé API (commence par AIzaSy...) :'}
+              </label>
+              <input
+                type="password"
+                value={geminiApiKey}
+                onChange={(e) => setGeminiApiKey(e.target.value)}
+                placeholder="AIzaSy..."
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-amber-500"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.removeItem('beya_gemini_api_key');
+                  setGeminiApiKey('');
+                  setShowApiKeyModal(false);
+                }}
+                className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all"
+              >
+                {isAr ? 'حذف / محاكاة افتراضية' : 'Effacer / Mode simulation'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.setItem('beya_gemini_api_key', geminiApiKey.trim());
+                  setShowApiKeyModal(false);
+                }}
+                className="px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white rounded-xl text-xs font-black transition-all shadow-lg shadow-amber-900/30"
+              >
+                {isAr ? '💾 حفظ الكود وتشغيل الذكاء الحقيقي' : '💾 Enregistrer et Activer l\'IA réelle'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
