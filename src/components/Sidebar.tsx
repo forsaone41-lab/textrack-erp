@@ -288,7 +288,6 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
                 {currentUser?.role === 'admin' && (
                   <>
                     <NavItem to="/atelier-calculator" icon={Calculator} label={isAr ? 'حاسبة أرباح الإنتاج (VIP)' : 'Calculateur Atelier (VIP)'} />
-                    <NavItem to="/gamme-ai-pilot" icon={Bot} label={isAr ? 'خبير الغام والإنتاج (AI)' : 'Gamme & Pilotage AI'} pro />
                   </>
                 )}
                 {can('agenda') && <NavItem to="/agenda" icon={CalendarDays} label={isAr ? 'الأجندة' : 'Agenda'} />}
@@ -314,7 +313,6 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
               <>
                 <NavItem to="/chaine-montage" icon={Activity} label={isAr ? 'تتبع التركيب' : 'Suivi Montage'} />
                 <NavItem to="/pilotage-chaine" icon={TrendingUp} label={isAr ? 'لوحة القيادة' : 'Pilotage'} />
-                <NavItem to="/gamme-ai-pilot" icon={Bot} label={isAr ? 'خبير الغام والإنتاج (AI)' : 'Gamme & Pilotage AI'} pro />
               </>
             )}
             </div>
