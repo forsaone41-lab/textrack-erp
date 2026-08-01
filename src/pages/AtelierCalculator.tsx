@@ -684,35 +684,34 @@ function isSupportRole(e: Employe): boolean {
     if (current.length <= 1) return;
     current.splice(idx, 1);
     setCustomPostes(current);
-    setWorkers(prev => Math.max(1, prev - 1));
   };
 
   const handleModalAddPoste = () => {
     const breakdown = getGarmentTechnicalBreakdown(selectedAiPreset.title, undefined, undefined, selectedModelCategory);
     const current = customPostes ? [...customPostes] : [...breakdown.postesTravail];
-    current.push({
-      nomAr: 'بوست خياطة / تجميع جديد',
-      nomFr: 'Nouveau Poste de Montage',
-      machine: 'Piqueuse Plate 1 Aiguille',
-      tempsMin: 5,
-      roleOuvrier: isAr ? 'عامل خياطة' : 'Ouvrier Qualifié'
+    const insertIdx = Math.max(0, current.length - 1);
+    current.splice(insertIdx, 0, {
+      nomAr: 'خياطة دعم — تجميع وتثبيت الأجزاء (Renfort Montage)',
+      nomFr: 'Montage Renfort — Piqueuse Plate',
+      machine: 'Piqueuse Plate 2 Aiguilles',
+      tempsMin: 6,
+      roleOuvrier: isAr ? 'خياط رئيسي' : 'Ouvrier Qualifié'
     });
     setCustomPostes(current);
-    setWorkers(prev => prev + 1);
   };
 
   const handleModalApplyAiSuggestion = () => {
     const breakdown = getGarmentTechnicalBreakdown(selectedAiPreset.title, undefined, undefined, selectedModelCategory);
     const current = customPostes ? [...customPostes] : [...breakdown.postesTravail];
-    current.push({
-      nomAr: 'سرفلة (Surjeteuse) — لتخفيف الاختناق وزيادة الإنتاج',
-      nomFr: "Surjeteuse — renfort goulet d'étranglement (+25% prod)",
+    const insertIdx = Math.max(0, current.length - 1);
+    current.splice(insertIdx, 0, {
+      nomAr: 'سرفلة (Surjeteuse 4 Fils) — لتخفيف الاختناق وتمرير الأجزاء بسرعة',
+      nomFr: "Surjeteuse 4 Fils — renfort goulet d'étranglement (+25% prod)",
       machine: 'Surjeteuse 4 Fils',
       tempsMin: 4,
       roleOuvrier: isAr ? 'عامل خياطة' : 'Ouvrier Qualifié'
     });
     setCustomPostes(current);
-    setWorkers(prev => prev + 1);
     setAiSuggestionApplied(true);
   };
 
@@ -2021,6 +2020,45 @@ function isSupportRole(e: Employe): boolean {
                               )}
                             </div>
                           </div>
+
+                          {/* NEW: Worker Shortage Alert Banner ("tnbih bli kyn naqs f leqiup") */}
+                          {(() => {
+                            const actualTeamSize = workers || selectedWorkerIds.length || 1;
+                            const requiredPostesCount = activePostesModal.length;
+                            const hasWorkerShortage = actualTeamSize < requiredPostesCount;
+
+                            if (!hasWorkerShortage) return null;
+
+                            return (
+                              <div className="p-4 bg-gradient-to-r from-amber-500/15 via-red-500/15 to-amber-500/15 border-2 border-amber-500/80 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
+                                <div className="flex items-start gap-3">
+                                  <span className="text-2xl shrink-0">⚠️</span>
+                                  <div>
+                                    <strong className="text-xs font-black text-amber-900 block">
+                                      {isAr
+                                        ? `تنبيه نقص في العمالة (Sous-effectif): هذا الموديل يتطلب (${requiredPostesCount}) محطات عمل متخصصة، بينما فريقك الحالي في الأتوليي يحتوي على (${actualTeamSize}) عمال فقط!`
+                                        : `Alerte Sous-effectif : Cette gamme nécessite ${requiredPostesCount} postes, mais votre atelier ne compte que ${actualTeamSize} ouvriers !`}
+                                    </strong>
+                                    <p className="text-[11px] font-bold text-amber-800/90 mt-1 leading-relaxed">
+                                      {isAr
+                                        ? 'هذا النقص سيؤدي إلى اختناقات في خط الإنتاج (Goulets d\'étranglement) وتقليل الإنتاج اليومي. ننصح بتوظيف عمال إضافيين أو تفعيل تعدد المهام (Polyvalence).'
+                                        : 'Ce déficit d\'effectif va créer des goulets d\'étranglement et ralentir votre production.'}
+                                    </p>
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setWorkers(requiredPostesCount);
+                                  }}
+                                  className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-black text-xs rounded-xl shadow-md transition-all shrink-0 flex items-center gap-1.5"
+                                >
+                                  <span>👥</span>
+                                  {isAr ? `تحديث الفريق لـ (${requiredPostesCount}) عمال` : `Renforcer l'équipe (${requiredPostesCount} ouvriers)`}
+                                </button>
+                              </div>
+                            );
+                          })()}
 
                           {/* Beautiful Interactive Grid of Workstations ("mstfin bdesgn wajiha hsn mnhaka") */}
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
