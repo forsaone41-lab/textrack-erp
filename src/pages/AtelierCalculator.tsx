@@ -731,7 +731,7 @@ function isSupportRole(e: Employe): boolean {
   // Apply AI estimation values to calculator
   const applyAiEstimation = (preset: AiPreset) => {
     const breakdown = getGarmentTechnicalBreakdown(preset.title, undefined, undefined, selectedModelCategory);
-    const activePostesModal = customPostes || breakdown.postesTravail;
+    const activePostesModal = (customPostes && customPostes.length > 0) ? customPostes : breakdown.postesTravail;
     const basePostesCount = breakdown.postesTravail.length;
     const basePostesMin = activePostesModal.slice(0, basePostesCount).reduce((acc, p) => acc + (Number(p.tempsMin) || 0), 0);
     const aiStitchingMin = basePostesMin || breakdown.totalMinutesConfection || preset.stitchingMin || 35;
@@ -744,6 +744,7 @@ function isSupportRole(e: Employe): boolean {
     setPricePerPiece(breakdown.prixVenteConseille || preset.recommendedPrice);
     setMaterials(Math.round(((breakdown.consommationMetrage * breakdown.prixMetreEstime) + breakdown.fournituresEstimees) * qty));
     setDays(aiRealisticDays);
+    setCustomPostes(null);
     setShowAiModal(false);
   };
 
@@ -1123,7 +1124,7 @@ function isSupportRole(e: Employe): boolean {
           {/* Workstations & Technical Operations Gamme de Montage Card on Main Calculator Screen */}
           {(() => {
             const breakdown = getGarmentTechnicalBreakdown(itemName, (materials / qty) / 35, materials / qty);
-            const activePostes = customPostes || breakdown.postesTravail;
+            const activePostes = (customPostes && customPostes.length > 0) ? customPostes : breakdown.postesTravail;
             const activeTotalMin = activePostes.reduce((acc, p) => acc + (Number(p.tempsMin) || 0), 0);
             return (
               <div className={`p-4 bg-slate-900 text-white rounded-3xl border ${isPostesBoxExpanded ? 'border-amber-400/60 shadow-2xl shadow-amber-500/10 ring-2 ring-amber-400/30' : 'border-slate-700 shadow-xl'} space-y-3 print-border transition-all duration-300`}>
@@ -1176,6 +1177,44 @@ function isSupportRole(e: Employe): boolean {
                       {activePostes.length} {isAr ? 'بوستات عمل' : 'Postes'} | {activeTotalMin} {isAr ? 'دقيقة/بياسة' : 'min'}
                     </span>
                   </div>
+                </div>
+
+                {/* Quick Model Selector for Automatic Gamme de Montage Configuration */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-2 pb-1 border-t border-slate-800">
+                  <span className="text-[11px] text-amber-300 font-black mr-1 flex items-center gap-1">
+                    <span>✨</span>
+                    {isAr ? 'اختر الموديل لتجهيز مراحل الخياطة تلقائياً:' : '✨ Modèle rapide :'}
+                  </span>
+                  {[
+                    { nameAr: '👘 عباية / بلدي', nameFr: 'Abaya / Beldi', keyword: 'Abaya Beldi', count: 8 },
+                    { nameAr: '🧥 جاكيت شتوي', nameFr: 'Veste / Manteau', keyword: 'Veste Manteau', count: 9 },
+                    { nameAr: '🏃 طقم هودي', nameFr: 'Sportswear Hoodie', keyword: 'Sportswear Hoodie', count: 7 },
+                    { nameAr: '👖 سروال كارجو', nameFr: 'Pantalon Cargo', keyword: 'Pantalon Cargo', count: 7 },
+                    { nameAr: '👕 طقم صيفي', nameFr: 'T-shirt Été', keyword: 'T-shirt Summer', count: 6 },
+                    { nameAr: '🧵 خياطة عامة', nameFr: 'Modèle Général', keyword: 'Confection Standard', count: 6 },
+                  ].map((mod, index) => {
+                    const isSelected = itemName.toLowerCase().includes(mod.keyword.toLowerCase().split(' ')[0]);
+                    return (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => {
+                          setItemName(mod.keyword);
+                          setCustomPostes(null);
+                        }}
+                        className={`px-2.5 py-1 rounded-xl text-[10px] font-black border transition-all flex items-center gap-1 active:scale-95 ${
+                          isSelected
+                            ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400 shadow-md shadow-emerald-900/40 ring-1 ring-emerald-400/50'
+                            : 'bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white border-slate-700'
+                        }`}
+                      >
+                        <span>{isAr ? mod.nameAr : mod.nameFr}</span>
+                        <span className="px-1.5 py-0.5 bg-black/30 rounded text-[9px] text-amber-300 font-extrabold">
+                          {mod.count} {isAr ? 'بوست' : 'postes'}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
 
                 <div className={`space-y-1.5 ${isPostesBoxExpanded ? 'max-h-[700px]' : 'max-h-56'} overflow-y-auto pr-1 custom-scrollbar transition-all duration-300`}>
@@ -1411,13 +1450,13 @@ function isSupportRole(e: Employe): boolean {
                     type="button"
                     onClick={() => {
                       const bk = getGarmentTechnicalBreakdown(itemName, (materials / qty) / 35, materials / qty);
-                      const currentPostes = customPostes || bk.postesTravail;
+                      const currentPostes = (customPostes && customPostes.length > 0) ? customPostes : bk.postesTravail;
                       setWorkers(currentPostes.length);
                     }}
                     title={isAr ? "مطابقة عدد العمال مع عدد بوستات العمل في الموديل" : "Synchroniser avec les postes"}
                     className="px-1.5 py-0.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-md text-[9px] font-bold transition-all"
                   >
-                    = {customPostes ? customPostes.length : getGarmentTechnicalBreakdown(itemName, (materials / qty) / 35, materials / qty).postesTravail.length} {isAr ? 'بوستات' : 'postes'}
+                    = {(customPostes && customPostes.length > 0) ? customPostes.length : getGarmentTechnicalBreakdown(itemName, (materials / qty) / 35, materials / qty).postesTravail.length} {isAr ? 'بوستات' : 'postes'}
                   </button>
                 </div>
                 <input
@@ -1897,7 +1936,7 @@ function isSupportRole(e: Employe): boolean {
                   {/* AI Response Box (moroccan style as in user screenshot) */}
                   {(() => {
                     const breakdown = getGarmentTechnicalBreakdown(selectedAiPreset.title, undefined, undefined, selectedModelCategory);
-                    const activePostesModal = customPostes || breakdown.postesTravail;
+                    const activePostesModal = (customPostes && customPostes.length > 0) ? customPostes : breakdown.postesTravail;
                     const basePostesCount = breakdown.postesTravail.length;
                     const basePostesMin = activePostesModal.slice(0, basePostesCount).reduce((acc, p) => acc + (Number(p.tempsMin) || 0), 0);
                     const aiStitchingMin = basePostesMin || breakdown.totalMinutesConfection || selectedAiPreset.stitchingMin || 35;
