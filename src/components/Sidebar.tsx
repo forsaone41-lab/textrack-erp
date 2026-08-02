@@ -306,6 +306,9 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
             {can('ai_space') && (
               <NavItem to="/ai-space" icon={Sparkles} label={isAr ? 'المساعد الذكي' : 'Assistant IA'} pro />
             )}
+            {can('ai_space') && (
+              <NavItem to="/beya-studio-tryon" icon={Sparkles} label={isAr ? 'استوديو التجربة الافتراضية' : 'Studio Essayage Virtuel'} pro />
+            )}
             {can('ordres') && <NavItem to="/ordres-de-coupe" icon={Scissors} label={isAr ? 'أوامر القص' : 'Ordres de Coupe'} />}
             {(can('ordres') || can('fiches')) && <NavItem to="/hpgl-viewer" icon={Scissors} label={isAr ? 'قارئ الباتروناج' : 'Visionneuse HPGL'} />}
             {(can('ordres') || can('fiches')) && <NavItem to="/kml-viewer" icon={Globe} label={isAr ? 'قارئ الخرائط (KML)' : 'Visionneuse KML / Géo'} />}
