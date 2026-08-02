@@ -1,7 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLang } from '../contexts/LangContext';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Upload, User, Shirt, Download, X, KeyRound, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Sparkles, Upload, User, Shirt, Download, X, KeyRound, AlertTriangle, RefreshCw, Plus, Trash2 } from 'lucide-react';
+
+const SAVED_MODELS_KEY = 'beya_tryon_saved_models';
+const MAX_SAVED_MODELS = 12;
+
+interface SavedModel {
+  id: string;
+  dataUrl: string;
+}
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -10,6 +18,15 @@ function readFileAsDataUrl(file: File): Promise<string> {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+function loadSavedModels(): SavedModel[] {
+  try {
+    const raw = localStorage.getItem(SAVED_MODELS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
 }
 
 export default function BeyaVirtualTryOn() {
@@ -21,11 +38,33 @@ export default function BeyaVirtualTryOn() {
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [savedModels, setSavedModels] = useState<SavedModel[]>([]);
 
   const [apiKeyInput, setApiKeyInput] = useState(
     (import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key')) || ''
   );
   const [showApiKeySettings, setShowApiKeySettings] = useState(false);
+
+  useEffect(() => {
+    setSavedModels(loadSavedModels());
+  }, []);
+
+  const persistSavedModels = (models: SavedModel[]) => {
+    setSavedModels(models);
+    localStorage.setItem(SAVED_MODELS_KEY, JSON.stringify(models));
+  };
+
+  const addNewModel = async (file: File) => {
+    const dataUrl = await readFileAsDataUrl(file);
+    const entry: SavedModel = { id: `${Date.now()}`, dataUrl };
+    const updated = [entry, ...savedModels].slice(0, MAX_SAVED_MODELS);
+    persistSavedModels(updated);
+    setPersonImage(dataUrl);
+  };
+
+  const removeSavedModel = (id: string) => {
+    persistSavedModels(savedModels.filter(m => m.id !== id));
+  };
 
   const generateTryOn = async () => {
     const apiKey = (import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key'));
@@ -35,7 +74,7 @@ export default function BeyaVirtualTryOn() {
       return;
     }
     if (!personImage || !garmentImage) {
-      setError(isAr ? 'خاصك ترفع صورة الموديل وصورة اللباس بجوج.' : 'Veuillez fournir la photo du modèle et celle du vêtement.');
+      setError(isAr ? 'خاصك تختار صورة الموديل وصورة اللباس بجوج.' : 'Veuillez fournir la photo du modèle et celle du vêtement.');
       return;
     }
 
@@ -170,107 +209,130 @@ export default function BeyaVirtualTryOn() {
         </div>
       )}
 
-      {/* Two upload zones */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="p-4 bg-white rounded-3xl border border-slate-200 shadow-sm space-y-2">
-          <label className="flex items-center gap-2 text-xs font-black text-slate-700">
-            <User className="w-4 h-4 text-violet-600" />
-            {isAr ? '1. صورة الموديل (الشخص)' : '1. Photo du modèle (personne)'}
-          </label>
-          <label className="block aspect-[3/4] rounded-2xl border-2 border-dashed border-slate-300 hover:border-violet-400 transition-colors cursor-pointer relative overflow-hidden bg-slate-50">
-            {personImage ? (
-              <img src={personImage} alt="model" className="w-full h-full object-cover" />
-            ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 gap-2">
-                <Upload className="w-6 h-6" />
-                <span className="text-xs font-bold">{isAr ? 'ارفع صورة الموديل' : 'Uploader la photo du modèle'}</span>
-              </div>
-            )}
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (file) setPersonImage(await readFileAsDataUrl(file));
-                e.target.value = '';
-              }}
-            />
-          </label>
-        </div>
+      {/* Split layout: settings/inputs (left) + preview (right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+        {/* LEFT: garment + model selection */}
+        <div className="space-y-4">
+          <div className="p-4 bg-white rounded-3xl border border-slate-200 shadow-sm space-y-2">
+            <label className="flex items-center gap-2 text-xs font-black text-slate-700">
+              <Shirt className="w-4 h-4 text-violet-600" />
+              {isAr ? '1. صورة اللباس' : '1. Photo du vêtement'}
+            </label>
+            <label className="block h-40 rounded-2xl border-2 border-dashed border-slate-300 hover:border-violet-400 transition-colors cursor-pointer relative overflow-hidden bg-slate-50">
+              {garmentImage ? (
+                <img src={garmentImage} alt="garment" className="w-full h-full object-cover" />
+              ) : (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 gap-2">
+                  <Upload className="w-6 h-6" />
+                  <span className="text-xs font-bold">{isAr ? 'ارفع صورة اللباس' : 'Uploader la photo du vêtement'}</span>
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (file) setGarmentImage(await readFileAsDataUrl(file));
+                  e.target.value = '';
+                }}
+              />
+            </label>
+          </div>
 
-        <div className="p-4 bg-white rounded-3xl border border-slate-200 shadow-sm space-y-2">
-          <label className="flex items-center gap-2 text-xs font-black text-slate-700">
-            <Shirt className="w-4 h-4 text-violet-600" />
-            {isAr ? '2. صورة اللباس' : '2. Photo du vêtement'}
-          </label>
-          <label className="block aspect-[3/4] rounded-2xl border-2 border-dashed border-slate-300 hover:border-violet-400 transition-colors cursor-pointer relative overflow-hidden bg-slate-50">
-            {garmentImage ? (
-              <img src={garmentImage} alt="garment" className="w-full h-full object-cover" />
-            ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 gap-2">
-                <Upload className="w-6 h-6" />
-                <span className="text-xs font-bold">{isAr ? 'ارفع صورة اللباس' : 'Uploader la photo du vêtement'}</span>
-              </div>
-            )}
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (file) setGarmentImage(await readFileAsDataUrl(file));
-                e.target.value = '';
-              }}
-            />
-          </label>
-        </div>
-      </div>
-
-      <button
-        onClick={generateTryOn}
-        disabled={isGenerating || !personImage || !garmentImage}
-        className="w-full py-3.5 bg-violet-600 hover:bg-violet-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-2xl font-black text-sm transition-all shadow-md shadow-violet-200 flex items-center justify-center gap-2"
-      >
-        {isGenerating ? (
-          <>
-            <RefreshCw className="w-4 h-4 animate-spin" />
-            {isAr ? 'جاري التوليد... قد ياخد بضع ثواني' : 'Génération en cours... quelques secondes'}
-          </>
-        ) : (
-          <>
-            <Sparkles className="w-4 h-4" />
-            {isAr ? '✨ لبّس الموديل الآن' : '✨ Habiller le modèle'}
-          </>
-        )}
-      </button>
-
-      {/* Result */}
-      <div className="p-4 bg-white rounded-3xl border border-slate-200 shadow-sm">
-        <label className="flex items-center justify-between text-xs font-black text-slate-700 mb-2">
-          <span>{isAr ? 'النتيجة' : 'Résultat'}</span>
-          {resultImage && (
-            <a
-              href={resultImage}
-              download="beya-tryon-result.png"
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-[11px] font-black transition-all"
-            >
-              <Download className="w-3.5 h-3.5" />
-              {isAr ? 'تحميل الصورة' : 'Télécharger'}
-            </a>
-          )}
-        </label>
-        <div className="aspect-[3/4] max-w-sm mx-auto rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden flex items-center justify-center">
-          {resultImage ? (
-            <img src={resultImage} alt="result" className="w-full h-full object-cover" />
-          ) : (
-            <div className="text-center text-slate-400 px-6">
-              <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-30" />
-              <p className="text-xs font-bold">
-                {isAr ? 'ارفع صورة الموديل واللباس وضغط "لبّس الموديل" باش تبان النتيجة هنا' : 'Uploadez les deux photos puis cliquez sur "Habiller le modèle"'}
-              </p>
+          <div className="p-4 bg-white rounded-3xl border border-slate-200 shadow-sm space-y-2">
+            <label className="flex items-center gap-2 text-xs font-black text-slate-700">
+              <User className="w-4 h-4 text-violet-600" />
+              {isAr ? '2. اختر موديل' : '2. Sélectionner un modèle'}
+            </label>
+            <p className="text-[10px] text-slate-400 font-bold">
+              {isAr ? 'اختار موديل رفعتيه من قبل، أو رفع صورة موديل جديد' : 'Choisissez un modèle déjà uploadé, ou ajoutez-en un nouveau'}
+            </p>
+            <div className="grid grid-cols-4 gap-2">
+              <label className="aspect-[3/4] rounded-xl border-2 border-dashed border-slate-300 hover:border-violet-400 transition-colors cursor-pointer flex flex-col items-center justify-center gap-1 text-slate-400 bg-slate-50">
+                <Plus className="w-5 h-5" />
+                <span className="text-[9px] font-bold">{isAr ? 'رفع جديد' : 'Ajouter'}</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file) await addNewModel(file);
+                    e.target.value = '';
+                  }}
+                />
+              </label>
+              {savedModels.map(model => (
+                <div
+                  key={model.id}
+                  onClick={() => setPersonImage(model.dataUrl)}
+                  className={`aspect-[3/4] rounded-xl overflow-hidden relative cursor-pointer border-2 transition-all group ${
+                    personImage === model.dataUrl ? 'border-violet-600 ring-2 ring-violet-200' : 'border-transparent hover:border-violet-300'
+                  }`}
+                >
+                  <img src={model.dataUrl} alt="model" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); removeSavedModel(model.id); }}
+                    className="absolute top-1 right-1 p-1 bg-black/50 hover:bg-rose-600 text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                    title={isAr ? 'حذف' : 'Supprimer'}
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
             </div>
-          )}
+          </div>
+
+          <button
+            onClick={generateTryOn}
+            disabled={isGenerating || !personImage || !garmentImage}
+            className="w-full py-3.5 bg-violet-600 hover:bg-violet-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-2xl font-black text-sm transition-all shadow-md shadow-violet-200 flex items-center justify-center gap-2"
+          >
+            {isGenerating ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                {isAr ? 'جاري التوليد... قد ياخد بضع ثواني' : 'Génération en cours... quelques secondes'}
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4" />
+                {isAr ? '✨ لبّس الموديل الآن' : '✨ Habiller le modèle'}
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* RIGHT: preview/result */}
+        <div className="p-4 bg-white rounded-3xl border border-slate-200 shadow-sm lg:sticky lg:top-4">
+          <label className="flex items-center justify-between text-xs font-black text-slate-700 mb-2">
+            <span>{isAr ? 'النتيجة' : 'Résultat'}</span>
+            {resultImage && (
+              <a
+                href={resultImage}
+                download="beya-tryon-result.png"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-[11px] font-black transition-all"
+              >
+                <Download className="w-3.5 h-3.5" />
+                {isAr ? 'تحميل الصورة' : 'Télécharger'}
+              </a>
+            )}
+          </label>
+          <div className="aspect-[3/4] rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden flex items-center justify-center">
+            {resultImage ? (
+              <img src={resultImage} alt="result" className="w-full h-full object-cover" />
+            ) : (
+              <div className="text-center text-slate-400 px-6 space-y-3">
+                <Sparkles className="w-8 h-8 mx-auto opacity-30" />
+                <ol className="text-xs font-bold text-start space-y-1.5 max-w-[220px] mx-auto list-decimal list-inside">
+                  <li>{isAr ? 'اختار / ارفع صورة اللباس' : 'Sélectionnez la photo du vêtement'}</li>
+                  <li>{isAr ? 'اختار / ارفع صورة الموديل' : 'Sélectionnez la photo du modèle'}</li>
+                  <li>{isAr ? 'اضغط "لبّس الموديل الآن"' : 'Cliquez sur "Habiller le modèle"'}</li>
+                </ol>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
