@@ -1226,6 +1226,12 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
         return;
       }
 
+      // Handle RLS policy violation specifically
+      if (error.message.includes('row-level security policy') || error.message.includes('RLS') || error.message.includes('policy')) {
+        if (!silent) alert(`🔒 خطأ في صلاحيات قاعدة البيانات (RLS) للجدول "${table}":\n\nيجب الدخول إلى Supabase > SQL Editor وتشغيل هذا الأمر للسماح بالحفظ:\n\nALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY;\nDROP POLICY IF EXISTS "Allow all" ON public.${table};\nCREATE POLICY "Allow all" ON public.${table} FOR ALL USING (true) WITH CHECK (true);`);
+        return;
+      }
+
       // Only alert if it's NOT a missing column error and NOT a network error
       const isNetworkError = error.message.toLowerCase().includes('failed to fetch') || error.message.toLowerCase().includes('networkerror');
       const isLockError = error.message.toLowerCase().includes('lock') && error.message.toLowerCase().includes('stole');

@@ -871,15 +871,15 @@ function isSupportRole(e: Employe): boolean {
           </div>
         </div>
 
-        {/* Smart Actions Toolbar */}
-        <div className="flex items-center gap-2 no-print flex-wrap">
+        {/* Smart Actions Toolbar (ONE SINGLE ROW "F SF WAHD MSTFIN", NO BLINKING/PULSING) */}
+        <div className="flex items-center gap-1.5 no-print flex-nowrap overflow-x-auto py-0.5">
           <button
             type="button"
             onClick={() => {
               setFichePickerMode('direct');
               setIsFichePickerOpen(true);
             }}
-            className="px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-2xs border border-indigo-100 active:scale-95 group"
+            className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-xl text-[11px] font-black flex items-center gap-1.5 transition-all shadow-2xs border border-indigo-100 active:scale-95 group shrink-0 whitespace-nowrap"
           >
             <FileText className="w-3.5 h-3.5 text-indigo-600 group-hover:text-white" />
             {isAr ? 'اختيار من الفيش تكنيك' : 'Fiches Tech'}
@@ -887,7 +887,7 @@ function isSupportRole(e: Employe): boolean {
 
           <button
             onClick={() => setShowWorkersModal(true)}
-            className="px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-2xs border border-indigo-100 active:scale-95"
+            className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-xl text-[11px] font-black flex items-center gap-1.5 transition-all shadow-2xs border border-indigo-100 active:scale-95 shrink-0 whitespace-nowrap"
           >
             <Users className="w-3.5 h-3.5" />
             {isAr ? `عمال الأتوليي (${selectedWorkerIds.length})` : `Ouvriers (${selectedWorkerIds.length})`}
@@ -896,7 +896,7 @@ function isSupportRole(e: Employe): boolean {
           <button
             type="button"
             onClick={() => setShowGammeModal(true)}
-            className="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-md shadow-amber-500/20 border border-amber-400 active:scale-95 animate-pulse"
+            className="px-2.5 py-1.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-xl text-[11px] font-black flex items-center gap-1.5 transition-all shadow-sm border border-amber-400/60 active:scale-95 shrink-0 whitespace-nowrap"
           >
             <Wrench className="w-3.5 h-3.5" />
             <span>{isAr ? '🏭 بوستات الخياطة (Gamme)' : '🏭 Gamme de Montage'}</span>
@@ -909,15 +909,15 @@ function isSupportRole(e: Employe): boolean {
 
           <button
             onClick={() => setShowAiModal(true)}
-            className="px-3.5 py-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-sm shadow-indigo-200 active:scale-95"
+            className="px-2.5 py-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl text-[11px] font-black flex items-center gap-1.5 transition-all shadow-sm shadow-indigo-200 active:scale-95 shrink-0 whitespace-nowrap"
           >
-            <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+            <Sparkles className="w-3.5 h-3.5" />
             {isAr ? 'الذكاء الاصطناعي (AI Expert)' : 'Estimation IA'}
           </button>
 
           <button
             onClick={() => window.print()}
-            className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
+            className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[11px] font-bold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap"
           >
             <Printer className="w-3.5 h-3.5" />
             {isAr ? 'طباعة / PDF' : 'Imprimer'}
@@ -939,15 +939,15 @@ function isSupportRole(e: Employe): boolean {
               setIsPostesBoxExpanded(false);
             }}
             title={isAr ? 'مسح وإفراغ جميع الخانات للبدء من جديد (Vider / Reset)' : 'Vider tous les champs (Reset)'}
-            className="p-2 bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white rounded-xl transition-all shadow-2xs border border-rose-200 active:scale-95 group"
+            className="p-1.5 bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white rounded-xl transition-all shadow-2xs border border-rose-200 active:scale-95 group shrink-0"
           >
-            <Trash2 className="w-4 h-4 text-rose-600 group-hover:text-white transition-transform duration-300 group-hover:scale-110" />
+            <Trash2 className="w-3.5 h-3.5 text-rose-600 group-hover:text-white transition-transform duration-300 group-hover:scale-110" />
           </button>
 
           {isModal && onClose && (
             <button
               onClick={onClose}
-              className="p-1.5 bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl transition-all"
+              className="p-1.5 bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl transition-all shrink-0"
             >
               ✕
             </button>
