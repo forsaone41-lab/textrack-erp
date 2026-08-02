@@ -212,11 +212,11 @@ Réponds uniquement en JSON valide, sans texte avant ni après.`;
       setVisionBreakdown(builtBreakdown);
 
       setSelectedAiPreset({
-        title: `📷 ${title}`,
+        title: `📷 ${category}`,
         desc: category,
         aiText: isAr
-          ? `🤖 تحليل حقيقي بالذكاء الاصطناعي (Gemini Vision): ${category}. استهلاك القماش المقدر من الصورة ${consommationMetrage.toFixed(2)} متر بثمن ${prixMetreEstime.toFixed(2)} درهم/متر. هذا الموديل يتطلب ${postesTravail.length} محطات عمل بمجموع ${totalMinutes} دقيقة للقطعة الواحدة.`
-          : `🤖 Analyse réelle par IA (Gemini Vision) : ${category}. Consommation de tissu estimée depuis la photo : ${consommationMetrage.toFixed(2)}m à ${prixMetreEstime.toFixed(2)} DH/m. Ce modèle nécessite ${postesTravail.length} postes de travail pour un total de ${totalMinutes} min/pièce.`,
+          ? `${category}. استهلاك القماش المقدر من الصورة ${consommationMetrage.toFixed(2)} متر بثمن ${prixMetreEstime.toFixed(2)} درهم/متر. هذا الموديل يتطلب ${postesTravail.length} محطات عمل بمجموع ${totalMinutes} دقيقة للقطعة الواحدة.`
+          : `${category}. Consommation de tissu estimée depuis la photo : ${consommationMetrage.toFixed(2)}m à ${prixMetreEstime.toFixed(2)} DH/m. Ce modèle nécessite ${postesTravail.length} postes de travail pour un total de ${totalMinutes} min/pièce.`,
         recommendedPrice: builtBreakdown.prixVenteConseille,
         materialPerPiece: (consommationMetrage * prixMetreEstime) + fournituresEstimees,
         recommendedDays: 2,
@@ -502,7 +502,6 @@ Réponds uniquement en JSON valide, sans texte avant ni après.`;
               <div className="p-5 bg-gradient-to-br from-violet-50 to-indigo-50/50 rounded-3xl border border-violet-200/80 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-violet-900 font-black text-xs">
-                    <Sparkles className="w-4 h-4 text-violet-600" />
                     <span>{isAr ? 'تحليل الخبير (Expert BEYA)' : 'Expert BEYA Analyse'}</span>
                   </div>
                   <span className="px-2 py-0.5 bg-violet-100 text-violet-800 font-black text-[10px] rounded-md">
