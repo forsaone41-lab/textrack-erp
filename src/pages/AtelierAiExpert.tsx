@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLang } from '../contexts/LangContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Bot, Sparkles, Wand2, Upload, FileText, Users, Wrench, Plus, Search, X, KeyRound, AlertTriangle } from 'lucide-react';
+import { Bot, Wand2, Upload, FileText, Users, Wrench, Plus, Search, X, KeyRound, AlertTriangle } from 'lucide-react';
 import { loadData, FicheTechnique } from '../types';
 import {
   AiPreset,
@@ -62,7 +62,6 @@ export default function AtelierAiExpert() {
   const [isAiAnalyzing, setIsAiAnalyzing] = useState(false);
   const [selectedModelCategory, setSelectedModelCategory] = useState<string | undefined>(navState.selectedModelCategory);
   const [workHoursPerDay, setWorkHoursPerDay] = useState<number>(8);
-  const [aiSuggestionApplied, setAiSuggestionApplied] = useState<boolean>(false);
   const [workers, setWorkers] = useState<number>(Math.max(1, navState.workers || 6));
   const [customPostes, setCustomPostes] = useState<PosteTravail[] | null>(navState.customPostes || null);
 
@@ -116,7 +115,11 @@ export default function AtelierAiExpert() {
       const mimeType = dataUrl.split(';')[0].split(':')[1];
 
       const prompt = isAr
-        ? `أنت خبير خياطة وإنتاج في مصنع خياطة مغربي. حلل صورة هذا الموديل بدقة عالية وأعطيني تفصيل تقني حقيقي مبني على ما تراه في الصورة فعلاً، بصيغة JSON فقط بدون أي نص إضافي وبهذا الشكل بالضبط:
+        ? `أنت خبير تقني خياطة وهندسة إنتاج (Ingénieur Méthodes) بخبرة 20 سنة في مصانع الخياطة المغربية. مهمتك تحليل صورة هذا الموديل بأقصى دقة ممكنة، بحال ما كيدير خبير حقيقي واقف قدام القطعة فالأتوليي.
+
+قبل ما تجاوب، لاحظ بدقة فالصورة: نوع القماش ووزنه ولمعانه (قطن، كريب، جينز، صوف...)، عدد الأجزاء والقطع (وحدة ولا طقم)، نوع القصة (لاصقة، واسعة، Oversize)، التفاصيل (جيوب، سحاب، أزرار، تطريز، سفيفة، ياقة، أكمام)، ودرجة التعقيد الفعلية.
+
+بناءً على هاد الملاحظة، أعطيني تفصيل تقني حقيقي بصيغة JSON فقط بدون أي نص إضافي وبهذا الشكل بالضبط:
 {
   "category": "اسم عام للموديل",
   "consommationMetrage": 1.8,
@@ -127,12 +130,22 @@ export default function AtelierAiExpert() {
     { "nomAr": "اسم المرحلة بالعربية", "nomFr": "Nom en français", "machine": "اسم الماكينة المناسبة", "tempsMin": 7, "roleOuvrier": "الوظيفة" }
   ]
 }
-- consommationMetrage: استهلاك القماش الحقيقي بالمتر لقطعة واحدة، لعرض ثوب 1.50م، حسب ما يظهر في الصورة (كمية القماش، الطول، الاتساع).
-- prixMetreEstime: ثمن المتر التقديري بالدرهم في السوق المغربية حسب نوع ومظهر القماش المرصود في الصورة.
-- fournituresEstimees: ثمن اللوازم (خيط، سحاب، أزرار، إبزيم...) بالدرهم للقطعة حسب ما يظهر في الصورة.
-- postesTravail: لائحة محطات العمل الحقيقية المطلوبة لخياطة هذا الموديل بالضبط كما يظهر في الصورة (Coupe, Surfilage, Assemblage, Finition...) بعدد واقعي حسب التعقيد الفعلي، مع الماكينة المناسبة والوقت بالدقائق لكل مرحلة.
+- consommationMetrage: استهلاك القماش الحقيقي بالمتر لقطعة واحدة، لعرض ثوب 1.50م، حسب ما يظهر في الصورة (كمية القماش، الطول، الاتساع، عدد الطبقات).
+- prixMetreEstime: ثمن المتر التقديري بالدرهم في السوق المغربية حسب نوع ومظهر القماش المرصود في الصورة بالضبط.
+- fournituresEstimees: ثمن اللوازم (خيط، سحاب، أزرار، إبزيم، تطريز...) بالدرهم للقطعة حسب ما يظهر في الصورة.
+- postesTravail: لائحة محطات العمل الحقيقية المطلوبة لخياطة هذا الموديل بالضبط كما يظهر في الصورة، بعدد واقعي حسب التعقيد الفعلي (لا تختصر ولا تبالغ). يجب ترتيبها بالترتيب الزمني الحقيقي لخط الإنتاج بالضبط كالتالي:
+  1) الفصالة والقص (Coupe) دائماً أول مرحلة.
+  2) التحضير (لصق فيزلين، تقوية) إذا كانت ضرورية.
+  3) السرفلة/حماية الحواف (Surfilage) إذا لزم الأمر.
+  4) التجميع والخياطة الرئيسية (Assemblage/Montage) بكل تفاصيلها الحقيقية (أكمام، جيوب، سحاب، ياقة، تطريز...).
+  5) التشطيب (ثني الأطراف، أزرار، لمسات أخيرة).
+  6) الكي والمراقبة النهائية (Repassage & Contrôle Qualité) دائماً آخر مرحلة.
 أجب بـ JSON صحيح فقط، بدون أي نص قبله أو بعده.`
-        : `Tu es un expert textile et production dans un atelier de confection marocain. Analyse la photo de ce modèle avec une très haute précision et donne une analyse technique réelle basée sur ce que tu observes, au format JSON uniquement, exactement comme suit :
+        : `Tu es un expert technique en confection et ingénieur méthodes avec 20 ans d'expérience dans les ateliers marocains. Ta mission est d'analyser la photo de ce modèle avec le maximum de précision possible, comme le ferait un vrai expert face à la pièce dans l'atelier.
+
+Avant de répondre, observe précisément sur la photo : le type de tissu et son grammage/aspect (coton, crêpe, denim, laine...), le nombre de pièces (unique ou ensemble), la coupe (ajustée, ample, oversize), les détails (poches, zip, boutons, broderie, sfifa, col, manches), et le niveau de complexité réel.
+
+Sur cette base, donne une analyse technique réelle au format JSON uniquement, exactement comme suit :
 {
   "category": "Nom général du modèle",
   "consommationMetrage": 1.8,
@@ -143,10 +156,16 @@ export default function AtelierAiExpert() {
     { "nomAr": "Nom de l'étape en arabe", "nomFr": "Nom de l'étape en français", "machine": "Machine appropriée", "tempsMin": 7, "roleOuvrier": "Rôle ouvrier" }
   ]
 }
-- consommationMetrage : consommation réelle de tissu en mètres pour une pièce, pour une laize de 1.50m, déduite de ce que montre la photo (quantité de tissu, longueur, ampleur).
-- prixMetreEstime : prix au mètre estimé en MAD sur le marché marocain selon le type et l'aspect du tissu observé.
-- fournituresEstimees : coût des fournitures (fil, zip, boutons...) en MAD par pièce selon ce qui est visible sur la photo.
-- postesTravail : liste réelle des postes de travail nécessaires pour confectionner exactement ce modèle (Coupe, Surfilage, Assemblage, Finition...), en nombre réaliste selon la complexité réelle, avec la machine appropriée et le temps en minutes par étape.
+- consommationMetrage : consommation réelle de tissu en mètres pour une pièce, pour une laize de 1.50m, déduite de ce que montre la photo (quantité de tissu, longueur, ampleur, nombre de couches).
+- prixMetreEstime : prix au mètre estimé en MAD sur le marché marocain selon le type et l'aspect exact du tissu observé.
+- fournituresEstimees : coût des fournitures (fil, zip, boutons, broderie...) en MAD par pièce selon ce qui est visible sur la photo.
+- postesTravail : liste réelle des postes de travail nécessaires pour confectionner exactement ce modèle, en nombre réaliste selon la complexité réelle (ni raccourci, ni exagéré). Ils doivent être ordonnés dans l'ordre chronologique réel de la chaîne de production, exactement comme suit :
+  1) Coupe (toujours en premier).
+  2) Préparation (thermocollage, renforts) si nécessaire.
+  3) Surfilage / protection des bords si nécessaire.
+  4) Assemblage et montage principal avec tous les détails réels (manches, poches, zip, col, broderie...).
+  5) Finitions (ourlets, boutons, derniers détails).
+  6) Repassage & Contrôle Qualité (toujours en dernier).
 Réponds uniquement en JSON valide, sans texte avant ni après.`;
 
       const callGemini = () => fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
@@ -293,21 +312,6 @@ Réponds uniquement en JSON valide, sans texte avant ni après.`;
       roleOuvrier: isAr ? 'خياط رئيسي' : 'Ouvrier Qualifié'
     });
     setCustomPostes(current);
-  };
-
-  const handleApplyAiSuggestion = () => {
-    const breakdown = getActiveBreakdown();
-    const current = customPostes ? [...customPostes] : [...breakdown.postesTravail];
-    const insertIdx = Math.max(0, current.length - 1);
-    current.splice(insertIdx, 0, {
-      nomAr: 'سرفلة (Surjeteuse 4 Fils) — لتخفيف الاختناق وتمرير الأجزاء بسرعة',
-      nomFr: "Surjeteuse 4 Fils — renfort goulet d'étranglement (+25% prod)",
-      machine: 'Surjeteuse 4 Fils',
-      tempsMin: 4,
-      roleOuvrier: isAr ? 'عامل خياطة' : 'Ouvrier Qualifié'
-    });
-    setCustomPostes(current);
-    setAiSuggestionApplied(true);
   };
 
   const applyAiEstimation = (preset: AiPreset) => {
@@ -529,74 +533,8 @@ Réponds uniquement en JSON valide, sans texte avant ni après.`;
                 </div>
               </div>
 
-              {/* AI PRODUCTION ADVISOR */}
-              <div className="p-4 bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-violet-500/10 rounded-3xl border border-amber-300/80 shadow-md space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 font-black text-xs text-amber-900">
-                    <Sparkles className="w-4 h-4 text-amber-600" />
-                    <span>{isAr ? '💡 إرشادات ومقترحات الخبير الذكي لرفع الإنتاجية في الأتوليي (IA Production Advisor)' : '💡 Recommandations IA : Optimisation & Productivité Atelier'}</span>
-                  </div>
-                  <span className="px-2 py-0.5 bg-amber-100 text-amber-800 font-black text-[10px] rounded-lg border border-amber-300">
-                    {isAr ? 'نصائح لزيادة الإنتاج +35%' : '+35% productivité'}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                  <div className="p-3 bg-white/90 rounded-2xl border border-amber-200/80 flex flex-col justify-between gap-2 shadow-sm">
-                    <div>
-                      <span className="text-[10px] font-black text-amber-700 block mb-1">
-                        {isAr ? '🏭 اقتراح بوست خياطة (إزالة الاختناق في الخط):' : '🏭 Recommandation Postes : Renfort Gamme'}
-                      </span>
-                      <p className="text-xs text-slate-700 font-bold leading-relaxed">
-                        {isAr ? `⚠️ لتفادي الاختناق في موديل (${selectedAiPreset.title}) وتسريع وتيرة الخياطة، يقترح الذكاء الاصطناعي إضافة بوست [سرفلة (Surjeteuse) / تجميع] إضافي لتخفيف الضغط على العمال.` : `⚠️ Pour éviter le goulet d'étranglement sur ce modèle (${selectedAiPreset.title}), l'IA recommande d'ajouter un poste de Surjeteuse supplémentaire.`}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleApplyAiSuggestion}
-                      disabled={aiSuggestionApplied}
-                      className={`w-full py-2 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm ${
-                        aiSuggestionApplied
-                          ? 'bg-emerald-600 text-white cursor-default'
-                          : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white'
-                      }`}
-                    >
-                      <Sparkles className="w-3.5 h-3.5" />
-                      {aiSuggestionApplied ? (isAr ? '✓ تم تطبيق الاقتراح (+1 بوست خياطة ذكي)' : '✓ Recommandation appliquée (+1 Poste)') : (isAr ? '✨ تطبيق اقتراح زيادة الإنتاجية (+1 بوست خياطة)' : '✨ Appliquer la recommandation (+1 Poste)')}
-                    </button>
-                  </div>
-
-                  <div className="p-3 bg-white/90 rounded-2xl border border-amber-200/80 flex flex-col justify-between gap-2 shadow-sm">
-                    <div>
-                      <span className="text-[10px] font-black text-indigo-700 block mb-1">
-                        {isAr ? '🕒 اقتراح ساعات العمل (لتعظيم الإنتاج اليومي):' : '🕒 Recommandation Horaires : Capacité Jour'}
-                      </span>
-                      <p className="text-xs text-slate-700 font-bold leading-relaxed">
-                        {isAr ? `🕒 نصيحة الإنتاج: مع هذا الموديل (${aiStitchingMin} دقيقة/قطعة)، تشغيل الورشة (${workHoursPerDay} ساعات/يوم) يمنحك ${aiDailyPiecesOutput} قطعة يومياً. الانتقال إلى 9 أو 10 ساعات يضيف حتى +${Math.floor((activeWorkersCount * 2 * 60) / aiStitchingMin)} قطعة إضافية يومياً.` : `🕒 Astuce Production : Avec ${aiStitchingMin} min/pièce, passer de 8h à 9h/10h augmente votre rendement quotidien jusqu'à +${Math.floor((activeWorkersCount * 2 * 60) / aiStitchingMin)} pcs/jour.`}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      {[8, 9, 10].map(hrs => (
-                        <button
-                          key={hrs}
-                          type="button"
-                          onClick={() => setWorkHoursPerDay(hrs)}
-                          className={`flex-1 py-1.5 rounded-xl font-black text-xs transition-all border ${
-                            workHoursPerDay === hrs
-                              ? 'bg-indigo-600 text-white border-indigo-700 shadow-sm'
-                              : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-                          }`}
-                        >
-                          {hrs} {isAr ? 'ساعات/يوم' : 'h / j'}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Gamme de Montage Studio Grid */}
-              <div className="p-4 bg-white rounded-3xl border border-slate-200 shadow-sm space-y-3">
+              {/* Gamme de Montage Studio Grid — the main focus of this page */}
+              <div className="p-5 bg-white rounded-3xl border-2 border-violet-300 shadow-lg shadow-violet-100 space-y-3">
                 <div className="flex items-center justify-between text-xs font-black flex-wrap gap-2">
                   <span className="flex items-center gap-2 text-slate-800">
                     <Wrench className="w-4 h-4 text-violet-600" />
@@ -612,15 +550,34 @@ Réponds uniquement en JSON valide, sans texte avant ni après.`;
                     {customPostes && (
                       <button
                         type="button"
-                        onClick={() => {
-                          setCustomPostes(null);
-                          setAiSuggestionApplied(false);
-                        }}
+                        onClick={() => setCustomPostes(null)}
                         className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[10px] font-black transition-colors"
                       >
                         {isAr ? '🔄 إعادة ضبط لاكام' : 'Réinitialiser'}
                       </button>
                     )}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between flex-wrap gap-2 p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                  <span className="text-[11px] font-black text-slate-600">
+                    {isAr ? '🕒 ساعات العمل في اليوم:' : '🕒 Heures de travail / jour :'}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    {[8, 9, 10].map(hrs => (
+                      <button
+                        key={hrs}
+                        type="button"
+                        onClick={() => setWorkHoursPerDay(hrs)}
+                        className={`px-3 py-1.5 rounded-xl font-black text-xs transition-all border ${
+                          workHoursPerDay === hrs
+                            ? 'bg-indigo-600 text-white border-indigo-700 shadow-sm'
+                            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        {hrs} {isAr ? 'ساعات/يوم' : 'h / j'}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
