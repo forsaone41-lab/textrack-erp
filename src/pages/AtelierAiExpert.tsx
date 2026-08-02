@@ -503,32 +503,30 @@ Réponds uniquement en JSON valide, sans texte avant ni après.`;
             </div>
           ) : selectedAiPreset && breakdown && (
             <>
-              <div className="p-5 bg-gradient-to-br from-violet-50 to-indigo-50/50 rounded-3xl border border-violet-200/80 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-violet-900 font-black text-xs">
-                    <span>{isAr ? 'تحليل الخبير (Expert BEYA)' : 'Expert BEYA Analyse'}</span>
-                  </div>
-                  <span className="px-2 py-0.5 bg-violet-100 text-violet-800 font-black text-[10px] rounded-md">
-                    {visionBreakdown ? (isAr ? 'تحليل حقيقي بالصورة (Gemini)' : 'Analyse réelle par photo (Gemini)') : (isAr ? 'تقدير يدوي' : 'Estimation manuelle')}
+              <div className="p-3.5 bg-gradient-to-br from-violet-50 to-indigo-50/50 rounded-2xl border border-violet-200/80 space-y-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-violet-900 font-black text-[11px]">{isAr ? 'تحليل الخبير (Expert BEYA)' : 'Expert BEYA Analyse'}</span>
+                  <span className="px-1.5 py-0.5 bg-violet-100 text-violet-800 font-black text-[9px] rounded-md shrink-0">
+                    {visionBreakdown ? (isAr ? 'تحليل حقيقي بالصورة' : 'Analyse réelle (photo)') : (isAr ? 'تقدير يدوي' : 'Estimation manuelle')}
                   </span>
                 </div>
 
-                <p className="text-sm font-bold text-slate-800 leading-relaxed">
+                <p className="text-xs font-bold text-slate-800 leading-relaxed">
                   {selectedAiPreset.aiText}
                 </p>
 
-                <div className="grid grid-cols-3 gap-3 pt-3 border-t border-violet-200/60 text-center">
-                  <div className="bg-white/80 p-2.5 rounded-2xl border border-violet-100">
-                    <span className="text-[10px] font-bold text-slate-500 block">{isAr ? 'القماش واللوازم (للقطعة)' : 'Matière / pièce'}</span>
-                    <strong className="text-sm font-black text-violet-700">{((breakdown.consommationMetrage * breakdown.prixMetreEstime) + breakdown.fournituresEstimees).toFixed(2)} DH</strong>
+                <div className="grid grid-cols-3 gap-2 pt-2 border-t border-violet-200/60 text-center">
+                  <div className="bg-white/80 p-2 rounded-xl border border-violet-100">
+                    <span className="text-[9px] font-bold text-slate-500 block">{isAr ? 'القماش واللوازم' : 'Matière / pièce'}</span>
+                    <strong className="text-xs font-black text-violet-700">{((breakdown.consommationMetrage * breakdown.prixMetreEstime) + breakdown.fournituresEstimees).toFixed(2)} DH</strong>
                   </div>
-                  <div className="bg-white/80 p-2.5 rounded-2xl border border-violet-100">
-                    <span className="text-[10px] font-bold text-slate-500 block">{isAr ? 'سعر البيع المقترح' : 'Prix de vente rec.'}</span>
-                    <strong className="text-sm font-black text-emerald-600">{breakdown.prixVenteConseille.toFixed(2)} DH</strong>
+                  <div className="bg-white/80 p-2 rounded-xl border border-violet-100">
+                    <span className="text-[9px] font-bold text-slate-500 block">{isAr ? 'سعر البيع المقترح' : 'Prix de vente rec.'}</span>
+                    <strong className="text-xs font-black text-emerald-600">{breakdown.prixVenteConseille.toFixed(2)} DH</strong>
                   </div>
-                  <div className="bg-white/80 p-2.5 rounded-2xl border border-violet-100">
-                    <span className="text-[10px] font-bold text-slate-500 block">{isAr ? 'وقت الخياطة للقطعة' : 'Temps / pièce'}</span>
-                    <strong className="text-sm font-black text-indigo-600">{aiStitchingMin} {isAr ? 'دقيقة' : 'min'}</strong>
+                  <div className="bg-white/80 p-2 rounded-xl border border-violet-100">
+                    <span className="text-[9px] font-bold text-slate-500 block">{isAr ? 'وقت الخياطة' : 'Temps / pièce'}</span>
+                    <strong className="text-xs font-black text-indigo-600">{aiStitchingMin} {isAr ? 'دقيقة' : 'min'}</strong>
                   </div>
                 </div>
               </div>
