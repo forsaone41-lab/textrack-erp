@@ -894,11 +894,20 @@ Réponds uniquement en JSON valide, sans texte avant ni après.`;
                 <div
                   key={f.id}
                   onClick={() => importFicheAsPreset(f)}
-                  className="p-3 bg-slate-50 hover:bg-violet-50 border border-slate-200 hover:border-violet-300 rounded-2xl transition-all cursor-pointer"
+                  className="p-3 bg-slate-50 hover:bg-violet-50 border border-slate-200 hover:border-violet-300 rounded-2xl transition-all cursor-pointer flex items-center gap-3"
                 >
-                  <div className="font-black text-xs text-slate-900">{f.modele}</div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">{f.type} {f.client ? `• ${f.client}` : ''}</div>
-                  <div className="text-[10px] text-violet-600 font-bold mt-1">{f.tissuConsommation || 1.5} m/pièce</div>
+                  <div className="w-14 h-14 rounded-xl bg-slate-200 border border-slate-200 shrink-0 overflow-hidden flex items-center justify-center">
+                    {f.photo ? (
+                      <img src={f.photo} alt={f.modele} className="w-full h-full object-cover" />
+                    ) : (
+                      <FileText className="w-5 h-5 text-slate-400" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-black text-xs text-slate-900 truncate">{f.modele}</div>
+                    <div className="text-[10px] text-slate-500 mt-0.5 truncate">{f.type} {f.client ? `• ${f.client}` : ''}</div>
+                    <div className="text-[10px] text-violet-600 font-bold mt-1">{f.tissuConsommation || 1.5} m/pièce</div>
+                  </div>
                 </div>
               ))}
               {filteredFiches.length === 0 && (
