@@ -272,6 +272,15 @@ Réponds uniquement en JSON valide, sans texte avant ni après.`;
     setCustomPostes(current);
   };
 
+  const handleTogglePosteExcluded = (idx: number) => {
+    const breakdown = getActiveBreakdown();
+    const current = customPostes ? [...customPostes] : [...breakdown.postesTravail];
+    if (current[idx]) {
+      current[idx] = { ...current[idx], excluded: !current[idx].excluded };
+      setCustomPostes(current);
+    }
+  };
+
   const handleAddPoste = () => {
     const breakdown = getActiveBreakdown();
     const current = customPostes ? [...customPostes] : [...breakdown.postesTravail];
@@ -305,7 +314,7 @@ Réponds uniquement en JSON valide, sans texte avant ni après.`;
     const breakdown = getActiveBreakdown();
     const activePostesModal = (customPostes && customPostes.length > 0) ? customPostes : breakdown.postesTravail;
     const basePostesCount = breakdown.postesTravail.length;
-    const basePostesMin = activePostesModal.slice(0, basePostesCount).reduce((acc, p) => acc + (Number(p.tempsMin) || 0), 0);
+    const basePostesMin = activePostesModal.slice(0, basePostesCount).filter(p => !p.excluded).reduce((acc, p) => acc + (Number(p.tempsMin) || 0), 0);
     const aiStitchingMin = basePostesMin || breakdown.totalMinutesConfection || preset.stitchingMin || 35;
     const extraPostesCount = Math.max(0, activePostesModal.length - basePostesCount);
     const activeWorkersCount = Math.max(1, workers + extraPostesCount);
@@ -597,6 +606,9 @@ Réponds uniquement en JSON valide, sans texte avant ni après.`;
                   <div className="flex items-center gap-2">
                     <span className="px-2.5 py-1 bg-violet-100 text-violet-800 rounded-xl text-[11px] font-black">
                       {activePostesModal.length} {isAr ? 'بوستات' : 'Postes'} | {aiStitchingMin} {isAr ? 'دقيقة (المجموع)' : 'min total'}
+                      {activePostesModal.some(p => p.excluded) && (
+                        <span className="text-amber-700"> · {activePostesModal.filter(p => p.excluded).length} {isAr ? 'مستثناة' : 'exclu(s)'}</span>
+                      )}
                     </span>
                     {customPostes && (
                       <button
@@ -643,7 +655,7 @@ Réponds uniquement en JSON valide, sans texte avant ni après.`;
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {activePostesModal.map((poste, idx) => (
-                    <div key={idx} className="p-3 bg-gradient-to-br from-slate-50 to-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-2.5 relative group">
+                    <div key={idx} className={`p-3 bg-gradient-to-br from-slate-50 to-white rounded-2xl border shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-2.5 relative group ${poste.excluded ? 'border-amber-300 opacity-60' : 'border-slate-200/80'}`}>
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2">
                           <span className="w-6 h-6 rounded-xl bg-violet-600 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-sm">
@@ -653,15 +665,31 @@ Réponds uniquement en JSON valide, sans texte avant ni après.`;
                             {poste.machine}
                           </span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handleDeletePoste(idx)}
-                          className="text-slate-400 hover:text-red-500 p-1 rounded-lg hover:bg-red-50 transition-colors"
-                          title={isAr ? 'حذف المرحلة' : 'Supprimer'}
-                        >
-                          🗑️
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleTogglePosteExcluded(idx)}
+                            className={`p-1 rounded-lg transition-colors ${poste.excluded ? 'text-amber-600 bg-amber-50 hover:bg-amber-100' : 'text-slate-400 hover:text-amber-600 hover:bg-amber-50'}`}
+                            title={isAr ? 'استثناء من الحساب الإجمالي (يتحسب بوحدو)' : "Exclure du calcul total (compté séparément)"}
+                          >
+                            {poste.excluded ? '↩️' : '🚫'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeletePoste(idx)}
+                            className="text-slate-400 hover:text-red-500 p-1 rounded-lg hover:bg-red-50 transition-colors"
+                            title={isAr ? 'حذف المرحلة' : 'Supprimer'}
+                          >
+                            🗑️
+                          </button>
+                        </div>
                       </div>
+
+                      {poste.excluded && (
+                        <span className="text-[9px] font-black text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-0.5 self-start">
+                          {isAr ? '⚠️ مستثناة من المجموع — تتحسب بوحدها' : '⚠️ Exclu du total — calculé séparément'}
+                        </span>
+                      )}
 
                       <div>
                         <input

@@ -17,6 +17,7 @@ export interface PosteTravail {
   machine: string;
   tempsMin: number;
   roleOuvrier: string;
+  excluded?: boolean;
 }
 
 export interface TechnicalOperationBreakdown {
