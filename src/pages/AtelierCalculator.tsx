@@ -7,7 +7,7 @@ import {
   Ruler, Upload, Image as ImageIcon, Search, FileText, Wrench, Trash2, RotateCcw, Maximize2, Minimize2, Plus
 } from 'lucide-react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { loadData, Employe, FicheTechnique } from '../types';
+import { loadData, Employe, FicheTechnique, Charge } from '../types';
 
 interface AtelierCalculatorProps {
   isModal?: boolean;
@@ -484,8 +484,22 @@ function isSupportRole(e: Employe): boolean {
   const [materials, setMaterials] = useState(300);
   const [totalMachines, setTotalMachines] = useState(7);
   const [monthlyOther, setMonthlyOther] = useState(3000);
+  const [monthlyChargesSynced, setMonthlyChargesSynced] = useState(false);
   const [customPostes, setCustomPostes] = useState<PosteTravail[] | null>(null);
   const [isPostesBoxExpanded, setIsPostesBoxExpanded] = useState(false);
+
+  // Pull the monthly recurring charges from Charges & Dépenses instead of retyping them here
+  useEffect(() => {
+    loadData<Charge>('charges').then(res => {
+      if (Array.isArray(res)) {
+        const total = res.filter(c => c.recurrence === 'mensuel').reduce((s, c) => s + (c.montant || 0), 0);
+        if (total > 0) {
+          setMonthlyOther(total);
+          setMonthlyChargesSynced(true);
+        }
+      }
+    }).catch(() => {});
+  }, []);
 
   // Auto-sync workers count with customPostes (Gamme) when user modifies it
   useEffect(() => {
@@ -1462,14 +1476,19 @@ function isSupportRole(e: Employe): boolean {
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                <label className="flex items-center justify-center gap-1 text-[11px] font-bold text-slate-600 mb-1">
                   {isAr ? 'مصاريف الشهر (الكرا، الضو...)' : 'Frais fixes mensuels (DH)'}
+                  {monthlyChargesSynced && (
+                    <span title={isAr ? 'مجموع تلقائي من صفحة المصاريف والتكاليف' : 'Total automatique depuis Charges & Dépenses'} className="text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-1.5 py-0.5 normal-case">
+                      {isAr ? 'مرتبط' : 'Synchro'}
+                    </span>
+                  )}
                 </label>
                 <input
                   type="number"
                   min="0"
                   value={monthlyOther === 0 ? '' : monthlyOther}
-                  onChange={(e) => setMonthlyOther(e.target.value === '' ? 0 : Number(e.target.value))}
+                  onChange={(e) => { setMonthlyOther(e.target.value === '' ? 0 : Number(e.target.value)); setMonthlyChargesSynced(false); }}
                   className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-indigo-600 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
                 />
               </div>
