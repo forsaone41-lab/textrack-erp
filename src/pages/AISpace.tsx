@@ -502,7 +502,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
 
       await saveRecord('fiches', newFT);
       localStorage.setItem('beya_ai_to_ft', JSON.stringify(newFT));
-      navigate('/fiches-techniques');
+      window.open('/fiches-techniques', '_blank');
     } catch (err) {
       console.error("Export Error:", err);
       setCustomAlert({
@@ -623,12 +623,12 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
         image: image || ''
       };
       localStorage.setItem('beya_ai_to_devis', JSON.stringify(devisData));
-      
-      // Navigate to Devis PRO (/devis-pro)
-      navigate('/devis-pro');
+
+      // Open Devis PRO in a new tab so the current AI analysis stays open
+      window.open('/devis-pro', '_blank');
     } catch (err) {
       console.error('sendToDevis error:', err);
-      navigate('/devis-pro');
+      window.open('/devis-pro', '_blank');
     }
   };
 
@@ -1316,7 +1316,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
                       timestamp: Date.now()
                     };
                     localStorage.setItem('beya_atelier_import', JSON.stringify(atelierData));
-                    navigate('/atelier-calculator');
+                    window.open('/atelier-calculator', '_blank');
                   } else {
                     setCustomAlert({
                       title: isAr ? 'تنبيه' : 'Attention',
@@ -1341,7 +1341,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
                       timestamp: Date.now()
                     };
                     localStorage.setItem('beya_achats_import', JSON.stringify(achData));
-                    navigate('/achats');
+                    window.open('/achats', '_blank');
                   } else {
                     setCustomAlert({
                       title: isAr ? 'تنبيه' : 'Attention',
