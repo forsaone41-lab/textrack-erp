@@ -9,6 +9,7 @@ const MAX_SAVED_MODELS = 12;
 interface SavedModel {
   id: string;
   dataUrl: string;
+  name: string;
 }
 
 function readFileAsDataUrl(file: File): Promise<string> {
@@ -56,7 +57,7 @@ export default function BeyaVirtualTryOn() {
 
   const addNewModel = async (file: File) => {
     const dataUrl = await readFileAsDataUrl(file);
-    const entry: SavedModel = { id: `${Date.now()}`, dataUrl };
+    const entry: SavedModel = { id: `${Date.now()}`, dataUrl, name: `${isAr ? 'موديل' : 'Modèle'} ${savedModels.length + 1}` };
     const updated = [entry, ...savedModels].slice(0, MAX_SAVED_MODELS);
     persistSavedModels(updated);
     setPersonImage(dataUrl);
@@ -64,6 +65,10 @@ export default function BeyaVirtualTryOn() {
 
   const removeSavedModel = (id: string) => {
     persistSavedModels(savedModels.filter(m => m.id !== id));
+  };
+
+  const renameSavedModel = (id: string, name: string) => {
+    persistSavedModels(savedModels.map(m => m.id === id ? { ...m, name } : m));
   };
 
   const generateTryOn = async () => {
@@ -271,7 +276,7 @@ export default function BeyaVirtualTryOn() {
                     personImage === model.dataUrl ? 'border-violet-600 ring-2 ring-violet-200' : 'border-transparent hover:border-violet-300'
                   }`}
                 >
-                  <img src={model.dataUrl} alt="model" className="w-full h-full object-cover" />
+                  <img src={model.dataUrl} alt={model.name} className="w-full h-full object-cover" />
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); removeSavedModel(model.id); }}
@@ -280,6 +285,13 @@ export default function BeyaVirtualTryOn() {
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>
+                  <input
+                    type="text"
+                    value={model.name}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => renameSavedModel(model.id, e.target.value)}
+                    className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[9px] font-bold text-center outline-none py-0.5 px-1 truncate focus:bg-black/80"
+                  />
                 </div>
               ))}
             </div>
