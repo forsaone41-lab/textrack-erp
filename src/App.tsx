@@ -690,7 +690,7 @@ function AppContent() {
         <Route path="kml-viewer" element={(can('ordres') || can('fiches')) ? <KMLViewer /> : <Navigate to="/" replace />} />
         <Route path="atelier-calculator" element={(can('atelier_calculator') || can('fiches') || can('ai_space') || currentUser?.role === 'admin') ? <AtelierCalculator /> : <Navigate to="/" replace />} />
         <Route path="atelier-ai-expert" element={(can('atelier_calculator') || can('fiches') || can('ai_space') || currentUser?.role === 'admin') ? <AtelierAiExpert /> : <Navigate to="/" replace />} />
-        <Route path="beya-studio-tryon" element={can('ai_space') ? <BeyaVirtualTryOn /> : <Navigate to="/" replace />} />
+        <Route path="beya-studio-tryon" element={currentUser?.role === 'admin' ? <BeyaVirtualTryOn /> : <Navigate to="/" replace />} />
         <Route path="worker-portal" element={<WorkerPortal currentUser={currentUser} onLogout={handleLogout} />} />
         <Route path="chef-portal" element={<ChefChainePortal currentUser={currentUser} onLogout={handleLogout} />} />
         <Route path="partenaire-portal" element={<PartenairePortal currentUser={currentUser} onLogout={handleLogout} />} />
