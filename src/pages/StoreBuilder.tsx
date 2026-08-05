@@ -2627,14 +2627,14 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
         {page === 'home' && (
           <>
             <div className={`flex ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'} h-auto bg-white`} style={{ minHeight: previewDevice === 'mobile' && !isModal ? undefined : `${isModal ? heroHeight + 150 : heroHeight}px` }}>
-               <div className="flex-1 flex flex-col justify-center p-12">
-                  <h1 className="text-5xl font-light leading-tight mb-6" style={{ color: primaryColor }}>
+               <div className={`flex flex-col justify-center ${previewDevice === 'mobile' && !isModal ? 'p-6' : 'p-12'}`}>
+                  <h1 className={`${previewDevice === 'mobile' && !isModal ? 'text-4xl' : 'text-5xl'} font-light leading-tight mb-4`} style={{ color: primaryColor }}>
                      {storeLang === 'ar' ? <>أناقة في<br/>البساطة.</> : storeLang === 'en' ? <>Elegance in <br/>Simplicity.</> : <>Élégance et<br/>Simplicité.</>}
                   </h1>
-                  <p className="text-gray-500 mb-8 max-w-sm leading-relaxed">{storeLang === 'ar' ? 'اكتشف تشكيلة تتميز بخطوط نقية ومواد طبيعية.' : storeLang === 'en' ? 'Experience a collection defined by pure lines and organic materials.' : 'Découvrez une collection définie par des lignes pures et des matériaux naturels.'}</p>
-                  <button onClick={() => setPage('collections')} className="w-max px-10 py-4 text-white text-sm tracking-widest transition-opacity hover:opacity-90" style={{ backgroundColor: primaryColor }}>{tr('DISCOVER')}</button>
+                  <p className={`text-gray-500 mb-6 leading-relaxed ${previewDevice === 'mobile' && !isModal ? 'text-sm max-w-full' : 'max-w-sm'}`}>{storeLang === 'ar' ? 'اكتشف تشكيلة تتميز بخطوط نقية ومواد طبيعية.' : storeLang === 'en' ? 'Experience a collection defined by pure lines and organic materials.' : 'Découvrez une collection définie par des lignes pures et des matériaux naturels.'}</p>
+                  <button onClick={() => setPage('collections')} className={`w-max ${previewDevice === 'mobile' && !isModal ? 'px-6 py-3 text-xs' : 'px-10 py-4 text-sm'} text-white tracking-widest transition-opacity hover:opacity-90`} style={{ backgroundColor: primaryColor }}>{tr('DISCOVER')}</button>
                </div>
-               <HeroBackgroundEditor className="flex-1 bg-cover" style={{ backgroundImage: `url(${heroImage})`, backgroundPosition: `${heroImagePosX}% ${heroImagePosY}%` }} />
+               <HeroBackgroundEditor className="bg-cover" style={{ backgroundImage: `url(${heroImage})`, backgroundPosition: `${heroImagePosX}% ${heroImagePosY}%`, flex: previewDevice === 'mobile' && !isModal ? 'none' : '1', height: previewDevice === 'mobile' && !isModal ? '250px' : undefined, width: previewDevice === 'mobile' && !isModal ? '100%' : undefined }} />
             </div>
             <div className={`${isModal ? 'p-20' : 'p-8'} mx-auto w-full`} style={{ maxWidth: `${siteMaxWidth}px` }}>
                <div className="flex justify-between items-end mb-12 border-b pb-4">
