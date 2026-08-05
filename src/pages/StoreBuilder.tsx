@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -867,6 +867,8 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
   const [allCollectionsTitle, setAllCollectionsTitle] = useState(config.allCollectionsTitle || 'All Products');
   const [homeBlocks, setHomeBlocks] = useState<string[]>(config.homeBlocks || ['hero', 'collections', 'products']);
   const [sliderImages, setSliderImages] = useState<string[]>(config.sliderImages || []);
+  const [heroSlides, setHeroSlides] = useState<Array<{image: string; title: string; subtitle: string}>>(config.heroSlides || []);
+  const [activeHeroSlide, setActiveHeroSlide] = useState(0);
   const [activeSidebarSection, setActiveSidebarSection] = useState<string>('hero');
   
   const [cartItems, setCartItems] = useState<any[]>([]);
@@ -1085,6 +1087,7 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
               if (conf.showReviews !== undefined) setShowReviews(conf.showReviews);
               if (conf.homeBlocks) setHomeBlocks(conf.homeBlocks);
               if (conf.sliderImages) setSliderImages(conf.sliderImages);
+              if (conf.heroSlides) setHeroSlides(conf.heroSlides);
               if (conf.newsletterTitle) setNewsletterTitle(conf.newsletterTitle);
               if (conf.newsletterSubtitle) setNewsletterSubtitle(conf.newsletterSubtitle);
               if (conf.featuresData) setFeaturesData(conf.featuresData);
@@ -1396,6 +1399,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
        buyMode,
        homeBlocks,
        sliderImages,
+       heroSlides,
        footerSettings,
        newsletterTitle,
        newsletterSubtitle,
@@ -2626,16 +2630,74 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
       <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
         {page === 'home' && (
           <>
-            <div className={`flex ${previewDevice === 'mobile' && !isModal ? 'flex-col' : 'flex-col md:flex-row'} h-auto bg-white`} style={{ minHeight: previewDevice === 'mobile' && !isModal ? undefined : `${isModal ? heroHeight + 150 : heroHeight}px` }}>
-               <div className={`flex flex-col justify-center ${previewDevice === 'mobile' && !isModal ? 'p-6' : 'p-12'}`}>
-                  <h1 className={`${previewDevice === 'mobile' && !isModal ? 'text-4xl' : 'text-5xl'} font-light leading-tight mb-4`} style={{ color: primaryColor }}>
-                     {storeLang === 'ar' ? <>أناقة في<br/>البساطة.</> : storeLang === 'en' ? <>Elegance in <br/>Simplicity.</> : <>Élégance et<br/>Simplicité.</>}
-                  </h1>
-                  <p className={`text-gray-500 mb-6 leading-relaxed ${previewDevice === 'mobile' && !isModal ? 'text-sm max-w-full' : 'max-w-sm'}`}>{storeLang === 'ar' ? 'اكتشف تشكيلة تتميز بخطوط نقية ومواد طبيعية.' : storeLang === 'en' ? 'Experience a collection defined by pure lines and organic materials.' : 'Découvrez une collection définie par des lignes pures et des matériaux naturels.'}</p>
-                  <button onClick={() => setPage('collections')} className={`w-max ${previewDevice === 'mobile' && !isModal ? 'px-6 py-3 text-xs' : 'px-10 py-4 text-sm'} text-white tracking-widest transition-opacity hover:opacity-90`} style={{ backgroundColor: primaryColor }}>{tr('DISCOVER')}</button>
-               </div>
-               <HeroBackgroundEditor className="bg-cover" style={{ backgroundImage: `url(${heroImage})`, backgroundPosition: `${heroImagePosX}% ${heroImagePosY}%`, flex: previewDevice === 'mobile' && !isModal ? 'none' : '1', height: previewDevice === 'mobile' && !isModal ? '250px' : undefined, width: previewDevice === 'mobile' && !isModal ? '100%' : undefined }} />
-            </div>
+            {/* ===== HERO SLIDESHOW (SplitScreen) ===== */}
+            {(() => {
+              const slides = heroSlides && heroSlides.length > 0
+                ? heroSlides
+                : [{ image: heroImage, title: heroTitle || (storeLang === 'ar' ? 'أناقة في البساطة.' : storeLang === 'en' ? 'Elegance in Simplicity.' : 'Élégance et Simplicité.'), subtitle: heroSubtitle || (storeLang === 'ar' ? 'اكتشف تشكيلة تتميز بخطوط نقية ومواد طبيعية.' : storeLang === 'en' ? 'Experience a collection defined by pure lines and organic materials.' : 'Découvrez une collection définie par des lignes pures et des matériaux naturels.') }];
+              const curIdx = activeHeroSlide % slides.length;
+              const curSlide = slides[curIdx];
+              const isMobile = previewDevice === 'mobile' && !isModal;
+              const goNext = () => setActiveHeroSlide(i => (i + 1) % slides.length);
+              const goPrev = () => setActiveHeroSlide(i => (i - 1 + slides.length) % slides.length);
+              return (
+                <div className={`flex ${isMobile ? 'flex-col' : 'flex-col md:flex-row'} relative overflow-hidden bg-white group`} style={{ minHeight: isMobile ? undefined : `${isModal ? heroHeight + 150 : heroHeight}px` }}>
+                  {/* LEFT: text content */}
+                  <div className={`relative z-10 flex flex-col justify-center ${isMobile ? 'p-6' : 'p-12'}`} style={{ flex: isMobile ? undefined : '0 0 42%' }}>
+                    {/* Slide dots */}
+                    {slides.length > 1 && (
+                      <div className="flex gap-2 mb-5">
+                        {slides.map((_: any, i: number) => (
+                          <button key={i} onClick={() => setActiveHeroSlide(i)}
+                            className="rounded-full transition-all duration-400"
+                            style={{ width: curIdx === i ? '24px' : '8px', height: '8px', backgroundColor: curIdx === i ? primaryColor : '#d1d5db' }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                    {/* Animated title & subtitle */}
+                    <div key={`slide-text-${curIdx}`} style={{ animation: 'heroFadeSlide 0.5s ease forwards' }}>
+                      <h1 className={`${isMobile ? 'text-4xl' : 'text-5xl'} font-light leading-tight mb-4`} style={{ color: primaryColor }}>
+                        {curSlide?.title}
+                      </h1>
+                      <p className={`text-gray-500 mb-6 leading-relaxed ${isMobile ? 'text-sm' : 'max-w-sm'}`}>
+                        {curSlide?.subtitle}
+                      </p>
+                    </div>
+                    <button onClick={() => setPage('collections')} className={`w-max ${isMobile ? 'px-6 py-3 text-xs' : 'px-10 py-4 text-sm'} text-white tracking-widest transition-opacity hover:opacity-80`} style={{ backgroundColor: primaryColor }}>
+                      {tr(heroButtonText || 'DISCOVER')}
+                    </button>
+                    {/* Prev / Next arrows */}
+                    {slides.length > 1 && (
+                      <div className="flex gap-3 mt-7">
+                        <button onClick={goPrev} className="w-9 h-9 border border-gray-300 flex items-center justify-center text-gray-500 hover:border-gray-800 hover:text-gray-800 transition-all">
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <button onClick={goNext} className="w-9 h-9 border border-gray-300 flex items-center justify-center text-gray-500 hover:border-gray-800 hover:text-gray-800 transition-all">
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  {/* RIGHT: image crossfade */}
+                  <div className="relative overflow-hidden" style={{ flex: isMobile ? 'none' : '1', height: isMobile ? '260px' : undefined, width: isMobile ? '100%' : undefined }}>
+                    {slides.map((sl: any, i: number) => (
+                      <div key={i} className="absolute inset-0 transition-opacity duration-700" style={{ opacity: curIdx === i ? 1 : 0 }}>
+                        <img src={sl.image || heroImage} className="w-full h-full object-cover" alt={sl.title || ''} />
+                      </div>
+                    ))}
+                    {!isLiveStore && (
+                      <button onClick={() => setIsHeroImagePickerOpen(true)}
+                        className="absolute top-3 right-3 bg-white/90 backdrop-blur text-slate-800 px-3 py-1.5 rounded-full text-xs font-bold shadow-md z-20 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white border border-slate-200"
+                      >
+                        <ImageIcon className="w-3.5 h-3.5" />{storeIsAr ? 'تغيير الصورة' : 'Changer'}
+                      </button>
+                    )}
+                  </div>
+                  <style>{`@keyframes heroFadeSlide { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }`}</style>
+                </div>
+              );
+            })()}
             <div className={`${isModal ? 'p-20' : 'p-8'} mx-auto w-full`} style={{ maxWidth: `${siteMaxWidth}px` }}>
                <div className="flex justify-between items-end mb-12 border-b pb-4">
                   <h3 className="text-2xl font-light">{storeLang === 'ar' ? 'وصل حديثاً' : storeLang === 'en' ? 'New Arrivals' : 'Nouveautés'}</h3>
@@ -6343,6 +6405,68 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                 <span className="text-[10px] font-bold text-slate-500">{isAr ? 'تغيير الصورة' : 'Changer l\'image'}</span>
                              </div>
                            </div>
+                       </div>
+
+                       {/* ===== HERO SLIDESHOW MANAGER ===== */}
+                       <div className="pt-3 border-t border-slate-100">
+                         <div className="flex items-center justify-between mb-3">
+                           <label className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider flex items-center gap-1.5">
+                             <span>🎞</span> {isAr ? 'سلايدشو الهيرو' : 'Hero Slideshow'}
+                           </label>
+                           <span className="text-[9px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full font-medium">{heroSlides.length} slide{heroSlides.length !== 1 ? 's' : ''}</span>
+                         </div>
+                         {heroSlides.length === 0 && (
+                           <p className="text-[10px] text-slate-400 mb-3 leading-relaxed">{isAr ? 'أضف slides لتفعيل السلايدشو.' : 'Ajoutez des slides pour activer le diaporama.'}</p>
+                         )}
+                         <div className="space-y-3 mb-3">
+                           {heroSlides.map((slide: any, idx: number) => (
+                             <div key={idx} className="bg-white border border-slate-200 rounded-xl p-3 space-y-2 shadow-sm">
+                               <div className="flex items-center gap-2">
+                                 <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 shrink-0 bg-slate-50 flex items-center justify-center">
+                                   {slide.image ? <img src={slide.image} className="w-full h-full object-cover" /> : <ImageIcon className="w-4 h-4 text-slate-300" />}
+                                 </div>
+                                 <span className="text-xs font-bold text-slate-600 flex-1">Slide {idx + 1}</span>
+                                 <button onClick={() => setHeroSlides((prev: any[]) => prev.filter((_: any, i: number) => i !== idx))}
+                                   className="w-6 h-6 rounded-full bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600 flex items-center justify-center transition-colors shrink-0">
+                                   <X className="w-3 h-3" />
+                                 </button>
+                               </div>
+                               <label className="flex items-center gap-2 cursor-pointer bg-slate-50 border border-dashed border-slate-200 rounded-lg px-2 py-1.5 hover:border-indigo-400 transition-colors">
+                                 <ImageIcon className="w-3 h-3 text-slate-400 shrink-0" />
+                                 <span className="text-[10px] text-slate-500 font-medium">{isAr ? 'تغيير الصورة' : 'Changer image'}</span>
+                                 <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                                   const file = e.target.files?.[0];
+                                   if (!file) return;
+                                   const b64 = await readFileAsBase64(file);
+                                   setHeroSlides((prev: any[]) => prev.map((s: any, i: number) => i === idx ? { ...s, image: b64 } : s));
+                                 }} />
+                               </label>
+                               <input type="text" placeholder={isAr ? 'العنوان...' : 'Titre...'} value={slide.title}
+                                 onChange={(e) => setHeroSlides((prev: any[]) => prev.map((s: any, i: number) => i === idx ? { ...s, title: e.target.value } : s))}
+                                 className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 outline-none focus:border-indigo-400 transition-colors" />
+                               <input type="text" placeholder={isAr ? 'النص الفرعي...' : 'Sous-titre...'} value={slide.subtitle}
+                                 onChange={(e) => setHeroSlides((prev: any[]) => prev.map((s: any, i: number) => i === idx ? { ...s, subtitle: e.target.value } : s))}
+                                 className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 outline-none focus:border-indigo-400 transition-colors" />
+                             </div>
+                           ))}
+                         </div>
+                         <label className="flex items-center justify-center gap-2 w-full py-2.5 border-2 border-dashed border-indigo-200 rounded-xl text-indigo-500 hover:border-indigo-400 hover:bg-indigo-50 cursor-pointer transition-all text-xs font-bold">
+                           <Plus className="w-4 h-4" />
+                           {isAr ? 'إضافة سلايد جديد' : 'Ajouter un slide'}
+                           <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                             const file = e.target.files?.[0];
+                             if (!file) return;
+                             const b64 = await readFileAsBase64(file);
+                             const newIdx = heroSlides.length;
+                             setHeroSlides((prev: any[]) => [...prev, { image: b64, title: heroTitle || '', subtitle: heroSubtitle || '' }]);
+                             setActiveHeroSlide(newIdx);
+                           }} />
+                         </label>
+                         {heroSlides.length > 0 && (
+                           <button onClick={() => setHeroSlides([])} className="mt-2 w-full text-[10px] text-slate-400 hover:text-red-500 transition-colors text-center py-1">
+                             {isAr ? '× مسح كل السلايدات' : '× Supprimer tous les slides'}
+                           </button>
+                         )}
                        </div>
                        </>
                     )}
