@@ -871,6 +871,9 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
   
   const [cartItems, setCartItems] = useState<any[]>([]);
   const cartCount = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
+  const removeFromCart = (index: number) => {
+    setCartItems(prev => prev.filter((_, i) => i !== index));
+  };
   const [isCartOpen, setIsCartOpen] = useState(false);
   // Preview navigation state (which storefront page/product is shown) lives up
   // here, not inside StorePreviewWrapper - that component is redefined on every
