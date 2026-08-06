@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -7384,8 +7384,32 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                           <div>
                              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">{isAr ? 'الوصف' : 'Description'}</label>
                              <textarea rows={4} placeholder={isAr ? 'اوصف منتجك بالتفصيل...' : 'Décrivez votre produit en détail...'} value={productForm?.description || ''} onChange={e => setProductForm({...productForm, description: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 resize-none"></textarea>
-                          </div>
-                       </div>
+                           </div>
+                           
+                           {/* ===== DIGITAL PRODUCT TOGGLE ===== */}
+                           <div className="pt-4 mt-4 border-t border-slate-100">
+                              <label className="flex items-center gap-3 cursor-pointer">
+                                 <input type="checkbox" checked={productForm?.isDigital || false} onChange={e => setProductForm({...productForm, isDigital: e.target.checked})} className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+                                 <div>
+                                    <span className="block text-sm font-bold text-slate-700">{isAr ? 'منتج رقمي (Digital Product)' : 'Produit Numérique (Digital)'}</span>
+                                    <span className="block text-xs text-slate-500">{isAr ? 'كتب، قوالب، برامج، أو ملفات للتحميل.' : 'E-books, templates, logiciels, ou fichiers téléchargeables.'}</span>
+                                 </div>
+                              </label>
+                              
+                              {productForm?.isDigital && (
+                                 <div className="mt-4 p-4 bg-indigo-50 border border-indigo-100 rounded-xl space-y-4">
+                                    <div>
+                                       <label className="block text-[10px] font-bold text-indigo-500 uppercase mb-2">{isAr ? 'رابط تحميل الملف (URL)' : 'Lien de téléchargement (URL)'}</label>
+                                       <input type="text" placeholder="https://..." value={productForm?.digitalFileUrl || ''} onChange={e => setProductForm({...productForm, digitalFileUrl: e.target.value})} className="w-full px-4 py-2 bg-white border border-indigo-200 rounded-xl focus:outline-none focus:border-indigo-500 text-sm" />
+                                    </div>
+                                    <div className="flex items-center justify-between text-xs text-indigo-400">
+                                       <p>{isAr ? 'سيتم إرسال هذا الرابط للزبون بعد الدفع.' : 'Ce lien sera envoyé au client après paiement.'}</p>
+                                    </div>
+                                 </div>
+                              )}
+                           </div>
+                           {/* ================================== */}
+                        </div>
 
                        
                         <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 relative overflow-hidden flex flex-col gap-4">
