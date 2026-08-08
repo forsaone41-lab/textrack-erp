@@ -370,21 +370,23 @@ export default function LandingPage() {
 
       {/* Navbar - Light Mode */}
       <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/90 backdrop-blur-2xl border-b border-slate-100 transition-all shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 h-20 md:h-24 flex items-center justify-between">
-          <LogoWithFallback src={company.logoLanding || company.logoUrl} alt={company.name} />
-          <div className="flex items-center gap-2 sm:gap-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 sm:h-20 md:h-24 flex items-center justify-between">
+          <div className="scale-75 sm:scale-100 origin-left">
+            <LogoWithFallback src={company.logoLanding || company.logoUrl} alt={company.name} />
+          </div>
+          <div className="flex items-center gap-1.5 sm:gap-4">
             <Link
               to="/store-landing"
-              className="inline-flex items-center gap-1.5 px-3.5 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-indigo-50 to-cyan-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100/80 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-sm hover:shadow-md"
+              className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-indigo-50 to-cyan-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100/80 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-black uppercase tracking-widest transition-all shadow-sm hover:shadow-md whitespace-nowrap"
             >
-              <Globe className="w-4 h-4 shrink-0 text-indigo-600 animate-pulse" />
-              <span>{isAr ? 'إنشاء متجر Store' : 'Beya Store'}</span>
+              <Globe className="w-3 h-3 sm:w-4 sm:h-4 shrink-0 text-indigo-600 animate-pulse" />
+              <span>{isAr ? 'متجر STORE' : 'Beya Store'}</span>
             </Link>
-            <button onClick={toggle} className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-indigo-600 px-3 py-2 bg-slate-50 rounded-lg border border-slate-200 transition-colors">
+            <button onClick={toggle} className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-indigo-600 px-2 sm:px-3 py-2 sm:py-2.5 bg-slate-50 rounded-lg border border-slate-200 transition-colors shrink-0">
               {isAr ? 'FR' : 'عربي'}
             </button>
-            <Link to={isLoggedIn ? "/dashboard" : "/login"} className="px-5 sm:px-8 py-2.5 sm:py-3 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-600 transition-colors shadow-lg shadow-slate-200">
-              {isLoggedIn ? (isAr ? 'حسابي' : 'Mon Espace') : (isAr ? 'تسجيل الدخول' : 'Connexion')}
+            <Link to={isLoggedIn ? "/dashboard" : "/login"} className="px-3 sm:px-8 py-2 sm:py-3 bg-slate-900 text-white rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-black uppercase tracking-widest hover:bg-indigo-600 transition-colors shadow-lg shadow-slate-200 whitespace-nowrap shrink-0">
+              {isLoggedIn ? (isAr ? 'حسابي' : 'Mon Espace') : (isAr ? 'دخول' : 'Connexion')}
             </Link>
           </div>
         </div>
