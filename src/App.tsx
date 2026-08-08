@@ -46,6 +46,7 @@ const Settings         = lazy(() => import('./pages/Settings'));
 const Profil           = lazy(() => import('./pages/Profil'));
 const Login            = lazy(() => import('./pages/Login'));
 const LandingPage      = lazy(() => import('./pages/LandingPage'));
+const BeyaFunnel       = lazy(() => import('./pages/BeyaFunnel'));
 const AdsLanding       = lazy(() => import('./pages/AdsLanding'));
 const NewLanding       = lazy(() => import('./pages/NewLanding'));
 const KioskScanner     = lazy(() => import('./pages/KioskScanner'));
