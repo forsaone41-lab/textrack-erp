@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="fr" translate="no">
   <head>
     <meta charset="UTF-8" />
@@ -23,10 +23,16 @@
               var apple = document.getElementById('dynamic-apple-icon');
               if (fav) fav.href = '/logo.png';
               if (apple) apple.href = '/logo.png';
+              var manifest = document.getElementById('pwa-manifest');
+              if (manifest) manifest.href = '/manifest.json';
            });
         }
       })();
     </script>
+    <!-- PWA Settings -->
+    <link rel="manifest" id="pwa-manifest" href="/manifest.json" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <!-- SEO Meta Tags -->
     <meta name="description" content="BEYA CREATIVE : Leader de la confection textile au Maroc. Fabrication de vêtements de haute qualité : T-shirts, Polos, Hoodies, Djellabas et Uniformes. Production 100% Marocaine." />
     <meta name="keywords" content="confection textile maroc, fabrication vetements casablanca, usine textile maroc, t-shirt oversize maroc, grossiste vetement maroc, beya creative, textile morocco" />
