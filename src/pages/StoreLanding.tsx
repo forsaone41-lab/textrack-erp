@@ -24,8 +24,9 @@ export default function StoreLanding() {
             <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center transform rotate-12">
               <span className="text-white font-black text-xl -rotate-12">B</span>
             </div>
-            <div>
+            <div className="flex items-baseline gap-1.5">
               <span className="font-black text-xl tracking-tight text-slate-900 block leading-none">BEYACREATIVE</span>
+              <span className="font-black text-2xl text-yellow-400 block leading-none" style={{ fontFamily: 'cursive' }}>Store</span>
             </div>
           </Link>
           
@@ -253,7 +254,10 @@ export default function StoreLanding() {
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center transform rotate-12">
               <span className="text-white font-black text-sm -rotate-12">B</span>
             </div>
-            <span className="font-black text-slate-900 tracking-tight">BEYACREATIVE</span>
+            <div className="flex items-baseline gap-1">
+              <span className="font-black text-slate-900 tracking-tight">BEYACREATIVE</span>
+              <span className="font-black text-lg text-yellow-400" style={{ fontFamily: 'cursive' }}>Store</span>
+            </div>
           </div>
           
           <div className="flex items-center gap-6">
