@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom';
+﻿import { HashRouter, Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom';
 import * as React from 'react';
 import { useState, useEffect, Component, ReactNode, lazy, Suspense } from 'react';
 import { Menu, Package, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
@@ -550,6 +550,7 @@ function AppContent() {
           </Suspense>
         } />
         <Route path="/" element={<LandingPage />} />
+          <Route path="/funnel" element={<BeyaFunnel />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </>
