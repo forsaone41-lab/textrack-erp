@@ -47,6 +47,7 @@ const Profil           = lazy(() => import('./pages/Profil'));
 const Login            = lazy(() => import('./pages/Login'));
 const LandingPage      = lazy(() => import('./pages/LandingPage'));
 const BeyaFunnel       = lazy(() => import('./pages/BeyaFunnel'));
+const DownloadApp      = lazy(() => import('./pages/DownloadApp'));
 const AdsLanding       = lazy(() => import('./pages/AdsLanding'));
 const NewLanding       = lazy(() => import('./pages/NewLanding'));
 const KioskScanner     = lazy(() => import('./pages/KioskScanner'));
@@ -552,6 +553,7 @@ function AppContent() {
         } />
         <Route path="/" element={<LandingPage />} />
           <Route path="/funnel" element={<BeyaFunnel />} />
+          <Route path="/app" element={<DownloadApp />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </>
