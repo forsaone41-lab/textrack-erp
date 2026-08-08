@@ -198,6 +198,34 @@ export default function Commandes() {
     return Math.round(((idx + 1) / phases.length) * 100);
   }
 
+  const pushToStore = async (c: Commande) => {
+    try {
+      const configStr = localStorage.getItem('beya_store_config');
+      const config = configStr ? JSON.parse(configStr) : {};
+      const products = config.storeProducts || [];
+      const newProduct = {
+        id: c.id,
+        name: c.modele,
+        price: ((c.prix || 150) * 2.5).toFixed(2),
+        category: 'Nouvelle Collection',
+        image: c.modelePhoto || c.tissuPhoto || 'https://images.unsplash.com/photo-1556821840-3a63f95609a7',
+        stock: c.quantite,
+        colors: c.couleurs ? (Array.isArray(c.couleurs) ? c.couleurs.join(',') : c.couleurs) : '',
+        sizes: c.tailles ? Object.keys(c.tailles).join(',') : ''
+      };
+      config.storeProducts = [newProduct, ...products];
+      localStorage.setItem('beya_store_config', JSON.stringify(config));
+      
+      const msg = `Bonjour ${c.client} 👋\n\nVotre article *${c.modele}* vient d'être ajouté automatiquement à votre Beya Store avec un stock de ${c.quantite} unités !\n\nVous pouvez maintenant commencer à vendre 🚀\n- BEYA CREATIVE`;
+      notifyClientWhatsApp(c, msg);
+      
+      alert(isAr ? 'تم إرسال المنتج بنجاح إلى متجرك!' : 'Produit poussé avec succès vers la boutique !');
+    } catch (err) {
+      console.error(err);
+      alert('Erreur: ' + err);
+    }
+  };
+
   async function handleSendToCoupe(c: Commande) {
     setSendToCoupeConfirm(c);
   }
@@ -886,6 +914,11 @@ export default function Commandes() {
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
+                          {c.statut === 'terminé' && (
+                            <button onClick={(e) => { e.stopPropagation(); pushToStore(c); }} className="w-9 h-9 text-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl flex items-center justify-center transition-all" title={isAr ? 'إرسال للمتجر' : 'Push to Store'}>
+                              <Globe className="w-4 h-4" />
+                            </button>
+                          )}
                           <button
                             onClick={(e) => {
                               e.stopPropagation();

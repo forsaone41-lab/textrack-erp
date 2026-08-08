@@ -1354,6 +1354,27 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
         }
     });
     
+    // COD eGrow Integration
+    if (appsConfig && appsConfig['eGrow COD Automation']) {
+        const eGrowKey = appsConfig['eGrow COD Automation'];
+        if (eGrowKey && eGrowKey.length > 5) {
+            try {
+                fetch('https://api.egrow.ma/v1/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${eGrowKey}` },
+                    body: JSON.stringify({
+                        customer: customerName,
+                        phone: customerPhone,
+                        city: customerCity,
+                        address: customerAddress,
+                        total_price: parseFloat(product ? product.price : 0) * (qty || 1),
+                        products: product ? [{ name: product.name, quantity: qty || 1, price: product.price, options: `Color: ${orderColor} - Size: ${orderSize}` }] : [],
+                        source: 'BEYA Store - ' + storeName
+                    })
+                }).catch(e => console.error("eGrow Error:", e));
+            } catch (e) { console.error(e); }
+        }
+    }
     if (!isLiveStore) {
         // Delay the local state update in preview mode to allow the success page to show
         setTimeout(() => {
