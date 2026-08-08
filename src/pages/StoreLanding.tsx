@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ArrowRight, CheckCircle2, MonitorSmartphone, Zap, Code, ShieldCheck } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { Link } from 'react-router-dom';
@@ -6,6 +6,7 @@ import { loadCompanyProfile } from '../types';
 
 export default function StoreLanding() {
   const { isAr, toggle } = useLang();
+  const [isYearly, setIsYearly] = useState(false);
   const company = loadCompanyProfile();
   const proPrice = company.storeProPrice || '299';
   const premiumPrice = company.storePremiumPrice || '499';
@@ -163,6 +164,20 @@ export default function StoreLanding() {
             </p>
           </div>
           
+          <div className="flex justify-center items-center gap-4 mb-12">
+            <span className={`text-sm font-bold ${!isYearly ? 'text-indigo-600' : 'text-slate-500'}`}>{isAr ? 'شهرياً' : 'Mensuel'}</span>
+            <button 
+              onClick={() => setIsYearly(!isYearly)} 
+              className="w-16 h-8 bg-indigo-100 rounded-full p-1 relative transition-colors focus:outline-none"
+            >
+              <div className={`w-6 h-6 bg-indigo-600 rounded-full shadow-md transition-transform duration-300 ${isYearly ? (isAr ? '-translate-x-8' : 'translate-x-8') : 'translate-x-0'}`} />
+            </button>
+            <span className={`text-sm font-bold flex items-center gap-2 ${isYearly ? 'text-indigo-600' : 'text-slate-500'}`}>
+              {isAr ? 'سنوياً' : 'Annuel'}
+              <span className="text-[10px] bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full uppercase tracking-widest">{isAr ? '-20% توفير' : '-20%'}</span>
+            </span>
+          </div>
+
           <div className="grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* PRO Plan */}
             <div className="bg-white rounded-[2rem] p-8 border border-slate-200 hover:border-indigo-200 transition-all hover:shadow-xl relative overflow-hidden flex flex-col">
@@ -174,8 +189,8 @@ export default function StoreLanding() {
               <h3 className="text-2xl font-black text-slate-900 mb-2">PRO</h3>
               <p className="text-slate-500 mb-6 font-medium text-sm">{isAr ? 'لأصحاب العلامات التجارية' : 'Pour les créateurs de marques'}</p>
               <div className="mb-8">
-                <span className="text-5xl font-black text-slate-900 transition-colors">{proPrice}</span>
-                <span className="text-slate-500 font-bold ml-2 uppercase tracking-widest text-xs">MAD / {isAr ? 'شهر' : 'mois'}</span>
+                <span className="text-5xl font-black text-slate-900 transition-colors">{isYearly ? (Number(proPrice) * 10).toLocaleString() : proPrice}</span>
+                <span className="text-slate-500 font-bold ml-2 uppercase tracking-widest text-xs">MAD / {isYearly ? (isAr ? 'سنة' : 'an') : (isAr ? 'شهر' : 'mois')}</span>
               </div>
               <ul className="space-y-4 mb-10 flex-1">
                 {[
@@ -206,8 +221,8 @@ export default function StoreLanding() {
               <h3 className="text-2xl font-black text-white mb-2 relative z-10">PREMIUM</h3>
               <p className="text-indigo-200 mb-6 font-medium text-sm relative z-10">{isAr ? 'لرواد الأعمال (عدة علامات)' : 'Pour les multi-marques'}</p>
               <div className="mb-8 relative z-10">
-                <span className="text-5xl font-black text-white">{premiumPrice}</span>
-                <span className="text-indigo-200 font-bold ml-2 uppercase tracking-widest text-xs">MAD / {isAr ? 'شهر' : 'mois'}</span>
+                <span className="text-5xl font-black text-white">{isYearly ? (Number(premiumPrice) * 10).toLocaleString() : premiumPrice}</span>
+                <span className="text-indigo-200 font-bold ml-2 uppercase tracking-widest text-xs">MAD / {isYearly ? (isAr ? 'سنة' : 'an') : (isAr ? 'شهر' : 'mois')}</span>
               </div>
               <ul className="space-y-4 mb-10 relative z-10 flex-1">
                 {[
