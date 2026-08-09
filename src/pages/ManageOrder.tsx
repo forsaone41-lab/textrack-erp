@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   ArrowLeft, Save, Plus, X, 
@@ -19,6 +19,9 @@ export default function ManageOrder() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit');
+  const urlModele = searchParams.get('modele');
+  const urlQuantite = searchParams.get('quantite');
+  const urlPrix = searchParams.get('prix');
   const isST = searchParams.get('st') === 'true';
   const isEchantillon = searchParams.get('echantillon') === 'true';
 
@@ -127,8 +130,10 @@ export default function ManageOrder() {
           setForm(prev => ({ 
             ...prev, 
             reference: prev.reference ? prev.reference : ref,
+            modele: prev.modele || urlModele || '',
+            prix: prev.prix || (urlPrix ? parseFloat(urlPrix) : 0),
             statut: prev.statut || (isEchantillon ? 'echantillon_en_cours' : 'en_cours'),
-            quantite: prev.quantite || (isEchantillon ? 1 : 0),
+            quantite: prev.quantite || (urlQuantite ? parseInt(urlQuantite) : (isEchantillon ? 1 : 0)),
             externalTasks: prev.externalTasks && prev.externalTasks.length > 0 ? prev.externalTasks : (isST ? [{ id: genId(), type: 'confection', partenaireId: '', details: '', status: 'en_attente', avance: 0, quantite: isEchantillon ? 1 : 0 }] : [])
           }));
         }
@@ -167,7 +172,7 @@ export default function ManageOrder() {
         }],
         modelePhoto: fiche.photo || prev.modelePhoto,
         preuveValidation: prev.preuveValidation || '',
-        tailles: fiche.tailles.reduce((acc, t) => ({ ...acc, [t]: prev.tailles?.[t] || 0 }), {})
+        tailles: (fiche.tailles || []).reduce((acc, t) => ({ ...acc, [t]: prev.tailles?.[t] || 0 }), {})
       }));
     } else {
       setForm(prev => ({ ...prev, modele: modeleName }));
