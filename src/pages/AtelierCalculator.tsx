@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useLang } from '../contexts/LangContext';
 import {
   Calculator, Printer, CheckCircle2, AlertTriangle,
@@ -1561,3 +1561,5 @@ function isSupportRole(e: Employe): boolean {
     </div>
   );
 }
+
+

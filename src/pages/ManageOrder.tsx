@@ -353,7 +353,7 @@ export default function ManageOrder() {
       <div className="bg-white border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button onClick={() => navigate('/commandes')} className="p-2 hover:bg-slate-100 rounded-xl transition-colors"><ArrowLeft className="w-6 h-6 text-slate-400" /></button>
+            <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors"><ArrowLeft className="w-6 h-6 text-slate-400" /></button>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg"><Binary className="w-5 h-5" /></div>
               <div><h1 className="text-xl font-black text-slate-800 tracking-tight uppercase leading-none">{t('master_setup', lang)}</h1><p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mt-1 flex items-center gap-1"><CloudOff className="w-3 h-3" /> {t('connection_priority', lang)}</p></div>
@@ -943,3 +943,4 @@ export default function ManageOrder() {
   </div>
 );
 }
+
