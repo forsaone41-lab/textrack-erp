@@ -103,6 +103,11 @@ export default function BeyaVirtualTryOn() {
     }
 
     if (data.error) {
+      if (data.error.message?.includes('Quota exceeded') || data.error.message?.includes('429')) {
+        throw new Error(isAr 
+          ? 'تجاوزتي الحد المسموح به فالمجان (Quota Exceeded). تسنى شوية وعاود جرب، أو دخل مفتاح API جديد فيه الرصيد.' 
+          : 'Quota dépassé. Veuillez patienter un peu ou utiliser une nouvelle clé API.');
+      }
       throw new Error(data.error.message || 'Gemini API error');
     }
 
