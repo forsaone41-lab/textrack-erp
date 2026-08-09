@@ -506,7 +506,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     } catch (err) {
       console.error("Export Error:", err);
       setCustomAlert({
-        title: isAr ? "Ø®Ø·Ø£ ÙÙŠ Ø§Ù„ØªØµØ¯ÙŠØ± âŒ" : "Erreur d'exportation âŒ",
+        title: isAr ? "خطأ في التصدير ❌" : "Erreur d'exportation ❌",
         message: isAr ? "حدث خطأ أثناء تصدير الموديل. يرجى المحاولة مرة أخرى." : "Une erreur est survenue lors de l'exportation. Veuillez réessayer.",
         isError: true
       });
@@ -572,7 +572,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
           const nameCell = cells.find(c => !/^[\d.,]+/.test(c.replace(/\*+/g, '').trim()) && c.length > 1);
           const amount = amountCell ? parseFloat(amountCell.replace(/\*+/g, '').replace(',', '.').match(/[\d.]+/)?.[0] || '0') : 0;
           const name = nameCell?.replace(/\*+/g, '').trim() || '';
-          if (name && amount > 0 && !name.toLowerCase().includes('total') && !name.toLowerCase().includes('مجموع') && !name.toLowerCase().includes('revient')) {
+          if (name && amount > 0 && !name.toLowerCase().includes('total') && !name.includes('إجمالي') && !name.includes('مجموع') && !name.toLowerCase().includes('revient')) {
             items.push({ designation: name, montant: amount, detail: cells[cells.length-1]?.replace(/\*+/g, '') || '', image: image || '' });
           }
         }
@@ -1271,7 +1271,8 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
               <button
                 onClick={() => {
                   if (analysisResult) {
-                    sendToDevis(analysisResult.rawAnalysis || JSON.stringify(analysisResult));
+                    const chatHistory = chat.map(c => c.text).join('\n');
+                    sendToDevis(chatHistory + '\n\n' + (analysisResult.rawAnalysis || JSON.stringify(analysisResult)));
                   } else {
                     setCustomAlert({
                       title: isAr ? 'تنبيه' : 'Attention',
@@ -1859,3 +1860,5 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
     </div>
   );
 }
+
+

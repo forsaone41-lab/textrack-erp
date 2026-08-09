@@ -94,11 +94,11 @@ export default function BeyaVirtualTryOn() {
       })
     });
 
-    let response = await callModel('gemini-2.5-flash-image');
+    let response = await callModel('gemini-3.5-flash');
     let data = await response.json();
 
     if (data.error && (data.error.code === 404 || (data.error.message || '').toLowerCase().includes('not found'))) {
-      response = await callModel('gemini-2.5-flash-image-preview');
+      response = await callModel('gemini-3.5-flash-8b');
       data = await response.json();
     }
 
@@ -424,3 +424,4 @@ export default function BeyaVirtualTryOn() {
     </div>
   );
 }
+

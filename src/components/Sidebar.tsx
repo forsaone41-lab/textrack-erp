@@ -307,7 +307,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
               <NavItem to="/ai-space" icon={Sparkles} label={isAr ? 'المساعد الذكي' : 'Assistant IA'} pro />
             )}
             {currentUser?.role === 'admin' && (
-              <NavItem to="/beya-studio-tryon" icon={Sparkles} label={isAr ? 'استوديو التجربة الافتراضية' : 'Studio Essayage Virtuel'} pro />
+              <NavItem to="/beya-studio-tryon" icon={Sparkles} label={isAr ? '?????? ??????? ??????????' : 'Studio Essayage Virtuel'} pro />
             )}
             {can('ordres') && <NavItem to="/ordres-de-coupe" icon={Scissors} label={isAr ? 'أوامر القص' : 'Ordres de Coupe'} />}
             {(can('ordres') || can('fiches')) && <NavItem to="/hpgl-viewer" icon={Scissors} label={isAr ? 'قارئ الباتروناج' : 'Visionneuse HPGL'} />}
@@ -452,3 +452,5 @@ function SectionTitle({ title, isAr }: { title: string; isAr: boolean }) {
     </div>
   );
 }
+
+

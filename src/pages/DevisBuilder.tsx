@@ -128,7 +128,7 @@ export default function DevisBuilder({ embedded = false, onBack }: DevisBuilderP
             const aiModels = parsed.items.map((item: any) => ({
               id: Math.random().toString(36).slice(2),
               name: item.designation || 'Désignation',
-              image: '',
+              image: item.image || parsed.image || '',
               quantity: 1,
               matierePrice: item.montant || 0,
               laborPrice: 0,
