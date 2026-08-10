@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowRight, CheckCircle2, MonitorSmartphone, Zap, Code, ShieldCheck } from 'lucide-react';
+import { ArrowRight, CheckCircle2, MonitorSmartphone, Zap, Code, ShieldCheck, Sparkles } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { Link } from 'react-router-dom';
 import { loadCompanyProfile } from '../types';
