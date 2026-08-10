@@ -76,7 +76,7 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
             setPendingUser(userObj);
           } else {
             if (onLogin) onLogin(userObj);
-            navigate('/store-builder');
+            navigate('/store-onboarding');
           }
         } else {
           // Email confirmation is required

@@ -78,6 +78,7 @@ const StoreBuilder    = lazy(() => import('./pages/StoreBuilder'));
 const StoreLanding    = lazy(() => import('./pages/StoreLanding'));
 const BeyaDropshipping = lazy(() => import('./pages/BeyaDropshipping'));
 const StoreSignup     = lazy(() => import('./pages/StoreSignup'));
+const StoreOnboarding = lazy(() => import('./pages/StoreOnboarding'));
 const MerchantDashboard = lazy(() => import('./pages/MerchantDashboard'));
 const Terms           = lazy(() => import('./pages/Terms'));
 const Partners        = lazy(() => import('./pages/Partners'));
@@ -817,4 +818,5 @@ export default function App() {
     </ErrorBoundary>
   );
 }
+
 

@@ -8,7 +8,7 @@ export default function StoreLanding() {
   const { isAr, toggle } = useLang();
   const [isYearly, setIsYearly] = useState(false);
   const company = loadCompanyProfile();
-  const proPrice = company.storeProPrice || '299';
+  const proPrice = '199';
   const premiumPrice = company.storePremiumPrice || '499';
   
   const whatsappUrl = `https://wa.me/${company.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
@@ -281,3 +281,5 @@ export default function StoreLanding() {
     </div>
   );
 }
+
+
