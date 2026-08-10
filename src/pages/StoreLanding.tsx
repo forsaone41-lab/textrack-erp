@@ -118,12 +118,7 @@ export default function StoreLanding() {
             <div className="absolute inset-0 bg-gradient-to-tr from-indigo-200 to-emerald-100 transform rotate-3 rounded-[3rem] -z-10 blur-3xl opacity-30" />
             
             <div className="relative w-full max-w-[550px] mx-auto lg:mx-0 lg:ml-auto">
-              <div className="bg-slate-900/95 backdrop-blur rounded-t-2xl p-4 flex items-center gap-2 shadow-sm">
-                <div className="w-3 h-3 rounded-full bg-rose-500" />
-                <div className="w-3 h-3 rounded-full bg-amber-500" />
-                <div className="w-3 h-3 rounded-full bg-emerald-500" />
-              </div>
-              <div className="bg-white rounded-b-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] border-x border-b border-slate-200/50 overflow-hidden">
+              <div className="bg-white rounded-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] border border-slate-200/50 overflow-hidden">
                 <img 
                   src="/store-dashboard.png" 
                   alt={isAr ? "لوحة تحكم المتجر" : "Tableau de bord de la boutique"} 
