@@ -179,20 +179,15 @@ export default function StoreLanding() {
             </span>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
             {/* PRO Plan */}
             <div className="bg-white rounded-[2rem] p-8 border border-slate-200 hover:border-indigo-200 transition-all hover:shadow-xl relative overflow-hidden flex flex-col">
-              <div className={`absolute top-6 ${isAr ? 'left-6' : 'right-6'}`}>
-                <span className="bg-indigo-100 text-indigo-600 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
-                  {isAr ? 'زيرو ريسك' : 'Zéro Risque'}
-                </span>
-              </div>
-              <h3 className="text-2xl font-black text-slate-900 mb-2 uppercase">Zirorisk</h3>
-              <p className="text-slate-500 mb-6 font-medium text-sm">{isAr ? 'لأصحاب العلامات التجارية' : 'Pour les créateurs de marques'}</p>
+              <h3 className="text-2xl font-black text-slate-900 mb-2 uppercase">PRO</h3>
+              <p className="text-slate-500 mb-6 font-medium text-sm">{isAr ? 'إنشاء المتجر بنفسك' : 'Création autonome'}</p>
               <div className="mb-8 flex flex-col">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xl font-bold text-slate-400 line-through decoration-2">{isYearly ? '2,990' : '299'}</span>
-                  <span className="text-[10px] font-black text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full uppercase tracking-wider">{isAr ? 'عرض محدود' : 'PROMO'}</span>
+                  <span className="text-[10px] font-black text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full uppercase tracking-wider">{isAr ? 'عرض محدود' : 'PROMO'}</span>
                 </div>
                 <div>
                   <span className="text-5xl font-black text-slate-900 transition-colors">{isYearly ? (Number(proPrice) * 10).toLocaleString() : proPrice}</span>
@@ -201,20 +196,60 @@ export default function StoreLanding() {
               </div>
               <ul className="space-y-4 mb-10 flex-1">
                 {[
-                  isAr ? 'تصميم المتجر + الدومين: 699 درهم فقط' : 'Création + Domaine : 699 DH',
-                  isAr ? 'الاشتراك لا يدفع إلا بعد أول مبيعة' : 'Abonnement après la 1ère vente',
-                  isAr ? 'ربط مباشر ومستقل مع eGrow' : 'Liaison directe & indépendante eGrow',
+                  isAr ? 'متجر إلكتروني واحد' : '1 Boutique en ligne',
                   isAr ? 'منتجات غير محدودة و0% عمولة' : 'Produits illimités & 0% commision',
-                  isAr ? 'تطبيقات لزيادة المبيعات (Upsell)' : 'Apps de conversion (Upsell)',
+                  isAr ? 'استضافة مجانية وسريعة' : 'Hébergement rapide et gratuit',
+                  isAr ? 'تطبيقات لزيادة المبيعات' : 'Apps de conversion (Upsell)',
+                  isAr ? 'دعم فني قياسي' : 'Support standard',
                 ].map((f, i) => (
                   <li key={i} className="flex items-start gap-3 text-slate-700 font-medium text-sm">
-                    <CheckCircle2 className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
                     <span>{f}</span>
                   </li>
                 ))}
               </ul>
-              <Link to="/store-signup?plan=ZIRORISK" className="block w-full py-4 text-center rounded-2xl font-black uppercase tracking-widest text-xs bg-slate-100 text-slate-700 hover:bg-indigo-600 hover:text-white transition-all">
-                {isAr ? 'ابدأ تجربتك المجانية' : 'Commencer l\'essai gratuit'}
+              <Link to="/store-signup?plan=PRO" className="block w-full py-4 text-center rounded-2xl font-black uppercase tracking-widest text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all">
+                {isAr ? 'ابدأ إنشاء متجرك' : 'Créer ma boutique'}
+              </Link>
+            </div>
+
+            {/* ZIRORISK Plan */}
+            <div className="bg-white rounded-[2rem] p-8 border-2 border-indigo-500 hover:shadow-2xl transition-all relative overflow-hidden flex flex-col shadow-[0_20px_50px_rgba(99,102,241,0.15)] hover:-translate-y-2 duration-300">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-2xl rounded-full" />
+              <div className={`absolute top-6 ${isAr ? 'left-6' : 'right-6'}`}>
+                <span className="bg-indigo-100 text-indigo-700 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                  <Sparkles className="w-3 h-3" />
+                  {isAr ? 'زيرو ريسك' : 'Zéro Risque'}
+                </span>
+              </div>
+              <h3 className="text-2xl font-black text-slate-900 mb-2 uppercase">Zirorisk</h3>
+              <p className="text-slate-500 mb-6 font-medium text-sm">{isAr ? 'متجر جاهز للاستخدام' : 'Clé en main (Recommandé)'}</p>
+              <div className="mb-8 flex flex-col relative z-10">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xl font-bold text-slate-400 line-through decoration-2">1,499</span>
+                  <span className="text-[10px] font-black text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full uppercase tracking-wider">{isAr ? 'عرض محدود' : 'PROMO'}</span>
+                </div>
+                <div>
+                  <span className="text-5xl font-black text-slate-900 transition-colors">699</span>
+                  <span className="text-slate-500 font-bold ml-2 uppercase tracking-widest text-xs">MAD / {isAr ? 'مرة واحدة' : 'Une fois'}</span>
+                </div>
+              </div>
+              <ul className="space-y-4 mb-10 flex-1 relative z-10">
+                {[
+                  isAr ? 'تصميم المتجر + الدومين احترافي' : 'Création + Domaine PRO',
+                  isAr ? 'الاشتراك (199) لا يدفع إلا بعد أول مبيعة' : 'Abonnement (199) après la 1ère vente',
+                  isAr ? 'ربط مباشر ومستقل مع حساب eGrow' : 'Liaison directe & indépendante eGrow',
+                  isAr ? 'منتجات غير محدودة و0% عمولة' : 'Produits illimités & 0% commision',
+                  isAr ? 'تطبيقات لزيادة المبيعات (Upsell)' : 'Apps de conversion (Upsell)',
+                ].map((f, i) => (
+                  <li key={i} className="flex items-start gap-3 text-slate-700 font-medium text-sm font-bold">
+                    <CheckCircle2 className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link to="/store-signup?plan=ZIRORISK" className="block w-full py-4 text-center rounded-2xl font-black uppercase tracking-widest text-xs bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 relative z-10">
+                {isAr ? 'احجز متجرك الآن' : 'Réserver ma boutique'}
               </Link>
             </div>
             
