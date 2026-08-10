@@ -62,9 +62,9 @@ export default function StoreLanding() {
           <div className="space-y-8 animate-fade-in-up">
             <h1 className="text-5xl lg:text-7xl font-extrabold text-slate-900 leading-tight tracking-tight">
               {isAr ? (
-                <>بني المتجر ديالك اليوم <br/> <span className="text-slate-500">وماتخلص الاشتراك</span> <br/> حتى تجيب أول مبيعة!</>
+                <>بني متجرك اليوم <br/> <span className="text-slate-500">وماتخلص حتى تجيب</span> <br/> أول مبيعة!</>
               ) : (
-                <>Lancez votre boutique <br/> <span className="text-slate-500">et ne payez qu'après</span> <br/> votre 1ère vente !</>
+                <>Créez votre boutique <br/> <span className="text-slate-500">et payez après</span> <br/> la 1ère vente !</>
               )}
             </h1>
             
