@@ -62,23 +62,23 @@ export default function StoreLanding() {
           <div className="space-y-8 animate-fade-in-up">
             <h1 className="text-5xl lg:text-7xl font-extrabold text-slate-900 leading-tight tracking-tight">
               {isAr ? (
-                <>البيع عبر الإنترنت <br/> <span className="text-slate-500">لم يكن يوماً</span> <br/> بهذه السهولة</>
+                <>بني المتجر ديالك اليوم <br/> <span className="text-slate-500">وماتخلص الاشتراك</span> <br/> حتى تجيب أول مبيعة!</>
               ) : (
-                <>Vendre en ligne <br/> <span className="text-slate-500">n'a jamais été</span> <br/> aussi simple</>
+                <>Lancez votre boutique <br/> <span className="text-slate-500">et ne payez qu'après</span> <br/> votre 1ère vente !</>
               )}
             </h1>
             
             <p className="text-lg lg:text-xl text-slate-600 max-w-lg leading-relaxed font-medium">
               {isAr 
-                ? 'ابدأ متجرك الإلكتروني في بضع نقرات واستفد من أدوات التجارة الإلكترونية القوية لدينا لبناء عمل تجاري مربح.'
-                : 'Démarrez votre boutique en ligne en quelques clics et profitez de nos puissants outils e-commerce pour bâtir une activité rentable.'}
+                ? 'استثمار واحد بـ 800 درهم فقط، وحنا كنتكلفو بالديزاين، الدومين (.com)، وتطبيقات المبيعات. ركز على الإعلانات، وماتخلصناش الاشتراك (199 درهم) حتى تجيب أول مبيعة!'
+                : 'Un seul investissement de 800 DH pour une boutique clé en main (Design, .com, Upsell). Concentrez-vous sur vos ventes, l\'abonnement (199 DH) n\'est dû qu\'APRÈS votre première vente !'}
             </p>
             
             <ul className="space-y-4">
               {[
-                isAr ? 'إعداد متجر سهل وبديهي' : 'Configuration de boutique facile et intuitive',
-                isAr ? 'بدون رسوم إنشاء، فقط 1.5% على المبيعات (أو 0% في PRO)' : 'Aucun frais de création, seulement 1.5% (ou 0% en PRO)',
-                isAr ? 'جميع أدوات التجارة الإلكترونية في مكان واحد' : 'Tous les outils e-commerce au même endroit'
+                isAr ? 'متجر واجد للخدمة (Clé en main) بـ 800 درهم فقط (دومين + ديزاين)' : 'Boutique clé en main à 800 DH (Domaine + Design PRO)',
+                isAr ? 'زيرو ريسك: ماتخلص الاشتراك حتى تجيب أول مبيعة' : 'Zéro risque : Ne payez l\'abonnement qu\'après la 1ère vente',
+                isAr ? 'استقلالية تامة: نتا كتجيري حساب eGrow ديالك وحنا التقنيات' : 'Indépendance totale : Vous gérez eGrow, nous gérons la technique'
               ].map((text, i) => (
                 <li key={i} className="flex items-center gap-3 text-slate-700 font-medium">
                   <CheckCircle2 className="w-6 h-6 text-emerald-500 shrink-0" />
@@ -184,7 +184,7 @@ export default function StoreLanding() {
             <div className="bg-white rounded-[2rem] p-8 border border-slate-200 hover:border-indigo-200 transition-all hover:shadow-xl relative overflow-hidden flex flex-col">
               <div className={`absolute top-6 ${isAr ? 'left-6' : 'right-6'}`}>
                 <span className="bg-indigo-100 text-indigo-600 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
-                  {isAr ? 'تجربة مجانية 14 يوم' : '14 jours d\'essai'}
+                  {isAr ? 'زيرو ريسك' : 'Zéro Risque'}
                 </span>
               </div>
               <h3 className="text-2xl font-black text-slate-900 mb-2">PRO</h3>
@@ -195,11 +195,11 @@ export default function StoreLanding() {
               </div>
               <ul className="space-y-4 mb-10 flex-1">
                 {[
-                  isAr ? 'متجر إلكتروني واحد' : '1 Boutique en ligne',
-                  isAr ? 'منتجات غير محدودة' : 'Produits illimités',
-                  isAr ? '0% عمولة على المبيعات' : '0% de frais de transaction',
-                  isAr ? 'استضافة مجانية وسريعة' : 'Hébergement rapide et gratuit',
-                  isAr ? 'دعم فني قياسي' : 'Support standard',
+                  isAr ? 'تصميم المتجر + الدومين: 800 درهم فقط' : 'Création + Domaine : 800 DH',
+                  isAr ? 'الاشتراك لا يدفع إلا بعد أول مبيعة' : 'Abonnement après la 1ère vente',
+                  isAr ? 'ربط مباشر ومستقل مع eGrow' : 'Liaison directe & indépendante eGrow',
+                  isAr ? 'منتجات غير محدودة و0% عمولة' : 'Produits illimités & 0% commision',
+                  isAr ? 'تطبيقات لزيادة المبيعات (Upsell)' : 'Apps de conversion (Upsell)',
                 ].map((f, i) => (
                   <li key={i} className="flex items-start gap-3 text-slate-700 font-medium text-sm">
                     <CheckCircle2 className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />

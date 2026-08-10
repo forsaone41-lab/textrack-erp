@@ -275,6 +275,7 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
               {!collapsed && <SectionTitle title={isAr ? 'التجارة الإلكترونية (SaaS)' : 'E-Commerce (SaaS)'} isAr={isAr} />}
               <NavItem to="/store-landing" icon={Store} label={isAr ? 'باقة المتجر (Landing)' : 'Beya Store Landing'} />
               {currentUser.role === 'admin' && <NavItem to="/store-builder" icon={Globe} label="BEYA STORE (SaaS)" pro />}
+              {currentUser.role === 'admin' && <NavItem to="/beya-dropshipping" icon={Package} label={isAr ? '?????? ????????????' : 'Beya Dropshipping'} pro />}
             </div>
           )}
 
@@ -452,5 +453,6 @@ function SectionTitle({ title, isAr }: { title: string; isAr: boolean }) {
     </div>
   );
 }
+
 
 

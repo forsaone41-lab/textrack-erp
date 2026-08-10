@@ -1,4 +1,4 @@
-﻿import { HashRouter, Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom';
+import { HashRouter, Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom';
 import * as React from 'react';
 import { useState, useEffect, Component, ReactNode, lazy, Suspense } from 'react';
 import { Menu, Package, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
@@ -8,7 +8,7 @@ import Calculator from './components/Tools/Calculator';
 import NotificationCenter from './components/Tools/NotificationCenter';
 import { CompanyProfile } from './types';
 
-// ✅ Lazy load all pages - each page loads only when visited
+// ? Lazy load all pages - each page loads only when visited
 const Dashboard        = lazy(() => import('./pages/Dashboard'));
 const StoreAnalytics   = lazy(() => import('./pages/StoreAnalytics'));
 const BeyaDesignerPage = lazy(() => import('./pages/BeyaDesignerPage'));
@@ -76,6 +76,7 @@ const AtelierAiExpert = lazy(() => import('./pages/AtelierAiExpert'));
 const BeyaVirtualTryOn = lazy(() => import('./pages/BeyaVirtualTryOn'));
 const StoreBuilder    = lazy(() => import('./pages/StoreBuilder'));
 const StoreLanding    = lazy(() => import('./pages/StoreLanding'));
+const BeyaDropshipping = lazy(() => import('./pages/BeyaDropshipping'));
 const StoreSignup     = lazy(() => import('./pages/StoreSignup'));
 const MerchantDashboard = lazy(() => import('./pages/MerchantDashboard'));
 const Terms           = lazy(() => import('./pages/Terms'));
@@ -90,7 +91,7 @@ import { initFacebookPixel, trackPixelEvent } from './utils/pixel';
 
 initMockData();
 
-// ⚡ CRITICAL: Capture password-recovery tokens BEFORE HashRouter overwrites the hash.
+// ? CRITICAL: Capture password-recovery tokens BEFORE HashRouter overwrites the hash.
 // Supabase redirects to: https://app.beyacreative.com/#access_token=xxx&type=recovery
 // But HashRouter immediately replaces the hash with #/ (its default route),
 // so by the time any useEffect runs, the tokens are already gone.
@@ -268,7 +269,7 @@ function AppContent() {
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword.length < 8) {
-      setRecoveryError('كلمة المرور يجب أن تتكون من 8 أحرف على الأقل');
+      setRecoveryError('???? ?????? ??? ?? ????? ?? 8 ???? ??? ?????');
       return;
     }
     
@@ -279,7 +280,7 @@ function AppContent() {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
       
-      alert('تم تحديث كلمة المرور بنجاح! يمكنك الآن تسجيل الدخول.');
+      alert('?? ????? ???? ?????? ?????! ????? ???? ????? ??????.');
       setShowRecoveryModal(false);
       handleLogout();
     } catch (err: any) {
@@ -338,7 +339,7 @@ function AppContent() {
         const manifestContent = {
           name: remote.name || "Beya Creative",
           short_name: remote.name || "Beya Creative",
-          description: "Système de gestion textile",
+          description: "Syst�me de gestion textile",
           start_url: "/",
           display: "standalone",
           background_color: "#0f172a",
@@ -398,7 +399,7 @@ function AppContent() {
         
         setAllUsers(users);
         
-        // ✅ Sync current user state with database (handles photo persistence)
+        // ? Sync current user state with database (handles photo persistence)
         if (currentUser) {
           const latest = users.find(u => u.id === currentUser.id);
           
@@ -458,12 +459,12 @@ function AppContent() {
         <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm shadow-blue-500/20">
           <Lock className="w-8 h-8 text-blue-600" />
         </div>
-        <h2 className="text-2xl font-black text-center text-slate-900 mb-2 tracking-tight">تعيين كلمة مرور جديدة</h2>
-        <p className="text-center text-slate-500 mb-8 font-medium">الرجاء إدخال كلمة المرور الجديدة لحسابك الخاص بك.</p>
+        <h2 className="text-2xl font-black text-center text-slate-900 mb-2 tracking-tight">????? ???? ???? ?????</h2>
+        <p className="text-center text-slate-500 mb-8 font-medium">?????? ????? ???? ?????? ??????? ?????? ????? ??.</p>
         
         <form onSubmit={handleUpdatePassword} className="space-y-6">
           <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2">كلمة المرور الجديدة</label>
+            <label className="block text-sm font-bold text-slate-700 mb-2">???? ?????? ???????</label>
             <div className="relative">
               <Lock className="absolute top-1/2 -translate-y-1/2 right-4 w-5 h-5 text-slate-400" />
               <input
@@ -473,7 +474,7 @@ function AppContent() {
                 value={newPassword}
                 onChange={e => setNewPassword(e.target.value)}
                 className="w-full pr-12 pl-12 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all font-bold text-slate-900 text-left"
-                placeholder="••••••••"
+                placeholder="��������"
                 dir="ltr"
               />
               <button
@@ -497,7 +498,7 @@ function AppContent() {
             disabled={isUpdatingPassword}
             className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-70"
           >
-            {isUpdatingPassword ? <Loader2 className="w-5 h-5 animate-spin" /> : 'حفظ كلمة المرور'}
+            {isUpdatingPassword ? <Loader2 className="w-5 h-5 animate-spin" /> : '??? ???? ??????'}
           </button>
         </form>
       </div>
@@ -583,7 +584,7 @@ function AppContent() {
 
 
 
-  // 🔥 Dedicated Merchant Portal (SaaS Dashboard)
+  // ?? Dedicated Merchant Portal (SaaS Dashboard)
   if (currentUser.role === 'merchant') {
     return (
       <>
@@ -647,7 +648,7 @@ function AppContent() {
           onClick={() => setShowClientPortal(false)}
           className="fixed top-4 right-4 z-50 bg-slate-800 text-white px-4 py-2 rounded-lg text-sm hover:bg-slate-700 transition shadow-lg"
         >
-          ← Retour à l'ERP
+          ? Retour � l'ERP
         </button>
         <PortailClient currentUser={currentUser} onLogout={() => setShowClientPortal(false)} />
       </div>
@@ -783,8 +784,8 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
             </h1>
             <p className="text-slate-400 mb-6 text-sm">
               {isChunkError 
-                ? "Une mise à jour du système a été effectuée. Veuillez recharger pour appliquer les changements." 
-                : "Le composant a crashé. Voici l'erreur :"}
+                ? "Une mise � jour du syst�me a �t� effectu�e. Veuillez recharger pour appliquer les changements." 
+                : "Le composant a crash�. Voici l'erreur :"}
             </p>
             {!isChunkError && (
               <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl mb-8 text-left overflow-auto max-h-40">
@@ -795,7 +796,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
               onClick={() => window.location.reload()}
               className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-600/20"
             >
-              {isChunkError ? "Mettre à jour maintenant" : "Recharger la page"}
+              {isChunkError ? "Mettre � jour maintenant" : "Recharger la page"}
             </button>
           </div>
         </div>
@@ -816,3 +817,4 @@ export default function App() {
     </ErrorBoundary>
   );
 }
+
