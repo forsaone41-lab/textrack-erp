@@ -114,7 +114,7 @@ export default function StoreLanding() {
           </div>
           
           {/* Right Content - Visual Representation */}
-          <div className="relative animate-fade-in-up w-full flex justify-center lg:justify-end items-center -mt-8 lg:-mt-16" style={{ animationDelay: '0.2s' }}>
+          <div className="relative animate-fade-in-up w-full flex justify-center lg:justify-end items-center -mt-8 lg:-mt-24 xl:-mt-32" style={{ animationDelay: '0.2s' }}>
             <div className="absolute inset-0 bg-gradient-to-tr from-indigo-200 to-emerald-100 transform rotate-3 rounded-[3rem] -z-10 blur-3xl opacity-30" />
             
             <div className="relative w-full max-w-[550px] mx-auto lg:mx-0 lg:ml-auto">
