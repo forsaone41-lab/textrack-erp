@@ -167,7 +167,7 @@ export default function StoreLanding() {
               <div className="mb-8 flex flex-col">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xl font-bold text-slate-400 line-through decoration-2">{isYearly ? '2,990' : '299'}</span>
-                  <span className="text-[10px] font-black text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full uppercase tracking-wider">{isAr ? 'عرض محدود' : 'PROMO'}</span>
+                  <span className="text-[10px] font-black text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full uppercase tracking-wider">{isAr ? 'عرض محدود' : 'PROMO'}</span>
                 </div>
                 <div>
                   <span className="text-5xl font-black text-slate-900 transition-colors">{isYearly ? (Number(proPrice) * 10).toLocaleString() : proPrice}</span>
