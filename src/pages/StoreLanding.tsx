@@ -60,25 +60,25 @@ export default function StoreLanding() {
           
           {/* Left Content */}
           <div className="space-y-8 animate-fade-in-up">
-            <h1 className="text-5xl lg:text-7xl font-extrabold text-slate-900 leading-tight tracking-tight">
+            <h1 className="text-4xl lg:text-5xl xl:text-6xl font-extrabold text-slate-900 leading-[1.1] tracking-tight">
               {isAr ? (
-                <>بني متجرك اليوم <br/> <span className="text-slate-500">وماتخلص حتى تجيب</span> <br/> أول مبيعة!</>
+                <>بني متجرك دابا، <br/><span className="text-indigo-600">وماتخلص حتى تبيع!</span></>
               ) : (
-                <>Créez votre boutique <br/> <span className="text-slate-500">et payez après</span> <br/> la 1ère vente !</>
+                <>Créez votre boutique, <br/><span className="text-indigo-600">payez après la 1ère vente !</span></>
               )}
             </h1>
             
-            <p className="text-lg lg:text-xl text-slate-600 max-w-lg leading-relaxed font-medium">
+            <p className="text-lg text-slate-600 max-w-lg leading-relaxed">
               {isAr 
-                ? 'استثمار واحد بـ 800 درهم فقط، وحنا كنتكلفو بالديزاين، الدومين (.com)، وتطبيقات المبيعات. ركز على الإعلانات، وماتخلصناش الاشتراك (199 درهم) حتى تجيب أول مبيعة!'
-                : 'Un seul investissement de 800 DH pour une boutique clé en main (Design, .com, Upsell). Concentrez-vous sur vos ventes, l\'abonnement (199 DH) n\'est dû qu\'APRÈS votre première vente !'}
+                ? 'بـ 800 درهم فقط، حنا كنتكلفو بالديزاين، الدومين (.com) وربط eGrow. نتا ركز غير على المبيعات ديالك!'
+                : 'Pour 800 DH, nous gérons le design, le domaine (.com) et eGrow. Concentrez-vous sur vos ventes !'}
             </p>
             
             <ul className="space-y-4">
               {[
-                isAr ? 'متجر واجد للخدمة (Clé en main) بـ 800 درهم فقط (دومين + ديزاين)' : 'Boutique clé en main à 800 DH (Domaine + Design PRO)',
-                isAr ? 'زيرو ريسك: ماتخلص الاشتراك حتى تجيب أول مبيعة' : 'Zéro risque : Ne payez l\'abonnement qu\'après la 1ère vente',
-                isAr ? 'استقلالية تامة: نتا كتجيري حساب eGrow ديالك وحنا التقنيات' : 'Indépendance totale : Vous gérez eGrow, nous gérons la technique'
+                isAr ? 'متجر احترافي جاهز للعمل بـ 800 درهم' : 'Boutique professionnelle prête à vendre (800 DH)',
+                isAr ? 'الاشتراك (199 درهم) يبدأ بعد أول مبيعة' : 'L\'abonnement (199 DH) commence après la 1ère vente',
+                isAr ? 'استقلالية تامة في إدارة حسابك' : 'Indépendance totale de votre compte'
               ].map((text, i) => (
                 <li key={i} className="flex items-center gap-3 text-slate-700 font-medium">
                   <CheckCircle2 className="w-6 h-6 text-emerald-500 shrink-0" />
