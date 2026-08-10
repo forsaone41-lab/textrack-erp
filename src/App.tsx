@@ -255,11 +255,24 @@ function AppContent() {
     // Use the module-level flag captured BEFORE HashRouter could wipe the hash.
     // This is the only reliable way to detect recovery redirects with HashRouter.
     if (__IS_RECOVERY_REDIRECT__) {
-      // Give Supabase's JS client a moment to parse the access_token from the original hash
-      // and establish the authenticated session, then show the modal.
-      setTimeout(() => {
-        setShowRecoveryModal(true);
-      }, 500);
+      const setupManualSession = async () => {
+        try {
+          const urlString = __INITIAL_HASH__.includes('access_token=') ? __INITIAL_HASH__.substring(1) : (__INITIAL_URL__.split('#')[1] || '');
+          if (urlString && urlString.includes('access_token=')) {
+            const params = new URLSearchParams(urlString);
+            const access_token = params.get('access_token');
+            const refresh_token = params.get('refresh_token');
+            if (access_token && refresh_token) {
+              await supabase.auth.setSession({ access_token, refresh_token });
+            }
+          }
+        } catch (e) {
+          console.error('Failed to set manual recovery session', e);
+        } finally {
+          setShowRecoveryModal(true);
+        }
+      };
+      setupManualSession();
     }
 
     return () => {
@@ -340,7 +353,7 @@ function AppContent() {
         const manifestContent = {
           name: remote.name || "Beya Creative",
           short_name: remote.name || "Beya Creative",
-          description: "Système de gestion textile",
+          description: "Systï¿½me de gestion textile",
           start_url: "/",
           display: "standalone",
           background_color: "#0f172a",
@@ -475,7 +488,7 @@ function AppContent() {
                 value={newPassword}
                 onChange={e => setNewPassword(e.target.value)}
                 className="w-full pr-12 pl-12 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all font-bold text-slate-900 text-left"
-                placeholder="••••••••"
+                placeholder="ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"
                 dir="ltr"
               />
               <button
@@ -649,7 +662,7 @@ function AppContent() {
           onClick={() => setShowClientPortal(false)}
           className="fixed top-4 right-4 z-50 bg-slate-800 text-white px-4 py-2 rounded-lg text-sm hover:bg-slate-700 transition shadow-lg"
         >
-          ? Retour à l'ERP
+          ? Retour ï¿½ l'ERP
         </button>
         <PortailClient currentUser={currentUser} onLogout={() => setShowClientPortal(false)} />
       </div>
@@ -785,8 +798,8 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
             </h1>
             <p className="text-slate-400 mb-6 text-sm">
               {isChunkError 
-                ? "Une mise à jour du système a été effectuée. Veuillez recharger pour appliquer les changements." 
-                : "Le composant a crashé. Voici l'erreur :"}
+                ? "Une mise ï¿½ jour du systï¿½me a ï¿½tï¿½ effectuï¿½e. Veuillez recharger pour appliquer les changements." 
+                : "Le composant a crashï¿½. Voici l'erreur :"}
             </p>
             {!isChunkError && (
               <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl mb-8 text-left overflow-auto max-h-40">
@@ -797,7 +810,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
               onClick={() => window.location.reload()}
               className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-600/20"
             >
-              {isChunkError ? "Mettre à jour maintenant" : "Recharger la page"}
+              {isChunkError ? "Mettre ï¿½ jour maintenant" : "Recharger la page"}
             </button>
           </div>
         </div>
