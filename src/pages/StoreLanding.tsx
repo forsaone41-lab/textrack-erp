@@ -217,9 +217,8 @@ export default function StoreLanding() {
             <div className="bg-white rounded-[2rem] p-8 border-2 border-indigo-500 hover:shadow-2xl transition-all relative overflow-hidden flex flex-col shadow-[0_20px_50px_rgba(99,102,241,0.15)] hover:-translate-y-2 duration-300">
               <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-2xl rounded-full" />
               <div className={`absolute top-6 ${isAr ? 'left-6' : 'right-6'}`}>
-                <span className="bg-indigo-100 text-indigo-700 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1 shadow-sm">
-                  <Sparkles className="w-3 h-3" />
-                  {isAr ? 'زيرو ريسك' : 'Zéro Risque'}
+                <span className="bg-indigo-100 text-indigo-700 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-sm">
+                  {isAr ? 'موصى به' : 'Recommandé'}
                 </span>
               </div>
               <h3 className="text-2xl font-black text-slate-900 mb-2 uppercase">Zirorisk</h3>
