@@ -216,7 +216,7 @@ export default function StoreLanding() {
               <ul className="space-y-4 mb-10 flex-1 relative z-10">
                 {[
                   isAr ? 'تصميم المتجر + الدومين احترافي' : 'Création + Domaine PRO',
-                  isAr ? 'الاشتراك (199) لا يدفع إلا بعد أول مبيعة' : 'Abonnement (199) après la 1ère vente',
+                  isAr ? `الاشتراك (${isYearly ? '1,990' : '199'}) لا يدفع إلا بعد أول مبيعة` : `Abonnement (${isYearly ? '1,990' : '199'}) après la 1ère vente`,
                   isAr ? 'ربط مباشر ومستقل مع حساب eGrow' : 'Liaison directe & indépendante eGrow',
                   isAr ? 'منتجات غير محدودة و0% عمولة' : 'Produits illimités & 0% commision',
                   isAr ? 'تطبيقات لزيادة المبيعات (Upsell)' : 'Apps de conversion (Upsell)',
