@@ -70,8 +70,8 @@ export default function StoreLanding() {
             
             <p className="text-lg text-slate-600 max-w-lg leading-relaxed">
               {isAr 
-                ? 'بـ 800 درهم فقط، حنا كنتكلفو بالديزاين، الدومين (.com) وربط eGrow. نتا ركز غير على المبيعات ديالك!'
-                : 'Pour 800 DH, nous gérons le design, le domaine (.com) et eGrow. Concentrez-vous sur vos ventes !'}
+                ? 'بـ 800 درهم فقط، حنا كنتكلفو بالديزاين والدومين (.com). نتا ركز غير على المبيعات ديالك!'
+                : 'Pour 800 DH, nous gérons le design et le domaine (.com). Concentrez-vous sur vos ventes !'}
             </p>
             
             <ul className="space-y-4">
