@@ -205,11 +205,11 @@ export default function StoreLanding() {
               <p className="text-slate-500 mb-6 font-medium text-sm">{isAr ? 'متجر جاهز للاستخدام' : 'Clé en main (Recommandé)'}</p>
               <div className="mb-8 flex flex-col relative z-10">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xl font-bold text-slate-400 line-through decoration-2">{isYearly ? '2,990' : '1,499'}</span>
+                  <span className="text-xl font-bold text-slate-400 line-through decoration-2">{isYearly ? '8,388' : '1,499'}</span>
                   <span className="text-[10px] font-black text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full uppercase tracking-wider">{isAr ? 'عرض محدود' : 'PROMO'}</span>
                 </div>
                 <div>
-                  <span className="text-5xl font-black text-slate-900 transition-colors">{isYearly ? '1,990' : '699'}</span>
+                  <span className="text-5xl font-black text-slate-900 transition-colors">{isYearly ? '6,990' : '699'}</span>
                   <span className="text-slate-500 font-bold ml-2 uppercase tracking-widest text-xs">MAD / {isYearly ? (isAr ? 'سنة' : 'an') : (isAr ? 'مرة واحدة' : 'Une fois')}</span>
                 </div>
               </div>
