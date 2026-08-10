@@ -114,19 +114,22 @@ export default function StoreLanding() {
           </div>
           
           {/* Right Content - Visual Representation */}
-          <div className="relative animate-fade-in-up flex justify-center lg:justify-end" style={{ animationDelay: '0.2s' }}>
-            <div className="absolute inset-0 bg-gradient-to-tr from-indigo-100 to-emerald-50 transform rotate-3 rounded-[3rem] -z-10 w-full max-w-[500px] mx-auto lg:ml-auto lg:mr-0" />
-            <div className="bg-white rounded-[2rem] p-4 shadow-2xl border border-slate-100 w-full max-w-[500px]">
-              <div className="flex items-center gap-2 mb-4 px-2">
-                <div className="w-3 h-3 rounded-full bg-rose-400" />
-                <div className="w-3 h-3 rounded-full bg-amber-400" />
-                <div className="w-3 h-3 rounded-full bg-emerald-400" />
+          <div className="relative animate-fade-in-up w-full flex justify-center lg:justify-end items-center" style={{ animationDelay: '0.2s' }}>
+            <div className="absolute inset-0 bg-gradient-to-tr from-indigo-200 to-emerald-100 transform rotate-3 rounded-[3rem] -z-10 blur-3xl opacity-30" />
+            
+            <div className="relative w-full max-w-[550px] mx-auto lg:mx-0 lg:ml-auto">
+              <div className="bg-slate-900/95 backdrop-blur rounded-t-2xl p-4 flex items-center gap-2 shadow-sm">
+                <div className="w-3 h-3 rounded-full bg-rose-500" />
+                <div className="w-3 h-3 rounded-full bg-amber-500" />
+                <div className="w-3 h-3 rounded-full bg-emerald-500" />
               </div>
-              <img 
-                src="/store-builder-mockup.png" 
-                alt={isAr ? "واجهة بناء المتجر" : "Interface de création de boutique"} 
-                className="w-full h-auto rounded-xl border border-slate-100 shadow-inner object-cover"
-              />
+              <div className="bg-white rounded-b-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] border-x border-b border-slate-200/50 overflow-hidden">
+                <img 
+                  src="/store-dashboard.png" 
+                  alt={isAr ? "لوحة تحكم المتجر" : "Tableau de bord de la boutique"} 
+                  className="w-full h-auto object-cover transform hover:scale-105 transition-transform duration-700"
+                />
+              </div>
             </div>
           </div>
           
