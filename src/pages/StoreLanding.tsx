@@ -114,37 +114,19 @@ export default function StoreLanding() {
           </div>
           
           {/* Right Content - Visual Representation */}
-          <div className="relative animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-            <div className="absolute inset-0 bg-gradient-to-tr from-pink-100 to-indigo-50 transform rotate-3 rounded-[3rem] -z-10" />
-            <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl border border-slate-100">
-              <div className="flex items-center gap-2 mb-6">
+          <div className="relative animate-fade-in-up flex justify-center lg:justify-end" style={{ animationDelay: '0.2s' }}>
+            <div className="absolute inset-0 bg-gradient-to-tr from-indigo-100 to-emerald-50 transform rotate-3 rounded-[3rem] -z-10 w-full max-w-[500px] mx-auto lg:ml-auto lg:mr-0" />
+            <div className="bg-white rounded-[2rem] p-4 shadow-2xl border border-slate-100 w-full max-w-[500px]">
+              <div className="flex items-center gap-2 mb-4 px-2">
                 <div className="w-3 h-3 rounded-full bg-rose-400" />
                 <div className="w-3 h-3 rounded-full bg-amber-400" />
                 <div className="w-3 h-3 rounded-full bg-emerald-400" />
               </div>
-              
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="h-32 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100">
-                  <MonitorSmartphone className="w-8 h-8 text-indigo-300" />
-                </div>
-                <div className="h-32 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100">
-                  <Zap className="w-8 h-8 text-amber-300" />
-                </div>
-              </div>
-              
-              <div className="h-48 bg-slate-900 rounded-2xl p-6 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 blur-3xl rounded-full" />
-                <Code className="w-6 h-6 text-emerald-400 mb-4" />
-                <div className="space-y-2">
-                  <div className="w-3/4 h-2 bg-slate-800 rounded-full" />
-                  <div className="w-1/2 h-2 bg-slate-800 rounded-full" />
-                  <div className="w-full h-2 bg-slate-800 rounded-full mt-4" />
-                  <div className="w-5/6 h-2 bg-slate-800 rounded-full" />
-                </div>
-                <div className="absolute bottom-6 right-6">
-                  <ShieldCheck className="w-8 h-8 text-emerald-400 opacity-50" />
-                </div>
-              </div>
+              <img 
+                src="/store-builder-mockup.png" 
+                alt={isAr ? "واجهة بناء المتجر" : "Interface de création de boutique"} 
+                className="w-full h-auto rounded-xl border border-slate-100 shadow-inner object-cover"
+              />
             </div>
           </div>
           
