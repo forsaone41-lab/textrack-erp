@@ -8,10 +8,10 @@ export default function StoreOnboarding() {
   const navigate = useNavigate();
 
   const handleOption1 = () => {
-    // Send them to whatsapp to pay 800 MAD for setup
+    // Send them to whatsapp to pay 699 MAD for setup
     const msg = encodeURIComponent(isAr 
-      ? "مرحباً، أنشأت حسابي وأريد باقة (800 درهم) لتقوموا بإنشاء المتجر لي." 
-      : "Bonjour, j'ai créé mon compte et je souhaite l'option à 800 DH pour que votre équipe crée ma boutique.");
+      ? "مرحباً، أنشأت حسابي وأريد باقة (699 درهم) لتقوموا بإنشاء المتجر لي." 
+      : "Bonjour, j'ai créé mon compte et je souhaite l'option à 699 DH pour que votre équipe crée ma boutique.");
     window.open(`https://wa.me/212600000000?text=${msg}`, '_blank');
     // Also navigate them so they can continue later
     navigate('/store-builder');
@@ -64,7 +64,7 @@ export default function StoreOnboarding() {
             
             <div className="mb-6 flex-1">
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-black text-slate-900">800</span>
+                <span className="text-4xl font-black text-slate-900">699</span>
                 <span className="text-slate-500 font-bold uppercase tracking-widest text-xs">MAD</span>
               </div>
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
@@ -125,7 +125,7 @@ export default function StoreOnboarding() {
               </div>
             </div>
             
-            <button className="w-full py-4 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-black text-sm transition-colors flex items-center justify-center gap-2">
+            <button className="w-full py-4 bg-slate-100 hover:bg-slate-200 text-slate-699 rounded-xl font-black text-sm transition-colors flex items-center justify-center gap-2">
               {isAr ? 'البدء الآن مجاناً' : 'Commencer gratuitement'}
               <ArrowRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
             </button>
@@ -138,7 +138,7 @@ export default function StoreOnboarding() {
             <ShieldCheck className="w-6 h-6 text-emerald-600" />
           </div>
           <div>
-            <h4 className="font-black text-emerald-800 mb-1">
+            <h4 className="font-black text-emerald-699 mb-1">
               {isAr ? 'ضمانة زيرو ريسك' : 'Garantie Zéro Risque'}
             </h4>
             <p className="text-emerald-700 text-sm font-medium leading-relaxed">
@@ -152,3 +152,4 @@ export default function StoreOnboarding() {
     </div>
   );
 }
+

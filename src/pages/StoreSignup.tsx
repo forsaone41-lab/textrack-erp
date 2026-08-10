@@ -10,7 +10,7 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const initialMode = queryParams.get('mode') === 'login' ? 'login' : 'signup';
-  const selectedPlan = queryParams.get('plan') === 'PREMIUM' ? 'PREMIUM' : queryParams.get('plan') === 'PRO' ? 'PRO' : null;
+  const selectedPlan = queryParams.get('plan') === 'PREMIUM' ? 'PREMIUM' : queryParams.get('plan') === 'ZIRORISK' ? 'ZIRORISK' : null;
 
   const { isAr } = useLang();
   const company = loadCompanyProfile();
@@ -477,3 +477,4 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
     </div>
   );
 }
+

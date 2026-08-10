@@ -70,13 +70,13 @@ export default function StoreLanding() {
             
             <p className="text-lg text-slate-600 max-w-lg leading-relaxed">
               {isAr 
-                ? 'بـ 800 درهم فقط، حنا كنتكلفو بالديزاين والدومين (.com). نتا ركز غير على المبيعات ديالك!'
-                : 'Pour 800 DH, nous gérons le design et le domaine (.com). Concentrez-vous sur vos ventes !'}
+                ? 'بـ 699 درهم فقط، حنا كنتكلفو بالديزاين والدومين (.com). نتا ركز غير على المبيعات ديالك!'
+                : 'Pour 699 DH, nous gérons le design et le domaine (.com). Concentrez-vous sur vos ventes !'}
             </p>
             
             <ul className="space-y-4">
               {[
-                isAr ? 'متجر احترافي جاهز للعمل بـ 800 درهم' : 'Boutique professionnelle prête à vendre (800 DH)',
+                isAr ? 'متجر احترافي جاهز للعمل بـ 699 درهم' : 'Boutique professionnelle prête à vendre (699 DH)',
                 isAr ? 'الاشتراك (199 درهم) يبدأ بعد أول مبيعة' : 'L\'abonnement (199 DH) commence après la 1ère vente',
                 isAr ? 'استقلالية تامة في إدارة حسابك' : 'Indépendance totale de votre compte'
               ].map((text, i) => (
@@ -187,7 +187,7 @@ export default function StoreLanding() {
                   {isAr ? 'زيرو ريسك' : 'Zéro Risque'}
                 </span>
               </div>
-              <h3 className="text-2xl font-black text-slate-900 mb-2">PRO</h3>
+              <h3 className="text-2xl font-black text-slate-900 mb-2 uppercase">Zirorisk</h3>
               <p className="text-slate-500 mb-6 font-medium text-sm">{isAr ? 'لأصحاب العلامات التجارية' : 'Pour les créateurs de marques'}</p>
               <div className="mb-8 flex flex-col">
                 <div className="flex items-center gap-2 mb-1">
@@ -201,7 +201,7 @@ export default function StoreLanding() {
               </div>
               <ul className="space-y-4 mb-10 flex-1">
                 {[
-                  isAr ? 'تصميم المتجر + الدومين: 800 درهم فقط' : 'Création + Domaine : 800 DH',
+                  isAr ? 'تصميم المتجر + الدومين: 699 درهم فقط' : 'Création + Domaine : 699 DH',
                   isAr ? 'الاشتراك لا يدفع إلا بعد أول مبيعة' : 'Abonnement après la 1ère vente',
                   isAr ? 'ربط مباشر ومستقل مع eGrow' : 'Liaison directe & indépendante eGrow',
                   isAr ? 'منتجات غير محدودة و0% عمولة' : 'Produits illimités & 0% commision',
@@ -213,7 +213,7 @@ export default function StoreLanding() {
                   </li>
                 ))}
               </ul>
-              <Link to="/store-signup?plan=PRO" className="block w-full py-4 text-center rounded-2xl font-black uppercase tracking-widest text-xs bg-slate-100 text-slate-700 hover:bg-indigo-600 hover:text-white transition-all">
+              <Link to="/store-signup?plan=ZIRORISK" className="block w-full py-4 text-center rounded-2xl font-black uppercase tracking-widest text-xs bg-slate-100 text-slate-700 hover:bg-indigo-600 hover:text-white transition-all">
                 {isAr ? 'ابدأ تجربتك المجانية' : 'Commencer l\'essai gratuit'}
               </Link>
             </div>
@@ -293,5 +293,6 @@ export default function StoreLanding() {
     </div>
   );
 }
+
 
 
