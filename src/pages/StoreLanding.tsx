@@ -114,14 +114,14 @@ export default function StoreLanding() {
           </div>
           
           {/* Right Content - Visual Representation */}
-          <div className="relative animate-fade-in-up w-full flex justify-center lg:justify-end items-center" style={{ animationDelay: '0.2s' }}>
+          <div className="relative animate-fade-in-up w-full flex justify-center lg:justify-end items-center -mt-8 lg:-mt-16" style={{ animationDelay: '0.2s' }}>
             <div className="absolute inset-0 bg-gradient-to-tr from-indigo-200 to-emerald-100 transform rotate-3 rounded-[3rem] -z-10 blur-3xl opacity-30" />
             
             <div className="relative w-full max-w-[550px] mx-auto lg:mx-0 lg:ml-auto">
               <div className="bg-white rounded-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] border border-slate-200/50 overflow-hidden">
                 <img 
-                  src="/store-dashboard.png" 
-                  alt={isAr ? "لوحة تحكم المتجر" : "Tableau de bord de la boutique"} 
+                  src="/store-boxes.png" 
+                  alt={isAr ? "متجر إلكتروني مع علب الشحن" : "Boutique en ligne avec colis"} 
                   className="w-full h-auto object-cover transform hover:scale-105 transition-transform duration-700"
                 />
               </div>
