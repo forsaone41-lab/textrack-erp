@@ -189,9 +189,15 @@ export default function StoreLanding() {
               </div>
               <h3 className="text-2xl font-black text-slate-900 mb-2">PRO</h3>
               <p className="text-slate-500 mb-6 font-medium text-sm">{isAr ? 'لأصحاب العلامات التجارية' : 'Pour les créateurs de marques'}</p>
-              <div className="mb-8">
-                <span className="text-5xl font-black text-slate-900 transition-colors">{isYearly ? (Number(proPrice) * 10).toLocaleString() : proPrice}</span>
-                <span className="text-slate-500 font-bold ml-2 uppercase tracking-widest text-xs">MAD / {isYearly ? (isAr ? 'سنة' : 'an') : (isAr ? 'شهر' : 'mois')}</span>
+              <div className="mb-8 flex flex-col">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xl font-bold text-slate-400 line-through decoration-2">{isYearly ? '2,990' : '299'}</span>
+                  <span className="text-[10px] font-black text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full uppercase tracking-wider">{isAr ? 'عرض محدود' : 'PROMO'}</span>
+                </div>
+                <div>
+                  <span className="text-5xl font-black text-slate-900 transition-colors">{isYearly ? (Number(proPrice) * 10).toLocaleString() : proPrice}</span>
+                  <span className="text-slate-500 font-bold ml-2 uppercase tracking-widest text-xs">MAD / {isYearly ? (isAr ? 'سنة' : 'an') : (isAr ? 'شهر' : 'mois')}</span>
+                </div>
               </div>
               <ul className="space-y-4 mb-10 flex-1">
                 {[
@@ -221,9 +227,15 @@ export default function StoreLanding() {
               
               <h3 className="text-2xl font-black text-white mb-2 relative z-10">PREMIUM</h3>
               <p className="text-indigo-200 mb-6 font-medium text-sm relative z-10">{isAr ? 'لرواد الأعمال (عدة علامات)' : 'Pour les multi-marques'}</p>
-              <div className="mb-8 relative z-10">
-                <span className="text-5xl font-black text-white">{isYearly ? (Number(premiumPrice) * 10).toLocaleString() : premiumPrice}</span>
-                <span className="text-indigo-200 font-bold ml-2 uppercase tracking-widest text-xs">MAD / {isYearly ? (isAr ? 'سنة' : 'an') : (isAr ? 'شهر' : 'mois')}</span>
+              <div className="mb-8 relative z-10 flex flex-col">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xl font-bold text-indigo-300 line-through decoration-2">{isYearly ? '7,990' : '799'}</span>
+                  <span className="text-[10px] font-black text-amber-950 bg-amber-400 px-2 py-0.5 rounded-full uppercase tracking-wider">{isAr ? 'عرض محدود' : 'PROMO'}</span>
+                </div>
+                <div>
+                  <span className="text-5xl font-black text-white">{isYearly ? (Number(premiumPrice) * 10).toLocaleString() : premiumPrice}</span>
+                  <span className="text-indigo-200 font-bold ml-2 uppercase tracking-widest text-xs">MAD / {isYearly ? (isAr ? 'سنة' : 'an') : (isAr ? 'شهر' : 'mois')}</span>
+                </div>
               </div>
               <ul className="space-y-4 mb-10 relative z-10 flex-1">
                 {[
