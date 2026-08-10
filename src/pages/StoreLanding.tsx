@@ -21,8 +21,8 @@ export default function StoreLanding() {
       <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2" dir="ltr">
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center transform rotate-12">
-              <span className="text-white font-black text-xl -rotate-12">B</span>
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-emerald-400 rounded-xl flex items-center justify-center transform -rotate-12">
+              <span className="text-white font-black text-xl rotate-12">B</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="font-black text-2xl tracking-tight text-slate-900">BEYA</span>
@@ -277,8 +277,8 @@ export default function StoreLanding() {
       <footer className="py-12 bg-white border-t border-slate-100">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2" dir="ltr">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg flex items-center justify-center transform rotate-12">
-              <span className="text-white font-black text-sm -rotate-12">B</span>
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-emerald-400 rounded-lg flex items-center justify-center transform -rotate-12">
+              <span className="text-white font-black text-sm rotate-12">B</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="font-black text-lg tracking-tight text-slate-900">BEYA</span>
