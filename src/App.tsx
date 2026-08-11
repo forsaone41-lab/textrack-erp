@@ -77,6 +77,8 @@ const BeyaVirtualTryOn = lazy(() => import('./pages/BeyaVirtualTryOn'));
 const StoreBuilder    = lazy(() => import('./pages/StoreBuilder'));
 const StoreLanding    = lazy(() => import('./pages/StoreLanding'));
 const StoreLandingV2  = lazy(() => import('./pages/StoreLandingV2'));
+const StoreLandingV3  = lazy(() => import('./pages/StoreLandingV3'));
+const StoreLandingV4  = lazy(() => import('./pages/StoreLandingV4'));
 const BeyaDropshipping = lazy(() => import('./pages/BeyaDropshipping'));
 const StoreSignup     = lazy(() => import('./pages/StoreSignup'));
 const StoreOnboarding = lazy(() => import('./pages/StoreOnboarding'));
@@ -542,6 +544,8 @@ function AppContent() {
         <Route path="/new" element={<NewLanding />} />
         <Route path="/store-landing" element={<StoreLanding />} />
         <Route path="/store-landing-v2" element={<StoreLandingV2 />} />
+        <Route path="/store-landing-v3" element={<StoreLandingV3 />} />
+        <Route path="/store-landing-v4" element={<StoreLandingV4 />} />
         <Route path="/store-signup" element={<StoreSignup onLogin={handleLogin} />} />
         <Route path="/partners" element={
           <Suspense fallback={<PageLoader />}>
@@ -753,6 +757,8 @@ function AppContent() {
         <Route path="/devis-express" element={<AdsLanding />} />
         <Route path="/store-landing" element={<StoreLanding />} />
         <Route path="/store-landing-v2" element={<StoreLandingV2 />} />
+        <Route path="/store-landing-v3" element={<StoreLandingV3 />} />
+        <Route path="/store-landing-v4" element={<StoreLandingV4 />} />
         <Route path="/partners" element={
           <Suspense fallback={<PageLoader />}>
             <Partners />
