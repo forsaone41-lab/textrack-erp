@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowRight, CheckCircle2, PlayCircle, Star, Rocket, Layout, Globe, Smartphone, ShieldCheck, Clock, Eye, X } from 'lucide-react';
+import { ArrowRight, CheckCircle2, PlayCircle, Star, Rocket, Layout, Globe, Smartphone, ShieldCheck, Clock, Eye, X, ExternalLink } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { Link, useLocation } from 'react-router-dom';
 import { loadCompanyProfile } from '../types';
@@ -7,7 +7,7 @@ import { loadCompanyProfile } from '../types';
 export default function SetupLanding() {
   const { isAr, toggle } = useLang();
   const company = loadCompanyProfile();
-  const [previewTheme, setPreviewTheme] = useState<{name: string, image: string} | null>(null);
+  const [previewTheme, setPreviewTheme] = useState<{name: string, image: string, url?: string} | null>(null);
   
   // Facebook Pixel tracking - track PageView specifically for this ad campaign
   const location = useLocation();
@@ -44,16 +44,27 @@ export default function SetupLanding() {
             <div className="max-w-4xl mx-auto shadow-2xl rounded-b-xl overflow-hidden ring-1 ring-slate-900/10 bg-white">
               {/* Fake Browser Header */}
               <div className="h-10 bg-slate-100 border-b border-slate-200 flex items-center px-4 gap-2 rounded-t-xl sticky top-0 z-10 backdrop-blur-md">
-                <div className="flex gap-1.5">
+                <div className="flex gap-1.5 shrink-0">
                   <div className="w-3 h-3 rounded-full bg-rose-400" />
                   <div className="w-3 h-3 rounded-full bg-amber-400" />
                   <div className="w-3 h-3 rounded-full bg-emerald-400" />
                 </div>
                 <div className="mx-auto bg-white px-4 py-1 rounded-md text-[10px] font-mono text-slate-400 border border-slate-200/60 shadow-sm w-1/2 text-center overflow-hidden text-ellipsis whitespace-nowrap">
-                  demo.beyacreative.com/{previewTheme.name.toLowerCase()}
+                  {previewTheme.url ? previewTheme.url.replace('https://', '').replace(/\/$/, '') : `demo.beyacreative.com/${previewTheme.name.toLowerCase().replace(' ', '-')}`}
                 </div>
+                {previewTheme.url ? (
+                  <a href={previewTheme.url} target="_blank" rel="noopener noreferrer" className="shrink-0 flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors px-2 py-1 rounded border border-blue-200">
+                    <ExternalLink className="w-3 h-3" /> <span className="hidden sm:inline">{isAr ? 'نافذة جديدة' : 'Ouvrir'}</span>
+                  </a>
+                ) : (
+                  <div className="w-[70px] shrink-0" />
+                )}
               </div>
-              <img src={previewTheme.image} alt={previewTheme.name} className="w-full h-auto block" />
+              {previewTheme.url ? (
+                <iframe src={previewTheme.url} title={previewTheme.name} className="w-full h-[75vh] border-none block bg-white" />
+              ) : (
+                <img src={previewTheme.image} alt={previewTheme.name} className="w-full h-auto block" />
+              )}
             </div>
           </div>
         </div>
@@ -242,7 +253,7 @@ export default function SetupLanding() {
             </div>
             {/* Theme 2 */}
             <div 
-              onClick={() => setPreviewTheme({ name: 'STREETWEAR PRO', image: '/images/themes/fashion.png' })}
+              onClick={() => setPreviewTheme({ name: 'STREETWEAR PRO', image: '/images/themes/fashion.png', url: 'https://bidla.beyacreative.com/' })}
               className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
             >
               <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
