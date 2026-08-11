@@ -20,6 +20,27 @@ export default function SetupLanding() {
     return () => clearTimeout(timer);
   }, [location]);
 
+  // Dynamic Favicon and Title specifically for BEYA SETUP
+  useEffect(() => {
+    const originalTitle = document.title;
+    const favicon = document.getElementById('dynamic-favicon') as HTMLLinkElement;
+    const originalFavicon = favicon ? favicon.href : '/logo.png';
+    
+    document.title = isAr ? 'BEYA SETUP - أنشئ متجرك الإلكتروني' : 'BEYA SETUP - Créez votre boutique';
+    
+    if (favicon) {
+      // SVG data URI for an orange rounded square with a white rocket
+      favicon.href = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23f59e0b'/%3E%3Csvg x='20' y='20' width='60' height='60' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z'/%3E%3Cpath d='m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z'/%3E%3Cpath d='M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0'/%3E%3Cpath d='M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5'/%3E%3C/svg%3E%3C/svg%3E`;
+    }
+
+    return () => {
+      document.title = originalTitle;
+      if (favicon) {
+        favicon.href = originalFavicon;
+      }
+    };
+  }, [isAr]);
+
   const whatsappUrl = `https://wa.me/${company.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
     isAr ? 'مرحباً، بغيت نستفد من عرض إنشاء متجر إلكتروني متكامل بـ 800 درهم (ZIRORISK).' : 'Bonjour, je suis intéressé par l\'offre de création de boutique complète à 800 MAD (ZIRORISK).'
   )}`;
