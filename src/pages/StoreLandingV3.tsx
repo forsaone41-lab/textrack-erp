@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowRight, Zap, Target, TrendingUp, Clock, CheckCircle2, ShoppingBag } from 'lucide-react';
+import { ArrowRight, Zap, Target, TrendingUp, Clock, CheckCircle2, ShoppingBag, Store } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { Link } from 'react-router-dom';
 
@@ -15,11 +15,14 @@ export default function StoreLandingV3() {
 
       {/* Navbar - Minimal */}
       <nav className="w-full py-6 px-6 md:px-12 flex items-center justify-between border-b border-slate-100">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-600 text-white shadow-md">
-            <span className="font-black text-[24px]">B</span>
+        <Link to="/" className="flex items-center gap-2" dir="ltr">
+          <div className="flex items-center justify-center w-10 h-10 rounded-[10px] bg-[#6A35FF] text-white shadow-sm shrink-0">
+            <Store className="w-5 h-5" />
           </div>
-          <span className="font-black text-[24px] uppercase tracking-tighter">BEYA</span>
+          <div className="flex flex-col justify-center text-left">
+            <span className="font-black text-[22px] leading-none tracking-tight text-[#0B1121]">BEYA</span>
+            <span className="font-bold text-[11px] leading-none tracking-[0.2em] text-[#6A35FF] mt-0.5 uppercase">STORES</span>
+          </div>
         </Link>
         
         <div className="flex items-center gap-4">
@@ -156,8 +159,17 @@ export default function StoreLandingV3() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-white py-10 border-t border-slate-200 text-center text-slate-500 font-medium">
-        © {new Date().getFullYear()} BEYA Store. {isAr ? 'جميع الحقوق محفوظة' : 'Tous droits réservés'}
+      <footer className="bg-white py-10 border-t border-slate-200 flex flex-col items-center gap-4 text-center text-slate-500 font-medium">
+        <Link to="/" className="flex items-center gap-2 mb-2" dir="ltr">
+          <div className="flex items-center justify-center w-10 h-10 rounded-[10px] bg-[#6A35FF] text-white shadow-sm shrink-0">
+            <Store className="w-5 h-5" />
+          </div>
+          <div className="flex flex-col justify-center text-left">
+            <span className="font-black text-[22px] leading-none tracking-tight text-[#0B1121]">BEYA</span>
+            <span className="font-bold text-[11px] leading-none tracking-[0.2em] text-[#6A35FF] mt-0.5 uppercase">STORES</span>
+          </div>
+        </Link>
+        <p>© {new Date().getFullYear()} BEYA CREATIVE. {isAr ? 'جميع الحقوق محفوظة' : 'Tous droits réservés'}</p>
       </footer>
     </div>
   );

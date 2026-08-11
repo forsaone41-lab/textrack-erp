@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowRight, CheckCircle2, MonitorSmartphone, Zap, ShieldCheck, LayoutTemplate, BarChart3, Users, Box, PlayCircle, ChevronRight, Check, Sun, Moon } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { Link } from 'react-router-dom';
@@ -67,12 +67,12 @@ export default function StoreLandingV2() {
       <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${navBg}`}>
         <div className="max-w-[1400px] mx-auto px-6 md:px-12 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 group" dir="ltr">
-            <div className={`flex items-center justify-center w-10 h-10 rounded-xl shadow-md relative overflow-hidden transition-colors ${logoBg}`}>
-              <span className="font-black text-[24px] tracking-tighter relative z-10">B</span>
+            <div className="flex items-center justify-center w-10 h-10 rounded-[10px] bg-[#6A35FF] text-white shadow-sm shrink-0">
+              <Store className="w-5 h-5" />
             </div>
-            <div className="flex items-center gap-1">
-              <span className={`font-black text-[28px] tracking-tighter uppercase leading-none transition-colors ${navText}`}>BEYA</span>
-              <span className={`font-medium text-[28px] tracking-tight leading-none transition-colors ${scrolled && !isDark ? 'text-slate-500' : 'text-slate-400'}`}>Store</span>
+            <div className="flex flex-col justify-center text-left">
+              <span className={`font-black text-[22px] leading-none tracking-tight transition-colors ${navText}`}>BEYA</span>
+              <span className="font-bold text-[11px] leading-none tracking-[0.2em] text-[#6A35FF] mt-0.5 uppercase">STORES</span>
             </div>
           </Link>
           
@@ -312,12 +312,12 @@ export default function StoreLandingV2() {
       {/* Footer */}
       <footer className={`pt-20 pb-10 border-t text-center transition-colors duration-500 ${isDark ? 'bg-black border-white/10' : 'bg-slate-50 border-slate-200'}`}>
         <Link to="/" className={`inline-flex items-center gap-2 mb-8 opacity-50 hover:opacity-100 transition-opacity ${isDark ? 'text-white' : 'text-black'}`} dir="ltr">
-          <div className={`flex items-center justify-center w-8 h-8 rounded-lg ${isDark ? 'bg-white text-black' : 'bg-black text-white'}`}>
-            <span className="font-black text-[20px] tracking-tighter">B</span>
+          <div className="flex items-center justify-center w-10 h-10 rounded-[10px] bg-[#6A35FF] text-white shadow-sm shrink-0">
+            <Store className="w-5 h-5" />
           </div>
-          <div className="flex items-center gap-1">
-            <span className="font-black text-[24px] tracking-tighter uppercase leading-none">BEYA</span>
-            <span className={`font-medium text-[24px] tracking-tight leading-none ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Store</span>
+          <div className="flex flex-col justify-center text-left">
+            <span className={`font-black text-[22px] leading-none tracking-tight ${isDark ? 'text-white' : 'text-[#0B1121]'}`}>BEYA</span>
+            <span className="font-bold text-[11px] leading-none tracking-[0.2em] text-[#6A35FF] mt-0.5 uppercase">STORES</span>
           </div>
         </Link>
         <p className={`font-medium ${isDark ? 'text-slate-600' : 'text-slate-500'}`}>

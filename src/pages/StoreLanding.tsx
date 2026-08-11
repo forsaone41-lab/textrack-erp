@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowRight, CheckCircle2, MonitorSmartphone, Zap, ShieldCheck, Globe, LayoutTemplate, BarChart3, TrendingUp, Users, Box, Star, PlayCircle, Sparkles } from 'lucide-react';
+import { ArrowRight, CheckCircle2, MonitorSmartphone, Zap, ShieldCheck, Globe, LayoutTemplate, BarChart3, TrendingUp, Users, Box, Star, PlayCircle, Sparkles, Store } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { Link } from 'react-router-dom';
 import { loadCompanyProfile } from '../types';
@@ -22,13 +22,12 @@ export default function StoreLanding() {
       <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 transition-all">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 group transition-opacity hover:opacity-90" dir="ltr">
-            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-slate-900 text-white shadow-md relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
-              <span className="font-black text-[22px] tracking-tighter relative z-10">B</span>
+            <div className="flex items-center justify-center w-10 h-10 rounded-[10px] bg-[#6A35FF] text-white shadow-sm shrink-0">
+              <Store className="w-5 h-5" />
             </div>
-            <div className="flex items-center gap-1">
-              <span className="font-black text-[26px] tracking-tighter text-slate-900 uppercase leading-none">BEYA</span>
-              <span className="font-medium text-[26px] tracking-tight text-slate-400 leading-none">Store</span>
+            <div className="flex flex-col justify-center">
+              <span className="font-black text-[22px] leading-none tracking-tight text-[#0B1121]">BEYA</span>
+              <span className="font-bold text-[11px] leading-none tracking-[0.2em] text-[#6A35FF] mt-0.5 uppercase">STORES</span>
             </div>
           </Link>
           
@@ -336,7 +335,6 @@ export default function StoreLanding() {
 
             {/* ZIRORISK Plan (Highlighted) */}
             <div className="bg-slate-900 text-white rounded-[2.5rem] p-10 border border-slate-800 shadow-[0_30px_60px_rgba(15,23,42,0.3)] relative flex flex-col h-[105%] z-10 transform lg:-translate-y-4">
-              <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-500 to-emerald-400" />
               <div className={`absolute top-8 ${isAr ? 'left-8' : 'right-8'}`}>
                 <span className="bg-gradient-to-r from-blue-500 to-emerald-400 text-white text-[11px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg">
                   {isAr ? 'الأكثر مبيعاً' : 'Le plus populaire'}
@@ -438,13 +436,12 @@ export default function StoreLanding() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
             <div className="md:col-span-1">
               <div className="flex items-center gap-2 mb-6" dir="ltr">
-                <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-slate-900 text-white shadow-md relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
-                  <span className="font-black text-[22px] tracking-tighter relative z-10">B</span>
+                <div className="flex items-center justify-center w-10 h-10 rounded-[10px] bg-[#6A35FF] text-white shadow-sm shrink-0">
+                  <Store className="w-5 h-5" />
                 </div>
-                <div className="flex items-center gap-1">
-                  <span className="font-black text-[26px] tracking-tighter text-slate-900 uppercase leading-none">BEYA</span>
-                  <span className="font-medium text-[26px] tracking-tight text-slate-400 leading-none">Store</span>
+                <div className="flex flex-col justify-center">
+                  <span className="font-black text-[22px] leading-none tracking-tight text-[#0B1121]">BEYA</span>
+                  <span className="font-bold text-[11px] leading-none tracking-[0.2em] text-[#6A35FF] mt-0.5 uppercase">STORES</span>
                 </div>
               </div>
               <p className="text-slate-500 font-medium leading-relaxed">

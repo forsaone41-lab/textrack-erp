@@ -20,12 +20,14 @@ export default function StoreLandingV4() {
       {/* Navbar - Exactly like screenshot */}
       <nav className="fixed top-0 w-full bg-white z-50 border-b border-slate-100">
         <div className="max-w-[1200px] mx-auto px-6 h-[80px] flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3">
-            {/* Logo */}
-            <div className={`flex items-center justify-center w-10 h-10 rounded-[10px] ${primaryColor} text-white`}>
-              <span className="font-black text-2xl">B</span>
+          <Link to="/" className="flex items-center gap-2" dir="ltr">
+            <div className="flex items-center justify-center w-10 h-10 rounded-[10px] bg-[#6A35FF] text-white shadow-sm shrink-0">
+              <Store className="w-5 h-5" />
             </div>
-            <span className="font-black text-xl tracking-tight uppercase">BEYA STORE</span>
+            <div className="flex flex-col justify-center text-left">
+              <span className="font-black text-[22px] leading-none tracking-tight text-[#0B1121]">BEYA</span>
+              <span className="font-bold text-[11px] leading-none tracking-[0.2em] text-[#6A35FF] mt-0.5 uppercase">STORES</span>
+            </div>
           </Link>
 
           <div className="flex items-center gap-6">
@@ -185,7 +187,7 @@ export default function StoreLandingV4() {
                <p className="text-slate-500 text-sm mb-8">{isAr ? 'لصناع العلامات التجارية' : 'Pour les créateurs de marques'}</p>
                
                <div className="flex items-baseline gap-2 mb-10">
-                  <span className="text-5xl font-black text-[#151E3F]">{isAnnual ? '239' : '299'}</span>
+                  <span className="text-5xl font-black text-[#151E3F]">{isAnnual ? '159' : '199'}</span>
                   <span className="text-sm font-bold text-slate-500 uppercase">MAD / {isAr ? 'شهر' : 'MOIS'}</span>
                </div>
                
@@ -254,11 +256,14 @@ export default function StoreLandingV4() {
       {/* Footer */}
       <footer className="bg-white pt-16 pb-8 border-t border-slate-100">
         <div className="max-w-[1200px] mx-auto px-6 pt-8 border-t border-slate-100 text-center flex flex-col items-center justify-center gap-4">
-           <Link to="/" className="flex items-center gap-2 mb-2">
-             <div className={`flex items-center justify-center w-6 h-6 rounded-md ${primaryColor} text-white`}>
-               <span className="font-black text-sm">B</span>
+           <Link to="/" className="flex items-center gap-2 mb-2" dir="ltr">
+             <div className="flex items-center justify-center w-10 h-10 rounded-[10px] bg-[#6A35FF] text-white shadow-sm shrink-0">
+               <Store className="w-5 h-5" />
              </div>
-             <span className="font-black text-sm tracking-tight text-slate-900 uppercase">BEYA STORE</span>
+             <div className="flex flex-col justify-center text-left">
+               <span className="font-black text-[22px] leading-none tracking-tight text-[#0B1121]">BEYA</span>
+               <span className="font-bold text-[11px] leading-none tracking-[0.2em] text-[#6A35FF] mt-0.5 uppercase">STORES</span>
+             </div>
            </Link>
            <p className="text-slate-400 font-medium text-sm">
              © {new Date().getFullYear()} BEYA CREATIVE. {isAr ? 'جميع الحقوق محفوظة' : 'Tous droits réservés'}
