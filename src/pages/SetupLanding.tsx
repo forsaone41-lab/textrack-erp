@@ -139,8 +139,53 @@ export default function SetupLanding() {
         </div>
       </main>
 
+      {/* 2.5 Partners Marquee */}
+      <section className="py-12 bg-white overflow-hidden border-b border-slate-100">
+        <style>{`
+          @keyframes marquee {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+          }
+          @keyframes marquee-rtl {
+            0% { transform: translateX(-50%); }
+            100% { transform: translateX(0%); }
+          }
+          .animate-marquee {
+            width: max-content;
+            animation: marquee 12s linear infinite;
+          }
+          [dir="rtl"] .animate-marquee {
+            animation: marquee-rtl 12s linear infinite;
+          }
+        `}</style>
+        
+        <div className="max-w-7xl mx-auto px-6 text-center relative z-10 mb-8">
+          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
+            {isAr ? 'موثوق به من طرف أكثر من 500 علامة تجارية' : 'Fait confiance par plus de 500 marques'}
+          </p>
+        </div>
+        
+        <div className="relative flex overflow-hidden group">
+          {/* Fading Edges */}
+          <div className="absolute top-0 bottom-0 left-0 w-32 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"></div>
+          <div className="absolute top-0 bottom-0 right-0 w-32 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
+          
+          <div className="animate-marquee flex items-center gap-24 md:gap-32 w-max px-12 group-hover:[animation-play-state:paused]">
+            {[1, 2, 3].map((group) => (
+              <React.Fragment key={group}>
+                <span className="font-black text-3xl text-slate-800 blur-[0.5px] opacity-75 mix-blend-multiply select-none tracking-tighter uppercase">FASHLOW</span>
+                <span className="font-extrabold text-2xl text-blue-600 italic blur-[0.5px] opacity-75 mix-blend-multiply select-none tracking-widest uppercase">MODAVION</span>
+                <span className="font-black text-3xl text-amber-500 tracking-tight blur-[0.5px] opacity-75 mix-blend-multiply select-none">BEYA<span className="font-light text-slate-500">CREATIVE</span></span>
+                <span className="font-bold text-3xl text-rose-500 blur-[0.5px] opacity-75 mix-blend-multiply select-none uppercase tracking-widest">STYLEMA</span>
+                <span className="font-black text-3xl text-emerald-500 blur-[0.5px] opacity-75 mix-blend-multiply select-none tracking-tighter">URBAN<span className="font-light text-slate-600">WEAR</span></span>
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* 3. What's Included */}
-      <section className="py-16 bg-white border-y border-slate-100">
+      <section className="py-16 bg-slate-50 border-b border-slate-100">
         <div className="max-w-4xl mx-auto px-6">
           <h2 className="text-3xl font-black text-center mb-12">
             {isAr ? 'شنو داخل فهاد 800 درهم؟' : 'Que comprend ce service ?'}
@@ -168,7 +213,7 @@ export default function SetupLanding() {
       </section>
       
       {/* 4. Themes / Examples Section */}
-      <section id="themes-section" className="py-16 bg-slate-50 border-b border-slate-100">
+      <section id="themes-section" className="py-16 bg-white border-b border-slate-100">
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-black text-slate-900 mb-4">{isAr ? 'نماذج من المتاجر اللي غنصاوبو ليك' : 'Exemples de boutiques'}</h2>
