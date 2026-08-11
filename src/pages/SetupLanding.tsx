@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { ArrowRight, CheckCircle2, PlayCircle, Star, Rocket, Layout, Globe, Smartphone, ShieldCheck, Clock } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ArrowRight, CheckCircle2, PlayCircle, Star, Rocket, Layout, Globe, Smartphone, ShieldCheck, Clock, Eye, X } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { Link, useLocation } from 'react-router-dom';
 import { loadCompanyProfile } from '../types';
@@ -7,6 +7,7 @@ import { loadCompanyProfile } from '../types';
 export default function SetupLanding() {
   const { isAr, toggle } = useLang();
   const company = loadCompanyProfile();
+  const [previewTheme, setPreviewTheme] = useState<{name: string, image: string} | null>(null);
   
   // Facebook Pixel tracking - track PageView specifically for this ad campaign
   const location = useLocation();
@@ -23,6 +24,41 @@ export default function SetupLanding() {
   return (
     <div className={`min-h-screen bg-slate-50 ${isAr ? 'font-arabic' : 'font-sans'}`} dir={isAr ? 'rtl' : 'ltr'}>
       
+      {/* Theme Preview Modal */}
+      {previewTheme && (
+        <div className="fixed inset-0 z-[100] bg-slate-900/90 flex flex-col backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="h-16 bg-white border-b border-slate-200 px-4 md:px-6 flex items-center justify-between shrink-0 shadow-sm" dir="ltr">
+            <button onClick={() => setPreviewTheme(null)} className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg">
+              <X className="w-5 h-5" />
+              <span className="font-bold text-sm hidden sm:block">Close Preview</span>
+            </button>
+            <div className="font-black text-lg text-slate-800 flex items-center gap-2">
+              {previewTheme.name} <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full uppercase tracking-widest hidden sm:inline-block">Live Demo</span>
+            </div>
+            <Link to="/store-signup?plan=ZIRORISK" className="bg-amber-500 hover:bg-amber-600 text-slate-900 px-4 py-2 rounded-lg font-bold text-sm transition-colors shadow-sm flex items-center gap-2">
+              <Rocket className="w-4 h-4 hidden sm:block" />
+              {isAr ? 'استعمل هاد التصميم' : 'Utiliser ce design'}
+            </Link>
+          </div>
+          <div className="flex-1 overflow-y-auto bg-slate-100/50 p-4 md:p-8" dir="ltr">
+            <div className="max-w-4xl mx-auto shadow-2xl rounded-b-xl overflow-hidden ring-1 ring-slate-900/10 bg-white">
+              {/* Fake Browser Header */}
+              <div className="h-10 bg-slate-100 border-b border-slate-200 flex items-center px-4 gap-2 rounded-t-xl sticky top-0 z-10 backdrop-blur-md">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-rose-400" />
+                  <div className="w-3 h-3 rounded-full bg-amber-400" />
+                  <div className="w-3 h-3 rounded-full bg-emerald-400" />
+                </div>
+                <div className="mx-auto bg-white px-4 py-1 rounded-md text-[10px] font-mono text-slate-400 border border-slate-200/60 shadow-sm w-1/2 text-center overflow-hidden text-ellipsis whitespace-nowrap">
+                  demo.beyacreative.com/{previewTheme.name.toLowerCase()}
+                </div>
+              </div>
+              <img src={previewTheme.image} alt={previewTheme.name} className="w-full h-auto block" />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 1. Navbar */}
       <nav className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-slate-200/50">
         <div className="max-w-4xl mx-auto px-6 h-20 flex items-center justify-between">
@@ -86,10 +122,19 @@ export default function SetupLanding() {
               </p>
             </div>
             
-            <Link to="/store-signup?plan=ZIRORISK" className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-xl transition-all shadow-lg hover:shadow-xl hover:bg-slate-800 flex items-center justify-center gap-3">
-              {isAr ? 'احجز متجرك الآن' : 'Réservez votre boutique'}
-              <ArrowRight className={`w-6 h-6 ${isAr ? 'rotate-180' : ''}`} />
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link to="/store-signup?plan=ZIRORISK" className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black text-xl transition-all shadow-lg hover:shadow-xl hover:bg-slate-800 flex items-center justify-center gap-3">
+                {isAr ? 'احجز متجرك الآن' : 'Réservez votre boutique'}
+                <ArrowRight className={`w-6 h-6 ${isAr ? 'rotate-180' : ''}`} />
+              </Link>
+              <button 
+                onClick={() => document.getElementById('themes-section')?.scrollIntoView({ behavior: 'smooth' })}
+                className="w-full sm:w-auto px-6 py-4 bg-slate-100 text-slate-700 rounded-2xl font-bold text-lg hover:bg-slate-200 transition-colors flex items-center justify-center gap-2"
+              >
+                <Eye className="w-5 h-5" />
+                {isAr ? 'شوف أمثلة المتاجر' : 'Voir les modèles'}
+              </button>
+            </div>
           </div>
         </div>
       </main>
@@ -122,7 +167,86 @@ export default function SetupLanding() {
         </div>
       </section>
       
-      {/* 4. Trust / FAQ */}
+      {/* 4. Themes / Examples Section */}
+      <section id="themes-section" className="py-16 bg-slate-50 border-b border-slate-100">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-black text-slate-900 mb-4">{isAr ? 'نماذج من المتاجر اللي غنصاوبو ليك' : 'Exemples de boutiques'}</h2>
+            <p className="text-slate-500 text-lg">{isAr ? 'تصاميم احترافية متجاوبة مع الموبايل ومصممة لرفع المبيعات (Conversion Rate)' : 'Des designs professionnels optimisés pour les conversions'}</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Theme 1 */}
+            <div 
+              onClick={() => setPreviewTheme({ name: 'MODAVION', image: '/images/themes/cosmetics.png' })}
+              className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
+            >
+              <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
+                <img src="/images/themes/cosmetics.png" className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" alt="Theme Modavion" />
+                <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center backdrop-blur-none group-hover:backdrop-blur-[2px]">
+                   <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-xl">
+                      <Eye className="w-5 h-5" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                   </div>
+                </div>
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-xs font-black px-3 py-1.5 rounded-full shadow-sm text-slate-800 uppercase">
+                  MODAVION
+                </div>
+              </div>
+              <div className="p-4 text-center">
+                <h3 className="font-bold text-slate-800 text-lg">MODAVION <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
+              </div>
+            </div>
+            {/* Theme 2 */}
+            <div 
+              onClick={() => setPreviewTheme({ name: 'FASHLOW', image: '/images/themes/fashion.png' })}
+              className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
+            >
+              <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
+                <img src="/images/themes/fashion.png" className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" alt="Theme Fashlow" />
+                <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center backdrop-blur-none group-hover:backdrop-blur-[2px]">
+                   <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-xl">
+                      <Eye className="w-5 h-5" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                   </div>
+                </div>
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-xs font-black px-3 py-1.5 rounded-full shadow-sm text-slate-800 uppercase">
+                  FASHLOW
+                </div>
+              </div>
+              <div className="p-4 text-center">
+                <h3 className="font-bold text-slate-800 text-lg">FASHLOW <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
+              </div>
+            </div>
+            {/* Theme 3 */}
+            <div 
+              onClick={() => setPreviewTheme({ name: 'BEYA CREATIVE', image: '/images/themes/tech.png' })}
+              className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
+            >
+              <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
+                <img src="/images/themes/tech.png" className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" alt="Theme Beya Creative" />
+                <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center backdrop-blur-none group-hover:backdrop-blur-[2px]">
+                   <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-xl">
+                      <Eye className="w-5 h-5" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                   </div>
+                </div>
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-xs font-black px-3 py-1.5 rounded-full shadow-sm text-slate-800 uppercase">
+                  BEYA CREATIVE
+                </div>
+              </div>
+              <div className="p-4 text-center">
+                <h3 className="font-bold text-slate-800 text-lg">BEYA CREATIVE <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-12 text-center">
+             <p className="text-slate-500 font-medium mb-6">{isAr ? '+ عشرات التصاميم الأخرى اللي غتناسب النوع ديال منتجاتك (Niche)' : '+ Des dizaines d\'autres modèles adaptés à votre niche'}</p>
+             <Link to="/store-signup?plan=ZIRORISK" className="inline-flex px-8 py-3 bg-amber-100 text-amber-700 hover:bg-amber-200 rounded-xl font-bold transition-colors">
+               {isAr ? 'عجبوني، بغيت متجر بحالهم' : 'Je veux une boutique comme ça'}
+             </Link>
+          </div>
+        </div>
+      </section>
+      
+      {/* 5. Trust / FAQ */}
       <section className="py-16 bg-slate-900 text-white text-center">
         <div className="max-w-3xl mx-auto px-6">
           <ShieldCheck className="w-16 h-16 text-amber-500 mx-auto mb-6" />
