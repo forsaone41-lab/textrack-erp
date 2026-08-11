@@ -16,12 +16,12 @@ export default function StoreLandingV3() {
       {/* Navbar - Minimal */}
       <nav className="w-full py-6 px-6 md:px-12 flex items-center justify-between border-b border-slate-100">
         <Link to="/" className="flex items-center gap-2" dir="ltr">
-          <div className="flex items-center justify-center w-10 h-10 rounded-[10px] bg-[#6A35FF] text-white shadow-sm shrink-0">
+          <div className="flex items-center justify-center w-10 h-10 rounded-[10px] bg-gradient-to-br from-blue-600 to-emerald-500 text-white shadow-sm shrink-0">
             <Store className="w-5 h-5" />
           </div>
           <div className="flex flex-col justify-center text-left">
             <span className="font-black text-[22px] leading-none tracking-tight text-[#0B1121]">BEYA</span>
-            <span className="font-bold text-[11px] leading-none tracking-[0.2em] text-[#6A35FF] mt-0.5 uppercase">STORES</span>
+            <span className="font-bold text-[11px] leading-none tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 mt-0.5 uppercase">STORES</span>
           </div>
         </Link>
         
@@ -161,7 +161,7 @@ export default function StoreLandingV3() {
       {/* Footer */}
       <footer className="bg-white py-10 border-t border-slate-200 flex flex-col items-center gap-4 text-center text-slate-500 font-medium">
         <Link to="/" className="flex items-center gap-2 mb-2" dir="ltr">
-          <div className="flex items-center justify-center w-10 h-10 rounded-[10px] bg-[#6A35FF] text-white shadow-sm shrink-0">
+          <div className="flex items-center justify-center w-10 h-10 rounded-[10px] bg-gradient-to-br from-blue-600 to-emerald-500 text-white shadow-sm shrink-0">
             <Store className="w-5 h-5" />
           </div>
           <div className="flex flex-col justify-center text-left">
