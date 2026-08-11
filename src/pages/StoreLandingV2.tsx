@@ -137,13 +137,13 @@ export default function StoreLandingV2() {
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-            <Link to="/store-signup" className="group relative w-full sm:w-auto px-10 py-5 bg-white text-black rounded-full font-black text-lg transition-all hover:scale-105 flex items-center justify-center gap-3 overflow-hidden shadow-[0_0_40px_rgba(255,255,255,0.2)]">
+            <a href="#pricing" onClick={(e) => { e.preventDefault(); document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' }); }} className="group relative w-full sm:w-auto px-10 py-5 bg-white text-black rounded-full font-black text-lg transition-all hover:scale-105 flex items-center justify-center gap-3 overflow-hidden shadow-[0_0_40px_rgba(255,255,255,0.2)] cursor-pointer">
               <div className="absolute inset-0 bg-blue-100 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
               <span className="relative z-10">{isAr ? 'أنشئ متجرك الآن' : 'Créer ma boutique'}</span>
               <ArrowRight className={`relative z-10 w-6 h-6 transition-transform group-hover:translate-x-1 ${isAr ? 'rotate-180 group-hover:-translate-x-1' : ''}`} />
-            </Link>
+            </a>
             
-            <a href="#demo" className="w-full sm:w-auto px-10 py-5 border border-white/30 text-white rounded-full font-bold text-lg hover:bg-white/10 transition-all flex items-center justify-center gap-3 backdrop-blur-sm">
+            <a href="#platform" onClick={(e) => { e.preventDefault(); document.getElementById('platform')?.scrollIntoView({ behavior: 'smooth' }); }} className="w-full sm:w-auto px-10 py-5 border border-white/30 text-white rounded-full font-bold text-lg hover:bg-white/10 transition-all flex items-center justify-center gap-3 backdrop-blur-sm cursor-pointer">
               <PlayCircle className="w-6 h-6" />
               {isAr ? 'شاهد كيف تعمل' : 'Voir la démo'}
             </a>
