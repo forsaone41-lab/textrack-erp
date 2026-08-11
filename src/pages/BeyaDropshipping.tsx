@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Package, TrendingUp, Filter, Search, Plus, ExternalLink, ShieldCheck, Zap } from 'lucide-react';
-import { useLang } from '../hooks/useLang';
+import { useLang } from '../contexts/LangContext';
 
 const DROPSHIPPING_PRODUCTS = [
   {
