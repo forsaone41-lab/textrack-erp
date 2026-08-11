@@ -253,11 +253,11 @@ export default function SetupLanding() {
             </div>
             {/* Theme 2 */}
             <div 
-              onClick={() => setPreviewTheme({ name: 'STREETWEAR PRO', image: '/images/themes/fashion.png', url: 'https://bidla.beyacreative.com/' })}
+              onClick={() => setPreviewTheme({ name: 'STREETWEAR PRO', image: '/images/themes/bidla.png', url: 'https://bidla.beyacreative.com/' })}
               className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
             >
               <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
-                <img src="/images/themes/fashion.png" className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" alt="Theme Streetwear Pro" />
+                <img src="/images/themes/bidla.png" className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" alt="Theme Streetwear Pro" />
                 <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center backdrop-blur-none group-hover:backdrop-blur-[2px]">
                    <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-xl">
                       <Eye className="w-5 h-5" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
