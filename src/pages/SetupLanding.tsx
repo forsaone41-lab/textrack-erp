@@ -106,7 +106,7 @@ export default function SetupLanding() {
               { icon: Globe, title: isAr ? 'دومين احترافي (.com)' : 'Nom de domaine (.com)', desc: isAr ? 'نشريو ونربطو ليك دومين باسم علامتك التجارية' : 'Achat et configuration de votre domaine' },
               { icon: Layout, title: isAr ? 'تصميم حصري ومميز' : 'Design exclusif', desc: isAr ? 'متجر متناسق مع ألوانك ومصمم لزيادة المبيعات' : 'Boutique optimisée pour les conversions' },
               { icon: Smartphone, title: isAr ? 'تطبيقات الـ Upsell' : 'Apps de Upsell', desc: isAr ? 'إعداد إضافات تزيد من قيمة الطلب الأوتوماتيكية' : 'Configuration des apps pour augmenter le panier' },
-              { icon: Rocket, title: isAr ? 'ربط أوتوماتيكي مع eGrow' : 'Liaison eGrow', desc: isAr ? 'طلبياتك كتمشي مباشرة لشركات التوصيل' : 'Envoi automatique des commandes aux livreurs' },
+              { icon: ShieldCheck, title: isAr ? 'دعم فني مستمر' : 'Support technique', desc: isAr ? 'فريقنا معاك خطوة بخطوة باش يجاوب على أسئلتك' : 'Notre équipe vous accompagne pour répondre à vos questions' },
             ].map((feature, i) => (
               <div key={i} className="flex gap-4 p-6 bg-slate-50 rounded-2xl border border-slate-100">
                 <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center shrink-0">
