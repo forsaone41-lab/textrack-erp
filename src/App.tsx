@@ -338,47 +338,51 @@ function AppContent() {
       const remote = await syncCompanyProfile();
       setCompany(remote);
 
-      // Do NOT apply Beya Creative branding on tenant live stores
+      // Do NOT apply Beya Creative branding on tenant live stores or special landing pages
       if (isLiveStore) return;
 
+      const isSetupPage = window.location.hash.includes('/setup');
+
       // Dynamic Branding Update
-      const finalIcon = remote.logoAppIcon || "/logo.png";
-      
-      // Update Favicon
-      const icon = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
-      if (icon) icon.href = finalIcon;
-      
-      const appleIcon = document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement;
-      if (appleIcon) appleIcon.href = finalIcon;
+      if (!isSetupPage) {
+        const finalIcon = remote.logoAppIcon || "/logo.png";
+        
+        // Update Favicon
+        const icon = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
+        if (icon) icon.href = finalIcon;
+        
+        const appleIcon = document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement;
+        if (appleIcon) appleIcon.href = finalIcon;
 
-      // Update Manifest (PWA Icon)
-      const existingManifest = document.querySelector("link[rel='manifest']") as HTMLLinkElement;
-      if (existingManifest) {
-        const manifestContent = {
-          name: remote.name || "Beya Creative",
-          short_name: remote.name || "Beya Creative",
-          description: "Syst�me de gestion textile",
-          start_url: "/",
-          display: "standalone",
-          background_color: "#0f172a",
-          theme_color: "#4f46e5",
-          icons: [
-            { src: finalIcon, sizes: "192x192", type: "image/png", purpose: "any maskable" },
-            { src: finalIcon, sizes: "512x512", type: "image/png", purpose: "any maskable" }
-          ]
-        };
-        const stringManifest = JSON.stringify(manifestContent);
-        const blob = new Blob([stringManifest], {type: 'application/json'});
-        const manifestURL = URL.createObjectURL(blob);
-        existingManifest.href = manifestURL;
-      }
+        // Update Manifest (PWA Icon)
+        const existingManifest = document.querySelector("link[rel='manifest']") as HTMLLinkElement;
+        if (existingManifest) {
+          const manifestContent = {
+            name: remote.name || "Beya Creative",
+            short_name: remote.name || "Beya Creative",
+            description: "Système de gestion textile",
+            start_url: "/",
+            display: "standalone",
+            background_color: "#0f172a",
+            theme_color: "#4f46e5",
+            icons: [
+              { src: finalIcon, sizes: "192x192", type: "image/png", purpose: "any maskable" },
+              { src: finalIcon, sizes: "512x512", type: "image/png", purpose: "any maskable" }
+            ]
+          };
+          const stringManifest = JSON.stringify(manifestContent);
+          const blob = new Blob([stringManifest], {type: 'application/json'});
+          const manifestURL = URL.createObjectURL(blob);
+          existingManifest.href = manifestURL;
+        }
 
-      // Update Document Title
-      if (remote.name) {
-        if (window.location.hash === '#/' || window.location.hash === '') {
-          document.title = "BEYA CREATIVE - Excellence en Confection Textile au Maroc";
-        } else {
-          document.title = remote.name;
+        // Update Document Title
+        if (remote.name) {
+          if (window.location.hash === '#/' || window.location.hash === '') {
+            document.title = "BEYA CREATIVE - Excellence en Confection Textile au Maroc";
+          } else {
+            document.title = remote.name;
+          }
         }
       }
     };
