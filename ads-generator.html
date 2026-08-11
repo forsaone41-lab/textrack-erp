@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEYA Store - Ads Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&family=Inter:wght@700;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        .font-arabic { font-family: 'Cairo', sans-serif; }
+        .font-french { font-family: 'Inter', sans-serif; }
+        .ad-container {
+            width: 1080px;
+            height: 1080px;
+            position: relative;
+            background-size: cover;
+            background-position: center;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            margin: 20px auto;
+            border-radius: 20px;
+        }
+        .overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.7) 100%);
+        }
+        .logo-box {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(to bottom right, #3b82f6, #34d399);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: rotate(-12deg);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+        .logo-b {
+            color: white;
+            font-size: 40px;
+            font-weight: 900;
+            transform: rotate(12deg);
+        }
+    </style>
+</head>
+<body class="bg-slate-100 p-8">
+    <div class="max-w-7xl mx-auto text-center mb-8">
+        <h1 class="text-3xl font-bold mb-2">BEYA Store - Ads Generator</h1>
+        <p class="text-slate-600">هادو هما التصاور واجدين بالكتابة مقادة (بالعربية والفرنسية). تقدر تدير ليهم سكرين شوت (Screenshot) وتخدم بيهم ففيسبوك.</p>
+    </div>
+
+    <!-- Ad 1: Arabic -->
+    <div class="flex flex-col items-center mb-16">
+        <div class="ad-container" id="ad1" style="background-image: url('public/ad-bg-1.png');" dir="rtl">
+            <div class="overlay"></div>
+        
+        <!-- Logo -->
+        <div class="absolute top-12 right-12 flex items-center gap-4 z-10" dir="ltr">
+            <div class="logo-box">
+                <span class="logo-b">B</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="font-black text-5xl text-white tracking-tight">BEYA</span>
+                <span class="font-bold text-5xl text-blue-400 tracking-tight">Store</span>
+            </div>
+        </div>
+
+        <!-- Text -->
+        <div class="absolute bottom-16 left-0 right-0 px-16 z-10 text-center font-arabic">
+            <span class="inline-block bg-rose-500 text-white px-6 py-2 rounded-full text-2xl font-bold mb-6">عرض زيرو ريسك 🔥</span>
+            <h2 class="text-[90px] font-black text-white leading-tight mb-4 drop-shadow-xl" style="text-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+                إنشاء متجرك الإلكتروني
+            </h2>
+            <p class="text-[50px] font-bold text-emerald-400 drop-shadow-md">
+                وماتخلص الاشتراك حتى تبيع!
+            </p>
+        </div> <!-- End Text -->
+    </div> <!-- End ad-container -->
+    <button onclick="downloadAd('ad1', 'BEYA_Ad_ZeroRisk.png')" class="mt-6 px-8 py-4 bg-blue-600 text-white font-black text-xl rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95">📥 تحميل الصورة (Download)</button>
+</div> <!-- End flex -->
+
+    <!-- Ad 2: French -->
+    <div class="flex flex-col items-center mb-16">
+        <div class="ad-container" id="ad2" style="background-image: url('public/ad-bg-2.png');">
+            <div class="overlay"></div>
+        
+        <!-- Logo -->
+        <div class="absolute top-12 left-12 flex items-center gap-4 z-10">
+            <div class="logo-box">
+                <span class="logo-b">B</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="font-black text-5xl text-white tracking-tight">BEYA</span>
+                <span class="font-bold text-5xl text-blue-400 tracking-tight">Store</span>
+            </div>
+        </div>
+
+        <!-- Text -->
+        <div class="absolute bottom-16 left-0 right-0 px-16 z-10 text-center font-french">
+            <span class="inline-block bg-blue-600 text-white px-6 py-2 rounded-full text-2xl font-bold mb-6">Lancement Rapide 🚀</span>
+            <h2 class="text-[85px] font-black text-white leading-tight mb-4 drop-shadow-xl" style="text-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+                Créer Votre Boutique
+            </h2>
+            <p class="text-[45px] font-bold text-indigo-300 drop-shadow-md">
+                Design pro. Hébergement inclus. 0% Commission.
+            </p>
+        </div>
+    </div>
+    <button onclick="downloadAd('ad2', 'BEYA_Ad_ProStore.png')" class="mt-6 px-8 py-4 bg-blue-600 text-white font-black text-xl rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95">📥 تحميل الصورة (Download)</button>
+</div>
+
+    <!-- Ad 3: Arabic -->
+    <div class="flex flex-col items-center mb-16">
+        <div class="ad-container" id="ad3" style="background-image: url('public/ad-bg-3.png');" dir="rtl">
+            <div class="overlay"></div>
+        
+        <!-- Logo -->
+        <div class="absolute top-12 right-12 flex items-center gap-4 z-10" dir="ltr">
+            <div class="logo-box">
+                <span class="logo-b">B</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="font-black text-5xl text-white tracking-tight">BEYA</span>
+                <span class="font-bold text-5xl text-blue-400 tracking-tight">Store</span>
+            </div>
+        </div>
+
+        <!-- Text -->
+        <div class="absolute bottom-16 left-0 right-0 px-16 z-10 text-center font-arabic">
+            <span class="inline-block bg-indigo-500 text-white px-6 py-2 rounded-full text-2xl font-bold mb-6">التجارة الإلكترونية بكل سهولة 📦</span>
+            <h2 class="text-[90px] font-black text-white leading-tight mb-4 drop-shadow-xl" style="text-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+                إنشاء متجرك الآن
+            </h2>
+            <p class="text-[50px] font-bold text-amber-400 drop-shadow-md">
+                كل ما تحتاجه للبيع في منصة واحدة!
+            </p>
+        </div>
+    </div>
+    <button onclick="downloadAd('ad3', 'BEYA_Ad_EcommerceFlow.png')" class="mt-6 px-8 py-4 bg-blue-600 text-white font-black text-xl rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95">📥 تحميل الصورة (Download)</button>
+</div>
+
+    <!-- Ad 4: Arabic (COD / E-commerce) -->
+    <div class="flex flex-col items-center mb-16">
+        <div class="ad-container" id="ad4" style="background-image: url('public/ad-bg-4.png');" dir="rtl">
+            <div class="overlay"></div>
+        
+        <!-- Logo -->
+        <div class="absolute top-12 right-12 flex items-center gap-4 z-10" dir="ltr">
+            <div class="logo-box">
+                <span class="logo-b">B</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="font-black text-5xl text-white tracking-tight">BEYA</span>
+                <span class="font-bold text-5xl text-blue-400 tracking-tight">Store</span>
+            </div>
+        </div>
+
+        <!-- Text -->
+        <div class="absolute bottom-16 left-0 right-0 px-16 z-10 text-center font-arabic">
+            <span class="inline-block bg-emerald-500 text-white px-6 py-2 rounded-full text-2xl font-bold mb-6">الدفع عند الاستلام (COD) 💸</span>
+            <h2 class="text-[90px] font-black text-white leading-tight mb-4 drop-shadow-xl" style="text-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+                بيع منتجاتك دابا
+            </h2>
+            <p class="text-[50px] font-bold text-emerald-400 drop-shadow-md">
+                متجر جاهز للعمل بـ 699 درهم فقط!
+            </p>
+        </div>
+    </div>
+    <button onclick="downloadAd('ad4', 'BEYA_Ad_COD.png')" class="mt-6 px-8 py-4 bg-blue-600 text-white font-black text-xl rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95">📥 تحميل الصورة (Download)</button>
+</div>
+
+    <!-- Ad 5: Arabic (Easy Setup) -->
+    <div class="flex flex-col items-center mb-16">
+        <div class="ad-container" id="ad5" style="background-image: url('public/ad-bg-5.png');" dir="rtl">
+            <div class="overlay"></div>
+        
+        <!-- Logo -->
+        <div class="absolute top-12 right-12 flex items-center gap-4 z-10" dir="ltr">
+            <div class="logo-box">
+                <span class="logo-b">B</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="font-black text-5xl text-white tracking-tight">BEYA</span>
+                <span class="font-bold text-5xl text-blue-400 tracking-tight">Store</span>
+            </div>
+        </div>
+
+        <!-- Text -->
+        <div class="absolute bottom-16 left-0 right-0 px-16 z-10 text-center font-arabic">
+            <span class="inline-block bg-blue-600 text-white px-6 py-2 rounded-full text-2xl font-bold mb-6">منصة عصرية وسريعة ⚡</span>
+            <h2 class="text-[85px] font-black text-white leading-tight mb-4 drop-shadow-xl" style="text-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+                صاوب متجرك بسهولة
+            </h2>
+            <p class="text-[45px] font-bold text-indigo-300 drop-shadow-md">
+                تصميم احترافي يجذب الكليان ويزيد المبيعات.
+            </p>
+        </div>
+    </div>
+    <button onclick="downloadAd('ad5', 'BEYA_Ad_EasySetup.png')" class="mt-6 px-8 py-4 bg-blue-600 text-white font-black text-xl rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95">📥 تحميل الصورة (Download)</button>
+</div>
+
+    <script>
+        function downloadAd(adId, fileName) {
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'جاري التحميل... ⏳';
+            
+            const element = document.getElementById(adId);
+            html2canvas(element, { scale: 1, useCORS: true, allowTaint: true }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = fileName;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                btn.innerHTML = originalText;
+            }).catch(err => {
+                alert('وقع مشكل أثناء التحميل. جرب تاخد سكرين شوت (Screenshot) للصورة عوض التحميل.');
+                btn.innerHTML = originalText;
+            });
+        }
+    </script>
+</body>
+</html>

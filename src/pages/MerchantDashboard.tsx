@@ -613,7 +613,7 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
                         <li className="flex items-center gap-2 text-sm font-medium text-slate-700"><div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center"><div className="w-2 h-2 bg-emerald-500 rounded-full"></div></div> {t('Produits illimités', 'Unlimited Products', 'منتجات غير محدودة')}</li>
                         <li className="flex items-center gap-2 text-sm font-medium text-slate-700"><div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center"><div className="w-2 h-2 bg-emerald-500 rounded-full"></div></div> {t('Support standard', 'Standard Support', 'دعم فني قياسي')}</li>
                      </ul>
-                     <button onClick={() => window.open(`https://wa.me/212684252575?text=Bonjour, je souhaite activer le plan PRO pour ma boutique ${currentUser?.nom}.`, '_blank')} className="w-full py-3.5 bg-slate-900 text-white rounded-xl font-bold text-center hover:bg-indigo-600 transition-colors block">
+                     <button onClick={() => window.open(`https://wa.me/${(company.phone || '212684252575').replace(/\D/g, '')}?text=Bonjour, je souhaite activer le plan PRO pour ma boutique ${currentUser?.nom}.`, '_blank')} className="w-full py-3.5 bg-slate-900 text-white rounded-xl font-bold text-center hover:bg-indigo-600 transition-colors block">
                         {t('Choisir le plan PRO', 'Choose PRO plan', 'اختيار باقة PRO')}
                      </button>
                   </div>
@@ -633,7 +633,7 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
                         <li className="flex items-center gap-2 text-sm font-medium text-slate-700"><div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center"><div className="w-2 h-2 bg-amber-500 rounded-full"></div></div> {t('Priorité de production', 'Production priority', 'أولوية في الإنتاج')}</li>
                         <li className="flex items-center gap-2 text-sm font-medium text-slate-700"><div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center"><div className="w-2 h-2 bg-amber-500 rounded-full"></div></div> {t('Account manager dédié', 'Dedicated account manager', 'مدير حساب مخصص')}</li>
                      </ul>
-                     <button onClick={() => window.open(`https://wa.me/212684252575?text=Bonjour, je souhaite activer le plan PREMIUM pour ma boutique ${currentUser?.nom}.`, '_blank')} className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold text-center hover:opacity-90 transition-opacity shadow-md shadow-amber-500/25 block">
+                     <button onClick={() => window.open(`https://wa.me/${(company.phone || '212684252575').replace(/\D/g, '')}?text=Bonjour, je souhaite activer le plan PREMIUM pour ma boutique ${currentUser?.nom}.`, '_blank')} className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold text-center hover:opacity-90 transition-opacity shadow-md shadow-amber-500/25 block">
                         {t('Choisir le plan PREMIUM', 'Choose PREMIUM plan', 'اختيار باقة PREMIUM')}
                      </button>
                   </div>

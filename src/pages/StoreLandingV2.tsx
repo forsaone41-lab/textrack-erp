@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, CheckCircle2, MonitorSmartphone, Zap, ShieldCheck, LayoutTemplate, BarChart3, Users, Box, PlayCircle, ChevronRight, Check, Sun, Moon } from 'lucide-react';
+import { ArrowRight, CheckCircle2, MonitorSmartphone, Zap, ShieldCheck, LayoutTemplate, BarChart3, Users, Box, PlayCircle, ChevronRight, Check, Sun, Moon, Store } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { Link } from 'react-router-dom';
+import { PricingSection } from '../components/PricingSection';
 
 export default function StoreLandingV2() {
   const { isAr, toggle } = useLang();
@@ -247,67 +248,7 @@ export default function StoreLandingV2() {
       </section>
 
       {/* Clean Pricing Section */}
-      <section id="pricing" className={`py-32 relative transition-colors duration-500 ${isDark ? 'bg-slate-900' : 'bg-slate-100'}`}>
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="text-center max-w-3xl mx-auto mb-20">
-            <h2 className="text-5xl md:text-7xl font-black mb-6">{isAr ? 'استثمار ذكي' : 'Investissement intelligent'}</h2>
-            <p className={`text-2xl ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{isAr ? 'أثمنة شفافة. لا توجد رسوم خفية. عمولة 0%.' : 'Tarifs transparents. Zéro frais cachés. 0% de commission.'}</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-10 max-w-5xl mx-auto">
-            {/* Standard PRO */}
-            <div className={`rounded-[2rem] p-10 transition-all border ${isDark ? 'bg-black border-slate-800 hover:border-blue-500/50' : 'bg-white border-slate-200 shadow-xl hover:shadow-2xl hover:border-blue-400'}`}>
-              <h3 className={`text-2xl font-bold mb-2 uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Standard PRO</h3>
-              <div className={`flex items-baseline gap-2 mb-8 pb-8 border-b ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
-                <span className="text-6xl font-black">199</span>
-                <span className={`text-xl font-bold uppercase ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>MAD / {isAr ? 'شهر' : 'mois'}</span>
-              </div>
-              <ul className="space-y-6 mb-12">
-                {[
-                  isAr ? 'متجر إلكتروني احترافي' : 'Boutique professionnelle',
-                  isAr ? 'منتجات غير محدودة' : 'Produits illimités',
-                  isAr ? 'ربط الدومين الخاص بك' : 'Domaine personnalisé',
-                  isAr ? '0% عمولة مبيعات' : '0% commission',
-                ].map((item, i) => (
-                  <li key={i} className={`flex items-center gap-4 text-lg font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                    <Check className="w-6 h-6 text-blue-500 shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link to="/store-signup?plan=PRO" className={`block w-full py-5 text-center rounded-xl border-2 font-bold text-lg transition-all ${isDark ? 'border-white/20 hover:bg-white hover:text-black' : 'border-slate-200 hover:border-black hover:bg-black hover:text-white'}`}>
-                {isAr ? 'ابدأ الآن' : 'Démarrer'}
-              </Link>
-            </div>
-
-            {/* ZIRORISK - REMOVED BADGE AND TOP BORDER AS REQUESTED */}
-            <div className={`rounded-[2rem] p-10 relative transform md:-translate-y-4 border transition-all ${isDark ? 'bg-gradient-to-b from-blue-900/40 to-black border-blue-500 shadow-[0_0_50px_rgba(59,130,246,0.15)]' : 'bg-gradient-to-b from-blue-50 to-white border-blue-400 shadow-[0_20px_60px_rgba(59,130,246,0.15)]'}`}>
-              
-              <h3 className="text-2xl font-bold text-blue-500 mb-2 uppercase tracking-widest">Zirorisk</h3>
-              <div className={`flex items-baseline gap-2 mb-8 pb-8 border-b ${isDark ? 'border-white/10' : 'border-blue-100'}`}>
-                <span className="text-6xl font-black">699</span>
-                <span className={`text-xl font-bold uppercase ${isDark ? 'text-slate-500' : 'text-blue-400'}`}>MAD / {isAr ? 'مرة واحدة' : 'Une fois'}</span>
-              </div>
-              <ul className="space-y-6 mb-12">
-                {[
-                  isAr ? 'تصميم المتجر بالكامل' : 'Création complète de boutique',
-                  isAr ? 'لا تدفع الاشتراك (199) حتى تبيع' : 'Payez l\'abonnement après 1ère vente',
-                  isAr ? 'دومين احترافي (.com)' : 'Domaine PRO (.com)',
-                  isAr ? 'ربط آلي مع eGrow' : 'Liaison auto eGrow',
-                ].map((item, i) => (
-                  <li key={i} className={`flex items-center gap-4 text-lg font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>
-                    <Check className="w-6 h-6 text-emerald-500 shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link to="/store-signup?plan=ZIRORISK" className="block w-full py-5 text-center rounded-xl bg-blue-600 text-white font-bold text-lg hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/25 animate-float">
-                {isAr ? 'احجز متجرك الآن' : 'Réserver maintenant'}
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      <PricingSection bgClass={isDark ? 'bg-slate-900' : 'bg-slate-100'} titleClass={isDark ? 'text-white' : 'text-slate-900'} />
 
       {/* Footer */}
       <footer className={`pt-20 pb-10 border-t text-center transition-colors duration-500 ${isDark ? 'bg-black border-white/10' : 'bg-slate-50 border-slate-200'}`}>

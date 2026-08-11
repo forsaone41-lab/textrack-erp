@@ -2,15 +2,12 @@ import React, { useState } from 'react';
 import { ArrowRight, CheckCircle2, MonitorSmartphone, Zap, ShieldCheck, Globe, LayoutTemplate, BarChart3, TrendingUp, Users, Box, Star, PlayCircle, Sparkles, Store } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { Link } from 'react-router-dom';
+import { PricingSection } from '../components/PricingSection';
 import { loadCompanyProfile } from '../types';
 
 export default function StoreLanding() {
   const { isAr, toggle } = useLang();
-  const [isYearly, setIsYearly] = useState(false);
   const company = loadCompanyProfile();
-  const proPrice = '199';
-  const premiumPrice = company.storePremiumPrice || '499';
-  
   const whatsappUrl = `https://wa.me/${company.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
     isAr ? 'مرحباً BEYA CREATIVE، أريد الاستفسار عن خدمة تصميم وبناء متجر إلكتروني احترافي.' : 'Bonjour BEYA CREATIVE, je suis intéressé par la création d\'une boutique en ligne professionnelle.'
   )}`;
@@ -265,153 +262,8 @@ export default function StoreLanding() {
         </div>
       </section>
 
-      {/* 6. Pricing Section (Imported & Restyled from previous) */}
-      <section className="py-32 bg-slate-50 relative" id="pricing">
-        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
-        
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-4xl md:text-6xl font-black text-slate-900 mb-6 tracking-tight">
-              {isAr ? 'خطط أسعار واضحة' : 'Des tarifs transparents'}
-            </h2>
-            <p className="text-xl text-slate-600">
-              {isAr 
-                ? 'اختر الخطة التي تناسبك وابدأ البيع اليوم. بدون رسوم خفية.'
-                : 'Choisissez le plan qui vous convient et commencez à vendre aujourd\'hui. Sans frais cachés.'}
-            </p>
-          </div>
-          
-          {/* Yearly Toggle */}
-          <div className="flex justify-center items-center gap-4 mb-16">
-            <span className={`text-base font-bold ${!isYearly ? 'text-slate-900' : 'text-slate-500'}`}>{isAr ? 'دفع شهري' : 'Mensuel'}</span>
-            <button 
-              onClick={() => setIsYearly(!isYearly)} 
-              className="w-20 h-10 bg-slate-200 rounded-full p-1 relative transition-colors focus:outline-none hover:bg-slate-300"
-            >
-              <div className={`w-8 h-8 bg-slate-900 rounded-full shadow-lg transition-transform duration-300 ${isYearly ? (isAr ? '-translate-x-10' : 'translate-x-10') : 'translate-x-0'}`} />
-            </button>
-            <span className={`text-base font-bold flex items-center gap-2 ${isYearly ? 'text-slate-900' : 'text-slate-500'}`}>
-              {isAr ? 'دفع سنوي' : 'Annuel'}
-              <span className="text-[10px] bg-emerald-100 text-emerald-700 font-black px-2 py-1 rounded-full uppercase tracking-widest shadow-sm">{isAr ? '-20% توفير' : '-20%'}</span>
-            </span>
-          </div>
-
-          <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-8 max-w-6xl mx-auto items-center">
-            
-            {/* PRO Plan */}
-            <div className="bg-white rounded-[2rem] p-8 border border-slate-200 hover:border-slate-300 transition-all hover:shadow-xl relative flex flex-col h-full">
-              <h3 className="text-2xl font-black text-slate-900 mb-2 uppercase tracking-tight">PRO</h3>
-              <p className="text-slate-500 mb-8 font-medium">{isAr ? 'للمبتدئين في التجارة الإلكترونية' : 'Création autonome'}</p>
-              
-              <div className="mb-8 flex flex-col pb-8 border-b border-slate-100">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xl font-bold text-slate-400 line-through decoration-2">{isYearly ? '2,990' : '299'}</span>
-                  <span className="text-[10px] font-black text-rose-600 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded-full uppercase tracking-wider">{isAr ? 'خصم' : 'PROMO'}</span>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-6xl font-black text-slate-900 tracking-tighter">{isYearly ? (Number(proPrice) * 10).toLocaleString() : proPrice}</span>
-                  <span className="text-slate-500 font-bold uppercase tracking-widest text-sm">MAD/{isYearly ? (isAr ? 'سنة' : 'an') : (isAr ? 'شهر' : 'mois')}</span>
-                </div>
-              </div>
-              
-              <ul className="space-y-5 mb-10 flex-1">
-                {[
-                  isAr ? 'متجر إلكتروني واحد' : '1 Boutique en ligne',
-                  isAr ? 'منتجات غير محدودة و0% عمولة' : 'Produits illimités & 0% commision',
-                  isAr ? 'استضافة مجانية وسريعة' : 'Hébergement rapide et gratuit',
-                  isAr ? 'تطبيقات لزيادة المبيعات' : 'Apps de conversion (Upsell)',
-                  isAr ? 'دعم فني قياسي' : 'Support standard',
-                ].map((f, i) => (
-                  <li key={i} className="flex items-start gap-4 text-slate-700 font-bold">
-                    <CheckCircle2 className="w-6 h-6 text-slate-300 shrink-0" />
-                    <span>{f}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link to="/store-signup?plan=PRO" className="block w-full py-5 text-center rounded-2xl font-black text-lg bg-slate-100 text-slate-900 hover:bg-slate-200 transition-all">
-                {isAr ? 'ابدأ الآن' : 'Créer ma boutique'}
-              </Link>
-            </div>
-
-            {/* ZIRORISK Plan (Highlighted) */}
-            <div className="bg-slate-900 text-white rounded-[2.5rem] p-10 border border-slate-800 shadow-[0_30px_60px_rgba(15,23,42,0.3)] relative flex flex-col h-[105%] z-10 transform lg:-translate-y-4">
-              <div className={`absolute top-8 ${isAr ? 'left-8' : 'right-8'}`}>
-                <span className="bg-gradient-to-r from-blue-500 to-emerald-400 text-white text-[11px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg">
-                  {isAr ? 'الأكثر مبيعاً' : 'Le plus populaire'}
-                </span>
-              </div>
-              
-              <h3 className="text-3xl font-black text-white mb-2 uppercase tracking-tight">Zirorisk</h3>
-              <p className="text-slate-400 mb-8 font-medium">{isAr ? 'حنا نصاوبو المتجر، نتا بيع' : 'Clé en main (Recommandé)'}</p>
-              
-              <div className="mb-8 flex flex-col pb-8 border-b border-slate-800">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xl font-bold text-slate-500 line-through decoration-2">{isYearly ? '8,388' : '1,499'}</span>
-                  <span className="text-[10px] font-black text-rose-400 bg-rose-400/10 border border-rose-400/20 px-2 py-0.5 rounded-full uppercase tracking-wider">{isAr ? 'عرض' : 'PROMO'}</span>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-6xl font-black text-white tracking-tighter">{isYearly ? '6,990' : '699'}</span>
-                  <span className="text-slate-400 font-bold uppercase tracking-widest text-sm">MAD/{isYearly ? (isAr ? 'سنة' : 'an') : (isAr ? 'مرة واحدة' : 'Une fois')}</span>
-                </div>
-              </div>
-              
-              <ul className="space-y-5 mb-10 flex-1">
-                {[
-                  isAr ? 'تصميم المتجر + دومين احترافي (.com)' : 'Création + Domaine PRO',
-                  isAr ? `الاشتراك (${isYearly ? '1,990' : '199'}) يبدأ بعد أول مبيعة` : `Abonnement (${isYearly ? '1,990' : '199'}) après la 1ère vente`,
-                  isAr ? 'ربط مباشر مع منصة eGrow' : 'Liaison directe eGrow',
-                  isAr ? 'منتجات غير محدودة و0% عمولة' : 'Produits illimités & 0% commision',
-                  isAr ? 'دعم فني استثنائي (VIP)' : 'Support VIP',
-                ].map((f, i) => (
-                  <li key={i} className="flex items-start gap-4 text-slate-200 font-bold">
-                    <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0" />
-                    <span>{f}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link to="/store-signup?plan=ZIRORISK" className="block w-full py-5 text-center rounded-2xl font-black text-lg bg-white text-slate-900 hover:bg-slate-100 transition-all shadow-xl">
-                {isAr ? 'احجز متجرك الآن' : 'Réserver ma boutique'}
-              </Link>
-            </div>
-            
-            {/* PREMIUM Plan */}
-            <div className="bg-white rounded-[2rem] p-8 border border-slate-200 hover:border-slate-300 transition-all hover:shadow-xl relative flex flex-col h-full">
-              <h3 className="text-2xl font-black text-slate-900 mb-2 uppercase tracking-tight">PREMIUM</h3>
-              <p className="text-slate-500 mb-8 font-medium">{isAr ? 'للشركات والعلامات الكبرى' : 'Pour les multi-marques'}</p>
-              
-              <div className="mb-8 flex flex-col pb-8 border-b border-slate-100">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xl font-bold text-slate-400 line-through decoration-2">{isYearly ? '7,990' : '799'}</span>
-                  <span className="text-[10px] font-black text-rose-600 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded-full uppercase tracking-wider">{isAr ? 'خصم' : 'PROMO'}</span>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-6xl font-black text-slate-900 tracking-tighter">{isYearly ? (Number(premiumPrice) * 10).toLocaleString() : premiumPrice}</span>
-                  <span className="text-slate-500 font-bold uppercase tracking-widest text-sm">MAD/{isYearly ? (isAr ? 'سنة' : 'an') : (isAr ? 'شهر' : 'mois')}</span>
-                </div>
-              </div>
-              
-              <ul className="space-y-5 mb-10 flex-1">
-                {[
-                  isAr ? 'حتى 5 متاجر إلكترونية' : 'Jusqu\'à 5 Boutiques',
-                  isAr ? '0% عمولة على المبيعات' : '0% de frais de transaction',
-                  isAr ? 'أولوية في التصنيع والشحن' : 'Priorité de confection',
-                  isAr ? 'مدير حساب شخصي' : 'Account manager dédié',
-                  isAr ? 'إضافات متقدمة مجانية' : 'Extensions premium gratuites',
-                ].map((f, i) => (
-                  <li key={i} className="flex items-start gap-4 text-slate-700 font-bold">
-                    <CheckCircle2 className="w-6 h-6 text-blue-600 shrink-0" />
-                    <span>{f}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link to="/store-signup?plan=PREMIUM" className="block w-full py-5 text-center rounded-2xl font-black text-lg bg-slate-100 text-slate-900 hover:bg-slate-200 transition-all">
-                {isAr ? 'تواصل معنا' : 'S\'abonner maintenant'}
-              </Link>
-            </div>
-
-          </div>
-        </div>
-      </section>
+      {/* 6. Pricing Section (Imported from component) */}
+      <PricingSection />
 
       {/* 7. Final CTA */}
       <section className="py-24 bg-gradient-to-br from-blue-600 to-emerald-500 text-white relative overflow-hidden">

@@ -71,8 +71,8 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
             role: 'merchant',
             email: data.user.email || email
           };
-          if (selectedPlan === 'PREMIUM') {
-            // PREMIUM is a paid plan, not a free trial: collect payment before handing over the dashboard.
+          if (selectedPlan === 'PREMIUM' || selectedPlan === 'ZIRORISK') {
+            // Paid plans require payment confirmation via WhatsApp before full onboarding
             setPendingUser(userObj);
           } else {
             if (onLogin) onLogin(userObj);
@@ -126,10 +126,14 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
   };
 
   if (pendingUser) {
+    const isZirorisk = selectedPlan === 'ZIRORISK';
+    const planName = isZirorisk ? 'ZIRORISK (Setup)' : 'PREMIUM';
+    const planPriceText = isZirorisk ? '800' : premiumPrice;
+
     const whatsappUrl = `https://wa.me/${(company.phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(
       isAr
-        ? `مرحباً، أنشأت حسابي (${pendingUser.email}) وأريد تفعيل باقة PREMIUM (${premiumPrice} درهم/شهر).`
-        : `Bonjour, j'ai créé mon compte (${pendingUser.email}) et je souhaite activer le plan PREMIUM (${premiumPrice} MAD/mois).`
+        ? `مرحباً، أنشأت حسابي (${pendingUser.email}) وأريد تفعيل باقة ${planName} (${planPriceText} درهم).`
+        : `Bonjour, j'ai créé mon compte (${pendingUser.email}) et je souhaite activer le plan ${planName} (${planPriceText} MAD).`
     )}`;
 
     return (
@@ -144,7 +148,9 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
                 {isAr ? 'خطوة واحدة قبل التفعيل' : 'Une dernière étape avant l\'activation'}
               </h1>
               <p className="text-slate-400 text-sm">
-                {isAr ? `تم إنشاء حسابك بنجاح. باقة PREMIUM هي باقة مدفوعة (${premiumPrice} درهم/شهر).` : `Votre compte a été créé. PREMIUM est un plan payant (${premiumPrice} MAD/mois).`}
+                {isAr 
+                  ? `تم إنشاء حسابك بنجاح. باقة ${planName} تتطلب تأكيد الدفع (${planPriceText} درهم).` 
+                  : `Votre compte a été créé. Le plan ${planName} nécessite une confirmation de paiement (${planPriceText} MAD).`}
               </p>
             </div>
 

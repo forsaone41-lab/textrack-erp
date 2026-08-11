@@ -1,4 +1,4 @@
-// @ts-nocheck
+ï»¿// @ts-nocheck
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -177,7 +177,7 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
         const company = loadCompanyProfile();
         const msg = adminIsAr
           ? `??????? ???? ????? ????? "${storeName || config.storeName || ''}" ??? ???? Beya Designer (????? ?????? ??????? ?????????).`
-          : `Bonjour, je souhaite mettre à niveau ma boutique "${storeName || config.storeName || ''}" pour débloquer Beya Designer (génération de logo IA).`;
+          : `Bonjour, je souhaite mettre Ã  niveau ma boutique "${storeName || config.storeName || ''}" pour dÃ©bloquer Beya Designer (gÃ©nÃ©ration de logo IA).`;
         window.open(`https://wa.me/${(company.phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
       }
     };
@@ -210,7 +210,7 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
      setActiveTabState(tab);
   };
     const [showTopBar, setShowTopBar] = useState(config.showTopBar ?? false);
-  const [topBarText, setTopBarText] = useState(config.topBarText || "LIVRAISON GRATUITE DÈS 799 DH D'ACHATS");
+  const [topBarText, setTopBarText] = useState(config.topBarText || "LIVRAISON GRATUITE DÃˆS 799 DH D'ACHATS");
   const [topBarBgColor, setTopBarBgColor] = useState(config.topBarBgColor || '#f1f5f9');
   const [topBarTextColor, setTopBarTextColor] = useState(config.topBarTextColor || '#0f172a');
   const [topBarPosition, setTopBarPosition] = useState(config.topBarPosition || 'top');
@@ -236,8 +236,8 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
   const [orderStatusFilter, setOrderStatusFilter] = useState<'all' | 'confirmed' | 'refused'>('all');
   const [ordersTimeFilter, setOrdersTimeFilter] = useState<'1h' | 'today' | '7d' | '30d' | '1y' | 'all'>('all');
   const [selectedStoreFilter, setSelectedStoreFilter] = useState<string>('all');
-  const CONFIRMED_STATUSES = ['Confirmé', 'Confirmée', 'Validée', 'Livrée', '????', '?? ???????'];
-  const REFUSED_STATUSES = ['Refusé', 'Refusée', 'Annulée', 'Retour', '?????', '????'];
+  const CONFIRMED_STATUSES = ['ConfirmÃ©', 'ConfirmÃ©e', 'ValidÃ©e', 'LivrÃ©e', '????', '?? ???????'];
+  const REFUSED_STATUSES = ['RefusÃ©', 'RefusÃ©e', 'AnnulÃ©e', 'Retour', '?????', '????'];
 
   const isWithinTimeFilter = (timestamp?: number) => {
     if (!timestamp || ordersTimeFilter === 'all') return true;
@@ -270,9 +270,9 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
     const nowMs = Date.now();
     return [
       { id: '#1042', customer: 'Youssef El Amrani', amount: '850.00 MAD', status: 'Nouveau', statusColor: 'bg-indigo-100 text-indigo-700', date: 'Il y a 10 min', timestamp: nowMs - 10 * 60 * 1000, storeName: config.storeName || 'BEYA STORE', items: '2 articles', products: [{ name: 'Premium Hoodie', photo: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop', qty: 1, price: '450.00 MAD', options: 'Taille: L, Couleur: Noir' }, { name: 'Cargo Pants', photo: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop', qty: 1, price: '400.00 MAD', options: 'Taille: M, Couleur: Kaki' }] },
-      { id: '#1041', customer: 'Sara Bennani', amount: '450.00 MAD', status: 'Confirmé', statusColor: 'bg-emerald-100 text-emerald-700', date: 'Il y a 1h', timestamp: nowMs - 45 * 60 * 1000, storeName: config.storeName || 'BEYA STORE', items: '1 article', products: [{ name: 'Essential T-Shirt', photo: 'https://images.unsplash.com/photo-1489987707023-afc7f93c6508?q=80&w=800&auto=format&fit=crop', qty: 1, price: '450.00 MAD', options: 'Taille: S, Couleur: Blanc' }] },
+      { id: '#1041', customer: 'Sara Bennani', amount: '450.00 MAD', status: 'ConfirmÃ©', statusColor: 'bg-emerald-100 text-emerald-700', date: 'Il y a 1h', timestamp: nowMs - 45 * 60 * 1000, storeName: config.storeName || 'BEYA STORE', items: '1 article', products: [{ name: 'Essential T-Shirt', photo: 'https://images.unsplash.com/photo-1489987707023-afc7f93c6508?q=80&w=800&auto=format&fit=crop', qty: 1, price: '450.00 MAD', options: 'Taille: S, Couleur: Blanc' }] },
       { id: '#1040', customer: 'Karim Tazi', amount: '1200.00 MAD', status: 'En cours', statusColor: 'bg-amber-100 text-amber-700', date: 'Hier', timestamp: nowMs - 14 * 3600 * 1000, storeName: config.storeName || 'BEYA STORE', items: '3 articles', products: [{ name: 'Classic Sneakers', photo: 'https://images.unsplash.com/photo-1589465885857-44edb59bbff2?q=80&w=800&auto=format&fit=crop', qty: 2, price: '400.00 MAD', options: 'Pointure: 42, Couleur: Blanc' }, { name: 'Cargo Pants', photo: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop', qty: 1, price: '400.00 MAD', options: 'Taille: L, Couleur: Noir' }] },
-      { id: '#1039', customer: 'Maha Alami', amount: '350.00 MAD', status: 'Refusé', statusColor: 'bg-rose-100 text-rose-700', date: 'Hier', timestamp: nowMs - 38 * 3600 * 1000, storeName: config.storeName || 'BEYA STORE', items: '1 article', products: [{ name: 'Summer Dress', photo: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=800&auto=format&fit=crop', qty: 1, price: '350.00 MAD', options: 'Taille: M, Couleur: Rouge' }] }
+      { id: '#1039', customer: 'Maha Alami', amount: '350.00 MAD', status: 'RefusÃ©', statusColor: 'bg-rose-100 text-rose-700', date: 'Hier', timestamp: nowMs - 38 * 3600 * 1000, storeName: config.storeName || 'BEYA STORE', items: '1 article', products: [{ name: 'Summer Dress', photo: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=800&auto=format&fit=crop', qty: 1, price: '350.00 MAD', options: 'Taille: M, Couleur: Rouge' }] }
     ];
   });
 
@@ -326,8 +326,8 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
           if (data && !error && data.length > 0) {
             const mappedOrders = data.map(cmd => {
                let statusColor = 'bg-slate-100 text-slate-700';
-               if (['Confirmé', 'Confirmée', 'Validée', 'Livrée', '????', '?? ???????'].includes(cmd.statut)) statusColor = 'bg-emerald-100 text-emerald-700';
-               if (['Refusé', 'Refusée', 'Annulée', 'Retour', '?????', '????'].includes(cmd.statut)) statusColor = 'bg-rose-100 text-rose-700';
+               if (['ConfirmÃ©', 'ConfirmÃ©e', 'ValidÃ©e', 'LivrÃ©e', '????', '?? ???????'].includes(cmd.statut)) statusColor = 'bg-emerald-100 text-emerald-700';
+               if (['RefusÃ©', 'RefusÃ©e', 'AnnulÃ©e', 'Retour', '?????', '????'].includes(cmd.statut)) statusColor = 'bg-rose-100 text-rose-700';
                if (['En attente', 'Nouveau'].includes(cmd.statut)) statusColor = 'bg-amber-100 text-amber-700';
                
                const qtyMatch = cmd.quantite ? parseInt(cmd.quantite.toString()) : 1;
@@ -370,7 +370,7 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
                    price: `${price.toFixed(2)} MAD`,
                    options: `Couleurs: ${cmd.couleurs} - Tailles: ${cmd.tailles}`
                  }],
-                 deleted: cmd.statut === 'Annulée'
+                 deleted: cmd.statut === 'AnnulÃ©e'
                };
             });
             
@@ -416,7 +416,7 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
 
   const persistOrderDeleted = async (id: string) => {
     if (isRealOrderId(id)) {
-      await supabase.from('commandes').update({ statut: 'Annulée' }).eq('id', id);
+      await supabase.from('commandes').update({ statut: 'AnnulÃ©e' }).eq('id', id);
     }
   };
   const persistOrderRestored = async (id: string) => {
@@ -482,14 +482,14 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
   const tr = (t: string) => {
      const dict: Record<string, { fr: string; en: string; ar: string }> = {
         'New Collection': { en: 'New Collection', fr: 'Nouvelle Collection', ar: '?????? ?????' },
-        'Discover our latest premium quality garments.': { en: 'Discover our latest premium quality garments.', fr: 'Découvrez nos dernières pièces de qualité premium.', ar: '????? ???? ????????? ??? ?????? ???????.' },
+        'Discover our latest premium quality garments.': { en: 'Discover our latest premium quality garments.', fr: 'DÃ©couvrez nos derniÃ¨res piÃ¨ces de qualitÃ© premium.', ar: '????? ???? ????????? ??? ?????? ???????.' },
         'Shop Now': { en: 'Shop Now', fr: 'Achetez maintenant', ar: '???? ????' },
         'Trending Now': { en: 'Trending Now', fr: 'Tendances', ar: '?????? ??????' },
         'All Products': { en: 'All Products', fr: 'Tous les produits', ar: '???? ????????' },
         'Home': { en: 'Home', fr: 'Accueil', ar: '????????' },
         'Collections': { en: 'Collections', fr: 'Collections', ar: '?????????' },
-        'About': { en: 'About', fr: 'À propos', ar: '?? ???' },
-        '© 2026 My Brand. Tous droits réservés.': { en: '© 2026 My Brand. All rights reserved.', fr: '© 2026 My Brand. Tous droits réservés.', ar: '© 2026 My Brand. ???? ?????? ??????.' },
+        'About': { en: 'About', fr: 'Ã€ propos', ar: '?? ???' },
+        'Â© 2026 My Brand. Tous droits rÃ©servÃ©s.': { en: 'Â© 2026 My Brand. All rights reserved.', fr: 'Â© 2026 My Brand. Tous droits rÃ©servÃ©s.', ar: 'Â© 2026 My Brand. ???? ?????? ??????.' },
         'Accueil': { en: 'Home', fr: 'Accueil', ar: '????????' },
         'Produits': { en: 'Products', fr: 'Produits', ar: '????????' },
         'All Products ?': { en: 'All Products ?', fr: 'Tous les produits ?', ar: '???? ???????? ?' },
@@ -506,24 +506,24 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
         'SHOES': { en: 'SHOES', fr: 'CHAUSSURES', ar: '?????' },
         'Dresses': { en: 'Dresses', fr: 'Robes', ar: '??????' },
         'DRESSES': { en: 'DRESSES', fr: 'ROBES', ar: '??????' },
-        'Recommandé': { en: 'Recommended', fr: 'Recommandé', ar: '???? ??' },
-        'Sort: Featured': { en: 'Sort: Featured', fr: 'Trier: Recommandé', ar: '???? ??' },
-        'Featured': { en: 'Featured', fr: 'Recommandé', ar: '???? ??' },
+        'RecommandÃ©': { en: 'Recommended', fr: 'RecommandÃ©', ar: '???? ??' },
+        'Sort: Featured': { en: 'Sort: Featured', fr: 'Trier: RecommandÃ©', ar: '???? ??' },
+        'Featured': { en: 'Featured', fr: 'RecommandÃ©', ar: '???? ??' },
         'Best Matches ??': { en: 'Best Matches ??', fr: 'Meilleurs choix ??', ar: '???? ?? ??' },
         'Prix: Croissant': { en: 'Price: Low to High', fr: 'Prix: Croissant', ar: '?????: ?? ????? ??????' },
         'Price: Low to High': { en: 'Price: Low to High', fr: 'Prix: Croissant', ar: '?????: ?? ????? ??????' },
         'Price: Low - High': { en: 'Price: Low - High', fr: 'Prix: Croissant', ar: '?????: ?? ????? ??????' },
         'Price: Low to High ??': { en: 'Price: Low to High ??', fr: 'Prix: Croissant ??', ar: '?????: ?? ????? ?????? ??' },
-        'Prix: Décroissant': { en: 'Price: High to Low', fr: 'Prix: Décroissant', ar: '?????: ?? ?????? ?????' },
-        'Price: High to Low': { en: 'Price: High to Low', fr: 'Prix: Décroissant', ar: '?????: ?? ?????? ?????' },
-        'Price: High - Low': { en: 'Price: High - Low', fr: 'Prix: Décroissant', ar: '?????: ?? ?????? ?????' },
-        'Price: High to Low ??': { en: 'Price: High to Low ??', fr: 'Prix: Décroissant ??', ar: '?????: ?? ?????? ????? ??' },
-        'De A à Z': { en: 'A to Z', fr: 'De A à Z', ar: '? - ?' },
-        'De Z à A': { en: 'Z to A', fr: 'De Z à A', ar: '? - ?' },
+        'Prix: DÃ©croissant': { en: 'Price: High to Low', fr: 'Prix: DÃ©croissant', ar: '?????: ?? ?????? ?????' },
+        'Price: High to Low': { en: 'Price: High to Low', fr: 'Prix: DÃ©croissant', ar: '?????: ?? ?????? ?????' },
+        'Price: High - Low': { en: 'Price: High - Low', fr: 'Prix: DÃ©croissant', ar: '?????: ?? ?????? ?????' },
+        'Price: High to Low ??': { en: 'Price: High to Low ??', fr: 'Prix: DÃ©croissant ??', ar: '?????: ?? ?????? ????? ??' },
+        'De A Ã  Z': { en: 'A to Z', fr: 'De A Ã  Z', ar: '? - ?' },
+        'De Z Ã  A': { en: 'Z to A', fr: 'De Z Ã  A', ar: '? - ?' },
         'Add to cart': { en: 'Add to cart', fr: 'Ajouter au panier', ar: '??? ?????' },
         'ADD TO CART': { en: 'ADD TO CART', fr: 'AJOUTER AU PANIER', ar: '??? ?????' },
         'BUY NOW': { en: 'BUY NOW', fr: 'ACHETER', ar: '????? ????' },
-        'DISCOVER': { en: 'DISCOVER', fr: 'DÉCOUVRIR', ar: '?????' }
+        'DISCOVER': { en: 'DISCOVER', fr: 'DÃ‰COUVRIR', ar: '?????' }
      };
      return dict[t]?.[storeLang] || t;
   };
@@ -580,7 +580,7 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
         <div className="fixed inset-0 z-[600] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setSizeGuideOpen(false)}>
            <div className="bg-white w-full max-w-xl max-h-[80vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
               <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-                 <h3 className="text-lg font-black text-slate-800">{storeIsAr ? '???? ????????' : 'Guide des tailles'}{sizeGuideData?.modele ? ` — ${sizeGuideData.modele}` : ''}</h3>
+                 <h3 className="text-lg font-black text-slate-800">{storeIsAr ? '???? ????????' : 'Guide des tailles'}{sizeGuideData?.modele ? ` â€” ${sizeGuideData.modele}` : ''}</h3>
                  <button onClick={() => setSizeGuideOpen(false)} className="p-2 text-slate-400 hover:text-rose-500"><X className="w-5 h-5" /></button>
               </div>
               <div className="flex-1 overflow-y-auto p-6">
@@ -609,7 +609,7 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
                              ))}
                           </tbody>
                        </table>
-                       <p className="text-[11px] text-slate-400 mt-4">{storeIsAr ? '???? ???????? ??????????. ?? ????? ???? ???? ??? ??????.' : 'Toutes les mesures sont en centimètres. Une légère variation est possible selon le tissu.'}</p>
+                       <p className="text-[11px] text-slate-400 mt-4">{storeIsAr ? '???? ???????? ??????????. ?? ????? ???? ???? ??? ??????.' : 'Toutes les mesures sont en centimÃ¨tres. Une lÃ©gÃ¨re variation est possible selon le tissu.'}</p>
                     </div>
                  ) : (!sizeGuideLoading && (
                     <p className="text-center text-sm text-slate-400 py-8">{storeIsAr ? '???? ???????? ??? ????? ???? ??????' : 'Guide des tailles indisponible pour ce produit'}</p>
@@ -711,7 +711,7 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
   const [showPdpTrustBadges, setShowPdpTrustBadges] = useState<boolean>(config.showPdpTrustBadges ?? true);
   const [deliveryScope, setDeliveryScope] = useState<'morocco' | 'international'>(config.deliveryScope || 'morocco');
   const [deliveryText, setDeliveryText] = useState<string>(config.deliveryText || 'Livraison 24-48h');
-  const [guaranteeText, setGuaranteeText] = useState<string>(config.guaranteeText || 'Satisfait ou remboursé');
+  const [guaranteeText, setGuaranteeText] = useState<string>(config.guaranteeText || 'Satisfait ou remboursÃ©');
   const [returnText, setReturnText] = useState<string>(config.returnText || 'Retour gratuit sous 14 jours');
   const [textStyles, setTextStyles] = useState<Record<string, { fontSize?: number; color?: string; fontFamily?: string }>>(config.textStyles || {});
   const [activeStyleKey, setActiveStyleKey] = useState<string | null>(null);
@@ -790,7 +790,7 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
         const data = await res.json();
         setHeroSearchResults((data.results || []).map((p: any) => p.urls?.regular).filter(Boolean));
      } catch (e) {
-        setHeroSearchError(storeIsAr ? '???? ?????? ???? ??? ????' : 'Recherche indisponible, réessayez');
+        setHeroSearchError(storeIsAr ? '???? ?????? ???? ??? ????' : 'Recherche indisponible, rÃ©essayez');
         setHeroSearchResults([]);
      } finally {
         setIsSearchingHero(false);
@@ -906,11 +906,11 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
   const [newProduct, setNewProduct] = useState({ name: '', price: '' });
   const [appsConfig, setAppsConfig] = useState<Record<string, string>>(config.appsConfig || {});
   const [deliveryCompanies, setDeliveryCompanies] = useState<any[]>(config.deliveryCompanies || [
-     { id: 1, name: 'Amana', type: 'Standard • National', isActive: true, initial: 'AM' },
-     { id: 2, name: 'Ghazal', type: 'Express • National', isActive: false, initial: 'GR' }
+     { id: 1, name: 'Amana', type: 'Standard â€¢ National', isActive: true, initial: 'AM' },
+     { id: 2, name: 'Ghazal', type: 'Express â€¢ National', isActive: false, initial: 'GR' }
   ]);
   const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
-  const [newDeliveryCompany, setNewDeliveryCompany] = useState({ name: '', type: 'Standard • National', isActive: true });
+  const [newDeliveryCompany, setNewDeliveryCompany] = useState({ name: '', type: 'Standard â€¢ National', isActive: true });
   const [activeAppModal, setActiveAppModal] = useState<string | null>(null);
   const [appInputValue, setAppInputValue] = useState('');
   const [egrowAutoSync, setEgrowAutoSync] = useState(true);
@@ -925,8 +925,8 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
     { id: 'about', title: 'About', isDefault: false }
   ]);
   const [footerSettings, setFooterSettings] = useState(config.footerSettings || {
-    copyright: '© 2024 Mon Magasin. Tous droits réservés.',
-    links: ['À Propos', 'Contact', 'Politique de Retour', 'Termes & Conditions']
+    copyright: 'Â© 2024 Mon Magasin. Tous droits rÃ©servÃ©s.',
+    links: ['Ã€ Propos', 'Contact', 'Politique de Retour', 'Termes & Conditions']
   });
   const [showReviews, setShowReviews] = useState(config.showReviews !== undefined ? config.showReviews : true);
   // Computed design vars - available to all Layout components
@@ -934,11 +934,11 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
   const btnStyle = { backgroundColor: primaryColor, borderRadius: btnRadius };
   const cardBg = secondaryColor || '#ffffff';
   const [newsletterTitle, setNewsletterTitle] = useState(config.newsletterTitle || 'Rejoignez notre Newsletter');
-  const [newsletterSubtitle, setNewsletterSubtitle] = useState(config.newsletterSubtitle || 'Recevez nos dernières offres et nouveautés directement dans votre boîte mail.');
+  const [newsletterSubtitle, setNewsletterSubtitle] = useState(config.newsletterSubtitle || 'Recevez nos derniÃ¨res offres et nouveautÃ©s directement dans votre boÃ®te mail.');
   const [featuresData, setFeaturesData] = useState(config.featuresData || [
     { icon: 'Truck', title: 'Livraison Rapide', subtitle: 'Partout au Maroc' },
-    { icon: 'ShieldCheck', title: 'Paiement Sécurisé', subtitle: '100% garanti' },
-    { icon: 'Star', title: 'Qualité Premium', subtitle: 'Produits certifiés' }
+    { icon: 'ShieldCheck', title: 'Paiement SÃ©curisÃ©', subtitle: '100% garanti' },
+    { icon: 'Star', title: 'QualitÃ© Premium', subtitle: 'Produits certifiÃ©s' }
   ]);
   const [videoUrl, setVideoUrl] = useState(config.videoUrl || '');
   const [newPageTitle, setNewPageTitle] = useState('');
@@ -1171,7 +1171,7 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
   };
   const linkedFiche = productForm?.ficheId ? fichesList.find(f => f.id === productForm.ficheId) : null;
 
-  // Pre-fill "Créer un Produit" when arriving from the Fiches Techniques page (see FichesTechniques.tsx)
+  // Pre-fill "CrÃ©er un Produit" when arriving from the Fiches Techniques page (see FichesTechniques.tsx)
   useEffect(() => {
      if (isLiveStore) return;
      const state = (window as any).history.state?.usr;
@@ -1200,7 +1200,7 @@ export default function StoreBuilder({ isLiveStore = false, appCurrentUser }: { 
      if (!productForm?.image) return;
      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('beya_gemini_api_key');
      if (!apiKey) {
-        alert(isAr ? '?? ??? ????? ?????? ????????? ?? ??? ??????.' : 'L\'IA n\'est pas configurée sur ce serveur.');
+        alert(isAr ? '?? ??? ????? ?????? ????????? ?? ??? ??????.' : 'L\'IA n\'est pas configurÃ©e sur ce serveur.');
         return;
      }
 
@@ -1591,7 +1591,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
      // Visual feedback
      const target = e.currentTarget as HTMLElement;
      const originalText = target.innerText;
-     target.innerText = typeof storeIsAr !== 'undefined' && storeIsAr ? '??? ??????? ?' : 'Ajouté ?';
+     target.innerText = typeof storeIsAr !== 'undefined' && storeIsAr ? '??? ??????? ?' : 'AjoutÃ© ?';
      target.style.backgroundColor = '#10b981'; // Green color for success
      target.style.color = '#fff';
      target.style.borderColor = '#10b981';
@@ -1692,8 +1692,8 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                   {/* Header */}
                   <div className="flex items-center justify-between p-5 border-b border-slate-100">
                      <div>
-                        <h3 className="text-base font-black text-slate-900">{storeIsAr ? '???? ???? ???????' : "Choisir l'image d'arrière-plan"}</h3>
-                        <p className="text-[11px] text-slate-400 mt-0.5">{storeIsAr ? '?? ????? ?? ?? ????? ?????' : 'Depuis votre appareil ou la bibliothèque de photos'}</p>
+                        <h3 className="text-base font-black text-slate-900">{storeIsAr ? '???? ???? ???????' : "Choisir l'image d'arriÃ¨re-plan"}</h3>
+                        <p className="text-[11px] text-slate-400 mt-0.5">{storeIsAr ? '?? ????? ?? ?? ????? ?????' : 'Depuis votre appareil ou la bibliothÃ¨que de photos'}</p>
                      </div>
                      <button onClick={() => setIsHeroImagePickerOpen(false)} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-colors"><X className="w-5 h-5" /></button>
                   </div>
@@ -1705,8 +1705,8 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                            <ImageIcon className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                           <p className="text-sm font-black text-slate-800">{storeIsAr ? '?? ??? ?? ????? (PC / Téléphone)' : '?? Importer depuis mon appareil'}</p>
-                           <p className="text-[11px] text-slate-500">{storeIsAr ? 'JPG, PNG, WEBP — ???? ????? ????? ???' : 'JPG, PNG, WEBP — Haute résolution recommandée'}</p>
+                           <p className="text-sm font-black text-slate-800">{storeIsAr ? '?? ??? ?? ????? (PC / TÃ©lÃ©phone)' : '?? Importer depuis mon appareil'}</p>
+                           <p className="text-[11px] text-slate-500">{storeIsAr ? 'JPG, PNG, WEBP â€” ???? ????? ????? ???' : 'JPG, PNG, WEBP â€” Haute rÃ©solution recommandÃ©e'}</p>
                         </div>
                         <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
                            const file = e.target.files?.[0];
@@ -1718,7 +1718,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                   {/* Divider */}
                   <div className="flex items-center gap-3 px-5 py-3">
                      <div className="h-px flex-1 bg-slate-100" />
-                     <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider">{storeIsAr ? '?? ???? ?? ???????' : 'ou choisir depuis la bibliothèque'}</span>
+                     <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider">{storeIsAr ? '?? ???? ?? ???????' : 'ou choisir depuis la bibliothÃ¨que'}</span>
                      <div className="h-px flex-1 bg-slate-100" />
                   </div>
 
@@ -1809,8 +1809,8 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
            <div className="max-w-4xl mx-auto flex flex-col items-center text-center gap-6">
               <div className="text-xl font-bold" style={{ color: effText }}>{storeLogo ? <img src={storeLogo} alt={storeName} className="h-10 object-contain" /> : storeName}</div>
               <div className="flex flex-wrap justify-center gap-6 text-sm font-medium" style={{ color: effText }}>
-                 {footerSettings.showPrivacy && <button onClick={() => setPage('privacy')} className="hover:opacity-70 transition-opacity">{storeIsAr ? '????? ????????' : 'Politique de Confidentialité'}</button>}
-                 {footerSettings.showTerms && <button onClick={() => setPage('terms')} className="hover:opacity-70 transition-opacity">{storeIsAr ? '?????? ????????' : 'Conditions Générales'}</button>}
+                 {footerSettings.showPrivacy && <button onClick={() => setPage('privacy')} className="hover:opacity-70 transition-opacity">{storeIsAr ? '????? ????????' : 'Politique de ConfidentialitÃ©'}</button>}
+                 {footerSettings.showTerms && <button onClick={() => setPage('terms')} className="hover:opacity-70 transition-opacity">{storeIsAr ? '?????? ????????' : 'Conditions GÃ©nÃ©rales'}</button>}
                  {footerSettings.showCookies && <button onClick={() => setPage('cookies')} className="hover:opacity-70 transition-opacity">{storeIsAr ? '????? ????? ????????' : 'Politique des Cookies'}</button>}
               </div>
               <EditableText as="p" text={footerSettings.copyright} onTextChange={(v: string) => setFooterSettings({...footerSettings, copyright: v})} isLiveStore={isLiveStore} className="text-xs opacity-70 mt-4" style={{ color: effText }} styleKey="footerCopyright" />
@@ -1994,7 +1994,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                         <span className="text-xs font-semibold text-slate-700 truncate">{p.name}</span>
                       </div>
                     )) : (
-                      <p className="text-xs text-slate-400 text-center py-3">{storeLang === 'ar' ? '?? ???? ?????' : storeLang === 'en' ? 'No results' : 'Aucun résultat'}</p>
+                      <p className="text-xs text-slate-400 text-center py-3">{storeLang === 'ar' ? '?? ???? ?????' : storeLang === 'en' ? 'No results' : 'Aucun rÃ©sultat'}</p>
                     )}
                   </div>
                 )}
@@ -2037,7 +2037,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                   <div className="mt-3 pt-2 border-t border-white/10 flex items-center justify-between">
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
                       {(customerUser?.email === (config.owner_email || 'fashlow@gmail.com') || customerUser?.id === config.owner_id) 
-                        ? (storeIsAr ? '?? ???? ?????? (Marchand)' : '?? Propriétaire du magasin') 
+                        ? (storeIsAr ? '?? ???? ?????? (Marchand)' : '?? PropriÃ©taire du magasin') 
                         : (storeIsAr ? '??? ???? (Client e-commerce)' : '??? Client e-commerce')}
                     </span>
                     <span className="text-[9px] font-bold text-emerald-400 flex items-center gap-1">
@@ -2074,7 +2074,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                     className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50/80 rounded-xl transition-all"
                   >
                     <LogOut className="w-4 h-4 text-rose-500" />
-                    <span>{storeIsAr ? '????? ??????' : storeLang === 'en' ? 'Log out' : 'Déconnexion'}</span>
+                    <span>{storeIsAr ? '????? ??????' : storeLang === 'en' ? 'Log out' : 'DÃ©connexion'}</span>
                   </button>
                 </div>
               </div>
@@ -2246,14 +2246,14 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                 if (block === 'newsletter') return (
                     <div key="newsletter" className="w-full py-16 px-4" style={{ backgroundColor: '#fff', borderTop: '1px solid #f1f5f9' }}>
                         <div className="max-w-xl mx-auto text-center space-y-6">
-                            <h3 className="text-2xl font-black">{storeIsAr ? '????? ?? ?????? ????????' : 'Abonnez-vous à notre newsletter'}</h3>
+                            <h3 className="text-2xl font-black">{storeIsAr ? '????? ?? ?????? ????????' : 'Abonnez-vous Ã  notre newsletter'}</h3>
                             <div className="flex flex-col gap-4">
-                               <input type="email" placeholder={storeIsAr ? '???? ????? ??????????' : 'Saisissez votre adresse électronique'} className="w-full bg-transparent border-b border-black py-3 px-2 text-sm outline-none text-center" />
+                               <input type="email" placeholder={storeIsAr ? '???? ????? ??????????' : 'Saisissez votre adresse Ã©lectronique'} className="w-full bg-transparent border-b border-black py-3 px-2 text-sm outline-none text-center" />
                                <button className="w-full border border-black py-3 text-sm font-bold hover:bg-black hover:text-white transition-colors">{storeIsAr ? '??????' : 'S\'abonner'}</button>
                             </div>
                             <div className="flex items-center justify-center gap-2 mt-4 text-[10px] text-slate-500">
                                <input type="checkbox" id="news-agree" />
-                               <label htmlFor="news-agree">{storeIsAr ? '????? ??? ?????? ?????????' : 'J\'accepte les conditions générales et la politique de confidentialité'}</label>
+                               <label htmlFor="news-agree">{storeIsAr ? '????? ??? ?????? ?????????' : 'J\'accepte les conditions gÃ©nÃ©rales et la politique de confidentialitÃ©'}</label>
                             </div>
                         </div>
                     </div>
@@ -2268,11 +2268,11 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                             </div>
                             <div className="flex flex-col items-center gap-3">
                                <ShieldCheck className="w-6 h-6 stroke-[1.5]" />
-                               <p className="text-[10px] font-bold">{storeIsAr ? '??? ??? ??????' : 'Paiement sécurisé'}</p>
+                               <p className="text-[10px] font-bold">{storeIsAr ? '??? ??? ??????' : 'Paiement sÃ©curisÃ©'}</p>
                             </div>
                             <div className="flex flex-col items-center gap-3">
                                <Package className="w-6 h-6 stroke-[1.5]" />
-                               <p className="text-[10px] font-bold">{storeIsAr ? '????? ?????' : 'Livraison offerte dès 799 Dhs d\'achat'}</p>
+                               <p className="text-[10px] font-bold">{storeIsAr ? '????? ?????' : 'Livraison offerte dÃ¨s 799 Dhs d\'achat'}</p>
                             </div>
                             <div className="flex flex-col items-center gap-3">
                                <Smartphone className="w-6 h-6 stroke-[1.5]" />
@@ -2383,7 +2383,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                           ) : (
                              <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
                                 <Video className="w-16 h-16 mb-4 opacity-50" />
-                                <p>Aucune vidéo sélectionnée</p>
+                                <p>Aucune vidÃ©o sÃ©lectionnÃ©e</p>
                              </div>
                           )}
                        </div>
@@ -2422,11 +2422,11 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                         </div>
                      )}
                      <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-wider rounded-full focus:ring-slate-500 focus:border-slate-500 block px-4 py-2 outline-none cursor-pointer">
-                        <option value="featured">{tr('Recommandé')}</option>
+                        <option value="featured">{tr('RecommandÃ©')}</option>
                         <option value="price-low-high">{tr('Prix: Croissant')}</option>
-                        <option value="price-high-low">{tr('Prix: Décroissant')}</option>
-                        <option value="az">{tr('De A à Z')}</option>
-                        <option value="za">{tr('De Z à A')}</option>
+                        <option value="price-high-low">{tr('Prix: DÃ©croissant')}</option>
+                        <option value="az">{tr('De A Ã  Z')}</option>
+                        <option value="za">{tr('De Z Ã  A')}</option>
                      </select>
                   </div>
                </div>
@@ -2502,7 +2502,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                              </div>
                           )}
                           <div>
-                             <span className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 block">{storeIsAr ? '??????' : 'Quantité'}</span>
+                             <span className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 block">{storeIsAr ? '??????' : 'QuantitÃ©'}</span>
                              <div className="flex items-center justify-between bg-slate-50 w-32 px-4 py-2 rounded-lg border border-slate-200">
                                 <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="text-slate-500 hover:text-slate-800 font-bold text-lg">-</button>
                                 <span className="font-bold text-slate-800">{quantity}</span>
@@ -2597,34 +2597,34 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                  <CheckCircle className="w-12 h-12 relative z-10" />
               </div>
               <h2 className="text-4xl font-black mb-3 text-slate-800 tracking-tight flex items-center gap-2 justify-center">
-                  {storeIsAr ? '?? ????? ???? ?????' : 'Commande Confirmée !'} <Sparkles className="w-8 h-8 text-amber-400" />
+                  {storeIsAr ? '?? ????? ???? ?????' : 'Commande ConfirmÃ©e !'} <Sparkles className="w-8 h-8 text-amber-400" />
               </h2>
               <p className="text-slate-500 text-lg max-w-md mx-auto leading-relaxed mb-8">
                  {storeIsAr 
                    ? "???????! ??? ?????? ???? ?????. ?????? ???? ???? ??????? ?????? ?????. ???? ??????? ??? ?????? ?????? ?????? ?????."
-                   : "Félicitations ! Nous avons bien reçu votre commande. Notre équipe la prépare avec soin et vous contactera très prochainement pour l'expédition."}
+                   : "FÃ©licitations ! Nous avons bien reÃ§u votre commande. Notre Ã©quipe la prÃ©pare avec soin et vous contactera trÃ¨s prochainement pour l'expÃ©dition."}
               </p>
               
               <div className="flex items-center justify-center gap-6 mb-10 text-slate-400 text-sm font-semibold">
-                 <div className="flex flex-col items-center gap-2"><Package className="w-6 h-6 text-indigo-400" /> <span>{storeIsAr ? '????? ?????' : 'Préparation'}</span></div>
+                 <div className="flex flex-col items-center gap-2"><Package className="w-6 h-6 text-indigo-400" /> <span>{storeIsAr ? '????? ?????' : 'PrÃ©paration'}</span></div>
                  <div className="w-12 h-px bg-slate-200"></div>
-                 <div className="flex flex-col items-center gap-2"><Truck className="w-6 h-6 text-emerald-400" /> <span>{storeIsAr ? '??? ????' : 'Expédition'}</span></div>
+                 <div className="flex flex-col items-center gap-2"><Truck className="w-6 h-6 text-emerald-400" /> <span>{storeIsAr ? '??? ????' : 'ExpÃ©dition'}</span></div>
               </div>
 
               <button onClick={() => setPage('home')} className="px-10 py-4 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 hover:-translate-y-1 transition-all shadow-xl shadow-slate-900/20">
-                 {storeIsAr ? "?????? ?????? ????????" : "Retour à l'accueil"}
+                 {storeIsAr ? "?????? ?????? ????????" : "Retour Ã  l'accueil"}
               </button>
            </div>
         )}
         {['privacy', 'terms', 'cookies'].includes(page) && (
            <div className={`${isModal ? 'p-16 max-w-4xl' : 'p-8'} mx-auto w-full`}>
               <h1 className="text-3xl font-black mb-6 text-slate-800">
-                {page === 'privacy' ? (storeIsAr ? '????? ????????' : 'Politique de Confidentialité') : page === 'terms' ? (storeIsAr ? '?????? ????????' : 'Conditions Générales') : (storeIsAr ? '????? ????? ????????' : 'Politique des Cookies')}
+                {page === 'privacy' ? (storeIsAr ? '????? ????????' : 'Politique de ConfidentialitÃ©') : page === 'terms' ? (storeIsAr ? '?????? ????????' : 'Conditions GÃ©nÃ©rales') : (storeIsAr ? '????? ????? ????????' : 'Politique des Cookies')}
               </h1>
               <div className="prose prose-slate max-w-none text-slate-600 space-y-4">
-                 <p>{storeIsAr ? '??? ????? : ' : 'Dernière mise à jour : '}{new Date().toLocaleDateString()}</p>
+                 <p>{storeIsAr ? '??? ????? : ' : 'DerniÃ¨re mise Ã  jour : '}{new Date().toLocaleDateString()}</p>
                  <p>{storeIsAr ? '??? ???? ?? ???? ??? ???? ?? ?????? ?? ??? ???????? ??? ?? ????? ??? ???? ?? ???? ???? ??????? ??? ????? ?? ???? ??? ??? ???? ?? ?????? ?? ?????? ?????? ????? ??? ????? ??? ?????? ???? ?????? ???????.' : 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing nec, ultricies sed, dolor. Cras elementum ultrices diam. Maecenas ligula massa, varius a, semper congue, euismod non, mi.'}</p>
-                 <h3 className="text-xl font-bold text-slate-800 mt-6 mb-3">{storeIsAr ? '1. ??? ????????' : '1. Collecte des données'}</h3>
+                 <h3 className="text-xl font-bold text-slate-800 mt-6 mb-3">{storeIsAr ? '1. ??? ????????' : '1. Collecte des donnÃ©es'}</h3>
                  <p>{storeIsAr ? '??? ??? ????? ??? ??? ???? ?? ??????? ???? ?? ???? ???? ?????? ????? ??? ??????? ??? ????? ???? ?? ???? ????? ??? ???? ????? ?????? ???? ???? ?????? ???? ?????? ??????? ??? ??? ??????.' : 'Proin porttitor, orci nec nonummy molestie, enim est eleifend mi, non fermentum diam nisl sit amet erat. Duis semper. Duis arcu massa, scelerisque vitae, consequat in, pretium a, enim.'}</p>
                  <h3 className="text-xl font-bold text-slate-800 mt-6 mb-3">{storeIsAr ? '2. ?????????' : '2. Utilisation'}</h3>
                  <p>{storeIsAr ? '??? ????? ?????? ?? ???? ?? ??????? ?? ???? ??? ???? ?????? ?????? ??????. ??? ??? ??? ??? ?????? ?? ??? ????? ????? ??? ??????? ????? ?????? ????? ??????.' : 'Pellentesque congue. Ut in risus volutpat libero pharetra tempor. Cras vestibulum bibendum augue. Praesent egestas leo in pede.'}</p>
@@ -2655,7 +2655,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
             {(() => {
               const slides = heroSlides && heroSlides.length > 0
                 ? heroSlides
-                : [{ image: heroImage, title: heroTitle || (storeLang === 'ar' ? '????? ?? ???????.' : storeLang === 'en' ? 'Elegance in Simplicity.' : 'Élégance et Simplicité.'), subtitle: heroSubtitle || (storeLang === 'ar' ? '????? ?????? ????? ????? ???? ????? ??????.' : storeLang === 'en' ? 'Experience a collection defined by pure lines and organic materials.' : 'Découvrez une collection définie par des lignes pures et des matériaux naturels.') }];
+                : [{ image: heroImage, title: heroTitle || (storeLang === 'ar' ? '????? ?? ???????.' : storeLang === 'en' ? 'Elegance in Simplicity.' : 'Ã‰lÃ©gance et SimplicitÃ©.'), subtitle: heroSubtitle || (storeLang === 'ar' ? '????? ?????? ????? ????? ???? ????? ??????.' : storeLang === 'en' ? 'Experience a collection defined by pure lines and organic materials.' : 'DÃ©couvrez une collection dÃ©finie par des lignes pures et des matÃ©riaux naturels.') }];
               const curIdx = activeHeroSlide % slides.length;
               const curSlide = slides[curIdx];
               const isMobile = previewDevice === 'mobile' && !isModal;
@@ -2721,7 +2721,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
             })()}
             <div className={`${isModal ? 'p-20' : 'p-8'} mx-auto w-full`} style={{ maxWidth: `${siteMaxWidth}px` }}>
                <div className="flex justify-between items-end mb-12 border-b pb-4">
-                  <h3 className="text-2xl font-light">{storeLang === 'ar' ? '??? ??????' : storeLang === 'en' ? 'New Arrivals' : 'Nouveautés'}</h3>
+                  <h3 className="text-2xl font-light">{storeLang === 'ar' ? '??? ??????' : storeLang === 'en' ? 'New Arrivals' : 'NouveautÃ©s'}</h3>
                   <span className="text-sm cursor-pointer hover:underline" style={{ color: primaryColor }}>{storeLang === 'ar' ? '??? ????' : storeLang === 'en' ? 'View all' : 'Voir tout'}</span>
                </div>
                <div className={`grid gap-x-8 gap-y-12 ${previewDevice === 'mobile' && !isModal ? 'grid-cols-1' : gridColsClass('lg3')}`}>
@@ -2910,22 +2910,22 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                  <CheckCircle className="w-12 h-12 relative z-10" />
               </div>
               <h2 className="text-4xl font-light mb-3 tracking-tight flex items-center gap-2 justify-center" style={{ color: primaryColor }}>
-                  {storeIsAr ? '?? ????? ???? ?????' : 'Commande Confirmée !'} <Sparkles className="w-8 h-8 text-amber-400" />
+                  {storeIsAr ? '?? ????? ???? ?????' : 'Commande ConfirmÃ©e !'} <Sparkles className="w-8 h-8 text-amber-400" />
               </h2>
               <p className="text-slate-500 text-lg max-w-md mx-auto leading-relaxed mb-8">
                  {storeIsAr 
                    ? "???????! ??? ?????? ???? ?????. ?????? ???? ???? ??????? ?????? ?????. ???? ??????? ??? ?????? ?????? ?????? ?????."
-                   : "Félicitations ! Nous avons bien reçu votre commande. Notre équipe la prépare avec soin et vous contactera très prochainement pour l'expédition."}
+                   : "FÃ©licitations ! Nous avons bien reÃ§u votre commande. Notre Ã©quipe la prÃ©pare avec soin et vous contactera trÃ¨s prochainement pour l'expÃ©dition."}
               </p>
               
               <div className="flex items-center justify-center gap-6 mb-10 text-slate-400 text-sm font-semibold">
-                 <div className="flex flex-col items-center gap-2"><Package className="w-6 h-6 text-indigo-400" /> <span>{storeIsAr ? '????? ?????' : 'Préparation'}</span></div>
+                 <div className="flex flex-col items-center gap-2"><Package className="w-6 h-6 text-indigo-400" /> <span>{storeIsAr ? '????? ?????' : 'PrÃ©paration'}</span></div>
                  <div className="w-12 h-px bg-slate-200"></div>
-                 <div className="flex flex-col items-center gap-2"><Truck className="w-6 h-6 text-emerald-400" /> <span>{storeIsAr ? '??? ????' : 'Expédition'}</span></div>
+                 <div className="flex flex-col items-center gap-2"><Truck className="w-6 h-6 text-emerald-400" /> <span>{storeIsAr ? '??? ????' : 'ExpÃ©dition'}</span></div>
               </div>
 
               <button onClick={() => setPage('home')} className="px-10 py-4 border border-black text-xs tracking-widest hover:bg-black hover:text-white transition-colors">
-                 {storeIsAr ? "?????? ?????? ????????" : "RETOUR À L'ACCUEIL"}
+                 {storeIsAr ? "?????? ?????? ????????" : "RETOUR Ã€ L'ACCUEIL"}
               </button>
            </div>
         )}
@@ -2953,7 +2953,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                   <div className="absolute inset-0 bg-gradient-to-t from-[#111] via-transparent to-transparent"></div>
                   <div className="absolute bottom-12 left-12 right-12 flex justify-between items-end">
                      <div>
-                        <h1 className="text-5xl font-serif mb-4">{storeLang === 'ar' ? '???????? ???????.' : storeLang === 'en' ? 'The Royal Edit.' : 'La Sélection Royale.'}</h1>
+                        <h1 className="text-5xl font-serif mb-4">{storeLang === 'ar' ? '???????? ???????.' : storeLang === 'en' ? 'The Royal Edit.' : 'La SÃ©lection Royale.'}</h1>
                         <button onClick={() => setPage('collections')} className="px-8 py-3 text-xs tracking-widest border transition-colors" style={{ borderColor: primaryColor, color: primaryColor }}>{storeLang === 'ar' ? '?????? ????????' : storeLang === 'en' ? 'EXPLORE COLLECTION' : 'EXPLORER LA COLLECTION'}</button>
                      </div>
                   </div>
@@ -3128,18 +3128,18 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                  <CheckCircle className="w-12 h-12 relative z-10" />
               </div>
               <h2 className="text-4xl font-serif mb-3 text-white tracking-wide flex items-center gap-2 justify-center">
-                  {storeIsAr ? '?? ????? ???? ?????' : 'Commande Confirmée !'} <Sparkles className="w-8 h-8 text-amber-500" />
+                  {storeIsAr ? '?? ????? ???? ?????' : 'Commande ConfirmÃ©e !'} <Sparkles className="w-8 h-8 text-amber-500" />
               </h2>
               <p className="text-[#888] text-lg max-w-md mx-auto leading-relaxed mb-8 font-light">
                  {storeIsAr 
                    ? "???????! ??? ?????? ???? ?????. ?????? ???? ???? ??????? ??????. ???? ??????? ??? ?????? ?????? ?????? ?????."
-                   : "Félicitations ! Nous avons bien reçu votre commande. Notre équipe la prépare avec soin et vous contactera très prochainement."}
+                   : "FÃ©licitations ! Nous avons bien reÃ§u votre commande. Notre Ã©quipe la prÃ©pare avec soin et vous contactera trÃ¨s prochainement."}
               </p>
               
               <div className="flex items-center justify-center gap-6 mb-10 text-[#666] text-sm font-medium tracking-wider">
-                 <div className="flex flex-col items-center gap-2"><Package className="w-6 h-6 text-[#b48a44]" /> <span>{storeIsAr ? '????? ?????' : 'PRÉPARATION'}</span></div>
+                 <div className="flex flex-col items-center gap-2"><Package className="w-6 h-6 text-[#b48a44]" /> <span>{storeIsAr ? '????? ?????' : 'PRÃ‰PARATION'}</span></div>
                  <div className="w-12 h-px bg-[#333]"></div>
-                 <div className="flex flex-col items-center gap-2"><Truck className="w-6 h-6 text-[#b48a44]" /> <span>{storeIsAr ? '??? ????' : 'EXPÉDITION'}</span></div>
+                 <div className="flex flex-col items-center gap-2"><Truck className="w-6 h-6 text-[#b48a44]" /> <span>{storeIsAr ? '??? ????' : 'EXPÃ‰DITION'}</span></div>
               </div>
 
               <button onClick={() => setPage('home')} className="px-10 py-4 border border-white/20 text-white text-xs tracking-widest hover:bg-white/5 transition-colors">
@@ -3186,13 +3186,13 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                   <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px]"></div>
                   <div className="relative z-10 flex flex-col items-center p-8 bg-white/90 rounded-[2rem] shadow-xl border-4 border-white">
                      <EditableText as="h1" text={heroTitle || (storeLang === 'ar' ? '??? ??????!' : storeLang === 'en' ? 'Fun & Fresh!' : 'Fun & Frais !')} onTextChange={setHeroTitle} isLiveStore={isLiveStore} className={`${isModal ? 'text-6xl' : 'text-4xl'} font-black tracking-tight mb-2`} style={{ color: primaryColor }} styleKey="heroTitle" />
-                     <EditableText as="p" text={heroSubtitle || (storeLang === 'ar' ? '????? ?????? ?????? ?????.' : storeLang === 'en' ? 'Colorful, comfortable, and made for play.' : 'Coloré, confortable, et fait pour jouer.')} onTextChange={setHeroSubtitle} isLiveStore={isLiveStore} className="text-slate-600 font-medium mb-6 max-w-sm" styleKey="heroSubtitle" />
+                     <EditableText as="p" text={heroSubtitle || (storeLang === 'ar' ? '????? ?????? ?????? ?????.' : storeLang === 'en' ? 'Colorful, comfortable, and made for play.' : 'ColorÃ©, confortable, et fait pour jouer.')} onTextChange={setHeroSubtitle} isLiveStore={isLiveStore} className="text-slate-600 font-medium mb-6 max-w-sm" styleKey="heroSubtitle" />
                      <button onClick={() => setPage('collections')} className="px-8 py-4 text-white font-black tracking-wide text-sm hover:scale-110 transition-transform rounded-full shadow-lg" style={{ backgroundColor: primaryColor }}>{storeLang === 'ar' ? '???? ???? ??' : storeLang === 'en' ? "LET'S SHOP ??" : 'ON Y VA ??'}</button>
                   </div>
                </HeroBackgroundEditor>
             </div>
             <div className={`${isModal ? 'p-16' : 'p-6'} mx-auto w-full`} style={{ maxWidth: `${siteMaxWidth}px` }}>
-               <h3 className="text-2xl md:text-3xl font-black text-center mb-6 md:mb-10 text-slate-800">{storeLang === 'ar' ? '??? ?????? ?' : storeLang === 'en' ? 'New Arrivals ?' : 'Nouveautés ?'}</h3>
+               <h3 className="text-2xl md:text-3xl font-black text-center mb-6 md:mb-10 text-slate-800">{storeLang === 'ar' ? '??? ?????? ?' : storeLang === 'en' ? 'New Arrivals ?' : 'NouveautÃ©s ?'}</h3>
                <div className="md:hidden grid grid-cols-2 gap-3">
                   {storeProducts.map((p: any, idx: number) => (
                      <MobileProductCard key={p.id} p={p} idx={idx} />
@@ -3324,7 +3324,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                           <div className="bg-white p-8 rounded-[2rem] border-4 border-slate-100 space-y-4">
                              <h4 className="text-xl font-black text-slate-800 mb-2">{storeLang === 'ar' ? '????? ??' : storeLang === 'en' ? 'Yay! Checkout ??' : 'Youpi ! Commande ??'}</h4>
                              <input type="text" placeholder={storeLang === 'ar' ? '????? ??????' : storeLang === 'en' ? 'Your Name' : 'Votre nom'} className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-full focus:outline-none focus:border-current text-base font-bold" style={{ '--tw-ring-color': primaryColor } as React.CSSProperties} />
-                             <input type="text" placeholder={storeLang === 'ar' ? '??? ??????' : storeLang === 'en' ? 'Phone Number' : 'Numéro de Téléphone'} className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-full focus:outline-none focus:border-current text-base font-bold" style={{ '--tw-ring-color': primaryColor } as React.CSSProperties} />
+                             <input type="text" placeholder={storeLang === 'ar' ? '??? ??????' : storeLang === 'en' ? 'Phone Number' : 'NumÃ©ro de TÃ©lÃ©phone'} className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-full focus:outline-none focus:border-current text-base font-bold" style={{ '--tw-ring-color': primaryColor } as React.CSSProperties} />
                              <input type="text" placeholder={storeLang === 'ar' ? '????? ???????' : storeLang === 'en' ? 'Where to send?' : 'Adresse de livraison ?'} className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-full focus:outline-none focus:border-current text-base font-bold" style={{ '--tw-ring-color': primaryColor } as React.CSSProperties} />
                              <button onClick={(e) => submitGlobalOrder(typeof p !== 'undefined' ? p : storeProducts.find((prod) => prod.id === activeProductId), typeof quantity !== 'undefined' ? quantity : 1, e)}  className={`w-full py-5 text-white font-black uppercase tracking-widest text-lg hover:scale-105 transition-transform rounded-full shadow-xl mt-4 `} style={{ backgroundColor: primaryColor }}>{storeLang === 'ar' ? '???? ?????! ??' : storeLang === 'en' ? 'Send it to me! ??' : 'Envoyez-le moi ! ??'}</button>
                           </div>
@@ -3379,18 +3379,18 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                  <CheckCircle className="w-12 h-12 relative z-10" />
               </div>
               <h2 className="text-5xl font-black mb-3 text-slate-800 tracking-tight flex items-center gap-2 justify-center" style={{ color: primaryColor }}>
-                  {storeIsAr ? '?? ????? ???? ?????' : 'Commande Confirmée !'} <Sparkles className="w-10 h-10 text-amber-400" />
+                  {storeIsAr ? '?? ????? ???? ?????' : 'Commande ConfirmÃ©e !'} <Sparkles className="w-10 h-10 text-amber-400" />
               </h2>
               <p className="text-slate-500 text-xl font-bold max-w-md mx-auto leading-relaxed mb-8">
                  {storeIsAr 
                    ? "???????! ??? ?????? ???? ?????. ?????? ???? ???? ??????? ?????? ?????. ???? ??????? ??? ?????? ?????? ?????? ?????."
-                   : "Félicitations ! Nous avons bien reçu votre commande. Notre équipe la prépare avec soin et vous contactera très prochainement pour l'expédition."}
+                   : "FÃ©licitations ! Nous avons bien reÃ§u votre commande. Notre Ã©quipe la prÃ©pare avec soin et vous contactera trÃ¨s prochainement pour l'expÃ©dition."}
               </p>
               
               <div className="flex items-center justify-center gap-6 mb-10 text-slate-400 text-sm font-bold">
-                 <div className="flex flex-col items-center gap-2"><Package className="w-8 h-8 text-indigo-400" /> <span>{storeIsAr ? '????? ?????' : 'Préparation'}</span></div>
+                 <div className="flex flex-col items-center gap-2"><Package className="w-8 h-8 text-indigo-400" /> <span>{storeIsAr ? '????? ?????' : 'PrÃ©paration'}</span></div>
                  <div className="w-12 h-2 rounded-full bg-slate-100"></div>
-                 <div className="flex flex-col items-center gap-2"><Truck className="w-8 h-8 text-emerald-400" /> <span>{storeIsAr ? '??? ????' : 'Expédition'}</span></div>
+                 <div className="flex flex-col items-center gap-2"><Truck className="w-8 h-8 text-emerald-400" /> <span>{storeIsAr ? '??? ????' : 'ExpÃ©dition'}</span></div>
               </div>
 
               <button onClick={() => setPage('home')} className="mt-8 px-10 py-4 bg-slate-900 text-white font-black uppercase tracking-widest rounded-full hover:scale-105 transition-transform shadow-lg">
@@ -3498,7 +3498,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                         <div className="text-left">
                            <h3 className="text-[13px] font-black uppercase tracking-widest text-[#1a1a1a] mb-1">{p.name}</h3>
                            <p className="text-[11px] text-[#666] mb-2">{p.category}</p>
-                           <p className="text-[13px] font-bold text-[#1a1a1a]">{storeIsAr ? '??????? ??' : 'à partir de'} {p.price} MAD</p>
+                           <p className="text-[13px] font-bold text-[#1a1a1a]">{storeIsAr ? '??????? ??' : 'Ã  partir de'} {p.price} MAD</p>
                         </div>
                      </div>
                      )
@@ -3550,7 +3550,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                     )}
                     
                     <div>
-                       <span className="text-[11px] font-bold uppercase tracking-widest text-[#666] mb-3 block">{storeIsAr ? '??????' : 'Quantité'}</span>
+                       <span className="text-[11px] font-bold uppercase tracking-widest text-[#666] mb-3 block">{storeIsAr ? '??????' : 'QuantitÃ©'}</span>
                        <div className="flex items-center gap-4">
                           <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-10 h-10 border border-[#ddd] flex items-center justify-center text-lg hover:border-[#1a1a1a] transition-colors">-</button>
                           <span className="text-sm font-bold w-4 text-center">{quantity}</span>
@@ -3604,22 +3604,22 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                  <CheckCircle className="w-12 h-12 relative z-10" />
               </div>
               <h2 className="text-3xl font-black uppercase tracking-widest text-[#1a1a1a] mb-4 flex items-center gap-2 justify-center">
-                  {storeIsAr ? '?? ????? ????' : 'Commande Confirmée !'} <Sparkles className="w-6 h-6 text-amber-400" />
+                  {storeIsAr ? '?? ????? ????' : 'Commande ConfirmÃ©e !'} <Sparkles className="w-6 h-6 text-amber-400" />
               </h2>
               <p className="text-[#666] text-lg max-w-md mx-auto leading-relaxed mb-8">
                  {storeIsAr 
                    ? "???????! ??? ?????? ???? ?????. ?????? ???? ???? ??????? ??????. ???? ??????? ??? ?????? ?????? ?????? ?????."
-                   : "Félicitations ! Nous avons bien reçu votre commande. Notre équipe la prépare avec soin et vous contactera très prochainement pour l'expédition."}
+                   : "FÃ©licitations ! Nous avons bien reÃ§u votre commande. Notre Ã©quipe la prÃ©pare avec soin et vous contactera trÃ¨s prochainement pour l'expÃ©dition."}
               </p>
               
               <div className="flex items-center justify-center gap-6 mb-10 text-[#888] text-sm font-semibold uppercase tracking-wider">
-                 <div className="flex flex-col items-center gap-2"><Package className="w-6 h-6 text-[#1a1a1a]" /> <span>{storeIsAr ? '????? ?????' : 'Préparation'}</span></div>
+                 <div className="flex flex-col items-center gap-2"><Package className="w-6 h-6 text-[#1a1a1a]" /> <span>{storeIsAr ? '????? ?????' : 'PrÃ©paration'}</span></div>
                  <div className="w-12 h-px bg-[#eee]"></div>
-                 <div className="flex flex-col items-center gap-2"><Truck className="w-6 h-6 text-[#1a1a1a]" /> <span>{storeIsAr ? '??? ????' : 'Expédition'}</span></div>
+                 <div className="flex flex-col items-center gap-2"><Truck className="w-6 h-6 text-[#1a1a1a]" /> <span>{storeIsAr ? '??? ????' : 'ExpÃ©dition'}</span></div>
               </div>
 
               <button onClick={() => setPage('home')} className="px-8 py-3 bg-[#f5f1e9] text-[#1a1a1a] font-bold uppercase tracking-widest text-xs hover:bg-[#e8e2d7] transition-colors">
-                 {storeIsAr ? "?????? ????????" : "Retour à l'accueil"}
+                 {storeIsAr ? "?????? ????????" : "Retour Ã  l'accueil"}
               </button>
            </div>
         )}
@@ -3648,8 +3648,8 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
             <div className={`w-full bg-[#f8f9fa] flex ${previewDevice === 'mobile' && !isModal ? 'flex-col pt-12' : 'flex-row items-center'} min-h-[500px] relative overflow-hidden`}>
                <div className={`z-10 ${previewDevice === 'mobile' && !isModal ? 'px-8 pb-12 text-center' : 'pl-24 pr-8 py-16 w-1/2 text-left'}`}>
                   <h1 className={`text-5xl md:text-7xl font-black text-slate-900 tracking-tighter mb-4 uppercase`} style={{ color: primaryColor }}>{heroTitle || (storeLang === 'ar' ? '??? ???' : storeLang === 'en' ? 'LOOKBOOK' : 'LOOKBOOK')}</h1>
-                  <p className="text-sm text-slate-500 mb-8 max-w-md font-medium leading-relaxed">{heroSubtitle || (storeLang === 'ar' ? '???? ??????? ??????. ???? ????????' : storeLang === 'en' ? 'New Spring drops from Over. Shop the Collection' : 'Nouvelles pièces de printemps. Découvrez la collection')}</p>
-                  <button className="px-8 py-3 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-slate-800 transition-colors rounded-full" style={btnStyle}>{heroButtonText || (storeLang === 'ar' ? '???? ????????' : storeLang === 'en' ? 'Shop Collection' : 'Découvrir la collection')}</button>
+                  <p className="text-sm text-slate-500 mb-8 max-w-md font-medium leading-relaxed">{heroSubtitle || (storeLang === 'ar' ? '???? ??????? ??????. ???? ????????' : storeLang === 'en' ? 'New Spring drops from Over. Shop the Collection' : 'Nouvelles piÃ¨ces de printemps. DÃ©couvrez la collection')}</p>
+                  <button className="px-8 py-3 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-slate-800 transition-colors rounded-full" style={btnStyle}>{heroButtonText || (storeLang === 'ar' ? '???? ????????' : storeLang === 'en' ? 'Shop Collection' : 'DÃ©couvrir la collection')}</button>
                </div>
                <div className={`absolute right-0 top-0 bottom-0 ${previewDevice === 'mobile' && !isModal ? 'w-full opacity-30 pointer-events-none' : 'w-1/2'} bg-cover bg-top`} style={{ backgroundImage: `url(${heroImage || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop'})` }}>
                </div>
@@ -3681,7 +3681,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
             {/* Products Grid */}
             <div className="mx-auto w-full px-4 py-8" style={{ maxWidth: `${siteMaxWidth}px` }}>
                <div className="flex items-center justify-between mb-12">
-                  <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{storeLang === 'ar' ? '#???_??????' : storeLang === 'en' ? '#New Arrivals' : '#Nouveautés'}</h3>
+                  <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{storeLang === 'ar' ? '#???_??????' : storeLang === 'en' ? '#New Arrivals' : '#NouveautÃ©s'}</h3>
                   <div className="flex gap-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden md:flex">
                      <span className="text-slate-900 border-b-2 border-slate-900 pb-1">All</span>
                      <span className="hover:text-slate-900 cursor-pointer">Men</span>
@@ -3887,7 +3887,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                      </div>
                      <div className="text-sm text-slate-500 leading-relaxed max-w-3xl">
                         {activePDPTab === 'description' ? (
-                           <ReadMoreDescription text={product.description || (storeLang === 'ar' ? `??? ?????? ?? ${product.name}.` : `Description détaillée de ${product.name}.`)} className="text-slate-500 text-sm leading-relaxed mb-8" isAr={storeIsAr} />
+                           <ReadMoreDescription text={product.description || (storeLang === 'ar' ? `??? ?????? ?? ${product.name}.` : `Description dÃ©taillÃ©e de ${product.name}.`)} className="text-slate-500 text-sm leading-relaxed mb-8" isAr={storeIsAr} />
                         ) : (
                            <div className="space-y-6">
                               <div className="flex gap-4">
@@ -3915,22 +3915,22 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                  <CheckCircle className="w-12 h-12 relative z-10" />
               </div>
               <h2 className="text-4xl font-black mb-3 text-slate-900 tracking-tight flex items-center gap-2 justify-center">
-                  {storeIsAr ? '?? ????? ???? ?????' : 'Commande Confirmée !'} <Sparkles className="w-8 h-8 text-amber-400" />
+                  {storeIsAr ? '?? ????? ???? ?????' : 'Commande ConfirmÃ©e !'} <Sparkles className="w-8 h-8 text-amber-400" />
               </h2>
               <p className="text-slate-500 text-lg max-w-md mx-auto leading-relaxed mb-8">
                  {storeIsAr 
                    ? "???????! ??? ?????? ???? ?????. ?????? ???? ???? ??????? ??????. ???? ??????? ??? ?????? ?????? ?????? ?????."
-                   : "Félicitations ! Nous avons bien reçu votre commande. Notre équipe la prépare avec soin et vous contactera très prochainement."}
+                   : "FÃ©licitations ! Nous avons bien reÃ§u votre commande. Notre Ã©quipe la prÃ©pare avec soin et vous contactera trÃ¨s prochainement."}
               </p>
               
               <div className="flex items-center justify-center gap-6 mb-10 text-slate-400 text-sm font-bold uppercase tracking-wider">
-                 <div className="flex flex-col items-center gap-2"><Package className="w-6 h-6 text-slate-900" /> <span>{storeIsAr ? '????? ?????' : 'PRÉPARATION'}</span></div>
+                 <div className="flex flex-col items-center gap-2"><Package className="w-6 h-6 text-slate-900" /> <span>{storeIsAr ? '????? ?????' : 'PRÃ‰PARATION'}</span></div>
                  <div className="w-12 h-px bg-slate-200"></div>
-                 <div className="flex flex-col items-center gap-2"><Truck className="w-6 h-6 text-slate-900" /> <span>{storeIsAr ? '??? ????' : 'EXPÉDITION'}</span></div>
+                 <div className="flex flex-col items-center gap-2"><Truck className="w-6 h-6 text-slate-900" /> <span>{storeIsAr ? '??? ????' : 'EXPÃ‰DITION'}</span></div>
               </div>
 
               <button onClick={() => setPage('home')} className="px-10 py-5 bg-slate-900 text-white font-black uppercase tracking-widest text-xs hover:bg-black transition-colors">
-                 {storeIsAr ? "?????? ????????" : "RETOUR À L'ACCUEIL"}
+                 {storeIsAr ? "?????? ????????" : "RETOUR Ã€ L'ACCUEIL"}
               </button>
            </div>
          </div>
@@ -4756,7 +4756,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                 <div className="w-full max-w-md h-full bg-white shadow-2xl flex flex-col transform transition-transform" onClick={e => e.stopPropagation()}>
                    <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
                       <h2 className="text-xl font-black uppercase tracking-tight">
-                         {authMode === 'login' ? (storeLang === 'ar' ? '????? ??????' : storeLang === 'en' ? 'Sign In' : 'Se connecter') : (storeLang === 'ar' ? '????? ????' : storeLang === 'en' ? 'Create Account' : 'Créer un compte')}
+                         {authMode === 'login' ? (storeLang === 'ar' ? '????? ??????' : storeLang === 'en' ? 'Sign In' : 'Se connecter') : (storeLang === 'ar' ? '????? ????' : storeLang === 'en' ? 'Create Account' : 'CrÃ©er un compte')}
                       </h2>
                       <button onClick={() => setIsAuthOpen(false)} className="w-8 h-8 flex items-center justify-center bg-white rounded-full border border-slate-200 text-slate-500 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-all">
                          <X className="w-4 h-4" />
@@ -4795,7 +4795,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                             <p className="text-xs text-indigo-200 font-mono mt-0.5">{customerUser?.email}</p>
                             <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
                                {(customerUser?.email === (config.owner_email || 'fashlow@gmail.com') || customerUser?.id === config.owner_id) 
-                                 ? (storeIsAr ? '?? ???? ???? (???? ??????)' : '?? Propriétaire / Marchand') 
+                                 ? (storeIsAr ? '?? ???? ???? (???? ??????)' : '?? PropriÃ©taire / Marchand') 
                                  : (storeIsAr ? '??? ???? ???? (????)' : '??? Client e-commerce')}
                             </div>
                          </div>
@@ -4806,7 +4806,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                       <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
                          <div className="flex items-center justify-between text-xs">
                             <span className="text-slate-500 font-semibold">{storeIsAr ? '????? ??????' : 'Nom complet'}</span>
-                            <span className="text-slate-800 font-bold">{customerProfile?.name || customerUser?.user_metadata?.full_name || 'Non spécifié'}</span>
+                            <span className="text-slate-800 font-bold">{customerProfile?.name || customerUser?.user_metadata?.full_name || 'Non spÃ©cifiÃ©'}</span>
                          </div>
                          <div className="h-px bg-slate-200/60" />
                          <div className="flex items-center justify-between text-xs">
@@ -4818,7 +4818,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                             <span className="text-slate-500 font-semibold">{storeIsAr ? '??? ??????' : 'Type de compte'}</span>
                             <span className="text-indigo-600 font-bold">
                                {(customerUser?.email === (config.owner_email || 'fashlow@gmail.com') || customerUser?.id === config.owner_id) 
-                                 ? (storeIsAr ? '???? — ???? ??????' : 'Marchand (Admin)') 
+                                 ? (storeIsAr ? '???? â€” ???? ??????' : 'Marchand (Admin)') 
                                  : (storeIsAr ? '???? ????????' : 'Client standard')}
                             </span>
                          </div>
@@ -4827,7 +4827,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                             <span className="text-slate-500 font-semibold">{storeIsAr ? '???? ??????' : 'Statut'}</span>
                             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                               {storeIsAr ? '???? ?????' : 'Vérifié'}
+                               {storeIsAr ? '???? ?????' : 'VÃ©rifiÃ©'}
                             </span>
                          </div>
                       </div>
@@ -4846,7 +4846,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                             className="w-full py-3 bg-rose-50 hover:bg-rose-100/80 text-rose-600 font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2"
                          >
                             <LogOut className="w-4 h-4" />
-                            <span>{storeIsAr ? '????? ?????? ?? ??????' : 'Se déconnecter de ce compte'}</span>
+                            <span>{storeIsAr ? '????? ?????? ?? ??????' : 'Se dÃ©connecter de ce compte'}</span>
                          </button>
                       </div>
                    </div>
@@ -4870,7 +4870,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                          </div>
                          <div className="flex-1 min-w-0">
                             <h4 className="font-bold text-sm text-slate-800 truncate">{quickBuyContext.product.name}</h4>
-                            <p className="text-sm font-black" style={{ color: primaryColor }}>{quickBuyContext.product.price} MAD {quickBuyContext.quantity > 1 ? `× ${quickBuyContext.quantity}` : ''}</p>
+                            <p className="text-sm font-black" style={{ color: primaryColor }}>{quickBuyContext.product.price} MAD {quickBuyContext.quantity > 1 ? `Ã— ${quickBuyContext.quantity}` : ''}</p>
                          </div>
                       </div>
                       <CheckoutForm
@@ -4915,12 +4915,12 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                       onChange={(e) => updateTextStyle(activeStyleKey, { fontFamily: e.target.value || undefined })}
                       className="text-[11px] font-bold text-slate-600 bg-slate-50 rounded-lg px-2 py-1.5 border-none focus:outline-none"
                    >
-                      <option value="">{isAr ? '????' : 'Thème'}</option>
+                      <option value="">{isAr ? '????' : 'ThÃ¨me'}</option>
                       <option value="sans">Sans</option>
                       <option value="serif">Serif</option>
                       <option value="mono">Mono</option>
                    </select>
-                   <button onClick={() => resetTextStyle(activeStyleKey)} title={isAr ? '????? ?????' : 'Réinitialiser'} className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-rose-500 rounded-md hover:bg-rose-50">
+                   <button onClick={() => resetTextStyle(activeStyleKey)} title={isAr ? '????? ?????' : 'RÃ©initialiser'} className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-rose-500 rounded-md hover:bg-rose-50">
                       <RefreshCw className="w-3.5 h-3.5" />
                    </button>
                    <button onClick={() => setActiveStyleKey(null)} className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-100">
@@ -4954,14 +4954,14 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                 <h2 className="text-lg font-black tracking-widest uppercase mb-6 text-white/70">{storeName || 'Beya Store'}</h2>
              )}
              <h1 className="text-3xl sm:text-5xl font-black tracking-tight mb-4">
-                {storeLang === 'ar' ? '??????' : storeLang === 'en' ? 'Coming Soon' : 'Bientôt disponible'}
+                {storeLang === 'ar' ? '??????' : storeLang === 'en' ? 'Coming Soon' : 'BientÃ´t disponible'}
              </h1>
              <p className="text-slate-300 text-base sm:text-lg max-w-md leading-relaxed">
                 {comingSoonMessage || (storeLang === 'ar'
                    ? '?????? ??????? ????? ???? ???? ?????!'
                    : storeLang === 'en'
                    ? "We're putting the final touches on our store. Check back soon!"
-                   : 'Notre boutique arrive très bientôt, revenez nous voir !')}
+                   : 'Notre boutique arrive trÃ¨s bientÃ´t, revenez nous voir !')}
              </p>
           </div>
        );
@@ -5029,7 +5029,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                      setDashLang(nextLang);
                   }}
                   className="flex items-center justify-center gap-1.5 px-3 h-[44px] bg-white border border-slate-200 hover:border-indigo-500 text-slate-700 hover:text-indigo-600 rounded-2xl font-black text-xs uppercase tracking-wider transition-all shadow-sm shrink-0 cursor-pointer"
-                  title={dashLang === 'ar' ? 'Passer en Français (FR)' : '??????? ??? ??????? (AR)'}
+                  title={dashLang === 'ar' ? 'Passer en FranÃ§ais (FR)' : '??????? ??? ??????? (AR)'}
                >
                   <Globe className="w-4 h-4 text-indigo-600 shrink-0" />
                   <span>{dashLang === 'ar' ? 'FR' : 'AR'}</span>
@@ -5038,7 +5038,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                <div className="flex items-center gap-2 bg-white px-2 py-1.5 rounded-2xl shadow-sm border border-slate-200 h-[44px]">
                   <div className="hidden sm:block text-right pr-2 pl-3">
                   <p className="text-sm font-bold text-slate-900 leading-none">{merchantUser?.user_metadata?.full_name || 'Merchant'}</p>
-                  <p className="text-[10px] font-black text-indigo-500 uppercase mt-1 tracking-wider">{isAr ? '???? ??????' : 'Gérant'}</p>
+                  <p className="text-[10px] font-black text-indigo-500 uppercase mt-1 tracking-wider">{isAr ? '???? ??????' : 'GÃ©rant'}</p>
                </div>
                <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-md border-2 border-white">
                   {(merchantUser?.user_metadata?.full_name || 'M').charAt(0).toUpperCase()}
@@ -5050,7 +5050,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                     window.location.href = '/';
                  }}
                  className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
-                 title={isAr ? '????? ??????' : 'Déconnexion'}
+                 title={isAr ? '????? ??????' : 'DÃ©connexion'}
                >
                  <LogOut className="w-4 h-4" />
                </button>
@@ -5080,11 +5080,11 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                   {isAr ? '????? ?????? ?' : 'Upgrade ?'}
                </button>
             )}
-            <span className="flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-black rounded uppercase tracking-widest" title="Connexion chiffrée de bout en bout et route protégée (Admin uniquement)"><ShieldCheck className="w-3 h-3" /> {isAr ? '???' : 'Sécurisé'}</span>
+            <span className="flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-black rounded uppercase tracking-widest" title="Connexion chiffrÃ©e de bout en bout et route protÃ©gÃ©e (Admin uniquement)"><ShieldCheck className="w-3 h-3" /> {isAr ? '???' : 'SÃ©curisÃ©'}</span>
           </div>
           <div className="flex bg-slate-100 p-1 rounded-xl w-max mt-4 shadow-inner">
              <button onClick={() => { setPlatformMode('gestion'); setActiveTab('orders'); }} className={`px-5 py-2 rounded-lg text-xs font-black transition-all ${platformMode === 'gestion' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>{isAr ? '????? ??????' : 'Gestion Boutique'}</button>
-             <button onClick={() => { setPlatformMode('builder'); setActiveTab('themes'); }} className={`px-5 py-2 rounded-lg text-xs font-black transition-all ${platformMode === 'builder' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>{isAr ? '????? ??????' : 'Développement Site'}</button>
+             <button onClick={() => { setPlatformMode('builder'); setActiveTab('themes'); }} className={`px-5 py-2 rounded-lg text-xs font-black transition-all ${platformMode === 'builder' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>{isAr ? '????? ??????' : 'DÃ©veloppement Site'}</button>
           </div>
         </div>
         <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
@@ -5094,10 +5094,10 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
              </div>
           )}
           <button onClick={() => handleSave()} disabled={isSaving} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${isSaving ? 'bg-green-500 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
-            {isSaving ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />} {isSaving ? (isAr ? '?? ?????' : 'Enregistré') : (isAr ? '???' : 'Enregistrer')}
+            {isSaving ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />} {isSaving ? (isAr ? '?? ?????' : 'EnregistrÃ©') : (isAr ? '???' : 'Enregistrer')}
           </button>
-          <button onClick={() => { setPreviewProductId(null); setShowPreview(true); }} className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 px-4 py-2 rounded-xl text-sm font-black hover:bg-indigo-100 hover:scale-105 transition-all shadow-sm" title={isAr ? '???? ?????? ?????????' : 'Éditeur Visuel PRO'}>
-            <LayoutTemplate className="w-4 h-4" /> {isAr ? '???? ??????' : 'Éditeur PRO'}
+          <button onClick={() => { setPreviewProductId(null); setShowPreview(true); }} className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 px-4 py-2 rounded-xl text-sm font-black hover:bg-indigo-100 hover:scale-105 transition-all shadow-sm" title={isAr ? '???? ?????? ?????????' : 'Ã‰diteur Visuel PRO'}>
+            <LayoutTemplate className="w-4 h-4" /> {isAr ? '???? ??????' : 'Ã‰diteur PRO'}
           </button>
           <button
              onClick={() => {
@@ -5134,7 +5134,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                  { id: 'delivery', icon: Truck, label: isAr ? '???????' : 'Livraison' },
                  { id: 'beya-designer', icon: Sparkles, label: isAr ? '???? ???' : 'Beya Designer' }
            ] : [
-                 { id: 'themes', icon: LayoutTemplate, label: isAr ? '???????' : 'Thèmes' },
+                 { id: 'themes', icon: LayoutTemplate, label: isAr ? '???????' : 'ThÃ¨mes' },
                  { id: 'design', icon: Paintbrush, label: isAr ? '???????' : 'Design' },
                  { id: 'apps', icon: Box, label: isAr ? '???????' : 'Apps' },
                  { id: 'settings', icon: Settings, label: isAr ? '???????' : 'Config' }
@@ -5163,7 +5163,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
               {activeTab === 'themes' && (
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Thème Actif</label>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">ThÃ¨me Actif</label>
                     <div className="border-2 border-indigo-600 rounded-xl p-1 relative bg-slate-50">
                       <div className="absolute top-2 right-2 bg-indigo-600 text-white p-1 rounded-full shadow-lg z-10"><CheckCircle className="w-3 h-3" /></div>
                       <div className="aspect-video bg-cover bg-center rounded-lg mb-2 relative" style={{ backgroundImage: `url(${activeTheme.previewImg})` }}>
@@ -5192,13 +5192,13 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                   </div>
                   <div className="pt-4 border-t border-slate-100">
                     <div className="flex items-center justify-between mb-3">
-                       <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">{isAr ? '?????? ????????' : 'Catalogue de Thèmes'}</label>
+                       <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">{isAr ? '?????? ????????' : 'Catalogue de ThÃ¨mes'}</label>
                        {subscriptionTier === 'NORMAL' && (
                           <button
                              onClick={() => { setShowUpgradeModal(true); setUpgradeStep('plans'); }}
                              className="flex items-center gap-1 text-[10px] font-black text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-full transition-colors border border-amber-200"
                           >
-                             <Crown className="w-3 h-3" /> {isAr ? '????? ???? ?? ???????? ?' : 'Débloquer tout ?'}
+                             <Crown className="w-3 h-3" /> {isAr ? '????? ???? ?? ???????? ?' : 'DÃ©bloquer tout ?'}
                           </button>
                        )}
                     </div>
@@ -5339,8 +5339,8 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                    <div className="flex items-center gap-2">
                                       <div className="w-8 h-8 bg-emerald-50 rounded-full flex items-center justify-center"><Truck className="w-4 h-4 text-emerald-500" /></div>
                                       <div>
-                                         <p className="text-[9px] font-bold text-slate-400 uppercase">{isAr ? '?? ???????' : 'Livrées'}</p>
-                                         <p className="text-sm font-black text-slate-800">{myStoreOrders.filter((o: any) => !o.deleted && ['Livrée', '?? ???????', 'Delivered'].includes(o.status)).length}</p>
+                                         <p className="text-[9px] font-bold text-slate-400 uppercase">{isAr ? '?? ???????' : 'LivrÃ©es'}</p>
+                                         <p className="text-sm font-black text-slate-800">{myStoreOrders.filter((o: any) => !o.deleted && ['LivrÃ©e', '?? ???????', 'Delivered'].includes(o.status)).length}</p>
                                       </div>
                                    </div>
                                 </div>
@@ -5349,7 +5349,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                       <div className="w-8 h-8 bg-rose-50 rounded-full flex items-center justify-center"><RotateCcw className="w-4 h-4 text-rose-500" /></div>
                                       <div>
                                          <p className="text-[9px] font-bold text-slate-400 uppercase">{isAr ? '?????????' : 'Retours'}</p>
-                                         <p className="text-sm font-black text-slate-800">{myStoreOrders.filter((o: any) => !o.deleted && ['Retour', 'Annulée'].includes(o.status)).length}</p>
+                                         <p className="text-sm font-black text-slate-800">{myStoreOrders.filter((o: any) => !o.deleted && ['Retour', 'AnnulÃ©e'].includes(o.status)).length}</p>
                                       </div>
                                    </div>
                                 </div>
@@ -5409,7 +5409,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                    <div className="flex items-center gap-2">
                                       <Package className="w-5 h-5 text-indigo-500" />
                                       <div>
-                                         <p className="text-[9px] font-bold text-slate-400 uppercase">{isAr ? '????? ?????? ?? ???????' : 'Modèles en Stock'}</p>
+                                         <p className="text-[9px] font-bold text-slate-400 uppercase">{isAr ? '????? ?????? ?? ???????' : 'ModÃ¨les en Stock'}</p>
                                          <p className="text-sm font-black text-slate-800">{storeProducts.length} {isAr ? '????' : 'Produits'}</p>
                                       </div>
                                    </div>
@@ -5506,7 +5506,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                        >
                           <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-green-400 group-hover:w-2 transition-all"></div>
                           <div className="pl-2">
-                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? '?????' : 'Confirmées'}</p>
+                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? '?????' : 'ConfirmÃ©es'}</p>
                              <h4 className="text-xl font-black text-slate-800 tracking-tight">{myStoreOrders.filter((ord: any) => !ord.deleted && CONFIRMED_STATUSES.includes(ord.status)).length.toLocaleString('fr-FR')}</h4>
                           </div>
                           <div className="w-10 h-10 bg-green-50 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:bg-green-100 transition-all"><CheckCircle className="w-5 h-5 text-green-500" /></div>
@@ -5518,7 +5518,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                        >
                           <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-400 group-hover:w-2 transition-all"></div>
                           <div className="pl-2">
-                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? '??????' : 'Refusées'}</p>
+                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isAr ? '??????' : 'RefusÃ©es'}</p>
                              <h4 className="text-xl font-black text-slate-800 tracking-tight">{myStoreOrders.filter((ord: any) => !ord.deleted && REFUSED_STATUSES.includes(ord.status)).length.toLocaleString('fr-FR')}</h4>
                           </div>
                           <div className="w-10 h-10 bg-rose-50 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:bg-rose-100 transition-all"><X className="w-5 h-5 text-rose-500" /></div>
@@ -5530,7 +5530,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                     <div>
                        <div className="flex justify-between items-center mb-3">
                           <div className="flex gap-4 items-center">
-                            <h3 className={`text-xs font-black uppercase tracking-wider cursor-pointer transition-colors ${!showTrash ? 'text-slate-800' : 'text-slate-400 hover:text-slate-600'}`} onClick={() => { setShowTrash(false); setSelectedOrderIds([]); }}>{isAr ? '???????' : 'Récentes'}</h3>
+                            <h3 className={`text-xs font-black uppercase tracking-wider cursor-pointer transition-colors ${!showTrash ? 'text-slate-800' : 'text-slate-400 hover:text-slate-600'}`} onClick={() => { setShowTrash(false); setSelectedOrderIds([]); }}>{isAr ? '???????' : 'RÃ©centes'}</h3>
                             <h3 className={`text-xs font-black uppercase tracking-wider cursor-pointer flex items-center gap-1 transition-colors ${showTrash ? 'text-rose-600' : 'text-slate-400 hover:text-rose-400'}`} onClick={() => { setShowTrash(true); setSelectedOrderIds([]); }}>
                                <Trash2 className="w-3 h-3" /> {isAr ? '??? ????????' : 'Poubelle'}
                             </h3>
@@ -5540,15 +5540,15 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                           </div>
                           {selectedOrderIds.length > 0 ? (
                              <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-bold text-slate-500">{selectedOrderIds.length} {isAr ? '????' : 'sélectionné(s)'}</span>
+                                <span className="text-[10px] font-bold text-slate-500">{selectedOrderIds.length} {isAr ? '????' : 'sÃ©lectionnÃ©(s)'}</span>
                                 <button onClick={() => setSelectedOrderIds([])} className="text-[10px] font-bold text-slate-400 hover:text-slate-600 transition-colors">{isAr ? '?????' : 'Annuler'}</button>
                                 <button onClick={() => setIsBulkDeleteOpen(true)} className="flex items-center gap-1 text-[10px] font-black text-rose-600 bg-rose-50 px-2.5 py-1.5 rounded-lg hover:bg-rose-100 transition-colors">
-                                   <Trash2 className="w-3 h-3" /> {showTrash ? (isAr ? '??? ?????' : 'Supprimer définitivement') : (isAr ? '???' : 'Supprimer')}
+                                   <Trash2 className="w-3 h-3" /> {showTrash ? (isAr ? '??? ?????' : 'Supprimer dÃ©finitivement') : (isAr ? '???' : 'Supprimer')}
                                 </button>
                              </div>
                           ) : orderStatusFilter !== 'all' ? (
                              <button onClick={() => setOrderStatusFilter('all')} className={`flex items-center gap-1 text-[10px] font-black px-2.5 py-1.5 rounded-lg transition-colors ${orderStatusFilter === 'confirmed' ? 'text-green-700 bg-green-50 hover:bg-green-100' : 'text-rose-700 bg-rose-50 hover:bg-rose-100'}`}>
-                                {orderStatusFilter === 'confirmed' ? (isAr ? '?????' : 'Confirmées') : (isAr ? '??????' : 'Refusées')} <X className="w-3 h-3" />
+                                {orderStatusFilter === 'confirmed' ? (isAr ? '?????' : 'ConfirmÃ©es') : (isAr ? '??????' : 'RefusÃ©es')} <X className="w-3 h-3" />
                              </button>
                           ) : (
                              <span className="text-[10px] text-indigo-600 font-bold cursor-pointer hover:underline">{isAr ? '??? ????' : 'Voir tout'}</span>
@@ -5562,7 +5562,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                    <Package className="w-8 h-8 text-slate-300 relative z-10" />
                                 </div>
                                 <h4 className="text-sm font-black text-slate-700 mb-1">{showTrash ? (isAr ? '??? ???????? ?????' : 'Corbeille vide') : (isAr ? '?? ???? ????? ???' : 'Aucune commande pour le moment')}</h4>
-                                <p className="text-[10px] font-bold text-slate-400 max-w-[200px] leading-relaxed">{showTrash ? '' : (isAr ? '????? ?????? ??? ????? ?? ???? ?????? ???????' : 'Vos commandes apparaîtront ici dès que vos clients commenceront à acheter')}</p>
+                                <p className="text-[10px] font-bold text-slate-400 max-w-[200px] leading-relaxed">{showTrash ? '' : (isAr ? '????? ?????? ??? ????? ?? ???? ?????? ???????' : 'Vos commandes apparaÃ®tront ici dÃ¨s que vos clients commenceront Ã  acheter')}</p>
                              </div>
                           ) : myStoreOrders.filter(matchesOrderFilter).map(order => (
                              <div key={order.id} onClick={() => setSelectedOrder(order)} className={`p-3 border rounded-2xl bg-white shadow-sm cursor-pointer transition-colors hover:shadow-md group flex gap-3 items-start ${selectedOrderIds.includes(order.id) ? 'border-indigo-500 ring-2 ring-indigo-100' : 'border-slate-200 hover:border-indigo-500'}`}>
@@ -5637,7 +5637,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                     <div className="p-12 text-center border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50">
                        <Users className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                        <h4 className="text-lg font-bold text-slate-600">Aucun client pour le moment</h4>
-                       <p className="text-sm text-slate-400 mt-2">Les clients apparaîtront ici lorsqu'ils passeront des commandes.</p>
+                       <p className="text-sm text-slate-400 mt-2">Les clients apparaÃ®tront ici lorsqu'ils passeront des commandes.</p>
                     </div>
                  </div>
               )}
@@ -5648,10 +5648,10 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                      <div className="flex justify-between items-center mb-6">
                         <div>
                            <h3 className="text-xl font-black text-slate-800 tracking-tight">{isAr ? '???????' : 'Livraison'}</h3>
-                           <p className="text-xs text-slate-500 font-bold mt-1">{isAr ? '????? ????? ??????? ?????? ??' : 'Gérez vos sociétés de livraison partenaires'}</p>
+                           <p className="text-xs text-slate-500 font-bold mt-1">{isAr ? '????? ????? ??????? ?????? ??' : 'GÃ©rez vos sociÃ©tÃ©s de livraison partenaires'}</p>
                         </div>
                         <button onClick={() => setIsDeliveryModalOpen(true)} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 shadow-sm transition-colors">
-                           <Plus className="w-4 h-4" /> {isAr ? '????? ????' : 'Ajouter société'}
+                           <Plus className="w-4 h-4" /> {isAr ? '????? ????' : 'Ajouter sociÃ©tÃ©'}
                         </button>
                      </div>
                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -5679,7 +5679,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
               {/* PAYMENTS TAB (NEW!) */}
               {activeTab === 'payments' && (
                  <div className="space-y-4">
-                    <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider mb-2">Méthodes de Paiement</h3>
+                    <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider mb-2">MÃ©thodes de Paiement</h3>
                     
                     <div className="p-4 border-2 border-indigo-600 rounded-xl bg-indigo-50/30 shadow-sm relative overflow-hidden">
                        <div className="absolute top-0 right-0 bg-indigo-600 text-white text-[8px] font-black uppercase px-2 py-1 rounded-bl-lg">Actif</div>
@@ -5688,8 +5688,8 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                              <CreditCard className="w-4 h-4" />
                           </div>
                           <div>
-                             <h4 className="text-sm font-black text-slate-800">Paiement à la Livraison (COD)</h4>
-                             <p className="text-[10px] text-slate-500">Le client paie à la réception.</p>
+                             <h4 className="text-sm font-black text-slate-800">Paiement Ã  la Livraison (COD)</h4>
+                             <p className="text-[10px] text-slate-500">Le client paie Ã  la rÃ©ception.</p>
                           </div>
                        </div>
                     </div>
@@ -5735,14 +5735,14 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                              <LayoutTemplate className="w-6 h-6 text-white" />
                           </div>
                           <h3 className="text-xl font-black tracking-tight mb-2">
-                             {isAr ? '???? ?????? ?????????' : 'Éditeur Visuel PRO'}
+                             {isAr ? '???? ?????? ?????????' : 'Ã‰diteur Visuel PRO'}
                           </h3>
                           <p className="text-indigo-100 text-xs mb-5 leading-relaxed px-2 font-medium">
-                             {isAr ? '??? ????? ???????! ??? ??????? ?????? ???????? ????? ??? ??? ?????? ????.' : 'Concevez votre site de A à Z ! Gérez le design, le texte et les sections avec des outils pro.'}
+                             {isAr ? '??? ????? ???????! ??? ??????? ?????? ???????? ????? ??? ??? ?????? ????.' : 'Concevez votre site de A Ã  Z ! GÃ©rez le design, le texte et les sections avec des outils pro.'}
                           </p>
                           <button onClick={() => setShowPreview(true)} className="w-full bg-white text-indigo-600 font-black py-3.5 rounded-xl shadow-[0_8px_16px_-6px_rgba(0,0,0,0.3)] hover:bg-slate-50 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2">
                              <Paintbrush className="w-4 h-4" />
-                             {isAr ? '???? ?????? ??????' : 'Ouvrir l\'Éditeur PRO'}
+                             {isAr ? '???? ?????? ??????' : 'Ouvrir l\'Ã‰diteur PRO'}
                           </button>
                        </div>
                     </div>
@@ -5763,9 +5763,9 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                           { id: 'WhatsApp Chat', name: 'WhatsApp', desc: isAr ? '?? ?????? ???? ??????? ??????' : 'Bouton flottant pour chat rapide', icon: Smartphone, color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200' },
                          { id: 'Facebook Pixel', name: 'Facebook Pixel', desc: isAr ? '???? ???? ?????? ?????? ??????' : 'Suivi des conversions Facebook', icon: Monitor, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
                          { id: 'TikTok Pixel', name: 'TikTok Pixel', desc: isAr ? '???? ??????? ????? ??? ???' : 'Suivi des conversions TikTok', icon: Video, color: 'text-slate-900', bg: 'bg-slate-100', border: 'border-slate-300' },
-                         { id: 'Google Analytics 4', name: 'Google Analytics 4', desc: isAr ? '???????? ????? ????? ?????' : 'Statistiques détaillées des visiteurs', icon: Globe, color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200' },
-                         { id: 'AI Auto-Builder', name: 'AI Product Builder', desc: isAr ? 'Premium: ????? ?????? ???????? ???? SEO ??????? ????????? ?? ?????' : 'Premium: Génération IA des détails et SEO via image', icon: Sparkles, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200' },
-                         { id: 'Beya Designer', name: 'Beya Designer', desc: isAr ? '??????? ????? ?????? ???? Mockup ??????? ?????????' : 'Studio de logo IA & générateur de mockups', icon: Sparkles, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-200', isLink: true }
+                         { id: 'Google Analytics 4', name: 'Google Analytics 4', desc: isAr ? '???????? ????? ????? ?????' : 'Statistiques dÃ©taillÃ©es des visiteurs', icon: Globe, color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200' },
+                         { id: 'AI Auto-Builder', name: 'AI Product Builder', desc: isAr ? 'Premium: ????? ?????? ???????? ???? SEO ??????? ????????? ?? ?????' : 'Premium: GÃ©nÃ©ration IA des dÃ©tails et SEO via image', icon: Sparkles, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200' },
+                         { id: 'Beya Designer', name: 'Beya Designer', desc: isAr ? '??????? ????? ?????? ???? Mockup ??????? ?????????' : 'Studio de logo IA & gÃ©nÃ©rateur de mockups', icon: Sparkles, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-200', isLink: true }
                        ].map(app => (
                           <div key={app.id} className={`bg-white border ${appsConfig[app.id] || (app as any).isLink ? app.border : 'border-slate-200'} rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group cursor-pointer`} onClick={() => { if ((app as any).isLink) { navigate(`/beya-designer?plan=${encodeURIComponent(subscriptionTier)}&lang=${isAr ? 'ar' : 'fr'}`); } else { setAppInputValue(appsConfig[app.id] || ''); setActiveAppModal(app.id); } }}>
                              {appsConfig[app.id] && !(app as any).isLink && <div className="absolute top-3 right-3 bg-green-100 text-green-700 text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider">{isAr ? '???' : 'Actif'}</div>}
@@ -5804,10 +5804,10 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                         </div>
                         <p className="text-[11px] text-slate-500 font-semibold">
                            {proThemesUnlocked
-                              ? (isAr ? '????? ???? ???? ???????? ??????? (Pro).' : 'Votre plan débloque tous les thèmes Pro.')
+                              ? (isAr ? '????? ???? ???? ???????? ??????? (Pro).' : 'Votre plan dÃ©bloque tous les thÃ¨mes Pro.')
                               : (isAr
                                  ? '???? Normal ????? 2 ?? ????????. ????? ???? ??????? ??? Pro ???? ???? ????????.'
-                                 : "Le plan Normal donne accès à 2 thèmes. Contactez-nous pour passer à PRO et débloquer les autres thèmes.")}
+                                 : "Le plan Normal donne accÃ¨s Ã  2 thÃ¨mes. Contactez-nous pour passer Ã  PRO et dÃ©bloquer les autres thÃ¨mes.")}
                         </p>
                      </div>
 
@@ -5816,11 +5816,11 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                            <div className="flex items-center gap-2">
                               <Clock className={`w-4 h-4 ${comingSoonMode ? 'text-amber-500' : 'text-slate-400'}`} />
                               <div>
-                                 <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{isAr ? '??? "??????" (Coming Soon)' : 'Mode "Bientôt disponible"'}</h4>
+                                 <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{isAr ? '??? "??????" (Coming Soon)' : 'Mode "BientÃ´t disponible"'}</h4>
                                  <p className="text-[11px] text-slate-500 font-semibold mt-0.5">
                                     {isAr
                                        ? '??? ???????? ?????? ??????? ???? "??????" ??? ?? ????? ?????? ?? ????? ???????.'
-                                       : "Si activé, vos visiteurs verront une page « Bientôt disponible » au lieu du site en construction."}
+                                       : "Si activÃ©, vos visiteurs verront une page Â« BientÃ´t disponible Â» au lieu du site en construction."}
                                  </p>
                               </div>
                            </div>
@@ -5833,11 +5833,11 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                         </div>
                         {comingSoonMode && (
                            <div>
-                              <label className="text-[10px] font-black text-amber-700 uppercase tracking-wider mb-1.5 block">{isAr ? '????? ????? (???????)' : 'Message personnalisé (optionnel)'}</label>
+                              <label className="text-[10px] font-black text-amber-700 uppercase tracking-wider mb-1.5 block">{isAr ? '????? ????? (???????)' : 'Message personnalisÃ© (optionnel)'}</label>
                               <textarea
                                  value={comingSoonMessage}
                                  onChange={(e) => setComingSoonMessage(e.target.value)}
-                                 placeholder={isAr ? '?????? ??????? ????? ???? ???? ?????!' : 'Notre boutique arrive très bientôt, revenez nous voir !'}
+                                 placeholder={isAr ? '?????? ??????? ????? ???? ???? ?????!' : 'Notre boutique arrive trÃ¨s bientÃ´t, revenez nous voir !'}
                                  rows={2}
                                  className="w-full text-sm font-medium bg-white border border-amber-200 rounded-lg px-3 py-2 resize-none"
                               />
@@ -5849,7 +5849,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                         <div>
                            <h4 className="text-xs font-black text-slate-800 mb-2 uppercase tracking-wider">{isAr ? '??? ??????' : 'Langue de la boutique'}</h4>
                            <div className="flex gap-2">
-                              <button onClick={() => setStoreLang('fr')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${storeLang === 'fr' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}`}>{isAr ? '????????' : 'Français'}</button>
+                              <button onClick={() => setStoreLang('fr')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${storeLang === 'fr' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}`}>{isAr ? '????????' : 'FranÃ§ais'}</button>
                               <button onClick={() => setStoreLang('en')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${storeLang === 'en' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}`}>{isAr ? '??????????' : 'English'}</button>
                               <button onClick={() => setStoreLang('ar')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${storeLang === 'ar' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}`}>{isAr ? '???????' : 'Arabe'}</button>
                            </div>
@@ -5860,7 +5860,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                         <div className="flex items-center justify-between">
                            <div>
                               <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{isAr ? '????? ???? ?????? ?????' : 'Compte requis pour commander'}</h4>
-                              <p className="text-[11px] text-slate-500 font-semibold mt-1">{isAr ? '??? ?? ???????? ??? ??? ??????? ????? ???? ??? ????? ?????' : "Si activé, les clients doivent créer un compte avant de finaliser une commande."}</p>
+                              <p className="text-[11px] text-slate-500 font-semibold mt-1">{isAr ? '??? ?? ???????? ??? ??? ??????? ????? ???? ??? ????? ?????' : "Si activÃ©, les clients doivent crÃ©er un compte avant de finaliser une commande."}</p>
                            </div>
                            <button
                               onClick={() => setRequireAccountToOrder((v: boolean) => !v)}
@@ -5875,7 +5875,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                         <div className="flex items-center justify-between">
                            <div>
                               <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{isAr ? '"????? ????" ?????? ??????' : "'Acheter Maintenant' en popup"}</h4>
-                              <p className="text-[11px] text-slate-500 font-semibold mt-1">{isAr ? '??? ?????? ???? "????? ????" ????? ???? ???? ??? ???????? ????? ?????' : "Si activé, le bouton ouvre une fenêtre d'achat rapide au lieu d'aller sur une page de commande complète."}</p>
+                              <p className="text-[11px] text-slate-500 font-semibold mt-1">{isAr ? '??? ?????? ???? "????? ????" ????? ???? ???? ??? ???????? ????? ?????' : "Si activÃ©, le bouton ouvre une fenÃªtre d'achat rapide au lieu d'aller sur une page de commande complÃ¨te."}</p>
                            </div>
                            <button
                               onClick={() => setBuyNowAsPopup((v: boolean) => !v)}
@@ -5889,8 +5889,8 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
                         <div className="flex items-center justify-between">
                            <div>
-                              <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{isAr ? '????? ????? ?? ???? ??????' : 'Réassurance (page produit)'}</h4>
-                              <p className="text-[11px] text-slate-500 font-semibold mt-1">{isAr ? '??????? ??????? ??????? ???????? ???? ?? ??????' : "Infos livraison/garantie/retour affichées sous le bouton d'achat."}</p>
+                              <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{isAr ? '????? ????? ?? ???? ??????' : 'RÃ©assurance (page produit)'}</h4>
+                              <p className="text-[11px] text-slate-500 font-semibold mt-1">{isAr ? '??????? ??????? ??????? ???????? ???? ?? ??????' : "Infos livraison/garantie/retour affichÃ©es sous le bouton d'achat."}</p>
                            </div>
                            <button
                               onClick={() => setShowPdpTrustBadges((v: boolean) => !v)}
@@ -5972,7 +5972,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                      <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? '??????' : 'Animation'}</label>
                                      <select value={topBarAnimation} onChange={e => setTopBarAnimation(e.target.value)} className="w-full px-2 py-1.5 text-xs border border-slate-200 rounded-lg outline-none bg-white">
                                         <option value="static">{isAr ? '????' : 'Statique'}</option>
-                                        <option value="marquee">{isAr ? '?????' : 'Défilant'}</option>
+                                        <option value="marquee">{isAr ? '?????' : 'DÃ©filant'}</option>
                                      </select>
                                   </div>
                                </div>
@@ -5980,9 +5980,9 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                          )}
                       </div>
 
-<h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{isAr ? '??????? ??? ??????' : "Icônes de l'en-tête"}</h4>
+<h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">{isAr ? '??????? ??? ??????' : "IcÃ´nes de l'en-tÃªte"}</h4>
                         <div className="flex items-center justify-between">
-                           <p className="text-xs font-bold text-slate-600">{isAr ? '?????? ?????' : 'Sélecteur de langue'}</p>
+                           <p className="text-xs font-bold text-slate-600">{isAr ? '?????? ?????' : 'SÃ©lecteur de langue'}</p>
                            <button onClick={() => setShowHeaderLang((v: boolean) => !v)} className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${showHeaderLang ? 'bg-indigo-600' : 'bg-slate-300'}`}>
                               <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${showHeaderLang ? 'translate-x-5' : ''}`} />
                            </button>
@@ -6051,13 +6051,13 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                        </div>
 
                        <div className="pt-4 border-t border-slate-200">
-                          <h4 className="text-xs font-black text-slate-800 mb-2 uppercase tracking-wider">{isAr ? '??? SEO (???? ?? ????? ????)' : 'Description SEO (affichée sur Google)'}</h4>
+                          <h4 className="text-xs font-black text-slate-800 mb-2 uppercase tracking-wider">{isAr ? '??? SEO (???? ?? ????? ????)' : 'Description SEO (affichÃ©e sur Google)'}</h4>
                           <textarea
                              value={seoDescription}
                              onChange={e => setSeoDescription(e.target.value)}
                              rows={3}
                              maxLength={160}
-                             placeholder={isAr ? '??? ???? ?????? ????? (??? ?? 160 ???)' : 'Courte description de votre boutique (moins de 160 caractères)'}
+                             placeholder={isAr ? '??? ???? ?????? ????? (??? ?? 160 ???)' : 'Courte description de votre boutique (moins de 160 caractÃ¨res)'}
                              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 resize-none"
                           />
                           <p className="text-[10px] text-slate-400 mt-1 text-right">{seoDescription.length}/160</p>
@@ -6089,7 +6089,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
 
                     {/* CUSTOM DOMAIN SECTION */}
                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                       <h4 className="text-xs font-black text-slate-800 mb-1 uppercase tracking-wider flex items-center gap-2"><Globe className="w-4 h-4 text-indigo-600" /> {isAr ? '???? ???? (?????)' : 'Domaine Personnalisé'}</h4>
+                       <h4 className="text-xs font-black text-slate-800 mb-1 uppercase tracking-wider flex items-center gap-2"><Globe className="w-4 h-4 text-indigo-600" /> {isAr ? '???? ???? (?????)' : 'Domaine PersonnalisÃ©'}</h4>
                        <p className="text-[10px] text-slate-500 mb-2">{isAr ? '???? ?????? ????? ?? (????: www.maboutique.com)' : 'Connectez votre propre domaine (ex: www.maboutique.com).'}</p>
                        <div className="flex gap-2">
                          <input
@@ -6121,7 +6121,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                       <code className="text-xs font-black text-slate-800 tracking-wide flex-1">A</code>
                                    </div>
                                    <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-100 rounded-lg group">
-                                      <span className="text-xs text-slate-500 font-medium w-16">{isAr ? '?????/??????' : 'Nom/Hôte'}</span>
+                                      <span className="text-xs text-slate-500 font-medium w-16">{isAr ? '?????/??????' : 'Nom/HÃ´te'}</span>
                                       <code className="text-xs font-black text-slate-800 tracking-wide flex-1">@</code>
                                       <button onClick={() => navigator.clipboard.writeText('@')} className="p-1 text-slate-400 group-hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors" title="Copier"><Copy className="w-3.5 h-3.5" /></button>
                                    </div>
@@ -6181,7 +6181,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                       </button>
                                    )}
                                    {page.isDefault && (
-                                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 px-2 py-1 bg-slate-200 rounded-md">{isAr ? '????' : 'Système'}</span>
+                                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 px-2 py-1 bg-slate-200 rounded-md">{isAr ? '????' : 'SystÃ¨me'}</span>
                                    )}
                                 </div>
                              </div>
@@ -6206,16 +6206,16 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                            </div>
 
                            <div className="space-y-2 pt-2">
-                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">{isAr ? '??????? ????????? (????? ????????)' : 'Pages Légales (Générées Automatiquement)'}</label>
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">{isAr ? '??????? ????????? (????? ????????)' : 'Pages LÃ©gales (GÃ©nÃ©rÃ©es Automatiquement)'}</label>
 
                               <label className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
                                  <input type="checkbox" checked={footerSettings.showPrivacy} onChange={e => setFooterSettings({...footerSettings, showPrivacy: e.target.checked})} className="w-4 h-4 accent-indigo-600" />
-                                 <span className="text-sm font-bold text-slate-700">{isAr ? '????? ????????' : 'Politique de Confidentialité'}</span>
+                                 <span className="text-sm font-bold text-slate-700">{isAr ? '????? ????????' : 'Politique de ConfidentialitÃ©'}</span>
                               </label>
 
                               <label className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
                                  <input type="checkbox" checked={footerSettings.showTerms} onChange={e => setFooterSettings({...footerSettings, showTerms: e.target.checked})} className="w-4 h-4 accent-indigo-600" />
-                                 <span className="text-sm font-bold text-slate-700">{isAr ? '?????? ???????? ?????? ?????' : 'Conditions Générales de Vente (CGV)'}</span>
+                                 <span className="text-sm font-bold text-slate-700">{isAr ? '?????? ???????? ?????? ?????' : 'Conditions GÃ©nÃ©rales de Vente (CGV)'}</span>
                               </label>
 
                               <label className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
@@ -6245,7 +6245,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                           </label>
                           <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors">
                              <input type="radio" name="buyMode" checked={buyMode === 'form'} onChange={() => setBuyMode('form')} className="accent-indigo-600" />
-                             {isAr ? "????? ???? (???? ?? ??????)" : "Formulaire intégré (Express sur la page)"}
+                             {isAr ? "????? ???? (???? ?? ??????)" : "Formulaire intÃ©grÃ© (Express sur la page)"}
                           </label>
                        </div>
                     </div>
@@ -6272,7 +6272,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                  </button>
               )}
               {activeTab === 'design' && (
-                 <button onClick={handleUndoDesign} disabled={designHistory.length < 2} title={isAr ? '?????' : 'Annuler la dernière modification'} className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-indigo-600 px-2 py-1 rounded-md hover:bg-indigo-50 transition-colors border border-slate-200 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-slate-500 disabled:hover:bg-transparent">
+                 <button onClick={handleUndoDesign} disabled={designHistory.length < 2} title={isAr ? '?????' : 'Annuler la derniÃ¨re modification'} className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-indigo-600 px-2 py-1 rounded-md hover:bg-indigo-50 transition-colors border border-slate-200 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-slate-500 disabled:hover:bg-transparent">
                     <Undo2 className="w-3.5 h-3.5" /> {isAr ? '?????' : 'Annuler'}
                  </button>
               )}
@@ -6304,7 +6304,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
              <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50 shrink-0">
                 <div className="flex items-center gap-2 text-indigo-700">
                    <LayoutTemplate className="w-5 h-5" />
-                   <span className="font-black tracking-tight">{isAr ? '?????? ??????' : 'Éditeur Visuel PRO'}</span>
+                   <span className="font-black tracking-tight">{isAr ? '?????? ??????' : 'Ã‰diteur Visuel PRO'}</span>
                 </div>
                 <button onClick={() => setShowPreview(false)} className="w-8 h-8 flex items-center justify-center bg-white border border-slate-200 text-slate-400 rounded hover:text-rose-500 transition-colors shrink-0">
                    <X className="w-4 h-4" />
@@ -6313,12 +6313,12 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
 
              <div className="flex-1 overflow-y-auto p-4 space-y-6">
                 <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
-                   <h4 className="text-xs font-bold text-indigo-900 uppercase tracking-wider mb-3">{isAr ? '??????? ????????' : 'Éléments de Base'}</h4>
+                   <h4 className="text-xs font-bold text-indigo-900 uppercase tracking-wider mb-3">{isAr ? '??????? ????????' : 'Ã‰lÃ©ments de Base'}</h4>
                    {(() => {
                       const blockDefs = [
                          { id: 'features', name: isAr ? '?????' : 'Avantages', icon: ShieldCheck, activeClasses: 'border-blue-500 shadow-md ring-2 ring-blue-100', bgClasses: 'bg-blue-50 text-blue-500', checkClass: 'text-blue-500' },
                          { id: 'newsletter', name: isAr ? '?????? ????????' : 'Newsletter', icon: Mail, activeClasses: 'border-purple-500 shadow-md ring-2 ring-purple-100', bgClasses: 'bg-purple-50 text-purple-500', checkClass: 'text-purple-500' },
-                         { id: 'hero', name: isAr ? '????? ???????' : 'Bannière (Hero)', icon: Type, activeClasses: 'border-indigo-500 shadow-md ring-2 ring-indigo-100', bgClasses: 'bg-indigo-50 text-indigo-500', checkClass: 'text-indigo-500' },
+                         { id: 'hero', name: isAr ? '????? ???????' : 'BanniÃ¨re (Hero)', icon: Type, activeClasses: 'border-indigo-500 shadow-md ring-2 ring-indigo-100', bgClasses: 'bg-indigo-50 text-indigo-500', checkClass: 'text-indigo-500' },
                          { id: 'slider', name: isAr ? '???? ???' : 'Slider', icon: ImageIcon, activeClasses: 'border-emerald-500 shadow-md ring-2 ring-emerald-100', bgClasses: 'bg-emerald-50 text-emerald-500', checkClass: 'text-emerald-500' },
                          { id: 'collections', name: isAr ? '???????' : 'Collections', icon: MousePointerClick, activeClasses: 'border-amber-500 shadow-md ring-2 ring-amber-100', bgClasses: 'bg-amber-50 text-amber-500', checkClass: 'text-amber-500' },
                          { id: 'products', name: isAr ? '??????' : 'Produits', icon: LayoutGrid, activeClasses: 'border-rose-500 shadow-md ring-2 ring-rose-100', bgClasses: 'bg-rose-50 text-rose-500', checkClass: 'text-rose-500' }
@@ -6363,7 +6363,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                            <div className="absolute top-0 right-0 w-16 h-16 bg-white opacity-50 rounded-full blur-xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
                            <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider mb-4 flex items-center gap-2">
                              <LayoutTemplate className="w-4 h-4 text-slate-500" />
-                             {isAr ? '??????? ??????? (Header)' : 'En-tête & Menu'}
+                             {isAr ? '??????? ??????? (Header)' : 'En-tÃªte & Menu'}
                            </h4>
                            <div className="space-y-5">
                               {/* Menu Alignment (Left / Center / Right) */}
@@ -6399,7 +6399,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                 </div>
 
                 <div className="space-y-4">
-                   <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">{isAr ? '??????? ????? ??????' : 'Paramètres de la Section'}</h4>
+                   <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">{isAr ? '??????? ????? ??????' : 'ParamÃ¨tres de la Section'}</h4>
                    
                     {activeSidebarSection === 'hero' && (
                        <>
@@ -6485,7 +6485,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                          </label>
                          {heroSlides.length > 0 && (
                            <button onClick={() => setHeroSlides([])} className="mt-2 w-full text-[10px] text-slate-400 hover:text-red-500 transition-colors text-center py-1">
-                             {isAr ? '× ??? ?? ?????????' : '× Supprimer tous les slides'}
+                             {isAr ? 'Ã— ??? ?? ?????????' : 'Ã— Supprimer tous les slides'}
                            </button>
                          )}
                        </div>
@@ -6510,7 +6510,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                 if (file) {
                                    setSliderImages([...sliderImages, await readFileAsBase64(file)]);
                                    // Adding the first image should turn Slider into a real, visible section
-                                   // in "Éléments de Base" instead of leaving it silently inactive.
+                                   // in "Ã‰lÃ©ments de Base" instead of leaving it silently inactive.
                                    if (!homeBlocks.includes('slider')) setHomeBlocks([...homeBlocks, 'slider']);
                                 }
                              }} />
@@ -6582,7 +6582,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                           <div className="grid grid-cols-3 gap-1.5">
                              {(['rounded', 'pill', 'square'] as const).map(key => (
                                 <button key={key} onClick={() => setButtonStyle(key)} className={`py-1.5 text-[9px] font-bold rounded-lg border ${buttonStyle === key ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-slate-200 text-slate-500'}`}>
-                                   {key === 'rounded' ? (isAr ? '??????' : 'Arrondi') : key === 'pill' ? (isAr ? '??????' : 'Capsule') : (isAr ? '????' : 'Carré')}
+                                   {key === 'rounded' ? (isAr ? '??????' : 'Arrondi') : key === 'pill' ? (isAr ? '??????' : 'Capsule') : (isAr ? '????' : 'CarrÃ©')}
                                 </button>
                              ))}
                           </div>
@@ -6593,14 +6593,14 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                           <div className="grid grid-cols-3 gap-1.5">
                              {(['rounded', 'square', 'arch', 'pill', 'trend'] as const).map(key => (
                                 <button key={key} onClick={() => setCardStyle(key)} className={`py-1.5 text-[9px] font-bold rounded-lg border ${cardStyle === key ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-slate-200 text-slate-500'}`}>
-                                   {key === 'rounded' ? (isAr ? '??????' : 'Arrondi') : key === 'square' ? (isAr ? '????' : 'Carré') : key === 'arch' ? (isAr ? '???' : 'Arche') : key === 'pill' ? (isAr ? '??????' : 'Pilule') : (isAr ? '????' : 'Trendy')}
+                                   {key === 'rounded' ? (isAr ? '??????' : 'Arrondi') : key === 'square' ? (isAr ? '????' : 'CarrÃ©') : key === 'arch' ? (isAr ? '???' : 'Arche') : key === 'pill' ? (isAr ? '??????' : 'Pilule') : (isAr ? '????' : 'Trendy')}
                                 </button>
                              ))}
                           </div>
                        </div>
 
                        <div className="flex items-center justify-between">
-                          <span className="text-[9px] font-bold text-slate-500">{isAr ? '???? ????? ??? ??????' : 'Badge catégorie sur l\'image'}</span>
+                          <span className="text-[9px] font-bold text-slate-500">{isAr ? '???? ????? ??? ??????' : 'Badge catÃ©gorie sur l\'image'}</span>
                           <button onClick={() => setShowCardBadge(v => !v)} className={`relative w-9 h-5 rounded-full transition-colors shrink-0 ${showCardBadge ? 'bg-indigo-600' : 'bg-slate-300'}`}>
                              <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${showCardBadge ? 'translate-x-4' : ''}`} />
                           </button>
@@ -6632,7 +6632,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                        </div>
 
                        <div>
-                          <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? '???? ??????/???????? (???? ??????)' : 'Ratio Image/Détails (produit)'}</label>
+                          <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? '???? ??????/???????? (???? ??????)' : 'Ratio Image/DÃ©tails (produit)'}</label>
                           <div className="flex items-center gap-2">
                              <input type="range" min={30} max={70} step={5} value={pdpImageWidth} onChange={e => setPdpImageWidth(parseInt(e.target.value))} className="flex-1 accent-indigo-600" />
                              <span className="text-[9px] font-mono font-bold text-slate-500 w-14 text-right">{pdpImageWidth}% / {100 - pdpImageWidth}%</span>
@@ -6644,7 +6644,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                           <div className="grid grid-cols-4 gap-1.5">
                              {(['3/4', '4/5', '1/1', '4/3'] as const).map(key => (
                                 <button key={key} onClick={() => setPdpImageAspect(key)} className={`py-1.5 text-[9px] font-bold rounded-lg border ${pdpImageAspect === key ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-slate-200 text-slate-500'}`}>
-                                   {key === '3/4' ? (isAr ? '????' : 'Portrait') : key === '4/5' ? (isAr ? '?????' : 'Standard') : key === '1/1' ? (isAr ? '????' : 'Carré') : (isAr ? '????' : 'Large')}
+                                   {key === '3/4' ? (isAr ? '????' : 'Portrait') : key === '4/5' ? (isAr ? '?????' : 'Standard') : key === '1/1' ? (isAr ? '????' : 'CarrÃ©') : (isAr ? '????' : 'Large')}
                                 </button>
                              ))}
                           </div>
@@ -6686,14 +6686,14 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                           <div className="grid grid-cols-3 gap-1.5">
                              {(['underline', 'pill', 'bold'] as const).map(key => (
                                 <button key={key} onClick={() => setMenuStyle(key)} className={`py-1.5 text-[9px] font-bold rounded-lg border ${menuStyle === key ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-slate-200 text-slate-500'}`}>
-                                   {key === 'underline' ? (isAr ? '?????' : 'Souligné') : key === 'pill' ? (isAr ? '??????' : 'Capsule') : (isAr ? '????' : 'Gras')}
+                                   {key === 'underline' ? (isAr ? '?????' : 'SoulignÃ©') : key === 'pill' ? (isAr ? '??????' : 'Capsule') : (isAr ? '????' : 'Gras')}
                                 </button>
                              ))}
                           </div>
                        </div>
 
                        <div>
-                          <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? '??? ??????' : 'Taille de la bannière'}</label>
+                          <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block">{isAr ? '??? ??????' : 'Taille de la banniÃ¨re'}</label>
                           <div className="flex items-center gap-2">
                              <input type="range" min={250} max={800} step={10} value={heroHeight} onChange={e => setHeroHeight(parseInt(e.target.value))} className="flex-1 accent-indigo-600" />
                              <span className="text-[9px] font-mono font-bold text-slate-500 w-9 text-right">{heroHeight}px</span>
@@ -6736,7 +6736,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                    }`}
                 >
                    {isSaving ? <CheckCircle className="w-5 h-5 animate-pulse" /> : <Save className="w-5 h-5" />}
-                   {isSaving ? (isAr ? '?? ??? ????????? ????? !' : 'Modifications enregistrées !') : (isAr ? '??? ?????????' : 'Sauvegarder')}
+                   {isSaving ? (isAr ? '?? ??? ????????? ????? !' : 'Modifications enregistrÃ©es !') : (isAr ? '??? ?????????' : 'Sauvegarder')}
                 </button>
              </div>
           </div>
@@ -6761,7 +6761,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 transition-colors"
                    title={isAr ? '????? ???????? ??? ???? ???? ??? ??????' : 'Agrandir pour voir comme un visiteur'}
                 >
-                   {isPreviewFullscreen ? <><Minimize2 className="w-3.5 h-3.5" /> {isAr ? '?????' : 'Réduire'}</> : <><Maximize2 className="w-3.5 h-3.5" /> {isAr ? '?????' : 'Agrandir'}</>}
+                   {isPreviewFullscreen ? <><Minimize2 className="w-3.5 h-3.5" /> {isAr ? '?????' : 'RÃ©duire'}</> : <><Maximize2 className="w-3.5 h-3.5" /> {isAr ? '?????' : 'Agrandir'}</>}
                 </button>
              </div>
 
@@ -6784,8 +6784,8 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
             <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300">
                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                   <div>
-                     <h3 className="text-xl font-black text-slate-800">Éditer la page</h3>
-                     <p className="text-xs text-slate-500 font-bold mt-1">Gérez le contenu et le référencement (SEO).</p>
+                     <h3 className="text-xl font-black text-slate-800">Ã‰diter la page</h3>
+                     <p className="text-xs text-slate-500 font-bold mt-1">GÃ©rez le contenu et le rÃ©fÃ©rencement (SEO).</p>
                   </div>
                   <button onClick={() => setIsPageModalOpen(false)} className="w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-400 hover:text-rose-500 hover:border-rose-200 shadow-sm transition-all"><X className="w-5 h-5" /></button>
                </div>
@@ -6794,22 +6794,22 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                   <div>
                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Titre de la page</label>
                      <input type="text" value={pageForm.title} onChange={e => setPageForm({...pageForm, title: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:border-indigo-500 transition-colors" />
-                     {pageForm.isDefault && <p className="text-[10px] text-amber-600 mt-2 font-bold flex items-center gap-1"><AlertCircle className="w-3 h-3" /> C'est une page système. Son URL ne peut pas être modifiée.</p>}
+                     {pageForm.isDefault && <p className="text-[10px] text-amber-600 mt-2 font-bold flex items-center gap-1"><AlertCircle className="w-3 h-3" /> C'est une page systÃ¨me. Son URL ne peut pas Ãªtre modifiÃ©e.</p>}
                   </div>
 
                   {!pageForm.isDefault && (
                      <div>
                         <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Contenu (Texte / HTML)</label>
-                        <textarea rows={8} value={pageForm.content || ''} onChange={e => setPageForm({...pageForm, content: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 transition-colors" placeholder="Rédigez le contenu de votre page ici..."></textarea>
+                        <textarea rows={8} value={pageForm.content || ''} onChange={e => setPageForm({...pageForm, content: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 transition-colors" placeholder="RÃ©digez le contenu de votre page ici..."></textarea>
                      </div>
                   )}
 
                   <div className="p-4 border border-slate-200 rounded-xl bg-slate-50">
-                     <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-2"><Globe className="w-4 h-4 text-slate-400" /> Aperçu SEO</h4>
+                     <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-2"><Globe className="w-4 h-4 text-slate-400" /> AperÃ§u SEO</h4>
                      <div className="space-y-1">
                         <p className="text-lg text-blue-600 font-medium truncate hover:underline cursor-pointer">{pageForm.title} - {storeName}</p>
                         <p className="text-sm text-green-700 truncate">https://{storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com/{pageForm.isDefault ? pageForm.id : pageForm.title.toLowerCase().replace(/\s+/g, '-')}</p>
-                        <p className="text-xs text-slate-600 line-clamp-2">{pageForm.content ? pageForm.content.substring(0, 150) : "Description automatique générée à partir du contenu de la page pour les moteurs de recherche..."}</p>
+                        <p className="text-xs text-slate-600 line-clamp-2">{pageForm.content ? pageForm.content.substring(0, 150) : "Description automatique gÃ©nÃ©rÃ©e Ã  partir du contenu de la page pour les moteurs de recherche..."}</p>
                      </div>
                   </div>
                </div>
@@ -6833,7 +6833,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
               <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50">
                  <div>
                     <h2 className="text-3xl font-black text-slate-800">Importer depuis l'ERP</h2>
-                    <p className="text-slate-500 mt-2">Sélectionnez les produits que vous souhaitez synchroniser avec votre boutique en ligne.</p>
+                    <p className="text-slate-500 mt-2">SÃ©lectionnez les produits que vous souhaitez synchroniser avec votre boutique en ligne.</p>
                  </div>
                  <button onClick={() => setIsImportModalOpen(false)} className="p-4 bg-white rounded-2xl shadow-sm text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all border border-slate-200">
                     <X className="w-6 h-6" />
@@ -6891,12 +6891,12 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-               <h3 className="text-lg font-black text-slate-800">{isAr ? '????? ???? ?????' : 'Ajouter une société'}</h3>
+               <h3 className="text-lg font-black text-slate-800">{isAr ? '????? ???? ?????' : 'Ajouter une sociÃ©tÃ©'}</h3>
                <button onClick={() => setIsDeliveryModalOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400"><X className="w-5 h-5"/></button>
             </div>
             <div className="p-6 space-y-4">
                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{isAr ? '??? ??????' : 'Nom de la société'}</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{isAr ? '??? ??????' : 'Nom de la sociÃ©tÃ©'}</label>
                   <input type="text" value={newDeliveryCompany.name} onChange={(e) => setNewDeliveryCompany({...newDeliveryCompany, name: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 font-bold text-sm" placeholder="Ex: Amana, Ghazal..." />
                </div>
                <div>
@@ -6909,7 +6909,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                <button onClick={() => {
                   if(newDeliveryCompany.name) {
                      setDeliveryCompanies([...deliveryCompanies, { ...newDeliveryCompany, id: Date.now() }]);
-                     setNewDeliveryCompany({ name: '', type: 'Standard • National', isActive: true });
+                     setNewDeliveryCompany({ name: '', type: 'Standard â€¢ National', isActive: true });
                      setIsDeliveryModalOpen(false);
                   }
                }} className="flex-1 py-3 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md transition-colors">{isAr ? '?????' : 'Ajouter'}</button>
@@ -6933,7 +6933,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
             guide: { step1: string; step2: string; step3: string };
           }> = {
             'eGrow COD Automation': {
-              title: 'eGrow — COD Automation',
+              title: 'eGrow â€” COD Automation',
               logoText: 'eG',
               logoBg: 'bg-gradient-to-br from-indigo-600 to-blue-600 text-white shadow-lg shadow-indigo-500/20',
               badge: isAr ? '? ???? ?????' : '? Verified Partner',
@@ -6942,7 +6942,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                 ? '????? ????? ?????? ????? ??? ???????? ??? ?????? ?????? ???? ?????????. eGrow ???? ??????? ?????? ???? ???????? ?????? ????? ??????? ?????? ?? ???? BEYA.'
                 : 'Automate your Cash on Delivery confirmations via WhatsApp and reduce return rates. eGrow calls your customers automatically, confirms orders, and syncs confirmed statuses straight back to Beya Store.',
               label: 'eGrow API Key *',
-              placeholder: 'egrow_live_••••••••••••••••••••',
+              placeholder: 'egrow_live_â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
               helper: isAr ? '??? ??? ??????? ?? ????? ??? eGrow ??? ????? Settings ? API Access.' : 'Find this key in your eGrow dashboard under Settings ? API Access.',
               guide: {
                 step1: isAr ? '??? ????? ??? ???? eGrow ?????? ??? Settings ? API Access.' : 'Log in to your eGrow account and go to Settings ? API Access.',
@@ -7069,8 +7069,8 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                     onClick={() => setActiveAppModal(null)}
                     className="flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors"
                   >
-                    <span>‹</span>
-                    <span>{isAr ? "?????? ??? ???? ?????????" : "Retour à l'App Store"}</span>
+                    <span>â€¹</span>
+                    <span>{isAr ? "?????? ??? ???? ?????????" : "Retour Ã  l'App Store"}</span>
                   </button>
                   <button
                     type="button"
@@ -7294,8 +7294,8 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
            <div className="bg-white w-full max-w-7xl max-h-[95vh] rounded-[2rem] shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
               <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50 sticky top-0 z-10">
                  <div>
-                    <h2 className="text-3xl font-black text-slate-800">{productForm?.id ? (isAr ? '????? ??????' : 'Modifier le Produit') : (isAr ? '????? ???? ????' : 'Créer un Produit')}</h2>
-                    <p className="text-slate-500 mt-2">{isAr ? '????????? ???????? ??????????.' : 'Détails, inventaire, et variantes de votre article.'}</p>
+                    <h2 className="text-3xl font-black text-slate-800">{productForm?.id ? (isAr ? '????? ??????' : 'Modifier le Produit') : (isAr ? '????? ???? ????' : 'CrÃ©er un Produit')}</h2>
+                    <p className="text-slate-500 mt-2">{isAr ? '????????? ???????? ??????????.' : 'DÃ©tails, inventaire, et variantes de votre article.'}</p>
                  </div>
                  <div className="flex items-center gap-3">
                     <button onClick={() => setIsFichePickerOpen(true)} className="flex items-center gap-2 px-4 py-3 bg-white border border-indigo-200 text-indigo-600 rounded-2xl text-xs font-black uppercase tracking-wider hover:bg-indigo-50 hover:border-indigo-500 transition-all shadow-sm">
@@ -7310,7 +7310,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                  <div className="fixed inset-0 z-[500] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setIsFichePickerOpen(false)}>
                     <div className="bg-white w-full max-w-2xl max-h-[80vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
                        <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-                          <h3 className="text-lg font-black text-slate-800">{isAr ? '??????? ????? ?? BEYA (V2)' : 'Importer un modèle BEYA (V2)'}</h3>
+                          <h3 className="text-lg font-black text-slate-800">{isAr ? '??????? ????? ?? BEYA (V2)' : 'Importer un modÃ¨le BEYA (V2)'}</h3>
                           <button onClick={() => setIsFichePickerOpen(false)} className="p-2 text-slate-400 hover:text-rose-500"><X className="w-5 h-5" /></button>
                        </div>
                        <div className="p-4 border-b border-slate-100">
@@ -7319,7 +7319,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                              autoFocus
                              value={fichePickerSearch}
                              onChange={e => setFichePickerSearch(e.target.value)}
-                             placeholder={isAr ? '??? ???????? ?? ??????...' : 'Rechercher un modèle ou client...'}
+                             placeholder={isAr ? '??? ???????? ?? ??????...' : 'Rechercher un modÃ¨le ou client...'}
                              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500"
                           />
                        </div>
@@ -7344,12 +7344,12 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                    </div>
                                    <div className="min-w-0">
                                       <p className="font-bold text-slate-800 truncate">{f.modele}</p>
-                                      <p className="text-xs text-slate-500 truncate">{f.client}{f.type ? ` · ${f.type}` : ''}</p>
+                                      <p className="text-xs text-slate-500 truncate">{f.client}{f.type ? ` Â· ${f.type}` : ''}</p>
                                    </div>
                                 </button>
                              ))}
                           {fichesList.length === 0 && (
-                             <p className="text-center text-sm text-slate-400 py-8">{isAr ? '?? ???? ??? ?????' : 'Aucune fiche technique trouvée'}</p>
+                             <p className="text-center text-sm text-slate-400 py-8">{isAr ? '?? ???? ??? ?????' : 'Aucune fiche technique trouvÃ©e'}</p>
                           )}
                        </div>
                     </div>
@@ -7388,7 +7388,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                     {/* Middle Column (Details) */}
                     <div className="col-span-5 space-y-6 flex flex-col">
                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                          <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">{isAr ? '????????? ????????' : 'Informations Générales'}</label>
+                          <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">{isAr ? '????????? ????????' : 'Informations GÃ©nÃ©rales'}</label>
                           <div>
                              <input type="text" placeholder={isAr ? '??? ?????? (????: ???? ????)' : 'Titre du produit (ex: Premium T-Shirt)'} value={productForm?.name || ''} onChange={e => setProductForm({...productForm, name: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-lg font-bold" />
                           </div>
@@ -7398,13 +7398,13 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                 <input type="number" placeholder="0.00" value={productForm?.price || ''} onChange={e => setProductForm({...productForm, price: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 font-bold" />
                              </div>
                              <div className="flex-1">
-                                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">{isAr ? '??????? (??????)' : 'Stock (Quantité)'}</label>
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">{isAr ? '??????? (??????)' : 'Stock (QuantitÃ©)'}</label>
                                 <input type="number" placeholder="10" value={productForm?.stock || ''} onChange={e => setProductForm({...productForm, stock: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 font-bold" />
                              </div>
                           </div>
                           <div>
                              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">{isAr ? '?????' : 'Description'}</label>
-                             <textarea rows={4} placeholder={isAr ? '???? ????? ????????...' : 'Décrivez votre produit en détail...'} value={productForm?.description || ''} onChange={e => setProductForm({...productForm, description: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 resize-none"></textarea>
+                             <textarea rows={4} placeholder={isAr ? '???? ????? ????????...' : 'DÃ©crivez votre produit en dÃ©tail...'} value={productForm?.description || ''} onChange={e => setProductForm({...productForm, description: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 resize-none"></textarea>
                            </div>
                            
                            {/* ===== DIGITAL PRODUCT TOGGLE ===== */}
@@ -7412,19 +7412,19 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                               <label className="flex items-center gap-3 cursor-pointer">
                                  <input type="checkbox" checked={productForm?.isDigital || false} onChange={e => setProductForm({...productForm, isDigital: e.target.checked})} className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
                                  <div>
-                                    <span className="block text-sm font-bold text-slate-700">{isAr ? '???? ???? (Digital Product)' : 'Produit Numérique (Digital)'}</span>
-                                    <span className="block text-xs text-slate-500">{isAr ? '???? ?????? ?????? ?? ????? ???????.' : 'E-books, templates, logiciels, ou fichiers téléchargeables.'}</span>
+                                    <span className="block text-sm font-bold text-slate-700">{isAr ? '???? ???? (Digital Product)' : 'Produit NumÃ©rique (Digital)'}</span>
+                                    <span className="block text-xs text-slate-500">{isAr ? '???? ?????? ?????? ?? ????? ???????.' : 'E-books, templates, logiciels, ou fichiers tÃ©lÃ©chargeables.'}</span>
                                  </div>
                               </label>
                               
                               {productForm?.isDigital && (
                                  <div className="mt-4 p-4 bg-indigo-50 border border-indigo-100 rounded-xl space-y-4">
                                     <div>
-                                       <label className="block text-[10px] font-bold text-indigo-500 uppercase mb-2">{isAr ? '???? ????? ????? (URL)' : 'Lien de téléchargement (URL)'}</label>
+                                       <label className="block text-[10px] font-bold text-indigo-500 uppercase mb-2">{isAr ? '???? ????? ????? (URL)' : 'Lien de tÃ©lÃ©chargement (URL)'}</label>
                                        <input type="text" placeholder="https://..." value={productForm?.digitalFileUrl || ''} onChange={e => setProductForm({...productForm, digitalFileUrl: e.target.value})} className="w-full px-4 py-2 bg-white border border-indigo-200 rounded-xl focus:outline-none focus:border-indigo-500 text-sm" />
                                     </div>
                                     <div className="flex items-center justify-between text-xs text-indigo-400">
-                                       <p>{isAr ? '???? ????? ??? ?????? ?????? ??? ?????.' : 'Ce lien sera envoyé au client après paiement.'}</p>
+                                       <p>{isAr ? '???? ????? ??? ?????? ?????? ??? ?????.' : 'Ce lien sera envoyÃ© au client aprÃ¨s paiement.'}</p>
                                     </div>
                                  </div>
                               )}
@@ -7488,11 +7488,11 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                                 <CheckCircle className="w-4 h-4" />
                                              </div>
                                              <div>
-                                                <h4 className="font-bold text-slate-800 text-sm">{isAr ? '?? ????????? ?????' : 'Importé avec succès'}</h4>
+                                                <h4 className="font-bold text-slate-800 text-sm">{isAr ? '?? ????????? ?????' : 'ImportÃ© avec succÃ¨s'}</h4>
                                                 <p className="text-[10px] text-slate-500 uppercase tracking-widest">{linkedFiche.modele}</p>
                                              </div>
                                           </div>
-                                          <button onClick={() => setProductForm({...productForm, ficheId: undefined})} className="text-[10px] font-bold text-slate-400 hover:text-rose-500">{isAr ? '?????' : 'Détacher'}</button>
+                                          <button onClick={() => setProductForm({...productForm, ficheId: undefined})} className="text-[10px] font-bold text-slate-400 hover:text-rose-500">{isAr ? '?????' : 'DÃ©tacher'}</button>
                                        </div>
                                        
                                        {linkedFiche.tailles?.length > 0 && linkedFiche.mesures?.length > 0 ? (
@@ -7526,7 +7526,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                     <div className="py-8 flex flex-col items-center justify-center text-center opacity-60">
                                        <Ruler className="w-8 h-8 text-slate-300 mb-2" />
                                        <p className="text-xs font-bold text-slate-500">{isAr ? '????? ???????? ????' : 'Mode Automatique Actif'}</p>
-                                       <p className="text-[10px] text-slate-400 mt-1 max-w-[200px]">{isAr ? '?????? ?? (??????? ?? BEYA) ?? ?????? ??????? ??????? ?????? ?????? ???.' : 'Utilisez le bouton (IMPORT BEYA) en haut pour lier un modèle.'}</p>
+                                       <p className="text-[10px] text-slate-400 mt-1 max-w-[200px]">{isAr ? '?????? ?? (??????? ?? BEYA) ?? ?????? ??????? ??????? ?????? ?????? ???.' : 'Utilisez le bouton (IMPORT BEYA) en haut pour lier un modÃ¨le.'}</p>
                                     </div>
                                  )}
                               </div>
@@ -7637,7 +7637,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                               <thead className="bg-white border-b border-slate-200 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
                                                   <tr>
                                                       <th className="px-6 py-4">{isAr ? '???????' : 'Variante'}</th>
-                                                      <th className="px-6 py-4 w-40">{isAr ? '?????? (???????)' : 'Quantité (Stock)'}</th>
+                                                      <th className="px-6 py-4 w-40">{isAr ? '?????? (???????)' : 'QuantitÃ© (Stock)'}</th>
                                                   </tr>
                                               </thead>
                                               <tbody className="divide-y divide-slate-100 bg-white">
@@ -7670,17 +7670,17 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                            })()}
                         </div>
                         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                           <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">{isAr ? '?????' : 'Catégorie'}</label>
+                           <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">{isAr ? '?????' : 'CatÃ©gorie'}</label>
                            <input type="text" placeholder={isAr ? '????: ????, ?????, ?????...' : 'Ex: T-Shirt, Chemise, Robe...'} value={productForm?.category || ''} onChange={e => setProductForm({...productForm, category: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 font-bold" />
                            <p className="text-[10px] text-slate-400 mt-2 font-medium">{isAr ? '?????? ?????? ?? ????? ??????.' : 'Permet de classer le produit dans les filtres du magasin.'}</p>
                         </div>
                         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                            <div className="flex items-center gap-2 mb-2">
-                              <label className="block text-xs font-black text-slate-400 uppercase tracking-wider">{isAr ? '??????? ???????? (SEO Tags)' : 'Mots-clés (SEO Tags)'}</label>
+                              <label className="block text-xs font-black text-slate-400 uppercase tracking-wider">{isAr ? '??????? ???????? (SEO Tags)' : 'Mots-clÃ©s (SEO Tags)'}</label>
                               {appsConfig['AI Auto-Builder'] && <Sparkles className="w-3 h-3 text-purple-500" />}
                            </div>
                            <div className="flex gap-2 mb-3">
-                              <input type="text" placeholder={isAr ? '????: ????, ?????...' : 'Ex: été, robe, premium...'} value={newTagInput} onChange={e => setNewTagInput(e.target.value)} onKeyDown={e => { if(e.key === 'Enter' && newTagInput) { setProductForm({...productForm, tags: [...(productForm.tags||[]), newTagInput]}); setNewTagInput(''); e.preventDefault(); } }} className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" />
+                              <input type="text" placeholder={isAr ? '????: ????, ?????...' : 'Ex: Ã©tÃ©, robe, premium...'} value={newTagInput} onChange={e => setNewTagInput(e.target.value)} onKeyDown={e => { if(e.key === 'Enter' && newTagInput) { setProductForm({...productForm, tags: [...(productForm.tags||[]), newTagInput]}); setNewTagInput(''); e.preventDefault(); } }} className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" />
                               <button onClick={() => { if(newTagInput) { setProductForm({...productForm, tags: [...(productForm.tags||[]), newTagInput]}); setNewTagInput(''); } }} className="px-4 py-2 bg-slate-900 text-white font-bold text-xs rounded-lg hover:bg-slate-800 transition-colors">{isAr ? '?????' : 'Ajouter'}</button>
                            </div>
                            <div className="flex flex-wrap gap-2">
@@ -7691,7 +7691,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                  </div>
                               ))}
                            </div>
-                           <p className="text-[10px] text-slate-400 mt-2 font-medium">{isAr ? '????? ?? ???? ?????? ?? ?????? ?????.' : 'Améliore le référencement (SEO) de votre produit.'}</p>
+                           <p className="text-[10px] text-slate-400 mt-2 font-medium">{isAr ? '????? ?? ???? ?????? ?? ?????? ?????.' : 'AmÃ©liore le rÃ©fÃ©rencement (SEO) de votre produit.'}</p>
                         </div>
                     </div>
                  </div>
@@ -7711,7 +7711,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                        handleSave(newProds);
                     }
                  }} className="px-10 py-4 font-black uppercase tracking-widest bg-indigo-600 text-white rounded-xl shadow-lg shadow-indigo-600/30 hover:bg-indigo-700 hover:scale-105 transition-all">
-                    {productForm?.id ? (isAr ? '????? ??????' : 'Mettre à jour') : (isAr ? '??? ??????' : 'Enregistrer le produit')}
+                    {productForm?.id ? (isAr ? '????? ??????' : 'Mettre Ã  jour') : (isAr ? '??? ??????' : 'Enregistrer le produit')}
                  </button>
               </div>
            </div>
@@ -7750,7 +7750,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                         <div className="flex items-center gap-3">
                            <div className="w-8 h-8 bg-white rounded-full border border-slate-200 flex items-center justify-center"><Smartphone className="w-4 h-4 text-slate-400" /></div>
                            <div>
-                              <p className="text-[10px] font-bold text-slate-500">Téléphone</p>
+                              <p className="text-[10px] font-bold text-slate-500">TÃ©lÃ©phone</p>
                               <p className="text-sm font-black text-slate-800">{selectedOrder.phone || '-'}</p>
                            </div>
                         </div>
@@ -7766,7 +7766,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
 
                   {/* Order Summary */}
                   <div>
-                     <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-3">Détails de la Commande</h3>
+                     <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-3">DÃ©tails de la Commande</h3>
                      
                      {/* Added Products Section */}
                      {selectedOrder.products && (
@@ -7785,7 +7785,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                                  </div>
                                  <div className="text-right shrink-0 px-2">
                                     <p className="text-xs font-black text-slate-800">{prod.price}</p>
-                                    <p className="text-[10px] text-slate-400 font-bold mt-0.5">Qté: {prod.qty}</p>
+                                    <p className="text-[10px] text-slate-400 font-bold mt-0.5">QtÃ©: {prod.qty}</p>
                                  </div>
                               </div>
                            ))}
@@ -7822,8 +7822,8 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                         <button onClick={() => handleDeleteOrder(selectedOrder.id)} className="w-12 h-12 shrink-0 bg-white border border-rose-200 text-rose-600 rounded-xl flex items-center justify-center hover:bg-rose-50 hover:text-rose-700 transition-colors active:scale-95" title={isAr ? '??? ?????' : 'Supprimer'}>
                            <Trash2 className="w-5 h-5" />
                         </button>
-                        <button onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'Refusé', 'bg-rose-100 text-rose-700')} className="flex-1 py-3 bg-white border border-rose-200 text-rose-600 font-bold rounded-xl hover:bg-rose-50 transition-colors text-sm active:scale-95">Refuser</button>
-                        <button onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'Confirmé', 'bg-emerald-100 text-emerald-700')} className="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors text-sm shadow-md shadow-indigo-200 flex items-center justify-center gap-2 active:scale-95">
+                        <button onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'RefusÃ©', 'bg-rose-100 text-rose-700')} className="flex-1 py-3 bg-white border border-rose-200 text-rose-600 font-bold rounded-xl hover:bg-rose-50 transition-colors text-sm active:scale-95">Refuser</button>
+                        <button onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'ConfirmÃ©', 'bg-emerald-100 text-emerald-700')} className="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors text-sm shadow-md shadow-indigo-200 flex items-center justify-center gap-2 active:scale-95">
                            <CheckCircle className="w-4 h-4" /> Confirmer
                         </button>
                      </>
@@ -7843,8 +7843,8 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                   <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
                      <Trash2 className="w-8 h-8 text-rose-600" />
                   </div>
-                  <h2 className="text-xl font-black text-slate-800 mb-2">{isAr ? '??? ??? ??? ?????????' : 'Déplacer vers la corbeille ?'}</h2>
-                  <p className="text-slate-500 text-sm mb-6">{isAr ? '???? ??? ??? ????? ??? ??? ????????. ????? ???? ??????? ?? ????.' : 'Cette commande sera déplacée vers la corbeille. Vous pourrez la supprimer définitivement par la suite.'}</p>
+                  <h2 className="text-xl font-black text-slate-800 mb-2">{isAr ? '??? ??? ??? ?????????' : 'DÃ©placer vers la corbeille ?'}</h2>
+                  <p className="text-slate-500 text-sm mb-6">{isAr ? '???? ??? ??? ????? ??? ??? ????????. ????? ???? ??????? ?? ????.' : 'Cette commande sera dÃ©placÃ©e vers la corbeille. Vous pourrez la supprimer dÃ©finitivement par la suite.'}</p>
                   
                   <div className="flex gap-3">
                      <button onClick={() => setOrderToDelete(null)} className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors text-sm">{isAr ? '?????' : 'Annuler'}</button>
@@ -7865,12 +7865,12 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                   </div>
                   <h2 className="text-xl font-black text-slate-800 mb-2">
                      {showTrash
-                        ? (isAr ? `??? ${selectedOrderIds.length} ??? ????????` : `Supprimer définitivement ${selectedOrderIds.length} commande(s) ?`)
-                        : (isAr ? `??? ${selectedOrderIds.length} ??? ??? ??? ?????????` : `Déplacer ${selectedOrderIds.length} commande(s) vers la corbeille ?`)}
+                        ? (isAr ? `??? ${selectedOrderIds.length} ??? ????????` : `Supprimer dÃ©finitivement ${selectedOrderIds.length} commande(s) ?`)
+                        : (isAr ? `??? ${selectedOrderIds.length} ??? ??? ??? ?????????` : `DÃ©placer ${selectedOrderIds.length} commande(s) vers la corbeille ?`)}
                   </h2>
                   <p className="text-slate-500 text-sm mb-6">
                      {showTrash
-                        ? (isAr ? '?? ???? ??????? ?? ??? ???????.' : 'Cette action est irréversible.')
+                        ? (isAr ? '?? ???? ??????? ?? ??? ???????.' : 'Cette action est irrÃ©versible.')
                         : (isAr ? '????? ????????? ?????? ?? ??? ????????.' : 'Vous pourrez les restaurer depuis la corbeille.')}
                   </p>
                   <div className="flex gap-3">
@@ -7895,9 +7895,9 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                   <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
                      <ShieldCheck className="w-7 h-7 text-amber-500" />
                   </div>
-                  <h2 className="text-xl font-black text-slate-800 mb-2">{isAr ? '????? Pro' : 'Thème Pro'}</h2>
+                  <h2 className="text-xl font-black text-slate-800 mb-2">{isAr ? '????? Pro' : 'ThÃ¨me Pro'}</h2>
                   <p className="text-slate-500 text-sm mb-6">
-                     {isAr ? '??? ??????? ???? ??? ?????? ???? Pro. ????? ???? ?????? ????? ???? ???? ???????? ???????.' : "Ce thème fait partie du Pack Pro. Contactez-nous pour passer au plan Pro et débloquer tous les thèmes premium."}
+                     {isAr ? '??? ??????? ???? ??? ?????? ???? Pro. ????? ???? ?????? ????? ???? ???? ???????? ???????.' : "Ce thÃ¨me fait partie du Pack Pro. Contactez-nous pour passer au plan Pro et dÃ©bloquer tous les thÃ¨mes premium."}
                   </p>
                   <div className="flex gap-3">
                      <button onClick={() => setProUpsellTheme(null)} className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors text-sm">{isAr ? '?????' : 'Fermer'}</button>
@@ -7927,12 +7927,12 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                         <h2 className="text-2xl sm:text-3xl font-black tracking-tight mb-1">
                            {upgradeStep === 'plans' && (isAr ? '????? ???? ????? ?' : 'Choisissez votre plan PRO ?')}
                            {upgradeStep === 'form' && (isAr ? `??? ????? ???? ${selectedUpgradeTier} ?` : `Commande du plan ${selectedUpgradeTier} ?`)}
-                           {upgradeStep === 'success' && (isAr ? '?? ????? ???? ?????! ??' : 'Demande enregistrée ! ??')}
+                           {upgradeStep === 'success' && (isAr ? '?? ????? ???? ?????! ??' : 'Demande enregistrÃ©e ! ??')}
                         </h2>
                         <p className="text-slate-300 text-xs sm:text-sm font-medium">
-                           {upgradeStep === 'plans' && (isAr ? '???? ?????? ???????? ?????? ???? ???????? ??????? ??????? ?? ??????? ??????????.' : 'Débloquez tous les thèmes premium et profitez de fonctionnalités exclusives.')}
+                           {upgradeStep === 'plans' && (isAr ? '???? ?????? ???????? ?????? ???? ???????? ??????? ??????? ?? ??????? ??????????.' : 'DÃ©bloquez tous les thÃ¨mes premium et profitez de fonctionnalitÃ©s exclusives.')}
                            {upgradeStep === 'form' && (isAr ? '?? ?????? ???????? ??????? ????? ????? ?????? ?????? ??????.' : 'Remplissez vos informations pour commander votre plan et l\'activer.')}
-                           {upgradeStep === 'success' && (isAr ? '???? ????? ????? ?????? ????? ????? ??? ??????.' : 'Une dernière étape pour activer votre plan immédiatement.')}
+                           {upgradeStep === 'success' && (isAr ? '???? ????? ????? ?????? ????? ????? ??? ??????.' : 'Une derniÃ¨re Ã©tape pour activer votre plan immÃ©diatement.')}
                         </p>
                      </div>
                      <button
@@ -7959,9 +7959,9 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                               <span className="text-slate-500 font-bold text-xs mb-1">MAD / {isAr ? '???' : 'mois'}</span>
                            </div>
                            <ul className="space-y-3 mb-6 flex-1 text-xs sm:text-sm font-medium text-slate-700">
-                              <li className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0"><Check className="w-3 h-3 text-emerald-600" /></div> {isAr ? '??? ???? ???????? ??????? PRO' : 'Tous les thèmes PRO débloqués'}</li>
-                              <li className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0"><Check className="w-3 h-3 text-emerald-600" /></div> {isAr ? '?????? ?????? ??? ??????' : 'Produits et commandes illimités'}</li>
-                              <li className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0"><Check className="w-3 h-3 text-emerald-600" /></div> {isAr ? '??? ??????? ????? (.com / .ma)' : 'Domaine personnalisé'}</li>
+                              <li className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0"><Check className="w-3 h-3 text-emerald-600" /></div> {isAr ? '??? ???? ???????? ??????? PRO' : 'Tous les thÃ¨mes PRO dÃ©bloquÃ©s'}</li>
+                              <li className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0"><Check className="w-3 h-3 text-emerald-600" /></div> {isAr ? '?????? ?????? ??? ??????' : 'Produits et commandes illimitÃ©s'}</li>
+                              <li className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0"><Check className="w-3 h-3 text-emerald-600" /></div> {isAr ? '??? ??????? ????? (.com / .ma)' : 'Domaine personnalisÃ©'}</li>
                               <li className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0"><Check className="w-3 h-3 text-emerald-600" /></div> {isAr ? '??? ??? ???????? ??????' : 'Support technique en continu'}</li>
                            </ul>
                            <button
@@ -7984,9 +7984,9 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                            </div>
                            <ul className="space-y-3 mb-6 flex-1 text-xs sm:text-sm font-medium text-slate-700">
                               <li className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center shrink-0"><Check className="w-3 h-3 text-amber-600" /></div> {isAr ? '???? ????? ???? PRO' : 'Tous les avantages PRO'}</li>
-                              <li className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center shrink-0"><Check className="w-3 h-3 text-amber-600" /></div> {isAr ? '?????? ???? ?? ????? ???????' : 'Priorité en fabrication (Usine BEYA)'}</li>
-                              <li className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center shrink-0"><Check className="w-3 h-3 text-amber-600" /></div> {isAr ? '???? ???? ???? ????????' : 'Account manager dédié'}</li>
-                              <li className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center shrink-0"><Check className="w-3 h-3 text-amber-600" /></div> {isAr ? '??????? ?????? ?????? ?????????' : 'Analyses et rapports avancés'}</li>
+                              <li className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center shrink-0"><Check className="w-3 h-3 text-amber-600" /></div> {isAr ? '?????? ???? ?? ????? ???????' : 'PrioritÃ© en fabrication (Usine BEYA)'}</li>
+                              <li className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center shrink-0"><Check className="w-3 h-3 text-amber-600" /></div> {isAr ? '???? ???? ???? ????????' : 'Account manager dÃ©diÃ©'}</li>
+                              <li className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center shrink-0"><Check className="w-3 h-3 text-amber-600" /></div> {isAr ? '??????? ?????? ?????? ?????????' : 'Analyses et rapports avancÃ©s'}</li>
                            </ul>
                            <button
                               onClick={() => { setSelectedUpgradeTier('PREMIUM'); setUpgradeStep('form'); }}
@@ -8016,7 +8016,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                   <form onSubmit={handleUpgradeSubmit} className="p-6 sm:p-8 space-y-6">
                      <div className="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-4 flex items-center justify-between">
                         <div>
-                           <p className="text-[10px] font-black text-indigo-500 uppercase tracking-wider">{isAr ? '???? ???????' : 'Résumé du Plan'}</p>
+                           <p className="text-[10px] font-black text-indigo-500 uppercase tracking-wider">{isAr ? '???? ???????' : 'RÃ©sumÃ© du Plan'}</p>
                            <p className="text-base font-black text-indigo-950">
                               {isAr ? `???? ${selectedUpgradeTier} - ???? ${storeName}` : `Plan ${selectedUpgradeTier} - ${storeName}`}
                            </p>
@@ -8040,7 +8040,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                            />
                         </div>
                         <div>
-                           <label className="block text-xs font-bold text-slate-700 mb-2">{isAr ? '??? ?????? / ???????? *' : 'Téléphone / WhatsApp *'}</label>
+                           <label className="block text-xs font-bold text-slate-700 mb-2">{isAr ? '??? ?????? / ???????? *' : 'TÃ©lÃ©phone / WhatsApp *'}</label>
                            <input
                               type="tel"
                               required
@@ -8058,7 +8058,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                            {[
                               { id: 'bank', label: isAr ? '????? ????' : 'Virement Bancaire', desc: 'CIH / Attijari / BMCE', icon: '??' },
                               { id: 'cash', label: 'Cash Plus / Wafacash', desc: isAr ? '?????? ????? ???????' : 'Agences de transfert', icon: '??' },
-                              { id: 'office', label: isAr ? '????? ??? ?????' : 'Paiement au siège', desc: 'BEYA Creative', icon: '??' }
+                              { id: 'office', label: isAr ? '????? ??? ?????' : 'Paiement au siÃ¨ge', desc: 'BEYA Creative', icon: '??' }
                            ].map(opt => {
                               const isSelected = upgradeForm.paymentMethod.includes(opt.label);
                               return (
@@ -8082,7 +8082,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                            rows={2}
                            value={upgradeForm.notes}
                            onChange={e => setUpgradeForm({ ...upgradeForm, notes: e.target.value })}
-                           placeholder={isAr ? '?? ?????? ??? ????? ?? ??????? ??????...' : 'Toute question ou note pour l\'équipe BEYA...'}
+                           placeholder={isAr ? '?? ?????? ??? ????? ?? ??????? ??????...' : 'Toute question ou note pour l\'Ã©quipe BEYA...'}
                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all resize-none"
                         ></textarea>
                      </div>
@@ -8117,23 +8117,23 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                         <CheckCircle className="w-10 h-10 text-emerald-600" />
                      </div>
                      <h3 className="text-2xl font-black text-slate-900 mb-2">
-                        {isAr ? '?? ????? ??? ????? ????? ?????! ??' : 'Votre commande a été enregistrée avec succès ! ??'}
+                        {isAr ? '?? ????? ??? ????? ????? ?????! ??' : 'Votre commande a Ã©tÃ© enregistrÃ©e avec succÃ¨s ! ??'}
                      </h3>
                      <p className="text-slate-600 text-sm max-w-md mx-auto mb-6 font-medium">
                         {isAr
                            ? `???? BEYA ???? ???? ????? ???? ${selectedUpgradeTier} ????? "${storeName}".`
-                           : `L'équipe BEYA a reçu votre demande pour le plan ${selectedUpgradeTier}.`}
+                           : `L'Ã©quipe BEYA a reÃ§u votre demande pour le plan ${selectedUpgradeTier}.`}
                      </p>
 
                      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 max-w-lg mx-auto mb-6 text-left">
                         <p className="text-xs font-bold text-amber-900 mb-1 flex items-center gap-1.5">
                            <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
-                           {isAr ? '???? ????? ????? ?????? ????? ?????:' : 'Une dernière étape pour activer votre plan :'}
+                           {isAr ? '???? ????? ????? ?????? ????? ?????:' : 'Une derniÃ¨re Ã©tape pour activer votre plan :'}
                         </p>
                         <p className="text-xs text-amber-800">
                            {isAr
-                              ? '???? ??? ?? ???????? ????? ??????? ?? ???? ??????? ?????? ??? ????? (Reçu) ??? ??? ??? ???? ???????? ??????? ?????? ??????.'
-                              : 'Cliquez sur le bouton WhatsApp ci-dessous pour envoyer votre reçu de paiement à l\'équipe BEYA et débloquer immédiatement vos thèmes.'}
+                              ? '???? ??? ?? ???????? ????? ??????? ?? ???? ??????? ?????? ??? ????? (ReÃ§u) ??? ??? ??? ???? ???????? ??????? ?????? ??????.'
+                              : 'Cliquez sur le bouton WhatsApp ci-dessous pour envoyer votre reÃ§u de paiement Ã  l\'Ã©quipe BEYA et dÃ©bloquer immÃ©diatement vos thÃ¨mes.'}
                         </p>
                      </div>
 
@@ -8141,11 +8141,11 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                         <button
                            onClick={() => {
                               const waText = `?????? ?????? ??? ???? ????? ????? "${storeName}" ??? ???? ${selectedUpgradeTier}.\n???????: ${getStoreDomain()}\n?????: ${upgradeForm.fullName}\n??????: ${upgradeForm.phone}\n????? ?????: ${upgradeForm.paymentMethod}\n???? ?? ????? ??????? ?????? ?????.`;
-                              window.open(`https://wa.me/212684252575?text=${encodeURIComponent(waText)}`, '_blank');
+                              window.open(`https://wa.me/${(company.phone || '212684252575').replace(/\\D/g, '')}?text=${encodeURIComponent(waText)}`, '_blank');
                            }}
                            className="flex-1 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/25 text-sm flex items-center justify-center gap-2"
                         >
-                           <span>??</span> {isAr ? '????? ??? ?????? ?????? ?????' : 'Envoyer le reçu sur WhatsApp'}
+                           <span>??</span> {isAr ? '????? ??? ?????? ?????? ?????' : 'Envoyer le reÃ§u sur WhatsApp'}
                         </button>
                         <button
                            onClick={() => { setShowUpgradeModal(false); setUpgradeStep('plans'); }}
@@ -8167,13 +8167,13 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                   <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
                      <CheckCircle className="w-10 h-10 text-green-600" />
                   </div>
-                  <h2 className="text-2xl font-black text-slate-800 mb-2">Boutique Publiée !</h2>
-                  <p className="text-slate-500 mb-8">Votre boutique est maintenant en ligne et prête à recevoir des commandes.</p>
+                  <h2 className="text-2xl font-black text-slate-800 mb-2">Boutique PubliÃ©e !</h2>
+                  <p className="text-slate-500 mb-8">Votre boutique est maintenant en ligne et prÃªte Ã  recevoir des commandes.</p>
                   
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center gap-3 mb-8">
                      <Globe className="w-5 h-5 text-indigo-600 shrink-0" />
                      <div className="flex-1 text-left overflow-hidden">
-                        <p className="text-xs font-bold text-slate-400 uppercase mb-1">Lien de démonstration (Provisoire)</p>
+                        <p className="text-xs font-bold text-slate-400 uppercase mb-1">Lien de dÃ©monstration (Provisoire)</p>
                         <p className="text-sm font-medium text-slate-800 truncate">https://{storeName.toLowerCase().replace(/\s+/g, '')}.beyacreative.com</p>
                      </div>
                      <button 
@@ -8210,4 +8210,5 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
     </div>
   );
 }
+
 

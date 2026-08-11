@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ArrowRight, Zap, Target, TrendingUp, Clock, CheckCircle2, ShoppingBag, Store } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { Link } from 'react-router-dom';
-
+import { PricingSection } from '../components/PricingSection';
 export default function StoreLandingV3() {
   const { isAr, toggle } = useLang();
   
@@ -129,34 +129,7 @@ export default function StoreLandingV3() {
       </section>
 
       {/* Simple Pricing */}
-      <section className="py-24 bg-slate-50">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-4xl font-black mb-16">{isAr ? 'أثمنة واضحة ومناسبة' : 'Tarifs simples et abordables'}</h2>
-          
-          <div className="bg-white rounded-3xl border-2 border-blue-600 p-10 md:p-16 shadow-2xl relative max-w-2xl mx-auto">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-600 text-white px-6 py-2 rounded-full font-bold uppercase tracking-wide">
-              {isAr ? 'الأكثر طلباً' : 'Le plus populaire'}
-            </div>
-            
-            <h3 className="text-3xl font-black mb-4">Standard PRO</h3>
-            <div className="flex items-center justify-center gap-2 mb-10">
-              <span className="text-7xl font-black">199</span>
-              <span className="text-xl font-bold text-slate-500 uppercase">MAD / {isAr ? 'شهر' : 'Mois'}</span>
-            </div>
-            
-            <ul className="space-y-4 mb-10 text-left max-w-sm mx-auto">
-              <li className="flex items-center gap-3 font-bold text-lg"><CheckCircle2 className="text-emerald-500" /> {isAr ? 'دومين مجاني (.com)' : 'Domaine offert (.com)'}</li>
-              <li className="flex items-center gap-3 font-bold text-lg"><CheckCircle2 className="text-emerald-500" /> {isAr ? 'منتجات غير محدودة' : 'Produits illimités'}</li>
-              <li className="flex items-center gap-3 font-bold text-lg"><CheckCircle2 className="text-emerald-500" /> {isAr ? 'ربط مباشر مع eGrow' : 'Liaison directe eGrow'}</li>
-              <li className="flex items-center gap-3 font-bold text-lg"><CheckCircle2 className="text-emerald-500" /> {isAr ? 'دعم فني واتساب' : 'Support WhatsApp'}</li>
-            </ul>
-            
-            <Link to="/store-signup" className="block w-full py-5 bg-blue-600 text-white rounded-xl font-black text-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/30">
-              {isAr ? 'اشترك الآن' : 'S\'abonner'}
-            </Link>
-          </div>
-        </div>
-      </section>
+      <PricingSection />
 
       {/* Footer */}
       <footer className="bg-white py-10 border-t border-slate-200 flex flex-col items-center gap-4 text-center text-slate-500 font-medium">

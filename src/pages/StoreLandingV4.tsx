@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ArrowRight, ShoppingCart, Globe, CreditCard, Truck, BarChart2, Shield, PlayCircle, Store, Zap, Smartphone, Check, CheckCircle2 } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { Link } from 'react-router-dom';
+import { PricingSection } from '../components/PricingSection';
 
 export default function StoreLandingV4() {
   const { isAr, toggle } = useLang();
@@ -47,11 +48,21 @@ export default function StoreLandingV4() {
       {/* Hero Section - Matching Screenshot 1 */}
       <section className="pt-32 pb-20 px-6 max-w-[1200px] mx-auto flex flex-col lg:flex-row items-center gap-16">
         <div className="lg:w-1/2 text-start">
-          <h1 className="text-[54px] lg:text-[64px] font-black leading-[1.1] mb-6 text-[#151E3F]">
+          <div className="inline-block mb-6">
+            <span className="bg-emerald-50 text-emerald-600 border border-emerald-100 text-sm font-black px-4 py-1.5 rounded-full shadow-sm flex items-center gap-2 w-fit">
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              {isAr ? '🚀 ابدأ الآن - لن تدفع الاشتراك حتى تحقق مبيعتك الأولى!' : '🚀 Démarrez maintenant - Abonnement payé après la 1ère vente !'}
+            </span>
+          </div>
+          
+          <h1 className={`font-black mb-6 text-[#151E3F] ${isAr ? 'text-[42px] lg:text-[52px] leading-[1.4]' : 'text-[54px] lg:text-[64px] leading-[1.1]'}`}>
             {isAr ? (
-              <>البيع عبر الإنترنت <br/>لم يكن أبدًا <br/>بهذه السهولة</>
+              <>متجر احترافي، 0% عمولة، <br/>وبيزنس جاهز للعمل <br/>من اليوم الأول!</>
             ) : (
-              <>Vendre en ligne <br/>n'a jamais été <br/>aussi simple</>
+              <>Boutique PRO, 0% commission, <br/>et un business prêt <br/>dès le premier jour !</>
             )}
           </h1>
           
@@ -73,23 +84,25 @@ export default function StoreLandingV4() {
                <div className="w-5 h-5 rounded-full border-2 border-emerald-500 flex items-center justify-center shrink-0">
                   <Check className="w-3 h-3 text-emerald-500" strokeWidth={3} />
                </div>
-               {isAr ? 'بدون رسوم إنشاء، فقط 1.5% (أو 0% في باقة PRO)' : 'Aucun frais de création, seulement 1.5% (ou 0% en PRO)'}
+               {isAr ? '0% عمولة على المبيعات، احتفظ بجميع أرباحك' : '0% de commission, gardez 100% de vos bénéfices'}
              </li>
              <li className="flex items-center gap-3">
-               <div className="w-5 h-5 rounded-full border-2 border-emerald-500 flex items-center justify-center shrink-0">
-                  <Check className="w-3 h-3 text-emerald-500" strokeWidth={3} />
+               <div className="w-5 h-5 rounded-full border-2 border-amber-500 flex items-center justify-center shrink-0 bg-amber-50">
+                  <Check className="w-3 h-3 text-amber-500" strokeWidth={3} />
                </div>
-               {isAr ? 'جميع أدوات التجارة الإلكترونية في مكان واحد' : 'Tous les outils e-commerce au même endroit'}
+               <span className="font-bold text-amber-700">
+                 {isAr ? 'بدون خبرة؟ نصمم متجرك بالكامل (دومين، تصميم، Upsell) بـ 800 درهم فقط!' : 'Sans expérience ? On crée votre boutique (Domaine, Design, Upsell) pour 800 MAD !'}
+               </span>
              </li>
           </ul>
 
           <div className="flex flex-col sm:flex-row items-center gap-4">
-            <Link to="/store-signup" className={`w-full sm:w-auto px-8 py-4 ${primaryColor} text-white rounded-xl font-bold text-lg ${primaryHover} transition-colors flex items-center justify-center`}>
+            <Link to="/store-signup" className={`w-full sm:w-auto px-8 py-4 ${primaryColor} text-white rounded-xl font-bold text-lg ${primaryHover} transition-colors flex items-center justify-center shadow-lg shadow-blue-500/30`}>
               {isAr ? 'ابدأ الآن' : 'Get Started'}
             </Link>
-            <a href="#contact" className="w-full sm:w-auto px-8 py-4 bg-white border border-slate-200 text-slate-800 rounded-xl font-bold text-lg hover:bg-slate-50 transition-colors flex items-center justify-center shadow-sm">
-              {isAr ? 'اطلب تصميمًا مخصصًا' : 'Demander un design sur-mesure'}
-            </a>
+            <Link to="/store-signup?plan=ZIRORISK" className="w-full sm:w-auto px-8 py-4 bg-amber-50 border-2 border-amber-400 text-amber-700 rounded-xl font-black text-lg hover:bg-amber-100 transition-colors flex items-center justify-center shadow-sm">
+              {isAr ? 'اطلب متجرك الجاهز بـ 800 درهم' : 'Boutique clé en main (800 MAD)'}
+            </Link>
           </div>
         </div>
         
@@ -144,114 +157,8 @@ export default function StoreLandingV4() {
          </div>
       </section>
 
-      {/* Pricing Section - Matching Screenshot 2 */}
-      <section id="pricing" className="py-24 bg-slate-50">
-        <div className="max-w-[1000px] mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-4xl md:text-5xl font-black mb-6 text-[#151E3F]">
-               {isAr ? 'أسعار تناسب طموحك' : 'Des tarifs adaptés à votre ambition'}
-            </h2>
-            <p className="text-lg text-slate-500">
-               {isAr 
-                  ? 'اختر الباقة التي تناسبك وابدأ البيع اليوم. بدون رسوم خفية.' 
-                  : 'Choisissez le plan qui vous convient et commencez à vendre aujourd\'hui. Sans frais cachés.'}
-            </p>
-          </div>
-
-          {/* Toggle Switch */}
-          <div className="flex items-center justify-center gap-4 mb-16 font-bold text-sm">
-             <span className={!isAnnual ? textColor : 'text-slate-500'}>
-                {isAr ? 'شهري' : 'Mensuel'}
-             </span>
-             <button 
-                onClick={() => setIsAnnual(!isAnnual)}
-                className={`w-14 h-7 rounded-full relative transition-colors flex items-center ${isAnnual ? 'bg-emerald-500' : primaryColor}`}
-             >
-                <div className={`w-5 h-5 rounded-full bg-white absolute top-1 transition-transform ${isAnnual ? 'right-1' : 'left-1'}`}></div>
-             </button>
-             <span className={`flex items-center gap-2 ${isAnnual ? 'text-emerald-500' : 'text-slate-500'}`}>
-                {isAr ? 'سنوي' : 'Annuel'}
-                <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-600">-20%</span>
-             </span>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8 items-stretch">
-            
-            {/* PRO Card - White */}
-            <div className="bg-white rounded-3xl p-10 shadow-[0_10px_30px_rgba(0,0,0,0.05)] border border-slate-100 relative">
-               <div className="absolute top-8 right-8 text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full uppercase tracking-wide">
-                  {isAr ? '14 يوم تجربة' : "14 JOURS D'ESSAI"}
-               </div>
-               
-               <h3 className="text-2xl font-black text-[#151E3F] mb-1">PRO</h3>
-               <p className="text-slate-500 text-sm mb-8">{isAr ? 'لصناع العلامات التجارية' : 'Pour les créateurs de marques'}</p>
-               
-               <div className="flex items-baseline gap-2 mb-10">
-                  <span className="text-5xl font-black text-[#151E3F]">{isAnnual ? '159' : '199'}</span>
-                  <span className="text-sm font-bold text-slate-500 uppercase">MAD / {isAr ? 'شهر' : 'MOIS'}</span>
-               </div>
-               
-               <ul className="space-y-4 mb-12">
-                  {[
-                     isAr ? 'متجر إلكتروني واحد' : '1 Boutique en ligne',
-                     isAr ? 'منتجات غير محدودة' : 'Produits illimités',
-                     isAr ? '0% رسوم على المبيعات' : '0% de frais de transaction',
-                     isAr ? 'استضافة سريعة ومجانية' : 'Hébergement rapide et gratuit',
-                     isAr ? 'دعم فني أساسي' : 'Support standard'
-                  ].map((item, i) => (
-                     <li key={i} className="flex items-center gap-3 text-sm font-semibold text-slate-700">
-                        <div className="w-5 h-5 rounded-full border border-blue-200 flex items-center justify-center shrink-0">
-                           <Check className="w-3 h-3 text-blue-500" strokeWidth={3} />
-                        </div>
-                        {item}
-                     </li>
-                  ))}
-               </ul>
-               
-               <Link to="/store-signup?plan=PRO" className="block w-full py-4 bg-slate-100 text-slate-800 rounded-xl font-bold text-center hover:bg-slate-200 transition-colors">
-                  {isAr ? 'ابدأ التجربة المجانية' : 'COMMENCER L\'ESSAI GRATUIT'}
-               </Link>
-            </div>
-
-            {/* PREMIUM Card - Dark */}
-            <div className="bg-[#0B1121] rounded-3xl p-10 shadow-2xl relative">
-               <div className="absolute top-8 right-8 text-xs font-bold text-[#451A03] bg-amber-400 px-3 py-1 rounded-full uppercase tracking-wide">
-                  {isAr ? 'الأكثر طلباً' : 'POPULAIRE'}
-               </div>
-               
-               <h3 className="text-2xl font-black text-white mb-1">PREMIUM</h3>
-               <p className="text-slate-400 text-sm mb-8">{isAr ? 'للعلامات المتعددة' : 'Pour les multi-marques'}</p>
-               
-               <div className="flex items-baseline gap-2 mb-10">
-                  <span className="text-5xl font-black text-white">{isAnnual ? '399' : '499'}</span>
-                  <span className="text-sm font-bold text-slate-400 uppercase">MAD / {isAr ? 'شهر' : 'MOIS'}</span>
-               </div>
-               
-               <ul className="space-y-4 mb-12">
-                  {[
-                     isAr ? 'حتى 5 متاجر' : 'Jusqu\'à 5 Boutiques',
-                     isAr ? '0% رسوم على المبيعات' : '0% de frais de transaction',
-                     isAr ? 'مساعد ذكاء اصطناعي للمنتجات' : 'Assistant IA pour produits',
-                     isAr ? 'أولوية في التنفيذ (VIP)' : 'Priorité de confection (VIP)',
-                     isAr ? 'مدير حساب مخصص' : 'Account manager dédié'
-                  ].map((item, i) => (
-                     <li key={i} className="flex items-center gap-3 text-sm font-semibold text-white">
-                        <div className="w-5 h-5 rounded-full border border-amber-500/30 flex items-center justify-center shrink-0">
-                           <Check className="w-3 h-3 text-amber-500" strokeWidth={3} />
-                        </div>
-                        {item}
-                     </li>
-                  ))}
-               </ul>
-               
-               <Link to="/store-signup?plan=PREMIUM" className={`block w-full py-4 ${primaryColor} text-white rounded-xl font-bold text-center ${primaryHover} transition-colors`}>
-                  {isAr ? 'اشترك الآن' : 'S\'ABONNER MAINTENANT'}
-               </Link>
-            </div>
-
-          </div>
-        </div>
-      </section>
+      {/* Pricing Section - Unified */}
+      <PricingSection bgClass="bg-slate-50" />
 
       {/* Footer */}
       <footer className="bg-white pt-16 pb-8 border-t border-slate-100">
