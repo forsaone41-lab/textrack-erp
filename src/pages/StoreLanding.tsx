@@ -32,9 +32,9 @@ export default function StoreLanding() {
           </Link>
           
           <div className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-sm font-semibold text-slate-600 hover:text-slate-900">{isAr ? 'المميزات' : 'Fonctionnalités'}</a>
-            <a href="#testimonials" className="text-sm font-semibold text-slate-600 hover:text-slate-900">{isAr ? 'قصص النجاح' : 'Témoignages'}</a>
-            <a href="#pricing" className="text-sm font-semibold text-slate-600 hover:text-slate-900">{isAr ? 'الأسعار' : 'Tarifs'}</a>
+            <button onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">{isAr ? 'المميزات' : 'Fonctionnalités'}</button>
+            <button onClick={() => document.getElementById('testimonials')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">{isAr ? 'قصص النجاح' : 'Témoignages'}</button>
+            <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">{isAr ? 'الأسعار' : 'Tarifs'}</button>
           </div>
 
           <div className="flex items-center gap-4">
@@ -453,18 +453,18 @@ export default function StoreLanding() {
             <div>
               <h4 className="font-black text-slate-900 mb-6 uppercase tracking-wider">{isAr ? 'المنصة' : 'Plateforme'}</h4>
               <ul className="space-y-4 text-slate-500 font-medium">
-                <li><a href="#" className="hover:text-blue-600 transition-colors">{isAr ? 'المميزات' : 'Fonctionnalités'}</a></li>
-                <li><a href="#pricing" className="hover:text-blue-600 transition-colors">{isAr ? 'الأسعار' : 'Tarifs'}</a></li>
-                <li><a href="#" className="hover:text-blue-600 transition-colors">{isAr ? 'قوالب المتاجر' : 'Thèmes'}</a></li>
+                <li><button onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-blue-600 transition-colors text-left">{isAr ? 'المميزات' : 'Fonctionnalités'}</button></li>
+                <li><button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-blue-600 transition-colors text-left">{isAr ? 'الأسعار' : 'Tarifs'}</button></li>
+                <li><button onClick={(e) => e.preventDefault()} className="hover:text-blue-600 transition-colors text-left">{isAr ? 'قوالب المتاجر' : 'Thèmes'}</button></li>
               </ul>
             </div>
             
             <div>
               <h4 className="font-black text-slate-900 mb-6 uppercase tracking-wider">{isAr ? 'الشركة' : 'Entreprise'}</h4>
               <ul className="space-y-4 text-slate-500 font-medium">
-                <li><a href="#" className="hover:text-blue-600 transition-colors">{isAr ? 'من نحن' : 'À propos'}</a></li>
+                <li><button onClick={(e) => e.preventDefault()} className="hover:text-blue-600 transition-colors text-left">{isAr ? 'من نحن' : 'À propos'}</button></li>
                 <li><Link to="/partners" className="hover:text-blue-600 transition-colors">{isAr ? 'برنامج الشركاء' : 'Partenaires'}</Link></li>
-                <li><a href="#" className="hover:text-blue-600 transition-colors">{isAr ? 'اتصل بنا' : 'Contact'}</a></li>
+                <li><button onClick={(e) => e.preventDefault()} className="hover:text-blue-600 transition-colors text-left">{isAr ? 'اتصل بنا' : 'Contact'}</button></li>
               </ul>
             </div>
             
