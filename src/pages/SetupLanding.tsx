@@ -291,7 +291,6 @@ export default function SetupLanding() {
                 <h3 className="font-bold text-slate-800 text-lg">MINIMALIST <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
               </div>
             </div>
-            </div>
             {/* Theme 4 */}
             <div 
               onClick={() => setPreviewTheme({ name: 'T-SHIRT BRAND', image: '/images/themes/tshirt.png' })}
