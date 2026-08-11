@@ -251,25 +251,7 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         
-        {/* Trial Banner - only shown for accounts still on the free NORMAL plan */}
-        {subscriptionTier === 'NORMAL' && (
-        <div className="mb-8 bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
-           <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
-                 <Zap className="w-5 h-5 text-amber-600" />
-              </div>
-              <div>
-                 <h3 className="font-bold text-amber-900">{t('Essai Gratuit', 'Free Trial', 'فترة تجريبية مجانية')}</h3>
-                 <p className="text-sm font-medium text-amber-700">
-                    {t(`Il vous reste ${trialDaysLeft} jours d'essai.`, `You have ${trialDaysLeft} days left in your trial.`, `متبقي ${trialDaysLeft} أيام على انتهاء الفترة التجريبية.`)}
-                 </p>
-              </div>
-           </div>
-           <button onClick={() => setShowUpgradeModal(true)} className="w-full sm:w-auto px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm rounded-xl transition-colors whitespace-nowrap shadow-md shadow-amber-500/20">
-              {t('Mettre à niveau', 'Upgrade Now', 'ترقية الحساب الآن')}
-           </button>
-        </div>
-        )}
+
 
         {/* Welcome Section */}
         <div className="mb-10">
