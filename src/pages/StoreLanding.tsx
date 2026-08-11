@@ -68,7 +68,7 @@ export default function StoreLanding() {
               <span>{isAr ? 'منصة التجارة الإلكترونية الأسرع نمواً في المغرب' : 'La plateforme e-commerce à la croissance la plus rapide au Maroc'}</span>
             </div>
             
-            <h1 className="text-5xl md:text-7xl lg:text-[80px] font-black text-slate-900 leading-[1.05] tracking-tight mb-8">
+            <h1 className={`font-black text-slate-900 tracking-tight mb-8 ${isAr ? 'text-4xl md:text-6xl lg:text-[68px] leading-[1.4]' : 'text-5xl md:text-7xl lg:text-[80px] leading-[1.05]'}`}>
               {isAr ? (
                 <>ابنِ متجرك، <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500">وضاعف مبيعاتك.</span></>
               ) : (
@@ -83,10 +83,13 @@ export default function StoreLanding() {
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link to="/store-signup" className="w-full sm:w-auto px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-lg transition-all shadow-[0_10px_20px_rgba(15,23,42,0.2)] hover:shadow-[0_15px_30px_rgba(15,23,42,0.3)] hover:-translate-y-1 flex items-center justify-center gap-2">
-                {isAr ? 'ابدأ تجربتك المجانية' : 'Commencer l\'essai gratuit'}
+              <button 
+                onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+                className="w-full sm:w-auto px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-lg transition-all shadow-[0_10px_20px_rgba(15,23,42,0.2)] hover:shadow-[0_15px_30px_rgba(15,23,42,0.3)] hover:-translate-y-1 flex items-center justify-center gap-2"
+              >
+                {isAr ? 'اختر خطتك وابدأ الآن' : 'Choisir mon plan'}
                 <ArrowRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
-              </Link>
+              </button>
               <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto px-8 py-4 bg-white text-slate-900 border-2 border-slate-200 rounded-2xl font-bold text-lg hover:border-slate-300 transition-all hover:bg-slate-50 flex items-center justify-center gap-2">
                 <PlayCircle className="w-5 h-5 text-slate-400" />
                 {isAr ? 'تحدث مع خبير' : 'Parler à un expert'}
@@ -94,30 +97,51 @@ export default function StoreLanding() {
             </div>
           </div>
           
-          {/* Dashboard Preview Image */}
-          <div className="mt-20 relative max-w-5xl mx-auto perspective-[2000px] animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-            <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent z-10 h-full w-full pointer-events-none" />
-            <img 
-              src="/ad-bg-2.png" 
-              alt="BEYA Store Dashboard" 
-              className="rounded-t-3xl shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] border-t border-l border-r border-slate-200/50 w-full h-auto transform rotate-x-[5deg] scale-105"
-            />
-          </div>
+
         </div>
       </main>
 
-      {/* 3. Trusted By (Logo Cloud) */}
-      <section className="py-12 border-b border-slate-100 bg-white">
-        <div className="max-w-7xl mx-auto px-6 text-center">
-          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-8">
+      {/* 3. Trusted By (Logo Cloud Marquee) */}
+      <section className="py-12 border-y border-slate-100 bg-slate-50 overflow-hidden relative">
+        <style>{`
+          @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-33.33%); }
+          }
+          @keyframes marquee-rtl {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(33.33%); }
+          }
+          .animate-marquee {
+            animation: marquee 12s linear infinite;
+            will-change: transform;
+          }
+          [dir="rtl"] .animate-marquee {
+            animation: marquee-rtl 12s linear infinite;
+          }
+        `}</style>
+        
+        <div className="max-w-7xl mx-auto px-6 text-center relative z-10 mb-8">
+          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
             {isAr ? 'موثوق به من طرف أكثر من 500 علامة تجارية' : 'Fait confiance par plus de 500 marques'}
           </p>
-          <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
-            <span className="font-black text-2xl text-slate-800">COSMETICA.</span>
-            <span className="font-extrabold text-xl text-slate-800 italic">STYLE<span className="text-blue-600">MA</span></span>
-            <span className="font-black text-2xl text-slate-800 tracking-tighter">URBAN<span className="font-light">WEAR</span></span>
-            <span className="font-bold text-2xl text-slate-800 font-serif">L'Artisan</span>
-            <span className="font-black text-2xl text-slate-800">TECH<span className="text-emerald-500">ZONE</span></span>
+        </div>
+        
+        <div className="relative flex overflow-hidden group">
+          {/* Fading Edges */}
+          <div className="absolute top-0 bottom-0 left-0 w-32 bg-gradient-to-r from-slate-50 to-transparent z-10 pointer-events-none"></div>
+          <div className="absolute top-0 bottom-0 right-0 w-32 bg-gradient-to-l from-slate-50 to-transparent z-10 pointer-events-none"></div>
+          
+          <div className="animate-marquee flex items-center gap-24 md:gap-32 w-max px-12 group-hover:[animation-play-state:paused]">
+            {[1, 2, 3].map((group) => (
+              <React.Fragment key={group}>
+                <span className="font-black text-3xl text-slate-800 blur-[0.5px] opacity-75 mix-blend-multiply select-none tracking-tighter uppercase">FASHLOW</span>
+                <span className="font-extrabold text-2xl text-blue-600 italic blur-[0.5px] opacity-75 mix-blend-multiply select-none tracking-widest uppercase">MODAVION</span>
+                <span className="font-black text-3xl text-indigo-600 tracking-tight blur-[0.5px] opacity-75 mix-blend-multiply select-none">BEYA<span className="font-light text-slate-500">CREATIVE</span></span>
+                <span className="font-bold text-3xl text-rose-500 blur-[0.5px] opacity-75 mix-blend-multiply select-none uppercase tracking-widest">STYLEMA</span>
+                <span className="font-black text-3xl text-emerald-500 blur-[0.5px] opacity-75 mix-blend-multiply select-none tracking-tighter">URBAN<span className="font-light text-slate-600">WEAR</span></span>
+              </React.Fragment>
+            ))}
           </div>
         </div>
       </section>

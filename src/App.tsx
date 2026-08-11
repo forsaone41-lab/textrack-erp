@@ -81,6 +81,7 @@ const StoreLandingV3  = lazy(() => import('./pages/StoreLandingV3'));
 const StoreLandingV4  = lazy(() => import('./pages/StoreLandingV4'));
 const BeyaDropshipping = lazy(() => import('./pages/BeyaDropshipping'));
 const StoreSignup     = lazy(() => import('./pages/StoreSignup'));
+const SetupLanding    = lazy(() => import('./pages/SetupLanding'));
 const StoreOnboarding = lazy(() => import('./pages/StoreOnboarding'));
 const MerchantDashboard = lazy(() => import('./pages/MerchantDashboard'));
 const Terms           = lazy(() => import('./pages/Terms'));
@@ -546,6 +547,7 @@ function AppContent() {
         <Route path="/store-landing-v2" element={<StoreLandingV2 />} />
         <Route path="/store-landing-v3" element={<StoreLandingV3 />} />
         <Route path="/store-landing-v4" element={<StoreLandingV4 />} />
+        <Route path="/setup" element={<SetupLanding />} />
         <Route path="/store-signup" element={<StoreSignup onLogin={handleLogin} />} />
         <Route path="/partners" element={
           <Suspense fallback={<PageLoader />}>
@@ -759,6 +761,7 @@ function AppContent() {
         <Route path="/store-landing-v2" element={<StoreLandingV2 />} />
         <Route path="/store-landing-v3" element={<StoreLandingV3 />} />
         <Route path="/store-landing-v4" element={<StoreLandingV4 />} />
+        <Route path="/setup" element={<SetupLanding />} />
         <Route path="/partners" element={
           <Suspense fallback={<PageLoader />}>
             <Partners />
