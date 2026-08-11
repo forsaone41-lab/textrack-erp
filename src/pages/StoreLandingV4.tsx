@@ -178,7 +178,7 @@ export default function StoreLandingV4() {
             {/* PRO Card - White */}
             <div className="bg-white rounded-3xl p-10 shadow-[0_10px_30px_rgba(0,0,0,0.05)] border border-slate-100 relative">
                <div className="absolute top-8 right-8 text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full uppercase tracking-wide">
-                  14 JOURS D'ESSAI
+                  {isAr ? '14 يوم تجربة' : "14 JOURS D'ESSAI"}
                </div>
                
                <h3 className="text-2xl font-black text-[#151E3F] mb-1">PRO</h3>
@@ -191,11 +191,11 @@ export default function StoreLandingV4() {
                
                <ul className="space-y-4 mb-12">
                   {[
-                     '1 Boutique en ligne',
-                     'Produits illimités',
-                     '0% de frais de transaction',
-                     'Hébergement rapide et gratuit',
-                     'Support standard'
+                     isAr ? 'متجر إلكتروني واحد' : '1 Boutique en ligne',
+                     isAr ? 'منتجات غير محدودة' : 'Produits illimités',
+                     isAr ? '0% رسوم على المبيعات' : '0% de frais de transaction',
+                     isAr ? 'استضافة سريعة ومجانية' : 'Hébergement rapide et gratuit',
+                     isAr ? 'دعم فني أساسي' : 'Support standard'
                   ].map((item, i) => (
                      <li key={i} className="flex items-center gap-3 text-sm font-semibold text-slate-700">
                         <div className="w-5 h-5 rounded-full border border-blue-200 flex items-center justify-center shrink-0">
@@ -214,7 +214,7 @@ export default function StoreLandingV4() {
             {/* PREMIUM Card - Dark */}
             <div className="bg-[#0B1121] rounded-3xl p-10 shadow-2xl relative">
                <div className="absolute top-8 right-8 text-xs font-bold text-[#451A03] bg-amber-400 px-3 py-1 rounded-full uppercase tracking-wide">
-                  POPULAIRE
+                  {isAr ? 'الأكثر طلباً' : 'POPULAIRE'}
                </div>
                
                <h3 className="text-2xl font-black text-white mb-1">PREMIUM</h3>
@@ -227,11 +227,11 @@ export default function StoreLandingV4() {
                
                <ul className="space-y-4 mb-12">
                   {[
-                     'Jusqu\'à 5 Boutiques',
-                     '0% de frais de transaction',
-                     'Assistant IA pour produits',
-                     'Priorité de confection (VIP)',
-                     'Account manager dédié'
+                     isAr ? 'حتى 5 متاجر' : 'Jusqu\'à 5 Boutiques',
+                     isAr ? '0% رسوم على المبيعات' : '0% de frais de transaction',
+                     isAr ? 'مساعد ذكاء اصطناعي للمنتجات' : 'Assistant IA pour produits',
+                     isAr ? 'أولوية في التنفيذ (VIP)' : 'Priorité de confection (VIP)',
+                     isAr ? 'مدير حساب مخصص' : 'Account manager dédié'
                   ].map((item, i) => (
                      <li key={i} className="flex items-center gap-3 text-sm font-semibold text-white">
                         <div className="w-5 h-5 rounded-full border border-amber-500/30 flex items-center justify-center shrink-0">
