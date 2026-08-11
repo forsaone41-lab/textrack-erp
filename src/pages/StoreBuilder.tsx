@@ -5131,8 +5131,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                  { id: 'products', icon: ShoppingBag, label: isAr ? 'المنتجات' : 'Produits' },
                  { id: 'customers', icon: Users, label: isAr ? 'الزبائن' : 'Clients' },
                  { id: 'payments', icon: CreditCard, label: isAr ? 'الأداء' : 'Paiements' },
-                 { id: 'delivery', icon: Truck, label: isAr ? 'التوصيل' : 'Livraison' },
-                 { id: 'beya-designer', icon: Sparkles, label: isAr ? 'مصمم بيا' : 'Beya Designer' }
+                 { id: 'delivery', icon: Truck, label: isAr ? 'التوصيل' : 'Livraison' }
            ] : [
                  { id: 'themes', icon: LayoutTemplate, label: isAr ? 'القوالب' : 'Thèmes' },
                  { id: 'design', icon: Paintbrush, label: isAr ? 'التصميم' : 'Design' },
@@ -5141,13 +5140,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
            ]).map(tab => (
                  <button
                    key={tab.id}
-                   onClick={() => {
-                      if (tab.id === 'beya-designer') {
-                         navigate(`/beya-designer?plan=${encodeURIComponent(subscriptionTier)}&lang=${isAr ? 'ar' : 'fr'}`);
-                      } else {
-                         setActiveTab(tab.id as any);
-                      }
-                   }}
+                   onClick={() => setActiveTab(tab.id as any)}
                    className={`w-full py-4 px-2 text-[10px] font-bold flex flex-col items-center justify-center gap-2 rounded-2xl transition-all border ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-lg scale-105 border-indigo-600' : 'bg-white text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 border-slate-200 shadow-sm'}`}
                  >
                    <tab.icon className="w-5 h-5" /> <span className="text-center leading-tight">{tab.label}</span>
@@ -8141,7 +8134,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                         <button
                            onClick={() => {
                               const waText = `السلام عليكم، قمت بطلب ترقية متجري "${storeName}" إلى باقة ${selectedUpgradeTier}.\nالدومين: ${getStoreDomain()}\nالاسم: ${upgradeForm.fullName}\nالهاتف: ${upgradeForm.phone}\nطريقة الدفع: ${upgradeForm.paymentMethod}\nأرغب في إتمام التفعيل وإرسال الوصل.`;
-                              window.open(`https://wa.me/212684252575?text=${encodeURIComponent(waText)}`, '_blank');
+                              window.open(`https://wa.me/${(company?.phone || '212684252575').replace(/\D/g, '')}?text=${encodeURIComponent(waText)}`, '_blank');
                            }}
                            className="flex-1 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/25 text-sm flex items-center justify-center gap-2"
                         >
