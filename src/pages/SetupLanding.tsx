@@ -41,7 +41,7 @@ export default function SetupLanding() {
     };
   }, [isAr]);
 
-  const whatsappUrl = `https://wa.me/${company.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
+  const whatsappUrl = `https://wa.me/212675239885?text=${encodeURIComponent(
     isAr ? 'مرحباً، بغيت نستفد من عرض إنشاء متجر إلكتروني متكامل بـ 800 درهم (ZIRORISK).' : 'Bonjour, je suis intéressé par l\'offre de création de boutique complète à 800 MAD (ZIRORISK).'
   )}`;
   
@@ -60,7 +60,7 @@ export default function SetupLanding() {
               {previewTheme.name} <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full uppercase tracking-widest hidden sm:inline-block">Live Demo</span>
             </div>
             <a 
-              href={`https://wa.me/${company.phone.replace(/\D/g, '')}?text=${encodeURIComponent(isAr ? `مرحباً، بغيت نستفد من عرض إنشاء متجر إلكتروني (ZIRORISK) وبغيت التصميم ديال: ${previewTheme.name}` : `Bonjour, je suis intéressé par l'offre de création de boutique (ZIRORISK) avec le design: ${previewTheme.name}`)}`}
+              href={`https://wa.me/212675239885?text=${encodeURIComponent(isAr ? `مرحباً، بغيت نستفد من عرض إنشاء متجر إلكتروني (ZIRORISK) وبغيت التصميم ديال: ${previewTheme.name}` : `Bonjour, je suis intéressé par l'offre de création de boutique (ZIRORISK) avec le design: ${previewTheme.name}`)}`}
               target="_blank" 
               rel="noopener noreferrer" 
               className="bg-amber-500 hover:bg-amber-600 text-slate-900 px-4 py-2 rounded-lg font-bold text-sm transition-colors shadow-sm flex items-center gap-2"
