@@ -8,7 +8,7 @@ import { loadCompanyProfile } from '../types';
 export default function StoreLanding() {
   const { isAr, toggle } = useLang();
   const company = loadCompanyProfile();
-  const whatsappUrl = `https://wa.me/${company.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
+  const whatsappUrl = `https://wa.me/212675239885?text=${encodeURIComponent(
     isAr ? 'مرحباً BEYA CREATIVE، أريد الاستفسار عن خدمة تصميم وبناء متجر إلكتروني احترافي.' : 'Bonjour BEYA CREATIVE, je suis intéressé par la création d\'une boutique en ligne professionnelle.'
   )}`;
   
