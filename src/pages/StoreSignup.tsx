@@ -202,9 +202,15 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
       <div className="w-full max-w-xl relative z-10">
         {/* Header */}
         <div className="text-center mb-10">
-          <Link to="/" className="inline-block mb-6">
-            <span className="font-black text-2xl tracking-tight text-slate-900 block leading-none">BEYACREATIVE</span>
-            <span className="text-[10px] font-bold text-blue-600 tracking-[0.2em] uppercase">STORES</span>
+          <Link to="/" className="flex items-center gap-2 justify-center mb-6 group transition-opacity hover:opacity-90" dir="ltr">
+            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-slate-900 text-white shadow-md relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+              <span className="font-black text-[22px] tracking-tighter relative z-10">B</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="font-black text-[26px] tracking-tighter text-slate-900 uppercase leading-none">BEYA</span>
+              <span className="font-medium text-[26px] tracking-tight text-slate-400 leading-none">Store</span>
+            </div>
           </Link>
           <h1 className="text-3xl font-extrabold text-slate-900 mb-2">
             {mode === 'signup' 

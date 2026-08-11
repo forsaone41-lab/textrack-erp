@@ -21,13 +21,14 @@ export default function StoreLanding() {
       {/* 1. Navbar - Clean, Sticky, Apple-like */}
       <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 transition-all">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 group" dir="ltr">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-emerald-400 rounded-xl flex items-center justify-center transform -rotate-12 group-hover:rotate-0 transition-transform duration-300">
-              <span className="text-white font-black text-xl rotate-12 group-hover:rotate-0 transition-transform duration-300">B</span>
+          <Link to="/" className="flex items-center gap-2 group transition-opacity hover:opacity-90" dir="ltr">
+            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-slate-900 text-white shadow-md relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+              <span className="font-black text-[22px] tracking-tighter relative z-10">B</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-black text-2xl tracking-tight text-slate-900">BEYA</span>
-              <span className="font-bold text-2xl tracking-tight text-blue-600">Store</span>
+            <div className="flex items-center gap-1">
+              <span className="font-black text-[26px] tracking-tighter text-slate-900 uppercase leading-none">BEYA</span>
+              <span className="font-medium text-[26px] tracking-tight text-slate-400 leading-none">Store</span>
             </div>
           </Link>
           
@@ -437,12 +438,13 @@ export default function StoreLanding() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
             <div className="md:col-span-1">
               <div className="flex items-center gap-2 mb-6" dir="ltr">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-emerald-400 rounded-xl flex items-center justify-center transform -rotate-12">
-                  <span className="text-white font-black text-xl rotate-12">B</span>
+                <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-slate-900 text-white shadow-md relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+                  <span className="font-black text-[22px] tracking-tighter relative z-10">B</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="font-black text-2xl tracking-tight text-slate-900">BEYA</span>
-                  <span className="font-bold text-2xl tracking-tight text-blue-600">Store</span>
+                <div className="flex items-center gap-1">
+                  <span className="font-black text-[26px] tracking-tighter text-slate-900 uppercase leading-none">BEYA</span>
+                  <span className="font-medium text-[26px] tracking-tight text-slate-400 leading-none">Store</span>
                 </div>
               </div>
               <p className="text-slate-500 font-medium leading-relaxed">
