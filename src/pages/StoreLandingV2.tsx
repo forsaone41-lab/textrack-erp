@@ -230,20 +230,48 @@ export default function StoreLandingV2() {
         </div>
       </section>
 
-      {/* Full-width Marquee (Trust) */}
-      <section className="py-20 border-y border-blue-500/10 overflow-hidden bg-blue-600 flex items-center">
-        <div className="whitespace-nowrap animate-[scroll_20s_linear_infinite] flex items-center gap-16 opacity-90">
-          {/* Repeat multiple times for seamless scrolling */}
-          {[1,2,3,4,5,6,7,8].map((i) => (
-            <span key={i} className="text-4xl font-black uppercase tracking-widest text-white mx-8 flex items-center gap-8 drop-shadow-md">
-              <span>{isAr ? 'بناء الثقة' : 'TRUSTED'}</span>
-              <span className="w-3 h-3 rounded-full bg-white shadow-[0_0_10px_white]"></span>
-              <span>{isAr ? 'حماية عالية' : 'SECURE'}</span>
-              <span className="w-3 h-3 rounded-full bg-white shadow-[0_0_10px_white]"></span>
-              <span>{isAr ? 'سرعة فائقة' : 'FAST'}</span>
-              <span className="w-3 h-3 rounded-full bg-white shadow-[0_0_10px_white]"></span>
-            </span>
-          ))}
+      {/* Partners Marquee */}
+      <section className={`py-12 overflow-hidden border-y transition-colors duration-500 ${isDark ? 'bg-slate-900 border-white/5' : 'bg-white border-slate-100'}`}>
+        <style>{`
+          @keyframes marquee {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+          }
+          @keyframes marquee-rtl {
+            0% { transform: translateX(-50%); }
+            100% { transform: translateX(0%); }
+          }
+          .animate-marquee {
+            width: max-content;
+            animation: marquee 12s linear infinite;
+          }
+          [dir="rtl"] .animate-marquee {
+            animation: marquee-rtl 12s linear infinite;
+          }
+        `}</style>
+        
+        <div className="max-w-7xl mx-auto px-6 text-center relative z-10 mb-8">
+          <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">
+            {isAr ? 'موثوق به من طرف أكثر من 500 علامة تجارية' : 'Fait confiance par plus de 500 marques'}
+          </p>
+        </div>
+        
+        <div className="relative flex overflow-hidden group">
+          {/* Fading Edges */}
+          <div className={`absolute top-0 bottom-0 left-0 w-32 bg-gradient-to-r transition-colors duration-500 ${isDark ? 'from-slate-900' : 'from-white'} to-transparent z-10 pointer-events-none`}></div>
+          <div className={`absolute top-0 bottom-0 right-0 w-32 bg-gradient-to-l transition-colors duration-500 ${isDark ? 'from-slate-900' : 'from-white'} to-transparent z-10 pointer-events-none`}></div>
+          
+          <div className="animate-marquee flex items-center gap-24 md:gap-32 w-max px-12 group-hover:[animation-play-state:paused]">
+            {[1, 2, 3].map((group) => (
+              <React.Fragment key={group}>
+                <span className={`font-black text-3xl blur-[0.5px] opacity-75 select-none tracking-tighter uppercase transition-colors duration-500 ${isDark ? 'text-slate-300' : 'text-slate-800'}`}>FASHLOW</span>
+                <span className="font-extrabold text-2xl text-blue-500 italic blur-[0.5px] opacity-75 select-none tracking-widest uppercase">MODAVION</span>
+                <span className={`font-black text-3xl tracking-tight blur-[0.5px] opacity-75 select-none transition-colors duration-500 ${isDark ? 'text-emerald-400' : 'text-amber-500'}`}>BEYA<span className="font-light text-slate-500">CREATIVE</span></span>
+                <span className="font-bold text-3xl text-rose-500 blur-[0.5px] opacity-75 select-none uppercase tracking-widest">STYLEMA</span>
+                <span className="font-black text-3xl text-emerald-500 blur-[0.5px] opacity-75 select-none tracking-tighter">URBAN<span className="font-light text-slate-500">WEAR</span></span>
+              </React.Fragment>
+            ))}
+          </div>
         </div>
       </section>
 
