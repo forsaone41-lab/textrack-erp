@@ -171,14 +171,7 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
             </div>
 
             <div className="flex items-center gap-4">
-              <button
-                onClick={() => navigate('/portal')}
-                className="hidden sm:flex items-center gap-2 px-3.5 py-2 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-xl text-xs font-black hover:bg-emerald-100 transition-colors"
-                title={t('Aller sur BEYA Portal', 'Go to BEYA Portal', 'الانتقال إلى بيا بورتال')}
-              >
-                <Globe className="w-4 h-4" />
-                {t('BEYA Portal', 'BEYA Portal', 'بيا بورتال')}
-              </button>
+
               {/* Language Switcher (Small Icon FR/AR Toggle) */}
               <button
                 onClick={() => setLang(dashLang === 'ar' ? 'fr' : 'ar')}
@@ -317,31 +310,7 @@ export default function MerchantDashboard({ currentUser, onLogout }: MerchantDas
             </div>
           </div>
 
-          {/* Action: Request Production */}
-          <div 
-            onClick={() => window.location.hash = '#/portal'}
-            className="group cursor-pointer bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-emerald-500/10 hover:border-emerald-200 transition-all duration-300 relative overflow-hidden"
-          >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-full blur-2xl -mr-16 -mt-16 transition-all group-hover:bg-emerald-100/50"></div>
-            <div className="relative z-10">
-              <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
-                <Package className="w-7 h-7" />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">
-                {t('Demander une production', 'Request a production', 'طلب تصنيع سلع')}
-              </h3>
-              <p className="text-sm text-slate-500 font-medium mb-6">
-                {t(
-                  'Commandez la fabrication de nouveaux vêtements directement depuis l\'usine BEYA.',
-                  'Order the manufacturing of new garments directly from the BEYA factory.',
-                  'اطلب تصنيع ملابس جديدة لمتجرك مباشرة من مصنع BEYA.'
-                )}
-              </p>
-              <div className="flex items-center text-emerald-600 font-bold text-sm group-hover:translate-x-1 transition-transform">
-                {t('Créer une demande', 'Create a request', 'إنشاء طلب جديد')} <ChevronRight className="w-4 h-4 ml-1" />
-              </div>
-            </div>
-          </div>
+
 
           {/* Action: Track Orders - opens the store's own internal dashboard tab
               (not the separate /store-analytics page) so there is a single source
