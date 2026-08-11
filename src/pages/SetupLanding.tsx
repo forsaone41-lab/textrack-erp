@@ -12,9 +12,12 @@ export default function SetupLanding() {
   // Facebook Pixel tracking - track PageView specifically for this ad campaign
   const location = useLocation();
   useEffect(() => {
-    if (window.fbq) {
-      window.fbq('track', 'ViewContent', { content_name: 'Setup_Service_Landing' });
-    }
+    const timer = setTimeout(() => {
+      if (window.fbq) {
+        window.fbq('track', 'ViewContent', { content_name: 'Setup_Service_Landing' });
+      }
+    }, 1000); // Small delay to ensure parent App.tsx has initialized the pixel
+    return () => clearTimeout(timer);
   }, [location]);
 
   const whatsappUrl = `https://wa.me/${company.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
