@@ -35,10 +35,15 @@ export default function SetupLanding() {
             <div className="font-black text-lg text-slate-800 flex items-center gap-2">
               {previewTheme.name} <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full uppercase tracking-widest hidden sm:inline-block">Live Demo</span>
             </div>
-            <Link to="/store-signup?plan=ZIRORISK" className="bg-amber-500 hover:bg-amber-600 text-slate-900 px-4 py-2 rounded-lg font-bold text-sm transition-colors shadow-sm flex items-center gap-2">
+            <a 
+              href={`https://wa.me/${company.phone.replace(/\D/g, '')}?text=${encodeURIComponent(isAr ? `مرحباً، بغيت نستفد من عرض إنشاء متجر إلكتروني (ZIRORISK) وبغيت التصميم ديال: ${previewTheme.name}` : `Bonjour, je suis intéressé par l'offre de création de boutique (ZIRORISK) avec le design: ${previewTheme.name}`)}`}
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="bg-amber-500 hover:bg-amber-600 text-slate-900 px-4 py-2 rounded-lg font-bold text-sm transition-colors shadow-sm flex items-center gap-2"
+            >
               <Rocket className="w-4 h-4 hidden sm:block" />
               {isAr ? 'استعمل هاد التصميم' : 'Utiliser ce design'}
-            </Link>
+            </a>
           </div>
           <div className="flex-1 overflow-y-auto bg-slate-100/50 p-4 md:p-8" dir="ltr">
             <div className="max-w-4xl mx-auto shadow-2xl rounded-b-xl overflow-hidden ring-1 ring-slate-900/10 bg-white">
