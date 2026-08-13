@@ -163,10 +163,10 @@ export default function SetupLanding() {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-3">
-              <Link to="/store-signup?plan=ZIRORISK" className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black text-xl transition-all shadow-lg hover:shadow-xl hover:bg-slate-800 flex items-center justify-center gap-3">
+              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black text-xl transition-all shadow-lg hover:shadow-xl hover:bg-slate-800 flex items-center justify-center gap-3">
                 {isAr ? 'احجز متجرك الآن' : 'Réservez votre boutique'}
                 <ArrowRight className={`w-6 h-6 ${isAr ? 'rotate-180' : ''}`} />
-              </Link>
+              </a>
               <button 
                 onClick={() => document.getElementById('themes-section')?.scrollIntoView({ behavior: 'smooth' })}
                 className="w-full sm:w-auto px-6 py-4 bg-slate-100 text-slate-700 rounded-2xl font-bold text-lg hover:bg-slate-200 transition-colors flex items-center justify-center gap-2"
@@ -384,9 +384,9 @@ export default function SetupLanding() {
           
           <div className="mt-12 text-center">
              <p className="text-slate-500 font-medium mb-6">{isAr ? '+ عشرات التصاميم الأخرى اللي غتناسب النوع ديال منتجاتك (Niche)' : '+ Des dizaines d\'autres modèles adaptés à votre niche'}</p>
-             <Link to="/store-signup?plan=ZIRORISK" className="inline-flex px-8 py-3 bg-amber-100 text-amber-700 hover:bg-amber-200 rounded-xl font-bold transition-colors">
+             <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="inline-flex px-8 py-3 bg-amber-100 text-amber-700 hover:bg-amber-200 rounded-xl font-bold transition-colors">
                {isAr ? 'عجبوني، بغيت متجر بحالهم' : 'Je veux une boutique comme ça'}
-             </Link>
+             </a>
           </div>
         </div>
       </section>
@@ -404,9 +404,9 @@ export default function SetupLanding() {
               : 'Nous croyons en notre service. C\'est pourquoi vous ne payez l\'abonnement (199 MAD) qu\'après avoir réalisé votre première vente. Les 699 MAD couvrent uniquement la création sur-mesure de votre boutique.'}
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link to="/store-signup?plan=ZIRORISK" className="px-8 py-4 bg-amber-500 text-slate-900 rounded-2xl font-black text-lg transition-all hover:bg-amber-400">
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="px-8 py-4 bg-amber-500 text-slate-900 rounded-2xl font-black text-lg transition-all hover:bg-amber-400">
               {isAr ? 'توكلنا على الله، بغيت متجر' : 'Je commande ma boutique'}
-            </Link>
+            </a>
           </div>
         </div>
       </section>
