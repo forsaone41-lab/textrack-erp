@@ -128,7 +128,7 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
   if (pendingUser) {
     const isZirorisk = selectedPlan === 'ZIRORISK';
     const planName = isZirorisk ? 'ZIRORISK (Setup)' : 'PREMIUM';
-    const planPriceText = isZirorisk ? '800' : premiumPrice;
+    const planPriceText = isZirorisk ? '699' : premiumPrice;
 
     const whatsappUrl = `https://wa.me/${(company.phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(
       isAr

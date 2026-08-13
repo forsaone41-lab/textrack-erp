@@ -42,7 +42,7 @@ export default function SetupLanding() {
   }, [isAr]);
 
   const whatsappUrl = `https://wa.me/212675239885?text=${encodeURIComponent(
-    isAr ? 'مرحباً، بغيت نستفد من عرض إنشاء متجر إلكتروني متكامل بـ 800 درهم (ZIRORISK).' : 'Bonjour, je suis intéressé par l\'offre de création de boutique complète à 800 MAD (ZIRORISK).'
+    isAr ? 'مرحباً، بغيت نستفد من عرض إنشاء متجر إلكتروني متكامل بـ 699 درهم (ZIRORISK).' : 'Bonjour, je suis intéressé par l\'offre de création de boutique complète à 699 MAD (ZIRORISK).'
   )}`;
   
   return (
@@ -146,15 +146,15 @@ export default function SetupLanding() {
           
           <p className="text-lg md:text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
             {isAr 
-              ? 'وفر وقتك ومجهودك. فريقنا المتخصص غادي يتكلف بكلشي: من التصميم الاحترافي حتى لربط الدومين وتطبيقات المبيعات. استلم بيزنس جاهز للعمل 100% بـ 800 درهم فقط.'
-              : 'Gagnez du temps. Notre équipe s\'occupe de tout : du design professionnel à la configuration du domaine et des applications de vente. Recevez un business clé en main pour 800 MAD.'}
+              ? 'وفر وقتك ومجهودك. فريقنا المتخصص غادي يتكلف بكلشي: من التصميم الاحترافي حتى لربط الدومين وتطبيقات المبيعات. استلم بيزنس جاهز للعمل 100% بـ 699 درهم فقط.'
+              : 'Gagnez du temps. Notre équipe s\'occupe de tout : du design professionnel à la configuration du domaine et des applications de vente. Recevez un business clé en main pour 699 MAD.'}
           </p>
           
           <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-200 shadow-xl max-w-2xl mx-auto mb-12 transform hover:scale-[1.02] transition-transform">
             <div className="flex flex-col items-center pb-6 border-b border-slate-100 mb-6">
               <span className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'تكلفة الإعداد تدفع مرة واحدة' : 'Frais de setup (Paiement unique)'}</span>
               <div className="flex items-baseline gap-2 text-slate-900">
-                <span className="text-6xl font-black tracking-tighter">800</span>
+                <span className="text-6xl font-black tracking-tighter">699</span>
                 <span className="text-xl font-bold">MAD</span>
               </div>
               <p className="text-emerald-600 font-bold text-sm mt-3 bg-emerald-50 px-4 py-1.5 rounded-full">
@@ -228,7 +228,7 @@ export default function SetupLanding() {
       <section className="py-16 bg-slate-50 border-b border-slate-100">
         <div className="max-w-4xl mx-auto px-6">
           <h2 className="text-3xl font-black text-center mb-12">
-            {isAr ? 'شنو داخل فهاد 800 درهم؟' : 'Que comprend ce service ?'}
+            {isAr ? 'شنو داخل فهاد 699 درهم؟' : 'Que comprend ce service ?'}
           </h2>
           
           <div className="grid sm:grid-cols-2 gap-6">
@@ -400,8 +400,8 @@ export default function SetupLanding() {
           </h2>
           <p className="text-xl text-slate-300 leading-relaxed mb-10">
             {isAr 
-              ? 'حنا كنتيقو فالخدمة ديالنا. داكشي علاش مكنتخلصوش فـالاشتراك الشهري ديال المنصة (199 درهم) حتى تبدا تبيع وتدخل الفلوس. 800 درهم هي فقط تكلفة الجهد والخدمة اللي غنخدمو ليك باش نجهزو ليك متجرك 100%.'
-              : 'Nous croyons en notre service. C\'est pourquoi vous ne payez l\'abonnement (199 MAD) qu\'après avoir réalisé votre première vente. Les 800 MAD couvrent uniquement la création sur-mesure de votre boutique.'}
+              ? 'حنا كنتيقو فالخدمة ديالنا. داكشي علاش مكنتخلصوش فـالاشتراك الشهري ديال المنصة (199 درهم) حتى تبدا تبيع وتدخل الفلوس. 699 درهم هي فقط تكلفة الجهد والخدمة اللي غنخدمو ليك باش نجهزو ليك متجرك 100%.'
+              : 'Nous croyons en notre service. C\'est pourquoi vous ne payez l\'abonnement (199 MAD) qu\'après avoir réalisé votre première vente. Les 699 MAD couvrent uniquement la création sur-mesure de votre boutique.'}
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link to="/store-signup?plan=ZIRORISK" className="px-8 py-4 bg-amber-500 text-slate-900 rounded-2xl font-black text-lg transition-all hover:bg-amber-400">

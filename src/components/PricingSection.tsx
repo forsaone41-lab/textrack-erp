@@ -95,7 +95,7 @@ export function PricingSection({
                 <span className="text-[9px] font-black text-rose-400 bg-rose-400/10 border border-rose-400/20 px-2 py-0.5 rounded-full uppercase tracking-wider">{isAr ? 'عرض' : 'PROMO'}</span>
               </div>
               <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-black text-white tracking-tighter">800</span>
+                <span className="text-5xl font-black text-white tracking-tighter">699</span>
                 <span className="text-slate-400 font-bold text-xs">MAD / {isAr ? 'مرة واحدة (Setup)' : 'Une fois (Setup)'}</span>
               </div>
             </div>
