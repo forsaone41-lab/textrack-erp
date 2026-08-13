@@ -8134,7 +8134,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
                         <button
                            onClick={() => {
                               const waText = `السلام عليكم، قمت بطلب ترقية متجري "${storeName}" إلى باقة ${selectedUpgradeTier}.\nالدومين: ${getStoreDomain()}\nالاسم: ${upgradeForm.fullName}\nالهاتف: ${upgradeForm.phone}\nطريقة الدفع: ${upgradeForm.paymentMethod}\nأرغب في إتمام التفعيل وإرسال الوصل.`;
-                              window.open(`https://wa.me/${(company?.phone || '212684252575').replace(/\D/g, '')}?text=${encodeURIComponent(waText)}`, '_blank');
+                              window.open(`https://wa.me/212675239885?text=${encodeURIComponent(waText)}`, '_blank');
                            }}
                            className="flex-1 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/25 text-sm flex items-center justify-center gap-2"
                         >
