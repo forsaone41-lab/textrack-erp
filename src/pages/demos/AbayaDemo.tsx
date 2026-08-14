@@ -1,5 +1,24 @@
 import React, { useState } from 'react';
-import { Search, User, ShoppingBag, CheckCircle2, Instagram, Pinterest, Facebook } from 'lucide-react';
+import { Search, User, ShoppingBag, CheckCircle2 } from 'lucide-react';
+
+const Instagram = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+  </svg>
+);
+const Pinterest = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <circle cx="12" cy="12" r="10" />
+    <path d="M9.5 19c.5-2 1.5-6 1.5-6m0 0c0-1.5 1-3 3-3 2 0 3 1.5 3 3.5 0 2.5-1.5 4.5-3.5 4.5-1 0-1.8-.5-2-1M11 13c-.3-1-.5-3 .5-4.5" />
+  </svg>
+);
+const Facebook = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+  </svg>
+);
 
 export default function AbayaDemo() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -12,14 +31,14 @@ export default function AbayaDemo() {
   const navLinks = ["HOME", "NEW ARRIVALS", "ABAYAS", "DRESSES", "HIJABS", "COLLECTION", "ACCESSORIES"];
   
   const arrivals = [
-    { name: "Amira Silk Abaya", price: "£85.00", img: "https://images.unsplash.com/photo-1515161318750-781d6122e367?q=80&w=400&auto=format&fit=crop" },
-    { name: "Zahra Kimono", price: "£99.00", img: "https://images.unsplash.com/photo-1589156229687-496a31ad1d1f?q=80&w=400&auto=format&fit=crop" },
-    { name: "Zoya Dress", price: "£99.00", img: "https://images.unsplash.com/photo-1516762689617-e1cffcef479d?q=80&w=400&auto=format&fit=crop" },
-    { name: "Zoya Dress", price: "£85.00", img: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=400&auto=format&fit=crop" },
-    { name: "Amira Silk Abaya", price: "£85.00", img: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?q=80&w=400&auto=format&fit=crop" },
-    { name: "Zahra Silk Kimono", price: "£99.00", img: "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=400&auto=format&fit=crop" },
-    { name: "Noura Dress", price: "£99.00", img: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=400&auto=format&fit=crop" },
-    { name: "Peyaa Dress", price: "£85.00", img: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=400&auto=format&fit=crop" }
+    { name: "Amira Silk Abaya", price: "£85.00", img: "/images/abaya_hero.png" },
+    { name: "Zahra Kimono", price: "£99.00", img: "/images/abaya_product_1.png" },
+    { name: "Zoya Dress", price: "£99.00", img: "/images/abaya_product_2.png" },
+    { name: "Zoya Dress", price: "£85.00", img: "/images/abaya_product_3.png" },
+    { name: "Amira Silk Abaya", price: "£85.00", img: "/images/abaya_product_2.png" },
+    { name: "Zahra Silk Kimono", price: "£99.00", img: "/images/abaya_product_3.png" },
+    { name: "Noura Dress", price: "£99.00", img: "/images/abaya_product_1.png" },
+    { name: "Peyaa Dress", price: "£85.00", img: "/images/abaya_hero.png" }
   ];
 
   return (
@@ -78,7 +97,7 @@ export default function AbayaDemo() {
           </div>
           {/* Right Image */}
           <div className="w-full md:w-1/2 h-full relative bg-[#e3d7d1]">
-             <img src="https://images.unsplash.com/photo-1515161318750-781d6122e367?q=80&w=800&auto=format&fit=crop" alt="Hero Modest Fashion" className="w-full h-full object-cover object-top" />
+             <img src="/images/abaya_hero.png" alt="Hero Modest Fashion" className="w-full h-full object-cover object-top" />
              <div className="absolute bottom-6 right-8 text-sm font-bold tracking-widest text-slate-700 mix-blend-color-burn">
                Noura Abaya
              </div>
@@ -112,14 +131,14 @@ export default function AbayaDemo() {
         
         <div className="grid md:grid-cols-2 gap-6">
           <div className="relative h-[400px] rounded-2xl overflow-hidden group cursor-pointer" onClick={() => showToast('Everyday Abaya Collection')}>
-            <img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?q=80&w=800&auto=format&fit=crop" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="The Everyday Abaya" />
+            <img src="/images/abaya_product_1.png" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="The Everyday Abaya" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col items-center justify-end pb-12">
               <h4 className="text-white text-2xl font-serif mb-2 tracking-wide uppercase">The Everyday Abaya</h4>
               <span className="text-white text-xs font-bold tracking-widest uppercase underline underline-offset-4 hover:text-[#f0d8d0] transition-colors">Explore</span>
             </div>
           </div>
           <div className="relative h-[400px] rounded-2xl overflow-hidden group cursor-pointer" onClick={() => showToast('Ramadan Collection')}>
-            <img src="https://images.unsplash.com/photo-1589156229687-496a31ad1d1f?q=80&w=800&auto=format&fit=crop" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="Ramadan Collection" />
+            <img src="/images/abaya_product_3.png" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="Ramadan Collection" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col items-center justify-end pb-12">
               <h4 className="text-white text-2xl font-serif mb-2 tracking-wide uppercase">Ramadan Collection</h4>
               <p className="text-white/80 font-serif italic mb-4">Festive Style</p>
@@ -136,7 +155,7 @@ export default function AbayaDemo() {
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="flex flex-col text-center cursor-pointer group" onClick={() => showToast('Hijab details')}>
               <div className="bg-[#f0ece9] aspect-square mb-4 rounded-xl overflow-hidden">
-                <img src={`https://images.unsplash.com/photo-1516762689617-e1cffcef479d?q=80&w=400&auto=format&fit=crop`} alt="Hijab" className="w-full h-full object-cover mix-blend-multiply opacity-90 group-hover:scale-110 transition-transform duration-700" />
+                <img src="/images/abaya_product_2.png" alt="Hijab" className="w-full h-full object-cover mix-blend-multiply opacity-90 group-hover:scale-110 transition-transform duration-700" />
               </div>
               <span className="text-sm font-bold text-gray-700">Modal/Jersey Hijab</span>
             </div>
@@ -148,19 +167,19 @@ export default function AbayaDemo() {
       <section className="max-w-6xl mx-auto px-6 py-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="relative aspect-square rounded-2xl overflow-hidden group cursor-pointer" onClick={() => showToast('Modest Dresses')}>
-            <img src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=600&auto=format&fit=crop" className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700" alt="Modest Dresses" />
+            <img src="/images/abaya_product_3.png" className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700" alt="Modest Dresses" />
             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors flex items-center justify-center">
               <h4 className="text-white text-xl font-serif tracking-widest uppercase text-center leading-snug">Modest<br/>Dresses</h4>
             </div>
           </div>
           <div className="relative aspect-square rounded-2xl overflow-hidden group cursor-pointer" onClick={() => showToast('Accessories')}>
-            <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop" className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700" alt="Accessories" />
+            <img src="/images/abaya_product_1.png" className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700" alt="Accessories" />
             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors flex items-center justify-center">
               <h4 className="text-white text-xl font-serif tracking-widest uppercase text-center leading-snug">Accessories</h4>
             </div>
           </div>
           <div className="relative aspect-square rounded-2xl overflow-hidden group cursor-pointer" onClick={() => showToast('Prayer Wear')}>
-            <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=600&auto=format&fit=crop" className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700" alt="Prayer Wear" />
+            <img src="/images/abaya_hero.png" className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700" alt="Prayer Wear" />
             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors flex items-center justify-center">
               <h4 className="text-white text-xl font-serif tracking-widest uppercase text-center leading-snug">Prayer<br/>Wear</h4>
             </div>
