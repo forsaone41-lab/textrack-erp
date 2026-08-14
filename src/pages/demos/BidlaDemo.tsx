@@ -131,28 +131,28 @@ export default function BidlaDemo() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-auto md:h-[600px]">
           {/* Large Left */}
           <div className="md:col-span-1 h-[400px] md:h-full relative group cursor-pointer overflow-hidden bg-gray-100" onClick={() => showToast('Chef Jackets Category')}>
-            <img src="https://images.unsplash.com/photo-1581349485608-9469926a8e5e?q=80&w=800&auto=format&fit=crop" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90" alt="Chef Jackets" />
+            <img src="https://images.unsplash.com/photo-1581349485608-9469926a8e5e?q=80&w=800&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90" alt="Chef Jackets" />
             <div className="absolute inset-0 bg-black/10 flex items-center justify-center">
               <span className="bg-white/90 px-6 py-3 text-[11px] font-bold tracking-widest uppercase text-black">Chef Jackets</span>
             </div>
           </div>
           
           {/* Middle/Right Grid */}
-          <div className="md:col-span-2 grid grid-cols-2 gap-6 h-[400px] md:h-full">
+          <div className="md:col-span-2 grid grid-cols-2 grid-rows-2 gap-6 h-[400px] md:h-full">
              <div className="col-span-2 relative group cursor-pointer overflow-hidden bg-gray-100" onClick={() => showToast('Aprons Category')}>
-                <img src="/images/chef_apron.png" className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 opacity-80 mix-blend-darken" alt="Aprons" />
+                <img src="/images/chef_apron.png" className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 opacity-80 mix-blend-darken" alt="Aprons" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span className="bg-white/90 px-6 py-3 text-[11px] font-bold tracking-widest uppercase text-black border border-black/10">Aprons</span>
                 </div>
              </div>
              <div className="col-span-1 relative group cursor-pointer overflow-hidden bg-gray-100" onClick={() => showToast('Pants Category')}>
-                <img src="https://images.unsplash.com/photo-1583338917451-face2751d8d5?q=80&w=500&auto=format&fit=crop" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90" alt="Pants" />
+                <img src="https://images.unsplash.com/photo-1583338917451-face2751d8d5?q=80&w=500&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90" alt="Pants" />
                 <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
                   <span className="bg-white/90 px-4 py-2 text-[10px] font-bold tracking-widest uppercase text-black">Pants</span>
                 </div>
              </div>
              <div className="col-span-1 relative group cursor-pointer overflow-hidden bg-gray-100" onClick={() => showToast('Accessories Category')}>
-                <img src="/images/chef_jacket.png" className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 opacity-80 mix-blend-darken p-4" alt="Accessories" />
+                <img src="/images/chef_jacket.png" className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 opacity-80 mix-blend-darken p-4" alt="Accessories" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span className="bg-white/90 px-4 py-2 text-[10px] font-bold tracking-widest uppercase text-black border border-black/10">Accessories</span>
                 </div>
