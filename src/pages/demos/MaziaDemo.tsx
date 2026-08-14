@@ -16,6 +16,8 @@ const Facebook = (props: React.SVGProps<SVGSVGElement>) => (
 
 export default function MaziaDemo() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -48,7 +50,7 @@ export default function MaziaDemo() {
               <span className="text-sm font-medium mr-1">Account</span>
               <Heart className="w-4 h-4" />
             </div>
-            <div className="flex items-center gap-1 cursor-pointer hover:text-amber-800 transition-colors" onClick={() => showToast('Panier ouvert')}>
+            <div className="flex items-center gap-1 cursor-pointer hover:text-amber-800 transition-colors" onClick={() => setIsCartOpen(true)}>
               <span className="text-sm font-medium mr-1">Cart</span>
               <ShoppingBag className="w-4 h-4" />
               <span className="text-[10px] bg-[#d2a58b] text-white w-4 h-4 flex items-center justify-center rounded-full">0</span>
@@ -85,7 +87,7 @@ export default function MaziaDemo() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {/* Product 1 */}
-          <div className="group cursor-pointer" onClick={() => showToast('View Velvet Moisturizer details')}>
+          <div className="group cursor-pointer" onClick={() => setSelectedProduct({name: 'Velvet Moisturizer', price: '$48', img: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=600&auto=format&fit=crop'})}>
             <div className="bg-[#f7ebe6] aspect-square mb-4 flex items-center justify-center p-6 relative overflow-hidden">
               <img src="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=600&auto=format&fit=crop" alt="Velvet Moisturizer" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 mix-blend-multiply" />
             </div>
@@ -96,7 +98,7 @@ export default function MaziaDemo() {
             </button>
           </div>
           {/* Product 2 */}
-          <div className="group cursor-pointer" onClick={() => showToast('View Glow Serum details')}>
+          <div className="group cursor-pointer" onClick={() => setSelectedProduct({name: 'Glow Serum', price: '$62', img: 'https://images.unsplash.com/photo-1599305090598-fe179d501227?q=80&w=600&auto=format&fit=crop'})}>
             <div className="bg-[#f7ebe6] aspect-square mb-4 flex items-center justify-center p-6 relative overflow-hidden">
               <img src="https://images.unsplash.com/photo-1599305090598-fe179d501227?q=80&w=600&auto=format&fit=crop" alt="Glow Serum" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 mix-blend-multiply" />
             </div>
@@ -107,7 +109,7 @@ export default function MaziaDemo() {
             </button>
           </div>
           {/* Product 3 */}
-          <div className="group cursor-pointer" onClick={() => showToast('View Rose Blush Palette details')}>
+          <div className="group cursor-pointer" onClick={() => setSelectedProduct({name: 'Rose Blush Palette', price: '$35', img: 'https://images.unsplash.com/photo-1617897903246-719242758050?q=80&w=600&auto=format&fit=crop'})}>
             <div className="bg-[#f7ebe6] aspect-square mb-4 flex items-center justify-center p-6 relative overflow-hidden">
               <img src="https://images.unsplash.com/photo-1617897903246-719242758050?q=80&w=600&auto=format&fit=crop" alt="Rose Blush Palette" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 mix-blend-multiply" />
             </div>
@@ -118,7 +120,7 @@ export default function MaziaDemo() {
             </button>
           </div>
           {/* Product 4 */}
-          <div className="group cursor-pointer" onClick={() => showToast('View Silk Lip Gloss details')}>
+          <div className="group cursor-pointer" onClick={() => setSelectedProduct({name: 'Silk Lip Gloss', price: '$24', img: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?q=80&w=600&auto=format&fit=crop'})}>
             <div className="bg-[#f7ebe6] aspect-square mb-4 flex items-center justify-center p-6 relative overflow-hidden">
               <img src="https://images.unsplash.com/photo-1571781926291-c477ebfd024b?q=80&w=600&auto=format&fit=crop" alt="Silk Lip Gloss" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 mix-blend-multiply" />
             </div>
@@ -304,6 +306,53 @@ export default function MaziaDemo() {
         <div className="fixed bottom-6 right-6 z-[100] bg-slate-900 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-5">
           <CheckCircle2 className="w-5 h-5 text-emerald-400" />
           <span className="font-sans font-medium">{toastMessage}</span>
+        </div>
+      )}
+
+      {/* Product Quick View Modal */}
+      {selectedProduct && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setSelectedProduct(null)}></div>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col md:flex-row relative z-10 overflow-hidden animate-in zoom-in-95">
+             <button onClick={() => setSelectedProduct(null)} className="absolute top-4 right-4 z-20 bg-white rounded-full p-2 text-slate-500 hover:text-black">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+             </button>
+             <div className="w-full md:w-1/2 bg-[#f7ebe6] aspect-square">
+                <img src={selectedProduct.img} alt={selectedProduct.name} className="w-full h-full object-cover mix-blend-multiply" />
+             </div>
+             <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
+                <h2 className="text-3xl font-serif text-[#333] mb-2">{selectedProduct.name}</h2>
+                <p className="text-xl font-medium text-[#666] mb-6">{selectedProduct.price}</p>
+                <p className="text-slate-500 text-sm leading-relaxed mb-8">
+                  Experience the ultimate luxury with this premium beauty essential. Crafted with high-quality ingredients to bring out your natural glow.
+                </p>
+                <button onClick={() => { setSelectedProduct(null); showToast(`Added ${selectedProduct.name} to cart!`); setIsCartOpen(true); }} className="w-full bg-[#d2a58b] hover:bg-[#c39176] text-white py-4 font-bold tracking-widest uppercase transition-colors rounded-none">
+                  Add To Bag
+                </button>
+             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cart Sidebar Modal */}
+      {isCartOpen && (
+        <div className="fixed inset-0 z-[200] flex justify-end">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsCartOpen(false)}></div>
+          <div className="w-full max-w-md bg-white h-full relative z-10 flex flex-col shadow-2xl animate-in slide-in-from-right">
+             <div className="p-6 border-b border-[#ebdcd5] flex items-center justify-between">
+                <h3 className="font-serif text-xl tracking-widest uppercase text-[#333]">Your Cart</h3>
+                <button onClick={() => setIsCartOpen(false)} className="p-2 text-slate-500 hover:text-black">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+             </div>
+             <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+                <ShoppingBag className="w-16 h-16 text-slate-200 mb-4" />
+                <p className="text-slate-500 font-serif italic mb-6">Your cart is currently empty.</p>
+                <button onClick={() => setIsCartOpen(false)} className="bg-[#333] text-white px-8 py-3 uppercase tracking-widest text-xs font-bold hover:bg-black transition-colors">
+                  Continue Shopping
+                </button>
+             </div>
+          </div>
         </div>
       )}
     </div>
