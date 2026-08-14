@@ -62,7 +62,7 @@ const THEME_CONFIGS: Record<string, any> = {
     },
     products: [
       { name: 'Oud Imperial', price: '$285.00', img: 'https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=600' },
-      { name: 'Midnight Rose', price: '$210.00', img: 'https://images.unsplash.com/photo-1595532542520-252fec2d5e35?q=80&w=600', badge: 'Signature' },
+      { name: 'Midnight Rose', price: '$210.00', img: 'https://images.unsplash.com/photo-1582211594533-268f4f1edcb9?q=80&w=600', badge: 'Signature' },
       { name: 'Amber Vanilla', price: '$195.00', img: 'https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?q=80&w=600' },
       { name: 'Sandalwood Extrait', price: '$320.00', img: 'https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?q=80&w=600' }
     ]
