@@ -39,6 +39,9 @@ const PortailClient    = lazy(() => import('./pages/PortailClient'));
 const ClientInfo       = lazy(() => import('./pages/ClientInfo'));
 const Utilisateurs     = lazy(() => import('./pages/Utilisateurs'));
 const StorePlans       = lazy(() => import('./pages/StorePlans'));
+const AffiliateSignup  = lazy(() => import('./pages/AffiliateSignup'));
+const AffiliatePortal  = lazy(() => import('./pages/AffiliatePortal'));
+const AffiliateAdmin   = lazy(() => import('./pages/AffiliateAdmin'));
 const Performance      = lazy(() => import('./pages/Performance'));
 const Charges          = lazy(() => import('./pages/Charges'));
 const BilanFinancier   = lazy(() => import('./pages/BilanFinancier'));
@@ -84,6 +87,7 @@ const StoreSignup     = lazy(() => import('./pages/StoreSignup'));
 const SetupLanding    = lazy(() => import('./pages/SetupLanding'));
 const TourismDemo     = lazy(() => import('./pages/demos/TourismDemo'));
 const VacationDealsDemo = lazy(() => import('./pages/demos/VacationDealsDemo'));
+const EcommerceDemo = lazy(() => import('./pages/demos/EcommerceDemo'));
 const StoreOnboarding = lazy(() => import('./pages/StoreOnboarding'));
 const MerchantDashboard = lazy(() => import('./pages/MerchantDashboard'));
 const Terms           = lazy(() => import('./pages/Terms'));
@@ -556,7 +560,13 @@ function AppContent() {
         <Route path="/setup" element={<SetupLanding />} />
         <Route path="/demo/tourism" element={<TourismDemo />} />
         <Route path="/demo/vacation-deals" element={<VacationDealsDemo />} />
+        <Route path="/demo/ecommerce/:themeId" element={<EcommerceDemo />} />
         <Route path="/store-signup" element={<StoreSignup onLogin={handleLogin} />} />
+        <Route path="/partner-signup" element={
+          <Suspense fallback={<PageLoader />}>
+            <AffiliateSignup onLogin={handleLogin} />
+          </Suspense>
+        } />
         <Route path="/partners" element={
           <Suspense fallback={<PageLoader />}>
             <Partners />
@@ -610,6 +620,10 @@ function AppContent() {
 
   if (currentUser.role === 'commercial') {
     return <Suspense fallback={<PageLoader />}><CommercialPortal currentUser={currentUser} onLogout={handleLogout} /></Suspense>;
+  }
+
+  if (currentUser.role === 'affiliate') {
+    return <Suspense fallback={<PageLoader />}><AffiliatePortal currentUser={currentUser} onLogout={handleLogout} /></Suspense>;
   }
 
 
@@ -743,6 +757,7 @@ function AppContent() {
         {/* Protected Admin & Other Routes */}
         <Route path="utilisateurs" element={can('utilisateurs') ? <Utilisateurs /> : <Navigate to="/" replace />} />
         <Route path="store-plans" element={can('store_plans') ? <StorePlans /> : <Navigate to="/" replace />} />
+        <Route path="affiliate-admin" element={can('affiliate_admin') ? <AffiliateAdmin /> : <Navigate to="/" replace />} />
         <Route path="rh" element={can('rh') ? <SuiviRH /> : <Navigate to="/" replace />} />
         <Route path="reclamations" element={can('plaintes') ? <Reclamations /> : <Navigate to="/" replace />} />
         <Route path="clients" element={can('clients') ? <Clients /> : <Navigate to="/" replace />} />
@@ -772,6 +787,7 @@ function AppContent() {
         <Route path="/setup" element={<SetupLanding />} />
         <Route path="/demo/tourism" element={<TourismDemo />} />
         <Route path="/demo/vacation-deals" element={<VacationDealsDemo />} />
+        <Route path="/demo/ecommerce/:themeId" element={<EcommerceDemo />} />
         <Route path="/partners" element={
           <Suspense fallback={<PageLoader />}>
             <Partners />

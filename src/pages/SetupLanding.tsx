@@ -316,7 +316,7 @@ export default function SetupLanding() {
             </div>
             {/* Theme 3 */}
             <div 
-              onClick={() => setPreviewTheme({ name: 'MINIMALIST', image: '/images/themes/tech.png' })}
+              onClick={() => setPreviewTheme({ name: 'MINIMALIST', image: '/images/themes/tech.png', url: window.location.origin + '/#/demo/ecommerce/minimalist' })}
               className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
             >
               <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
@@ -339,7 +339,7 @@ export default function SetupLanding() {
             </div>
             {/* Theme 4 */}
             <div 
-              onClick={() => setPreviewTheme({ name: 'ABAYA FASHION', image: '/images/themes/abaya.png' })}
+              onClick={() => setPreviewTheme({ name: 'ABAYA FASHION', image: '/images/themes/abaya.png', url: window.location.origin + '/#/demo/ecommerce/abaya' })}
               className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
             >
               <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
@@ -362,7 +362,7 @@ export default function SetupLanding() {
             </div>
             {/* Theme 5 */}
             <div 
-              onClick={() => setPreviewTheme({ name: 'DENTIST CLINIC', image: '/images/themes/dentist.png' })}
+              onClick={() => setPreviewTheme({ name: 'DENTIST CLINIC', image: '/images/themes/dentist.png', url: window.location.origin + '/#/demo/ecommerce/dentist' })}
               className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
             >
               <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
@@ -385,7 +385,7 @@ export default function SetupLanding() {
             </div>
             {/* Theme 6 */}
             <div 
-              onClick={() => setPreviewTheme({ name: 'LUXURY PERFUME', image: '/images/themes/perfume.png' })}
+              onClick={() => setPreviewTheme({ name: 'LUXURY PERFUME', image: '/images/themes/perfume.png', url: window.location.origin + '/#/demo/ecommerce/luxury-perfume' })}
               className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
             >
               <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
