@@ -419,16 +419,7 @@ export default function SetupLanding() {
                 </button>
               </div>
             </div>
-          </div>
 
-          {/* Tourism Section */}
-          <div className="mt-16 mb-8 flex items-center gap-3">
-             <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-               <Globe className="w-5 h-5" />
-             </div>
-             <h3 className="text-2xl font-black text-slate-800">{isAr ? 'وكالات الأسفار (Agences de Voyage)' : 'Agences de Voyage'}</h3>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
             {/* Tourism 1 */}
             <div 
               onClick={() => setPreviewTheme({ name: 'OMRA & TOURS', image: '/images/themes/tourism_1.png', url: window.location.origin + '/#/demo/omra-tours' })}
