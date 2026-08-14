@@ -1,5 +1,18 @@
 import React, { useState } from 'react';
-import { Search, Heart, ShoppingBag, ChevronLeft, ChevronRight, CheckCircle2, Instagram, Facebook, Link as LinkIcon } from 'lucide-react';
+import { Search, Heart, ShoppingBag, ChevronLeft, ChevronRight, CheckCircle2, Link as LinkIcon } from 'lucide-react';
+
+const Instagram = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+  </svg>
+);
+const Facebook = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+  </svg>
+);
 
 export default function MaziaDemo() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -17,12 +30,12 @@ export default function MaziaDemo() {
         <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
           
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
-            <a href="#!" onClick={(e) => { e.preventDefault(); showToast('Redirection Shop'); }} className="hover:text-amber-800 transition-colors">Shop</a>
-            <a href="#!" onClick={(e) => { e.preventDefault(); showToast('Redirection Skincare'); }} className="hover:text-amber-800 transition-colors">Skincare</a>
-            <a href="#!" onClick={(e) => { e.preventDefault(); showToast('Redirection Makeup'); }} className="hover:text-amber-800 transition-colors">Makeup</a>
-            <a href="#!" onClick={(e) => { e.preventDefault(); showToast('Redirection Bestsellers'); }} className="hover:text-amber-800 transition-colors">Bestsellers</a>
-            <a href="#!" onClick={(e) => { e.preventDefault(); showToast('Redirection About'); }} className="hover:text-amber-800 transition-colors">About</a>
-            <a href="#!" onClick={(e) => { e.preventDefault(); showToast('Redirection Journal'); }} className="hover:text-amber-800 transition-colors">Journal</a>
+            <a href="#" onClick={(e) => { e.preventDefault(); showToast('Redirection Shop'); }} className="hover:text-amber-800 transition-colors">Shop</a>
+            <a href="#" onClick={(e) => { e.preventDefault(); showToast('Redirection Skincare'); }} className="hover:text-amber-800 transition-colors">Skincare</a>
+            <a href="#" onClick={(e) => { e.preventDefault(); showToast('Redirection Makeup'); }} className="hover:text-amber-800 transition-colors">Makeup</a>
+            <a href="#" onClick={(e) => { e.preventDefault(); showToast('Redirection Bestsellers'); }} className="hover:text-amber-800 transition-colors">Bestsellers</a>
+            <a href="#" onClick={(e) => { e.preventDefault(); showToast('Redirection About'); }} className="hover:text-amber-800 transition-colors">About</a>
+            <a href="#" onClick={(e) => { e.preventDefault(); showToast('Redirection Journal'); }} className="hover:text-amber-800 transition-colors">Journal</a>
           </nav>
 
           <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center">
@@ -72,46 +85,46 @@ export default function MaziaDemo() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {/* Product 1 */}
-          <div className="group cursor-pointer">
+          <div className="group cursor-pointer" onClick={() => showToast('View Velvet Moisturizer details')}>
             <div className="bg-[#f7ebe6] aspect-square mb-4 flex items-center justify-center p-6 relative overflow-hidden">
               <img src="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=600&auto=format&fit=crop" alt="Velvet Moisturizer" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 mix-blend-multiply" />
             </div>
             <h4 className="font-bold text-[#333] text-sm">Velvet Moisturizer</h4>
             <p className="text-[#666] text-sm mb-3">$48</p>
-            <button onClick={() => showToast('Ajouté au panier !')} className="w-full bg-[#dfbfa9] hover:bg-[#d2a58b] text-white py-2 text-xs font-bold tracking-widest uppercase transition-colors">
+            <button onClick={(e) => { e.stopPropagation(); showToast('Ajouté au panier !'); }} className="w-full bg-[#dfbfa9] hover:bg-[#d2a58b] text-white py-2 text-xs font-bold tracking-widest uppercase transition-colors">
               Add To Bag
             </button>
           </div>
           {/* Product 2 */}
-          <div className="group cursor-pointer">
+          <div className="group cursor-pointer" onClick={() => showToast('View Glow Serum details')}>
             <div className="bg-[#f7ebe6] aspect-square mb-4 flex items-center justify-center p-6 relative overflow-hidden">
               <img src="https://images.unsplash.com/photo-1599305090598-fe179d501227?q=80&w=600&auto=format&fit=crop" alt="Glow Serum" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 mix-blend-multiply" />
             </div>
             <h4 className="font-bold text-[#333] text-sm">Glow Serum</h4>
             <p className="text-[#666] text-sm mb-3">$62</p>
-            <button onClick={() => showToast('Ajouté au panier !')} className="w-full bg-[#dfbfa9] hover:bg-[#d2a58b] text-white py-2 text-xs font-bold tracking-widest uppercase transition-colors">
+            <button onClick={(e) => { e.stopPropagation(); showToast('Ajouté au panier !'); }} className="w-full bg-[#dfbfa9] hover:bg-[#d2a58b] text-white py-2 text-xs font-bold tracking-widest uppercase transition-colors">
               Add To Bag
             </button>
           </div>
           {/* Product 3 */}
-          <div className="group cursor-pointer">
+          <div className="group cursor-pointer" onClick={() => showToast('View Rose Blush Palette details')}>
             <div className="bg-[#f7ebe6] aspect-square mb-4 flex items-center justify-center p-6 relative overflow-hidden">
               <img src="https://images.unsplash.com/photo-1617897903246-719242758050?q=80&w=600&auto=format&fit=crop" alt="Rose Blush Palette" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 mix-blend-multiply" />
             </div>
             <h4 className="font-bold text-[#333] text-sm">Rose Blush Palette</h4>
             <p className="text-[#666] text-sm mb-3">$35</p>
-            <button onClick={() => showToast('Ajouté au panier !')} className="w-full bg-[#dfbfa9] hover:bg-[#d2a58b] text-white py-2 text-xs font-bold tracking-widest uppercase transition-colors">
+            <button onClick={(e) => { e.stopPropagation(); showToast('Ajouté au panier !'); }} className="w-full bg-[#dfbfa9] hover:bg-[#d2a58b] text-white py-2 text-xs font-bold tracking-widest uppercase transition-colors">
               Add To Bag
             </button>
           </div>
           {/* Product 4 */}
-          <div className="group cursor-pointer">
+          <div className="group cursor-pointer" onClick={() => showToast('View Silk Lip Gloss details')}>
             <div className="bg-[#f7ebe6] aspect-square mb-4 flex items-center justify-center p-6 relative overflow-hidden">
               <img src="https://images.unsplash.com/photo-1571781926291-c477ebfd024b?q=80&w=600&auto=format&fit=crop" alt="Silk Lip Gloss" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 mix-blend-multiply" />
             </div>
             <h4 className="font-bold text-[#333] text-sm">Silk Lip Gloss</h4>
             <p className="text-[#666] text-sm mb-3">$24</p>
-            <button onClick={() => showToast('Ajouté au panier !')} className="w-full bg-[#dfbfa9] hover:bg-[#d2a58b] text-white py-2 text-xs font-bold tracking-widest uppercase transition-colors">
+            <button onClick={(e) => { e.stopPropagation(); showToast('Ajouté au panier !'); }} className="w-full bg-[#dfbfa9] hover:bg-[#d2a58b] text-white py-2 text-xs font-bold tracking-widest uppercase transition-colors">
               Add To Bag
             </button>
           </div>
