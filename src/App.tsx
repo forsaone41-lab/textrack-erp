@@ -553,6 +553,7 @@ function AppContent() {
         <Route path="/store-landing-v3" element={<StoreLandingV3 />} />
         <Route path="/store-landing-v4" element={<StoreLandingV4 />} />
         <Route path="/setup" element={<SetupLanding />} />
+        <Route path="/demo/tourism" element={<TourismDemo />} />
         <Route path="/store-signup" element={<StoreSignup onLogin={handleLogin} />} />
         <Route path="/partners" element={
           <Suspense fallback={<PageLoader />}>
