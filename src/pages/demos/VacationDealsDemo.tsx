@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
-import { Search, MapPin, Calendar, Users, User, Star, ArrowRight, Plane, Globe2, Phone, Mail, Send } from 'lucide-react';
+import { Search, MapPin, Calendar, Users, User, Star, ArrowRight, Plane, Globe2, Phone, Mail, Send, CheckCircle2 } from 'lucide-react';
 
 export default function VacationDealsDemo() {
   const [activePage, setActivePage] = useState('home');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
 
   return (
     <div className="min-h-screen bg-white font-sans">
@@ -320,7 +326,7 @@ export default function VacationDealsDemo() {
             <h2 className="text-3xl font-black text-slate-900 mb-2">Welcome Back</h2>
             <p className="text-slate-500 mb-8 font-medium">Sign in to access your bookings.</p>
             
-            <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setIsLoggedIn(true); setActivePage('home'); }}>
+            <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setIsLoggedIn(true); setActivePage('home'); showToast('Logged in successfully!'); }}>
               <input type="email" placeholder="Email Address" defaultValue="admin@texflow.com" className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-left" />
               <input type="password" placeholder="Password" defaultValue="password123" className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-left" />
               
@@ -329,7 +335,7 @@ export default function VacationDealsDemo() {
               </button>
             </form>
             <p className="mt-6 text-sm text-slate-500 font-medium">
-              Don't have an account? <span className="text-orange-500 cursor-pointer hover:underline" onClick={() => { setIsLoggedIn(true); setActivePage('home'); }}>Register</span>
+              Don't have an account? <span className="text-orange-500 cursor-pointer hover:underline" onClick={() => { setIsLoggedIn(true); setActivePage('home'); showToast('Registered successfully!'); }}>Register</span>
             </p>
           </div>
         </section>
@@ -369,7 +375,7 @@ export default function VacationDealsDemo() {
 
             <div>
               <h3 className="text-xl font-black text-slate-900 mb-6">Payment Information</h3>
-              <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); alert('Booking Confirmed! You will receive an email shortly.'); setActivePage('home'); }}>
+              <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); showToast('Booking Confirmed! You will receive an email shortly.'); setActivePage('home'); }}>
                 <input type="text" placeholder="Full Name" defaultValue={isLoggedIn ? "Admin User" : ""} className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500" />
                 <input type="email" placeholder="Email Address" defaultValue={isLoggedIn ? "admin@texflow.com" : ""} className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500" />
                 <div className="pt-4">
@@ -396,6 +402,13 @@ export default function VacationDealsDemo() {
         </div>
         <p>&copy; 2026 Wanderlust Travels. All rights reserved.</p>
       </footer>
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-[100] bg-slate-900 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-5">
+          <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+          <span className="font-sans font-medium">{toastMessage}</span>
+        </div>
+      )}
     </div>
   );
 }
