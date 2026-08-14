@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Search, Menu, User, Heart, ChevronRight, Star, ArrowRight, Instagram, Facebook, Twitter } from 'lucide-react';
+import { ShoppingBag, Search, Menu, User, Heart, ChevronRight, Star, ArrowRight } from 'lucide-react';
 import { useParams, Navigate } from 'react-router-dom';
 
 const THEME_CONFIGS: Record<string, any> = {
@@ -238,10 +238,10 @@ export default function EcommerceDemo() {
           <div className="font-black text-xl tracking-tighter">
             {theme.name}
           </div>
-          <div className="flex gap-4">
-            <Instagram className="w-5 h-5 opacity-60 hover:opacity-100 cursor-pointer transition-opacity" />
-            <Facebook className="w-5 h-5 opacity-60 hover:opacity-100 cursor-pointer transition-opacity" />
-            <Twitter className="w-5 h-5 opacity-60 hover:opacity-100 cursor-pointer transition-opacity" />
+          <div className="flex gap-6 text-sm font-bold opacity-60">
+            <span className="hover:opacity-100 cursor-pointer transition-opacity">INSTAGRAM</span>
+            <span className="hover:opacity-100 cursor-pointer transition-opacity">FACEBOOK</span>
+            <span className="hover:opacity-100 cursor-pointer transition-opacity">TWITTER</span>
           </div>
           <p className="opacity-60 text-sm">&copy; 2026 {theme.name}. All rights reserved.</p>
         </div>
