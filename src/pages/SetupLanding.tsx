@@ -439,7 +439,7 @@ export default function SetupLanding() {
             </div>
             {/* Tourism 2 */}
             <div 
-              onClick={() => setPreviewTheme({ name: 'VACATION DEALS', image: '/images/themes/tourism_2.png' })}
+              onClick={() => setPreviewTheme({ name: 'VACATION DEALS', image: '/images/themes/tourism_2.png', url: window.location.origin + '/#/demo/vacation-deals' })}
               className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
             >
               <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
