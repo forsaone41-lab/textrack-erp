@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, MapPin, Calendar, Users, Star, ArrowRight, Plane, Globe2, Phone, Mail, Send } from 'lucide-react';
+import { Search, MapPin, Calendar, Users, User, Star, ArrowRight, Plane, Globe2, Phone, Mail, Send } from 'lucide-react';
 
 export default function VacationDealsDemo() {
   const [activePage, setActivePage] = useState('home');
