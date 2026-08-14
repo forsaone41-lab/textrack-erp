@@ -102,7 +102,7 @@ export default function TourismDemo() {
           {/* Card 1 */}
           <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 hover:shadow-xl transition-all group cursor-pointer font-sans flex flex-col">
             <div className="h-48 overflow-hidden relative">
-              <img src="https://images.unsplash.com/photo-1499678329028-101435549a4e?q=80&w=600&auto=format&fit=crop" alt="Amalfi Coast" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+              <img src="https://images.unsplash.com/photo-1533676802871-eca1ae998cd5?q=80&w=600&auto=format&fit=crop" alt="Amalfi Coast" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
               <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-lg text-xs font-bold text-emerald-700 flex items-center gap-1 shadow-sm">
                  <Clock className="w-3 h-3" /> 7 Days
               </div>
