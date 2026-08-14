@@ -272,7 +272,7 @@ export default function SetupLanding() {
           <div className="grid md:grid-cols-3 gap-8">
             {/* Theme 1 */}
             <div 
-              onClick={() => setPreviewTheme({ name: 'MAZIA', image: '/images/themes/cosmetics.png' })}
+              onClick={() => setPreviewTheme({ name: 'MAZIA', image: '/images/themes/cosmetics.png', url: window.location.origin + '/#/demo/mazia' })}
               className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
             >
               <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">

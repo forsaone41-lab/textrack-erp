@@ -42,6 +42,7 @@ const StorePlans       = lazy(() => import('./pages/StorePlans'));
 const AffiliateSignup  = lazy(() => import('./pages/AffiliateSignup'));
 const AffiliatePortal  = lazy(() => import('./pages/AffiliatePortal'));
 const AffiliateAdmin   = lazy(() => import('./pages/AffiliateAdmin'));
+const PartnerDirectory = lazy(() => import('./pages/PartnerDirectory'));
 const Performance      = lazy(() => import('./pages/Performance'));
 const Charges          = lazy(() => import('./pages/Charges'));
 const BilanFinancier   = lazy(() => import('./pages/BilanFinancier'));
@@ -88,6 +89,7 @@ const SetupLanding    = lazy(() => import('./pages/SetupLanding'));
 const TourismDemo     = lazy(() => import('./pages/demos/TourismDemo'));
 const VacationDealsDemo = lazy(() => import('./pages/demos/VacationDealsDemo'));
 const OmraToursDemo = lazy(() => import('./pages/demos/OmraToursDemo'));
+const MaziaDemo = lazy(() => import('./pages/demos/MaziaDemo'));
 const EcommerceDemo = lazy(() => import('./pages/demos/EcommerceDemo'));
 const StoreOnboarding = lazy(() => import('./pages/StoreOnboarding'));
 const MerchantDashboard = lazy(() => import('./pages/MerchantDashboard'));
@@ -562,11 +564,17 @@ function AppContent() {
         <Route path="/demo/tourism" element={<TourismDemo />} />
         <Route path="/demo/vacation-deals" element={<VacationDealsDemo />} />
         <Route path="/demo/omra-tours" element={<OmraToursDemo />} />
+        <Route path="/demo/mazia" element={<MaziaDemo />} />
         <Route path="/demo/ecommerce/:themeId" element={<EcommerceDemo />} />
         <Route path="/store-signup" element={<StoreSignup onLogin={handleLogin} />} />
         <Route path="/partner-signup" element={
           <Suspense fallback={<PageLoader />}>
             <AffiliateSignup onLogin={handleLogin} />
+          </Suspense>
+        } />
+        <Route path="/partner-directory" element={
+          <Suspense fallback={<PageLoader />}>
+            <PartnerDirectory />
           </Suspense>
         } />
         <Route path="/partners" element={
