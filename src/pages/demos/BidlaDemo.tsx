@@ -21,6 +21,8 @@ const Twitter = (props: React.SVGProps<SVGSVGElement>) => (
 
 export default function BidlaDemo() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -67,7 +69,7 @@ export default function BidlaDemo() {
           <div className="flex items-center gap-5 text-gray-800">
             <Search className="w-5 h-5 cursor-pointer hover:text-gray-500 transition-colors" onClick={() => showToast('Search')} />
             <User className="w-5 h-5 cursor-pointer hover:text-gray-500 transition-colors" onClick={() => showToast('Account')} />
-            <div className="relative cursor-pointer hover:text-gray-500 transition-colors" onClick={() => showToast('Cart')}>
+            <div className="relative cursor-pointer hover:text-gray-500 transition-colors" onClick={() => setIsCartOpen(true)}>
               <ShoppingBag className="w-5 h-5" />
               <span className="absolute -top-1 -right-1.5 bg-black text-white text-[9px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">0</span>
             </div>
@@ -111,12 +113,12 @@ export default function BidlaDemo() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {essentials.map((item, idx) => (
             <div key={idx} className="group flex flex-col text-center">
-              <div className="bg-[#f2f2f2] aspect-[4/5] mb-6 overflow-hidden relative cursor-pointer" onClick={() => showToast(`View ${item.name}`)}>
+              <div className="bg-[#f2f2f2] aspect-[4/5] mb-6 overflow-hidden relative cursor-pointer" onClick={() => setSelectedProduct(item)}>
                 <img src={item.img} alt={item.name} className="w-full h-full object-cover object-center mix-blend-darken p-8 group-hover:scale-105 transition-transform duration-700" />
               </div>
               <h4 className="font-bold text-[13px] text-[#222] mb-1 font-serif uppercase tracking-wide">{item.name}</h4>
               <p className="text-[13px] text-gray-500 mb-6 font-sans">{item.price}</p>
-              <button onClick={() => showToast(`Added ${item.name} to cart`)} className="w-full border border-gray-300 hover:border-black text-[#222] py-3 text-[10px] font-bold tracking-widest uppercase transition-colors">
+              <button onClick={() => { setSelectedProduct(item); showToast(`Added ${item.name} to cart`); setIsCartOpen(true); }} className="w-full border border-gray-300 hover:border-black text-[#222] py-3 text-[10px] font-bold tracking-widest uppercase transition-colors">
                 Add To Cart
               </button>
             </div>
@@ -186,7 +188,7 @@ export default function BidlaDemo() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {favorites.map((item, idx) => (
             <div key={idx} className="group flex flex-col text-center">
-              <div className="bg-[#f2f2f2] aspect-[4/5] mb-6 overflow-hidden relative cursor-pointer" onClick={() => showToast(`View ${item.name}`)}>
+              <div className="bg-[#f2f2f2] aspect-[4/5] mb-6 overflow-hidden relative cursor-pointer" onClick={() => setSelectedProduct(item)}>
                 <img src={item.img} alt={item.name} className="w-full h-full object-cover object-center mix-blend-darken p-8 group-hover:scale-105 transition-transform duration-700" />
               </div>
               <h4 className="font-bold text-[13px] text-[#222] mb-1 font-serif uppercase tracking-wide">{item.name}</h4>
@@ -254,6 +256,62 @@ export default function BidlaDemo() {
           </div>
         </div>
       </footer>
+
+      {/* Product Quick View Modal */}
+      {selectedProduct && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedProduct(null)}></div>
+          <div className="bg-white shadow-2xl w-full max-w-4xl flex flex-col md:flex-row relative z-10 animate-in zoom-in-95 overflow-hidden">
+             <button onClick={() => setSelectedProduct(null)} className="absolute top-4 right-4 z-20 bg-white rounded-full p-2 text-gray-500 hover:text-black shadow-sm">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+             </button>
+             <div className="w-full md:w-1/2 bg-[#f2f2f2] p-8 md:p-16 flex items-center justify-center">
+                <img src={selectedProduct.img} alt={selectedProduct.name} className="w-full h-auto object-contain mix-blend-darken" />
+             </div>
+             <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white">
+                <p className="text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2">Atelier Collection</p>
+                <h2 className="text-3xl font-serif text-[#111] mb-2">{selectedProduct.name}</h2>
+                <p className="text-xl font-sans text-gray-600 mb-6">{selectedProduct.price}</p>
+                <p className="text-gray-500 text-sm leading-relaxed mb-8">
+                  Engineered for the demanding environment of a professional kitchen. Premium fabric, precision stitching, and a timeless aesthetic.
+                </p>
+                <div className="space-y-4 mb-8">
+                   <div className="flex items-center gap-3 text-sm text-gray-600">
+                     <CheckCircle2 className="w-4 h-4 text-green-600" /> In Stock - Ready to ship
+                   </div>
+                   <div className="flex items-center gap-3 text-sm text-gray-600">
+                     <CheckCircle2 className="w-4 h-4 text-green-600" /> Professional Grade Material
+                   </div>
+                </div>
+                <button onClick={() => { setSelectedProduct(null); showToast(`Added ${selectedProduct.name} to cart!`); setIsCartOpen(true); }} className="w-full bg-[#111] hover:bg-black text-white py-4 text-xs font-bold tracking-widest uppercase transition-colors">
+                  Add To Cart
+                </button>
+             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cart Sidebar Modal */}
+      {isCartOpen && (
+        <div className="fixed inset-0 z-[200] flex justify-end">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsCartOpen(false)}></div>
+          <div className="w-full max-w-md bg-white h-full relative z-10 flex flex-col shadow-2xl animate-in slide-in-from-right border-l border-gray-200">
+             <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                <h3 className="font-serif text-xl tracking-widest uppercase text-[#111]">Your Cart</h3>
+                <button onClick={() => setIsCartOpen(false)} className="p-2 text-gray-500 hover:text-black">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+             </div>
+             <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-gray-50/50">
+                <ShoppingBag className="w-16 h-16 text-gray-300 mb-6" />
+                <p className="text-gray-500 font-serif italic mb-8">Your cart is currently empty.</p>
+                <button onClick={() => setIsCartOpen(false)} className="bg-transparent border border-black text-black px-8 py-3 uppercase tracking-widest text-xs font-bold hover:bg-black hover:text-white transition-colors">
+                  Continue Shopping
+                </button>
+             </div>
+          </div>
+        </div>
+      )}
 
       {/* Toast Notification */}
       {toastMessage && (
