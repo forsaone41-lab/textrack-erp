@@ -419,6 +419,30 @@ export default function SetupLanding() {
                 </button>
               </div>
             </div>
+            
+            {/* Service 2 */}
+            <div 
+              onClick={() => setPreviewTheme({ name: 'LUXE RENTALS', image: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?q=80&w=600&auto=format&fit=crop', url: window.location.origin + '/#/demo/car-rental' })}
+              className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
+            >
+              <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
+                <img src="https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?q=80&w=600&auto=format&fit=crop" className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" alt="Theme Car Rental" />
+                <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center backdrop-blur-none group-hover:backdrop-blur-[2px]">
+                   <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-xl">
+                      <Eye className="w-5 h-5" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                   </div>
+                </div>
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-xs font-black px-3 py-1.5 rounded-full shadow-sm text-slate-800 uppercase">
+                  LUXE RENTALS
+                </div>
+              </div>
+              <div className="p-4 flex flex-col items-center gap-3">
+                <h3 className="font-bold text-slate-800 text-lg">LUXE RENTALS <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
+                <button className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 border border-slate-200">
+                  <Eye className="w-4 h-4" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                </button>
+              </div>
+            </div>
 
             {/* Tourism 1 */}
             <div 
