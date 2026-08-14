@@ -54,7 +54,8 @@ const THEMES = [
   { id: 'pop-fashion', name: 'Simple Minimal (Pro)', layout: 'pro-simple', defaultColor: '#e11d48', defaultFont: 'font-sans', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=800&auto=format&fit=crop' },
   { id: 'fitness-pulse', name: 'Joyride (Pro)', layout: 'pro-joyride', defaultColor: '#7c3aed', defaultFont: 'font-sans', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop' },
   { id: 'editorial-noir', name: 'Lamode Web (Pro)', layout: 'pro-lamode', defaultColor: '#dc2626', defaultFont: 'font-sans', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=800&auto=format&fit=crop' },
-  { id: 'emerald-market', name: 'Ultimate Store (Pro)', layout: 'pro-ultimate', defaultColor: '#0d9488', defaultFont: 'font-sans', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=800&auto=format&fit=crop' }
+  { id: 'emerald-market', name: 'Ultimate Store (Pro)', layout: 'pro-ultimate', defaultColor: '#0d9488', defaultFont: 'font-sans', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=800&auto=format&fit=crop' },
+  { id: 'atelier', name: 'Atelier Kitchen Wear', layout: 'atelier', defaultColor: '#1a1a1a', defaultFont: 'font-serif', tier: 'pro', previewImg: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?q=80&w=800&auto=format&fit=crop' }
 ];
 
 const readFileAsBase64 = (file: File): Promise<string> => {
@@ -3644,6 +3645,239 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
   );
   };
 
+  const LayoutAtelier = ({ isModal = false, page, setPage, activeProductId, navigateToProduct, buyMode, categories, activeCategory, setActiveCategory, filteredProducts, setIsCartOpen, submitGlobalOrder, storeProducts }: any) => {
+    const [selectedSize, setSelectedSize] = useState<string>('');
+    const [selectedColor, setSelectedColor] = useState<string>('');
+    const [quantity, setQuantity] = useState(1);
+    const realCategories = (categories || []).filter((c: string) => c !== 'All');
+    const essentials = filteredProducts.slice(0, 4);
+    const favorites = filteredProducts.slice(4, 8).length > 0 ? filteredProducts.slice(4, 8) : filteredProducts.slice(0, 4);
+
+    return (
+    <div className={`w-full min-h-full bg-white text-[#222] ${fontFamily} flex flex-col`}>
+      <StoreHeaderNavbar variant="light" page={page} setPage={setPage} isModal={isModal} />
+      <MobileNavPanel page={page} setPage={setPage} />
+
+      <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
+        {page === 'home' && (
+          <>
+            <div className="w-full bg-[#f4f4f4] py-2.5 text-center text-[10px] tracking-widest text-gray-600 uppercase font-bold border-b border-gray-200">
+              {storeIsAr ? 'شحن مجاني للطلبات فوق 150 درهم' : 'Livraison gratuite dès 150 MAD'}
+            </div>
+
+            <div className="bg-[#f0f0f0] border-b border-gray-200">
+              <div className="mx-auto flex flex-col md:flex-row min-h-[500px]" style={{ maxWidth: `${siteMaxWidth}px` }}>
+                <div className="w-full md:w-1/2 flex flex-col justify-center p-12 md:p-20">
+                  <EditableText as="h2" text={heroTitle} onTextChange={setHeroTitle} isLiveStore={isLiveStore} className="text-4xl md:text-5xl font-serif text-[#111] mb-6 leading-tight uppercase" styleKey="heroTitle" />
+                  <p className="text-sm text-gray-600 mb-10 tracking-wide font-serif italic">
+                    {storeIsAr ? 'اكتشف مجموعتنا المميزة.' : 'Découvrez la Collection Signature.'}
+                  </p>
+                  <button onClick={() => { setActiveCategory('All'); }} className="self-start bg-transparent border border-[#222] text-[#222] hover:bg-[#222] hover:text-white px-8 py-3.5 text-xs font-bold tracking-widest uppercase transition-colors">
+                    {storeIsAr ? 'تسوق الآن' : 'Shop Now'}
+                  </button>
+                </div>
+                <div className="w-full md:w-1/2 relative bg-gray-200 min-h-[300px]">
+                  <img src={heroImage} alt="Hero" className="w-full h-full object-cover object-center absolute inset-0" style={{ objectPosition: `${heroImagePosX}% ${heroImagePosY}%` }} />
+                </div>
+              </div>
+            </div>
+
+            <div className="mx-auto px-6 py-20 text-center" style={{ maxWidth: `${siteMaxWidth}px` }}>
+              <EditableText as="h3" text={homeCollectionsTitle} onTextChange={setHomeCollectionsTitle} isLiveStore={isLiveStore} className="text-xl font-serif uppercase tracking-widest mb-16 text-[#111]" styleKey="homeCollectionsTitle" />
+              <div className={`grid ${previewDevice === 'mobile' && !isModal ? 'grid-cols-2' : gridColsClass('md4')} gap-8`}>
+                {essentials.map((p: any) => (
+                  <div key={p.id} className="group flex flex-col text-center cursor-pointer" onClick={() => navigateToProduct(p.id)}>
+                    <div className="bg-[#f2f2f2] aspect-[4/5] mb-6 overflow-hidden relative">
+                      <img src={getCoverImage(p)} alt={p.name} className="w-full h-full object-cover object-center mix-blend-darken p-8 group-hover:scale-105 transition-transform duration-700" />
+                    </div>
+                    <h4 className="font-bold text-[13px] text-[#222] mb-1 font-serif uppercase tracking-wide">{p.name}</h4>
+                    <p className="text-[13px] text-gray-500 mb-6 font-sans">{p.price} MAD</p>
+                    <button onClick={(e) => handleAddToCart(e, p, 1)} className="w-full border border-gray-300 hover:border-black text-[#222] py-3 text-[10px] font-bold tracking-widest uppercase transition-colors">
+                      {storeIsAr ? 'أضف للسلة' : 'Add To Cart'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {realCategories.length > 0 && (
+              <div className="mx-auto px-6 py-10" style={{ maxWidth: `${siteMaxWidth}px` }}>
+                <h3 className="text-xl font-serif text-center uppercase tracking-widest mb-16 text-[#111]">{allCollectionsTitle}</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-auto md:h-[600px]">
+                  <div className="md:col-span-1 h-[400px] md:h-full relative group cursor-pointer overflow-hidden bg-gray-100" onClick={() => setActiveCategory(realCategories[0])}>
+                    <img src={getCoverImage(storeProducts.find((p: any) => p.category === realCategories[0]) || storeProducts[0])} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90" alt={tr(realCategories[0])} />
+                    <div className="absolute inset-0 bg-black/10 flex items-center justify-center">
+                      <span className="bg-white/90 px-6 py-3 text-[11px] font-bold tracking-widest uppercase text-black">{tr(realCategories[0])}</span>
+                    </div>
+                  </div>
+                  {realCategories.length > 1 && (
+                    <div className="md:col-span-2 grid grid-cols-2 grid-rows-2 gap-6 h-[400px] md:h-full">
+                      {realCategories.slice(1, 4).map((c: string, idx: number) => (
+                        <div key={tr(c)} className={`${idx === 0 ? 'col-span-2' : 'col-span-1'} relative group cursor-pointer overflow-hidden bg-gray-100`} onClick={() => setActiveCategory(c)}>
+                          <img src={getCoverImage(storeProducts.find((p: any) => p.category === c) || storeProducts[0])} className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 opacity-90" alt={tr(c)} />
+                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                            <span className="bg-white/90 px-4 py-2 text-[10px] font-bold tracking-widest uppercase text-black border border-black/10">{tr(c)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="my-20 relative h-[500px] overflow-hidden">
+              <img src={heroImage} className="absolute inset-0 w-full h-full object-cover" alt="" />
+              <div className="absolute inset-0 bg-black/60 flex items-center">
+                <div className="mx-auto px-6 w-full md:w-1/2" style={{ maxWidth: `${siteMaxWidth}px` }}>
+                  <h2 className="text-3xl md:text-4xl font-serif text-white mb-6 uppercase tracking-wider">
+                    {storeIsAr ? 'صُمم للأداء والأناقة' : 'Designed For Performance & Style'}
+                  </h2>
+                  <p className="text-gray-300 text-sm leading-relaxed mb-10 max-w-md">
+                    {storeIsAr
+                      ? 'منتجاتنا مصممة لتتحمل حرارة العمل مع الحفاظ على مظهر احترافي أنيق.'
+                      : 'Nos pièces sont conçues pour résister à la chaleur tout en gardant une allure professionnelle et élégante.'}
+                  </p>
+                  <button onClick={() => { setActiveCategory('All'); }} className="bg-white text-black px-8 py-3.5 text-xs font-bold tracking-widest uppercase hover:bg-gray-200 transition-colors">
+                    {storeIsAr ? 'اكتشف المجموعة' : 'Explore Collection'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="mx-auto px-6 py-10 text-center" style={{ maxWidth: `${siteMaxWidth}px` }}>
+              <h3 className="text-xl font-serif uppercase tracking-widest mb-16 text-[#111]">{storeIsAr ? 'المفضلة لدى الزبناء' : 'Customer Favorites'}</h3>
+              <div className={`grid ${previewDevice === 'mobile' && !isModal ? 'grid-cols-2' : gridColsClass('md4')} gap-8`}>
+                {favorites.map((p: any) => (
+                  <div key={p.id} className="group flex flex-col text-center cursor-pointer" onClick={() => navigateToProduct(p.id)}>
+                    <div className="bg-[#f2f2f2] aspect-[4/5] mb-6 overflow-hidden relative">
+                      <img src={getCoverImage(p)} alt={p.name} className="w-full h-full object-cover object-center mix-blend-darken p-8 group-hover:scale-105 transition-transform duration-700" />
+                    </div>
+                    <h4 className="font-bold text-[13px] text-[#222] mb-1 font-serif uppercase tracking-wide">{p.name}</h4>
+                    <p className="text-[13px] text-gray-500 font-sans">{p.price} MAD</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {page === 'product' && activeProductId && (() => {
+           const p = storeProducts.find((prod: any) => prod.id === activeProductId);
+           if (!p) return null;
+           return (
+           <div className="p-8 mx-auto min-h-[600px] my-8 flex flex-col md:flex-row gap-12 bg-white" style={{ maxWidth: `${pdpMaxWidth}px` }}>
+              <div className="w-full md:w-1/2 flex gap-4">
+                 <div className="w-full bg-[#f2f2f2] overflow-hidden flex items-center justify-center" style={{ aspectRatio: pdpImageAspect }}>
+                    <img src={getCoverImage(p)} className="w-full h-full object-cover mix-blend-darken p-8" alt="Product" />
+                 </div>
+              </div>
+              <div className="w-full md:w-1/2 pt-4">
+                 <h2 className="text-3xl font-serif font-black uppercase tracking-widest text-[#111] mb-2">{p.name}</h2>
+                 <p className="text-xl font-bold text-[#444] mb-8">{p.price} MAD</p>
+
+                 <div className="space-y-6 mb-8">
+                    {p.colors?.length > 0 && (
+                       <div>
+                          <span className="text-[11px] font-bold uppercase tracking-widest text-[#666] mb-3 block">{storeIsAr ? 'لون' : 'Couleur'}</span>
+                          <div className="flex gap-2">
+                             {p.colors.map((c: string) => (
+                                <button key={tr(c)} onClick={() => setSelectedColor(c)} className={`w-8 h-8 rounded-full border-2 transition-transform ${selectedColor === c ? 'border-[#111] scale-110' : 'border-transparent hover:scale-105 shadow-sm'}`} style={{ backgroundColor: c }} />
+                             ))}
+                          </div>
+                       </div>
+                    )}
+                    {p.sizes?.length > 0 && (
+                       <div>
+                          <div className="flex items-center justify-between mb-3">
+                             <span className="text-[11px] font-bold uppercase tracking-widest text-[#666] block">{storeIsAr ? 'المقاس' : 'Taille'}</span>
+                             <SizeGuideButton ficheId={p.ficheId} />
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                             {p.sizes.map((s: string) => (
+                                <button key={s} onClick={() => setSelectedSize(s)} className={`min-w-[40px] h-10 px-3 text-[11px] font-bold uppercase tracking-widest transition-colors border ${selectedSize === s ? 'bg-[#111] text-white border-[#111]' : 'bg-white text-[#444] border-[#ddd] hover:border-[#111]'}`}>
+                                   {s}
+                                </button>
+                             ))}
+                          </div>
+                       </div>
+                    )}
+
+                    <div>
+                       <span className="text-[11px] font-bold uppercase tracking-widest text-[#666] mb-3 block">{storeIsAr ? 'الكمية' : 'Quantité'}</span>
+                       <div className="flex items-center gap-4">
+                          <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-10 h-10 border border-[#ddd] flex items-center justify-center text-lg hover:border-[#111] transition-colors">-</button>
+                          <span className="text-sm font-bold w-4 text-center">{quantity}</span>
+                          <button onClick={() => setQuantity(quantity + 1)} className="w-10 h-10 border border-[#ddd] flex items-center justify-center text-lg hover:border-[#111] transition-colors">+</button>
+                       </div>
+                    </div>
+                 </div>
+
+                 {(buyMode === 'both' || buyMode === 'cart') && (
+                    <button onClick={(e) => handleAddToCart(e, p, quantity, selectedColor, selectedSize)} className="w-full h-14 bg-[#111] text-white font-bold uppercase tracking-widest text-xs hover:bg-black transition-colors mb-4">{storeIsAr ? 'أضف للسلة' : 'Ajouter au panier'}</button>
+                 )}
+                 {(buyMode === 'both' || buyMode === 'direct') && (
+                    <button onClick={() => {
+                                 if (p.colors?.length > 0 && !selectedColor) { alert(storeIsAr ? 'الرجاء اختيار اللون أولاً' : 'Veuillez choisir une couleur d\'abord'); return; }
+                                 if (p.sizes?.length > 0 && !selectedSize) { alert(storeIsAr ? 'الرجاء اختيار المقاس أولاً' : 'Veuillez choisir une taille d\'abord'); return; }
+                                 buyNowAsPopup ? setQuickBuyContext({ product: p, quantity, selectedColor, selectedSize, setPage }) : setPage('checkout')
+                              }} className="w-full h-14 bg-[#f2f2f2] text-[#111] font-bold uppercase tracking-widest text-xs hover:bg-[#e5e5e5] transition-colors">{storeIsAr ? 'اشتري الآن' : 'Acheter Maintenant'}</button>
+                 )}
+                 <PdpTrustBadges />
+              </div>
+           </div>
+         );
+        })()}
+
+        {page === 'checkout' && (() => {
+           const p = storeProducts.find((prod: any) => prod.id === activeProductId);
+           return (
+           <div className="p-8 max-w-2xl mx-auto my-8 bg-white border border-[#eee]">
+              <h2 className="text-2xl font-serif font-black uppercase tracking-widest text-[#111] mb-8 text-center">{storeIsAr ? 'شراء سريع' : 'Achat Express'}</h2>
+              <div className="space-y-4">
+                 <CheckoutForm
+                                 storeIsAr={typeof storeLang !== 'undefined' ? storeLang === 'ar' : storeIsAr}
+                                 storeLang={storeLang}
+                                 onSubmit={submitGlobalOrder}
+                                 product={p}
+                                 quantity={quantity}
+                                 disabled={(p?.colors?.length > 0 && !selectedColor) || (p?.sizes?.length > 0 && !selectedSize)}
+                                 requireAccount={requireAccountToOrder}
+                                 isAuthenticated={!!customerUser}
+                                 onRequestLogin={() => { setAuthMode('login'); setIsAuthOpen(true); }}
+                                 selectedColor={selectedColor}
+                                 selectedSize={selectedSize}
+                              />
+              </div>
+           </div>
+           );
+        })()}
+
+        {page === 'success' && (
+           <div className="p-16 max-w-2xl mx-auto my-8 bg-white border border-[#eee] text-center flex flex-col items-center justify-center min-h-[400px]">
+              <div className="w-24 h-24 bg-[#111] text-white rounded-full flex items-center justify-center mb-8">
+                 <CheckCircle className="w-12 h-12" />
+              </div>
+              <h2 className="text-3xl font-serif font-black uppercase tracking-widest text-[#111] mb-4">
+                  {storeIsAr ? 'تم تأكيد طلبك' : 'Commande Confirmée !'}
+              </h2>
+              <p className="text-[#666] text-sm max-w-md mx-auto leading-relaxed mb-8">
+                 {storeIsAr
+                   ? 'شكراً لطلبك. فريقنا يجهزه الآن وسيتواصل معك قريباً لتأكيد الشحن.'
+                   : 'Merci pour votre commande. Notre équipe la prépare et vous contactera bientôt pour la livraison.'}
+              </p>
+              <button onClick={() => setPage('home')} className="px-8 py-3 bg-[#f2f2f2] text-[#111] font-bold uppercase tracking-widest text-xs hover:bg-[#e5e5e5] transition-colors">
+                 {storeIsAr ? "العودة للرئيسية" : "Retour à l'accueil"}
+              </button>
+           </div>
+        )}
+      </div>
+      <ThemeFooter setPage={setPage} />
+      <BottomNavBar page={page} setPage={setPage} />
+    </div>
+  );
+  };
+
     const LayoutMazia = ({ isModal, page, setPage, activeProductId, navigateToProduct, setIsCartOpen, submitGlobalOrder, storeProducts }: any) => {
     const [selectedSize, setSelectedSize] = useState<string>('');
     const [selectedColor, setSelectedColor] = useState<string>('');
@@ -4658,6 +4892,7 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
        if (activeTheme.layout === 'pro-joyride') return <LayoutProJoyride {...props} />;
        if (activeTheme.layout === 'pro-lamode') return <LayoutProLamode {...props} />;
        if (activeTheme.layout === 'clement') return <LayoutClement {...props} />;
+       if (activeTheme.layout === 'atelier') return <LayoutAtelier {...props} />;
        return <LayoutHeroCenter {...props} />;
     };
 
