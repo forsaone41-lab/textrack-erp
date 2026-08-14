@@ -162,7 +162,7 @@ export default function BidlaDemo() {
       </section>
 
       {/* Performance & Style Banner */}
-      <section className="my-20 relative h-[500px]">
+      <section className="my-20 relative h-[500px] overflow-hidden">
         <img src="https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?q=80&w=2000&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover" alt="Chefs working" />
         <div className="absolute inset-0 bg-black/60 flex items-center">
           <div className="max-w-7xl mx-auto px-6 w-full md:w-1/2">
