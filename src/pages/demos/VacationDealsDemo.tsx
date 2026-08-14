@@ -14,11 +14,11 @@ export default function VacationDealsDemo() {
             Wanderlust<span className="text-orange-500">Travels</span>
           </div>
           <nav className="hidden lg:flex items-center gap-8 text-sm font-bold text-slate-600">
-            <a href="#" className="text-orange-500">Home</a>
-            <a href="#" className="hover:text-orange-500 transition-colors">Destinations</a>
-            <a href="#" className="hover:text-orange-500 transition-colors">Packages</a>
-            <a href="#" className="hover:text-orange-500 transition-colors">Deals</a>
-            <a href="#" className="hover:text-orange-500 transition-colors">Contact</a>
+            <a href="#!" onClick={(e) => e.preventDefault()} className="text-orange-500">Home</a>
+            <a href="#!" onClick={(e) => e.preventDefault()} className="hover:text-orange-500 transition-colors">Destinations</a>
+            <a href="#!" onClick={(e) => e.preventDefault()} className="hover:text-orange-500 transition-colors">Packages</a>
+            <a href="#!" onClick={(e) => e.preventDefault()} className="hover:text-orange-500 transition-colors">Deals</a>
+            <a href="#!" onClick={(e) => e.preventDefault()} className="hover:text-orange-500 transition-colors">Contact</a>
           </nav>
           <button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-lg shadow-orange-500/30">
             Sign In / Register

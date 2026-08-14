@@ -12,13 +12,13 @@ export default function TourismDemo() {
             ExploreLocal
           </div>
           <nav className="hidden lg:flex items-center gap-8 font-sans text-sm font-semibold text-slate-600">
-            <a href="#" className="text-emerald-700 border-b-2 border-emerald-700 py-7">Home</a>
-            <a href="#" className="hover:text-emerald-700 transition-colors">Destinations</a>
-            <a href="#" className="hover:text-emerald-700 transition-colors">Tours & Packages</a>
-            <a href="#" className="hover:text-emerald-700 transition-colors">Experiences</a>
-            <a href="#" className="hover:text-emerald-700 transition-colors">Blog</a>
-            <a href="#" className="hover:text-emerald-700 transition-colors">About Us</a>
-            <a href="#" className="hover:text-emerald-700 transition-colors">Contact</a>
+            <a href="#!" onClick={(e) => e.preventDefault()} className="text-emerald-700 border-b-2 border-emerald-700 py-7">Home</a>
+            <a href="#!" onClick={(e) => e.preventDefault()} className="hover:text-emerald-700 transition-colors">Destinations</a>
+            <a href="#!" onClick={(e) => e.preventDefault()} className="hover:text-emerald-700 transition-colors">Tours & Packages</a>
+            <a href="#!" onClick={(e) => e.preventDefault()} className="hover:text-emerald-700 transition-colors">Experiences</a>
+            <a href="#!" onClick={(e) => e.preventDefault()} className="hover:text-emerald-700 transition-colors">Blog</a>
+            <a href="#!" onClick={(e) => e.preventDefault()} className="hover:text-emerald-700 transition-colors">About Us</a>
+            <a href="#!" onClick={(e) => e.preventDefault()} className="hover:text-emerald-700 transition-colors">Contact</a>
           </nav>
           <button className="bg-emerald-700 hover:bg-emerald-800 text-white px-6 py-2.5 rounded-full font-sans font-bold text-sm transition-all shadow-lg shadow-emerald-700/20">
             Book Now
