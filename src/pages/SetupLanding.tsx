@@ -256,8 +256,16 @@ export default function SetupLanding() {
       <section id="themes-section" className="py-16 bg-white border-b border-slate-100">
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-black text-slate-900 mb-4">{isAr ? 'نماذج من المتاجر اللي غنصاوبو ليك' : 'Exemples de boutiques'}</h2>
-            <p className="text-slate-500 text-lg">{isAr ? 'تصاميم احترافية متجاوبة مع الموبايل ومصممة لرفع المبيعات (Conversion Rate)' : 'Des designs professionnels optimisés pour les conversions'}</p>
+            <h2 className="text-3xl font-black text-slate-900 mb-4">{isAr ? 'نماذج من المواقع اللي غنصاوبو ليك' : 'Exemples de sites web'}</h2>
+            <p className="text-slate-500 text-lg mb-8">{isAr ? 'تصاميم احترافية متجاوبة مع الموبايل مصممة خصيصاً لمجالك' : 'Des designs professionnels adaptés à votre domaine'}</p>
+          </div>
+          
+          {/* E-Commerce Section */}
+          <div className="mb-8 flex items-center gap-3">
+             <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+               <Globe className="w-5 h-5" />
+             </div>
+             <h3 className="text-2xl font-black text-slate-800">{isAr ? 'متاجر إلكترونية (E-Commerce)' : 'Boutiques E-commerce'}</h3>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {/* Theme 1 */}
@@ -400,6 +408,77 @@ export default function SetupLanding() {
             </div>
           </div>
           
+
+          {/* Tourism Section */}
+          <div className="mt-16 mb-8 flex items-center gap-3">
+             <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+               <Globe className="w-5 h-5" />
+             </div>
+             <h3 className="text-2xl font-black text-slate-800">{isAr ? 'وكالات الأسفار (Agences de Voyage)' : 'Agences de Voyage'}</h3>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Tourism 1 */}
+            <div 
+              onClick={() => setPreviewTheme({ name: 'OMRA & TOURS', image: '/images/themes/tourism_1.png' })}
+              className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
+            >
+              <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
+                <img src="/images/themes/tourism_1.png" className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" alt="Tourism Agency" />
+                <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center backdrop-blur-none group-hover:backdrop-blur-[2px]">
+                </div>
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-xs font-black px-3 py-1.5 rounded-full shadow-sm text-slate-800 uppercase">
+                  OMRA & TOURS
+                </div>
+              </div>
+              <div className="p-4 flex flex-col items-center gap-3">
+                <h3 className="font-bold text-slate-800 text-lg">OMRA & TOURS <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
+                <button className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 border border-slate-200">
+                  <Eye className="w-4 h-4" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                </button>
+              </div>
+            </div>
+            {/* Tourism 2 */}
+            <div 
+              onClick={() => setPreviewTheme({ name: 'VACATION DEALS', image: '/images/themes/tourism_2.png' })}
+              className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
+            >
+              <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
+                <img src="/images/themes/tourism_2.png" className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" alt="Tourism Agency" />
+                <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center backdrop-blur-none group-hover:backdrop-blur-[2px]">
+                </div>
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-xs font-black px-3 py-1.5 rounded-full shadow-sm text-slate-800 uppercase">
+                  VACATION DEALS
+                </div>
+              </div>
+              <div className="p-4 flex flex-col items-center gap-3">
+                <h3 className="font-bold text-slate-800 text-lg">VACATION DEALS <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
+                <button className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 border border-slate-200">
+                  <Eye className="w-4 h-4" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                </button>
+              </div>
+            </div>
+            {/* Tourism 3 */}
+            <div 
+              onClick={() => setPreviewTheme({ name: 'LOCAL TOURS', image: '/images/themes/tourism_3.png' })}
+              className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
+            >
+              <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
+                <img src="/images/themes/tourism_3.png" className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" alt="Tourism Agency" />
+                <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center backdrop-blur-none group-hover:backdrop-blur-[2px]">
+                </div>
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-xs font-black px-3 py-1.5 rounded-full shadow-sm text-slate-800 uppercase">
+                  LOCAL TOURS
+                </div>
+              </div>
+              <div className="p-4 flex flex-col items-center gap-3">
+                <h3 className="font-bold text-slate-800 text-lg">LOCAL TOURS <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
+                <button className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 border border-slate-200">
+                  <Eye className="w-4 h-4" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div className="mt-12 text-center">
              <p className="text-slate-500 font-medium mb-6">{isAr ? '+ عشرات التصاميم الأخرى اللي غتناسب النوع ديال منتجاتك (Niche)' : '+ Des dizaines d\'autres modèles adaptés à votre niche'}</p>
              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="inline-flex px-8 py-3 bg-amber-100 text-amber-700 hover:bg-amber-200 rounded-xl font-bold transition-colors">
