@@ -24,7 +24,7 @@ export default function VacationDealsDemo() {
             <a href="#!" onClick={(e) => { e.preventDefault(); setActivePage('packages'); }} className={activePage === 'packages' ? "text-orange-500" : "hover:text-orange-500 transition-colors"}>Packages</a>
             <a href="#!" onClick={(e) => { e.preventDefault(); setActivePage('contact'); }} className={activePage === 'contact' ? "text-orange-500" : "hover:text-orange-500 transition-colors"}>Contact</a>
           </nav>
-          <button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-lg shadow-orange-500/30">
+          <button onClick={() => setActivePage('login')} className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-lg shadow-orange-500/30">
             Sign In / Register
           </button>
         </div>
@@ -117,7 +117,7 @@ export default function VacationDealsDemo() {
                   <span className="text-[10px] uppercase font-bold text-slate-400">Per Person</span>
                 </div>
               </div>
-              <button className="w-full bg-orange-500/10 text-orange-600 group-hover:bg-orange-500 group-hover:text-white py-3 rounded-xl text-sm font-black transition-colors flex items-center justify-center gap-2">
+              <button onClick={() => setActivePage('booking')} className="w-full bg-orange-500/10 text-orange-600 group-hover:bg-orange-500 group-hover:text-white py-3 rounded-xl text-sm font-black transition-colors flex items-center justify-center gap-2">
                 Explore & Book <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -143,7 +143,7 @@ export default function VacationDealsDemo() {
                   <span className="text-[10px] uppercase font-bold text-slate-400">Per Person</span>
                 </div>
               </div>
-              <button className="w-full bg-orange-500/10 text-orange-600 group-hover:bg-orange-500 group-hover:text-white py-3 rounded-xl text-sm font-black transition-colors flex items-center justify-center gap-2">
+              <button onClick={() => setActivePage('booking')} className="w-full bg-orange-500/10 text-orange-600 group-hover:bg-orange-500 group-hover:text-white py-3 rounded-xl text-sm font-black transition-colors flex items-center justify-center gap-2">
                 Explore & Book <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -169,7 +169,7 @@ export default function VacationDealsDemo() {
                   <span className="text-[10px] uppercase font-bold text-slate-400">Per Person</span>
                 </div>
               </div>
-              <button className="w-full bg-orange-500/10 text-orange-600 group-hover:bg-orange-500 group-hover:text-white py-3 rounded-xl text-sm font-black transition-colors flex items-center justify-center gap-2">
+              <button onClick={() => setActivePage('booking')} className="w-full bg-orange-500/10 text-orange-600 group-hover:bg-orange-500 group-hover:text-white py-3 rounded-xl text-sm font-black transition-colors flex items-center justify-center gap-2">
                 Explore & Book <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -195,7 +195,7 @@ export default function VacationDealsDemo() {
                   <span className="text-[10px] uppercase font-bold text-slate-400">Per Person</span>
                 </div>
               </div>
-              <button className="w-full bg-orange-500/10 text-orange-600 group-hover:bg-orange-500 group-hover:text-white py-3 rounded-xl text-sm font-black transition-colors flex items-center justify-center gap-2">
+              <button onClick={() => setActivePage('booking')} className="w-full bg-orange-500/10 text-orange-600 group-hover:bg-orange-500 group-hover:text-white py-3 rounded-xl text-sm font-black transition-colors flex items-center justify-center gap-2">
                 Explore & Book <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -297,6 +297,84 @@ export default function VacationDealsDemo() {
         </section>
       )}
       
+      {/* LOGIN PAGE */}
+      {activePage === 'login' && (
+        <section className="py-20 max-w-md mx-auto px-6 min-h-[60vh] flex flex-col items-center justify-center">
+          <div className="bg-white p-8 rounded-3xl shadow-2xl border border-slate-100 w-full text-center">
+            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center text-orange-500 mx-auto mb-6">
+              <User className="w-8 h-8" />
+            </div>
+            <h2 className="text-3xl font-black text-slate-900 mb-2">Welcome Back</h2>
+            <p className="text-slate-500 mb-8 font-medium">Sign in to access your bookings.</p>
+            
+            <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+              <input type="email" placeholder="Email Address" className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-left" />
+              <input type="password" placeholder="Password" className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-left" />
+              
+              <button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-xl font-bold transition-colors shadow-lg shadow-orange-500/30">
+                Sign In
+              </button>
+            </form>
+            <p className="mt-6 text-sm text-slate-500 font-medium">
+              Don't have an account? <span className="text-orange-500 cursor-pointer hover:underline">Register</span>
+            </p>
+          </div>
+        </section>
+      )}
+
+      {/* BOOKING PAGE */}
+      {activePage === 'booking' && (
+        <section className="py-20 max-w-4xl mx-auto px-6 min-h-[60vh]">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-black text-slate-900 mb-4">Complete Your Booking</h2>
+            <div className="w-24 h-1.5 bg-orange-500 rounded-full mb-6 mx-auto"></div>
+            <p className="text-slate-500 font-medium text-lg">You're one step away from your dream vacation.</p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-12">
+            <div className="bg-slate-50 p-8 rounded-3xl border border-slate-100">
+              <h3 className="text-xl font-black text-slate-900 mb-6">Trip Summary</h3>
+              <div className="aspect-video rounded-2xl overflow-hidden mb-6">
+                <img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=600" className="w-full h-full object-cover" alt="Destination" />
+              </div>
+              <h4 className="font-bold text-lg mb-2">Selected Package</h4>
+              <p className="text-slate-500 text-sm mb-6 pb-6 border-b border-slate-200">5 Days / 4 Nights All-Inclusive</p>
+              
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-slate-500 font-medium">Base Price</span>
+                <span className="font-bold">$1,299.00</span>
+              </div>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-slate-500 font-medium">Taxes & Fees</span>
+                <span className="font-bold">$125.00</span>
+              </div>
+              <div className="flex justify-between items-center mt-6 pt-6 border-t border-slate-200">
+                <span className="text-lg font-black text-slate-900">Total</span>
+                <span className="text-2xl font-black text-orange-500">$1,424.00</span>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-xl font-black text-slate-900 mb-6">Payment Information</h3>
+              <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+                <input type="text" placeholder="Full Name" className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                <input type="email" placeholder="Email Address" className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                <div className="pt-4">
+                  <input type="text" placeholder="Card Number" className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 mb-4" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <input type="text" placeholder="MM/YY" className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                    <input type="text" placeholder="CVC" className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                  </div>
+                </div>
+                <button className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors mt-8">
+                  Confirm Booking <ArrowRight className="w-4 h-4" />
+                </button>
+              </form>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Footer minimal */}
       <footer className="bg-slate-50 py-12 text-center text-slate-400 font-sans text-sm border-t border-slate-200 mt-12">
         <div className="flex items-center justify-center gap-2 text-slate-800 font-black text-xl tracking-tighter mb-4 opacity-50 cursor-pointer" onClick={() => setActivePage('home')}>
