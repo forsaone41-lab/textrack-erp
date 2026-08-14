@@ -276,8 +276,11 @@ export default function SetupLanding() {
                   MAZIA
                 </div>
               </div>
-              <div className="p-4 text-center">
+              <div className="p-4 flex flex-col items-center gap-3">
                 <h3 className="font-bold text-slate-800 text-lg">MAZIA <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
+                <button className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 border border-slate-200">
+                  <Eye className="w-4 h-4" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                </button>
               </div>
             </div>
             {/* Theme 2 */}
@@ -296,8 +299,11 @@ export default function SetupLanding() {
                   STREETWEAR PRO
                 </div>
               </div>
-              <div className="p-4 text-center">
+              <div className="p-4 flex flex-col items-center gap-3">
                 <h3 className="font-bold text-slate-800 text-lg">STREETWEAR PRO <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
+                <button className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 border border-slate-200">
+                  <Eye className="w-4 h-4" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                </button>
               </div>
             </div>
             {/* Theme 3 */}
@@ -316,8 +322,11 @@ export default function SetupLanding() {
                   MINIMALIST
                 </div>
               </div>
-              <div className="p-4 text-center">
+              <div className="p-4 flex flex-col items-center gap-3">
                 <h3 className="font-bold text-slate-800 text-lg">MINIMALIST <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
+                <button className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 border border-slate-200">
+                  <Eye className="w-4 h-4" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                </button>
               </div>
             </div>
             {/* Theme 4 */}
@@ -336,8 +345,11 @@ export default function SetupLanding() {
                   ABAYA FASHION
                 </div>
               </div>
-              <div className="p-4 text-center">
+              <div className="p-4 flex flex-col items-center gap-3">
                 <h3 className="font-bold text-slate-800 text-lg">ABAYA FASHION <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
+                <button className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 border border-slate-200">
+                  <Eye className="w-4 h-4" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                </button>
               </div>
             </div>
             {/* Theme 5 */}
@@ -356,8 +368,11 @@ export default function SetupLanding() {
                   DENTIST CLINIC
                 </div>
               </div>
-              <div className="p-4 text-center">
+              <div className="p-4 flex flex-col items-center gap-3">
                 <h3 className="font-bold text-slate-800 text-lg">DENTIST CLINIC <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
+                <button className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 border border-slate-200">
+                  <Eye className="w-4 h-4" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                </button>
               </div>
             </div>
             {/* Theme 6 */}
@@ -376,8 +391,11 @@ export default function SetupLanding() {
                   LUXURY PERFUME
                 </div>
               </div>
-              <div className="p-4 text-center">
+              <div className="p-4 flex flex-col items-center gap-3">
                 <h3 className="font-bold text-slate-800 text-lg">LUXURY PERFUME <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
+                <button className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 border border-slate-200">
+                  <Eye className="w-4 h-4" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                </button>
               </div>
             </div>
           </div>
