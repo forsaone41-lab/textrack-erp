@@ -118,7 +118,7 @@ export default function OmraToursDemo() {
           {/* Card 1 */}
           <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-slate-200 hover:shadow-xl transition-shadow flex flex-col">
             <div className="h-48 relative">
-              <img src="https://images.unsplash.com/photo-1565552643982-261bd71cc9eb?q=80&w=600&auto=format&fit=crop" alt="Makkah" className="w-full h-full object-cover" />
+              <img src="https://images.unsplash.com/photo-1565557623262-b51c2513a641?q=80&w=600&auto=format&fit=crop" alt="Makkah" className="w-full h-full object-cover" />
             </div>
             <div className="p-5 flex-1 flex flex-col">
               <div className="flex justify-between items-start mb-2">
