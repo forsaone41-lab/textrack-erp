@@ -3,6 +3,7 @@ import { Search, MapPin, Calendar, Users, User, Star, ArrowRight, Plane, Globe2,
 
 export default function VacationDealsDemo() {
   const [activePage, setActivePage] = useState('home');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   return (
     <div className="min-h-screen bg-white font-sans">
@@ -24,9 +25,21 @@ export default function VacationDealsDemo() {
             <a href="#!" onClick={(e) => { e.preventDefault(); setActivePage('packages'); }} className={activePage === 'packages' ? "text-orange-500" : "hover:text-orange-500 transition-colors"}>Packages</a>
             <a href="#!" onClick={(e) => { e.preventDefault(); setActivePage('contact'); }} className={activePage === 'contact' ? "text-orange-500" : "hover:text-orange-500 transition-colors"}>Contact</a>
           </nav>
-          <button onClick={() => setActivePage('login')} className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-lg shadow-orange-500/30">
-            Sign In / Register
-          </button>
+          {isLoggedIn ? (
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-500">
+                <User className="w-5 h-5" />
+              </div>
+              <div className="hidden lg:block text-sm">
+                <div className="font-bold text-slate-800">Admin User</div>
+                <div className="text-slate-500 text-xs">admin@texflow.com</div>
+              </div>
+            </div>
+          ) : (
+            <button onClick={() => setActivePage('login')} className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-lg shadow-orange-500/30">
+              Sign In / Register
+            </button>
+          )}
         </div>
       </header>
 
@@ -307,16 +320,16 @@ export default function VacationDealsDemo() {
             <h2 className="text-3xl font-black text-slate-900 mb-2">Welcome Back</h2>
             <p className="text-slate-500 mb-8 font-medium">Sign in to access your bookings.</p>
             
-            <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-              <input type="email" placeholder="Email Address" className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-left" />
-              <input type="password" placeholder="Password" className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-left" />
+            <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setIsLoggedIn(true); setActivePage('home'); }}>
+              <input type="email" placeholder="Email Address" defaultValue="admin@texflow.com" className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-left" />
+              <input type="password" placeholder="Password" defaultValue="password123" className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-left" />
               
-              <button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-xl font-bold transition-colors shadow-lg shadow-orange-500/30">
+              <button type="submit" className="w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-xl font-bold transition-colors shadow-lg shadow-orange-500/30">
                 Sign In
               </button>
             </form>
             <p className="mt-6 text-sm text-slate-500 font-medium">
-              Don't have an account? <span className="text-orange-500 cursor-pointer hover:underline">Register</span>
+              Don't have an account? <span className="text-orange-500 cursor-pointer hover:underline" onClick={() => { setIsLoggedIn(true); setActivePage('home'); }}>Register</span>
             </p>
           </div>
         </section>
@@ -356,17 +369,17 @@ export default function VacationDealsDemo() {
 
             <div>
               <h3 className="text-xl font-black text-slate-900 mb-6">Payment Information</h3>
-              <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-                <input type="text" placeholder="Full Name" className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500" />
-                <input type="email" placeholder="Email Address" className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500" />
+              <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); alert('Booking Confirmed! You will receive an email shortly.'); setActivePage('home'); }}>
+                <input type="text" placeholder="Full Name" defaultValue={isLoggedIn ? "Admin User" : ""} className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                <input type="email" placeholder="Email Address" defaultValue={isLoggedIn ? "admin@texflow.com" : ""} className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500" />
                 <div className="pt-4">
-                  <input type="text" placeholder="Card Number" className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 mb-4" />
+                  <input type="text" placeholder="Card Number" defaultValue="4242 4242 4242 4242" className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 mb-4" />
                   <div className="grid grid-cols-2 gap-4">
-                    <input type="text" placeholder="MM/YY" className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500" />
-                    <input type="text" placeholder="CVC" className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                    <input type="text" placeholder="MM/YY" defaultValue="12/26" className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                    <input type="text" placeholder="CVC" defaultValue="123" className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500" />
                   </div>
                 </div>
-                <button className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors mt-8">
+                <button type="submit" className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors mt-8">
                   Confirm Booking <ArrowRight className="w-4 h-4" />
                 </button>
               </form>

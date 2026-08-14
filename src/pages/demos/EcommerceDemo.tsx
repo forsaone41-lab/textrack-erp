@@ -109,6 +109,7 @@ export default function EcommerceDemo() {
 
   const [activePage, setActivePage] = useState('home');
   const [activeProduct, setActiveProduct] = useState<any>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   return (
     <div className={`min-h-screen ${theme.colors.bg} ${theme.colors.text} font-sans transition-colors duration-500`}>
@@ -128,7 +129,9 @@ export default function EcommerceDemo() {
 
           <div className="flex items-center gap-4">
             <button className={`p-2 hover:${theme.colors.accent} transition-colors`}><Search className="w-5 h-5" /></button>
-            <button className={`p-2 hover:${theme.colors.accent} transition-colors`}><User className="w-5 h-5" /></button>
+            <button className={`p-2 transition-colors ${isLoggedIn ? theme.colors.accent : 'hover:' + theme.colors.accent}`} onClick={() => setIsLoggedIn(!isLoggedIn)}>
+              {isLoggedIn ? <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs bg-current text-white`}>A</div> : <User className="w-5 h-5" />}
+            </button>
             <button className={`p-2 hover:${theme.colors.accent} transition-colors relative`}>
               <ShoppingBag className="w-5 h-5" />
               <span className={`absolute top-1 right-1 w-2 h-2 ${theme.colors.primary} rounded-full`}></span>
