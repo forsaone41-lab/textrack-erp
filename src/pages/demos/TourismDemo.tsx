@@ -19,7 +19,7 @@ export default function TourismDemo() {
             <a href="#!" onClick={(e) => { e.preventDefault(); setActivePage('packages'); }} className={activePage === 'packages' ? "text-emerald-700 border-b-2 border-emerald-700 py-7" : "hover:text-emerald-700 transition-colors py-7 border-b-2 border-transparent"}>Tours & Packages</a>
             <a href="#!" onClick={(e) => { e.preventDefault(); setActivePage('contact'); }} className={activePage === 'contact' ? "text-emerald-700 border-b-2 border-emerald-700 py-7" : "hover:text-emerald-700 transition-colors py-7 border-b-2 border-transparent"}>Contact</a>
           </nav>
-          <button onClick={() => setActivePage('destinations')} className="bg-emerald-700 hover:bg-emerald-800 text-white px-6 py-2.5 rounded-full font-sans font-bold text-sm transition-all shadow-lg shadow-emerald-700/20">
+          <button onClick={() => alert('This is a live demo preview! Bookings are disabled.')} className="bg-emerald-700 hover:bg-emerald-800 text-white px-6 py-2.5 rounded-full font-sans font-bold text-sm transition-all shadow-lg shadow-emerald-700/20">
             Book Now
           </button>
         </div>
@@ -96,7 +96,7 @@ export default function TourismDemo() {
           {/* Card 1 */}
           <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 hover:shadow-xl transition-all group cursor-pointer font-sans flex flex-col">
             <div className="h-48 overflow-hidden relative">
-              <img src="https://images.unsplash.com/photo-1533682800508-410787e9eb4f?q=80&w=600&auto=format&fit=crop" alt="Amalfi Coast" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+              <img src="https://images.unsplash.com/photo-1499678329028-101435549a4e?q=80&w=600&auto=format&fit=crop" alt="Amalfi Coast" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
               <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-lg text-xs font-bold text-emerald-700 flex items-center gap-1 shadow-sm">
                  <Clock className="w-3 h-3" /> 7 Days
               </div>
@@ -112,7 +112,7 @@ export default function TourismDemo() {
                   <span className="text-xs text-slate-400 font-medium">from</span>
                   <div className="font-black text-emerald-700 text-lg">$1,299</div>
                 </div>
-                <button className="bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-800 transition-colors">Explore</button>
+                <button onClick={(e) => { e.stopPropagation(); alert('This is a live demo preview! Bookings are disabled.'); }} className="bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-800 transition-colors">Explore</button>
               </div>
             </div>
           </div>
@@ -136,7 +136,7 @@ export default function TourismDemo() {
                   <span className="text-xs text-slate-400 font-medium">from</span>
                   <div className="font-black text-emerald-700 text-lg">$3,450</div>
                 </div>
-                <button className="bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-800 transition-colors">Explore</button>
+                <button onClick={(e) => { e.stopPropagation(); alert('This is a live demo preview! Bookings are disabled.'); }} className="bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-800 transition-colors">Explore</button>
               </div>
             </div>
           </div>
@@ -160,7 +160,7 @@ export default function TourismDemo() {
                   <span className="text-xs text-slate-400 font-medium">from</span>
                   <div className="font-black text-emerald-700 text-lg">$2,800</div>
                 </div>
-                <button className="bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-800 transition-colors">Explore</button>
+                <button onClick={(e) => { e.stopPropagation(); alert('This is a live demo preview! Bookings are disabled.'); }} className="bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-800 transition-colors">Explore</button>
               </div>
             </div>
           </div>
@@ -184,7 +184,7 @@ export default function TourismDemo() {
                   <span className="text-xs text-slate-400 font-medium">from</span>
                   <div className="font-black text-emerald-700 text-lg">$1,950</div>
                 </div>
-                <button className="bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-800 transition-colors">Explore</button>
+                <button onClick={(e) => { e.stopPropagation(); alert('This is a live demo preview! Bookings are disabled.'); }} className="bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-800 transition-colors">Explore</button>
               </div>
             </div>
           </div>
