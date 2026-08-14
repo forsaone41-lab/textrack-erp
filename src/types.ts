@@ -307,7 +307,7 @@ export interface Presence {
 export interface User {
   id: string;
   nom: string;
-  role: 'admin' | 'superadmin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire' | 'chef_chaine' | 'commercial' | 'merchant';
+  role: 'admin' | 'superadmin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire' | 'chef_chaine' | 'commercial' | 'merchant' | 'affiliate';
   email: string;
   telephone?: string;
   password?: string;
@@ -318,6 +318,82 @@ export interface User {
   ville?: string;
   adresse?: string;
   notes?: string;
+}
+
+// ─── Affiliate Program ────────────────────────────────────────
+export interface Affiliate {
+  id: string; // uuid, matches auth.users(id)
+  full_name: string;
+  email: string;
+  phone?: string;
+  referral_code: string;
+  tracks: ('builder' | 'reseller' | 'supplier' | 'atelier')[];
+  status: 'pending' | 'approved' | 'suspended';
+  commission_rate_builder_setup: number;
+  commission_rate_builder_recurring: number;
+  commission_rate_reseller: number;
+  commission_rate_supplier: number;
+  commission_rate_atelier: number;
+  payout_method?: string;
+  payout_details?: Record<string, unknown>;
+  // Directory profile (only used by 'supplier' / 'atelier' tracks)
+  business_name?: string;
+  category?: string;
+  description?: string;
+  city?: string;
+  whatsapp?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AffiliateResale {
+  id: string;
+  affiliate_id: string;
+  client_name: string;
+  client_email?: string;
+  product: string;
+  sale_amount: number;
+  store_id?: string;
+  status: 'pending' | 'confirmed' | 'rejected';
+  created_at: string;
+}
+
+export interface AffiliateDeal {
+  id: string;
+  affiliate_id: string;
+  deal_type: 'supplier' | 'atelier';
+  counterparty_name: string;
+  counterparty_contact?: string;
+  amount: number;
+  notes?: string;
+  status: 'pending' | 'confirmed' | 'rejected';
+  created_at: string;
+}
+
+export interface AffiliateCommission {
+  id: string;
+  affiliate_id: string;
+  track: 'builder' | 'reseller' | 'supplier' | 'atelier';
+  source_type: 'store_setup' | 'store_recurring' | 'resale' | 'deal';
+  source_id?: string;
+  amount: number;
+  rate_applied?: number;
+  base_amount?: number;
+  period?: string;
+  status: 'pending' | 'approved' | 'paid' | 'void';
+  created_at: string;
+}
+
+export interface AffiliatePayout {
+  id: string;
+  affiliate_id: string;
+  amount: number;
+  commission_ids: string[];
+  status: 'requested' | 'approved' | 'paid' | 'rejected';
+  method?: string;
+  admin_note?: string;
+  requested_at: string;
+  processed_at?: string;
 }
 
 export interface Appointment {
@@ -404,12 +480,12 @@ export type AppPage =
   | 'rh' | 'commandes' | 'clients' | 'factures' | 'charges' | 'bilan' | 'fast_scanner'
   | 'pointage' | 'portail_client' | 'performance' | 'utilisateurs' | 'parametres' | 'demandes'
   | 'worker_portal' | 'controle_qualite' | 'partenaire_portal' | 'agenda' | 'notifications' | 'ai_space' | 'crm' | 'chef_chaine_portal' | 'validation'
-  | 'inbox' | 'gmail' | 'plaintes' | 'fournisseurs' | 'achats' | 'visio' | 'tarifs' | 'tarifs_edit' | 'devis' | 'recus' | 'evaluation_patronage' | 'commercial_portal' | 'store_plans' | 'atelier_calculator';
+  | 'inbox' | 'gmail' | 'plaintes' | 'fournisseurs' | 'achats' | 'visio' | 'tarifs' | 'tarifs_edit' | 'devis' | 'recus' | 'evaluation_patronage' | 'commercial_portal' | 'store_plans' | 'atelier_calculator' | 'affiliate_admin';
 
 export type RolePermMap = Record<'admin' | 'pointeur' | 'client' | 'worker' | 'coupeur' | 'modeliste' | 'controleur' | 'agent_pointage' | 'partenaire' | 'chef_chaine' | 'commercial', AppPage[]>;
 
 export const DEFAULT_PERMISSIONS: RolePermMap = {
-  admin: ['dashboard', 'demandes', 'crm', 'evaluation_patronage', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'stocks', 'rh', 'commandes', 'clients', 'factures', 'devis', 'recus', 'charges', 'bilan', 'fast_scanner', 'pointage', 'portail_client', 'performance', 'utilisateurs', 'parametres', 'worker_portal', 'controle_qualite', 'partenaire_portal', 'agenda', 'notifications', 'ai_space', 'chef_chaine_portal', 'inbox', 'gmail', 'plaintes', 'fournisseurs', 'achats', 'visio', 'tarifs', 'tarifs_edit', 'commercial_portal', 'store_plans', 'atelier_calculator'],
+  admin: ['dashboard', 'demandes', 'crm', 'evaluation_patronage', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'stocks', 'rh', 'commandes', 'clients', 'factures', 'devis', 'recus', 'charges', 'bilan', 'fast_scanner', 'pointage', 'portail_client', 'performance', 'utilisateurs', 'parametres', 'worker_portal', 'controle_qualite', 'partenaire_portal', 'agenda', 'notifications', 'ai_space', 'chef_chaine_portal', 'inbox', 'gmail', 'plaintes', 'fournisseurs', 'achats', 'visio', 'tarifs', 'tarifs_edit', 'commercial_portal', 'store_plans', 'atelier_calculator', 'affiliate_admin'],
   pointeur: ['dashboard', 'fiches', 'ordres', 'chaine', 'pilotage', 'scan_production', 'pointage', 'performance', 'worker_portal', 'controle_qualite'],
   client: ['portail_client'],
   worker: ['worker_portal'],

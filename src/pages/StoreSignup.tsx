@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { ShieldCheck, Mail, AlertCircle, Lock, User as UserIcon, CheckCircle, Store, ArrowRight, Loader2, Eye, EyeOff, Crown, MessageCircle } from 'lucide-react';
 import { supabase } from '../supabase';
@@ -31,6 +31,18 @@ export default function StoreSignup({ onLogin }: { onLogin?: (user: any) => void
   const [phone, setPhone] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+
+  // Affiliate referral attribution: capture ?ref=<code> and resolve it to an affiliate_id
+  // so StoreBuilder can attribute the store once it's created.
+  useEffect(() => {
+    const ref = queryParams.get('ref');
+    if (!ref) return;
+    supabase.from('affiliates').select('id, status').eq('referral_code', ref).maybeSingle()
+      .then(({ data }) => {
+        if (data?.id) sessionStorage.setItem('beya_ref_affiliate_id', data.id);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();

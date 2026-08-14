@@ -1477,6 +1477,15 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
        console.error("Could not fetch session for owner_id", e);
     }
 
+    // Affiliate attribution: if this store was created via a partner referral link
+    // (?ref=<code> captured on /store-signup), tag it so commissions can be tracked.
+    let referredByAffiliateId: string | null = null;
+    try {
+       referredByAffiliateId = sessionStorage.getItem('beya_ref_affiliate_id');
+    } catch (e) {
+       // sessionStorage unavailable, ignore
+    }
+
     try {
        localStorage.setItem('beya_store_config', JSON.stringify(storeConfig));
        window.dispatchEvent(new Event('storage'));
@@ -1494,7 +1503,8 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
           domain: domain,
           config_json: storeConfig,
           name: storeName,
-          updated_at: new Date()
+          updated_at: new Date(),
+          ...(referredByAffiliateId ? { created_by_affiliate_id: referredByAffiliateId } : {})
        }, { onConflict: 'domain' });
 
        // Only update latest_saved_store if no custom domain is set, preventing cross-tenant contamination
@@ -1503,11 +1513,14 @@ Return ONLY a raw JSON object (no markdown formatting, no backticks) with the fo
              domain: 'latest_saved_store',
              config_json: storeConfig,
              name: storeName,
-             updated_at: new Date()
+             updated_at: new Date(),
+             ...(referredByAffiliateId ? { created_by_affiliate_id: referredByAffiliateId } : {})
           }, { onConflict: 'domain' });
        }
 
-       
+       if (referredByAffiliateId) {
+          try { sessionStorage.removeItem('beya_ref_affiliate_id'); } catch (e) { /* ignore */ }
+       }
 
     } catch (err) {
        console.warn("Supabase sync failed (Table 'stores' might not exist yet):", err);

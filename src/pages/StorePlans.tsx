@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Store, Loader2, ShieldCheck } from 'lucide-react';
 import { supabase } from '../supabase';
+import { loadCompanyProfile } from '../types';
 import { useLang } from '../contexts/LangContext';
 
 const TIERS = ['NORMAL', 'PRO', 'PREMIUM'] as const;
@@ -21,7 +22,7 @@ export default function StorePlans() {
       setIsLoading(true);
       const { data, error } = await supabase
          .from('stores')
-         .select('domain, name, subscription_tier, updated_at')
+         .select('id, domain, name, subscription_tier, updated_at, created_by_affiliate_id')
          .neq('domain', 'latest_saved_store')
          .order('updated_at', { ascending: false });
       if (!error && data) setStores(data);
@@ -32,9 +33,53 @@ export default function StorePlans() {
 
    const handleChangePlan = async (domain: string, tier: string) => {
       setSavingDomain(domain);
+      const store = stores.find(s => s.domain === domain);
       setStores(prev => prev.map(s => s.domain === domain ? { ...s, subscription_tier: tier } : s));
       await supabase.from('stores').update({ subscription_tier: tier }).eq('domain', domain);
+
+      // Track A affiliate commission: first paid-tier upgrade of a referred store
+      if (store?.created_by_affiliate_id && tier !== 'NORMAL' && (store.subscription_tier || 'NORMAL') === 'NORMAL') {
+         await generateSetupCommission(store, tier);
+      }
       setSavingDomain(null);
+   };
+
+   const generateSetupCommission = async (store: any, tier: string) => {
+      try {
+         const { data: existing } = await supabase
+            .from('affiliate_commissions')
+            .select('id')
+            .eq('source_type', 'store_setup')
+            .eq('source_id', store.id)
+            .maybeSingle();
+         if (existing) return;
+
+         const { data: affiliate } = await supabase
+            .from('affiliates')
+            .select('commission_rate_builder_setup')
+            .eq('id', store.created_by_affiliate_id)
+            .maybeSingle();
+         if (!affiliate) return;
+
+         const company = loadCompanyProfile();
+         const baseAmount = tier === 'PREMIUM' ? Number(company.storePremiumPrice || 499) : Number(company.storeProPrice || 299);
+         const rate = Number(affiliate.commission_rate_builder_setup || 0);
+         const amount = Math.round((baseAmount * rate) / 100);
+
+         await supabase.from('affiliate_commissions').insert({
+            id: crypto.randomUUID(),
+            affiliate_id: store.created_by_affiliate_id,
+            track: 'builder',
+            source_type: 'store_setup',
+            source_id: store.id,
+            amount,
+            rate_applied: rate,
+            base_amount: baseAmount,
+            status: 'pending'
+         });
+      } catch (e) {
+         console.error('Failed to generate affiliate setup commission', e);
+      }
    };
 
    return (

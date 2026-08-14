@@ -23,7 +23,7 @@ export default function Partners() {
             <button onClick={toggle} className="px-3 py-1.5 text-xs font-bold bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors uppercase">
               {isAr ? 'FR' : 'AR'}
             </button>
-            <Link to="/store-signup" className="px-6 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all">
+            <Link to="/partner-signup" className="px-6 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all">
               {isAr ? 'انضم إلينا' : 'Rejoignez-nous'}
             </Link>
           </div>
@@ -41,10 +41,13 @@ export default function Partners() {
             {isAr ? 'برنامج شركاء BEYA' : 'Programme Partenaires BEYA'}
           </h1>
           <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto font-medium">
-            {isAr 
+            {isAr
               ? 'نظام بيئي متكامل يجمع بين المطورين، المسوقين، والموردين. انضم إلى أقوى شبكة تجارة إلكترونية وحقق أرباحاً مستدامة.'
               : 'Un écosystème complet réunissant développeurs, marketeurs et fournisseurs. Rejoignez notre réseau et générez des revenus récurrents.'}
           </p>
+          <Link to="/partner-directory" className="inline-block mt-6 text-sm font-bold text-indigo-600 hover:underline">
+            {isAr ? 'شاهد دليل الموردين والورشات ←' : 'Voir l\'annuaire des fournisseurs & ateliers →'}
+          </Link>
         </div>
       </main>
 
@@ -76,7 +79,7 @@ export default function Partners() {
                 </li>
               ))}
             </ul>
-            <Link to="/store-signup" className="flex items-center justify-center gap-2 w-full py-4 bg-slate-900 hover:bg-indigo-600 text-white rounded-xl font-bold transition-colors">
+            <Link to="/partner-signup" className="flex items-center justify-center gap-2 w-full py-4 bg-slate-900 hover:bg-indigo-600 text-white rounded-xl font-bold transition-colors">
               {isAr ? 'انضم كوكالة' : 'Devenir Agence'} <ArrowRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
             </Link>
           </div>
@@ -106,7 +109,7 @@ export default function Partners() {
                 </li>
               ))}
             </ul>
-            <Link to="/store-signup" className="flex items-center justify-center gap-2 w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-bold transition-colors relative z-10">
+            <Link to="/partner-signup" className="flex items-center justify-center gap-2 w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-bold transition-colors relative z-10">
               {isAr ? 'انضم كمسوق' : 'Devenir Marketeur'} <ArrowRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
             </Link>
           </div>
@@ -135,7 +138,7 @@ export default function Partners() {
                 </li>
               ))}
             </ul>
-            <Link to="/store-signup" className="flex items-center justify-center gap-2 w-full py-4 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-xl font-bold transition-colors">
+            <Link to="/partner-signup" className="flex items-center justify-center gap-2 w-full py-4 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-xl font-bold transition-colors">
               {isAr ? 'انضم كمورد' : 'Devenir Fournisseur'} <ArrowRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
             </Link>
           </div>
@@ -164,7 +167,7 @@ export default function Partners() {
                 </li>
               ))}
             </ul>
-            <Link to="/store-signup" className="flex items-center justify-center gap-2 w-full py-4 bg-amber-500 hover:bg-amber-400 text-amber-950 rounded-xl font-bold transition-colors">
+            <Link to="/partner-signup" className="flex items-center justify-center gap-2 w-full py-4 bg-amber-500 hover:bg-amber-400 text-amber-950 rounded-xl font-bold transition-colors">
               {isAr ? 'انضم كمعمل' : 'Devenir Atelier Partenaire'} <ArrowRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
             </Link>
           </div>
