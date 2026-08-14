@@ -86,7 +86,9 @@ export default function SetupLanding() {
                     <ExternalLink className="w-3 h-3" /> <span className="hidden sm:inline">{isAr ? 'نافذة جديدة' : 'Ouvrir'}</span>
                   </a>
                 ) : (
-                  <div className="w-[70px] shrink-0" />
+                  <a href={previewTheme.image} target="_blank" rel="noopener noreferrer" className="shrink-0 flex items-center gap-1 text-[10px] font-bold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-200 transition-colors px-2 py-1 rounded border border-slate-200">
+                    <ExternalLink className="w-3 h-3" /> <span className="hidden sm:inline">{isAr ? 'تكبير الصورة' : 'Agrandir'}</span>
+                  </a>
                 )}
               </div>
               {previewTheme.url ? (
