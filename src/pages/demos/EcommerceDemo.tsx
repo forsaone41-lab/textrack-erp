@@ -93,10 +93,10 @@ const THEME_CONFIGS: Record<string, any> = {
       btn: 'Book Appointment'
     },
     products: [
-      { name: 'Teeth Whitening', price: 'from $150', img: 'https://images.unsplash.com/photo-1598256989800-fea5ce5146be?q=80&w=600' },
+      { name: 'Teeth Whitening', price: 'from $150', img: 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?q=80&w=600' },
       { name: 'Dental Implants', price: 'Consultation', img: 'https://images.unsplash.com/photo-1609840114035-3c981b782dfe?q=80&w=600', badge: 'Expert' },
-      { name: 'Invisalign', price: 'from $2000', img: 'https://images.unsplash.com/photo-1628177142898-93e46e646067?q=80&w=600' },
-      { name: 'General Checkup', price: '$85.00', img: 'https://images.unsplash.com/photo-1606214174585-fd3158dd4268?q=80&w=600' }
+      { name: 'Invisalign', price: 'from $2000', img: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?q=80&w=600' },
+      { name: 'General Checkup', price: '$85.00', img: 'https://images.unsplash.com/photo-1536294709491-9e7ec2bf4a62?q=80&w=600' }
     ]
   }
 };
