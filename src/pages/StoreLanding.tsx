@@ -330,7 +330,7 @@ export default function StoreLanding() {
               <ul className="space-y-4 text-slate-500 font-medium">
                 <li><button onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-blue-600 transition-colors text-left">{isAr ? 'المميزات' : 'Fonctionnalités'}</button></li>
                 <li><button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-blue-600 transition-colors text-left">{isAr ? 'الأسعار' : 'Tarifs'}</button></li>
-                <li><button onClick={(e) => e.preventDefault()} className="hover:text-blue-600 transition-colors text-left">{isAr ? 'قوالب المتاجر' : 'Thèmes'}</button></li>
+                <li><Link to="/setup" className="hover:text-blue-600 transition-colors text-left">{isAr ? 'قوالب المتاجر' : 'Thèmes'}</Link></li>
               </ul>
             </div>
             
