@@ -71,16 +71,16 @@ const THEME_CONFIGS: Record<string, any> = {
     name: 'ABAYA FASHION',
     colors: { bg: 'bg-[#faf7f2]', text: 'text-[#4a4238]', primary: 'bg-[#8c7a6b] text-white hover:bg-[#756557]', accent: 'text-[#8c7a6b]', border: 'border-[#e8e0d5]' },
     hero: {
-      image: 'https://images.unsplash.com/photo-1629813589417-64665421dce3?q=80&w=2000&auto=format&fit=crop',
+      image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=2000&auto=format&fit=crop',
       title: 'Modest Elegance',
       subtitle: 'Discover our new Ramadan Collection featuring premium fabrics and exquisite tailoring.',
       btn: 'Shop Collection'
     },
     products: [
-      { name: 'Silk Flow Abaya', price: '$120.00', img: 'https://images.unsplash.com/photo-1589317585847-19eb71ba9dfd?q=80&w=600' },
-      { name: 'Embroidered Kaftan', price: '$180.00', img: 'https://images.unsplash.com/photo-1589317585728-6625807921c5?q=80&w=600', badge: 'Ramadan' },
-      { name: 'Everyday Basic', price: '$75.00', img: 'https://images.unsplash.com/photo-1589317586558-86d49bc70b2a?q=80&w=600' },
-      { name: 'Luxury Chiffon Wrap', price: '$145.00', img: 'https://images.unsplash.com/photo-1589317585521-7299a910ecb5?q=80&w=600' }
+      { name: 'Silk Flow Abaya', price: '$120.00', img: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?q=80&w=600' },
+      { name: 'Embroidered Kaftan', price: '$180.00', img: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=600', badge: 'Ramadan' },
+      { name: 'Everyday Basic', price: '$75.00', img: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=600' },
+      { name: 'Luxury Chiffon Wrap', price: '$145.00', img: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600' }
     ]
   },
   'dentist': {
