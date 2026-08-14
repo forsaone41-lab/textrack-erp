@@ -27,55 +27,56 @@ export default function TourismDemo() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative h-[600px] flex items-center justify-center">
+      <section className="relative h-[550px] flex items-center justify-center">
         <div className="absolute inset-0">
-          <img src="https://images.unsplash.com/photo-1506929562872-bb421503ef21?q=80&w=2000&auto=format&fit=crop" alt="Beautiful Coastline" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-slate-900/40" />
+          <img src="https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?q=80&w=2000&auto=format&fit=crop" alt="Beautiful Coastline" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-slate-900/30" />
         </div>
         
-        <div className="relative z-10 w-full max-w-5xl mx-auto px-6 text-center text-white">
-          <h1 className="text-5xl md:text-6xl font-black mb-6 leading-tight drop-shadow-lg">
+        <div className="relative z-10 w-full max-w-5xl mx-auto px-6 text-center text-white mt-12">
+          <h1 className="text-4xl md:text-5xl font-black mb-4 leading-tight drop-shadow-lg font-serif">
             Discover Your Next Adventure:<br />Authentic Local Experiences
           </h1>
-          <p className="text-xl md:text-2xl font-sans mb-12 drop-shadow-md text-slate-100 font-medium">
+          <p className="text-lg md:text-xl font-sans mb-12 drop-shadow-md text-slate-100 font-medium">
             Book Guided Tours & Holiday Packages with Confidence.
           </p>
 
-          {/* Search Widget */}
-          <div className="bg-white/95 backdrop-blur-xl p-4 md:p-6 rounded-3xl shadow-2xl flex flex-col md:flex-row gap-4 text-left font-sans items-end">
-            <div className="flex-1 w-full">
-              <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Enter Destination</label>
-              <div className="relative">
-                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input type="text" placeholder="Where to?" className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold text-slate-800" defaultValue="Amalfi Coast" />
+          {/* Search Widget - Matches Thumbnail single-line style */}
+          <div className="bg-white/20 backdrop-blur-md p-2 rounded-2xl shadow-2xl flex flex-col md:flex-row gap-2 font-sans items-center border border-white/30 max-w-4xl mx-auto">
+            <div className="flex-1 w-full relative">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400">
+                <MapPin className="w-full h-full" />
               </div>
+              <input type="text" placeholder="Enter Destination" className="w-full pl-10 pr-4 py-3 bg-white rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 font-bold text-sm text-slate-800" defaultValue="Amalfi Coast" />
             </div>
-            <div className="w-full md:w-[200px]">
-              <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Check-in Date</label>
-              <div className="relative">
-                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input type="text" placeholder="Select Date" className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold text-slate-800" />
+            
+            <div className="w-full md:w-[160px] relative">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400">
+                <Calendar className="w-full h-full" />
               </div>
+              <input type="text" placeholder="Check-in Date" className="w-full pl-10 pr-4 py-3 bg-white rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 font-bold text-sm text-slate-800" />
             </div>
-            <div className="w-full md:w-[200px]">
-              <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Check-out Date</label>
-              <div className="relative">
-                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input type="text" placeholder="Select Date" className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold text-slate-800" />
+
+            <div className="w-full md:w-[160px] relative">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400">
+                <Calendar className="w-full h-full" />
               </div>
+              <input type="text" placeholder="Check-out Date" className="w-full pl-10 pr-4 py-3 bg-white rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 font-bold text-sm text-slate-800" />
             </div>
-            <div className="w-full md:w-[200px]">
-              <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Travelers</label>
-              <div className="relative">
-                <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <select className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold text-slate-800 appearance-none">
-                  <option>1 Adult</option>
-                  <option selected>2 Adults</option>
-                  <option>Family (4)</option>
-                </select>
+
+            <div className="w-full md:w-[180px] relative">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400">
+                <Users className="w-full h-full" />
               </div>
+              <select className="w-full pl-10 pr-4 py-3 bg-white rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 font-bold text-sm text-slate-800 appearance-none">
+                <option>Number of Travelers</option>
+                <option>1 Adult</option>
+                <option selected>2 Adults</option>
+                <option>Family</option>
+              </select>
             </div>
-            <button className="w-full md:w-auto px-8 py-3.5 bg-amber-500 hover:bg-amber-600 text-slate-900 rounded-xl font-black text-lg transition-colors shadow-lg shadow-amber-500/30 shrink-0">
+
+            <button className="w-full md:w-[120px] py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-black text-sm transition-colors shadow-lg shadow-amber-500/30 shrink-0">
               Search
             </button>
           </div>
