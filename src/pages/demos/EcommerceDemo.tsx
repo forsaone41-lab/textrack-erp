@@ -15,7 +15,7 @@ const THEME_CONFIGS: Record<string, any> = {
     products: [
       { name: 'Minimalist Keyboard', price: '$129.00', img: 'https://images.unsplash.com/photo-1595225476474-87563907a212?q=80&w=600' },
       { name: 'Wireless Headphones', price: '$249.00', img: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=600', badge: 'New' },
-      { name: 'Desk Organizer', price: '$49.00', img: 'https://images.unsplash.com/photo-1528731700624-910ec3f3097c?q=80&w=600' },
+      { name: 'Desk Organizer', price: '$49.00', img: 'https://images.unsplash.com/photo-1505843490538-5133c6c7d0e1?q=80&w=600' },
       { name: 'Aluminium Stand', price: '$39.00', img: 'https://images.unsplash.com/photo-1585565804112-f201f68c48b4?q=80&w=600' }
     ]
   },
@@ -108,6 +108,7 @@ export default function EcommerceDemo() {
   if (!theme) return <Navigate to="/" replace />;
 
   const [activePage, setActivePage] = useState('home');
+  const [activeProduct, setActiveProduct] = useState<any>(null);
 
   return (
     <div className={`min-h-screen ${theme.colors.bg} ${theme.colors.text} font-sans transition-colors duration-500`}>
@@ -168,7 +169,7 @@ export default function EcommerceDemo() {
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               {theme.products.map((product: any, idx: number) => (
-                <div key={idx} className="group cursor-pointer">
+                <div key={idx} className="group cursor-pointer" onClick={() => { setActiveProduct(product); setActivePage('product'); }}>
                   <div className="relative aspect-[3/4] overflow-hidden rounded-lg mb-4 bg-gray-100">
                     <img src={product.img} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                     {product.badge && (
@@ -194,7 +195,7 @@ export default function EcommerceDemo() {
           <h1 className="text-4xl font-black mb-12">All Products</h1>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {[...theme.products, ...theme.products].map((product: any, idx: number) => (
-              <div key={idx} className="group cursor-pointer">
+              <div key={idx} className="group cursor-pointer" onClick={() => { setActiveProduct(product); setActivePage('product'); }}>
                 <div className="relative aspect-[3/4] overflow-hidden rounded-lg mb-4 bg-gray-100">
                   <img src={product.img} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                   <button className={`absolute bottom-0 inset-x-0 py-4 ${theme.colors.primary} font-bold opacity-0 group-hover:opacity-100 transition-opacity flex justify-center items-center gap-2`}>
@@ -229,6 +230,65 @@ export default function EcommerceDemo() {
             <textarea placeholder="Message" rows={5} className={`w-full p-4 border ${theme.colors.border} bg-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-current resize-none`}></textarea>
             <button className={`w-full py-4 rounded-lg font-bold ${theme.colors.primary} transition-opacity hover:opacity-90`}>Send Message</button>
           </form>
+        </main>
+      )}
+
+      {activePage === 'product' && activeProduct && (
+        <main className="py-12 md:py-24 max-w-7xl mx-auto px-6 min-h-[70vh]">
+          <div className="flex items-center gap-2 mb-8 text-sm opacity-60">
+            <span className="cursor-pointer hover:opacity-100" onClick={() => setActivePage('home')}>Home</span>
+            <ChevronRight className="w-4 h-4" />
+            <span className="cursor-pointer hover:opacity-100" onClick={() => setActivePage('shop')}>Shop</span>
+            <ChevronRight className="w-4 h-4" />
+            <span className="font-bold">{activeProduct.name}</span>
+          </div>
+          <div className="grid md:grid-cols-2 gap-12 items-start">
+            <div className="relative aspect-[4/5] bg-gray-100 rounded-2xl overflow-hidden">
+              <img src={activeProduct.img} alt={activeProduct.name} className="w-full h-full object-cover" />
+            </div>
+            <div className="flex flex-col">
+              {activeProduct.badge && (
+                <span className={`self-start ${theme.colors.primary} px-3 py-1 text-xs font-bold uppercase rounded mb-4`}>
+                  {activeProduct.badge}
+                </span>
+              )}
+              <h1 className="text-4xl md:text-5xl font-black mb-4">{activeProduct.name}</h1>
+              <p className="text-2xl opacity-80 mb-6">{activeProduct.price}</p>
+              
+              <div className="flex items-center gap-1 mb-8 text-yellow-400">
+                <Star className="w-5 h-5 fill-current" />
+                <Star className="w-5 h-5 fill-current" />
+                <Star className="w-5 h-5 fill-current" />
+                <Star className="w-5 h-5 fill-current" />
+                <Star className="w-5 h-5 fill-current" />
+                <span className={`text-sm ml-2 ${theme.colors.text} opacity-50`}>(128 Reviews)</span>
+              </div>
+              
+              <p className="opacity-70 mb-8 leading-relaxed">
+                Experience premium quality with the {activeProduct.name}. Carefully crafted to perfection, it brings both elegance and functionality to your daily life. Available in limited quantities.
+              </p>
+              
+              <div className="flex gap-4 mb-12">
+                <button className={`flex-1 py-4 rounded-lg font-bold flex items-center justify-center gap-2 ${theme.colors.primary} hover:opacity-90 transition-opacity text-lg`}>
+                  Add to Cart
+                </button>
+                <button className={`w-14 h-14 rounded-lg border ${theme.colors.border} flex items-center justify-center hover:opacity-70 transition-opacity`}>
+                  <Heart className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className={`border-t ${theme.colors.border} pt-8 space-y-4`}>
+                <div className="flex justify-between font-bold cursor-pointer hover:opacity-70">
+                  <span>Product Details</span>
+                  <ChevronRight className="w-5 h-5" />
+                </div>
+                <div className="flex justify-between font-bold cursor-pointer hover:opacity-70">
+                  <span>Shipping & Returns</span>
+                  <ChevronRight className="w-5 h-5" />
+                </div>
+              </div>
+            </div>
+          </div>
         </main>
       )}
 
