@@ -362,29 +362,6 @@ export default function SetupLanding() {
                 </button>
               </div>
             </div>
-            {/* Theme 5 */}
-            <div 
-              onClick={() => setPreviewTheme({ name: 'DENTIST CLINIC', image: '/images/themes/dentist.png', url: window.location.origin + '/#/demo/ecommerce/dentist' })}
-              className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
-            >
-              <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
-                <img src="/images/themes/dentist.png" className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" alt="Theme Dentist" />
-                <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center backdrop-blur-none group-hover:backdrop-blur-[2px]">
-                   <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-xl">
-                      <Eye className="w-5 h-5" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
-                   </div>
-                </div>
-                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-xs font-black px-3 py-1.5 rounded-full shadow-sm text-slate-800 uppercase">
-                  DENTIST CLINIC
-                </div>
-              </div>
-              <div className="p-4 flex flex-col items-center gap-3">
-                <h3 className="font-bold text-slate-800 text-lg">DENTIST CLINIC <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
-                <button className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 border border-slate-200">
-                  <Eye className="w-4 h-4" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
-                </button>
-              </div>
-            </div>
             {/* Theme 6 */}
             <div 
               onClick={() => setPreviewTheme({ name: 'LUXURY PERFUME', image: '/images/themes/perfume.png', url: window.location.origin + '/#/demo/ecommerce/luxury-perfume' })}
@@ -410,6 +387,39 @@ export default function SetupLanding() {
             </div>
           </div>
           
+
+          {/* Services Section */}
+          <div className="mt-16 mb-8 flex items-center gap-3">
+             <div className="w-10 h-10 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center shrink-0">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+             </div>
+             <h3 className="text-2xl font-black text-slate-800">{isAr ? 'الخدمات (Services)' : 'Services'}</h3>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Service 1 */}
+            <div 
+              onClick={() => setPreviewTheme({ name: 'DENTIST CLINIC', image: '/images/themes/dentist.png', url: window.location.origin + '/#/demo/dentist' })}
+              className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
+            >
+              <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
+                <img src="/images/themes/dentist.png" className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" alt="Theme Dentist" />
+                <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center backdrop-blur-none group-hover:backdrop-blur-[2px]">
+                   <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-xl">
+                      <Eye className="w-5 h-5" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                   </div>
+                </div>
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-xs font-black px-3 py-1.5 rounded-full shadow-sm text-slate-800 uppercase">
+                  DENTIST CLINIC
+                </div>
+              </div>
+              <div className="p-4 flex flex-col items-center gap-3">
+                <h3 className="font-bold text-slate-800 text-lg">DENTIST CLINIC <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
+                <button className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 border border-slate-200">
+                  <Eye className="w-4 h-4" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                </button>
+              </div>
+            </div>
+          </div>
 
           {/* Tourism Section */}
           <div className="mt-16 mb-8 flex items-center gap-3">
