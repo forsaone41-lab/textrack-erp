@@ -30,13 +30,11 @@ export default function CityRentalsDemo() {
   };
 
   // Booking widget state
-  const todayStr = new Date().toISOString().split('T')[0];
-  const inThreeDaysStr = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
   const [pickupLocation, setPickupLocation] = useState('downtown');
-  const [pickupDate, setPickupDate] = useState(todayStr);
-  const [pickupTime, setPickupTime] = useState('10:00');
-  const [dropoffDate, setDropoffDate] = useState(inThreeDaysStr);
-  const [dropoffTime, setDropoffTime] = useState('10:00');
+  const [pickupDate, setPickupDate] = useState('');
+  const [pickupTime, setPickupTime] = useState('');
+  const [dropoffDate, setDropoffDate] = useState('');
+  const [dropoffTime, setDropoffTime] = useState('');
 
   // Geolocation state
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -258,28 +256,54 @@ export default function CityRentalsDemo() {
                    </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                   <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 relative">
-                      <label className="block text-xs font-bold text-slate-400 mb-1">{t('Pick-up Date & Time', 'Date & Heure de Prise', 'تاريخ ووقت الاستلام')}</label>
-                      <div className="flex items-center gap-2 text-slate-700 font-bold">
-                        <Calendar className="w-4 h-4 text-blue-500 shrink-0"/>
-                        <input type="date" value={pickupDate} onChange={(e) => setPickupDate(e.target.value)} className="bg-transparent border-none outline-none w-1/2 font-bold text-slate-700 cursor-pointer" />
-                        <span className="text-slate-300">|</span>
-                        <Clock className="w-4 h-4 text-blue-500 shrink-0"/>
-                        <input type="time" value={pickupTime} onChange={(e) => setPickupTime(e.target.value)} className="bg-transparent border-none outline-none w-1/2 font-bold text-slate-700 cursor-pointer" />
+                   <div className={`rounded-2xl p-4 md:p-5 border-2 relative transition-all duration-300 ${pickupDate && pickupTime ? 'border-green-500 bg-green-50' : (pickupDate && !pickupTime) ? 'border-red-400 bg-red-50' : 'border-slate-200 bg-slate-50'}`}>
+                      <label className={`block text-xs font-bold mb-3 ${pickupDate && pickupTime ? 'text-green-600' : (pickupDate && !pickupTime) ? 'text-red-500' : 'text-slate-400'}`}>
+                        {t('Pick-up Date & Time', 'Date & Heure de Prise', 'تاريخ ووقت الاستلام')}
+                      </label>
+                      <div className="flex flex-col gap-3 text-slate-700 font-bold">
+                        <div className="flex items-center gap-3 bg-white px-3 py-2.5 rounded-xl border border-slate-200/60 shadow-sm">
+                          <Calendar className={`w-5 h-5 shrink-0 ${pickupDate ? 'text-blue-600' : 'text-slate-400'}`}/>
+                          <input type="date" value={pickupDate} onChange={(e) => setPickupDate(e.target.value)} className={`bg-transparent border-none outline-none w-full font-bold cursor-pointer text-sm ${pickupDate ? 'text-slate-800' : 'text-slate-400'}`} />
+                        </div>
+                        
+                        {pickupDate && (
+                          <div className="flex items-center gap-3 bg-white px-3 py-2.5 rounded-xl border border-slate-200/60 shadow-sm animate-in fade-in slide-in-from-top-2">
+                            <Clock className={`w-5 h-5 shrink-0 ${pickupTime ? 'text-blue-600' : 'text-red-400 animate-pulse'}`}/>
+                            <input type="time" value={pickupTime} onChange={(e) => setPickupTime(e.target.value)} className={`bg-transparent border-none outline-none w-full font-bold cursor-pointer text-sm ${pickupTime ? 'text-slate-800' : 'text-red-500'}`} />
+                          </div>
+                        )}
                       </div>
                    </div>
-                   <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 relative">
-                      <label className="block text-xs font-bold text-slate-400 mb-1">{t('Drop-off Date & Time', 'Date & Heure de Retour', 'تاريخ ووقت الإرجاع')}</label>
-                      <div className="flex items-center gap-2 text-slate-700 font-bold">
-                        <Calendar className="w-4 h-4 text-blue-500 shrink-0"/>
-                        <input type="date" value={dropoffDate} onChange={(e) => setDropoffDate(e.target.value)} className="bg-transparent border-none outline-none w-1/2 font-bold text-slate-700 cursor-pointer" />
-                        <span className="text-slate-300">|</span>
-                        <Clock className="w-4 h-4 text-blue-500 shrink-0"/>
-                        <input type="time" value={dropoffTime} onChange={(e) => setDropoffTime(e.target.value)} className="bg-transparent border-none outline-none w-1/2 font-bold text-slate-700 cursor-pointer" />
+                   
+                   <div className={`rounded-2xl p-4 md:p-5 border-2 relative transition-all duration-300 ${dropoffDate && dropoffTime ? 'border-green-500 bg-green-50' : (dropoffDate && !dropoffTime) ? 'border-red-400 bg-red-50' : 'border-slate-200 bg-slate-50'}`}>
+                      <label className={`block text-xs font-bold mb-3 ${dropoffDate && dropoffTime ? 'text-green-600' : (dropoffDate && !dropoffTime) ? 'text-red-500' : 'text-slate-400'}`}>
+                        {t('Drop-off Date & Time', 'Date & Heure de Retour', 'تاريخ ووقت الإرجاع')}
+                      </label>
+                      <div className="flex flex-col gap-3 text-slate-700 font-bold">
+                        <div className="flex items-center gap-3 bg-white px-3 py-2.5 rounded-xl border border-slate-200/60 shadow-sm">
+                          <Calendar className={`w-5 h-5 shrink-0 ${dropoffDate ? 'text-blue-600' : 'text-slate-400'}`}/>
+                          <input type="date" value={dropoffDate} onChange={(e) => setDropoffDate(e.target.value)} className={`bg-transparent border-none outline-none w-full font-bold cursor-pointer text-sm ${dropoffDate ? 'text-slate-800' : 'text-slate-400'}`} />
+                        </div>
+                        
+                        {dropoffDate && (
+                          <div className="flex items-center gap-3 bg-white px-3 py-2.5 rounded-xl border border-slate-200/60 shadow-sm animate-in fade-in slide-in-from-top-2">
+                            <Clock className={`w-5 h-5 shrink-0 ${dropoffTime ? 'text-blue-600' : 'text-red-400 animate-pulse'}`}/>
+                            <input type="time" value={dropoffTime} onChange={(e) => setDropoffTime(e.target.value)} className={`bg-transparent border-none outline-none w-full font-bold cursor-pointer text-sm ${dropoffTime ? 'text-slate-800' : 'text-red-500'}`} />
+                          </div>
+                        )}
                       </div>
                    </div>
                 </div>
-                <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-bold text-lg shadow-lg shadow-blue-200 hover:shadow-blue-300 flex justify-center items-center gap-2 transition-all hover:-translate-y-0.5">
+                <button 
+                  type="submit" 
+                  onClick={(e) => {
+                    if (!pickupDate || !pickupTime || !dropoffDate || !dropoffTime) {
+                      e.preventDefault();
+                      showToast(t('Please complete the date and time selection first', 'Veuillez d\'abord compléter la sélection de la date et de l\'heure', 'يرجى إكمال تحديد التاريخ والوقت أولاً'));
+                    }
+                  }}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-bold text-lg shadow-lg shadow-blue-200 hover:shadow-blue-300 flex justify-center items-center gap-2 transition-all hover:-translate-y-0.5"
+                >
                   <Search className="w-5 h-5"/> {t('Find a Car', 'Trouver une Voiture', 'ابحث عن سيارة')}
                 </button>
 

@@ -3,8 +3,8 @@ import {
   Car, MapPin, Calendar, Search,
   Settings, Users, Shield, Zap,
   CheckCircle2, Menu, X,
-  Phone, Mail, ChevronLeft, ChevronRight,
-  ShoppingCart, Fuel, Navigation, Trash2, AlertCircle
+  Phone, Mail, ChevronLeft, ChevronRight, MessageCircle,
+  Fuel, Navigation, Trash2, AlertCircle
 } from 'lucide-react';
 
 const Instagram = (props: React.SVGProps<SVGSVGElement>) => (
@@ -49,9 +49,8 @@ export default function CarRentalDemo() {
   const [filterFuel, setFilterFuel] = useState<'all' | 'Petrol' | 'Diesel' | 'Hybrid'>('all');
   const [availableOnly, setAvailableOnly] = useState(false);
 
-  // Reservation cart
-  const [cart, setCart] = useState<any[]>([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  // Reservation Contact Modal
+  const [contactCar, setContactCar] = useState<any | null>(null);
 
   const t = (en: string, fr: string, ar: string) => {
     if (lang === 'fr') return fr;
@@ -122,30 +121,13 @@ export default function CarRentalDemo() {
     return parsePrice(car.prices.tier3);
   };
 
-  const addToCart = (car: any) => {
+  const handleReserve = (car: any) => {
     if (car.available === false) {
       showToast(t('This vehicle is not available for the selected dates', 'Ce véhicule n\'est pas disponible pour ces dates', 'هذه السيارة غير متوفرة في هذه التواريخ'));
       return;
     }
-    const days = rentalDays();
-    setCart(prev => [...prev, {
-      cartId: `${car.id}-${Date.now()}`,
-      car,
-      pickupLocation,
-      pickupDate,
-      dropoffDate,
-      days,
-      pricePerDay: tierPriceFor(car, days)
-    }]);
-    setIsCartOpen(true);
-    showToast(t(`${car.name} added to your reservation`, `${car.name} ajouté à votre réservation`, `تمت إضافة ${car.name} إلى حجزك`));
+    setContactCar(car);
   };
-
-  const removeFromCart = (cartId: string) => {
-    setCart(prev => prev.filter(item => item.cartId !== cartId));
-  };
-
-  const cartTotal = cart.reduce((sum, item) => sum + item.pricePerDay * item.days, 0);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -288,12 +270,6 @@ export default function CarRentalDemo() {
              <button onClick={() => showToast(t('Login', 'Connexion', 'دخول'))} className="text-xs font-bold tracking-widest uppercase hover:text-amber-500 transition-colors">
                {t('Sign In', 'Se connecter', 'تسجيل الدخول')}
              </button>
-             <button onClick={() => setIsCartOpen(true)} className="relative text-white hover:text-amber-500 transition-colors">
-               <ShoppingCart className="w-5 h-5" />
-               {cart.length > 0 && (
-                 <span className="absolute -top-2 -right-2 bg-amber-500 text-black text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{cart.length}</span>
-               )}
-             </button>
              <button onClick={() => showToast(t('Manage Booking', 'Gérer la réservation', 'إدارة الحجز'))} className="bg-white text-black hover:bg-amber-500 px-5 py-2.5 text-xs font-bold tracking-widest uppercase transition-colors rounded-sm">
                {t('Manage Booking', 'Gérer', 'إدارة الحجز')}
              </button>
@@ -301,12 +277,6 @@ export default function CarRentalDemo() {
 
           {/* Mobile Actions */}
           <div className="flex md:hidden items-center gap-4 text-white">
-            <button onClick={() => setIsCartOpen(true)} className="relative text-white hover:text-amber-500 transition-colors">
-              <ShoppingCart className="w-5 h-5" />
-              {cart.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-amber-500 text-black text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{cart.length}</span>
-              )}
-            </button>
             <button
               onClick={() => {
                 if (lang === 'en') setLang('fr');
@@ -546,7 +516,7 @@ export default function CarRentalDemo() {
                 </div>
 
                 <button
-                  onClick={(e) => { e.stopPropagation(); addToCart(car); }}
+                  onClick={(e) => { e.stopPropagation(); handleReserve(car); }}
                   disabled={car.available === false}
                   className="w-full bg-white/5 hover:bg-amber-500 disabled:hover:bg-white/5 disabled:cursor-not-allowed text-white hover:text-black disabled:text-zinc-500 py-3 rounded text-xs font-bold tracking-widest uppercase transition-colors"
                 >
@@ -756,7 +726,7 @@ export default function CarRentalDemo() {
                   </div>
                 )}
                 <button
-                  onClick={() => { addToCart(selectedCar); setSelectedCar(null); }}
+                  onClick={() => { handleReserve(selectedCar); setSelectedCar(null); }}
                   disabled={selectedCar.available === false}
                   className="w-full bg-amber-500 hover:bg-amber-400 disabled:bg-white/10 disabled:text-zinc-500 disabled:cursor-not-allowed text-black py-4 font-bold tracking-widest uppercase transition-colors rounded-lg flex items-center justify-center gap-2"
                 >
@@ -767,69 +737,40 @@ export default function CarRentalDemo() {
         </div>
       )}
 
-      {/* Cart Sidebar */}
-      {isCartOpen && (
-        <div className="fixed inset-0 z-[250] flex justify-end">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsCartOpen(false)}></div>
-          <div className="relative z-10 w-full max-w-md h-full bg-[#111] border-l border-white/10 flex flex-col shadow-2xl animate-in slide-in-from-right" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-            <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
-              <h3 className="font-bold uppercase tracking-widest text-sm flex items-center gap-2">
-                <ShoppingCart className="w-4 h-4 text-amber-500" /> {t('Your Reservations', 'Vos Réservations', 'حجوزاتك')}
-              </h3>
-              <button onClick={() => setIsCartOpen(false)} className="text-zinc-400 hover:text-white">
+      {/* Contact Reservation Modal */}
+      {contactCar && (
+        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/90 backdrop-blur-sm" onClick={() => setContactCar(null)}></div>
+          <div className="relative bg-[#111] border border-white/10 rounded-2xl w-full max-w-md p-6 md:p-8 animate-in zoom-in-95 shadow-2xl overflow-hidden" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+             <button onClick={() => setContactCar(null)} className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors">
                 <X className="w-5 h-5" />
-              </button>
-            </div>
+             </button>
+             
+             <div className="text-center mb-8">
+               <h3 className="text-amber-500 text-[10px] font-bold tracking-widest uppercase mb-2">{t('Complete Reservation', 'Compléter la Réservation', 'أكمل الحجز')}</h3>
+               <h2 className="text-2xl font-black uppercase tracking-tight text-white mb-2">{contactCar.name}</h2>
+               <p className="text-sm text-zinc-400 font-medium">
+                 {t('Choose how you would like to complete your reservation.', 'Choisissez comment vous souhaitez compléter votre réservation.', 'اختر كيف ترغب في إكمال حجزك.')}
+               </p>
+             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 py-4">
-              {cart.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center text-zinc-500 gap-3">
-                  <ShoppingCart className="w-10 h-10 opacity-30" />
-                  <p className="text-sm font-medium">{t('No vehicles reserved yet.', 'Aucun véhicule réservé.', 'لا توجد سيارات محجوزة بعد.')}</p>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-4">
-                  {cart.map((item) => (
-                    <div key={item.cartId} className="bg-[#1a1a1a] border border-white/5 rounded-lg p-4 flex gap-4">
-                      <img src={item.car.img} alt={item.car.name} className="w-20 h-16 object-cover rounded-md shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <h4 className="font-bold text-sm truncate">{item.car.name}</h4>
-                          <button onClick={() => removeFromCart(item.cartId)} className="text-zinc-500 hover:text-red-400 shrink-0">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                        <div className="text-[10px] text-zinc-500 mt-1 flex items-center gap-1">
-                          <MapPin className="w-3 h-3" /> {t(branches[item.pickupLocation].nameEn, branches[item.pickupLocation].nameFr, branches[item.pickupLocation].nameAr)}
-                        </div>
-                        <div className="text-[10px] text-zinc-500 mt-1 flex items-center gap-1">
-                          <Calendar className="w-3 h-3" /> {new Date(item.pickupDate).toLocaleString()} → {new Date(item.dropoffDate).toLocaleString()}
-                        </div>
-                        <div className="flex items-center justify-between mt-2">
-                          <span className="text-[10px] text-zinc-500 font-medium">{item.days} {t('day(s)', 'jour(s)', 'يوم/أيام')}</span>
-                          <span className="text-amber-500 font-bold text-sm">${(item.pricePerDay * item.days).toFixed(0)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {cart.length > 0 && (
-              <div className="px-6 py-5 border-t border-white/10">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">{t('Total', 'Total', 'المجموع')}</span>
-                  <span className="text-2xl font-black text-amber-500">${cartTotal.toFixed(0)}</span>
-                </div>
-                <button
-                  onClick={() => { setCart([]); setIsCartOpen(false); showToast(t('Booking confirmed! Check your email for details.', 'Réservation confirmée ! Consultez votre email.', 'تم تأكيد الحجز! تحقق من بريدك الإلكتروني.')); }}
-                  className="w-full bg-amber-500 hover:bg-amber-400 text-black py-4 font-bold tracking-widest uppercase transition-colors rounded-lg flex items-center justify-center gap-2"
-                >
-                  <CheckCircle2 className="w-5 h-5" /> {t('Confirm Booking', 'Confirmer la Réservation', 'تأكيد الحجز')}
-                </button>
-              </div>
-            )}
+             <div className="flex flex-col gap-4">
+                <a href={`https://wa.me/212600000000?text=${encodeURIComponent(`Hello LuxeDrive, I would like to reserve the ${contactCar.name}.`)}`} target="_blank" rel="noreferrer" className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white py-4 rounded-xl flex items-center justify-center gap-3 font-bold uppercase tracking-widest text-sm transition-transform hover:-translate-y-1 shadow-lg shadow-[#25D366]/20">
+                  <MessageCircle className="w-5 h-5" /> {t('WhatsApp', 'WhatsApp', 'واتساب')}
+                </a>
+                
+                <a href="tel:+212600000000" className="w-full bg-white hover:bg-zinc-200 text-black py-4 rounded-xl flex items-center justify-center gap-3 font-bold uppercase tracking-widest text-sm transition-transform hover:-translate-y-1 shadow-lg">
+                  <Phone className="w-5 h-5" /> {t('Call Us', 'Appelez-nous', 'اتصل بنا')}
+                </a>
+                
+                <a href={`mailto:reservations@luxedrive.com?subject=Reservation: ${contactCar.name}`} className="w-full bg-[#1a1a1a] border border-white/10 hover:border-amber-500/50 hover:bg-[#222] text-white py-4 rounded-xl flex items-center justify-center gap-3 font-bold uppercase tracking-widest text-sm transition-transform hover:-translate-y-1">
+                  <Mail className="w-5 h-5" /> {t('Email Us', 'Envoyez un Email', 'راسلنا عبر البريد')}
+                </a>
+             </div>
+             
+             <div className="mt-6 text-center text-[10px] text-zinc-500 uppercase tracking-widest font-bold">
+               {t('Our concierge team will respond instantly.', 'Notre équipe de conciergerie répondra instantanément.', 'سيقوم فريق الكونسيرج بالرد فوراً.')}
+             </div>
           </div>
         </div>
       )}
