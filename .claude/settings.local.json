@@ -15,7 +15,8 @@
       "Bash(awk 'NR>165 && NR<420 && /\\\\bisAr\\\\b/ {print NR\": \"$0}' src/pages/StoreBuilder.tsx)",
       "Bash(vercel --prod --yes)",
       "Read(//c/Users/hp/AppData/Local/Temp/claude/**)",
-      "Bash(xargs ls -la)"
+      "Bash(xargs ls -la)",
+      "Bash(npx vite *)"
     ]
   }
 }

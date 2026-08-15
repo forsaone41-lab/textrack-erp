@@ -94,6 +94,7 @@ const AbayaDemo = lazy(() => import('./pages/demos/AbayaDemo'));
 const BidlaDemo = lazy(() => import('./pages/demos/BidlaDemo'));
 const DentistDemo = lazy(() => import('./pages/demos/DentistDemo'));
 const CarRentalDemo = lazy(() => import('./pages/demos/CarRentalDemo'));
+const CityRentalsDemo = lazy(() => import('./pages/demos/CityRentalsDemo'));
 const EcommerceDemo = lazy(() => import('./pages/demos/EcommerceDemo'));
 const StoreOnboarding = lazy(() => import('./pages/StoreOnboarding'));
 const MerchantDashboard = lazy(() => import('./pages/MerchantDashboard'));
@@ -572,6 +573,7 @@ function AppContent() {
         <Route path="/demo/bidla" element={<BidlaDemo />} />
         <Route path="/demo/dentist" element={<DentistDemo />} />
         <Route path="/demo/car-rental" element={<CarRentalDemo />} />
+        <Route path="/demo/city-rentals" element={<CityRentalsDemo />} />
         <Route path="/demo/ecommerce/abaya" element={<AbayaDemo />} />
         <Route path="/demo/ecommerce/:themeId" element={<EcommerceDemo />} />
         <Route path="/store-signup" element={<StoreSignup onLogin={handleLogin} />} />
