@@ -5,6 +5,8 @@ export default function OmraToursDemo() {
   const [activePage, setActivePage] = useState('home');
   const [activeTab, setActiveTab] = useState('voyages');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isLangOpen, setIsLangOpen] = useState(false);
+  const [lang, setLang] = useState<'FR' | 'EN' | 'AR'>('FR');
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -45,12 +47,40 @@ export default function OmraToursDemo() {
               <button onClick={() => showToast('Login en mode demo!')} className="flex items-center gap-2 border border-white/30 hover:bg-white/10 px-4 py-1.5 rounded text-sm transition-colors">
                 <User className="w-4 h-4" /> Login
               </button>
-              <button className="flex items-center gap-1 border border-white/30 hover:bg-white/10 px-2 py-1.5 rounded text-sm transition-colors">
-                <span className="w-4 h-3 bg-red-600 relative overflow-hidden block">
-                  <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[8px] text-green-500 font-bold">★</span>
-                </span>
-                <ChevronDown className="w-3 h-3" />
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setIsLangOpen((open) => !open)}
+                  className="flex items-center gap-2 border border-white/30 hover:bg-white/10 px-2 py-1.5 rounded text-sm transition-colors"
+                >
+                  <span className="w-4 h-3 bg-red-600 relative overflow-hidden block">
+                    <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[8px] text-green-500 font-bold">★</span>
+                  </span>
+                  <span className="text-xs font-bold">{lang}</span>
+                  <ChevronDown className={`w-3 h-3 transition-transform ${isLangOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {isLangOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-36 bg-white text-slate-800 rounded-lg shadow-xl overflow-hidden z-50">
+                    {([
+                      { code: 'FR', label: 'Français' },
+                      { code: 'EN', label: 'English' },
+                      { code: 'AR', label: 'العربية' },
+                    ] as const).map((opt) => (
+                      <button
+                        key={opt.code}
+                        onClick={() => {
+                          setLang(opt.code);
+                          setIsLangOpen(false);
+                          showToast(`Langue changée: ${opt.label}`);
+                        }}
+                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 transition-colors flex items-center justify-between ${lang === opt.code ? 'font-bold text-[#175c99]' : ''}`}
+                      >
+                        {opt.label}
+                        {lang === opt.code && <CheckCircle2 className="w-4 h-4" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </nav>
         </div>
@@ -63,13 +93,13 @@ export default function OmraToursDemo() {
           <div className="absolute inset-0 bg-black/20"></div>
         </div>
         
-        <div className="relative z-10 w-full max-w-5xl mx-auto px-6 text-center pt-8">
+        <div className="relative z-10 w-full max-w-5xl mx-auto px-6 text-center pt-8 animate-fade-in-up">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-12 drop-shadow-lg">
             Découvrez le Maroc et le Monde
           </h1>
-          
+
           {/* Search Box with Zellij pattern simulation border */}
-          <div className="relative p-2 rounded-xl bg-[url('https://images.unsplash.com/photo-1538681105587-85640961bf8b?q=80&w=600')] bg-cover bg-center shadow-2xl">
+          <div className="relative p-2 rounded-xl bg-[url('https://images.unsplash.com/photo-1538681105587-85640961bf8b?q=80&w=600')] bg-cover bg-center shadow-2xl transition-shadow hover:shadow-[0_25px_50px_rgba(23,92,153,0.35)]">
             {/* Inner content white bg */}
             <div className="bg-white rounded-lg p-2 flex flex-col w-full h-full">
               {/* Tabs */}
@@ -116,7 +146,7 @@ export default function OmraToursDemo() {
         
         <div className="grid md:grid-cols-3 gap-8">
           {/* Card 1 */}
-          <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-slate-200 hover:shadow-xl transition-shadow flex flex-col">
+          <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-slate-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col">
             <div className="h-48 relative">
               <img src="/images/omra_makkah.png" alt="Makkah" className="w-full h-full object-cover" />
             </div>
@@ -142,7 +172,7 @@ export default function OmraToursDemo() {
           </div>
 
           {/* Card 2 */}
-          <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-slate-200 hover:shadow-xl transition-shadow flex flex-col">
+          <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-slate-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col">
             <div className="h-48 relative">
               <img src="https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?q=80&w=600&auto=format&fit=crop" alt="Istanbul" className="w-full h-full object-cover" />
             </div>
@@ -168,7 +198,7 @@ export default function OmraToursDemo() {
           </div>
 
           {/* Card 3 */}
-          <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-slate-200 hover:shadow-xl transition-shadow flex flex-col">
+          <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-slate-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col">
             <div className="h-48 relative">
               <img src="https://images.unsplash.com/photo-1514282401047-d79a71a590e8?q=80&w=600&auto=format&fit=crop" alt="Maldives" className="w-full h-full object-cover" />
             </div>

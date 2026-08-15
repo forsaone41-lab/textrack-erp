@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { 
-  Car, MapPin, Calendar, Search, 
+import {
+  Car, MapPin, Calendar, Search,
   Settings, Users, Shield, Zap,
-  CheckCircle2, Menu, X, Star,
-  Phone, Mail, ChevronLeft, ChevronRight
+  CheckCircle2, Menu, X,
+  Phone, Mail, ChevronLeft, ChevronRight,
+  ShoppingCart, Fuel, Navigation, Trash2, AlertCircle
 } from 'lucide-react';
 
 const Instagram = (props: React.SVGProps<SVGSVGElement>) => (
@@ -31,11 +32,120 @@ export default function CarRentalDemo() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [lang, setLang] = useState<'en'|'fr'|'ar'>('en');
 
+  // Booking widget state
+  const todayStr = new Date().toISOString().split('T')[0];
+  const inFiveDaysStr = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const [pickupLocation, setPickupLocation] = useState('CMN');
+  const [pickupDate, setPickupDate] = useState(`${todayStr}T10:00`);
+  const [dropoffDate, setDropoffDate] = useState(`${inFiveDaysStr}T10:00`);
+
+  // Geolocation state
+  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locateError, setLocateError] = useState<string | null>(null);
+
+  // Fleet filters
+  const [filterTrans, setFilterTrans] = useState<'all' | 'Auto' | 'Manual'>('all');
+  const [filterFuel, setFilterFuel] = useState<'all' | 'Petrol' | 'Diesel' | 'Hybrid'>('all');
+  const [availableOnly, setAvailableOnly] = useState(false);
+
+  // Reservation cart
+  const [cart, setCart] = useState<any[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
   const t = (en: string, fr: string, ar: string) => {
     if (lang === 'fr') return fr;
     if (lang === 'ar') return ar;
     return en;
   };
+
+  const branches: Record<string, { nameEn: string; nameFr: string; nameAr: string; lat: number; lng: number }> = {
+    CMN: { nameEn: 'Casablanca Airport (CMN)', nameFr: 'Aéroport Casablanca (CMN)', nameAr: 'مطار الدار البيضاء (CMN)', lat: 33.3675, lng: -7.5898 },
+    RAK: { nameEn: 'Marrakech Menara (RAK)', nameFr: 'Aéroport Marrakech (RAK)', nameAr: 'مطار مراكش (RAK)', lat: 31.6069, lng: -8.0363 },
+    RBA: { nameEn: 'Rabat Sale (RBA)', nameFr: 'Aéroport Rabat (RBA)', nameAr: 'مطار الرباط (RBA)', lat: 34.0515, lng: -6.7515 },
+    AGA: { nameEn: 'Agadir Al Massira (AGA)', nameFr: 'Aéroport Agadir (AGA)', nameAr: 'مطار أكادير (AGA)', lat: 30.3250, lng: -9.4131 },
+  };
+
+  const haversine = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  };
+
+  const locateMe = () => {
+    if (!navigator.geolocation) {
+      setLocateError(t('Geolocation not supported', 'Géolocalisation non supportée', 'تحديد الموقع غير مدعوم'));
+      return;
+    }
+    setLocating(true);
+    setLocateError(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setUserCoords({ lat: latitude, lng: longitude });
+        let nearestCode = 'CMN';
+        let nearestDist = Infinity;
+        Object.entries(branches).forEach(([code, b]) => {
+          const d = haversine(latitude, longitude, b.lat, b.lng);
+          if (d < nearestDist) { nearestDist = d; nearestCode = code; }
+        });
+        setPickupLocation(nearestCode);
+        setLocating(false);
+        const b = branches[nearestCode];
+        showToast(t(
+          `Located! Nearest branch: ${t(b.nameEn, b.nameFr, b.nameAr)} (${nearestDist.toFixed(0)} km)`,
+          `Localisé ! Agence la plus proche : ${t(b.nameEn, b.nameFr, b.nameAr)} (${nearestDist.toFixed(0)} km)`,
+          `تم تحديد الموقع! أقرب فرع: ${t(b.nameEn, b.nameFr, b.nameAr)} (${nearestDist.toFixed(0)} كم)`
+        ));
+      },
+      () => {
+        setLocating(false);
+        setLocateError(t('Unable to get your location', 'Impossible d\'obtenir votre position', 'تعذر تحديد موقعك'));
+      }
+    );
+  };
+
+  const parsePrice = (s: string) => parseFloat(s.replace(/[^0-9.]/g, ''));
+
+  const rentalDays = () => {
+    const start = new Date(pickupDate).getTime();
+    const end = new Date(dropoffDate).getTime();
+    if (isNaN(start) || isNaN(end) || end <= start) return 1;
+    return Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+  };
+
+  const tierPriceFor = (car: any, days: number) => {
+    if (days <= 7) return parsePrice(car.prices.tier1);
+    if (days <= 15) return parsePrice(car.prices.tier2);
+    return parsePrice(car.prices.tier3);
+  };
+
+  const addToCart = (car: any) => {
+    if (car.available === false) {
+      showToast(t('This vehicle is not available for the selected dates', 'Ce véhicule n\'est pas disponible pour ces dates', 'هذه السيارة غير متوفرة في هذه التواريخ'));
+      return;
+    }
+    const days = rentalDays();
+    setCart(prev => [...prev, {
+      cartId: `${car.id}-${Date.now()}`,
+      car,
+      pickupLocation,
+      pickupDate,
+      dropoffDate,
+      days,
+      pricePerDay: tierPriceFor(car, days)
+    }]);
+    setIsCartOpen(true);
+    showToast(t(`${car.name} added to your reservation`, `${car.name} ajouté à votre réservation`, `تمت إضافة ${car.name} إلى حجزك`));
+  };
+
+  const removeFromCart = (cartId: string) => {
+    setCart(prev => prev.filter(item => item.cartId !== cartId));
+  };
+
+  const cartTotal = cart.reduce((sum, item) => sum + item.pricePerDay * item.days, 0);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -44,6 +154,21 @@ export default function CarRentalDemo() {
 
   const preventScroll = (e: React.MouseEvent) => {
     e.preventDefault();
+  };
+
+  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    const element = document.getElementById(id);
+    if (element) {
+      const headerOffset = 80;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      });
+      setIsMobileMenuOpen(false);
+    }
   };
 
   const fleet = [
@@ -59,7 +184,8 @@ export default function CarRentalDemo() {
         "https://images.unsplash.com/photo-1617531653332-bd46c24f2068?q=80&w=800&auto=format&fit=crop"
       ],
       specs: { seats: 4, transEn: "Auto", transFr: "Auto", transAr: "أوتوماتيك", doors: 4, fuelEn: "Petrol", fuelFr: "Essence", fuelAr: "بنزين", ac: true },
-      prices: { tier1: "$170", tier2: "$150", tier3: "$130" }
+      prices: { tier1: "$170", tier2: "$150", tier3: "$130" },
+      available: true
     },
     { 
       id: 2, 
@@ -72,8 +198,9 @@ export default function CarRentalDemo() {
         "https://images.unsplash.com/photo-1503376713356-20092c19c5c2?q=80&w=800&auto=format&fit=crop",
         "https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?q=80&w=800&auto=format&fit=crop"
       ],
-      specs: { seats: 2, transEn: "Auto", transFr: "Auto", transAr: "أوتوماتيك", doors: 2, fuelEn: "Petrol", fuelFr: "Essence", fuelAr: "بنزين", ac: true },
-      prices: { tier1: "$230", tier2: "$200", tier3: "$180" }
+      specs: { seats: 2, transEn: "Manual", transFr: "Manuelle", transAr: "يدوي", doors: 2, fuelEn: "Petrol", fuelFr: "Essence", fuelAr: "بنزين", ac: true },
+      prices: { tier1: "$230", tier2: "$200", tier3: "$180" },
+      available: false
     },
     { 
       id: 3, 
@@ -87,7 +214,8 @@ export default function CarRentalDemo() {
         "https://images.unsplash.com/photo-1563720223185-11003d516935?q=80&w=800&auto=format&fit=crop"
       ],
       specs: { seats: 5, transEn: "Auto", transFr: "Auto", transAr: "أوتوماتيك", doors: 4, fuelEn: "Diesel", fuelFr: "Diesel", fuelAr: "ديزل", ac: true },
-      prices: { tier1: "$140", tier2: "$120", tier3: "$100" }
+      prices: { tier1: "$140", tier2: "$120", tier3: "$100" },
+      available: true
     },
     { 
       id: 4, 
@@ -101,9 +229,17 @@ export default function CarRentalDemo() {
         "https://images.unsplash.com/photo-1607853202273-797f1c22a38e?q=80&w=800&auto=format&fit=crop"
       ],
       specs: { seats: 5, transEn: "Auto", transFr: "Auto", transAr: "أوتوماتيك", doors: 4, fuelEn: "Hybrid", fuelFr: "Hybride", fuelAr: "هجين", ac: true },
-      prices: { tier1: "$155", tier2: "$140", tier3: "$120" }
+      prices: { tier1: "$155", tier2: "$140", tier3: "$120" },
+      available: true
     }
   ];
+
+  const filteredFleet = fleet.filter(car => {
+    if (filterTrans !== 'all' && car.specs.transEn !== filterTrans) return false;
+    if (filterFuel !== 'all' && car.specs.fuelEn !== filterFuel) return false;
+    if (availableOnly && car.available === false) return false;
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-amber-500 selection:text-black">
@@ -141,10 +277,10 @@ export default function CarRentalDemo() {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8 text-xs font-bold tracking-[0.2em] uppercase text-zinc-300">
-            <a href="#" onClick={(e) => { preventScroll(e); showToast(t('Fleet', 'Flotte', 'الأسطول')); }} className="hover:text-amber-500 transition-colors">{t('Fleet', 'Flotte', 'الأسطول')}</a>
-            <a href="#" onClick={(e) => { preventScroll(e); showToast(t('Offers', 'Offres', 'العروض')); }} className="hover:text-amber-500 transition-colors">{t('Offers', 'Offres', 'العروض')}</a>
-            <a href="#" onClick={(e) => { preventScroll(e); showToast(t('Services', 'Services', 'الخدمات')); }} className="hover:text-amber-500 transition-colors">{t('Services', 'Services', 'الخدمات')}</a>
-            <a href="#" onClick={(e) => { preventScroll(e); showToast(t('Contact', 'Contact', 'اتصل بنا')); }} className="hover:text-amber-500 transition-colors">{t('Contact', 'Contact', 'اتصل بنا')}</a>
+            <a href="#fleet" onClick={(e) => scrollToSection(e, 'fleet')} className="hover:text-amber-500 transition-colors">{t('Fleet', 'Flotte', 'الأسطول')}</a>
+            <a href="#offers" onClick={(e) => scrollToSection(e, 'offers')} className="hover:text-amber-500 transition-colors">{t('Offers', 'Offres', 'العروض')}</a>
+            <a href="#services" onClick={(e) => scrollToSection(e, 'services')} className="hover:text-amber-500 transition-colors">{t('Services', 'Services', 'الخدمات')}</a>
+            <a href="#contact" onClick={(e) => scrollToSection(e, 'contact')} className="hover:text-amber-500 transition-colors">{t('Contact', 'Contact', 'اتصل بنا')}</a>
           </nav>
 
           {/* Actions */}
@@ -152,16 +288,63 @@ export default function CarRentalDemo() {
              <button onClick={() => showToast(t('Login', 'Connexion', 'دخول'))} className="text-xs font-bold tracking-widest uppercase hover:text-amber-500 transition-colors">
                {t('Sign In', 'Se connecter', 'تسجيل الدخول')}
              </button>
+             <button onClick={() => setIsCartOpen(true)} className="relative text-white hover:text-amber-500 transition-colors">
+               <ShoppingCart className="w-5 h-5" />
+               {cart.length > 0 && (
+                 <span className="absolute -top-2 -right-2 bg-amber-500 text-black text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{cart.length}</span>
+               )}
+             </button>
              <button onClick={() => showToast(t('Manage Booking', 'Gérer la réservation', 'إدارة الحجز'))} className="bg-white text-black hover:bg-amber-500 px-5 py-2.5 text-xs font-bold tracking-widest uppercase transition-colors rounded-sm">
                {t('Manage Booking', 'Gérer', 'إدارة الحجز')}
              </button>
           </div>
 
-          {/* Mobile Toggle */}
-          <button className="md:hidden text-white" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-            {isMobileMenuOpen ? <X /> : <Menu />}
-          </button>
+          {/* Mobile Actions */}
+          <div className="flex md:hidden items-center gap-4 text-white">
+            <button onClick={() => setIsCartOpen(true)} className="relative text-white hover:text-amber-500 transition-colors">
+              <ShoppingCart className="w-5 h-5" />
+              {cart.length > 0 && (
+                <span className="absolute -top-2 -right-2 bg-amber-500 text-black text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{cart.length}</span>
+              )}
+            </button>
+            <button
+              onClick={() => {
+                if (lang === 'en') setLang('fr');
+                else if (lang === 'fr') setLang('ar');
+                else setLang('en');
+              }}
+              className="text-[10px] font-bold border border-white/20 w-8 h-8 flex items-center justify-center rounded hover:bg-white/10 hover:text-amber-500 transition-colors"
+            >
+              {lang.toUpperCase()}
+            </button>
+            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+              {isMobileMenuOpen ? <X /> : <Menu />}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Menu Dropdown */}
+        {isMobileMenuOpen && (
+          <div className="absolute top-20 left-0 w-full bg-[#050505] border-b border-white/10 flex flex-col md:hidden z-40 px-6 py-6 animate-in slide-in-from-top-2 shadow-2xl" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+
+            
+            <nav className="flex flex-col gap-6 text-sm font-bold tracking-[0.2em] uppercase text-zinc-300 mb-6 text-center">
+              <a href="#fleet" onClick={(e) => scrollToSection(e, 'fleet')} className="hover:text-amber-500 transition-colors">{t('Fleet', 'Flotte', 'الأسطول')}</a>
+              <a href="#offers" onClick={(e) => scrollToSection(e, 'offers')} className="hover:text-amber-500 transition-colors">{t('Offers', 'Offres', 'العروض')}</a>
+              <a href="#services" onClick={(e) => scrollToSection(e, 'services')} className="hover:text-amber-500 transition-colors">{t('Services', 'Services', 'الخدمات')}</a>
+              <a href="#contact" onClick={(e) => scrollToSection(e, 'contact')} className="hover:text-amber-500 transition-colors">{t('Contact', 'Contact', 'اتصل بنا')}</a>
+            </nav>
+
+            <div className="flex flex-col gap-4 pt-6 border-t border-white/10">
+               <button onClick={() => { showToast(t('Login', 'Connexion', 'دخول')); setIsMobileMenuOpen(false); }} className="text-xs font-bold tracking-widest uppercase hover:text-amber-500 transition-colors text-white text-center pb-2">
+                 {t('Sign In', 'Se connecter', 'تسجيل الدخول')}
+               </button>
+               <button onClick={() => { showToast(t('Manage Booking', 'Gérer la réservation', 'إدارة الحجز')); setIsMobileMenuOpen(false); }} className="bg-white text-black hover:bg-amber-500 px-5 py-3.5 text-xs font-bold tracking-widest uppercase transition-colors rounded-sm text-center">
+                 {t('Manage Booking', 'Gérer', 'إدارة الحجز')}
+               </button>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Hero Section */}
@@ -173,7 +356,7 @@ export default function CarRentalDemo() {
         </div>
         
         <div className="relative z-10 max-w-7xl mx-auto px-6 w-full flex flex-col md:flex-row items-end pb-20 gap-10">
-          <div className="w-full md:w-2/3" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+          <div className="w-full md:w-2/3 animate-fade-in-up" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
              <div className="inline-block bg-amber-500/10 border border-amber-500/20 text-amber-500 px-4 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase mb-6 backdrop-blur-sm">
                {t('Premium Car Rental Service', 'Service de Location Premium', 'خدمة تأجير سيارات متميزة')}
              </div>
@@ -188,7 +371,7 @@ export default function CarRentalDemo() {
       </section>
 
       {/* Booking Widget (Overlapping Hero) */}
-      <section className="relative z-20 max-w-6xl mx-auto px-6 -mt-32 mb-20">
+      <section id="offers" className="relative z-20 max-w-6xl mx-auto px-6 -mt-32 mb-20">
         <div className="bg-[#111] border border-white/10 rounded-xl p-2 shadow-2xl backdrop-blur-md">
           <form className="flex flex-col md:flex-row gap-2" onSubmit={(e) => { e.preventDefault(); document.getElementById('fleet')?.scrollIntoView({ behavior: 'smooth' }); }}>
              <div className="flex-1 bg-[#1a1a1a] rounded-lg p-4 border border-white/5 relative group" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
@@ -197,22 +380,34 @@ export default function CarRentalDemo() {
                </label>
                <div className="flex items-center gap-3 text-white">
                  <MapPin className="w-5 h-5 text-zinc-400 group-hover:text-amber-500 shrink-0" />
-                 <select className="bg-transparent border-none outline-none w-full font-medium text-white cursor-pointer appearance-none truncate [&>option]:bg-[#111] [&>option]:text-white">
-                   <option>{t('Casablanca Airport (CMN)', 'Aéroport Casablanca (CMN)', 'مطار الدار البيضاء (CMN)')}</option>
-                   <option>{t('Marrakech Menara (RAK)', 'Aéroport Marrakech (RAK)', 'مطار مراكش (RAK)')}</option>
-                   <option>{t('Rabat Sale (RBA)', 'Aéroport Rabat (RBA)', 'مطار الرباط (RBA)')}</option>
-                   <option>{t('Agadir Al Massira (AGA)', 'Aéroport Agadir (AGA)', 'مطار أكادير (AGA)')}</option>
+                 <select
+                   value={pickupLocation}
+                   onChange={(e) => setPickupLocation(e.target.value)}
+                   className="bg-transparent border-none outline-none w-full font-medium text-white cursor-pointer appearance-none truncate [&>option]:bg-[#111] [&>option]:text-white"
+                 >
+                   {Object.entries(branches).map(([code, b]) => (
+                     <option key={code} value={code}>{t(b.nameEn, b.nameFr, b.nameAr)}</option>
+                   ))}
                  </select>
+                 <button
+                   type="button"
+                   onClick={locateMe}
+                   title={t('Use my location', 'Utiliser ma position', 'استخدم موقعي')}
+                   className="shrink-0 text-zinc-400 hover:text-amber-500 transition-colors disabled:opacity-50"
+                   disabled={locating}
+                 >
+                   <Navigation className={`w-4 h-4 ${locating ? 'animate-pulse' : ''}`} />
+                 </button>
                </div>
              </div>
-             
+
              <div className="flex-1 bg-[#1a1a1a] rounded-lg p-4 border border-white/5 relative group" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
                <label className="block text-[10px] font-bold tracking-widest text-zinc-500 uppercase mb-2 group-hover:text-amber-500 transition-colors">
                  {t('Pick-up Date & Time', 'Date & Heure Prise', 'تاريخ ووقت الاستلام')}
                </label>
                <div className="flex items-center gap-3 text-white">
                  <Calendar className="w-5 h-5 text-zinc-400 group-hover:text-amber-500 shrink-0" />
-                 <input type="datetime-local" className="bg-transparent border-none outline-none w-full font-medium text-white cursor-pointer [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert" defaultValue={`${new Date().toISOString().split('T')[0]}T10:00`} />
+                 <input type="datetime-local" value={pickupDate} onChange={(e) => setPickupDate(e.target.value)} className="bg-transparent border-none outline-none w-full font-medium text-white cursor-pointer [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert" />
                </div>
              </div>
 
@@ -222,14 +417,35 @@ export default function CarRentalDemo() {
                </label>
                <div className="flex items-center gap-3 text-white">
                  <Calendar className="w-5 h-5 text-zinc-400 group-hover:text-amber-500 shrink-0" />
-                 <input type="datetime-local" className="bg-transparent border-none outline-none w-full font-medium text-white cursor-pointer [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert" defaultValue={`${new Date(Date.now() + 5*24*60*60*1000).toISOString().split('T')[0]}T10:00`} />
+                 <input type="datetime-local" value={dropoffDate} onChange={(e) => setDropoffDate(e.target.value)} className="bg-transparent border-none outline-none w-full font-medium text-white cursor-pointer [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert" />
                </div>
              </div>
 
-             <button type="submit" className="bg-amber-500 hover:bg-amber-400 text-black px-8 py-4 rounded-lg font-bold tracking-widest uppercase transition-colors flex items-center justify-center gap-2 whitespace-nowrap">
+             <button type="submit" className="bg-amber-500 hover:bg-amber-400 text-black px-8 py-4 rounded-lg font-bold tracking-widest uppercase transition-all hover:-translate-y-0.5 shadow-lg shadow-amber-500/10 hover:shadow-amber-500/30 flex items-center justify-center gap-2 whitespace-nowrap">
                <Search className="w-5 h-5" /> {t('Search', 'Rechercher', 'بحث')}
              </button>
           </form>
+
+          {locateError && (
+            <div className="flex items-center gap-2 text-red-400 text-xs font-medium px-4 pb-2 pt-1">
+              <AlertCircle className="w-3.5 h-3.5" /> {locateError}
+            </div>
+          )}
+
+          {userCoords && (
+            <div className="p-2">
+              <div className="rounded-lg overflow-hidden border border-white/5 h-48">
+                <iframe
+                  title="map"
+                  className="w-full h-full grayscale contrast-125 invert-[0.9]"
+                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${userCoords.lng - 0.08}%2C${userCoords.lat - 0.06}%2C${userCoords.lng + 0.08}%2C${userCoords.lat + 0.06}&layer=mapnik&marker=${userCoords.lat}%2C${userCoords.lng}`}
+                />
+              </div>
+              <div className="text-[10px] text-zinc-500 px-2 pt-2 font-medium tracking-wide">
+                {t('Your location', 'Votre position', 'موقعك')}: {userCoords.lat.toFixed(4)}, {userCoords.lng.toFixed(4)} — {t('nearest branch selected above', 'agence la plus proche sélectionnée ci-dessus', 'أقرب فرع محدد أعلاه')}
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -245,14 +461,47 @@ export default function CarRentalDemo() {
           </button>
         </div>
 
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-3 mb-10 text-xs" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+          <div className="flex items-center gap-2 bg-[#111] border border-white/10 rounded-lg px-3 py-2">
+            <Settings className="w-3.5 h-3.5 text-amber-500" />
+            <select value={filterTrans} onChange={(e) => setFilterTrans(e.target.value as any)} className="bg-transparent outline-none font-bold uppercase tracking-wider text-zinc-300 cursor-pointer [&>option]:bg-[#111]">
+              <option value="all">{t('All Transmissions', 'Toutes Transmissions', 'كل ناقل الحركة')}</option>
+              <option value="Auto">{t('Automatic', 'Automatique', 'أوتوماتيك')}</option>
+              <option value="Manual">{t('Manual', 'Manuelle', 'يدوي')}</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-2 bg-[#111] border border-white/10 rounded-lg px-3 py-2">
+            <Fuel className="w-3.5 h-3.5 text-amber-500" />
+            <select value={filterFuel} onChange={(e) => setFilterFuel(e.target.value as any)} className="bg-transparent outline-none font-bold uppercase tracking-wider text-zinc-300 cursor-pointer [&>option]:bg-[#111]">
+              <option value="all">{t('All Fuel Types', 'Tous Carburants', 'كل أنواع الوقود')}</option>
+              <option value="Petrol">{t('Petrol', 'Essence', 'بنزين')}</option>
+              <option value="Diesel">{t('Diesel', 'Diesel', 'ديزل')}</option>
+              <option value="Hybrid">{t('Hybrid', 'Hybride', 'هجين')}</option>
+            </select>
+          </div>
+          <label className="flex items-center gap-2 bg-[#111] border border-white/10 rounded-lg px-3 py-2.5 cursor-pointer select-none">
+            <input type="checkbox" checked={availableOnly} onChange={(e) => setAvailableOnly(e.target.checked)} className="accent-amber-500 w-3.5 h-3.5" />
+            <span className="font-bold uppercase tracking-wider text-zinc-300">{t('Available Only', 'Disponible Seulement', 'المتوفر فقط')}</span>
+          </label>
+          <span className="text-zinc-500 font-medium tracking-wide">
+            {t(`${filteredFleet.length} vehicles`, `${filteredFleet.length} véhicules`, `${filteredFleet.length} سيارات`)}
+          </span>
+        </div>
+
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {fleet.map((car) => (
-            <div key={car.id} className="bg-[#111] border border-white/5 rounded-xl overflow-hidden group hover:border-amber-500/30 transition-all cursor-pointer" onClick={() => { setSelectedCar(car); setCurrentImageIndex(0); }}>
+          {filteredFleet.map((car) => (
+            <div key={car.id} className={`bg-[#111] border border-white/5 rounded-xl overflow-hidden group hover:border-amber-500/30 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/40 transition-all duration-300 cursor-pointer relative ${car.available === false ? 'opacity-60' : ''}`} onClick={() => { setSelectedCar(car); setCurrentImageIndex(0); }}>
               <div className="h-48 relative overflow-hidden bg-black p-6">
                 <img src={car.img} alt={car.name} className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-100" />
                 <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded text-[10px] font-bold tracking-wider uppercase text-zinc-300">
-                  {car.type}
+                  {t(car.typeEn, car.typeFr, car.typeAr)}
                 </div>
+                {car.available === false && (
+                  <div className="absolute top-4 left-4 bg-red-500/90 backdrop-blur-md px-3 py-1 rounded text-[10px] font-bold tracking-wider uppercase text-white">
+                    {t('Unavailable', 'Indisponible', 'غير متوفر')}
+                  </div>
+                )}
               </div>
               <div className="p-6">
                 <h4 className="font-bold text-lg mb-1 truncate">{car.name}</h4>
@@ -260,7 +509,7 @@ export default function CarRentalDemo() {
                   <span className="text-amber-500 font-bold text-2xl leading-none">{car.price}</span>
                   <span className="text-zinc-500 text-xs font-medium">/ day</span>
                 </div>
-                
+
                 <div className="flex justify-between text-zinc-400 mb-4 pb-4 border-b border-white/5">
                   <div className="flex flex-col items-center gap-1.5" title="Seats">
                     <Users className="w-4 h-4" />
@@ -277,10 +526,10 @@ export default function CarRentalDemo() {
                 </div>
 
                 <div className="text-[9px] text-zinc-400 mb-4 pb-4 border-b border-white/5 flex justify-center gap-2 font-medium tracking-wide">
-                   <span><span className="text-zinc-600">{t('Fuel', 'Carburant', 'الوقود')}:</span> {t(car.specs.fuelEn, car.specs.fuelFr, car.specs.fuelAr)}</span> <span className="text-zinc-700">|</span> 
+                   <span><span className="text-zinc-600">{t('Fuel', 'Carburant', 'الوقود')}:</span> {t(car.specs.fuelEn, car.specs.fuelFr, car.specs.fuelAr)}</span> <span className="text-zinc-700">|</span>
                    <span><span className="text-zinc-600">{t('A/C', 'Clim', 'مكيف')}:</span> {car.specs.ac ? t('Yes','Oui','نعم') : t('No','Non','لا')}</span>
                 </div>
-                
+
                 <div className="grid grid-cols-3 gap-1 mb-6 text-center">
                    <div className="bg-white/5 p-1.5 rounded border border-white/5">
                       <div className="text-[8px] text-zinc-500 uppercase tracking-widest mb-0.5" dir={lang === 'ar' ? 'rtl' : 'ltr'}>{t('3-7 Days','3 À 7 JR','من 3 إلى 7 أيام')}</div>
@@ -296,17 +545,26 @@ export default function CarRentalDemo() {
                    </div>
                 </div>
 
-                <button className="w-full bg-white/5 hover:bg-amber-500 text-white hover:text-black py-3 rounded text-xs font-bold tracking-widest uppercase transition-colors">
-                  {t('Reserve Now', 'Réserver', 'احجز الآن')}
+                <button
+                  onClick={(e) => { e.stopPropagation(); addToCart(car); }}
+                  disabled={car.available === false}
+                  className="w-full bg-white/5 hover:bg-amber-500 disabled:hover:bg-white/5 disabled:cursor-not-allowed text-white hover:text-black disabled:text-zinc-500 py-3 rounded text-xs font-bold tracking-widest uppercase transition-colors"
+                >
+                  {car.available === false ? t('Not Available', 'Indisponible', 'غير متوفر') : t('Reserve Now', 'Réserver', 'احجز الآن')}
                 </button>
               </div>
             </div>
           ))}
+          {filteredFleet.length === 0 && (
+            <div className="col-span-full text-center py-16 text-zinc-500 text-sm font-medium">
+              {t('No vehicles match your filters.', 'Aucun véhicule ne correspond à vos filtres.', 'لا توجد سيارات مطابقة لعوامل التصفية.')}
+            </div>
+          )}
         </div>
       </section>
 
       {/* Why Choose Us */}
-      <section className="py-20 bg-[#111] border-y border-white/5">
+      <section id="services" className="py-20 bg-[#111] border-y border-white/5">
         <div className="max-w-7xl mx-auto px-6 text-center" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
           <h3 className="text-amber-500 text-[10px] font-bold tracking-widest uppercase mb-2">{t('The LuxeDrive Experience', 'L\'Expérience LuxeDrive', 'تجربة لوكس درايف')}</h3>
           <h2 className="text-3xl font-black uppercase tracking-tight mb-16">{t('Why Choose Us', 'Pourquoi Nous Choisir', 'لماذا تختارنا')}</h2>
@@ -344,7 +602,7 @@ export default function CarRentalDemo() {
       </section>
 
       {/* Footer */}
-      <footer className="pt-20 pb-10 max-w-7xl mx-auto px-6" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+      <footer id="contact" className="pt-20 pb-10 max-w-7xl mx-auto px-6" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
         <div className="grid md:grid-cols-4 gap-12 mb-16 border-b border-white/5 pb-16">
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-6">
@@ -492,10 +750,86 @@ export default function CarRentalDemo() {
                    <span><span className="text-zinc-600">{t('A/C', 'Climatisé', 'مكيف')}:</span> <span className="text-white">{selectedCar.specs.ac ? t('Yes','Oui','نعم') : t('No','Non','لا')}</span></span>
                 </div>
 
-                <button onClick={() => { setSelectedCar(null); showToast(t(`Reservation started for ${selectedCar.name}`, `Réservation commencée pour ${selectedCar.name}`, `بدأ الحجز لـ ${selectedCar.name}`)); }} className="w-full bg-amber-500 hover:bg-amber-400 text-black py-4 font-bold tracking-widest uppercase transition-colors rounded-lg flex items-center justify-center gap-2">
+                {selectedCar.available === false && (
+                  <div className="flex items-center gap-2 text-red-400 text-xs font-bold mb-3 justify-center">
+                    <AlertCircle className="w-4 h-4" /> {t('Not available for the selected dates', 'Non disponible pour ces dates', 'غير متوفر في هذه التواريخ')}
+                  </div>
+                )}
+                <button
+                  onClick={() => { addToCart(selectedCar); setSelectedCar(null); }}
+                  disabled={selectedCar.available === false}
+                  className="w-full bg-amber-500 hover:bg-amber-400 disabled:bg-white/10 disabled:text-zinc-500 disabled:cursor-not-allowed text-black py-4 font-bold tracking-widest uppercase transition-colors rounded-lg flex items-center justify-center gap-2"
+                >
                   <Calendar className="w-5 h-5" /> {t('Book This Vehicle', 'Réserver ce véhicule', 'احجز هذه السيارة')}
                 </button>
              </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cart Sidebar */}
+      {isCartOpen && (
+        <div className="fixed inset-0 z-[250] flex justify-end">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsCartOpen(false)}></div>
+          <div className="relative z-10 w-full max-w-md h-full bg-[#111] border-l border-white/10 flex flex-col shadow-2xl animate-in slide-in-from-right" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+            <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
+              <h3 className="font-bold uppercase tracking-widest text-sm flex items-center gap-2">
+                <ShoppingCart className="w-4 h-4 text-amber-500" /> {t('Your Reservations', 'Vos Réservations', 'حجوزاتك')}
+              </h3>
+              <button onClick={() => setIsCartOpen(false)} className="text-zinc-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              {cart.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-center text-zinc-500 gap-3">
+                  <ShoppingCart className="w-10 h-10 opacity-30" />
+                  <p className="text-sm font-medium">{t('No vehicles reserved yet.', 'Aucun véhicule réservé.', 'لا توجد سيارات محجوزة بعد.')}</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {cart.map((item) => (
+                    <div key={item.cartId} className="bg-[#1a1a1a] border border-white/5 rounded-lg p-4 flex gap-4">
+                      <img src={item.car.img} alt={item.car.name} className="w-20 h-16 object-cover rounded-md shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <h4 className="font-bold text-sm truncate">{item.car.name}</h4>
+                          <button onClick={() => removeFromCart(item.cartId)} className="text-zinc-500 hover:text-red-400 shrink-0">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <div className="text-[10px] text-zinc-500 mt-1 flex items-center gap-1">
+                          <MapPin className="w-3 h-3" /> {t(branches[item.pickupLocation].nameEn, branches[item.pickupLocation].nameFr, branches[item.pickupLocation].nameAr)}
+                        </div>
+                        <div className="text-[10px] text-zinc-500 mt-1 flex items-center gap-1">
+                          <Calendar className="w-3 h-3" /> {new Date(item.pickupDate).toLocaleString()} → {new Date(item.dropoffDate).toLocaleString()}
+                        </div>
+                        <div className="flex items-center justify-between mt-2">
+                          <span className="text-[10px] text-zinc-500 font-medium">{item.days} {t('day(s)', 'jour(s)', 'يوم/أيام')}</span>
+                          <span className="text-amber-500 font-bold text-sm">${(item.pricePerDay * item.days).toFixed(0)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {cart.length > 0 && (
+              <div className="px-6 py-5 border-t border-white/10">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">{t('Total', 'Total', 'المجموع')}</span>
+                  <span className="text-2xl font-black text-amber-500">${cartTotal.toFixed(0)}</span>
+                </div>
+                <button
+                  onClick={() => { setCart([]); setIsCartOpen(false); showToast(t('Booking confirmed! Check your email for details.', 'Réservation confirmée ! Consultez votre email.', 'تم تأكيد الحجز! تحقق من بريدك الإلكتروني.')); }}
+                  className="w-full bg-amber-500 hover:bg-amber-400 text-black py-4 font-bold tracking-widest uppercase transition-colors rounded-lg flex items-center justify-center gap-2"
+                >
+                  <CheckCircle2 className="w-5 h-5" /> {t('Confirm Booking', 'Confirmer la Réservation', 'تأكيد الحجز')}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

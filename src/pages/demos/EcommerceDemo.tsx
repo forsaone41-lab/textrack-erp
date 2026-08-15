@@ -83,6 +83,54 @@ const THEME_CONFIGS: Record<string, any> = {
       { name: 'Luxury Chiffon Wrap', price: '$145.00', img: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600' }
     ]
   },
+  'iptv': {
+    name: 'STREAM BOX MA',
+    colors: { bg: 'bg-[#0b0b14]', text: 'text-slate-100', primary: 'bg-violet-600 text-white hover:bg-violet-700', accent: 'text-violet-400', border: 'border-violet-900/40' },
+    hero: {
+      image: 'https://images.unsplash.com/photo-1546027658-7aa750153465?q=80&w=2000&auto=format&fit=crop',
+      title: 'Le Divertissement Sans Limites',
+      subtitle: 'Abonnements IPTV HD/4K et boxes Android TV. Des milliers de chaînes, films et séries livrés en quelques minutes.',
+      btn: 'Voir les Offres'
+    },
+    products: [
+      { name: 'IPTV 1 Mois HD', price: '79 MAD', img: 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?q=80&w=600', badge: 'Populaire' },
+      { name: 'IPTV 12 Mois 4K', price: '499 MAD', img: 'https://images.unsplash.com/photo-1567690187548-f07b1d7bf5a9?q=80&w=600', badge: 'Meilleur Prix' },
+      { name: 'Box Android TV 4K', price: '450 MAD', img: 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?q=80&w=600' },
+      { name: 'Récepteur HD Satellite', price: '350 MAD', img: 'https://images.unsplash.com/photo-1461151304267-38535e780c79?q=80&w=600' }
+    ]
+  },
+  'lingerie': {
+    name: 'SILK & LACE',
+    colors: { bg: 'bg-[#fdfaf6]', text: 'text-stone-800', primary: 'bg-[#b69485] text-white hover:bg-[#a68273]', accent: 'text-[#b69485]', border: 'border-[#e8e0d5]' },
+    hero: {
+      image: '/demo-assets/lingerie/lingerie_hero_1786817080033.png',
+      title: 'Comfort. Elegance. You.',
+      subtitle: 'Our premium collection of sleepwear and intimate apparel, designed to elevate your evenings.',
+      btn: 'Discover the Collection'
+    },
+    products: [
+      { name: 'Delicate Lace Set', price: '$65.00', img: '/demo-assets/lingerie/lingerie_p1_1786817088110.png', badge: 'New' },
+      { name: 'Silk Nightgown', price: '$55.00', img: '/demo-assets/lingerie/lingerie_p2_1786817096661.png' },
+      { name: 'Emerald Silk Robe', price: '$89.00', img: '/demo-assets/lingerie/lingerie_p3_1786817105561.png', badge: 'Best Seller' },
+      { name: 'Cozy Cotton Pajamas', price: '$45.00', img: '/demo-assets/lingerie/lingerie_p4_1786817114656.png' }
+    ]
+  },
+  'jalaba-caftan': {
+    name: 'DAR CAFTAN',
+    colors: { bg: 'bg-[#0f1f1a]', text: 'text-amber-50', primary: 'bg-emerald-700 text-white hover:bg-emerald-800', accent: 'text-amber-400', border: 'border-emerald-900/40' },
+    hero: {
+      image: '/demo-assets/jalaba-caftan/moroccan_caftan_hero_1786817002711.png',
+      title: "L'Élégance Marocaine",
+      subtitle: 'Caftans et jalabas artisanaux, brodés à la main, pour toutes vos occasions et fêtes.',
+      btn: 'Voir la Collection'
+    },
+    products: [
+      { name: 'Caftan Brodé Royal', price: '950 MAD', img: '/demo-assets/jalaba-caftan/caftan_royal_1786817018583.png', badge: 'Fait Main' },
+      { name: 'Jalaba Homme Classique', price: '450 MAD', img: '/demo-assets/jalaba-caftan/jalaba_homme_1786817027878.png' },
+      { name: 'Takchita de Fête', price: '1800 MAD', img: '/demo-assets/jalaba-caftan/takchita_mariage_1786817037077.png', badge: 'Mariage' },
+      { name: 'Jalaba Femme Casual', price: '380 MAD', img: '/demo-assets/jalaba-caftan/jalaba_femme_1786817045955.png' }
+    ]
+  },
   'dentist': {
     name: 'SMILE CLINIC',
     colors: { bg: 'bg-white', text: 'text-slate-800', primary: 'bg-blue-600 text-white hover:bg-blue-700', accent: 'text-blue-500', border: 'border-blue-100' },
@@ -149,10 +197,10 @@ export default function EcommerceDemo() {
               <img src={theme.hero.image} alt="Hero" className="w-full h-full object-cover scale-105" />
               <div className="absolute inset-0 bg-black/40" />
             </div>
-            <div className="relative z-10 text-center text-white max-w-3xl px-6">
+            <div className="relative z-10 text-center text-white max-w-3xl px-6 animate-fade-in-up">
               <h1 className="text-5xl md:text-7xl font-black mb-6 tracking-tight leading-tight">{theme.hero.title}</h1>
               <p className="text-lg md:text-xl mb-10 opacity-90">{theme.hero.subtitle}</p>
-              <button onClick={() => setActivePage('shop')} className={`${theme.colors.primary} px-8 py-4 rounded-full font-bold tracking-wide uppercase transition-all transform hover:scale-105 shadow-2xl`}>
+              <button onClick={() => setActivePage('shop')} className={`${theme.colors.primary} px-8 py-4 rounded-full font-bold tracking-wide uppercase transition-all transform hover:scale-105 hover:-translate-y-0.5 shadow-2xl`}>
                 {theme.hero.btn}
               </button>
             </div>
@@ -172,7 +220,7 @@ export default function EcommerceDemo() {
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               {theme.products.map((product: any, idx: number) => (
-                <div key={idx} className="group cursor-pointer" onClick={() => { setActiveProduct(product); setActivePage('product'); }}>
+                <div key={idx} className="group cursor-pointer transition-transform duration-300 hover:-translate-y-1" onClick={() => { setActiveProduct(product); setActivePage('product'); }}>
                   <div className="relative aspect-[3/4] overflow-hidden rounded-lg mb-4 bg-gray-100">
                     <img src={product.img} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                     {product.badge && (
@@ -198,7 +246,7 @@ export default function EcommerceDemo() {
           <h1 className="text-4xl font-black mb-12">All Products</h1>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {[...theme.products, ...theme.products].map((product: any, idx: number) => (
-              <div key={idx} className="group cursor-pointer" onClick={() => { setActiveProduct(product); setActivePage('product'); }}>
+              <div key={idx} className="group cursor-pointer transition-transform duration-300 hover:-translate-y-1" onClick={() => { setActiveProduct(product); setActivePage('product'); }}>
                 <div className="relative aspect-[3/4] overflow-hidden rounded-lg mb-4 bg-gray-100">
                   <img src={product.img} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                   <button className={`absolute bottom-0 inset-x-0 py-4 ${theme.colors.primary} font-bold opacity-0 group-hover:opacity-100 transition-opacity flex justify-center items-center gap-2`}>

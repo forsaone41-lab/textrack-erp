@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowRight, CheckCircle2, PlayCircle, Star, Rocket, Layout, Globe, Smartphone, ShieldCheck, Clock, Eye, X, ExternalLink } from 'lucide-react';
+import { ArrowRight, CheckCircle2, PlayCircle, Star, Rocket, Layout, Globe, Smartphone, ShieldCheck, Clock, Eye, X, ExternalLink, Phone, Tv, Shirt, Gem } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { Link, useLocation } from 'react-router-dom';
 import { loadCompanyProfile } from '../types';
@@ -140,43 +140,120 @@ export default function SetupLanding() {
           
           <h1 className={`font-black text-slate-900 tracking-tight mb-6 ${isAr ? 'text-4xl md:text-5xl leading-[1.4]' : 'text-5xl md:text-6xl leading-[1.1]'}`}>
             {isAr ? (
-              <>ماعندكش مع التقنية؟ <br/><span className="text-amber-500">حنا نصاوبو ليك متجرك من الألف للياء.</span></>
+              <>تهنا من صداع الراس، <br/><span className="text-amber-500">حنا نقادو ليك السيت ولا المتجر من الألف للياء.</span></>
             ) : (
-              <>Pas de compétences techniques ? <br/><span className="text-amber-500">Nous créons votre boutique de A à Z.</span></>
+              <>Fini les casse-têtes techniques ! <br/><span className="text-amber-500">Nous créons votre site de A à Z.</span></>
             )}
           </h1>
           
-          <p className="text-lg md:text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-slate-600 mb-12 max-w-2xl mx-auto leading-relaxed">
             {isAr 
-              ? 'وفر وقتك ومجهودك. فريقنا المتخصص غادي يتكلف بكلشي: من التصميم الاحترافي حتى لربط الدومين وتطبيقات المبيعات. استلم بيزنس جاهز للعمل 100% بـ 699 درهم فقط.'
-              : 'Gagnez du temps. Notre équipe s\'occupe de tout : du design professionnel à la configuration du domaine et des applications de vente. Recevez un business clé en main pour 699 MAD.'}
+              ? 'استلم مشروعك واجد 100% وبأقل ثمن فالسوق. بلا متقلب على مبرمجين يضيعو ليك الوقت والفلوس. (مواقع احترافية ومتاجر جاهزة للبيع).'
+              : 'Recevez votre projet clé en main au meilleur prix du marché. Ne perdez plus de temps et d\'argent avec des développeurs.'}
           </p>
           
-          <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-200 shadow-xl max-w-2xl mx-auto mb-12 transform hover:scale-[1.02] transition-transform">
-            <div className="flex flex-col items-center pb-6 border-b border-slate-100 mb-6">
-              <span className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'تكلفة الإعداد تدفع مرة واحدة' : 'Frais de setup (Paiement unique)'}</span>
-              <div className="flex items-baseline gap-2 text-slate-900">
-                <span className="text-6xl font-black tracking-tighter">699</span>
-                <span className="text-xl font-bold">MAD</span>
-              </div>
-              <p className="text-emerald-600 font-bold text-sm mt-3 bg-emerald-50 px-4 py-1.5 rounded-full">
-                {isAr ? 'الاشتراك الشهري (199 MAD) كيبدا حتى كتجيب أول مبيعة!' : 'L\'abonnement (199 MAD) ne commence qu\'après votre 1ère vente !'}
-              </p>
-            </div>
+          <div className={`grid md:grid-cols-3 gap-6 max-w-6xl mx-auto mb-12 ${isAr ? 'text-right' : 'text-left'}`}>
             
-            <div className="flex flex-col sm:flex-row gap-3">
-              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black text-xl transition-all shadow-lg hover:shadow-xl hover:bg-slate-800 flex items-center justify-center gap-3">
-                {isAr ? 'احجز متجرك الآن' : 'Réservez votre boutique'}
-                <ArrowRight className={`w-6 h-6 ${isAr ? 'rotate-180' : ''}`} />
-              </a>
-              <button 
-                onClick={() => document.getElementById('themes-section')?.scrollIntoView({ behavior: 'smooth' })}
-                className="w-full sm:w-auto px-6 py-4 bg-slate-100 text-slate-700 rounded-2xl font-bold text-lg hover:bg-slate-200 transition-colors flex items-center justify-center gap-2"
-              >
-                <Eye className="w-5 h-5" />
-                {isAr ? 'شوف أمثلة المتاجر' : 'Voir les modèles'}
-              </button>
+            {/* Site Professionnel Pricing Box */}
+            <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-200 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden flex flex-col h-full">
+               <div className={`absolute top-0 ${isAr ? 'left-0 rounded-br-xl' : 'right-0 rounded-bl-xl'} bg-blue-500 text-white px-4 py-1 font-bold text-xs`}>
+                 {isAr ? 'للخدمات والشركات' : 'Services & Entreprises'}
+               </div>
+               <h3 className="text-2xl font-black text-slate-900 mb-2 mt-4">{isAr ? 'الباك الاقتصادي' : 'Pack Essentiel'}</h3>
+               <p className="text-sm text-slate-500 mb-6 flex-1">{isAr ? 'بان قدام الكليان ديالك بحرفية. موقع واجد باش يتواصلو معاك. (خلص مرة وحدة وتهنا).' : 'Site vitrine pro pour présenter vos services et gagner la confiance. (Paiement unique).'}</p>
+               
+               <div className="flex flex-col mb-1">
+                 <span className="text-sm text-slate-400 line-through font-bold">{isAr ? '1500 MAD' : '1500 MAD'}</span>
+                 <div className="flex items-baseline gap-2 text-slate-900">
+                   <span className="text-5xl font-black tracking-tighter">499</span>
+                   <span className="text-lg font-bold">MAD</span>
+                 </div>
+               </div>
+               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{isAr ? 'تكلفة الإعداد (تدفع مرة واحدة)' : 'Frais de Création (Unique)'}</span>
+               
+               <div className="mt-4 bg-blue-50 p-3 rounded-lg border border-blue-100 text-center">
+                 <p className="text-blue-800 font-bold text-xs leading-relaxed">
+                   {isAr ? 'كراء السيرفور والدومين بـ 399 درهم/سنة فقط. (أرخص من قهوة).' : 'Abonnement (399 MAD/an) incluant l\'hébergement et le domaine.'}
+                 </p>
+               </div>
+               
+               <div className="mt-6 flex flex-col gap-3">
+                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2 shadow-md">
+                   {isAr ? 'احجز موقعك' : 'Commander le Site'}
+                 </a>
+                 <button onClick={() => document.getElementById('themes-section')?.scrollIntoView({ behavior: 'smooth' })} className="w-full py-3 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl font-bold transition-colors text-sm">
+                   {isAr ? 'شوف الأمثلة' : 'Voir les modèles'}
+                 </button>
+               </div>
             </div>
+
+            {/* VIP Corporate Site Box */}
+            <div className="bg-slate-900 p-6 md:p-8 rounded-[2rem] border border-slate-800 shadow-2xl hover:shadow-emerald-900/50 transition-shadow relative overflow-hidden flex flex-col h-full md:-translate-y-6">
+               <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/20 to-transparent"></div>
+               <div className={`absolute top-0 ${isAr ? 'left-0 rounded-br-xl' : 'right-0 rounded-bl-xl'} bg-emerald-500 text-slate-900 px-4 py-1 font-bold text-xs z-10`}>
+                 {isAr ? 'للشركات والعيادات (VIP)' : 'Corporate & Cliniques (VIP)'}
+               </div>
+               <h3 className="text-2xl font-black text-white mb-2 mt-4 relative z-10">{isAr ? 'باك الشركات (VIP)' : 'Pack Corporate VIP'}</h3>
+               <p className="text-sm text-slate-400 mb-6 flex-1 relative z-10">{isAr ? 'بغيتي تبان واعر على المنافسين ديالك؟ تصميم فخم كيعطي هيبة للبراند ديالك.' : 'Design ultra-premium pour asseoir votre autorité et dominer la concurrence.'}</p>
+               
+               <div className="flex flex-col mb-1 relative z-10">
+                 <span className="text-sm text-slate-500 line-through font-bold">{isAr ? '7000 MAD' : '7000 MAD'}</span>
+                 <div className="flex items-baseline gap-2 text-white">
+                   <span className="text-5xl font-black tracking-tighter">2999</span>
+                   <span className="text-lg font-bold text-emerald-500">MAD</span>
+                 </div>
+               </div>
+               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest relative z-10">{isAr ? 'تكلفة الإعداد (تدفع مرة واحدة)' : 'Frais de Création (Unique)'}</span>
+               
+               <div className="mt-4 bg-emerald-900/30 p-3 rounded-lg border border-emerald-800/50 text-center relative z-10">
+                 <p className="text-emerald-400 font-bold text-xs leading-relaxed">
+                   {isAr ? 'سيرفور طيارة ومصاريف الصيانة بـ 999 درهم/سنة. (تهنا من المشاكل).' : 'Serveur ultra-rapide et maintenance à 999 MAD/an. (Tranquillité totale).'}
+                 </p>
+               </div>
+
+               <div className="mt-6 flex flex-col gap-3 relative z-10">
+                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-slate-900 rounded-xl font-black transition-colors flex items-center justify-center gap-2 shadow-lg">
+                   {isAr ? 'احجز موقع VIP' : 'Commander Site VIP'}
+                 </a>
+                 <button onClick={() => document.getElementById('themes-section')?.scrollIntoView({ behavior: 'smooth' })} className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition-colors text-sm">
+                   {isAr ? 'شوف الأمثلة' : 'Voir les modèles'}
+                 </button>
+               </div>
+            </div>
+
+            {/* E-commerce Store Pricing Box */}
+            <div className="bg-white p-6 md:p-8 rounded-[2rem] border-2 border-amber-500 shadow-xl hover:shadow-2xl transition-shadow relative overflow-hidden flex flex-col h-full md:-translate-y-2">
+               <div className={`absolute top-0 ${isAr ? 'left-0 rounded-br-xl' : 'right-0 rounded-bl-xl'} bg-amber-500 text-slate-900 px-4 py-1 font-bold text-xs`}>
+                 {isAr ? 'لبيع المنتجات (E-commerce)' : 'Pour l\'E-commerce'}
+               </div>
+               <h3 className="text-2xl font-black text-slate-900 mb-2 mt-4">{isAr ? 'متجر إلكتروني' : 'Boutique E-commerce'}</h3>
+               <p className="text-sm text-slate-500 mb-6 flex-1">{isAr ? 'متجر واجد للبيع. تطبيقات احترافية باش تضاعف المبيعات ديالك بلا صداع.' : 'Boutique prête à vendre. Apps pros pour booster vos ventes sans soucis.'}</p>
+               
+               <div className="flex flex-col mb-1">
+                 <span className="text-sm text-slate-400 line-through font-bold">{isAr ? '2500 MAD' : '2500 MAD'}</span>
+                 <div className="flex items-baseline gap-2 text-slate-900">
+                   <span className="text-5xl font-black tracking-tighter">699</span>
+                   <span className="text-lg font-bold">MAD</span>
+                 </div>
+               </div>
+               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{isAr ? 'تكلفة الإعداد (تدفع مرة واحدة)' : 'Frais de Setup (Unique)'}</span>
+               
+               <div className="mt-4 bg-amber-50 p-3 rounded-lg border border-amber-100 text-center">
+                 <p className="text-amber-800 font-bold text-xs leading-relaxed">
+                   {isAr ? 'كراء السيرفور (199 درهم/شهر) متبدا تخلصو حتى تدخل أول مبيعة! (ماعندك ماتخسر).' : 'Abonnement (199 MAD) ne commence qu\'après votre 1ère vente !'}
+                 </p>
+               </div>
+
+               <div className="mt-6 flex flex-col gap-3">
+                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-black transition-colors flex items-center justify-center gap-2 shadow-lg">
+                   {isAr ? 'احجز متجرك' : 'Commander la Boutique'}
+                 </a>
+                 <button onClick={() => document.getElementById('themes-section')?.scrollIntoView({ behavior: 'smooth' })} className="w-full py-3 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl font-bold transition-colors text-sm">
+                   {isAr ? 'شوف الأمثلة' : 'Voir les modèles'}
+                 </button>
+               </div>
+            </div>
+
           </div>
         </div>
       </main>
@@ -230,17 +307,17 @@ export default function SetupLanding() {
       <section className="py-16 bg-slate-50 border-b border-slate-100">
         <div className="max-w-4xl mx-auto px-6">
           <h2 className="text-3xl font-black text-center mb-12">
-            {isAr ? 'شنو داخل فهاد 699 درهم؟' : 'Que comprend ce service ?'}
+            {isAr ? 'شنو كتستفد ملي كتصاوب السيت ديالك معانا؟' : 'Que comprennent nos packs ?'}
           </h2>
           
           <div className="grid sm:grid-cols-2 gap-6">
             {[
-              { icon: Globe, title: isAr ? 'دومين احترافي (.com)' : 'Nom de domaine (.com)', desc: isAr ? 'نشريو ونربطو ليك دومين باسم علامتك التجارية' : 'Achat et configuration de votre domaine' },
-              { icon: Layout, title: isAr ? 'تصميم حصري ومميز' : 'Design exclusif', desc: isAr ? 'متجر متناسق مع ألوانك ومصمم لزيادة المبيعات' : 'Boutique optimisée pour les conversions' },
-              { icon: Smartphone, title: isAr ? 'تطبيقات الـ Upsell' : 'Apps de Upsell', desc: isAr ? 'إعداد إضافات تزيد من قيمة الطلب الأوتوماتيكية' : 'Configuration des apps pour augmenter le panier' },
-              { icon: ShieldCheck, title: isAr ? 'دعم فني مستمر' : 'Support technique', desc: isAr ? 'فريقنا معاك خطوة بخطوة باش يجاوب على أسئلتك' : 'Notre équipe vous accompagne pour répondre à vos questions' },
+              { icon: Globe, title: isAr ? 'دومين احترافي (.com / .net)' : 'Domaine professionnel', desc: isAr ? 'نشريو ونربطو ليك دومين باسم علامتك التجارية' : 'Achat et configuration de votre domaine' },
+              { icon: Layout, title: isAr ? 'تصميم فخم ومتجاوب' : 'Design Premium & Responsive', desc: isAr ? 'تصميم كيجاوب مع التليفون ومصمم لزيادة الثقة والمبيعات' : 'Design optimisé pour mobile et conversions' },
+              { icon: Smartphone, title: isAr ? 'تطبيقات لزيادة المبيعات' : 'Apps de Ventes', desc: isAr ? 'إعداد إضافات تزيد من قيمة الطلب وتسهل التواصل' : 'Configuration des apps pour booster vos commandes' },
+              { icon: ShieldCheck, title: isAr ? 'دعم فني مستمر' : 'Support technique continu', desc: isAr ? 'فريقنا معاك خطوة بخطوة طول العام باش يجاوب على أسئلتك' : 'Notre équipe vous accompagne toute l\'année' },
             ].map((feature, i) => (
-              <div key={i} className="flex gap-4 p-6 bg-slate-50 rounded-2xl border border-slate-100">
+              <div key={i} className="flex gap-4 p-6 bg-white rounded-2xl border border-slate-200 shadow-sm">
                 <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center shrink-0">
                   <feature.icon className="w-6 h-6" />
                 </div>
@@ -385,8 +462,89 @@ export default function SetupLanding() {
                 </button>
               </div>
             </div>
+
+            {/* Theme 7 (Digital Products / IPTV) */}
+            <div
+              onClick={() => setPreviewTheme({ name: isAr ? 'منتجات رقمية' : 'STREAM BOX MA', image: 'https://images.unsplash.com/photo-1546027658-7aa750153465?q=80&w=600&auto=format&fit=crop', url: window.location.origin + '/#/demo/ecommerce/iptv' })}
+              className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
+            >
+              <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
+                <img src="https://images.unsplash.com/photo-1546027658-7aa750153465?q=80&w=600&auto=format&fit=crop" className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" alt="Theme IPTV Digital Products" />
+                <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center backdrop-blur-none group-hover:backdrop-blur-[2px]">
+                   <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-xl">
+                      <Eye className="w-5 h-5" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                   </div>
+                </div>
+                <div className="absolute top-4 left-4 bg-violet-600 text-white p-2 rounded-full shadow-sm">
+                  <Tv className="w-4 h-4" />
+                </div>
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-xs font-black px-3 py-1.5 rounded-full shadow-sm text-slate-800 uppercase">
+                  {isAr ? 'منتجات رقمية' : 'STREAM BOX MA'}
+                </div>
+              </div>
+              <div className="p-4 flex flex-col items-center gap-3">
+                <h3 className="font-bold text-slate-800 text-lg">{isAr ? 'منتجات رقمية' : 'STREAM BOX MA'} <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
+                <button className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 border border-slate-200">
+                  <Eye className="w-4 h-4" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                </button>
+              </div>
+            </div>
+
+            {/* Theme 8 (Lingerie / Underwear & Accessories) */}
+            <div
+              onClick={() => setPreviewTheme({ name: isAr ? 'ملابس حريرية' : 'SILK & LACE', image: '/demo-assets/lingerie/lingerie_hero_1786817080033.png', url: window.location.origin + '/#/demo/ecommerce/lingerie' })}
+              className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
+            >
+              <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
+                <img src="/demo-assets/lingerie/lingerie_hero_1786817080033.png" className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" alt="Theme Lingerie" />
+                <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center backdrop-blur-none group-hover:backdrop-blur-[2px]">
+                   <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-xl">
+                      <Eye className="w-5 h-5" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                   </div>
+                </div>
+                <div className="absolute top-4 left-4 bg-stone-600 text-white p-2 rounded-full shadow-sm">
+                  <Gem className="w-4 h-4" />
+                </div>
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-xs font-black px-3 py-1.5 rounded-full shadow-sm text-slate-800 uppercase">
+                  {isAr ? 'ملابس حريرية' : 'SILK & LACE'}
+                </div>
+              </div>
+              <div className="p-4 flex flex-col items-center gap-3">
+                <h3 className="font-bold text-slate-800 text-lg">{isAr ? 'ملابس حريرية' : 'SILK & LACE'} <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
+                <button className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 border border-slate-200">
+                  <Eye className="w-4 h-4" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                </button>
+              </div>
+            </div>
+
+            {/* Theme 9 (Jalaba & Caftan Marocain) */}
+            <div
+              onClick={() => setPreviewTheme({ name: isAr ? 'جلابة وقفطان' : 'DAR CAFTAN', image: '/demo-assets/jalaba-caftan/moroccan_caftan_hero_1786817002711.png', url: window.location.origin + '/#/demo/ecommerce/jalaba-caftan' })}
+              className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
+            >
+              <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
+                <img src="/demo-assets/jalaba-caftan/moroccan_caftan_hero_1786817002711.png" className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" alt="Theme Jalaba Caftan" />
+                <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center backdrop-blur-none group-hover:backdrop-blur-[2px]">
+                   <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-xl">
+                      <Eye className="w-5 h-5" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                   </div>
+                </div>
+                <div className="absolute top-4 left-4 bg-emerald-700 text-white p-2 rounded-full shadow-sm">
+                  <Shirt className="w-4 h-4" />
+                </div>
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-xs font-black px-3 py-1.5 rounded-full shadow-sm text-slate-800 uppercase">
+                  {isAr ? 'جلابة وقفطان' : 'DAR CAFTAN'}
+                </div>
+              </div>
+              <div className="p-4 flex flex-col items-center gap-3">
+                <h3 className="font-bold text-slate-800 text-lg">{isAr ? 'جلابة وقفطان' : 'DAR CAFTAN'} <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
+                <button className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 border border-slate-200">
+                  <Eye className="w-4 h-4" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                </button>
+              </div>
+            </div>
           </div>
-          
+
 
           {/* Services Section */}
           <div className="mt-16 mb-8 flex items-center gap-3">
@@ -468,6 +626,126 @@ export default function SetupLanding() {
               </div>
             </div>
 
+            {/* Service 4 (Home Services Pro) */}
+            <div 
+              onClick={() => setPreviewTheme({ name: isAr ? 'خدمات منزلية' : 'FIXIT MAROC', image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=800&auto=format&fit=crop', url: window.location.origin + '/#/demo/service-pro' })}
+              className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
+            >
+              <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
+                <img src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=800&auto=format&fit=crop" className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" alt="Theme Home Services" />
+                <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center backdrop-blur-none group-hover:backdrop-blur-[2px]">
+                   <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-xl">
+                      <Eye className="w-5 h-5" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                   </div>
+                </div>
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-xs font-black px-3 py-1.5 rounded-full shadow-sm text-slate-800 uppercase">
+                  {isAr ? 'خدمات منزلية' : 'FIXIT MAROC'}
+                </div>
+              </div>
+              <div className="p-4 flex flex-col items-center gap-3">
+                <h3 className="font-bold text-slate-800 text-lg">{isAr ? 'خدمات منزلية' : 'FIXIT MAROC'} <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
+                <button className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 border border-slate-200">
+                  <Eye className="w-4 h-4" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                </button>
+              </div>
+            </div>
+
+            {/* Service 5 (Apartment) */}
+            <div 
+              onClick={() => setPreviewTheme({ name: isAr ? 'كراء الشقق' : 'DAR STAY', image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=800', url: window.location.origin + '/#/demo/apartment' })}
+              className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
+            >
+              <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
+                <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=800" className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" alt="Apartment Rentals" />
+                <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center backdrop-blur-none group-hover:backdrop-blur-[2px]">
+                   <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-xl">
+                      <Eye className="w-5 h-5" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                   </div>
+                </div>
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-xs font-black px-3 py-1.5 rounded-full shadow-sm text-slate-800 uppercase">
+                  {isAr ? 'كراء الشقق' : 'DAR STAY'}
+                </div>
+              </div>
+              <div className="p-4 flex flex-col items-center gap-3">
+                <h3 className="font-bold text-slate-800 text-lg">{isAr ? 'كراء الشقق' : 'DAR STAY'} <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
+                <button className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 border border-slate-200">
+                  <Eye className="w-4 h-4" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                </button>
+              </div>
+            </div>
+
+            {/* Service 6 (Beauty Salon) */}
+            <div 
+              onClick={() => setPreviewTheme({ name: isAr ? 'صالون تجميل' : 'BEAUTY SALON', image: 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?auto=format&fit=crop&q=80&w=800', url: window.location.origin + '/#/demo/beauty-salon' })}
+              className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
+            >
+              <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
+                <img src="https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?auto=format&fit=crop&q=80&w=800" className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" alt="Beauty Salon" />
+                <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center backdrop-blur-none group-hover:backdrop-blur-[2px]">
+                   <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-xl">
+                      <Eye className="w-5 h-5" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                   </div>
+                </div>
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-xs font-black px-3 py-1.5 rounded-full shadow-sm text-slate-800 uppercase">
+                  {isAr ? 'صالون تجميل' : 'BEAUTY SALON'}
+                </div>
+              </div>
+              <div className="p-4 flex flex-col items-center gap-3">
+                <h3 className="font-bold text-slate-800 text-lg">{isAr ? 'صالون تجميل' : 'BEAUTY SALON'} <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
+                <button className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 border border-slate-200">
+                  <Eye className="w-4 h-4" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                </button>
+              </div>
+            </div>
+
+            {/* Service 7 (Traiteur/Events) */}
+            <div 
+              onClick={() => setPreviewTheme({ name: isAr ? 'تنظيم الحفلات' : 'ROYAL EVENTS', image: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=800', url: window.location.origin + '/#/demo/traiteur' })}
+              className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
+            >
+              <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
+                <img src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=800" className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" alt="Events Traiteur" />
+                <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center backdrop-blur-none group-hover:backdrop-blur-[2px]">
+                   <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-xl">
+                      <Eye className="w-5 h-5" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                   </div>
+                </div>
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-xs font-black px-3 py-1.5 rounded-full shadow-sm text-slate-800 uppercase">
+                  {isAr ? 'تنظيم الحفلات' : 'ROYAL EVENTS'}
+                </div>
+              </div>
+              <div className="p-4 flex flex-col items-center gap-3">
+                <h3 className="font-bold text-slate-800 text-lg">{isAr ? 'تنظيم الحفلات' : 'ROYAL EVENTS'} <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
+                <button className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 border border-slate-200">
+                  <Eye className="w-4 h-4" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                </button>
+              </div>
+            </div>
+
+            {/* Service 8 (Logistics) */}
+            <div 
+              onClick={() => setPreviewTheme({ name: isAr ? 'شركة توصيل' : 'BEYA EXPRESS', image: 'https://images.unsplash.com/photo-1580674285054-bed31e145f59?auto=format&fit=crop&q=80&w=800', url: window.location.origin + '/#/demo/logistics' })}
+              className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
+            >
+              <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
+                <img src="https://images.unsplash.com/photo-1580674285054-bed31e145f59?auto=format&fit=crop&q=80&w=800" className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" alt="Logistics Delivery" />
+                <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center backdrop-blur-none group-hover:backdrop-blur-[2px]">
+                   <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-xl">
+                      <Eye className="w-5 h-5" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                   </div>
+                </div>
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-xs font-black px-3 py-1.5 rounded-full shadow-sm text-slate-800 uppercase">
+                  {isAr ? 'شركة توصيل' : 'BEYA EXPRESS'}
+                </div>
+              </div>
+              <div className="p-4 flex flex-col items-center gap-3">
+                <h3 className="font-bold text-slate-800 text-lg">{isAr ? 'شركة توصيل' : 'BEYA EXPRESS'} <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
+                <button className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 border border-slate-200">
+                  <Eye className="w-4 h-4" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                </button>
+              </div>
+            </div>
+
             {/* Tourism 1 */}
             <div 
               onClick={() => setPreviewTheme({ name: 'OMRA & TOURS', image: '/images/themes/tourism_1.png', url: window.location.origin + '/#/demo/omra-tours' })}
@@ -539,22 +817,27 @@ export default function SetupLanding() {
         </div>
       </section>
       
-      {/* 5. Trust / FAQ */}
-      <section className="py-16 bg-slate-900 text-white text-center">
-        <div className="max-w-3xl mx-auto px-6">
-          <ShieldCheck className="w-16 h-16 text-amber-500 mx-auto mb-6" />
-          <h2 className="text-3xl md:text-4xl font-black mb-6">
-            {isAr ? 'ضمان "زيرو ريسك"' : 'Garantie Zéro Risque'}
+      {/* 5. Professional CTA */}
+      <section className="py-20 bg-slate-900 text-white text-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-tr from-blue-900/40 via-transparent to-emerald-900/40 pointer-events-none" />
+        <div className="max-w-3xl mx-auto px-6 relative z-10">
+          <Rocket className="w-16 h-16 text-emerald-400 mx-auto mb-6" />
+          <h2 className="text-3xl md:text-5xl font-black mb-6 leading-tight">
+            {isAr ? 'مستعد تبدا مشروعك الرقمي؟' : 'Prêt à lancer votre projet ?'}
           </h2>
-          <p className="text-xl text-slate-300 leading-relaxed mb-10">
+          <p className="text-xl text-slate-300 leading-relaxed mb-10 max-w-2xl mx-auto">
             {isAr 
-              ? 'حنا كنتيقو فالخدمة ديالنا. داكشي علاش مكنتخلصوش فـالاشتراك الشهري ديال المنصة (199 درهم) حتى تبدا تبيع وتدخل الفلوس. 699 درهم هي فقط تكلفة الجهد والخدمة اللي غنخدمو ليك باش نجهزو ليك متجرك 100%.'
-              : 'Nous croyons en notre service. C\'est pourquoi vous ne payez l\'abonnement (199 MAD) qu\'après avoir réalisé votre première vente. Les 699 MAD couvrent uniquement la création sur-mesure de votre boutique.'}
+              ? 'سواء كنتي طبيب، شركة لوجيستيك، صالون، ولا باغي تبيع منتجاتك. حنا شريكك التقني باش توصل للنجاح. فريقنا واجد يجاوب على كل التساؤلات ديالك.'
+              : 'Que vous soyez médecin, agence, salon ou e-commerçant. Nous sommes votre partenaire technique pour réussir.'}
           </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="px-8 py-4 bg-amber-500 text-slate-900 rounded-2xl font-black text-lg transition-all hover:bg-amber-400">
-              {isAr ? 'توكلنا على الله، بغيت متجر' : 'Je commande ma boutique'}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto bg-emerald-500 text-slate-900 px-10 py-4 rounded-xl font-black text-xl hover:bg-emerald-400 transition-colors shadow-lg hover:shadow-emerald-500/20 flex items-center justify-center gap-3">
+              <Phone className="w-6 h-6" />
+              {isAr ? 'تواصل مع خبير مجاناً' : 'Parler à un expert'}
             </a>
+            <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="w-full sm:w-auto bg-slate-800 text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-slate-700 transition-colors border border-slate-700">
+              {isAr ? 'راجع الباقات والأثمنة' : 'Revoir les prix'}
+            </button>
           </div>
         </div>
       </section>

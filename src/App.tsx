@@ -94,6 +94,11 @@ const AbayaDemo = lazy(() => import('./pages/demos/AbayaDemo'));
 const BidlaDemo = lazy(() => import('./pages/demos/BidlaDemo'));
 const DentistDemo = lazy(() => import('./pages/demos/DentistDemo'));
 const CarRentalDemo = lazy(() => import('./pages/demos/CarRentalDemo'));
+const ServiceProDemo = lazy(() => import('./pages/demos/ServiceProDemo'));
+const ApartmentDemo = lazy(() => import('./pages/demos/ApartmentDemo'));
+const BeautySalonDemo = lazy(() => import('./pages/demos/BeautySalonDemo'));
+const TraiteurDemo = lazy(() => import('./pages/demos/TraiteurDemo'));
+const LogisticsDemo = lazy(() => import('./pages/demos/LogisticsDemo'));
 const CityRentalsDemo = lazy(() => import('./pages/demos/CityRentalsDemo'));
 const EcommerceDemo = lazy(() => import('./pages/demos/EcommerceDemo'));
 const StoreOnboarding = lazy(() => import('./pages/StoreOnboarding'));
@@ -573,6 +578,11 @@ function AppContent() {
         <Route path="/demo/bidla" element={<BidlaDemo />} />
         <Route path="/demo/dentist" element={<DentistDemo />} />
         <Route path="/demo/car-rental" element={<CarRentalDemo />} />
+        <Route path="/demo/service-pro" element={<ServiceProDemo />} />
+        <Route path="/demo/apartment" element={<ApartmentDemo />} />
+        <Route path="/demo/beauty-salon" element={<BeautySalonDemo />} />
+        <Route path="/demo/traiteur" element={<TraiteurDemo />} />
+        <Route path="/demo/logistics" element={<LogisticsDemo />} />
         <Route path="/demo/city-rentals" element={<CityRentalsDemo />} />
         <Route path="/demo/ecommerce/abaya" element={<AbayaDemo />} />
         <Route path="/demo/ecommerce/:themeId" element={<EcommerceDemo />} />
@@ -856,8 +866,8 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
             </h1>
             <p className="text-slate-400 mb-6 text-sm">
               {isChunkError 
-                ? "Une mise � jour du syst�me a �t� effectu�e. Veuillez recharger pour appliquer les changements." 
-                : "Le composant a crash�. Voici l'erreur :"}
+                ? "Une mise à jour du système a été effectuée. Veuillez recharger pour appliquer les changements." 
+                : "Le composant a crashé. Voici l'erreur :"}
             </p>
             {!isChunkError && (
               <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl mb-8 text-left overflow-auto max-h-40">
@@ -868,7 +878,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
               onClick={() => window.location.reload()}
               className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-600/20"
             >
-              {isChunkError ? "Mettre � jour maintenant" : "Recharger la page"}
+              {isChunkError ? "Mettre à jour maintenant" : "Recharger la page"}
             </button>
           </div>
         </div>
