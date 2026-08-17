@@ -574,6 +574,7 @@ function AppContent() {
         <Route path="/recrut" element={<Navigate to="/recrutement" replace />} />
         <Route path="/devis-express" element={<AdsLanding />} />
         <Route path="/new" element={<NewLanding />} />
+        <Route path="/commencer" element={<NewLanding standalone />} />
         <Route path="/store-landing" element={<StoreLanding />} />
         <Route path="/store-landing-v2" element={<StoreLandingV2 />} />
         <Route path="/store-landing-v3" element={<StoreLandingV3 />} />

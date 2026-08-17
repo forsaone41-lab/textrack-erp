@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Building2, User, Sparkles, ShoppingCart, Rocket, ChevronRight, CheckCircle2, ArrowRight, X, Phone, Mail, ImageIcon, MousePointerClick, MessageSquareText, PhoneCall, Sun, Moon, ChevronDown, Globe } from 'lucide-react';
 import { saveRecord, TarifService, loadData } from '../types';
 import { useLang } from '../contexts/LangContext';
 
-export default function NewLanding() {
+export default function NewLanding({ standalone = false }: { standalone?: boolean }) {
   const { isAr, toggle } = useLang();
+  const navigate = useNavigate();
   const [isDark, setIsDark] = useState(() => {
     const hour = new Date().getHours();
     // Dark mode from 19:00 to 06:59
     return hour >= 19 || hour < 7;
   });
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(standalone);
+  const closeModal = () => {
+    if (standalone) { navigate('/'); return; }
+    setIsModalOpen(false);
+  };
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     clientType: '',
@@ -326,6 +331,8 @@ export default function NewLanding() {
 
   return (
     <div className={`min-h-screen font-sans selection:bg-indigo-500/30 transition-colors duration-300 ${isDark ? 'bg-[#020617] text-slate-50' : 'bg-slate-50 text-slate-900'}`} dir={isAr ? 'rtl' : 'ltr'}>
+      {!standalone && (
+      <>
       <nav className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b transition-colors duration-300 ${isDark ? 'bg-[#020617]/80 border-white/5' : 'bg-white/80 border-slate-200'}`}>
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -450,15 +457,17 @@ export default function NewLanding() {
       <footer className={`py-12 border-t text-center text-slate-500 ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
         <p>© {new Date().getFullYear()} Beya Creative. {isAr ? 'جميع الحقوق محفوظة.' : 'Tous droits réservés.'}</p>
       </footer>
+      </>
+      )}
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !isSubmitting && setIsModalOpen(false)} />
-          
+        <div className={standalone ? `min-h-screen flex items-center justify-center p-4 md:p-8 transition-colors duration-300 ${isDark ? 'bg-[#020617]' : 'bg-slate-50'}` : "fixed inset-0 z-[100] flex items-center justify-center p-4"}>
+          {!standalone && <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !isSubmitting && closeModal()} />}
+
           <div className={`relative w-full max-w-2xl border rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition-colors duration-300 ${isDark ? 'bg-[#0f172a] border-white/10' : 'bg-white border-slate-200'}`}>
             <div className={`flex items-center justify-between p-6 border-b shrink-0 ${isDark ? 'border-white/5' : 'border-slate-100'}`}>
               <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{isAr ? 'ابدأ مشروعك' : 'Démarrer votre projet'}</h3>
-              <button onClick={() => !isSubmitting && setIsModalOpen(false)} className={`p-2 rounded-full ${isDark ? 'text-slate-400 hover:text-white bg-white/5' : 'text-slate-500 hover:text-slate-900 bg-slate-100'}`}>
+              <button onClick={() => !isSubmitting && closeModal()} className={`p-2 rounded-full ${isDark ? 'text-slate-400 hover:text-white bg-white/5' : 'text-slate-500 hover:text-slate-900 bg-slate-100'}`}>
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -496,7 +505,7 @@ export default function NewLanding() {
                     {isAr ? 'تأكيد الطلب عبر الواتساب' : 'Confirmer via WhatsApp'}
                   </a>
                   
-                  <button onClick={() => { setIsModalOpen(false); setIsSuccess(false); setStep(1); setFormData({ clientType: '', companyName: '', companySector: '', budget: '', intent: '', deadline: '', photo: '', phone: '', name: '', email: '', details: '', needWebsite: false }); }} className="text-slate-400 hover:text-white text-sm font-medium">
+                  <button onClick={() => { setIsSuccess(false); setStep(1); setFormData({ clientType: '', companyName: '', companySector: '', budget: '', intent: '', deadline: '', photo: '', phone: '', name: '', email: '', details: '', needWebsite: false }); closeModal(); }} className="text-slate-400 hover:text-white text-sm font-medium">
                     {isAr ? 'إغلاق' : 'Fermer'}
                   </button>
                 </div>
