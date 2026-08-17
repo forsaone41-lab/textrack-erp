@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useLang } from '../contexts/LangContext';
-import { ArrowRight, Code, Scissors, ShoppingBag, Store, Globe, Cpu, Zap, Star, LayoutTemplate, Settings, ChevronRight } from 'lucide-react';
+import { ArrowRight, Code, Scissors, ShoppingBag, Store, Globe, Zap, Star, Settings, ChevronRight } from 'lucide-react';
 
 const styles = `
   @keyframes marquee {
@@ -123,20 +123,6 @@ export default function LandingPage() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
-            
-            {/* Beya Creative */}
-            <div className="bg-white p-12 rounded-[2.5rem] shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300 group">
-               <Cpu className="w-10 h-10 text-slate-800 mb-6" />
-               <h3 className="text-3xl font-semibold mb-3 tracking-tight">Beya Creative.</h3>
-               <p className="text-lg text-[#86868b] leading-relaxed mb-8">
-                 {isAr 
-                   ? 'المركز الرئيسي للعمليات التقنية. نبني أنظمة ذكية، وتطبيقات ويب مخصصة لتمكين الشركات من إدارة أعمالها بكل احترافية.'
-                   : 'Le centre névralgique des opérations. Nous créons des systèmes intelligents et des apps sur mesure pour les entreprises.'}
-               </p>
-               <Link to="/store-landing" className="inline-flex items-center text-[#0071e3] font-medium hover:underline">
-                 {isAr ? 'المزيد عن خدماتنا' : 'En savoir plus'} <ChevronRight className={`w-4 h-4 ml-1 ${isAr ? 'rotate-180 mr-1 ml-0' : ''}`} />
-               </Link>
-            </div>
 
             {/* Beya Store */}
             <div className="bg-white p-12 rounded-[2.5rem] shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300 group flex flex-col justify-between">
@@ -153,18 +139,6 @@ export default function LandingPage() {
                  <span className="text-3xl font-bold">199 <span className="text-base text-slate-500 font-medium">DH/{isAr ? 'شهر' : 'mois'}</span></span>
                  <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-medium uppercase tracking-widest">{isAr ? 'مخاطرة 0' : '0 Risque'}</span>
                </div>
-            </div>
-
-            {/* Beya Setup */}
-            <div className="bg-white p-12 rounded-[2.5rem] shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300 group">
-               <LayoutTemplate className="w-10 h-10 text-slate-800 mb-6" />
-               <h3 className="text-3xl font-semibold mb-3 tracking-tight">Beya Setup.</h3>
-               <p className="text-lg text-[#86868b] leading-relaxed mb-8">
-                 {isAr 
-                   ? 'الخدمة الشاملة لتجهيز المتاجر. نتكلف بكل التفاصيل: التصميم الاحترافي، الدومين، وإعدادات الربط التقني لتنطلق بقوة.'
-                   : 'Service clé en main pour configurer votre boutique. Design pro, nom de domaine et intégrations techniques.'}
-               </p>
-               <div className="text-3xl font-bold">800 <span className="text-base text-slate-500 font-medium">DH</span></div>
             </div>
 
             {/* Beya Production */}
