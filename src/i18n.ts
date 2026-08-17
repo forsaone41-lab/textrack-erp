@@ -1,4 +1,4 @@
-export type Lang = 'fr' | 'ar';
+export type Lang = 'fr' | 'ar' | 'en';
 
 export const T = {
   // Brand

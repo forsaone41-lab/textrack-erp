@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowRight, CheckCircle2, PlayCircle, Star, Rocket, Layout, Globe, Smartphone, ShieldCheck, Clock, Eye, X, ExternalLink, Phone, Tv, Shirt, Gem } from 'lucide-react';
+import { ArrowRight, CheckCircle2, PlayCircle, Star, Rocket, Layout, Globe, Smartphone, ShieldCheck, Clock, Eye, X, ExternalLink, Phone, Tv, Shirt, Gem, Ticket } from 'lucide-react';
 import { useLang } from '../contexts/LangContext';
 import { Link, useLocation } from 'react-router-dom';
 import { loadCompanyProfile } from '../types';
@@ -416,6 +416,29 @@ export default function SetupLanding() {
                 </button>
               </div>
             </div>
+            {/* Theme 3.5: Agency Pixy */}
+            <div 
+              onClick={() => setPreviewTheme({ name: 'AGENCY PIXY', image: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=600&auto=format&fit=crop', url: window.location.origin + '/#/demo/agency-pixy' })}
+              className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
+            >
+              <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
+                <img src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=600&auto=format&fit=crop" className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" alt="Theme Agency Pixy" />
+                <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center backdrop-blur-none group-hover:backdrop-blur-[2px]">
+                   <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-xl">
+                      <Eye className="w-5 h-5" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                   </div>
+                </div>
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-xs font-black px-3 py-1.5 rounded-full shadow-sm text-slate-800 uppercase">
+                  AGENCY PIXY
+                </div>
+              </div>
+              <div className="p-4 flex flex-col items-center gap-3">
+                <h3 className="font-bold text-slate-800 text-lg">AGENCY PIXY <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
+                <button className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 border border-slate-200">
+                  <Eye className="w-4 h-4" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                </button>
+              </div>
+            </div>
             {/* Theme 4 */}
             <div 
               onClick={() => setPreviewTheme({ name: 'ABAYA FASHION', image: '/images/themes/abaya.png', url: window.location.origin + '/#/demo/ecommerce/abaya' })}
@@ -465,11 +488,11 @@ export default function SetupLanding() {
 
             {/* Theme 7 (Digital Products / IPTV) */}
             <div
-              onClick={() => setPreviewTheme({ name: isAr ? 'منتجات رقمية' : 'STREAM BOX MA', image: 'https://images.unsplash.com/photo-1546027658-7aa750153465?q=80&w=600&auto=format&fit=crop', url: window.location.origin + '/#/demo/ecommerce/iptv' })}
+              onClick={() => setPreviewTheme({ name: isAr ? 'منتجات رقمية' : 'STREAM BOX MA', image: '/demo-assets/digital.png', url: window.location.origin + '/#/demo/ecommerce/iptv' })}
               className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
             >
               <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
-                <img src="https://images.unsplash.com/photo-1546027658-7aa750153465?q=80&w=600&auto=format&fit=crop" className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" alt="Theme IPTV Digital Products" />
+                <img src="/demo-assets/digital.png" className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" alt="Theme IPTV Digital Products" />
                 <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center backdrop-blur-none group-hover:backdrop-blur-[2px]">
                    <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-xl">
                       <Eye className="w-5 h-5" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
@@ -492,11 +515,11 @@ export default function SetupLanding() {
 
             {/* Theme 8 (Lingerie / Underwear & Accessories) */}
             <div
-              onClick={() => setPreviewTheme({ name: isAr ? 'ملابس حريرية' : 'SILK & LACE', image: '/demo-assets/lingerie/lingerie_hero_1786817080033.png', url: window.location.origin + '/#/demo/ecommerce/lingerie' })}
+              onClick={() => setPreviewTheme({ name: isAr ? 'ملابس حريرية' : 'SILK & LACE', image: '/demo-assets/lingerie/silk_theme_ui.png', url: window.location.origin + '/#/demo/ecommerce/lingerie' })}
               className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
             >
               <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
-                <img src="/demo-assets/lingerie/lingerie_hero_1786817080033.png" className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" alt="Theme Lingerie" />
+                <img src="/demo-assets/lingerie/lingerie_hero_1786817080033.png" className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" alt="Theme Lingerie" />
                 <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center backdrop-blur-none group-hover:backdrop-blur-[2px]">
                    <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-xl">
                       <Eye className="w-5 h-5" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
@@ -519,11 +542,11 @@ export default function SetupLanding() {
 
             {/* Theme 9 (Jalaba & Caftan Marocain) */}
             <div
-              onClick={() => setPreviewTheme({ name: isAr ? 'جلابة وقفطان' : 'DAR CAFTAN', image: '/demo-assets/jalaba-caftan/moroccan_caftan_hero_1786817002711.png', url: window.location.origin + '/#/demo/ecommerce/jalaba-caftan' })}
+              onClick={() => setPreviewTheme({ name: isAr ? 'جلابة وقفطان' : 'DAR CAFTAN', image: '/demo-assets/jalaba-caftan/dar_caftan_ui.png', url: window.location.origin + '/#/demo/ecommerce/jalaba-caftan' })}
               className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
             >
               <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
-                <img src="/demo-assets/jalaba-caftan/moroccan_caftan_hero_1786817002711.png" className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" alt="Theme Jalaba Caftan" />
+                <img src="/demo-assets/jalaba-caftan/moroccan_caftan_hero_1786817002711.png" className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" alt="Theme Jalaba Caftan" />
                 <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center backdrop-blur-none group-hover:backdrop-blur-[2px]">
                    <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-xl">
                       <Eye className="w-5 h-5" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
@@ -580,11 +603,11 @@ export default function SetupLanding() {
             
             {/* Service 2 */}
             <div 
-              onClick={() => setPreviewTheme({ name: 'LUXE RENTALS', image: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?q=80&w=600&auto=format&fit=crop', url: window.location.origin + '/#/demo/car-rental' })}
+              onClick={() => setPreviewTheme({ name: 'LUXE RENTALS', image: '/demo-assets/luxe-rentals.png', url: window.location.origin + '/#/demo/car-rental' })}
               className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
             >
               <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
-                <img src="https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?q=80&w=600&auto=format&fit=crop" className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" alt="Theme Car Rental" />
+                <img src="/demo-assets/luxe-rentals.png" className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" alt="Theme Car Rental" />
                 <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center backdrop-blur-none group-hover:backdrop-blur-[2px]">
                    <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-xl">
                       <Eye className="w-5 h-5" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
@@ -604,11 +627,11 @@ export default function SetupLanding() {
 
             {/* Service 3 (City Rentals) */}
             <div 
-              onClick={() => setPreviewTheme({ name: isAr ? 'كراء السيارات' : 'LOCATION VOITURES', image: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?q=80&w=600&auto=format&fit=crop', url: window.location.origin + '/#/demo/city-rentals' })}
+              onClick={() => setPreviewTheme({ name: isAr ? 'كراء السيارات' : 'LOCATION VOITURES', image: '/demo-assets/city-rentals.png', url: window.location.origin + '/#/demo/city-rentals' })}
               className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
             >
               <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
-                <img src="https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?q=80&w=600&auto=format&fit=crop" className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" alt="Theme Location Voitures" />
+                <img src="/demo-assets/city-rentals.png" className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" alt="Theme Location Voitures" />
                 <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center backdrop-blur-none group-hover:backdrop-blur-[2px]">
                    <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-xl">
                       <Eye className="w-5 h-5" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
@@ -801,6 +824,33 @@ export default function SetupLanding() {
               </div>
               <div className="p-4 flex flex-col items-center gap-3">
                 <h3 className="font-bold text-slate-800 text-lg">LOCAL TOURS <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
+                <button className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 border border-slate-200">
+                  <Eye className="w-4 h-4" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                </button>
+              </div>
+            </div>
+
+            {/* Event & Conference */}
+            <div
+              onClick={() => setPreviewTheme({ name: isAr ? 'مؤتمرات وفعاليات' : 'NEXUS SUMMIT', image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=600&auto=format&fit=crop', url: window.location.origin + '/#/demo/event-conference' })}
+              className="bg-white p-3 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative"
+            >
+              <div className="aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden relative">
+                <img src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=600&auto=format&fit=crop" className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" alt="Theme Event Conference" />
+                <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center backdrop-blur-none group-hover:backdrop-blur-[2px]">
+                   <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-xl">
+                      <Eye className="w-5 h-5" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
+                   </div>
+                </div>
+                <div className="absolute top-4 left-4 bg-fuchsia-600 text-white p-2 rounded-full shadow-sm">
+                  <Ticket className="w-4 h-4" />
+                </div>
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-xs font-black px-3 py-1.5 rounded-full shadow-sm text-slate-800 uppercase">
+                  {isAr ? 'مؤتمرات وفعاليات' : 'NEXUS SUMMIT'}
+                </div>
+              </div>
+              <div className="p-4 flex flex-col items-center gap-3">
+                <h3 className="font-bold text-slate-800 text-lg">{isAr ? 'مؤتمرات وفعاليات' : 'NEXUS SUMMIT'} <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1 uppercase">Premium</span></h3>
                 <button className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 border border-slate-200">
                   <Eye className="w-4 h-4" /> {isAr ? 'معاينة حية' : 'Aperçu en direct'}
                 </button>

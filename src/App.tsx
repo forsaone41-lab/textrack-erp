@@ -83,6 +83,9 @@ const StoreLanding    = lazy(() => import('./pages/StoreLanding'));
 const StoreLandingV2  = lazy(() => import('./pages/StoreLandingV2'));
 const StoreLandingV3  = lazy(() => import('./pages/StoreLandingV3'));
 const StoreLandingV4  = lazy(() => import('./pages/StoreLandingV4'));
+const StoreLandingV5  = lazy(() => import('./pages/StoreLandingV5'));
+const EnterpriseLanding  = lazy(() => import('./pages/EnterpriseLanding'));
+const PlatformLanding  = lazy(() => import('./pages/PlatformLanding'));
 const BeyaDropshipping = lazy(() => import('./pages/BeyaDropshipping'));
 const StoreSignup     = lazy(() => import('./pages/StoreSignup'));
 const SetupLanding    = lazy(() => import('./pages/SetupLanding'));
@@ -347,8 +350,9 @@ function AppContent() {
   }, [location.pathname, company?.metaPixelId]);
 
   const hostname = window.location.hostname;
-  const isSubdomain = hostname.includes('.beyacreative.com') && hostname !== 'www.beyacreative.com' && hostname !== 'app.beyacreative.com';
-  const isCustomDomain = !hostname.includes('beyacreative.com') && !hostname.includes('localhost') && !hostname.includes('vercel.app');
+  const isSaaSDomain = hostname === 'beyacreative.com' || hostname === 'www.beyacreative.com' || hostname === 'app.beyacreative.com' || hostname === 'gzeed.com' || hostname === 'www.gzeed.com' || hostname === 'localhost' || hostname.includes('vercel.app');
+  const isSubdomain = hostname.includes('.beyacreative.com') && !isSaaSDomain;
+  const isCustomDomain = !isSaaSDomain;
   const isLiveStore = isSubdomain || isCustomDomain;
 
   // Heartbeat for presence & Sync settings
@@ -571,6 +575,7 @@ function AppContent() {
         <Route path="/store-landing-v3" element={<StoreLandingV3 />} />
         <Route path="/store-landing-v4" element={<StoreLandingV4 />} />
         <Route path="/setup" element={<SetupLanding />} />
+        <Route path="/platform-demo" element={<PlatformLanding />} />
         <Route path="/demo/tourism" element={<TourismDemo />} />
         <Route path="/demo/vacation-deals" element={<VacationDealsDemo />} />
         <Route path="/demo/omra-tours" element={<OmraToursDemo />} />
@@ -622,7 +627,8 @@ function AppContent() {
             <SaaSAdminPage />
           </Suspense>
         } />
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<PlatformLanding />} />
+        <Route path="/beya-old" element={<LandingPage />} />
           <Route path="/funnel" element={<BeyaFunnel />} />
           <Route path="/app" element={<DownloadApp />} />
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -815,6 +821,7 @@ function AppContent() {
         <Route path="/store-landing-v3" element={<StoreLandingV3 />} />
         <Route path="/store-landing-v4" element={<StoreLandingV4 />} />
         <Route path="/setup" element={<SetupLanding />} />
+        <Route path="/platform-demo" element={<PlatformLanding />} />
         <Route path="/demo/tourism" element={<TourismDemo />} />
         <Route path="/demo/vacation-deals" element={<VacationDealsDemo />} />
         <Route path="/demo/ecommerce/:themeId" element={<EcommerceDemo />} />

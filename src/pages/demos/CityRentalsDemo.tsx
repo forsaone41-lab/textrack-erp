@@ -112,7 +112,7 @@ export default function CityRentalsDemo() {
       name: "VW Golf 8",
       typeEn: "Hatchback", typeFr: "Compacte", typeAr: "هاتشباك",
       price: "$60",
-      img: "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?q=80&w=800&auto=format&fit=crop",
+      img: "https://images.unsplash.com/photo-1619682817481-e994891cd1f5?q=80&w=800&auto=format&fit=crop",
       specs: { seats: 5, transEn: "Auto", transFr: "Auto", transAr: "أوتوماتيك", doors: 5, fuelEn: "Diesel", fuelFr: "Diesel", fuelAr: "ديزل" },
       available: true
     },

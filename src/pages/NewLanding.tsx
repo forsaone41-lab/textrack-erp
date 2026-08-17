@@ -382,36 +382,7 @@ export default function NewLanding() {
             {isAr ? 'من الفكرة إلى الإنتاج النهائي. نرافق الشركات والماركات والمصممين في تحقيق تشكيلاتهم بجودة استثنائية.' : "De l'idée à la production finale. Nous accompagnons les entreprises, les marques et les créateurs dans la réalisation de leurs collections de vêtements avec une qualité premium."}
           </p>
 
-          {/* SMART E-COMMERCE WEBSITE SOLUTION BADGE / CLICKABLE CARD WITH BUTTON */}
-          <div className={`mb-8 p-5 md:p-6 rounded-3xl border backdrop-blur-md max-w-xl mx-auto text-left flex flex-col sm:flex-row items-center sm:items-start gap-4 shadow-xl transition-all hover:scale-[1.01] ${isDark ? 'bg-gradient-to-r from-indigo-950/70 via-slate-900/90 to-slate-900 border-indigo-500/40 text-indigo-100' : 'bg-gradient-to-r from-indigo-50 via-blue-50/90 to-white border-indigo-200 text-slate-800'}`}>
-             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600 to-cyan-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/30">
-                <Globe className="w-7 h-7" />
-             </div>
-             <div className="flex-1 min-w-0 w-full">
-                <div className="flex items-center justify-between gap-2 mb-1.5">
-                   <h4 className="text-sm md:text-base font-black tracking-tight flex items-center gap-1.5">
-                      {isAr ? '🌐 معندكش موقع إلكتروني للبيع؟' : '🌐 Pas encore de site E-commerce pour vendre ?'}
-                   </h4>
-                   <span className="px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0">
-                      {isAr ? 'حل متكامل 100%' : 'Clés en main'}
-                   </span>
-                </div>
-                <p className="text-xs md:text-sm leading-relaxed opacity-90 font-medium mb-4">
-                   {isAr 
-                     ? 'ماشي غير كنصاوبو ليك الملابس! كنصاوبو ليك حتى المتجر الإلكتروني الاحترافي (Beya Store) لتتبع المبيعات والطلبات فورياً.' 
-                     : 'Nous ne confectionnons pas seulement vos vêtements ! Nous créons également votre boutique en ligne (Beya Store) clés en main pour vendre et gérer vos commandes.'}
-                </p>
-                <div className="flex items-center justify-start">
-                   <Link
-                      to="/store-landing"
-                      className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-black text-xs md:text-sm transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
-                   >
-                      <span>{isAr ? '🚀 اكتشف Beya Store وصمم متجرك الآن' : '🚀 Découvrir Beya Store et créer ma boutique'}</span>
-                      <ArrowRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
-                   </Link>
-                </div>
-             </div>
-          </div>
+
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button 

@@ -4,10 +4,11 @@ import { Lang } from '../i18n';
 interface LangCtx {
   lang: Lang;
   toggle: () => void;
+  setLang: (lang: Lang) => void;
   isAr: boolean;
 }
 
-const LangContext = createContext<LangCtx>({ lang: 'fr', toggle: () => {}, isAr: false });
+const LangContext = createContext<LangCtx>({ lang: 'fr', toggle: () => {}, setLang: () => {}, isAr: false });
 
 export function LangProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Lang>(() => (localStorage.getItem('textrack_lang') as Lang) || 'fr');
@@ -18,8 +19,13 @@ export function LangProvider({ children }: { children: ReactNode }) {
     setLang(next);
   }
 
+  function handleSetLang(newLang: Lang) {
+    localStorage.setItem('textrack_lang', newLang);
+    setLang(newLang);
+  }
+
   return (
-    <LangContext.Provider value={{ lang, toggle, isAr: lang === 'ar' }}>
+    <LangContext.Provider value={{ lang, toggle, setLang: handleSetLang, isAr: lang === 'ar' }}>
       {children}
     </LangContext.Provider>
   );

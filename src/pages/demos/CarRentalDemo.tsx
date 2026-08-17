@@ -3,7 +3,7 @@ import {
   Car, MapPin, Calendar, Search,
   Settings, Users, Shield, Zap,
   CheckCircle2, Menu, X,
-  Phone, Mail, ChevronLeft, ChevronRight, MessageCircle,
+  Phone, Mail, ChevronLeft, ChevronRight, MessageCircle, Globe,
   Fuel, Navigation, Trash2, AlertCircle
 } from 'lucide-react';
 
@@ -234,12 +234,6 @@ export default function CarRentalDemo() {
         </div>
         <div className="flex gap-6 items-center">
           <a href="#" className="hover:text-white transition-colors" onClick={preventScroll}>{t('FAQ', 'FAQ', 'الأسئلة الشائعة')}</a>
-          <a href="#" className="hover:text-white transition-colors" onClick={preventScroll}>{t('Locations', 'Agences', 'الفروع')}</a>
-          <div className="flex gap-2">
-            <button onClick={() => setLang('en')} className={`hover:text-white transition-colors ${lang === 'en' ? 'text-amber-500 font-bold' : ''}`}>EN</button>
-            <button onClick={() => setLang('fr')} className={`hover:text-white transition-colors ${lang === 'fr' ? 'text-amber-500 font-bold' : ''}`}>FR</button>
-            <button onClick={() => setLang('ar')} className={`hover:text-white transition-colors ${lang === 'ar' ? 'text-amber-500 font-bold' : ''}`}>AR</button>
-          </div>
         </div>
       </div>
 
@@ -267,6 +261,17 @@ export default function CarRentalDemo() {
 
           {/* Actions */}
           <div className="hidden md:flex items-center gap-4">
+             <div className="relative group">
+               <button className="flex items-center gap-1 text-xs font-bold tracking-widest uppercase hover:text-amber-500 transition-colors py-2">
+                 <Globe className="w-4 h-4" /> {lang}
+               </button>
+               <div className="absolute top-full right-0 mt-2 w-32 bg-[#111] border border-white/10 rounded-lg shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 flex flex-col py-2 z-50">
+                  <button onClick={() => setLang('en')} className={`text-left px-4 py-2 text-xs font-bold hover:bg-white/5 transition-colors ${lang === 'en' ? 'text-amber-500' : 'text-white'}`}>English</button>
+                  <button onClick={() => setLang('fr')} className={`text-left px-4 py-2 text-xs font-bold hover:bg-white/5 transition-colors ${lang === 'fr' ? 'text-amber-500' : 'text-white'}`}>Français</button>
+                  <button onClick={() => setLang('ar')} className={`text-left px-4 py-2 text-xs font-bold hover:bg-white/5 transition-colors ${lang === 'ar' ? 'text-amber-500' : 'text-white'}`}>العربية</button>
+               </div>
+             </div>
+             <div className="w-px h-4 bg-white/20 mx-1"></div>
              <button onClick={() => showToast(t('Login', 'Connexion', 'دخول'))} className="text-xs font-bold tracking-widest uppercase hover:text-amber-500 transition-colors">
                {t('Sign In', 'Se connecter', 'تسجيل الدخول')}
              </button>

@@ -337,7 +337,7 @@ export default function StoreLanding() {
             <div>
               <h4 className="font-black text-slate-900 mb-6 uppercase tracking-wider">{isAr ? 'الشركة' : 'Entreprise'}</h4>
               <ul className="space-y-4 text-slate-500 font-medium">
-                <li><button onClick={(e) => e.preventDefault()} className="hover:text-blue-600 transition-colors text-left">{isAr ? 'من نحن' : 'À propos'}</button></li>
+                <li><Link to="/about" className="hover:text-blue-600 transition-colors text-left">{isAr ? 'من نحن' : 'À propos'}</Link></li>
                 <li><Link to="/partners" className="hover:text-blue-600 transition-colors">{isAr ? 'برنامج الشركاء' : 'Partenaires'}</Link></li>
                 <li><button onClick={(e) => e.preventDefault()} className="hover:text-blue-600 transition-colors text-left">{isAr ? 'اتصل بنا' : 'Contact'}</button></li>
               </ul>
