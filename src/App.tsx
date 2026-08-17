@@ -350,7 +350,8 @@ function AppContent() {
   }, [location.pathname, company?.metaPixelId]);
 
   const hostname = window.location.hostname;
-  const isSaaSDomain = hostname === 'beyacreative.com' || hostname === 'www.beyacreative.com' || hostname === 'app.beyacreative.com' || hostname === 'gzeed.com' || hostname === 'www.gzeed.com' || hostname === 'localhost' || hostname.includes('vercel.app');
+  const isGZeed = hostname === 'gzeed.com' || hostname === 'www.gzeed.com';
+  const isSaaSDomain = hostname === 'beyacreative.com' || hostname === 'www.beyacreative.com' || hostname === 'app.beyacreative.com' || isGZeed || hostname === 'localhost' || hostname.includes('vercel.app');
   const isSubdomain = hostname.includes('.beyacreative.com') && !isSaaSDomain;
   const isCustomDomain = !isSaaSDomain;
   const isLiveStore = isSubdomain || isCustomDomain;
@@ -368,7 +369,8 @@ function AppContent() {
 
       // Dynamic Branding Update
       if (!isSetupPage) {
-        const finalIcon = remote.logoAppIcon || "/logo.png";
+        let finalIcon = remote.logoAppIcon || "/logo.png";
+        if (isGZeed) finalIcon = "/gzeed-favicon.svg";
         
         // Update Favicon
         const icon = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
@@ -400,7 +402,9 @@ function AppContent() {
         }
 
         // Update Document Title
-        if (remote.name) {
+        if (isGZeed) {
+          document.title = "GZeed - The Future of Commerce";
+        } else if (remote.name) {
           if (window.location.hash === '#/' || window.location.hash === '') {
             document.title = "BEYA CREATIVE - Excellence en Confection Textile au Maroc";
           } else {
@@ -627,7 +631,7 @@ function AppContent() {
             <SaaSAdminPage />
           </Suspense>
         } />
-        <Route path="/" element={<PlatformLanding />} />
+        <Route path="/" element={isGZeed ? <PlatformLanding /> : <LandingPage />} />
         <Route path="/beya-old" element={<LandingPage />} />
           <Route path="/funnel" element={<BeyaFunnel />} />
           <Route path="/app" element={<DownloadApp />} />
