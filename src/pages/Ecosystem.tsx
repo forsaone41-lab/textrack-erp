@@ -166,8 +166,8 @@ export default function Ecosystem() {
               </Link>
             </div>
             <div className="flex-1 w-full relative">
-              <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-lg border border-slate-200 bg-white p-4 flex items-center justify-center">
-                <Globe className="w-32 h-32 text-slate-200" />
+              <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-lg border border-slate-200 bg-white p-2">
+                <img src="/store-builder-mockup.png" alt="Beya Store" className="w-full h-full object-cover rounded-2xl" />
               </div>
             </div>
           </div>
