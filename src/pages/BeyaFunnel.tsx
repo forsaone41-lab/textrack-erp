@@ -234,7 +234,7 @@ export default function BeyaFunnel() {
               <div className="bg-[#0f172a] p-10 md:p-16 rounded-[2.8rem]">
                 <div className="text-center mb-10">
                   <div className="w-20 h-20 bg-indigo-600 rounded-3xl flex items-center justify-center transform rotate-12 mx-auto mb-6 shadow-xl shadow-indigo-500/30">
-                    <Star className="w-10 h-10 text-white -rotate-12" />
+                    <img src="/logo-blue.png" alt="Beya Creative" className="w-10 h-10 rounded-lg brightness-0 invert -rotate-12" />
                   </div>
                   <h2 className="text-3xl md:text-5xl font-black text-white mb-4">هل أنت مستعد للبدء؟</h2>
                   <p className="text-slate-400 text-lg">أدخل معلوماتك وسنتواصل معك فوراً لتحديد موعد والبدء في مشروعك.</p>

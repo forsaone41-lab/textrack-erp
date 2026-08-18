@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useLang } from '../contexts/LangContext';
-import { ArrowRight, Code, Scissors, ShoppingBag, Store, Globe, Zap, Star, Settings, ChevronRight, Play, Pause, Volume2, VolumeX, MousePointerClick, MessageSquareText, PhoneCall, Shirt, PenTool, Ruler, Eye, HeartHandshake, X, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, ArrowDown, Code, Scissors, ShoppingBag, Store, Globe, Zap, Star, Settings, ChevronRight, Play, Pause, Volume2, VolumeX, MousePointerClick, MessageSquareText, PhoneCall, Shirt, PenTool, Ruler, Eye, HeartHandshake, X, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../supabase';
 import ProjectRequestModal from '../components/ProjectRequestModal';
 
@@ -244,6 +244,17 @@ export default function LandingPage() {
                {isAr ? 'ابدأ الآن' : 'Commencer'} <ArrowRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
              </button>
           </div>
+        </div>
+
+        {/* Scroll Down Arrow */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center animate-bounce">
+          <button 
+            onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
+            className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg border border-slate-200 text-[#0071e3] hover:bg-slate-50 transition-colors"
+            aria-label="Scroll down"
+          >
+            <ArrowDown className="w-6 h-6" />
+          </button>
         </div>
 
         {/* Subtle Background Elements */}
