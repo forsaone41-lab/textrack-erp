@@ -244,9 +244,9 @@ export default function BeyaFunnel() {
       <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
         <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] ${isDark ? 'from-indigo-900/40 via-[#0f172a] to-[#0f172a]' : 'from-indigo-100 via-slate-50 to-slate-50'} transition-colors duration-500`}></div>
         
-        {/* Animated Background Elements */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-[120px] mix-blend-screen animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-600/10 rounded-full blur-[120px] mix-blend-screen animate-pulse" style={{ animationDelay: '2s' }}></div>
+        {/* Animated Background Elements (Optimized: removed animate-pulse and mix-blend for performance) */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-[100px]"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-600/10 rounded-full blur-[100px]"></div>
         
         <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
           <FadeIn delay={100}>
@@ -401,7 +401,8 @@ export default function BeyaFunnel() {
             {/* Right: Visual */}
             <FadeIn delay={200} className="order-1 lg:order-2">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-tr from-[#0071e3] to-cyan-400 rounded-full blur-[100px] opacity-20 animate-pulse"></div>
+                {/* Optimized: Removed animate-pulse from large blurred background */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-[#0071e3] to-cyan-400 rounded-full blur-[80px] opacity-20"></div>
                 <div className={`relative border rounded-[3rem] p-4 shadow-2xl overflow-hidden aspect-[4/5] flex flex-col group ${isDark ? 'bg-[#1e293b] border-white/10' : 'bg-white border-slate-200'}`}>
                   <div className="w-full flex-1 bg-[url('/premium_streetwear_hoodie.png')] bg-cover bg-center rounded-[2.5rem] relative overflow-hidden transition-transform duration-700 group-hover:scale-105">
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
@@ -430,8 +431,9 @@ export default function BeyaFunnel() {
         <div className="max-w-4xl mx-auto px-6 relative z-10">
           <FadeIn>
             <div className={`p-10 md:p-16 rounded-[3rem] shadow-2xl border backdrop-blur-xl relative overflow-hidden ${isDark ? 'bg-white/5 border-white/10 shadow-black/50' : 'bg-white/80 border-slate-200 shadow-slate-200/50'}`}>
-              <div className="absolute top-0 right-0 w-64 h-64 bg-[#0071e3]/20 rounded-full blur-[80px]"></div>
-              <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-500/20 rounded-full blur-[80px]"></div>
+              {/* Optimized: reduced blur values to improve rendering performance */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[#0071e3]/10 rounded-full blur-[60px]"></div>
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-[60px]"></div>
               
               <div className="relative z-10 text-center mb-10">
                 <h2 className={`text-3xl md:text-5xl font-black mb-4 tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>{t.ctaTitle}</h2>
