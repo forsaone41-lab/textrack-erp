@@ -43,7 +43,7 @@ export default function Ecosystem() {
             <Link to="/login" className={`text-sm font-medium transition-colors hidden sm:block ${scrolled ? 'text-slate-800 hover:text-black' : 'text-white hover:text-blue-100'}`}>
               {isAr ? 'تسجيل الدخول' : 'Connexion'}
             </Link>
-            <Link to="/commencer" className={`px-4 py-2 sm:px-5 sm:py-2 rounded-full font-medium text-xs sm:text-sm transition-all ${scrolled ? 'bg-[#1d1d1f] text-white hover:bg-black' : 'bg-white text-[#0071e3] hover:bg-blue-50 shadow-md'}`}>
+            <Link to="/funnel" className={`px-4 py-2 sm:px-5 sm:py-2 rounded-full font-medium text-xs sm:text-sm transition-all ${scrolled ? 'bg-[#1d1d1f] text-white hover:bg-black' : 'bg-white text-[#0071e3] hover:bg-blue-50 shadow-md'}`}>
               {isAr ? 'ابدأ الآن' : 'Commencer'}
             </Link>
           </div>
@@ -183,7 +183,7 @@ export default function Ecosystem() {
         <p className="text-xl text-slate-500 mb-10 max-w-2xl mx-auto">
           {isAr ? 'المنظومة بانتظارك لتبدأ قصة نجاح جديدة.' : 'L\'écosystème vous attend pour démarrer votre nouvelle success story.'}
         </p>
-        <Link to="/commencer" className="inline-flex items-center justify-center px-10 py-4 bg-[#0071e3] text-white rounded-full font-bold text-xl hover:bg-[#0077ED] transition-all shadow-xl hover:-translate-y-1">
+        <Link to="/funnel" className="inline-flex items-center justify-center px-10 py-4 bg-[#0071e3] text-white rounded-full font-bold text-xl hover:bg-[#0077ED] transition-all shadow-xl hover:-translate-y-1">
           {isAr ? 'ابدأ الآن' : 'Commencer maintenant'}
         </Link>
       </section>

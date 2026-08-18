@@ -136,7 +136,7 @@ export default function LandingPage() {
             <Link to="/login" className="text-sm font-medium text-slate-800 hover:text-black transition-colors hidden sm:block">
               {isAr ? 'تسجيل الدخول' : 'Connexion'}
             </Link>
-            <Link to="/commencer" className="px-4 py-2 sm:px-5 sm:py-2 rounded-full bg-[#1d1d1f] text-white font-medium text-xs sm:text-sm hover:bg-black transition-all">
+            <Link to="/funnel" className="px-4 py-2 sm:px-5 sm:py-2 rounded-full bg-[#1d1d1f] text-white font-medium text-xs sm:text-sm hover:bg-black transition-all">
               {isAr ? 'ابدأ الآن' : 'Commencer'}
             </Link>
           </div>
@@ -154,17 +154,17 @@ export default function LandingPage() {
             </div>
 
             <h1 className="text-5xl md:text-6xl lg:text-[64px] font-bold tracking-tight text-[#1d1d1f] leading-[1.1] mb-6 text-balance animate-in slide-in-from-bottom-8 duration-1000">
-              {isAr ? 'من خيوط المصنع.. إلى شاشة متجرك.' : 'De l\'usine à votre boutique en ligne.'}
+              {isAr ? 'نصنع علامتك التجارية من الفكرة إلى القطعة النهائية.' : 'Nous fabriquons votre marque de l\'idée à la pièce finale.'}
             </h1>
 
             <p className="text-xl md:text-2xl text-[#86868b] leading-relaxed mb-10 animate-in slide-in-from-bottom-8 duration-1000 delay-150 font-medium text-balance">
               {isAr
-                ? 'نحن لا ننشئ المتاجر فقط، بل نصنع أزياءك ومنتجاتك بأعلى معايير الجودة الصناعية، ونسلمك علامة تجارية متكاملة وجاهزة للبيع والانتشار فوراً.'
-                : 'Nous ne créons pas seulement des boutiques. Nous fabriquons vos vêtements avec les plus hauts standards industriels et vous livrons une marque prête à vendre.'}
+                ? 'نوفر للعلامات التجارية حلول تصنيع متكاملة بأعلى معايير الجودة الصناعية. من اختيار الأقمشة إلى الخياطة والتغليف، مصنعنا هو شريكك لإنتاج ملابسك باحترافية.'
+                : 'Nous offrons aux marques des solutions de fabrication complètes avec les plus hauts standards industriels. Du choix des tissus à la couture et à l\'emballage, notre usine est votre partenaire de production.'}
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 animate-in slide-in-from-bottom-8 duration-1000 delay-300">
-              <Link to="/commencer" className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#0071e3] hover:bg-[#0077ED] text-white font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+              <Link to="/funnel" className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#0071e3] hover:bg-[#0077ED] text-white font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
                 {isAr ? 'ابدأ مشروعك الآن' : 'Démarrer votre projet'} <ArrowRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
               </Link>
               <Link to="/ecosystem" className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-white border border-slate-200 text-slate-700 font-medium text-lg hover:bg-slate-50 transition-all flex items-center justify-center gap-2 shadow-sm">
@@ -207,7 +207,7 @@ export default function LandingPage() {
 
           {/* Mobile CTA (Under Video) */}
           <div className="lg:hidden flex justify-center mt-2 w-full px-2">
-             <Link to="/commencer" className="w-full py-4 rounded-full bg-[#1d1d1f] text-white font-bold text-lg hover:bg-black transition-all shadow-xl flex items-center justify-center gap-2 animate-in slide-in-from-bottom-8 duration-1000 delay-500">
+             <Link to="/funnel" className="w-full py-4 rounded-full bg-[#1d1d1f] text-white font-bold text-lg hover:bg-black transition-all shadow-xl flex items-center justify-center gap-2 animate-in slide-in-from-bottom-8 duration-1000 delay-500">
                {isAr ? 'ابدأ الآن' : 'Commencer'} <ArrowRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
              </Link>
           </div>
