@@ -216,6 +216,17 @@ export default function LandingPage() {
                 {isAr ? 'تفاصيل المنظومة' : 'Détails de l\'écosystème'} <ChevronRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
               </Link>
             </div>
+
+            {/* Mobile Scroll to Video Arrow */}
+            <div className="flex justify-center mt-10 lg:hidden animate-bounce">
+              <button 
+                onClick={() => document.getElementById('hero-video')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+                className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg border border-slate-200 text-[#0071e3] hover:bg-slate-50 transition-colors"
+                aria-label="Scroll to video"
+              >
+                <ArrowDown className="w-6 h-6" />
+              </button>
+            </div>
           </div>
 
           {/* Hero Video */}
@@ -258,8 +269,8 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Scroll Down Arrow */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center animate-bounce">
+        {/* Scroll Down Arrow (Desktop) */}
+        <div className="hidden lg:flex absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex-col items-center animate-bounce">
           <button 
             onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
             className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg border border-slate-200 text-[#0071e3] hover:bg-slate-50 transition-colors"
