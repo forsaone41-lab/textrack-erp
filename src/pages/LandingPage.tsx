@@ -166,7 +166,7 @@ export default function LandingPage() {
             <button onClick={toggle} className="text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors uppercase tracking-widest">
               {isAr ? 'FR' : 'العربية'}
             </button>
-            <Link to="/login" className="text-sm font-medium text-slate-800 hover:text-black transition-colors hidden sm:block">
+            <Link to="/login" className="text-xs sm:text-sm font-medium text-slate-800 hover:text-black transition-colors">
               {isAr ? 'تسجيل الدخول' : 'Connexion'}
             </Link>
             <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 sm:px-5 sm:py-2 rounded-full bg-[#1d1d1f] text-white font-medium text-xs sm:text-sm hover:bg-black transition-all">

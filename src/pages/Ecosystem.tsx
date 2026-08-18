@@ -45,7 +45,7 @@ export default function Ecosystem() {
             <button onClick={toggle} className={`text-xs font-semibold uppercase tracking-widest transition-colors ${scrolled ? 'text-slate-500 hover:text-slate-900' : 'text-blue-100 hover:text-white'}`}>
               {isAr ? 'FR' : 'العربية'}
             </button>
-            <Link to="/login" className={`text-sm font-medium transition-colors hidden sm:block ${scrolled ? 'text-slate-800 hover:text-black' : 'text-white hover:text-blue-100'}`}>
+            <Link to="/login" className={`text-xs sm:text-sm font-medium transition-colors ${scrolled ? 'text-slate-800 hover:text-black' : 'text-white hover:text-blue-100'}`}>
               {isAr ? 'تسجيل الدخول' : 'Connexion'}
             </Link>
             <button onClick={() => setIsModalOpen(true)} className={`px-4 py-2 sm:px-5 sm:py-2 rounded-full font-medium text-xs sm:text-sm transition-all cursor-pointer ${scrolled ? 'bg-[#1d1d1f] text-white hover:bg-black' : 'bg-white text-[#0071e3] hover:bg-blue-50 shadow-md'}`}>

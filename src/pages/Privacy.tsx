@@ -39,25 +39,31 @@ export default function Privacy() {
                 <section>
                   <h2 className="text-xl">1. جمع المعلومات</h2>
                   <p className="text-slate-600 leading-relaxed">
-                    نحن نجمع المعلومات التي تقدمها لنا مباشرة عند استخدامك لمنصة BEYACREATIVE، بما في ذلك عند إنشاء حساب أو تحديث ملفك الشخصي أو التواصل معنا.
+                    نحن في BEYA CREATIVE نجمع المعلومات اللازمة لتقديم منظومتنا المتكاملة بفعالية. يشمل ذلك:
+                    <br/>- <strong>بيانات التواصل:</strong> الاسم، رقم الهاتف، والبريد الإلكتروني عند طلب عرض سعر أو التسجيل.
+                    <br/>- <strong>بيانات الإنتاج (Beya Production):</strong> تفاصيل المشاريع، المقاسات، والتصاميم التي تشاركها معنا لتصنيع ملابسك.
+                    <br/>- <strong>بيانات المتاجر (Beya Store):</strong> معلومات المنتجات، والطلبيات الخاصة بمتجرك الإلكتروني الذي نستضيفه لك.
                   </p>
                 </section>
                 <section>
                   <h2 className="text-xl">2. استخدام المعلومات</h2>
                   <p className="text-slate-600 leading-relaxed">
-                    نستخدم المعلومات التي نجمعها لتوفير وصيانة وتحسين خدماتنا، وتطوير خدمات جديدة، وحماية BEYACREATIVE ومستخدمينا.
+                    نستخدم معلوماتك لضمان سير أعمالك بسلاسة داخل منظومتنا:
+                    <br/>- معالجة طلبات الإنتاج وتتبع حالة التصنيع عبر (Beya Portal).
+                    <br/>- إعداد وتخصيص المتاجر الإلكترونية لتتناسب مع علامتك التجارية.
+                    <br/>- تقديم الدعم الفني، وإرسال تحديثات حول حالة الفواتير والشحنات.
                   </p>
                 </section>
                 <section>
-                  <h2 className="text-xl">3. مشاركة المعلومات</h2>
+                  <h2 className="text-xl">3. مشاركة وحماية البيانات</h2>
                   <p className="text-slate-600 leading-relaxed">
-                    نحن لا نشارك معلوماتك الشخصية مع شركات أو منظمات أو أفراد خارج BEYACREATIVE إلا في الحالات التالية: بموافقتك، أو لأسباب قانونية.
+                    نحن نعتبر تصاميمك وبيانات عملائك (في متجرك الإلكتروني) سراً مهنياً. لا نقوم بمشاركة أي من هذه البيانات مع أطراف خارجية إلا لغرض تقديم الخدمة (مثل شركات الشحن والتوصيل). يتم تشفير قواعد البيانات وحمايتها بأحدث التقنيات لضمان خصوصيتك.
                   </p>
                 </section>
                 <section>
-                  <h2 className="text-xl">4. أمن البيانات</h2>
+                  <h2 className="text-xl">4. حقوقك</h2>
                   <p className="text-slate-600 leading-relaxed">
-                    نحن نعمل بجد لحماية BEYACREATIVE ومستخدمينا من الوصول غير المصرح به أو التعديل أو الكشف أو الإتلاف للمعلومات التي نحتفظ بها.
+                    بصفتك شريكاً أو عميلاً في منصة BEYA CREATIVE، يحق لك الوصول إلى بياناتك، طلب تعديلها، أو حذفها نهائياً من أنظمتنا عبر التواصل المباشر مع فريق الدعم الفني.
                   </p>
                 </section>
               </>
@@ -66,25 +72,31 @@ export default function Privacy() {
                 <section>
                   <h2 className="text-xl">1. Collecte des informations</h2>
                   <p className="text-slate-600 leading-relaxed">
-                    Nous recueillons les informations que vous nous fournissez directement lorsque vous utilisez la plateforme BEYACREATIVE, y compris lorsque vous créez un compte, mettez à jour votre profil ou communiquez avec nous.
+                    Chez BEYA CREATIVE, nous recueillons les informations nécessaires pour fournir efficacement notre écosystème. Cela comprend :
+                    <br/>- <strong>Coordonnées :</strong> Nom, téléphone et email lors de l'inscription ou d'une demande de devis.
+                    <br/>- <strong>Données de production (Beya Production) :</strong> Détails de vos projets, tailles et designs partagés pour la confection.
+                    <br/>- <strong>Données e-commerce (Beya Store) :</strong> Informations sur les produits et les commandes de la boutique que nous hébergeons pour vous.
                   </p>
                 </section>
                 <section>
                   <h2 className="text-xl">2. Utilisation des informations</h2>
                   <p className="text-slate-600 leading-relaxed">
-                    Nous utilisons les informations que nous recueillons pour fournir, maintenir et améliorer nos services, développer de nouveaux services et protéger BEYACREATIVE ainsi que nos utilisateurs.
+                    Nous utilisons vos informations pour assurer le bon fonctionnement de vos activités au sein de notre écosystème :
+                    <br/>- Traitement de la production et suivi via le (Beya Portal).
+                    <br/>- Création et personnalisation de votre boutique en ligne.
+                    <br/>- Support technique et notifications sur l'état des factures et des livraisons.
                   </p>
                 </section>
                 <section>
-                  <h2 className="text-xl">3. Partage des informations</h2>
+                  <h2 className="text-xl">3. Partage et sécurité des données</h2>
                   <p className="text-slate-600 leading-relaxed">
-                    Nous ne partageons pas vos informations personnelles avec des entreprises, des organisations ou des personnes extérieures à BEYACREATIVE, sauf dans les cas suivants : avec votre consentement, ou pour des raisons légales.
+                    Nous considérons vos designs et les données de vos clients (sur votre boutique en ligne) comme un secret professionnel. Nous ne partageons ces données avec des tiers que pour la fourniture du service (ex: sociétés de livraison). Nos bases de données sont cryptées et sécurisées.
                   </p>
                 </section>
                 <section>
-                  <h2 className="text-xl">4. Sécurité des données</h2>
+                  <h2 className="text-xl">4. Vos droits</h2>
                   <p className="text-slate-600 leading-relaxed">
-                    Nous travaillons dur pour protéger BEYACREATIVE et nos utilisateurs contre l'accès non autorisé, l'altération, la divulgation ou la destruction des informations que nous détenons.
+                    En tant que partenaire ou client de BEYA CREATIVE, vous avez le droit d'accéder, de modifier ou de demander la suppression de vos données de nos systèmes en contactant directement notre support technique.
                   </p>
                 </section>
               </>

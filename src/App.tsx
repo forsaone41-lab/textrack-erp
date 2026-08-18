@@ -110,6 +110,7 @@ const MerchantDashboard = lazy(() => import('./pages/MerchantDashboard'));
 const Terms           = lazy(() => import('./pages/Terms'));
 const Partners        = lazy(() => import('./pages/Partners'));
 const Privacy         = lazy(() => import('./pages/Privacy'));
+const Cookies         = lazy(() => import('./pages/Cookies'));
 const SaaSAdminPage   = lazy(() => import('./pages/SaaSAdminPage'));
 import { PageLoader } from './components/PageLoader';
 
@@ -621,6 +622,11 @@ function AppContent() {
         <Route path="/privacy" element={
           <Suspense fallback={<PageLoader />}>
             <Privacy />
+          </Suspense>
+        } />
+        <Route path="/cookies" element={
+          <Suspense fallback={<PageLoader />}>
+            <Cookies />
           </Suspense>
         } />
         <Route path="/saas-admin" element={

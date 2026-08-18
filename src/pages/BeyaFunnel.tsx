@@ -158,13 +158,13 @@ export default function BeyaFunnel() {
 
       {/* The BEYA Solution */}
       <section className="py-32 relative overflow-hidden">
-        <div className="absolute inset-0 bg-indigo-600/5"></div>
+        <div className={`absolute inset-0 ${isDark ? 'bg-indigo-600/5' : 'bg-indigo-50/50'}`}></div>
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <FadeIn>
             <div className="text-center mb-24">
-              <span className="text-indigo-400 font-black tracking-widest uppercase text-sm mb-4 block">الحل المتكامل</span>
-              <h2 className="text-5xl md:text-6xl font-black text-white mb-6">BEYA CREATIVE</h2>
-              <p className="text-xl text-slate-400 max-w-2xl mx-auto">مكان واحد يجمع التصنيع العالي الجودة مع أحدث تكنولوجيا التجارة الإلكترونية.</p>
+              <span className="text-indigo-500 font-black tracking-widest uppercase text-sm mb-4 block">الحل المتكامل</span>
+              <h2 className={`text-5xl md:text-6xl font-black mb-6 ${isDark ? 'text-white' : 'text-slate-900'}`}>BEYA CREATIVE</h2>
+              <p className="text-xl text-slate-500 max-w-3xl mx-auto font-medium">منظومة شاملة ومتكاملة تجمع بين التصنيع العالي الجودة، التكنولوجيا الرقمية، والتسيير الذكي. مكان واحد لكل ما تحتاجه لنجاح علامتك التجارية.</p>
             </div>
           </FadeIn>
 
@@ -172,39 +172,58 @@ export default function BeyaFunnel() {
             {/* Left: Production */}
             <FadeIn delay={100} className="order-2 lg:order-1">
               <div className="space-y-12">
+                
+                {/* Module 1: Production */}
                 <div className="flex gap-6">
-                  <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shrink-0 shadow-xl shadow-white/5 transform -rotate-6">
-                    <Scissors className="w-8 h-8 text-slate-900" />
+                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 shadow-xl transform -rotate-6 ${isDark ? 'bg-white shadow-white/5' : 'bg-slate-900 shadow-slate-900/10'}`}>
+                    <Scissors className={`w-8 h-8 ${isDark ? 'text-slate-900' : 'text-white'}`} />
                   </div>
                   <div>
-                    <h3 className="text-3xl font-black text-white mb-3">1. BEYA Production</h3>
-                    <p className="text-slate-400 leading-relaxed mb-4">نحن نتكفل بصناعة ملابسك من الألف إلى الياء. أثواب ممتازة، فصالة عصرية، وخياطة بمعايير التصدير.</p>
+                    <h3 className={`text-3xl font-black mb-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>1. BEYA Production</h3>
+                    <p className="text-slate-500 leading-relaxed mb-4">نحن نتكفل بصناعة ملابسك من الألف إلى الياء. توفير أقمشة ممتازة، تصميم باترون دقيق، فصالة عصرية، وخياطة بمعايير التصدير العالمية لضمان جودة استثنائية.</p>
                     <ul className="space-y-2">
-                      <li className="flex items-center gap-2 text-sm text-slate-300 font-bold"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> تتبع مباشر لمراحل الخياطة من حسابك</li>
-                      <li className="flex items-center gap-2 text-sm text-slate-300 font-bold"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> احترام تام لمواعيد التسليم</li>
+                      <li className="flex items-center gap-2 text-sm text-slate-500 font-bold"><CheckCircle2 className="w-5 h-5 text-emerald-500" /> مراقبة صارمة للجودة في كل مرحلة</li>
+                      <li className="flex items-center gap-2 text-sm text-slate-500 font-bold"><CheckCircle2 className="w-5 h-5 text-emerald-500" /> احترام تام لمواعيد التسليم المتفق عليها</li>
                     </ul>
                   </div>
                 </div>
 
+                {/* Module 2: Store */}
                 <div className="flex gap-6">
                   <div className="w-16 h-16 bg-indigo-500 rounded-2xl flex items-center justify-center shrink-0 shadow-xl shadow-indigo-500/20 transform rotate-6">
+                    <ShoppingCart className="w-8 h-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className={`text-3xl font-black mb-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>2. BEYA Store</h3>
+                    <p className="text-slate-500 leading-relaxed mb-4">نبني لك متجراً إلكترونياً ذكياً ومحسّناً خصيصاً للسوق المغربي لضمان أعلى نسبة مبيعات، مع تصميم عصري يبرز قيمة منتجاتك.</p>
+                    <ul className="space-y-2">
+                      <li className="flex items-center gap-2 text-sm text-slate-500 font-bold"><CheckCircle2 className="w-5 h-5 text-emerald-500" /> دعم كامل لنظام الدفع عند الاستلام (COD)</li>
+                      <li className="flex items-center gap-2 text-sm text-slate-500 font-bold"><CheckCircle2 className="w-5 h-5 text-emerald-500" /> ربط أوتوماتيكي مع شركات التوصيل وتتبع الشحنات</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Module 3: Portal */}
+                <div className="flex gap-6">
+                  <div className="w-16 h-16 bg-cyan-500 rounded-2xl flex items-center justify-center shrink-0 shadow-xl shadow-cyan-500/20 transform -rotate-3">
                     <MonitorSmartphone className="w-8 h-8 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-3xl font-black text-white mb-3">2. BEYA Store</h3>
-                    <p className="text-slate-400 leading-relaxed mb-4">نبني لك متجراً إلكترونياً ذكياً ومحسّناً للسوق المغربي بنسبة 100%.</p>
+                    <h3 className={`text-3xl font-black mb-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>3. BEYA Portal</h3>
+                    <p className="text-slate-500 leading-relaxed mb-4">لوحة تحكم ذكية واحدة تضع عملك كاملاً بين يديك. تابع الإنتاج، راقب المبيعات، وتواصل مع فريقنا لحظة بلحظة.</p>
                     <ul className="space-y-2">
-                      <li className="flex items-center gap-2 text-sm text-slate-300 font-bold"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> الدفع عند الاستلام (COD) سريع جداً</li>
-                      <li className="flex items-center gap-2 text-sm text-slate-300 font-bold"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> ربط أوتوماتيكي مع شركات التوصيل (eGrow)</li>
+                      <li className="flex items-center gap-2 text-sm text-slate-500 font-bold"><CheckCircle2 className="w-5 h-5 text-emerald-500" /> تتبع مباشر لمراحل الخياطة والإنتاج</li>
+                      <li className="flex items-center gap-2 text-sm text-slate-500 font-bold"><CheckCircle2 className="w-5 h-5 text-emerald-500" /> إدارة الفواتير والمخزون بشفافية تامة</li>
                     </ul>
                   </div>
                 </div>
                 
-                <div className="bg-emerald-500/10 border border-emerald-500/20 p-6 rounded-2xl flex items-start gap-4">
-                  <Zap className="w-8 h-8 text-emerald-400 shrink-0 mt-1 animate-pulse" />
+                {/* Push to Store Highlight */}
+                <div className="bg-emerald-500/10 border border-emerald-500/20 p-6 rounded-2xl flex items-start gap-4 transform hover:scale-[1.02] transition-transform">
+                  <Zap className="w-8 h-8 text-emerald-500 shrink-0 mt-1 animate-pulse" />
                   <div>
-                    <h4 className="text-lg font-black text-white mb-1">الميزة الخارقة (Push to Store)</h4>
-                    <p className="text-sm text-slate-300 leading-relaxed">بمجرد الانتهاء من خياطة ملابسك، يتم إرسالها آلياً إلى متجرك مع الكمية الصحيحة لتصبح جاهزة للبيع فوراً!</p>
+                    <h4 className={`text-lg font-black mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>الميزة الخارقة (Push to Store)</h4>
+                    <p className="text-sm text-slate-500 leading-relaxed font-medium">بمجرد الانتهاء من خياطة ملابسك في الورشة وتغليفها، يتم إرسالها آلياً بنقرة واحدة إلى متجرك الإلكتروني مع الصور والكمية الصحيحة لتصبح جاهزة للبيع فوراً!</p>
                   </div>
                 </div>
               </div>
