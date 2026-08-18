@@ -212,6 +212,13 @@ export default function LandingPage() {
               </button>
             </div>
           </div>
+
+          {/* Mobile CTA (Under Video) */}
+          <div className="lg:hidden flex justify-center mt-2 w-full px-2">
+             <Link to="/commencer" className="w-full py-4 rounded-full bg-[#1d1d1f] text-white font-bold text-lg hover:bg-black transition-all shadow-xl flex items-center justify-center gap-2 animate-in slide-in-from-bottom-8 duration-1000 delay-500">
+               {isAr ? 'ابدأ الآن' : 'Commencer'} <ArrowRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
+             </Link>
+          </div>
         </div>
 
         {/* Subtle Background Elements */}
