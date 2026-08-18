@@ -434,6 +434,9 @@ export default function LandingPage() {
              <Link to="/cookies" className="text-[#86868b] text-sm font-medium hover:text-[#0071e3] transition-colors">
                {isAr ? 'ملفات تعريف الارتباط' : 'Cookies'}
              </Link>
+             <Link to="/funnel" className="text-[#86868b] text-sm font-medium hover:text-[#0071e3] transition-colors">
+               Beya Funnel
+             </Link>
            </div>
 
            <p className="text-slate-400 font-semibold uppercase tracking-widest text-xs hidden md:block">Professional Excellence</p>

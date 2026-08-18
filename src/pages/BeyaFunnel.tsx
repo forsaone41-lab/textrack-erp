@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, ArrowDown, Scissors, MonitorSmartphone, TrendingUp, CheckCircle2, ShoppingCart, Zap, Star } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowDown, Scissors, MonitorSmartphone, TrendingUp, CheckCircle2, ShoppingCart, Zap, Star, Sun, Moon } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../supabase';
 import ProjectRequestModal from '../components/ProjectRequestModal';
+import { useLang } from '../contexts/LangContext';
 
 function useOnScreen(ref: React.RefObject<Element>, rootMargin = '0px') {
   const [isIntersecting, setIntersecting] = useState(false);
@@ -40,29 +41,39 @@ const FadeIn = ({ children, delay = 0, className = '' }: any) => {
 export default function BeyaFunnel() {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { isAr, toggle } = useLang();
+  const [isDark, setIsDark] = useState(true);
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-slate-50 font-arabic selection:bg-indigo-500/30" dir="rtl">
+    <div className={`min-h-screen ${isDark ? 'bg-[#0f172a] text-slate-50' : 'bg-slate-50 text-slate-900'} font-arabic selection:bg-indigo-500/30 transition-colors duration-500`} dir={isAr ? 'rtl' : 'ltr'}>
       
       {/* Navbar */}
-      <nav className="fixed top-0 w-full z-50 bg-[#0f172a]/80 backdrop-blur-xl border-b border-white/5">
+      <nav className={`fixed top-0 w-full z-50 ${isDark ? 'bg-[#0f172a]/80 border-white/5' : 'bg-white/80 border-slate-200 shadow-sm'} backdrop-blur-xl border-b transition-colors duration-500`}>
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-2.5">
-            <img src="/logo-blue.png" alt="Beya Creative" className="w-8 h-8 rounded-lg brightness-0 invert" />
-            <span className="font-black text-xl tracking-widest uppercase">BEYA CREATIVE</span>
+            <img src="/logo-blue.png" alt="Beya Creative" className={`w-8 h-8 rounded-lg transition-all ${isDark ? 'brightness-0 invert' : ''}`} />
+            <span className={`font-black text-xl tracking-widest uppercase ${isDark ? 'text-white' : 'text-slate-900'}`}>BEYA CREATIVE</span>
           </div>
-          <button 
-            onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
-            className="px-6 py-2.5 bg-white text-slate-900 rounded-full text-xs font-black uppercase tracking-widest hover:scale-105 transition-transform"
-          >
-            ابدأ الآن
-          </button>
+          <div className="flex items-center gap-3 md:gap-5">
+            <button onClick={toggle} className={`text-xs font-bold uppercase tracking-widest transition-colors ${isDark ? 'text-slate-300 hover:text-white' : 'text-slate-500 hover:text-[#0071e3]'}`}>
+              {isAr ? 'EN/FR' : 'عربي'}
+            </button>
+            <button onClick={() => setIsDark(!isDark)} className={`p-2 rounded-full transition-colors ${isDark ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-500 hover:text-[#0071e3] hover:bg-slate-100'}`}>
+              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+            <button 
+              onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+              className={`px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-widest hover:scale-105 transition-transform ${isDark ? 'bg-white text-slate-900' : 'bg-[#0071e3] text-white shadow-lg shadow-blue-500/20'}`}
+            >
+              {isAr ? 'ابدأ الآن' : 'Start Now'}
+            </button>
+          </div>
         </div>
       </nav>
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/40 via-[#0f172a] to-[#0f172a]"></div>
+        <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] ${isDark ? 'from-indigo-900/40 via-[#0f172a] to-[#0f172a]' : 'from-indigo-100 via-slate-50 to-slate-50'} transition-colors duration-500`}></div>
         
         {/* Animated Background Elements */}
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-[120px] mix-blend-screen animate-pulse"></div>
@@ -80,7 +91,7 @@ export default function BeyaFunnel() {
           </FadeIn>
           
           <FadeIn delay={200}>
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white mb-8 leading-[1.1] tracking-tighter">
+            <h1 className={`text-5xl md:text-7xl lg:text-8xl font-black mb-8 leading-[1.1] tracking-tighter ${isDark ? 'text-white' : 'text-slate-900'}`}>
               أطلق علامتك <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">التجارية</span><br />
               من الفكرة إلى المبيعات
             </h1>
@@ -236,14 +247,14 @@ export default function BeyaFunnel() {
                   <div className="w-20 h-20 bg-indigo-600 rounded-3xl flex items-center justify-center transform rotate-12 mx-auto mb-6 shadow-xl shadow-indigo-500/30">
                     <img src="/logo-blue.png" alt="Beya Creative" className="w-10 h-10 rounded-lg brightness-0 invert -rotate-12" />
                   </div>
-                  <h2 className="text-3xl md:text-5xl font-black text-white mb-4">هل أنت مستعد للبدء؟</h2>
+                  <h2 className={`text-3xl md:text-5xl font-black mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>هل أنت مستعد للبدء؟</h2>
                   <p className="text-slate-400 text-lg">أدخل معلوماتك وسنتواصل معك فوراً لتحديد موعد والبدء في مشروعك.</p>
                 </div>
 
                 <div className="flex justify-center pb-8">
                   <button 
                     onClick={() => setIsModalOpen(true)}
-                    className="w-full py-5 bg-white text-slate-900 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-xl shadow-white/10 flex justify-center items-center gap-2"
+                    className={`w-full py-5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all flex justify-center items-center gap-2 ${isDark ? 'bg-white text-slate-900 hover:bg-indigo-600 hover:text-white shadow-xl shadow-white/10' : 'bg-[#0071e3] text-white hover:bg-[#0077ED] shadow-xl shadow-blue-500/20'}`}
                   >
                     ابدأ الآن
                   </button>

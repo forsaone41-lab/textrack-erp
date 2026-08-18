@@ -208,6 +208,9 @@ export default function Ecosystem() {
             <Link to="/cookies" className="text-slate-500 text-sm font-medium hover:text-[#0071e3] transition-colors">
               {isAr ? 'ملفات تعريف الارتباط' : 'Cookies'}
             </Link>
+            <Link to="/funnel" className="text-slate-500 text-sm font-medium hover:text-[#0071e3] transition-colors">
+              Beya Funnel
+            </Link>
           </div>
           <p className="text-slate-500 text-sm">© {new Date().getFullYear()} Beya Creative. {isAr ? 'جميع الحقوق محفوظة' : 'Tous droits réservés'}.</p>
         </div>
