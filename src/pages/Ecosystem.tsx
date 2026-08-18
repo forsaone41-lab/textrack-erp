@@ -20,11 +20,9 @@ export default function Ecosystem() {
       {/* Navigation */}
       <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-xl border-b border-slate-200/50 shadow-sm py-3' : 'bg-transparent py-5'}`}>
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${scrolled ? 'bg-[#0071e3] text-white' : 'bg-white text-[#0071e3]'}`}>
-              <span className="font-bold text-lg">B</span>
-            </div>
-            <span className={`font-semibold text-lg tracking-tight transition-colors ${scrolled ? 'text-slate-900' : 'text-white'}`}>Beya Creative</span>
+          <Link to="/" className="flex items-center gap-2 sm:gap-2.5 group">
+            <img src="/logo-blue.png" alt="Beya Creative" className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg transition-all ${!scrolled && 'brightness-0 invert'}`} />
+            <span className={`font-semibold text-lg sm:text-xl tracking-tight transition-colors ${scrolled ? 'text-slate-900' : 'text-white'}`}>Beya Creative</span>
           </Link>
           
           <div className="hidden md:flex items-center gap-8">
