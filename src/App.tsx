@@ -661,6 +661,9 @@ function AppContent() {
           </Suspense>
         } />
           <Route path="/funnel" element={<BeyaFunnel />} />
+          <Route path="/funnel/ar" element={<BeyaFunnel />} />
+          <Route path="/funnel/fr" element={<BeyaFunnel />} />
+          <Route path="/funnel/en" element={<BeyaFunnel />} />
           <Route path="/app" element={<DownloadApp />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
