@@ -24,12 +24,12 @@ export default function Ecosystem() {
     <div className={`min-h-screen bg-slate-50 font-sans selection:bg-[#0071e3] selection:text-white ${isAr ? 'rtl' : 'ltr'}`} dir={isAr ? 'rtl' : 'ltr'}>
       {/* Navigation */}
       <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-xl border-b border-slate-200/50 shadow-sm py-3' : 'bg-transparent py-5'}`}>
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 sm:gap-2.5 group">
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 ${!scrolled ? 'bg-white shadow-sm p-1' : 'bg-transparent'}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2 sm:gap-2.5 group shrink-0">
+            <div className={`w-7 h-7 sm:w-8 sm:h-8 shrink-0 rounded-lg flex items-center justify-center transition-all duration-300 ${!scrolled ? 'bg-white shadow-sm p-1' : 'bg-transparent'}`}>
               <img src="/logo-blue.png" alt="Beya Creative" className="w-full h-full object-contain" />
             </div>
-            <span className={`font-semibold text-lg sm:text-xl tracking-tight transition-colors ${scrolled ? 'text-slate-900' : 'text-white'}`}>Beya Creative</span>
+            <span className={`font-semibold text-sm sm:text-xl tracking-tight whitespace-nowrap transition-colors ${scrolled ? 'text-slate-900' : 'text-white'}`}>Beya Creative</span>
           </Link>
           
           <div className="hidden md:flex items-center gap-8">
@@ -41,14 +41,14 @@ export default function Ecosystem() {
             </a>
           </div>
 
-          <div className="flex items-center gap-3 sm:gap-6">
-            <button onClick={toggle} className={`text-xs font-semibold uppercase tracking-widest transition-colors ${scrolled ? 'text-slate-500 hover:text-slate-900' : 'text-blue-100 hover:text-white'}`}>
+          <div className="flex items-center gap-2 sm:gap-6 shrink-0 ml-2">
+            <button onClick={toggle} className={`text-[10px] sm:text-xs font-semibold uppercase tracking-widest transition-colors ${scrolled ? 'text-slate-500 hover:text-slate-900' : 'text-blue-100 hover:text-white'}`}>
               {isAr ? 'FR' : 'العربية'}
             </button>
-            <Link to="/login" className={`text-xs sm:text-sm font-medium transition-colors ${scrolled ? 'text-slate-800 hover:text-black' : 'text-white hover:text-blue-100'}`}>
+            <Link to="/login" className={`hidden sm:block text-xs sm:text-sm font-medium transition-colors ${scrolled ? 'text-slate-800 hover:text-black' : 'text-white hover:text-blue-100'}`}>
               {isAr ? 'تسجيل الدخول' : 'Connexion'}
             </Link>
-            <button onClick={() => setIsModalOpen(true)} className={`px-4 py-2 sm:px-5 sm:py-2 rounded-full font-medium text-xs sm:text-sm transition-all cursor-pointer ${scrolled ? 'bg-[#1d1d1f] text-white hover:bg-black' : 'bg-white text-[#0071e3] hover:bg-blue-50 shadow-md'}`}>
+            <button onClick={() => setIsModalOpen(true)} className={`px-3 py-1.5 sm:px-5 sm:py-2 rounded-full font-medium text-[11px] sm:text-sm transition-all cursor-pointer whitespace-nowrap ${scrolled ? 'bg-[#1d1d1f] text-white hover:bg-black' : 'bg-white text-[#0071e3] hover:bg-blue-50 shadow-md'}`}>
               {isAr ? 'ابدأ الآن' : 'Commencer'}
             </button>
           </div>
@@ -209,7 +209,7 @@ export default function Ecosystem() {
               {isAr ? 'ملفات تعريف الارتباط' : 'Cookies'}
             </Link>
             <Link to="/funnel" className="text-slate-500 text-sm font-medium hover:text-[#0071e3] transition-colors">
-              Beya Funnel
+              {isAr ? 'كيف نطور فكرتك لتنجح؟' : 'Développer votre idée'}
             </Link>
           </div>
           <p className="text-slate-500 text-sm">© {new Date().getFullYear()} Beya Creative. {isAr ? 'جميع الحقوق محفوظة' : 'Tous droits réservés'}.</p>
