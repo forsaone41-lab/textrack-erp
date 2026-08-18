@@ -43,6 +43,24 @@ const styles = `
     66% { transform: translate(-20px, 20px) rotate(-10deg); opacity: 0.08; }
     100% { transform: translate(0px, 0px) rotate(0deg); opacity: 0.03; }
   }
+  
+  [dir="ltr"] .slide-from-start { opacity: 0; transform: translateX(-100px); }
+  [dir="ltr"] .slide-from-end { opacity: 0; transform: translateX(100px); }
+  [dir="rtl"] .slide-from-start { opacity: 0; transform: translateX(100px); }
+  [dir="rtl"] .slide-from-end { opacity: 0; transform: translateX(-100px); }
+  
+  .slide-fade-up { opacity: 0; transform: translateY(30px); }
+
+  .slide-from-start, .slide-from-end, .slide-fade-up {
+    transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .slide-from-start.is-visible,
+  .slide-from-end.is-visible,
+  .slide-fade-up.is-visible {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
 `;
 
 const TRANSLATIONS: any = {
@@ -287,6 +305,20 @@ export default function LandingPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+        }
+      });
+    }, { threshold: 0.2 });
+    
+    document.querySelectorAll('.scroll-animate-item').forEach((el) => observer.observe(el));
+    
+    return () => observer.disconnect();
+  }, []);
+
   const toggleVideoPlay = () => {
     const v = heroVideoRef.current;
     if (!v) return;
@@ -495,26 +527,30 @@ export default function LandingPage() {
            <p className="text-lg text-[#86868b] max-w-xl mx-auto mb-20">{t.dualDesc}</p>
 
            <div className="relative flex flex-col md:flex-row items-stretch justify-center gap-6 md:gap-0">
-              <div className="relative flex-1 max-w-sm mx-auto md:mx-0 bg-white border border-slate-200 rounded-[2rem] p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_40px_rgba(0,113,227,0.12)] hover:-translate-y-1 transition-all duration-300 md:mr-[-1px]">
-                 <div className="w-20 h-20 rounded-2xl bg-[#0071e3] flex items-center justify-center mb-6 mx-auto shadow-[0_8px_24px_rgba(0,113,227,0.35)]">
-                   <Code className="w-9 h-9 text-white" />
+              <div className="slide-from-start scroll-animate-item relative flex-1 max-w-sm mx-auto md:mx-0 md:mr-[-1px]">
+                 <div className="bg-white border border-slate-200 rounded-[2rem] p-10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_40px_rgba(0,113,227,0.12)] hover:-translate-y-1 transition-all duration-300 h-full">
+                   <div className="w-20 h-20 rounded-2xl bg-[#0071e3] flex items-center justify-center mb-6 mx-auto shadow-[0_8px_24px_rgba(0,113,227,0.35)]">
+                     <Code className="w-9 h-9 text-white" />
+                   </div>
+                   <h3 className="text-2xl font-semibold mb-3 text-[#1d1d1f]">{t.techTitle}</h3>
+                   <p className="text-[#86868b] leading-relaxed">{t.techDesc}</p>
                  </div>
-                 <h3 className="text-2xl font-semibold mb-3 text-[#1d1d1f]">{t.techTitle}</h3>
-                 <p className="text-[#86868b] leading-relaxed">{t.techDesc}</p>
               </div>
 
-              <div className="hidden md:flex items-center justify-center z-10 -mx-5">
+              <div className="hidden md:flex items-center justify-center z-10 -mx-5 slide-fade-up scroll-animate-item" style={{ transitionDelay: '0.2s' }}>
                 <div className="w-12 h-12 rounded-full bg-white border-4 border-[#FBFBFD] shadow-md flex items-center justify-center text-[#0071e3]">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
                 </div>
               </div>
 
-              <div className="relative flex-1 max-w-sm mx-auto md:mx-0 bg-[#1d1d1f] rounded-[2rem] p-10 shadow-[0_2px_20px_rgba(0,0,0,0.08)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.3)] hover:-translate-y-1 transition-all duration-300 md:ml-[-1px]">
-                 <div className="w-20 h-20 rounded-2xl bg-white/10 flex items-center justify-center mb-6 mx-auto">
-                   <Scissors className="w-9 h-9 text-white" />
+              <div className="slide-from-end scroll-animate-item relative flex-1 max-w-sm mx-auto md:mx-0 md:ml-[-1px]">
+                 <div className="bg-[#1d1d1f] rounded-[2rem] p-10 shadow-[0_2px_20px_rgba(0,0,0,0.08)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.3)] hover:-translate-y-1 transition-all duration-300 h-full">
+                   <div className="w-20 h-20 rounded-2xl bg-white/10 flex items-center justify-center mb-6 mx-auto">
+                     <Scissors className="w-9 h-9 text-white" />
+                   </div>
+                   <h3 className="text-2xl font-semibold mb-3 text-white">{t.indTitle}</h3>
+                   <p className="text-[#a1a1a6] leading-relaxed">{t.indDesc}</p>
                  </div>
-                 <h3 className="text-2xl font-semibold mb-3 text-white">{t.indTitle}</h3>
-                 <p className="text-[#a1a1a6] leading-relaxed">{t.indDesc}</p>
               </div>
            </div>
         </div>
