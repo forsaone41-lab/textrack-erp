@@ -6,10 +6,6 @@ import { ChevronRight, Store, Settings, Scissors, Globe, Layers, ShieldCheck, Ar
 export default function Ecosystem() {
   const { isAr, toggle } = useLang();
   const [scrolled, setScrolled] = useState(false);
-  
-  // Basic slider state
-  const [slide, setSlide] = useState(0);
-  const slides = ['/factory_bg.jpg', '/atelier_background.png', '/dashboard-preview.png'];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -18,13 +14,6 @@ export default function Ecosystem() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSlide((prev) => (prev + 1) % slides.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [slides.length]);
 
   return (
     <div className={`min-h-screen bg-slate-50 font-sans selection:bg-[#0071e3] selection:text-white ${isAr ? 'rtl' : 'ltr'}`} dir={isAr ? 'rtl' : 'ltr'}>
@@ -62,34 +51,25 @@ export default function Ecosystem() {
       </nav>
 
       {/* Hero Header */}
-      <section className="pt-32 pb-20 px-6 bg-white overflow-hidden relative">
+      <section className="relative pt-40 pb-32 px-6 overflow-hidden min-h-[70vh] flex items-center justify-center rounded-b-[3rem] shadow-2xl mb-12">
+        {/* Single Image Background with Blue Overlay/Flow */}
+        <div className="absolute inset-0 z-0">
+          <img src="/factory_bg.jpg" alt="Beya Production" className="absolute inset-0 w-full h-full object-cover" />
+          {/* Blue Flow/Glow Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0071e3]/90 via-[#0077ED]/70 to-slate-900/90 mix-blend-multiply" />
+          <div className="absolute inset-0 bg-[#0071e3]/10 backdrop-blur-[1px]" />
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-black/30 via-transparent to-transparent" />
+        </div>
+        
         <div className="max-w-5xl mx-auto text-center relative z-10">
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-[#1d1d1f] leading-tight mb-6">
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white leading-tight mb-8 drop-shadow-lg">
             {isAr ? 'منظومة متكاملة لنجاحك.' : 'Un écosystème pour votre succès.'}
           </h1>
-          <p className="text-xl text-[#86868b] max-w-3xl mx-auto leading-relaxed mb-10">
+          <p className="text-xl md:text-2xl text-blue-50 max-w-3xl mx-auto leading-relaxed mb-10 drop-shadow-md font-medium">
             {isAr
               ? 'في Beya Creative، لا نكتفي بتقديم خدمة واحدة، بل نقدم لك منظومة شاملة تدمج بين الإنتاج الصناعي عالي الجودة والتكنولوجيا الرقمية المتقدمة لضمان توسع أعمالك بكل احترافية وسهولة.'
               : 'Chez Beya Creative, nous ne nous contentons pas d\'un seul service. Nous offrons un écosystème complet alliant production industrielle et technologie numérique.'}
           </p>
-        </div>
-        
-        {/* Main Slider */}
-        <div className="max-w-6xl mx-auto h-[50vh] md:h-[60vh] rounded-[2rem] overflow-hidden relative shadow-2xl mt-8 border-4 border-slate-50">
-          {slides.map((src, idx) => (
-            <img
-              key={src}
-              src={src}
-              alt=""
-              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === slide ? 'opacity-100' : 'opacity-0'}`}
-            />
-          ))}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-          <div className="absolute bottom-8 left-0 w-full flex justify-center gap-2">
-            {slides.map((_, idx) => (
-              <span key={idx} className={`h-1.5 rounded-full transition-all duration-300 ${idx === slide ? 'w-8 bg-white' : 'w-2 bg-white/50'}`} />
-            ))}
-          </div>
         </div>
       </section>
 
