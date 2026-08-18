@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useLang } from '../contexts/LangContext';
 import { ArrowRight, ArrowDown, Code, Scissors, ShoppingBag, Store, Globe, Zap, Star, Settings, ChevronRight, Play, Pause, Volume2, VolumeX, MousePointerClick, MessageSquareText, PhoneCall, Shirt, PenTool, Ruler, Eye, HeartHandshake, X, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../supabase';
@@ -77,11 +77,23 @@ function useScrollFocus() {
 
 export default function LandingPage() {
   const { isAr, toggle } = useLang();
+  const location = useLocation();
   const heroFocus = useScrollFocus();
   const [scrolled, setScrolled] = useState(false);
   const heroVideoRef = React.useRef<HTMLVideoElement>(null);
   const [videoPlaying, setVideoPlaying] = useState(true);
   const [videoMuted, setVideoMuted] = useState(false);
+
+  // Auto-scroll logic for FB Ads
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('scroll') === 'video') {
+      // Small delay to ensure rendering is done before scrolling
+      setTimeout(() => {
+        document.getElementById('hero-video')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 800);
+    }
+  }, [location.search]);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -207,7 +219,7 @@ export default function LandingPage() {
           </div>
 
           {/* Hero Video */}
-          <div ref={heroFocus.ref} style={heroFocus.style} className="relative rounded-[2rem] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.12)] border-b-4 border-[#0071e3] aspect-[2/3] md:aspect-[4/5] w-full h-auto md:h-[680px] md:w-auto mx-auto animate-in slide-in-from-bottom-8 duration-1000 delay-150 group">
+          <div id="hero-video" ref={heroFocus.ref} style={heroFocus.style} className="relative rounded-[2rem] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.12)] border-b-4 border-[#0071e3] aspect-[2/3] md:aspect-[4/5] w-full h-auto md:h-[680px] md:w-auto mx-auto animate-in slide-in-from-bottom-8 duration-1000 delay-150 group">
             <video
               ref={heroVideoRef}
               autoPlay
@@ -435,7 +447,7 @@ export default function LandingPage() {
                {isAr ? 'ملفات تعريف الارتباط' : 'Cookies'}
              </Link>
              <Link to="/funnel" className="text-[#86868b] text-sm font-medium hover:text-[#0071e3] transition-colors">
-               Beya Funnel
+               {isAr ? 'كيف نطور فكرتك لتنجح؟' : 'Développer votre idée'}
              </Link>
            </div>
 
