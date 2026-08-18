@@ -166,7 +166,7 @@ export default function LandingPage() {
           </div>
 
           {/* Hero Video */}
-          <div className="relative rounded-[2rem] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.12)] border-b-4 border-[#0071e3] aspect-[4/5] h-[560px] md:h-[680px] w-auto mx-auto animate-in slide-in-from-bottom-8 duration-1000 delay-150 group">
+          <div className="relative rounded-[2rem] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.12)] border-b-4 border-[#0071e3] aspect-[4/5] w-full h-auto md:h-[680px] md:w-auto mx-auto animate-in slide-in-from-bottom-8 duration-1000 delay-150 group">
             <video
               ref={heroVideoRef}
               autoPlay
