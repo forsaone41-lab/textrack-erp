@@ -16,7 +16,19 @@
       "Bash(vercel --prod --yes)",
       "Read(//c/Users/hp/AppData/Local/Temp/claude/**)",
       "Bash(xargs ls -la)",
-      "Bash(npx vite *)"
+      "Bash(npx vite *)",
+      "Bash(ls -la \"/c/Users/hp/Downloads/BeyaCreative.mp4\" 2>&1)",
+      "Read(//c/Users/hp/Downloads/**)",
+      "Bash(cp \"C:\\\\Users\\\\hp\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-hp-Downloads-BEYA\\\\232cd9c0-5ce7-4f5d-96fb-314b04eacff4\\\\scratchpad\\\\hover.cjs\" .)",
+      "Bash(node hover.cjs)",
+      "Bash(rm hover.cjs)",
+      "Bash(lsof -ti:5179 -sTCP:LISTEN)",
+      "Bash(xargs -r kill)",
+      "Bash(lsof -ti:5180 -sTCP:LISTEN)",
+      "Bash(npm run *)",
+      "Bash(cp \"C:\\\\Users\\\\hp\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-hp-Downloads-BEYA\\\\232cd9c0-5ce7-4f5d-96fb-314b04eacff4\\\\scratchpad\\\\flowtest.cjs\" .)",
+      "Bash(node flowtest.cjs)",
+      "Bash(rm flowtest.cjs)"
     ]
   }
 }
