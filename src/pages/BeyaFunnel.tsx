@@ -204,7 +204,7 @@ export default function BeyaFunnel() {
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500 to-cyan-400 rounded-full blur-[100px] opacity-30 animate-pulse"></div>
                 <div className="relative bg-[#1e293b] border border-white/10 rounded-[3rem] p-4 shadow-2xl overflow-hidden aspect-[4/5] flex flex-col group">
-                  <div className="w-full flex-1 bg-[url('https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80')] bg-cover bg-center rounded-[2.5rem] relative overflow-hidden transition-transform duration-700 group-hover:scale-105">
+                  <div className="w-full flex-1 bg-[url('/premium_streetwear_hoodie.png')] bg-cover bg-center rounded-[2.5rem] relative overflow-hidden transition-transform duration-700 group-hover:scale-105">
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
                     <div className="absolute bottom-6 left-6 right-6">
                        <div className="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl">
