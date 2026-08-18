@@ -217,16 +217,7 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            {/* Mobile Scroll to Video Arrow */}
-            <div className="flex justify-center mt-10 lg:hidden animate-bounce">
-              <button 
-                onClick={() => document.getElementById('hero-video')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-                className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg border border-slate-200 text-[#0071e3] hover:bg-slate-50 transition-colors"
-                aria-label="Scroll to video"
-              >
-                <ArrowDown className="w-6 h-6" />
-              </button>
-            </div>
+
           </div>
 
           {/* Hero Video */}
@@ -269,14 +260,14 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Scroll Down Arrow (Desktop) */}
-        <div className="hidden lg:flex absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex-col items-center animate-bounce">
+        {/* Universal Scroll Down Arrow (Fixed to bottom, hides on scroll) */}
+        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] transition-all duration-500 flex-col items-center animate-bounce ${scrolled ? 'opacity-0 pointer-events-none translate-y-10' : 'opacity-100 translate-y-0'}`}>
           <button 
-            onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
-            className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg border border-slate-200 text-[#0071e3] hover:bg-slate-50 transition-colors"
+            onClick={() => document.getElementById('hero-video')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+            className="w-14 h-14 bg-white/95 backdrop-blur-sm rounded-full flex items-center justify-center shadow-[0_8px_30px_rgba(0,113,227,0.25)] border border-[#0071e3]/20 text-[#0071e3] hover:bg-white transition-all hover:scale-110"
             aria-label="Scroll down"
           >
-            <ArrowDown className="w-6 h-6" />
+            <ArrowDown className="w-7 h-7" />
           </button>
         </div>
 
