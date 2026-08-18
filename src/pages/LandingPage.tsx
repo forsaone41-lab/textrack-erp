@@ -25,6 +25,22 @@ const styles = `
   .text-balance {
     text-wrap: balance;
   }
+  @keyframes float {
+    0% { transform: translateY(0px) rotate(0deg); opacity: 0.05; }
+    50% { transform: translateY(-20px) rotate(5deg); opacity: 0.15; }
+    100% { transform: translateY(0px) rotate(0deg); opacity: 0.05; }
+  }
+  @keyframes float-reverse {
+    0% { transform: translateY(0px) rotate(0deg); opacity: 0.05; }
+    50% { transform: translateY(20px) rotate(-5deg); opacity: 0.15; }
+    100% { transform: translateY(0px) rotate(0deg); opacity: 0.05; }
+  }
+  @keyframes float-slow {
+    0% { transform: translate(0px, 0px) rotate(0deg); opacity: 0.03; }
+    33% { transform: translate(30px, -50px) rotate(10deg); opacity: 0.1; }
+    66% { transform: translate(-20px, 20px) rotate(-10deg); opacity: 0.08; }
+    100% { transform: translate(0px, 0px) rotate(0deg); opacity: 0.03; }
+  }
 `;
 
 export default function LandingPage() {
@@ -199,8 +215,30 @@ export default function LandingPage() {
         </div>
 
         {/* Subtle Background Elements */}
-        <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden flex justify-center -z-10">
-           <div className="w-[120%] h-64 bg-gradient-to-b from-slate-50 to-white rounded-[100%] -top-32 absolute" />
+        <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden -z-10">
+           {/* Original subtle gradient */}
+           <div className="w-[120%] h-64 bg-gradient-to-b from-slate-50 to-white rounded-[100%] -top-32 absolute left-1/2 -translate-x-1/2" />
+           
+           {/* Animated Floating Vectors */}
+           <div className="absolute top-[20%] left-[10%] text-[#0071e3]" style={{ animation: 'float-slow 15s ease-in-out infinite' }}>
+             <Scissors className="w-12 h-12" />
+           </div>
+           <div className="absolute top-[70%] left-[15%] text-[#1d1d1f]" style={{ animation: 'float 12s ease-in-out infinite' }}>
+             <Store className="w-16 h-16" />
+           </div>
+           <div className="absolute top-[25%] right-[15%] text-[#0071e3]" style={{ animation: 'float-reverse 18s ease-in-out infinite' }}>
+             <Code className="w-14 h-14" />
+           </div>
+           <div className="absolute top-[65%] right-[10%] text-[#1d1d1f]" style={{ animation: 'float-slow 20s ease-in-out infinite' }}>
+             <Globe className="w-20 h-20 opacity-50" />
+           </div>
+           <div className="absolute top-[45%] left-[50%] text-[#0071e3]" style={{ animation: 'float 14s ease-in-out infinite' }}>
+             <Zap className="w-10 h-10" />
+           </div>
+           
+           {/* Abstract geometric shapes */}
+           <div className="absolute top-[10%] right-[35%] w-32 h-32 rounded-full border border-[#0071e3]/10" style={{ animation: 'float-slow 25s linear infinite' }} />
+           <div className="absolute bottom-[20%] left-[40%] w-24 h-24 rounded-2xl border border-[#1d1d1f]/10 rotate-45" style={{ animation: 'float-reverse 22s linear infinite' }} />
         </div>
       </section>
 
