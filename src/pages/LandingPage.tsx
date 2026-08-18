@@ -415,7 +415,17 @@ export default function LandingPage() {
       <footer className="py-12 text-center bg-white border-t border-slate-200">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
            <p className="text-[#86868b] text-sm font-medium">© {new Date().getFullYear()} Beya Creative. {isAr ? 'جميع الحقوق محفوظة.' : 'Tous droits réservés.'}</p>
-           <p className="text-slate-400 font-semibold uppercase tracking-widest text-xs">Professional Excellence</p>
+           
+           <div className="flex items-center gap-6">
+             <Link to="/privacy" className="text-[#86868b] text-sm font-medium hover:text-[#0071e3] transition-colors">
+               {isAr ? 'سياسة الخصوصية' : 'Politique de Confidentialité'}
+             </Link>
+             <Link to="/cookies" className="text-[#86868b] text-sm font-medium hover:text-[#0071e3] transition-colors">
+               {isAr ? 'ملفات تعريف الارتباط' : 'Cookies'}
+             </Link>
+           </div>
+
+           <p className="text-slate-400 font-semibold uppercase tracking-widest text-xs hidden md:block">Professional Excellence</p>
         </div>
       </footer>
 

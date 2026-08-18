@@ -200,7 +200,17 @@ export default function Ecosystem() {
 
       {/* Footer minimal */}
       <footer className="py-12 border-t border-slate-200 bg-slate-50 text-center">
-        <p className="text-slate-500 text-sm">© {new Date().getFullYear()} Beya Creative. {isAr ? 'جميع الحقوق محفوظة' : 'Tous droits réservés'}.</p>
+        <div className="max-w-7xl mx-auto px-6 flex flex-col items-center justify-center gap-4">
+          <div className="flex items-center gap-6">
+            <Link to="/privacy" className="text-slate-500 text-sm font-medium hover:text-[#0071e3] transition-colors">
+              {isAr ? 'سياسة الخصوصية' : 'Politique de Confidentialité'}
+            </Link>
+            <Link to="/cookies" className="text-slate-500 text-sm font-medium hover:text-[#0071e3] transition-colors">
+              {isAr ? 'ملفات تعريف الارتباط' : 'Cookies'}
+            </Link>
+          </div>
+          <p className="text-slate-500 text-sm">© {new Date().getFullYear()} Beya Creative. {isAr ? 'جميع الحقوق محفوظة' : 'Tous droits réservés'}.</p>
+        </div>
       </footer>
 
       {/* Contact Request Modal */}

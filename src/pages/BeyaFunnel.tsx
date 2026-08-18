@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, ArrowDown, Scissors, MonitorSmartphone, TrendingUp, CheckCircle2, ShoppingCart, Zap, Star } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../supabase';
 import ProjectRequestModal from '../components/ProjectRequestModal';
 
@@ -255,8 +255,20 @@ export default function BeyaFunnel() {
       </section>
 
       {/* Footer */}
-      <footer className="py-10 text-center border-t border-white/5 text-slate-500 text-sm font-bold uppercase tracking-widest">
-        &copy; {new Date().getFullYear()} BEYA CREATIVE. Tous droits réservés.
+      <footer className="py-10 text-center border-t border-white/5">
+        <div className="flex flex-col items-center justify-center gap-4">
+          <div className="flex items-center gap-6">
+            <Link to="/privacy" className="text-slate-500 text-sm font-bold uppercase tracking-widest hover:text-white transition-colors">
+              سياسة الخصوصية
+            </Link>
+            <Link to="/cookies" className="text-slate-500 text-sm font-bold uppercase tracking-widest hover:text-white transition-colors">
+              ملفات تعريف الارتباط
+            </Link>
+          </div>
+          <p className="text-slate-500 text-sm font-bold uppercase tracking-widest">
+            &copy; {new Date().getFullYear()} BEYA CREATIVE. Tous droits réservés.
+          </p>
+        </div>
       </footer>
 
       {/* Contact Request Modal */}
