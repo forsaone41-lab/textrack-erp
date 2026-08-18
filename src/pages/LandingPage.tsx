@@ -32,7 +32,7 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const heroVideoRef = React.useRef<HTMLVideoElement>(null);
   const [videoPlaying, setVideoPlaying] = useState(true);
-  const [videoMuted, setVideoMuted] = useState(true);
+  const [videoMuted, setVideoMuted] = useState(false);
 
   const productionSlides = ['/factory_bg.jpg', '/atelier-machine.jpg', '/atelier-fabric.jpg'];
   const [productionSlide, setProductionSlide] = useState(0);
@@ -104,10 +104,10 @@ export default function LandingPage() {
 
       {/* Navigation */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'glass-header py-3' : 'bg-transparent py-5'}`}>
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-             <img src="/logo-blue.png" alt="Beya Creative" className="w-8 h-8 rounded-lg" />
-             <span className="text-xl font-semibold tracking-tight text-slate-900">Beya Creative.</span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-2.5">
+             <img src="/logo-blue.png" alt="Beya Creative" className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg" />
+             <span className="text-lg sm:text-xl font-semibold tracking-tight text-slate-900">Beya Creative</span>
           </div>
           <div className="hidden lg:flex items-center gap-8">
             <a href="#solutions" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
@@ -121,14 +121,14 @@ export default function LandingPage() {
             </a>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 sm:gap-6">
             <button onClick={toggle} className="text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors uppercase tracking-widest">
               {isAr ? 'FR' : 'العربية'}
             </button>
             <Link to="/login" className="text-sm font-medium text-slate-800 hover:text-black transition-colors hidden sm:block">
               {isAr ? 'تسجيل الدخول' : 'Connexion'}
             </Link>
-            <Link to="/commencer" className="px-5 py-2 rounded-full bg-[#1d1d1f] text-white font-medium text-sm hover:bg-black transition-all">
+            <Link to="/commencer" className="px-4 py-2 sm:px-5 sm:py-2 rounded-full bg-[#1d1d1f] text-white font-medium text-xs sm:text-sm hover:bg-black transition-all">
               {isAr ? 'ابدأ الآن' : 'Commencer'}
             </Link>
           </div>
@@ -171,7 +171,7 @@ export default function LandingPage() {
               ref={heroVideoRef}
               autoPlay
               loop
-              muted
+              muted={videoMuted}
               playsInline
               className="absolute inset-0 w-full h-full object-cover"
             >
@@ -179,18 +179,18 @@ export default function LandingPage() {
             </video>
 
             {/* Controls */}
-            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between transition-opacity duration-300 opacity-100 md:opacity-0 md:group-hover:opacity-100">
               <button
                 onClick={toggleVideoPlay}
                 aria-label={videoPlaying ? 'Pause' : 'Play'}
-                className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+                className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/70 transition-colors shadow-lg"
               >
                 {videoPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
               </button>
               <button
                 onClick={toggleVideoMute}
                 aria-label={videoMuted ? 'Unmute' : 'Mute'}
-                className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+                className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/70 transition-colors shadow-lg"
               >
                 {videoMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
               </button>
