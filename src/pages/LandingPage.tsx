@@ -43,8 +43,39 @@ const styles = `
   }
 `;
 
+function useScrollFocus() {
+  const ref = React.useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+  const [opacity, setOpacity] = useState(1);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!ref.current) return;
+      const rect = ref.current.getBoundingClientRect();
+      const viewportCenter = window.innerHeight / 2;
+      const elementCenter = rect.top + rect.height / 2;
+      const maxDistance = window.innerHeight;
+      
+      const distance = Math.abs(viewportCenter - elementCenter);
+      let newScale = 1 - (distance / maxDistance) * 0.15;
+      let newOpacity = 1 - (distance / maxDistance) * 0.8;
+      
+      setScale(Math.max(0.85, Math.min(1, newScale)));
+      setOpacity(Math.max(0.2, Math.min(1, newOpacity)));
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return { ref, style: { transform: `scale(${scale})`, opacity, transition: 'transform 0.1s ease-out, opacity 0.1s ease-out', willChange: 'transform, opacity' } };
+}
+
 export default function LandingPage() {
   const { isAr, toggle } = useLang();
+  const heroFocus = useScrollFocus();
   const [scrolled, setScrolled] = useState(false);
   const heroVideoRef = React.useRef<HTMLVideoElement>(null);
   const [videoPlaying, setVideoPlaying] = useState(true);
@@ -145,7 +176,7 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-6 min-h-[90vh] flex items-center relative overflow-hidden bg-white">
-        <div className="max-w-7xl mx-auto relative z-10 grid lg:grid-cols-2 gap-12 items-center">
+        <div ref={heroFocus.ref} style={heroFocus.style} className="max-w-7xl mx-auto relative z-10 grid lg:grid-cols-2 gap-12 items-center w-full">
           <div className={isAr ? 'text-center lg:text-right' : 'text-center lg:text-left'}>
             <div className="mb-6 inline-flex items-center justify-center">
               <span className="px-3 py-1 text-xs font-semibold text-slate-500 bg-slate-100 rounded-full border border-slate-200 uppercase tracking-widest">
