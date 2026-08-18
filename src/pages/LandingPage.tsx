@@ -321,10 +321,10 @@ export default function LandingPage() {
 
       {/* Navigation */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'glass-header py-3' : 'bg-transparent py-5'}`}>
-        <div className="max-w-7xl mx-auto px-2 sm:px-6 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-             <img src="/logo-blue.png" alt="Beya Creative" className="w-5 h-5 sm:w-8 sm:h-8 rounded-lg shrink-0" />
-             <span className="text-[13px] sm:text-xl font-semibold tracking-tight text-slate-900 whitespace-nowrap">Beya Creative</span>
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+             <img src="/logo-blue.png" alt="Beya Creative" className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg shrink-0" />
+             <span className="text-[15px] sm:text-xl font-semibold tracking-tight text-slate-900 whitespace-nowrap">Beya Creative</span>
           </div>
           <div className="hidden lg:flex items-center gap-8">
             <Link to="/ecosystem" className="text-sm font-bold text-[#0071e3] hover:text-[#0077ED] transition-colors shrink-0">
@@ -338,9 +338,9 @@ export default function LandingPage() {
             </a>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-6 relative shrink-0">
+          <div className="flex items-center gap-3 sm:gap-6 relative shrink-0">
             <div className="relative group shrink-0">
-              <button className="text-[10px] sm:text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors uppercase tracking-widest flex items-center gap-0.5 shrink-0">
+              <button className="text-[11px] sm:text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors uppercase tracking-widest flex items-center gap-1 shrink-0">
                 {currentLang} <ChevronRight className="w-3 h-3 rotate-90" />
               </button>
               <div className="absolute top-full right-0 mt-2 w-24 bg-white border border-slate-100 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all flex flex-col overflow-hidden z-[60]">
@@ -352,10 +352,10 @@ export default function LandingPage() {
               </div>
             </div>
             
-            <Link to="/login" className="text-[10px] sm:text-sm font-medium text-slate-800 hover:text-black transition-colors whitespace-nowrap shrink-0">
+            <Link to="/login" className="text-[12px] sm:text-sm font-medium text-slate-800 hover:text-black transition-colors whitespace-nowrap shrink-0">
               {t.navLogin}
             </Link>
-            <button onClick={() => setIsModalOpen(true)} className="px-2.5 py-1.5 sm:px-5 sm:py-2 rounded-full bg-[#1d1d1f] text-white font-medium text-[10px] sm:text-sm hover:bg-black transition-all whitespace-nowrap shrink-0">
+            <button onClick={() => setIsModalOpen(true)} className="px-4 py-1.5 sm:px-5 sm:py-2 rounded-full bg-[#1d1d1f] text-white font-medium text-[12px] sm:text-sm hover:bg-black transition-all whitespace-nowrap shrink-0">
               {t.navStart}
             </button>
           </div>
