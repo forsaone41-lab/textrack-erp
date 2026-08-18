@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, ArrowDown, Scissors, MonitorSmartphone, TrendingUp, CheckCircle2, ShoppingCart, Zap, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
+import ProjectRequestModal from '../components/ProjectRequestModal';
 
 function useOnScreen(ref: React.RefObject<Element>, rootMargin = '0px') {
   const [isIntersecting, setIntersecting] = useState(false);
@@ -38,31 +39,7 @@ const FadeIn = ({ children, delay = 0, className = '' }: any) => {
 
 export default function BeyaFunnel() {
   const navigate = useNavigate();
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [project, setProject] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || !phone) return;
-    setIsSubmitting(true);
-    try {
-      await supabase.from('leads').insert({
-        name,
-        phone,
-        type: project || 'Marque de vêtement complète (Ecosystem)',
-        status: 'nouveau',
-        source: 'Beya Funnel'
-      });
-      setSuccess(true);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#0f172a] text-slate-50 font-arabic selection:bg-indigo-500/30" dir="rtl">
@@ -263,57 +240,14 @@ export default function BeyaFunnel() {
                   <p className="text-slate-400 text-lg">أدخل معلوماتك وسنتواصل معك فوراً لتحديد موعد والبدء في مشروعك.</p>
                 </div>
 
-                {success ? (
-                  <div className="bg-emerald-500/10 border border-emerald-500/20 p-8 rounded-3xl text-center">
-                    <CheckCircle2 className="w-16 h-16 text-emerald-400 mx-auto mb-4" />
-                    <h3 className="text-2xl font-black text-white mb-2">تم الإرسال بنجاح!</h3>
-                    <p className="text-slate-400">سنتصل بك في أقرب وقت لبدء رحلتك مع BEYA.</p>
-                  </div>
-                ) : (
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-black text-slate-300 uppercase tracking-widest mb-2">الاسم الكامل</label>
-                      <input 
-                        type="text" 
-                        required
-                        value={name}
-                        onChange={e => setName(e.target.value)}
-                        className="w-full bg-[#1e293b] border-2 border-white/5 rounded-2xl px-6 py-4 text-white focus:border-indigo-500 focus:bg-[#0f172a] transition-all outline-none"
-                        placeholder="أدخل اسمك هنا..."
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-black text-slate-300 uppercase tracking-widest mb-2">رقم الواتساب</label>
-                      <input 
-                        type="tel" 
-                        required
-                        value={phone}
-                        onChange={e => setPhone(e.target.value)}
-                        dir="ltr"
-                        className="w-full bg-[#1e293b] border-2 border-white/5 rounded-2xl px-6 py-4 text-white focus:border-indigo-500 focus:bg-[#0f172a] transition-all outline-none text-right"
-                        placeholder="+212 6..."
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-black text-slate-300 uppercase tracking-widest mb-2">شنو الفكرة ديال مشروعك؟</label>
-                      <textarea 
-                        rows={3}
-                        value={project}
-                        onChange={e => setProject(e.target.value)}
-                        className="w-full bg-[#1e293b] border-2 border-white/5 rounded-2xl px-6 py-4 text-white focus:border-indigo-500 focus:bg-[#0f172a] transition-all outline-none resize-none"
-                        placeholder="مثال: بغيت نصاوب ماركة ديال التيشيرتات..."
-                      ></textarea>
-                    </div>
-                    <button 
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="w-full py-5 bg-white text-slate-900 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-xl shadow-white/10 disabled:opacity-50 flex justify-center items-center gap-2"
-                    >
-                      {isSubmitting ? 'جاري الإرسال...' : 'إرسال الطلب الآن'}
-                      {!isSubmitting && <ArrowLeft className="w-4 h-4" />}
-                    </button>
-                  </form>
-                )}
+                <div className="flex justify-center pb-8">
+                  <button 
+                    onClick={() => setIsModalOpen(true)}
+                    className="w-full py-5 bg-white text-slate-900 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-xl shadow-white/10 flex justify-center items-center gap-2"
+                  >
+                    ابدأ الآن
+                  </button>
+                </div>
               </div>
             </div>
           </FadeIn>
@@ -324,6 +258,13 @@ export default function BeyaFunnel() {
       <footer className="py-10 text-center border-t border-white/5 text-slate-500 text-sm font-bold uppercase tracking-widest">
         &copy; {new Date().getFullYear()} BEYA CREATIVE. Tous droits réservés.
       </footer>
+
+      {/* Contact Request Modal */}
+      <ProjectRequestModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        isDark={true} 
+      />
     </div>
   );
 }
