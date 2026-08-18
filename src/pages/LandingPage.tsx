@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useLang } from '../contexts/LangContext';
-import { ArrowRight, Code, Scissors, ShoppingBag, Store, Globe, Zap, Star, Settings, ChevronRight, Play, Pause, Volume2, VolumeX, MousePointerClick, MessageSquareText, PhoneCall, Shirt, PenTool, Ruler, Eye, HeartHandshake } from 'lucide-react';
+import { ArrowRight, Code, Scissors, ShoppingBag, Store, Globe, Zap, Star, Settings, ChevronRight, Play, Pause, Volume2, VolumeX, MousePointerClick, MessageSquareText, PhoneCall, Shirt, PenTool, Ruler, Eye, HeartHandshake, X, CheckCircle2 } from 'lucide-react';
+import { supabase } from '../supabase';
 
 const styles = `
   @keyframes marquee {
@@ -80,6 +81,34 @@ export default function LandingPage() {
   const heroVideoRef = React.useRef<HTMLVideoElement>(null);
   const [videoPlaying, setVideoPlaying] = useState(true);
   const [videoMuted, setVideoMuted] = useState(false);
+
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [project, setProject] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !phone) return;
+    setIsSubmitting(true);
+    try {
+      await supabase.from('leads').insert({
+        name,
+        phone,
+        type: project || 'Marque de vêtement complète (Ecosystem)',
+        status: 'nouveau',
+        source: 'Beya Landing Modal'
+      });
+      setSuccess(true);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
 
 
@@ -167,16 +196,16 @@ export default function LandingPage() {
             <Link to="/login" className="text-sm font-medium text-slate-800 hover:text-black transition-colors hidden sm:block">
               {isAr ? 'تسجيل الدخول' : 'Connexion'}
             </Link>
-            <Link to="/funnel" className="px-4 py-2 sm:px-5 sm:py-2 rounded-full bg-[#1d1d1f] text-white font-medium text-xs sm:text-sm hover:bg-black transition-all">
+            <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 sm:px-5 sm:py-2 rounded-full bg-[#1d1d1f] text-white font-medium text-xs sm:text-sm hover:bg-black transition-all">
               {isAr ? 'ابدأ الآن' : 'Commencer'}
-            </Link>
+            </button>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-6 min-h-[90vh] flex items-center relative overflow-hidden bg-white">
-        <div ref={heroFocus.ref} style={heroFocus.style} className="max-w-7xl mx-auto relative z-10 grid lg:grid-cols-2 gap-12 items-center w-full">
+        <div className="max-w-7xl mx-auto relative z-10 grid lg:grid-cols-2 gap-12 items-center w-full">
           <div className={isAr ? 'text-center lg:text-right' : 'text-center lg:text-left'}>
             <div className="mb-6 inline-flex items-center justify-center">
               <span className="px-3 py-1 text-xs font-semibold text-slate-500 bg-slate-100 rounded-full border border-slate-200 uppercase tracking-widest">
@@ -195,9 +224,9 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 animate-in slide-in-from-bottom-8 duration-1000 delay-300">
-              <Link to="/funnel" className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#0071e3] hover:bg-[#0077ED] text-white font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+              <button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#0071e3] hover:bg-[#0077ED] text-white font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5 cursor-pointer">
                 {isAr ? 'ابدأ مشروعك الآن' : 'Démarrer votre projet'} <ArrowRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
-              </Link>
+              </button>
               <Link to="/ecosystem" className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-white border border-slate-200 text-slate-700 font-medium text-lg hover:bg-slate-50 transition-all flex items-center justify-center gap-2 shadow-sm">
                 {isAr ? 'تفاصيل المنظومة' : 'Détails de l\'écosystème'} <ChevronRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
               </Link>
@@ -205,7 +234,7 @@ export default function LandingPage() {
           </div>
 
           {/* Hero Video */}
-          <div className="relative rounded-[2rem] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.12)] border-b-4 border-[#0071e3] aspect-[2/3] md:aspect-[4/5] w-full h-auto md:h-[680px] md:w-auto mx-auto animate-in slide-in-from-bottom-8 duration-1000 delay-150 group">
+          <div ref={heroFocus.ref} style={heroFocus.style} className="relative rounded-[2rem] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.12)] border-b-4 border-[#0071e3] aspect-[2/3] md:aspect-[4/5] w-full h-auto md:h-[680px] md:w-auto mx-auto animate-in slide-in-from-bottom-8 duration-1000 delay-150 group">
             <video
               ref={heroVideoRef}
               autoPlay
@@ -238,9 +267,9 @@ export default function LandingPage() {
 
           {/* Mobile CTA (Under Video) */}
           <div className="lg:hidden flex justify-center mt-2 w-full px-2">
-             <Link to="/funnel" className="w-full py-4 rounded-full bg-[#1d1d1f] text-white font-bold text-lg hover:bg-black transition-all shadow-xl flex items-center justify-center gap-2 animate-in slide-in-from-bottom-8 duration-1000 delay-500">
+             <button onClick={() => setIsModalOpen(true)} className="w-full py-4 rounded-full bg-[#1d1d1f] text-white font-bold text-lg hover:bg-black transition-all shadow-xl flex items-center justify-center gap-2 animate-in slide-in-from-bottom-8 duration-1000 delay-500 cursor-pointer">
                {isAr ? 'ابدأ الآن' : 'Commencer'} <ArrowRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
-             </Link>
+             </button>
           </div>
         </div>
 
@@ -400,9 +429,9 @@ export default function LandingPage() {
              : 'Rejoignez-nous aujourd\'hui et bâtissez votre projet sur des bases solides.'}
         </p>
         <div className="flex justify-center">
-          <Link to="/store-landing" className="px-8 py-4 rounded-full bg-[#1d1d1f] hover:bg-black text-white font-medium text-lg transition-colors shadow-lg">
+          <button onClick={() => setIsModalOpen(true)} className="px-8 py-4 rounded-full bg-[#1d1d1f] hover:bg-black text-white font-medium text-lg transition-colors shadow-lg cursor-pointer">
             {isAr ? 'ابدأ مشروعك الآن' : 'Créer votre projet'}
-          </Link>
+          </button>
         </div>
       </section>
 
@@ -413,6 +442,76 @@ export default function LandingPage() {
            <p className="text-slate-400 font-semibold uppercase tracking-widest text-xs">Professional Excellence</p>
         </div>
       </footer>
+
+      {/* Contact Request Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
+          <div className="bg-white rounded-3xl w-full max-w-lg relative z-10 p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+            <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-500 hover:bg-slate-200 transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">{isAr ? 'هل أنت مستعد للبدء؟' : 'Prêt à commencer ?'}</h2>
+              <p className="text-slate-500 text-sm font-medium">{isAr ? 'أدخل معلوماتك وسنتواصل معك فوراً لتحديد موعد والبدء في مشروعك.' : 'Laissez vos coordonnées et nous vous contacterons immédiatement.'}</p>
+            </div>
+
+            {success ? (
+              <div className="bg-emerald-50 border border-emerald-100 p-8 rounded-2xl text-center">
+                <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-slate-900 mb-2">{isAr ? 'تم الإرسال بنجاح!' : 'Demande envoyée !'}</h3>
+                <p className="text-slate-500 text-sm">{isAr ? 'سنتصل بك في أقرب وقت لبدء رحلتك مع BEYA.' : 'Nous vous contacterons très prochainement.'}</p>
+                <button onClick={() => { setIsModalOpen(false); setSuccess(false); }} className="mt-6 px-6 py-2 bg-emerald-500 text-white rounded-full font-bold text-sm hover:bg-emerald-600 transition-colors">
+                  {isAr ? 'إغلاق' : 'Fermer'}
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-5 text-right" dir={isAr ? 'rtl' : 'ltr'}>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-right">{isAr ? 'الاسم الكامل' : 'Nom Complet'}</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    className={`w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:border-[#0071e3] focus:ring-1 focus:ring-[#0071e3] transition-all outline-none ${isAr ? 'text-right' : 'text-left'}`}
+                    placeholder={isAr ? 'أدخل اسمك هنا...' : 'Votre nom...'}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-right">{isAr ? 'رقم الواتساب' : 'Numéro WhatsApp'}</label>
+                  <input 
+                    type="tel" 
+                    required
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    dir="ltr"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:border-[#0071e3] focus:ring-1 focus:ring-[#0071e3] transition-all outline-none text-right"
+                    placeholder="+212 6..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-right">{isAr ? 'شنو الفكرة ديال مشروعك؟' : 'Quelle est votre idée ?'}</label>
+                  <textarea 
+                    rows={3}
+                    value={project}
+                    onChange={e => setProject(e.target.value)}
+                    className={`w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:border-[#0071e3] focus:ring-1 focus:ring-[#0071e3] transition-all outline-none resize-none ${isAr ? 'text-right' : 'text-left'}`}
+                    placeholder={isAr ? 'مثال: بغيت نصاوب ماركة ديال التيشيرتات...' : 'Ex: Je veux créer une marque de t-shirts...'}
+                  ></textarea>
+                </div>
+                <button 
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-3.5 bg-[#0071e3] text-white rounded-xl font-bold hover:bg-[#0077ED] transition-all shadow-md disabled:opacity-50 flex justify-center items-center gap-2"
+                >
+                  {isSubmitting ? (isAr ? 'جاري الإرسال...' : 'Envoi en cours...') : (isAr ? 'إرسال الطلب الآن' : 'Envoyer la demande')}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
