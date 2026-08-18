@@ -242,16 +242,28 @@ export default function LandingPage() {
       </section>
 
       {/* Marquee (Clean and minimal) */}
-      <section className="py-4 border-y border-slate-200 bg-white overflow-hidden flex">
-        <div className="animate-marquee whitespace-nowrap flex items-center">
+      <section className="py-5 border-y border-slate-200 bg-slate-50 overflow-hidden flex flex-nowrap w-full">
+        <div className="flex items-center flex-shrink-0 animate-marquee whitespace-nowrap">
           {[...Array(10)].map((_, i) => (
-            <div key={i} className="flex items-center gap-8 mx-8 text-sm font-semibold text-slate-400 tracking-widest uppercase">
+            <div key={`m1-${i}`} className="flex items-center gap-10 mx-5 text-base font-bold text-slate-800 tracking-wider uppercase">
               <span>{isAr ? 'التجارة الإلكترونية' : 'E-COMMERCE'}</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+              <span className="w-2 h-2 rounded-full bg-[#0071e3]" />
               <span>{isAr ? 'صناعة النسيج' : 'TEXTILE INDUSTRY'}</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+              <span className="w-2 h-2 rounded-full bg-[#0071e3]" />
               <span>{isAr ? 'الأنظمة الذكية' : 'SMART SYSTEMS'}</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+              <span className="w-2 h-2 rounded-full bg-[#0071e3]" />
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center flex-shrink-0 animate-marquee whitespace-nowrap" aria-hidden="true">
+          {[...Array(10)].map((_, i) => (
+            <div key={`m2-${i}`} className="flex items-center gap-10 mx-5 text-base font-bold text-slate-800 tracking-wider uppercase">
+              <span>{isAr ? 'التجارة الإلكترونية' : 'E-COMMERCE'}</span>
+              <span className="w-2 h-2 rounded-full bg-[#0071e3]" />
+              <span>{isAr ? 'صناعة النسيج' : 'TEXTILE INDUSTRY'}</span>
+              <span className="w-2 h-2 rounded-full bg-[#0071e3]" />
+              <span>{isAr ? 'الأنظمة الذكية' : 'SMART SYSTEMS'}</span>
+              <span className="w-2 h-2 rounded-full bg-[#0071e3]" />
             </div>
           ))}
         </div>
