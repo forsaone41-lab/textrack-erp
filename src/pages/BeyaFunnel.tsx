@@ -49,21 +49,21 @@ export default function BeyaFunnel() {
       
       {/* Navbar */}
       <nav className={`fixed top-0 w-full z-50 ${isDark ? 'bg-[#0f172a]/80 border-white/5' : 'bg-white/80 border-slate-200 shadow-sm'} backdrop-blur-xl border-b transition-colors duration-500`}>
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-2.5">
-            <img src="/logo-blue.png" alt="Beya Creative" className={`w-8 h-8 rounded-lg transition-all ${isDark ? 'brightness-0 invert' : ''}`} />
-            <span className={`font-black text-xl tracking-widest uppercase ${isDark ? 'text-white' : 'text-slate-900'}`}>BEYA CREATIVE</span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+            <img src="/logo-blue.png" alt="Beya Creative" className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg transition-all ${isDark ? 'brightness-0 invert' : ''}`} />
+            <span className={`font-black text-[12px] sm:text-xl tracking-widest uppercase ${isDark ? 'text-white' : 'text-slate-900'}`}>BEYA CREATIVE</span>
           </div>
-          <div className="flex items-center gap-3 md:gap-5">
-            <button onClick={toggle} className={`text-xs font-bold uppercase tracking-widest transition-colors ${isDark ? 'text-slate-300 hover:text-white' : 'text-slate-500 hover:text-[#0071e3]'}`}>
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-5">
+            <button onClick={toggle} className={`text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-colors ${isDark ? 'text-slate-300 hover:text-white' : 'text-slate-500 hover:text-[#0071e3]'}`}>
               {isAr ? 'EN/FR' : 'عربي'}
             </button>
-            <button onClick={() => setIsDark(!isDark)} className={`p-2 rounded-full transition-colors ${isDark ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-500 hover:text-[#0071e3] hover:bg-slate-100'}`}>
-              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            <button onClick={() => setIsDark(!isDark)} className={`p-1.5 sm:p-2 rounded-full transition-colors ${isDark ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-500 hover:text-[#0071e3] hover:bg-slate-100'}`}>
+              {isDark ? <Sun className="w-4 h-4 sm:w-5 sm:h-5" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5" />}
             </button>
             <button 
               onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
-              className={`px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-widest hover:scale-105 transition-transform ${isDark ? 'bg-white text-slate-900' : 'bg-[#0071e3] text-white shadow-lg shadow-blue-500/20'}`}
+              className={`px-3 py-1.5 sm:px-5 sm:py-2.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest hover:scale-105 transition-transform whitespace-nowrap ${isDark ? 'bg-white text-slate-900' : 'bg-[#0071e3] text-white shadow-lg shadow-blue-500/20'}`}
             >
               {isAr ? 'ابدأ الآن' : 'Start Now'}
             </button>
