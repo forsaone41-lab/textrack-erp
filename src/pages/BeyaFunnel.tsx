@@ -70,11 +70,9 @@ export default function BeyaFunnel() {
       {/* Navbar */}
       <nav className="fixed top-0 w-full z-50 bg-[#0f172a]/80 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center transform rotate-12 shadow-lg shadow-indigo-600/30">
-              <span className="text-white font-black text-xl -rotate-12">B</span>
-            </div>
-            <span className="font-black text-xl tracking-widest uppercase">BEYA</span>
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            <img src="/logo-blue.png" alt="Beya Creative" className="w-8 h-8 rounded-lg brightness-0 invert" />
+            <span className="font-black text-xl tracking-widest uppercase">BEYA CREATIVE</span>
           </div>
           <button 
             onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
@@ -177,7 +175,7 @@ export default function BeyaFunnel() {
           <FadeIn>
             <div className="text-center mb-24">
               <span className="text-indigo-400 font-black tracking-widest uppercase text-sm mb-4 block">الحل المتكامل</span>
-              <h2 className="text-5xl md:text-6xl font-black text-white mb-6">نظام BEYA البيئي</h2>
+              <h2 className="text-5xl md:text-6xl font-black text-white mb-6">BEYA CREATIVE</h2>
               <p className="text-xl text-slate-400 max-w-2xl mx-auto">مكان واحد يجمع التصنيع العالي الجودة مع أحدث تكنولوجيا التجارة الإلكترونية.</p>
             </div>
           </FadeIn>

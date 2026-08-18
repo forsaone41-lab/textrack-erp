@@ -1,11 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useLang } from '../contexts/LangContext';
-import { ChevronRight, Store, Settings, Scissors, Globe, Layers, ShieldCheck, ArrowRight, MousePointerClick } from 'lucide-react';
+import { ChevronRight, Store, Settings, Scissors, Globe, Layers, ShieldCheck, ArrowRight, MousePointerClick, X, CheckCircle2 } from 'lucide-react';
+import { supabase } from '../supabase';
 
 export default function Ecosystem() {
   const { isAr, toggle } = useLang();
   const [scrolled, setScrolled] = useState(false);
+
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [project, setProject] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !phone) return;
+    setIsSubmitting(true);
+    try {
+      await supabase.from('leads').insert({
+        name,
+        phone,
+        type: project || 'Marque de vêtement complète (Ecosystem)',
+        status: 'nouveau',
+        source: 'Beya Ecosystem Modal'
+      });
+      setSuccess(true);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -43,9 +72,9 @@ export default function Ecosystem() {
             <Link to="/login" className={`text-sm font-medium transition-colors hidden sm:block ${scrolled ? 'text-slate-800 hover:text-black' : 'text-white hover:text-blue-100'}`}>
               {isAr ? 'تسجيل الدخول' : 'Connexion'}
             </Link>
-            <Link to="/funnel" className={`px-4 py-2 sm:px-5 sm:py-2 rounded-full font-medium text-xs sm:text-sm transition-all ${scrolled ? 'bg-[#1d1d1f] text-white hover:bg-black' : 'bg-white text-[#0071e3] hover:bg-blue-50 shadow-md'}`}>
+            <button onClick={() => setIsModalOpen(true)} className={`px-4 py-2 sm:px-5 sm:py-2 rounded-full font-medium text-xs sm:text-sm transition-all cursor-pointer ${scrolled ? 'bg-[#1d1d1f] text-white hover:bg-black' : 'bg-white text-[#0071e3] hover:bg-blue-50 shadow-md'}`}>
               {isAr ? 'ابدأ الآن' : 'Commencer'}
-            </Link>
+            </button>
           </div>
         </div>
       </nav>
@@ -183,15 +212,134 @@ export default function Ecosystem() {
         <p className="text-xl text-slate-500 mb-10 max-w-2xl mx-auto">
           {isAr ? 'المنظومة بانتظارك لتبدأ قصة نجاح جديدة.' : 'L\'écosystème vous attend pour démarrer votre nouvelle success story.'}
         </p>
-        <Link to="/funnel" className="inline-flex items-center justify-center px-10 py-4 bg-[#0071e3] text-white rounded-full font-bold text-xl hover:bg-[#0077ED] transition-all shadow-xl hover:-translate-y-1">
-          {isAr ? 'ابدأ الآن' : 'Commencer maintenant'}
-        </Link>
+        <div className="flex justify-center mt-10">
+          {success ? (
+            <div className="bg-emerald-50 border border-emerald-100 p-8 rounded-2xl text-center max-w-lg w-full shadow-lg">
+              <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-slate-900 mb-2">{isAr ? 'تم الإرسال بنجاح!' : 'Demande envoyée !'}</h3>
+              <p className="text-slate-500 text-sm">{isAr ? 'سنتصل بك في أقرب وقت لبدء رحلتك مع BEYA.' : 'Nous vous contacterons très prochainement.'}</p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="w-full max-w-lg bg-white p-8 rounded-3xl shadow-xl border border-slate-100 space-y-5 text-right" dir={isAr ? 'rtl' : 'ltr'}>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-right">{isAr ? 'الاسم الكامل' : 'Nom Complet'}</label>
+                <input 
+                  type="text" 
+                  required
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  className={`w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:border-[#0071e3] focus:ring-1 focus:ring-[#0071e3] transition-all outline-none ${isAr ? 'text-right' : 'text-left'}`}
+                  placeholder={isAr ? 'أدخل اسمك هنا...' : 'Votre nom...'}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-right">{isAr ? 'رقم الواتساب' : 'Numéro WhatsApp'}</label>
+                <input 
+                  type="tel" 
+                  required
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  dir="ltr"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:border-[#0071e3] focus:ring-1 focus:ring-[#0071e3] transition-all outline-none text-right"
+                  placeholder="+212 6..."
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-right">{isAr ? 'شنو الفكرة ديال مشروعك؟' : 'Quelle est votre idée ?'}</label>
+                <textarea 
+                  rows={3}
+                  value={project}
+                  onChange={e => setProject(e.target.value)}
+                  className={`w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:border-[#0071e3] focus:ring-1 focus:ring-[#0071e3] transition-all outline-none resize-none ${isAr ? 'text-right' : 'text-left'}`}
+                  placeholder={isAr ? 'مثال: بغيت نصاوب ماركة ديال التيشيرتات...' : 'Ex: Je veux créer une marque de t-shirts...'}
+                ></textarea>
+              </div>
+              <button 
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full py-3.5 bg-[#0071e3] text-white rounded-xl font-bold hover:bg-[#0077ED] transition-all shadow-md disabled:opacity-50 flex justify-center items-center gap-2"
+              >
+                {isSubmitting ? (isAr ? 'جاري الإرسال...' : 'Envoi en cours...') : (isAr ? 'إرسال الطلب الآن' : 'Envoyer la demande')}
+              </button>
+            </form>
+          )}
+        </div>
       </section>
 
       {/* Footer minimal */}
       <footer className="py-12 border-t border-slate-200 bg-slate-50 text-center">
         <p className="text-slate-500 text-sm">© {new Date().getFullYear()} Beya Creative. {isAr ? 'جميع الحقوق محفوظة' : 'Tous droits réservés'}.</p>
       </footer>
+
+      {/* Contact Request Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
+          <div className="bg-white rounded-3xl w-full max-w-lg relative z-10 p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+            <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-500 hover:bg-slate-200 transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">{isAr ? 'هل أنت مستعد للبدء؟' : 'Prêt à commencer ?'}</h2>
+              <p className="text-slate-500 text-sm font-medium">{isAr ? 'أدخل معلوماتك وسنتواصل معك فوراً لتحديد موعد والبدء في مشروعك.' : 'Laissez vos coordonnées et nous vous contacterons immédiatement.'}</p>
+            </div>
+
+            {success ? (
+              <div className="bg-emerald-50 border border-emerald-100 p-8 rounded-2xl text-center">
+                <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-slate-900 mb-2">{isAr ? 'تم الإرسال بنجاح!' : 'Demande envoyée !'}</h3>
+                <p className="text-slate-500 text-sm">{isAr ? 'سنتصل بك في أقرب وقت لبدء رحلتك مع BEYA.' : 'Nous vous contacterons très prochainement.'}</p>
+                <button onClick={() => { setIsModalOpen(false); setSuccess(false); }} className="mt-6 px-6 py-2 bg-emerald-500 text-white rounded-full font-bold text-sm hover:bg-emerald-600 transition-colors">
+                  {isAr ? 'إغلاق' : 'Fermer'}
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-5 text-right" dir={isAr ? 'rtl' : 'ltr'}>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-right">{isAr ? 'الاسم الكامل' : 'Nom Complet'}</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    className={`w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:border-[#0071e3] focus:ring-1 focus:ring-[#0071e3] transition-all outline-none ${isAr ? 'text-right' : 'text-left'}`}
+                    placeholder={isAr ? 'أدخل اسمك هنا...' : 'Votre nom...'}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-right">{isAr ? 'رقم الواتساب' : 'Numéro WhatsApp'}</label>
+                  <input 
+                    type="tel" 
+                    required
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    dir="ltr"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:border-[#0071e3] focus:ring-1 focus:ring-[#0071e3] transition-all outline-none text-right"
+                    placeholder="+212 6..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-right">{isAr ? 'شنو الفكرة ديال مشروعك؟' : 'Quelle est votre idée ?'}</label>
+                  <textarea 
+                    rows={3}
+                    value={project}
+                    onChange={e => setProject(e.target.value)}
+                    className={`w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:border-[#0071e3] focus:ring-1 focus:ring-[#0071e3] transition-all outline-none resize-none ${isAr ? 'text-right' : 'text-left'}`}
+                    placeholder={isAr ? 'مثال: بغيت نصاوب ماركة ديال التيشيرتات...' : 'Ex: Je veux créer une marque de t-shirts...'}
+                  ></textarea>
+                </div>
+                <button 
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-3.5 bg-[#0071e3] text-white rounded-xl font-bold hover:bg-[#0077ED] transition-all shadow-md disabled:opacity-50 flex justify-center items-center gap-2"
+                >
+                  {isSubmitting ? (isAr ? 'جاري الإرسال...' : 'Envoi en cours...') : (isAr ? 'إرسال الطلب الآن' : 'Envoyer la demande')}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

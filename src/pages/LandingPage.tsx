@@ -429,9 +429,56 @@ export default function LandingPage() {
              : 'Rejoignez-nous aujourd\'hui et bâtissez votre projet sur des bases solides.'}
         </p>
         <div className="flex justify-center">
-          <button onClick={() => setIsModalOpen(true)} className="px-8 py-4 rounded-full bg-[#1d1d1f] hover:bg-black text-white font-medium text-lg transition-colors shadow-lg cursor-pointer">
-            {isAr ? 'ابدأ مشروعك الآن' : 'Créer votre projet'}
-          </button>
+          {success ? (
+            <div className="bg-emerald-50 border border-emerald-100 p-8 rounded-2xl text-center max-w-lg w-full shadow-lg">
+              <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-slate-900 mb-2">{isAr ? 'تم الإرسال بنجاح!' : 'Demande envoyée !'}</h3>
+              <p className="text-slate-500 text-sm">{isAr ? 'سنتصل بك في أقرب وقت لبدء رحلتك مع BEYA.' : 'Nous vous contacterons très prochainement.'}</p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="w-full max-w-lg bg-white p-8 rounded-3xl shadow-xl border border-slate-100 space-y-5 text-right" dir={isAr ? 'rtl' : 'ltr'}>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-right">{isAr ? 'الاسم الكامل' : 'Nom Complet'}</label>
+                <input 
+                  type="text" 
+                  required
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  className={`w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:border-[#0071e3] focus:ring-1 focus:ring-[#0071e3] transition-all outline-none ${isAr ? 'text-right' : 'text-left'}`}
+                  placeholder={isAr ? 'أدخل اسمك هنا...' : 'Votre nom...'}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-right">{isAr ? 'رقم الواتساب' : 'Numéro WhatsApp'}</label>
+                <input 
+                  type="tel" 
+                  required
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  dir="ltr"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:border-[#0071e3] focus:ring-1 focus:ring-[#0071e3] transition-all outline-none text-right"
+                  placeholder="+212 6..."
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-right">{isAr ? 'شنو الفكرة ديال مشروعك؟' : 'Quelle est votre idée ?'}</label>
+                <textarea 
+                  rows={3}
+                  value={project}
+                  onChange={e => setProject(e.target.value)}
+                  className={`w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:border-[#0071e3] focus:ring-1 focus:ring-[#0071e3] transition-all outline-none resize-none ${isAr ? 'text-right' : 'text-left'}`}
+                  placeholder={isAr ? 'مثال: بغيت نصاوب ماركة ديال التيشيرتات...' : 'Ex: Je veux créer une marque de t-shirts...'}
+                ></textarea>
+              </div>
+              <button 
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full py-3.5 bg-[#0071e3] text-white rounded-xl font-bold hover:bg-[#0077ED] transition-all shadow-md disabled:opacity-50 flex justify-center items-center gap-2"
+              >
+                {isSubmitting ? (isAr ? 'جاري الإرسال...' : 'Envoi en cours...') : (isAr ? 'إرسال الطلب الآن' : 'Envoyer la demande')}
+              </button>
+            </form>
+          )}
         </div>
       </section>
 
