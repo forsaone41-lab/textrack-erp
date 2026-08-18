@@ -454,19 +454,28 @@ export default function BeyaFunnel() {
       </section>
 
       {/* Footer */}
-      <footer className={`py-10 text-center border-t ${isDark ? 'border-white/5' : 'border-slate-200'}`}>
-        <div className="flex flex-col items-center justify-center gap-4">
-          <div className="flex items-center gap-6">
-            <Link to="/privacy" className={`text-sm font-bold uppercase tracking-widest transition-colors ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-500 hover:text-[#0071e3]'}`}>
-              {t.privacy}
-            </Link>
-            <Link to="/cookies" className={`text-sm font-bold uppercase tracking-widest transition-colors ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-500 hover:text-[#0071e3]'}`}>
-              {t.cookies}
-            </Link>
+      <footer className={`py-12 border-t ${isDark ? 'border-white/5' : 'border-slate-200'}`}>
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-0">
+            <div className="flex items-center gap-2 opacity-50">
+               <img src="/logo-blue.png" alt="Beya Creative" className="w-5 h-5 rounded" />
+               <span className={`text-[10px] sm:text-xs font-black tracking-widest uppercase ${isDark ? 'text-white' : 'text-slate-900'}`}>BEYA CREATIVE</span>
+            </div>
+            
+            <div className="flex flex-wrap justify-center items-center gap-x-6 gap-y-3">
+              <Link to="/privacy" className={`text-[11px] sm:text-xs font-medium transition-colors ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'}`}>
+                {t.privacy}
+              </Link>
+              <span className={`w-1 h-1 rounded-full ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></span>
+              <Link to="/cookies" className={`text-[11px] sm:text-xs font-medium transition-colors ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'}`}>
+                {t.cookies}
+              </Link>
+            </div>
+
+            <p className={`text-[11px] sm:text-xs font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+              &copy; {new Date().getFullYear()} BEYA CREATIVE. {t.rights}
+            </p>
           </div>
-          <p className={`text-sm font-bold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
-            &copy; {new Date().getFullYear()} BEYA CREATIVE. {t.rights}
-          </p>
         </div>
       </footer>
 
