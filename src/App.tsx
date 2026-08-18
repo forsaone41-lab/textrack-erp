@@ -640,6 +640,12 @@ function AppContent() {
           </Suspense>
         } />
         <Route path="/" element={isGZeed ? <PlatformLanding /> : <LandingPage />} />
+        <Route path="/ar" element={<LandingPage />} />
+        <Route path="/fr" element={<LandingPage />} />
+        <Route path="/en" element={<LandingPage />} />
+        <Route path="/AR" element={<LandingPage />} />
+        <Route path="/FR" element={<LandingPage />} />
+        <Route path="/EN" element={<LandingPage />} />
         <Route path="/beya-old" element={<LandingPage />} />
         <Route path="/ecosystem" element={
           <Suspense fallback={<PageLoader />}>
