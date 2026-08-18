@@ -118,9 +118,9 @@ export default function LandingPage() {
              <span className="text-lg sm:text-xl font-semibold tracking-tight text-slate-900">Beya Creative</span>
           </div>
           <div className="hidden lg:flex items-center gap-8">
-            <a href="#solutions" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
-              {isAr ? 'الحلول' : 'Solutions'}
-            </a>
+            <Link to="/ecosystem" className="text-sm font-bold text-[#0071e3] hover:text-[#0077ED] transition-colors">
+              {isAr ? 'المنظومة' : 'Écosystème'}
+            </Link>
             <a href="#how-it-works" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
               {isAr ? 'كيف نعمل' : 'Comment ça marche'}
             </a>
@@ -167,9 +167,9 @@ export default function LandingPage() {
               <Link to="/commencer" className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#0071e3] hover:bg-[#0077ED] text-white font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
                 {isAr ? 'ابدأ مشروعك الآن' : 'Démarrer votre projet'} <ArrowRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
               </Link>
-              <a href="#solutions" className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-white border border-slate-200 text-slate-700 font-medium text-lg hover:bg-slate-50 transition-all flex items-center justify-center gap-2 shadow-sm">
+              <Link to="/ecosystem" className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-white border border-slate-200 text-slate-700 font-medium text-lg hover:bg-slate-50 transition-all flex items-center justify-center gap-2 shadow-sm">
                 {isAr ? 'تفاصيل المنظومة' : 'Détails de l\'écosystème'} <ChevronRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
-              </a>
+              </Link>
             </div>
           </div>
 
@@ -257,71 +257,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* The Ecosystem (Apple Style Grid) */}
-      <section id="solutions" className="py-32 px-6 bg-[#FBFBFD]">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">{isAr ? 'حلول مصممة للنمو.' : 'Des solutions conçues pour la croissance.'}</h2>
-            <p className="text-xl text-[#86868b] max-w-2xl mx-auto">{isAr ? 'منصة واحدة تجمع كل ما يتطلبه عملك للنجاح في السوق.' : 'Une seule plateforme réunissant tout ce dont votre entreprise a besoin pour réussir.'}</p>
-          </div>
 
-          <div className="flex flex-col gap-6">
-
-            {/* Beya Production - Primary */}
-            <div className="relative overflow-hidden p-10 md:p-16 rounded-[2.5rem] shadow-[0_8px_40px_rgba(0,0,0,0.1)] hover:shadow-[0_12px_50px_rgba(0,0,0,0.35)] transition-all duration-300 group text-white min-h-[480px] flex flex-col justify-end">
-               {/* Background Image */}
-               <div className="absolute inset-0 bg-[#1d1d1f]">
-                 <img
-                   src="/factory_bg.jpg"
-                   alt="Beya Production Factory"
-                   className="absolute inset-0 w-full h-full object-cover opacity-50"
-                 />
-                 <div className="absolute inset-0 bg-gradient-to-t from-[#1d1d1f]/80 via-[#1d1d1f]/40 to-transparent" />
-               </div>
-
-               <div className="relative z-10 max-w-2xl">
-                 <Scissors className="w-12 h-12 text-slate-300 mb-6" />
-                 <h3 className="text-4xl md:text-5xl font-semibold mb-4 tracking-tight">Beya Production.</h3>
-                 <p className="text-xl text-[#e5e5e7] leading-relaxed mb-8">
-                   {isAr
-                     ? 'ورشة صناعية متكاملة ومجهزة بأحدث التقنيات. نصمم ونصنع لك منتجات بمعايير جودة عالية لتليق بعلامتك التجارية.'
-                     : 'Atelier industriel équipé des dernières technologies. Nous concevons et fabriquons des produits de haute qualité.'}
-                 </p>
-                 <Link to="/setup" className="inline-flex items-center px-6 py-3 bg-white text-[#1d1d1f] rounded-full font-bold hover:bg-slate-100 transition-colors text-base shadow-lg">
-                   {isAr ? 'أريد صناعة منتجي' : 'Fabriquer mon produit'} <ChevronRight className={`w-4 h-4 ml-1 ${isAr ? 'rotate-180 mr-1 ml-0' : ''}`} />
-                 </Link>
-               </div>
-            </div>
-
-            {/* Beya Store - Secondary */}
-            <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-200 shadow-[0_2px_16px_rgba(0,0,0,0.03)] hover:shadow-[0_6px_24px_rgba(0,0,0,0.06)] transition-all duration-300 group flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-               <div className="flex items-center gap-4">
-                 <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0">
-                   <Store className="w-6 h-6 text-slate-700" />
-                 </div>
-                 <div>
-                   <h3 className="text-lg font-semibold text-[#1d1d1f]">Beya Store.</h3>
-                   <p className="text-sm text-[#86868b] leading-relaxed max-w-md">
-                     {isAr
-                       ? 'منصة التجارة الإلكترونية الأقوى. أطلق متجرك الاحترافي وابدأ البيع فوراً.'
-                       : 'La plateforme E-commerce ultime. Lancez votre boutique et commencez à vendre immédiatement.'}
-                   </p>
-                 </div>
-               </div>
-               <div className="flex flex-col sm:flex-row items-center gap-4 shrink-0 ltr:ml-auto ps-16 sm:ps-0 w-full sm:w-auto">
-                 <div className="flex items-center gap-3">
-                   <span className="text-xl font-bold text-[#1d1d1f]">199 <span className="text-sm text-slate-500 font-medium">DH/{isAr ? 'شهر' : 'mois'}</span></span>
-                   <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-medium uppercase tracking-widest">{isAr ? 'مخاطرة 0' : '0 Risque'}</span>
-                 </div>
-                 <Link to="/store-landing" className="w-full sm:w-auto px-6 py-2.5 bg-[#0071e3] text-white rounded-full font-bold hover:bg-[#0077ED] transition-colors text-sm shadow-md flex items-center justify-center">
-                   {isAr ? 'أريد إطلاق متجري' : 'Lancer ma boutique'}
-                 </Link>
-               </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
 
       {/* Dual Core Concept - Apple Style */}
       <section className="py-32 px-6 bg-[#FBFBFD] border-y border-slate-100 overflow-hidden">

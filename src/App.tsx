@@ -50,6 +50,7 @@ const Settings         = lazy(() => import('./pages/Settings'));
 const Profil           = lazy(() => import('./pages/Profil'));
 const Login            = lazy(() => import('./pages/Login'));
 const LandingPage      = lazy(() => import('./pages/LandingPage'));
+const Ecosystem        = lazy(() => import('./pages/Ecosystem'));
 const BeyaFunnel       = lazy(() => import('./pages/BeyaFunnel'));
 const DownloadApp      = lazy(() => import('./pages/DownloadApp'));
 const AdsLanding       = lazy(() => import('./pages/AdsLanding'));
@@ -634,6 +635,11 @@ function AppContent() {
         } />
         <Route path="/" element={isGZeed ? <PlatformLanding /> : <LandingPage />} />
         <Route path="/beya-old" element={<LandingPage />} />
+        <Route path="/ecosystem" element={
+          <Suspense fallback={<PageLoader />}>
+            <Ecosystem />
+          </Suspense>
+        } />
           <Route path="/funnel" element={<BeyaFunnel />} />
           <Route path="/app" element={<DownloadApp />} />
         <Route path="*" element={<Navigate to="/" replace />} />
