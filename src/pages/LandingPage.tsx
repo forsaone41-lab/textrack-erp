@@ -153,14 +153,14 @@ export default function LandingPage() {
               </span>
             </div>
 
-            <h1 className="text-5xl md:text-6xl lg:text-[64px] font-bold tracking-tight text-[#1d1d1f] leading-[1.05] mb-6 text-balance animate-in slide-in-from-bottom-8 duration-1000">
-              {isAr ? 'التكنولوجيا المتقدمة تلتقي بالصناعة.' : 'La technologie avancée rencontre l\'industrie.'}
+            <h1 className="text-5xl md:text-6xl lg:text-[64px] font-bold tracking-tight text-[#1d1d1f] leading-[1.1] mb-6 text-balance animate-in slide-in-from-bottom-8 duration-1000">
+              {isAr ? 'من خيوط المصنع.. إلى شاشة متجرك.' : 'De l\'usine à votre boutique en ligne.'}
             </h1>
 
             <p className="text-xl md:text-2xl text-[#86868b] leading-relaxed mb-10 animate-in slide-in-from-bottom-8 duration-1000 delay-150 font-medium text-balance">
               {isAr
-                ? 'نبني أنظمة رقمية ذكية، متاجر إلكترونية احترافية، ونصنع منتجاتك بمعايير عالمية. كل ما تحتاجه لتوسيع نطاق أعمالك في مكان واحد.'
-                : 'Nous construisons des systèmes intelligents, des boutiques pro, et fabriquons vos produits selon les standards internationaux.'}
+                ? 'نحن لا ننشئ المتاجر فقط، بل نصنع أزياءك ومنتجاتك بأعلى معايير الجودة الصناعية، ونسلمك علامة تجارية متكاملة وجاهزة للبيع والانتشار فوراً.'
+                : 'Nous ne créons pas seulement des boutiques. Nous fabriquons vos vêtements avec les plus hauts standards industriels et vous livrons une marque prête à vendre.'}
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 animate-in slide-in-from-bottom-8 duration-1000 delay-300">

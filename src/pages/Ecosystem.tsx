@@ -167,7 +167,7 @@ export default function Ecosystem() {
             </div>
             <div className="flex-1 w-full relative">
               <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-lg border border-slate-200 bg-white p-2">
-                <img src="/store-builder-mockup.png" alt="Beya Store" className="w-full h-full object-cover rounded-2xl" />
+                <img src="/beya_creative_streetwear.png" alt="Beya Store Realistic Example" className="w-full h-full object-cover rounded-2xl" />
               </div>
             </div>
           </div>
