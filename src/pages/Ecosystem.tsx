@@ -18,32 +18,32 @@ export default function Ecosystem() {
   return (
     <div className={`min-h-screen bg-slate-50 font-sans selection:bg-[#0071e3] selection:text-white ${isAr ? 'rtl' : 'ltr'}`} dir={isAr ? 'rtl' : 'ltr'}>
       {/* Navigation */}
-      <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white/80 backdrop-blur-xl border-b border-slate-200/50 shadow-sm py-3' : 'bg-transparent py-5'}`}>
+      <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-xl border-b border-slate-200/50 shadow-sm py-3' : 'bg-transparent py-5'}`}>
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-xl bg-[#0071e3] flex items-center justify-center text-white">
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${scrolled ? 'bg-[#0071e3] text-white' : 'bg-white text-[#0071e3]'}`}>
               <span className="font-bold text-lg">B</span>
             </div>
-            <span className="font-semibold text-lg tracking-tight text-slate-900">Beya Creative</span>
+            <span className={`font-semibold text-lg tracking-tight transition-colors ${scrolled ? 'text-slate-900' : 'text-white'}`}>Beya Creative</span>
           </Link>
           
           <div className="hidden md:flex items-center gap-8">
-            <Link to="/ecosystem" className="text-sm font-bold text-[#0071e3]">
+            <Link to="/ecosystem" className={`text-sm font-bold transition-colors ${scrolled ? 'text-[#0071e3]' : 'text-blue-100'}`}>
               {isAr ? 'المنظومة' : 'Écosystème'}
             </Link>
-            <a href="/#order-steps" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
+            <a href="/#order-steps" className={`text-sm font-medium transition-colors ${scrolled ? 'text-slate-600 hover:text-slate-900' : 'text-blue-100 hover:text-white'}`}>
               {isAr ? 'كيف نعمل' : 'Comment ça marche'}
             </a>
           </div>
 
           <div className="flex items-center gap-3 sm:gap-6">
-            <button onClick={toggle} className="text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors uppercase tracking-widest">
+            <button onClick={toggle} className={`text-xs font-semibold uppercase tracking-widest transition-colors ${scrolled ? 'text-slate-500 hover:text-slate-900' : 'text-blue-100 hover:text-white'}`}>
               {isAr ? 'FR' : 'العربية'}
             </button>
-            <Link to="/login" className="text-sm font-medium text-slate-800 hover:text-black transition-colors hidden sm:block">
+            <Link to="/login" className={`text-sm font-medium transition-colors hidden sm:block ${scrolled ? 'text-slate-800 hover:text-black' : 'text-white hover:text-blue-100'}`}>
               {isAr ? 'تسجيل الدخول' : 'Connexion'}
             </Link>
-            <Link to="/commencer" className="px-4 py-2 sm:px-5 sm:py-2 rounded-full bg-[#1d1d1f] text-white font-medium text-xs sm:text-sm hover:bg-black transition-all">
+            <Link to="/commencer" className={`px-4 py-2 sm:px-5 sm:py-2 rounded-full font-medium text-xs sm:text-sm transition-all ${scrolled ? 'bg-[#1d1d1f] text-white hover:bg-black' : 'bg-white text-[#0071e3] hover:bg-blue-50 shadow-md'}`}>
               {isAr ? 'ابدأ الآن' : 'Commencer'}
             </Link>
           </div>
@@ -91,8 +91,24 @@ export default function Ecosystem() {
               </p>
             </div>
             <div className="flex-1 w-full relative">
-              <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-lg border border-slate-200 bg-white p-4">
-                <img src="/atelier_background.png" alt="Production" className="w-full h-full object-cover rounded-2xl" />
+              <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-lg border border-slate-200 bg-slate-50 p-8 flex flex-col items-center justify-center relative">
+                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-100 rounded-bl-full opacity-50"></div>
+                 <div className="absolute bottom-0 left-0 w-40 h-40 bg-purple-100 rounded-tr-full opacity-50"></div>
+                 
+                 <div className="relative z-10 grid grid-cols-2 gap-6">
+                    <div className="w-24 h-24 md:w-32 md:h-32 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center transition-transform hover:-translate-y-2">
+                       <Scissors className="w-10 h-10 md:w-14 md:h-14 text-slate-700" />
+                    </div>
+                    <div className="w-24 h-24 md:w-32 md:h-32 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center translate-y-8 transition-transform hover:translate-y-6">
+                       <Layers className="w-10 h-10 md:w-14 md:h-14 text-[#0071e3]" />
+                    </div>
+                    <div className="w-24 h-24 md:w-32 md:h-32 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center -translate-y-4 transition-transform hover:-translate-y-6">
+                       <Settings className="w-10 h-10 md:w-14 md:h-14 text-slate-700" />
+                    </div>
+                    <div className="w-24 h-24 md:w-32 md:h-32 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center translate-y-4 transition-transform hover:translate-y-2">
+                       <ShieldCheck className="w-10 h-10 md:w-14 md:h-14 text-purple-600" />
+                    </div>
+                 </div>
               </div>
             </div>
           </div>
