@@ -50,15 +50,7 @@ export default function LandingPage() {
   const [videoPlaying, setVideoPlaying] = useState(true);
   const [videoMuted, setVideoMuted] = useState(false);
 
-  const productionSlides = ['/workshop_view_1.png', '/workshop_view_2.png', '/factory_bg.jpg'];
-  const [productionSlide, setProductionSlide] = useState(0);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setProductionSlide((prev) => (prev + 1) % productionSlides.length);
-    }, 3500);
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -172,11 +164,11 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 animate-in slide-in-from-bottom-8 duration-1000 delay-300">
-              <Link to="/store-landing" className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#0071e3] hover:bg-[#0077ED] text-white font-medium text-lg transition-colors flex items-center justify-center gap-2">
-                {isAr ? 'اكتشف المنظومة' : 'Découvrir'}
+              <Link to="/commencer" className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#0071e3] hover:bg-[#0077ED] text-white font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+                {isAr ? 'ابدأ مشروعك الآن' : 'Démarrer votre projet'} <ArrowRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
               </Link>
-              <a href="#solutions" className="w-full sm:w-auto px-8 py-3.5 rounded-full text-[#0071e3] font-medium text-lg hover:underline flex items-center justify-center gap-1">
-                {isAr ? 'كيف نعمل؟' : 'Comment ça marche ?'} <ChevronRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
+              <a href="#solutions" className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-white border border-slate-200 text-slate-700 font-medium text-lg hover:bg-slate-50 transition-all flex items-center justify-center gap-2 shadow-sm">
+                {isAr ? 'تفاصيل المنظومة' : 'Détails de l\'écosystème'} <ChevronRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
               </a>
             </div>
           </div>
@@ -277,24 +269,14 @@ export default function LandingPage() {
 
             {/* Beya Production - Primary */}
             <div className="relative overflow-hidden p-10 md:p-16 rounded-[2.5rem] shadow-[0_8px_40px_rgba(0,0,0,0.1)] hover:shadow-[0_12px_50px_rgba(0,0,0,0.35)] transition-all duration-300 group text-white min-h-[480px] flex flex-col justify-end">
-               {/* Background Slider */}
+               {/* Background Image */}
                <div className="absolute inset-0 bg-[#1d1d1f]">
-                 {productionSlides.map((src, idx) => (
-                   <img
-                     key={src}
-                     src={src}
-                     alt=""
-                     className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === productionSlide ? 'opacity-50' : 'opacity-0'}`}
-                   />
-                 ))}
+                 <img
+                   src="/factory_bg.jpg"
+                   alt="Beya Production Factory"
+                   className="absolute inset-0 w-full h-full object-cover opacity-50"
+                 />
                  <div className="absolute inset-0 bg-gradient-to-t from-[#1d1d1f]/80 via-[#1d1d1f]/40 to-transparent" />
-               </div>
-
-               {/* Slide dots */}
-               <div className="absolute top-8 ltr:right-8 rtl:left-8 rtl:right-auto flex gap-1.5 z-10">
-                 {productionSlides.map((_, idx) => (
-                   <span key={idx} className={`h-1.5 rounded-full transition-all duration-300 ${idx === productionSlide ? 'w-6 bg-white' : 'w-1.5 bg-white/40'}`} />
-                 ))}
                </div>
 
                <div className="relative z-10 max-w-2xl">
