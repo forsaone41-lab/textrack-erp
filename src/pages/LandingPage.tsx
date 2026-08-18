@@ -358,7 +358,7 @@ export default function LandingPage() {
         </p>
         <div className="flex justify-center">
           <Link to="/store-landing" className="px-8 py-4 rounded-full bg-[#1d1d1f] hover:bg-black text-white font-medium text-lg transition-colors shadow-lg">
-            {isAr ? 'تأسيس مشروعك الآن' : 'Créer votre projet'}
+            {isAr ? 'ابدأ مشروعك الآن' : 'Créer votre projet'}
           </Link>
         </div>
       </section>
