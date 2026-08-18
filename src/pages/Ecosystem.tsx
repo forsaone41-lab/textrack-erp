@@ -21,7 +21,9 @@ export default function Ecosystem() {
       <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-xl border-b border-slate-200/50 shadow-sm py-3' : 'bg-transparent py-5'}`}>
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 sm:gap-2.5 group">
-            <img src="/logo-blue.png" alt="Beya Creative" className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg transition-all ${!scrolled && 'brightness-0 invert'}`} />
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 ${!scrolled ? 'bg-white shadow-sm p-1' : 'bg-transparent'}`}>
+              <img src="/logo-blue.png" alt="Beya Creative" className="w-full h-full object-contain" />
+            </div>
             <span className={`font-semibold text-lg sm:text-xl tracking-tight transition-colors ${scrolled ? 'text-slate-900' : 'text-white'}`}>Beya Creative</span>
           </Link>
           
@@ -49,14 +51,18 @@ export default function Ecosystem() {
       </nav>
 
       {/* Hero Header */}
-      <section className="relative pt-40 pb-32 px-6 overflow-hidden min-h-[70vh] flex items-center justify-center rounded-b-[3rem] shadow-2xl mb-12">
-        {/* Single Image Background with Blue Overlay/Flow */}
-        <div className="absolute inset-0 z-0">
-          <img src="/factory_bg.jpg" alt="Beya Production" className="absolute inset-0 w-full h-full object-cover" />
-          {/* Blue Flow/Glow Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0071e3]/90 via-[#0077ED]/70 to-slate-900/90 mix-blend-multiply" />
-          <div className="absolute inset-0 bg-[#0071e3]/10 backdrop-blur-[1px]" />
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-black/30 via-transparent to-transparent" />
+      <section className="relative pt-40 pb-32 px-6 overflow-hidden min-h-[70vh] flex items-center justify-center rounded-b-[3rem] shadow-2xl mb-12 bg-[#0071e3]">
+        {/* Pure CSS Vector Background */}
+        <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-[#0071e3] via-[#005bb5] to-[#003b75]"></div>
+          
+          {/* Vector Glowing Shapes */}
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-cyan-400 rounded-full mix-blend-screen filter blur-[100px] opacity-60 animate-pulse"></div>
+          <div className="absolute top-1/3 -left-20 w-72 h-72 bg-purple-500 rounded-full mix-blend-screen filter blur-[80px] opacity-40"></div>
+          <div className="absolute -bottom-40 right-1/4 w-[30rem] h-[30rem] bg-blue-400 rounded-full mix-blend-screen filter blur-[120px] opacity-50"></div>
+          
+          {/* Decorative Lines/Grid effect */}
+          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }}></div>
         </div>
         
         <div className="max-w-5xl mx-auto text-center relative z-10">
