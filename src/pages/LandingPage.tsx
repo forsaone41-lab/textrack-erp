@@ -50,7 +50,7 @@ export default function LandingPage() {
   const [videoPlaying, setVideoPlaying] = useState(true);
   const [videoMuted, setVideoMuted] = useState(false);
 
-  const productionSlides = ['/factory_bg.jpg', '/atelier-machine.jpg', '/atelier-fabric.jpg'];
+  const productionSlides = ['/workshop_view_1.png', '/workshop_view_2.png', '/factory_bg.jpg'];
   const [productionSlide, setProductionSlide] = useState(0);
 
   useEffect(() => {
@@ -280,7 +280,7 @@ export default function LandingPage() {
                      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === productionSlide ? 'opacity-50' : 'opacity-0'}`}
                    />
                  ))}
-                 <div className="absolute inset-0 bg-gradient-to-t from-[#1d1d1f] via-[#1d1d1f]/75 to-[#1d1d1f]/25" />
+                 <div className="absolute inset-0 bg-gradient-to-t from-[#1d1d1f]/80 via-[#1d1d1f]/40 to-transparent" />
                </div>
 
                {/* Slide dots */}
@@ -298,8 +298,8 @@ export default function LandingPage() {
                      ? 'ورشة صناعية متكاملة ومجهزة بأحدث التقنيات. نصمم ونصنع لك منتجات بمعايير جودة عالية لتليق بعلامتك التجارية.'
                      : 'Atelier industriel équipé des dernières technologies. Nous concevons et fabriquons des produits de haute qualité.'}
                  </p>
-                 <Link to="/setup" className="inline-flex items-center text-white font-medium hover:underline text-lg">
-                   {isAr ? 'اكتشف خدمات الورشة' : 'Découvrir l\'atelier'} <ChevronRight className={`w-4 h-4 ml-1 ${isAr ? 'rotate-180 mr-1 ml-0' : ''}`} />
+                 <Link to="/setup" className="inline-flex items-center px-6 py-3 bg-white text-[#1d1d1f] rounded-full font-bold hover:bg-slate-100 transition-colors text-base shadow-lg">
+                   {isAr ? 'أريد صناعة منتجي' : 'Fabriquer mon produit'} <ChevronRight className={`w-4 h-4 ml-1 ${isAr ? 'rotate-180 mr-1 ml-0' : ''}`} />
                  </Link>
                </div>
             </div>
@@ -319,9 +319,14 @@ export default function LandingPage() {
                    </p>
                  </div>
                </div>
-               <div className="flex items-center gap-3 shrink-0 ltr:ml-auto ps-16 sm:ps-0">
-                 <span className="text-xl font-bold text-[#1d1d1f]">199 <span className="text-sm text-slate-500 font-medium">DH/{isAr ? 'شهر' : 'mois'}</span></span>
-                 <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-medium uppercase tracking-widest">{isAr ? 'مخاطرة 0' : '0 Risque'}</span>
+               <div className="flex flex-col sm:flex-row items-center gap-4 shrink-0 ltr:ml-auto ps-16 sm:ps-0 w-full sm:w-auto">
+                 <div className="flex items-center gap-3">
+                   <span className="text-xl font-bold text-[#1d1d1f]">199 <span className="text-sm text-slate-500 font-medium">DH/{isAr ? 'شهر' : 'mois'}</span></span>
+                   <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-medium uppercase tracking-widest">{isAr ? 'مخاطرة 0' : '0 Risque'}</span>
+                 </div>
+                 <Link to="/store-landing" className="w-full sm:w-auto px-6 py-2.5 bg-[#0071e3] text-white rounded-full font-bold hover:bg-[#0077ED] transition-colors text-sm shadow-md flex items-center justify-center">
+                   {isAr ? 'أريد إطلاق متجري' : 'Lancer ma boutique'}
+                 </Link>
                </div>
             </div>
 
