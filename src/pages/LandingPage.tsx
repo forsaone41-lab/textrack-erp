@@ -493,9 +493,7 @@ export default function LandingPage() {
               <source src="/videos/beya-creative.mp4" type="video/mp4" />
             </video>
           </div>
-
-        </div>
-
+          </div>
         {/* Universal Scroll Down Arrow (Desktop only) */}
         <div className={`hidden lg:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] transition-all duration-500 flex-col items-center animate-bounce ${scrolled ? 'opacity-0 pointer-events-none translate-y-10' : 'opacity-100 translate-y-0'}`}>
           <button 
@@ -520,6 +518,7 @@ export default function LandingPage() {
             {t.navStart} <ArrowRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
           </button>
         </div>
+      </div>
 
         <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden -z-10">
            <div className="w-[120%] h-64 bg-gradient-to-b from-slate-50 to-white rounded-[100%] -top-32 absolute left-1/2 -translate-x-1/2" />
