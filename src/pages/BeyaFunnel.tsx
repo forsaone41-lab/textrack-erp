@@ -213,7 +213,7 @@ export default function BeyaFunnel() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             <img src="/logo-blue.png" alt="Beya Creative" className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg" />
-            <span className={`font-black text-[12px] sm:text-xl tracking-widest uppercase ${isDark ? 'text-white' : 'text-slate-900'}`}>BEYA CREATIVE</span>
+            <span className={`font-semibold text-[15px] sm:text-xl tracking-tight whitespace-nowrap ${isDark ? 'text-white' : 'text-slate-900'}`}>Beya Creative</span>
           </Link>
           <div className="flex items-center gap-2 sm:gap-3 md:gap-5">
             <div className="relative shrink-0" onMouseEnter={() => setShowLangMenu(true)} onMouseLeave={() => setShowLangMenu(false)}>
