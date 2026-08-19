@@ -268,12 +268,10 @@ export default function LandingPage() {
   const heroFocus = useScrollFocus();
   const [scrolled, setScrolled] = useState(false);
   const heroVideoRef = React.useRef<HTMLVideoElement>(null);
-  const [videoPlaying, setVideoPlaying] = useState(false); // starts paused so user taps for sound
-  const [videoMuted, setVideoMuted] = useState(false);
+  const [videoPlaying, setVideoPlaying] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [videoVisible, setVideoVisible] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
 
   // Parse language from URL path
   const [currentLang, setCurrentLang] = useState<'ar'|'fr'|'en'>(() => {
@@ -466,36 +464,15 @@ export default function LandingPage() {
           <div id="hero-video" ref={heroFocus.ref} style={heroFocus.style} className="relative rounded-2xl md:rounded-[2rem] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.12)] border-b-4 border-[#0071e3] aspect-[2/3] md:aspect-[4/5] w-full h-auto md:h-[680px] md:w-auto mx-auto animate-in slide-in-from-bottom-8 duration-1000 delay-150 group">
             <video
               ref={heroVideoRef}
+              autoPlay
               loop
+              muted
               playsInline
               controls
-              onPlay={() => setVideoPlaying(true)}
-              onPause={() => setVideoPlaying(false)}
               className="absolute inset-0 w-full h-full object-cover bg-black rounded-2xl md:rounded-[2rem]"
             >
               <source src="/videos/beya-creative.mp4" type="video/mp4" />
             </video>
-
-            {/* Big Play Overlay — shown when video is paused */}
-            {!videoPlaying && (
-              <button
-                onClick={() => {
-                  if (heroVideoRef.current) {
-                    heroVideoRef.current.play();
-                    setVideoPlaying(true);
-                  }
-                }}
-                className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-black/30 cursor-pointer"
-                aria-label="Play video with sound"
-              >
-                <div className="w-20 h-20 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-2xl hover:scale-110 transition-transform">
-                  <Play className="w-9 h-9 text-[#0071e3] ml-1" />
-                </div>
-                <span className="text-white text-sm font-semibold bg-black/50 backdrop-blur-sm px-4 py-1.5 rounded-full">
-                  {isAr ? 'اضغط لمشاهدة بالصوت' : 'Appuyer pour regarder avec le son'}
-                </span>
-              </button>
-            )}
           </div>
 
           {/* Mobile-only CTA below video (in page flow, not fixed) */}
