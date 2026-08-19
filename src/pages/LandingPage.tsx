@@ -405,7 +405,7 @@ export default function LandingPage() {
           </div>
 
           <div className="flex items-center gap-3 sm:gap-6 relative shrink-0">
-            <div className="relative shrink-0" onMouseEnter={() => setShowLangMenu(true)} onMouseLeave={() => setShowLangMenu(false)}>
+            <div className="relative shrink-0">
               <button 
                 onClick={() => setShowLangMenu(!showLangMenu)} 
                 className="text-[11px] sm:text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors uppercase tracking-widest flex items-center gap-1 shrink-0 h-8"
@@ -413,13 +413,16 @@ export default function LandingPage() {
                 {currentLang} <ChevronRight className="w-3 h-3 rotate-90" />
               </button>
               {showLangMenu && (
-                <div className="absolute top-full right-0 mt-1 w-24 bg-white border border-slate-100 rounded-xl shadow-xl animate-fade-in flex flex-col overflow-hidden z-[60]">
-                  <button onClick={() => { changeLang('ar'); setShowLangMenu(false); }} className={`px-4 py-2 text-sm text-center hover:bg-slate-50 transition-colors ${currentLang === 'ar' ? 'font-bold text-[#0071e3]' : 'text-slate-600 font-medium'}`}>العربية</button>
-                  <div className="h-px bg-slate-100 w-full" />
-                  <button onClick={() => { changeLang('fr'); setShowLangMenu(false); }} className={`px-4 py-2 text-sm text-center hover:bg-slate-50 transition-colors ${currentLang === 'fr' ? 'font-bold text-[#0071e3]' : 'text-slate-600 font-medium'}`}>FR</button>
-                  <div className="h-px bg-slate-100 w-full" />
-                  <button onClick={() => { changeLang('en'); setShowLangMenu(false); }} className={`px-4 py-2 text-sm text-center hover:bg-slate-50 transition-colors ${currentLang === 'en' ? 'font-bold text-[#0071e3]' : 'text-slate-600 font-medium'}`}>EN</button>
-                </div>
+                <>
+                  <div className="fixed inset-0 z-50" onClick={() => setShowLangMenu(false)} />
+                  <div className="absolute top-full right-0 mt-2 w-24 bg-white border border-slate-100 rounded-xl shadow-xl animate-fade-in flex flex-col overflow-hidden z-[60]">
+                    <button onClick={() => { changeLang('ar'); setShowLangMenu(false); }} className={`px-4 py-2 text-sm text-center hover:bg-slate-50 transition-colors ${currentLang === 'ar' ? 'font-bold text-[#0071e3]' : 'text-slate-600 font-medium'}`}>العربية</button>
+                    <div className="h-px bg-slate-100 w-full" />
+                    <button onClick={() => { changeLang('fr'); setShowLangMenu(false); }} className={`px-4 py-2 text-sm text-center hover:bg-slate-50 transition-colors ${currentLang === 'fr' ? 'font-bold text-[#0071e3]' : 'text-slate-600 font-medium'}`}>FR</button>
+                    <div className="h-px bg-slate-100 w-full" />
+                    <button onClick={() => { changeLang('en'); setShowLangMenu(false); }} className={`px-4 py-2 text-sm text-center hover:bg-slate-50 transition-colors ${currentLang === 'en' ? 'font-bold text-[#0071e3]' : 'text-slate-600 font-medium'}`}>EN</button>
+                  </div>
+                </>
               )}
             </div>
             
