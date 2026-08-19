@@ -15,6 +15,11 @@ const styles = `
     width: max-content;
     animation: marquee 40s linear infinite;
   }
+  
+  /* Hide the huge center play button on iOS/Safari native controls */
+  video::-webkit-media-controls-overlay-play-button {
+    display: none !important;
+  }
   .glass-header {
     background: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(20px);
@@ -451,12 +456,19 @@ export default function LandingPage() {
               loop
               muted
               playsInline
+              controls
               onClick={(e) => {
                 const video = e.currentTarget;
-                if (video.paused) {
-                  video.play();
+                if (video.muted) {
+                  video.muted = false;
+                  // If it was paused for some reason, ensure it plays when unmuted
+                  if (video.paused) video.play();
                 } else {
-                  video.pause();
+                  if (video.paused) {
+                    video.play();
+                  } else {
+                    video.pause();
+                  }
                 }
               }}
               className="absolute inset-0 w-full h-full object-cover bg-black rounded-2xl md:rounded-[2rem] cursor-pointer"
