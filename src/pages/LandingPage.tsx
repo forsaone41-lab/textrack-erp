@@ -454,16 +454,7 @@ export default function LandingPage() {
               {t.heroDesc}
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 animate-in slide-in-from-bottom-8 duration-1000 delay-300">
-              <button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#0071e3] hover:bg-[#0077ED] text-white font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5 cursor-pointer">
-                {t.heroStartProject} <ArrowRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
-              </button>
-              <Link to="/ecosystem" className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-white border border-slate-200 text-slate-700 font-medium text-lg hover:bg-slate-50 transition-all flex items-center justify-center gap-2 shadow-sm">
-                {t.heroDetails} <ChevronRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
-              </Link>
-            </div>
-
-            <div className="mt-8 flex flex-col gap-3.5 animate-in slide-in-from-bottom-8 duration-1000 delay-500 w-full lg:w-fit">
+            <div className="mb-8 flex flex-col gap-3.5 animate-in slide-in-from-bottom-8 duration-1000 delay-300 w-full lg:w-fit mx-auto lg:mx-0">
               <div className="flex items-start gap-3 text-[15px] md:text-base text-slate-700 font-medium">
                 <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center shrink-0 mt-0.5">
                   <Check className="w-4 h-4 text-green-600" />
@@ -480,6 +471,15 @@ export default function LandingPage() {
                   {isAr ? 'لا نقبل الإنتاج التجاري الرخيص أو الجودة الرديئة أبداً.' : 'Nous refusons la production de masse à bas prix et de mauvaise qualité.'}
                 </span>
               </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 animate-in slide-in-from-bottom-8 duration-1000 delay-500">
+              <button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#0071e3] hover:bg-[#0077ED] text-white font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5 cursor-pointer">
+                {t.heroStartProject} <ArrowRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
+              </button>
+              <Link to="/ecosystem" className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-white border border-slate-200 text-slate-700 font-medium text-lg hover:bg-slate-50 transition-all flex items-center justify-center gap-2 shadow-sm">
+                {t.heroDetails} <ChevronRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
+              </Link>
             </div>
           </div>
 
