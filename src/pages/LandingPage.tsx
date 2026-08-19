@@ -477,21 +477,29 @@ export default function LandingPage() {
             </video>
           </div>
 
-          <div className="lg:hidden flex justify-center mt-2 w-full px-2">
-             <button onClick={() => setIsModalOpen(true)} className="w-full py-4 rounded-full bg-[#1d1d1f] text-white font-bold text-lg hover:bg-black transition-all shadow-xl flex items-center justify-center gap-2 animate-in slide-in-from-bottom-8 duration-1000 delay-500 cursor-pointer">
-               {t.navStart} <ArrowRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
-             </button>
-          </div>
         </div>
 
-        {/* Universal Scroll Down Arrow (Fixed to bottom, hides on scroll) */}
-        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] transition-all duration-500 flex-col items-center animate-bounce ${scrolled ? 'opacity-0 pointer-events-none translate-y-10' : 'opacity-100 translate-y-0'}`}>
+        {/* Universal Scroll Down Arrow (Desktop only) */}
+        <div className={`hidden lg:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] transition-all duration-500 flex-col items-center animate-bounce ${scrolled ? 'opacity-0 pointer-events-none translate-y-10' : 'opacity-100 translate-y-0'}`}>
           <button 
             onClick={() => document.getElementById('hero-video')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
             className="w-14 h-14 bg-white/95 backdrop-blur-sm rounded-full flex items-center justify-center shadow-[0_8px_30px_rgba(0,113,227,0.25)] border border-[#0071e3]/20 text-[#0071e3] hover:bg-white transition-all hover:scale-110"
             aria-label="Scroll down"
           >
             <ArrowDown className="w-7 h-7" />
+          </button>
+        </div>
+
+        {/* Smart Mobile CTA (Fixed to bottom, hides on scroll) */}
+        <div className={`fixed bottom-6 left-0 right-0 z-[100] px-4 transition-all duration-500 flex flex-col items-center lg:hidden ${scrolled ? 'opacity-0 pointer-events-none translate-y-10' : 'opacity-100 translate-y-0'}`}>
+          <a href="https://wa.me/212500000000" target="_blank" rel="noopener noreferrer" className="bg-white px-4 py-1.5 rounded-full shadow-lg text-xs font-bold text-green-600 flex items-center gap-1.5 mb-[-12px] z-10 border border-green-100 animate-bounce">
+            ⭐ {isAr ? 'استشارة مجانية عبر الواتساب' : 'Consultation gratuite WhatsApp'}
+          </a>
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="w-full py-4 rounded-full bg-[#1d1d1f] text-white font-bold text-lg hover:bg-black shadow-[0_8px_30px_rgba(29,29,31,0.3)] flex items-center justify-center gap-2 animate-pop cursor-pointer relative"
+          >
+            {t.navStart} <ArrowRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
           </button>
         </div>
 
