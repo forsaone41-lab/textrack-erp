@@ -273,6 +273,7 @@ export default function LandingPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [videoVisible, setVideoVisible] = useState(false);
+  const [isMuted, setIsMuted] = useState(true); // track mute state for overlay
 
   // Parse language from URL path
   const [currentLang, setCurrentLang] = useState<'ar'|'fr'|'en'>(() => {
@@ -383,8 +384,8 @@ export default function LandingPage() {
     <div className="min-h-screen bg-[#FBFBFD] text-[#1d1d1f] font-sans overflow-x-hidden selection:bg-slate-200" dir={t.dir}>
       <style>{styles}</style>
 
-      {/* Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'glass-header py-3' : 'bg-transparent py-5'}`}>
+      {/* Navigation - hides on mobile when video is in view */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'glass-header py-3' : 'bg-transparent py-5'} ${videoVisible ? '-translate-y-full lg:translate-y-0' : 'translate-y-0'}`}>
         <div className="max-w-7xl mx-auto px-3 sm:px-6 flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
              <img src="/logo-blue.png" alt="Beya Creative" className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg shrink-0" />
@@ -474,20 +475,54 @@ export default function LandingPage() {
                 const video = e.currentTarget;
                 if (video.muted) {
                   video.muted = false;
-                  // If it was paused for some reason, ensure it plays when unmuted
+                  setIsMuted(false);
                   if (video.paused) video.play();
                 } else {
-                  if (video.paused) {
-                    video.play();
-                  } else {
-                    video.pause();
-                  }
+                  if (video.paused) { video.play(); }
+                  else { video.pause(); }
                 }
               }}
               className="absolute inset-0 w-full h-full object-cover bg-black rounded-2xl md:rounded-[2rem] cursor-pointer"
             >
               <source src="/videos/beya-creative.mp4" type="video/mp4" />
             </video>
+
+            {/* Tap-to-unmute overlay badge — disappears after tap */}
+            {isMuted && (
+              <button
+                onClick={() => {
+                  if (heroVideoRef.current) {
+                    heroVideoRef.current.muted = false;
+                    if (heroVideoRef.current.paused) heroVideoRef.current.play();
+                    setIsMuted(false);
+                  }
+                }}
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center gap-1 pointer-events-auto lg:hidden"
+                aria-label="Unmute video"
+              >
+                <span className="bg-black/60 backdrop-blur-sm text-white text-xs font-bold px-4 py-2 rounded-full flex items-center gap-2 animate-pulse shadow-lg">
+                  🔇 {isAr ? 'اضغط للصوت' : 'Appuyer pour le son'}
+                </span>
+              </button>
+            )}
+          </div>
+
+          {/* Mobile-only CTA below video (in page flow, not fixed) */}
+          <div className="lg:hidden flex flex-col items-center w-full mt-5 gap-2 px-1">
+            <a
+              href="https://wa.me/212500000000"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-white px-5 py-2 rounded-full shadow-md text-sm font-bold text-green-600 flex items-center gap-2 border border-green-100 animate-bounce w-fit"
+            >
+              ⭐ {isAr ? 'استشارة مجانية عبر الواتساب' : 'Consultation gratuite WhatsApp'}
+            </a>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="w-full py-4 rounded-full bg-[#1d1d1f] text-white font-bold text-lg hover:bg-black shadow-[0_8px_30px_rgba(29,29,31,0.3)] flex items-center justify-center gap-2 animate-pop cursor-pointer"
+            >
+              {t.navStart} <ArrowRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
+            </button>
           </div>
 
         </div>
@@ -503,18 +538,6 @@ export default function LandingPage() {
           </button>
         </div>
 
-        {/* Smart Mobile CTA — shows only when video is visible */}
-        <div className={`fixed bottom-6 left-0 right-0 z-[100] px-4 transition-all duration-500 flex flex-col items-center lg:hidden ${videoVisible ? 'opacity-100 translate-y-0' : 'opacity-0 pointer-events-none translate-y-10'}`}>
-          <a href="https://wa.me/212500000000" target="_blank" rel="noopener noreferrer" className="bg-white px-4 py-1.5 rounded-full shadow-lg text-xs font-bold text-green-600 flex items-center gap-1.5 mb-[-12px] z-10 border border-green-100 animate-bounce">
-            ⭐ {isAr ? 'استشارة مجانية عبر الواتساب' : 'Consultation gratuite WhatsApp'}
-          </a>
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="w-full py-4 rounded-full bg-[#1d1d1f] text-white font-bold text-lg hover:bg-black shadow-[0_8px_30px_rgba(29,29,31,0.3)] flex items-center justify-center gap-2 animate-pop cursor-pointer relative"
-          >
-            {t.navStart} <ArrowRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
-          </button>
-        </div>
 
         <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden -z-10">
            <div className="w-[120%] h-64 bg-gradient-to-b from-slate-50 to-white rounded-[100%] -top-32 absolute left-1/2 -translate-x-1/2" />
