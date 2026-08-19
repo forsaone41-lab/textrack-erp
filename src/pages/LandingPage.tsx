@@ -228,10 +228,10 @@ function useScrollFocus() {
           const maxDistance = window.innerHeight;
           
           const distance = Math.abs(viewportCenter - elementCenter);
-          let newScale = 1 - (distance / maxDistance) * 0.15;
+          let newScale = 1.05 - (distance / maxDistance) * 0.2;
           let newOpacity = 1 - (distance / maxDistance) * 0.8;
           
-          const finalScale = Math.max(0.85, Math.min(1, newScale));
+          const finalScale = Math.max(0.85, Math.min(1.05, newScale));
           const finalOpacity = Math.max(0.2, Math.min(1, newOpacity));
           
           ref.current.style.transform = `scale(${finalScale})`;
@@ -441,13 +441,13 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div id="hero-video" ref={heroFocus.ref} style={heroFocus.style} className="relative rounded-[2rem] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.12)] border-b-4 border-[#0071e3] aspect-[2/3] md:aspect-[4/5] w-full h-auto md:h-[680px] md:w-auto mx-auto animate-in slide-in-from-bottom-8 duration-1000 delay-150 group">
+          <div id="hero-video" ref={heroFocus.ref} style={heroFocus.style} className="relative rounded-2xl md:rounded-[2rem] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.12)] border-b-4 border-[#0071e3] aspect-[2/3] md:aspect-[4/5] w-full h-auto md:h-[680px] md:w-auto mx-auto animate-in slide-in-from-bottom-8 duration-1000 delay-150 group">
             <video
               autoPlay
               loop
               playsInline
               controls
-              className="absolute inset-0 w-full h-full object-cover bg-black"
+              className="absolute inset-0 w-full h-full object-cover bg-black rounded-2xl md:rounded-[2rem]"
             >
               <source src="/videos/beya-creative.mp4" type="video/mp4" />
             </video>
