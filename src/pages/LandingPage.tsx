@@ -489,7 +489,6 @@ export default function LandingPage() {
                 ref={heroVideoRef}
                 autoPlay
                 loop
-                muted
                 playsInline
                 controls
                 className="absolute inset-0 w-full h-full object-cover bg-black rounded-2xl md:rounded-[2rem]"
