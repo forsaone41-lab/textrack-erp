@@ -47,7 +47,8 @@ export default function GZeedDashboard() {
   const [storeDescription, setStoreDescription] = useState('');
   
   // Domain States
-  const [domainName, setDomainName] = useState(() => localStorage.getItem('gzeed_domain_name') || 'store-123.gzeed.com');
+  const [domainName, setDomainName] = useState(() => localStorage.getItem('beya_domain_name') || 'store-123.beyacreative.com');
+  const [themeFilter, setThemeFilter] = useState('all');
   const [subdomainInput, setSubdomainInput] = useState('');
   const [customDomainInput, setCustomDomainInput] = useState('');
   const [isVerifyingDomain, setIsVerifyingDomain] = useState(false);
@@ -253,8 +254,8 @@ export default function GZeedDashboard() {
       return;
     }
 
-    const reserved = ['shop', 'store', 'admin', 'gzeed', 'app', 'www'];
-    const newDomain = `${input}.gzeed.com`;
+    const reserved = ['shop', 'store', 'admin', 'beya', 'beyacreative', 'app', 'www'];
+    const newDomain = `${input}.beyacreative.com`;
 
     setIsVerifyingDomain(true);
     setDomainError(null);
@@ -469,10 +470,10 @@ export default function GZeedDashboard() {
         {/* Logo Area */}
         <div className="h-16 flex items-center px-6 border-b border-slate-200 bg-[#F5F5F7]/80 backdrop-blur-xl sticky top-0 z-10 cursor-pointer" onClick={() => navigate('/')}>
           <div className="flex items-center gap-2" dir="ltr">
-            <div className="w-8 h-8 bg-black rounded-xl flex items-center justify-center font-black text-white text-sm shadow-md">
-              GZ
+            <div className="w-8 h-8 bg-[#0071e3] rounded-xl flex items-center justify-center font-black text-white text-sm shadow-md">
+              <img src="/logo-blue.png" alt="BEYA" className="w-5 h-5 rounded-sm invert brightness-0" />
             </div>
-            <span className="font-black text-slate-900 tracking-tight text-xl">GZeed</span>
+            <span className="font-black text-slate-900 tracking-tight text-xl">BEYA</span>
           </div>
         </div>
 
@@ -532,7 +533,7 @@ export default function GZeedDashboard() {
           <div className="bg-white border border-slate-200 rounded-2xl p-4 text-slate-900 shadow-sm relative overflow-hidden">
             <h4 className="font-black text-sm mb-1">{lang === 'ar' ? 'خطتك الحالية: مجانية' : lang === 'en' ? 'Current Plan: Free' : 'Plan actuel: Gratuit'}</h4>
             <p className="text-xs font-medium text-slate-500 mb-4 leading-relaxed">
-              {lang === 'ar' ? 'قم بالترقية للحصول على نطاق مخصص (gzeed.com).' : lang === 'en' ? 'Upgrade to get a custom domain.' : 'Passez au niveau supérieur pour un domaine personnalisé.'}
+              {lang === 'ar' ? 'قم بالترقية للحصول على نطاق مخصص (beyacreative.com).' : lang === 'en' ? 'Upgrade to get a custom domain.' : 'Passez au niveau supérieur pour un domaine personnalisé.'}
             </p>
             <button className="w-full py-2.5 bg-black text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all shadow-md">
               {lang === 'ar' ? 'ترقية الآن' : lang === 'en' ? 'Upgrade' : 'Mettre à niveau'}
@@ -577,7 +578,7 @@ export default function GZeedDashboard() {
               <div className="absolute top-12 left-0 w-48 bg-white border border-slate-200 rounded-xl shadow-lg py-2 animate-fade-in z-50">
                 <div className="px-4 py-3 border-b border-slate-100 mb-2">
                   <p className="text-sm font-bold text-slate-900">Admin</p>
-                  <p className="text-xs font-medium text-slate-500">admin@gzeed.com</p>
+                  <p className="text-xs font-medium text-slate-500">admin@beyacreative.com</p>
                 </div>
                 <button 
                   onClick={() => {
@@ -675,7 +676,7 @@ export default function GZeedDashboard() {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
               <div>
                 <h1 className="text-3xl font-black text-slate-900 mb-1">
-                  {lang === 'ar' ? 'مرحباً بك في GZeed 👋' : lang === 'en' ? 'Welcome to GZeed 👋' : 'Bienvenue sur GZeed 👋'}
+                  {lang === 'ar' ? 'مرحباً بك في BEYA 👋' : lang === 'en' ? 'Welcome to BEYA 👋' : 'Bienvenue sur BEYA 👋'}
                 </h1>
                 <p className="text-slate-500 font-medium">
                   {lang === 'ar' ? 'لنقم بإعداد مشروعك وإطلاقه للعالم.' : lang === 'en' ? "Let's set up your project for launch." : "Configurons votre projet pour le lancer."}
@@ -927,7 +928,27 @@ export default function GZeedDashboard() {
                   <p className="text-slate-500 font-medium">{lang === 'ar' ? 'اختر القالب المناسب لنوع باقتك ومشروعك.' : lang === 'en' ? 'Choose the theme that fits your plan.' : 'Choisissez le thème adapté à votre forfait.'}</p>
                 </div>
                 
-                {/* Theme Filters Removed based on user request */}
+                {/* Theme Filters */}
+                <div className="flex bg-slate-200/50 p-1 rounded-xl overflow-x-auto hide-scrollbar max-w-full">
+                  {[
+                    { id: 'all', label: lang === 'ar' ? 'الكل' : lang === 'en' ? 'All' : 'Tous' },
+                    { id: 'store', label: lang === 'ar' ? 'متاجر إلكترونية' : lang === 'en' ? 'E-commerce' : 'E-commerce' },
+                    { id: 'website', label: lang === 'ar' ? 'مواقع تعريفية' : lang === 'en' ? 'Showcase Sites' : 'Sites Vitrine' },
+                    { id: 'dev', label: lang === 'ar' ? 'للمطورين' : lang === 'en' ? 'Developers' : 'Développeurs' }
+                  ].map(filter => (
+                    <button
+                      key={filter.id}
+                      onClick={() => setThemeFilter(filter.id)}
+                      className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap shrink-0 ${
+                        themeFilter === filter.id 
+                          ? 'bg-white text-slate-900 shadow-sm' 
+                          : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
+                      }`}
+                    >
+                      {filter.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -940,7 +961,7 @@ export default function GZeedDashboard() {
                   { id: 'omra', category: 'website', name: lang === 'ar' ? 'عمرة وسياحة' : lang === 'en' ? 'Omra & Tours' : 'Omra & Tours', image: '/images/themes/tourism_1.png', desc: lang === 'ar' ? 'موقع لوكالة أسفار' : lang === 'en' ? 'Travel agency site' : 'Site pour agence de voyage' },
                   { id: 'blank', category: 'dev', name: lang === 'ar' ? 'قالب فارغ (للمطورين)' : lang === 'en' ? 'Blank Theme (Dev)' : 'Thème Vide (Dev)', image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=600&auto=format&fit=crop', desc: lang === 'ar' ? 'ابنِ موقعك من الصفر بالكود' : lang === 'en' ? 'Create from scratch with code' : 'Créez depuis zéro avec du code' },
                 ]
-                .filter(theme => theme.category === 'store')
+                .filter(theme => themeFilter === 'all' || theme.category === themeFilter)
                 .map((theme) => (
                   <div 
                     key={theme.id} 
@@ -1100,7 +1121,7 @@ export default function GZeedDashboard() {
                       <div>
                         <p className="font-bold text-slate-900" dir="ltr">{domainName}</p>
                         <p className="text-xs text-slate-500 font-medium">
-                          {domainName.includes('.gzeed.com') ? (lang === 'ar' ? 'نطاق فرعي مجاني' : lang === 'en' ? 'Free Subdomain' : 'Sous-domaine gratuit') : (lang === 'ar' ? 'نطاق مخصص PRO' : lang === 'en' ? 'Custom Domain PRO' : 'Domaine personnalisé PRO')}
+                          {domainName.includes('.beyacreative.com') ? (lang === 'ar' ? 'نطاق فرعي مجاني' : lang === 'en' ? 'Free Subdomain' : 'Sous-domaine gratuit') : (lang === 'ar' ? 'نطاق مخصص PRO' : lang === 'en' ? 'Custom Domain PRO' : 'Domaine personnalisé PRO')}
                         </p>
                       </div>
                     </div>
@@ -1127,7 +1148,7 @@ export default function GZeedDashboard() {
                       {domainTab === 'subdomain' && (
                         <div className="space-y-4 animate-fade-in">
                           <p className="text-sm font-medium text-slate-500 mb-4">
-                            {lang === 'ar' ? 'اختر اسماً لمشروعك ليظهر قبل .gzeed.com' : lang === 'en' ? 'Choose a name for your project before .gzeed.com' : 'Choisissez un nom pour votre projet avant .gzeed.com'}
+                            {lang === 'ar' ? 'اختر اسماً لمشروعك ليظهر قبل .beyacreative.com' : lang === 'en' ? 'Choose a name for your project before .beyacreative.com' : 'Choisissez un nom pour votre projet avant .beyacreative.com'}
                           </p>
                           <div className="flex flex-col gap-2">
                             <div className="flex flex-col md:flex-row gap-3">
@@ -1143,7 +1164,7 @@ export default function GZeedDashboard() {
                                   className={`w-full bg-slate-50 border rounded-lg px-4 py-3 focus:ring-2 outline-none font-bold text-slate-900 text-right md:text-left transition-all ${domainError ? 'border-red-400 focus:ring-red-200' : 'border-slate-200 focus:ring-cyan-500'}`}
                                   dir="ltr"
                                 />
-                                <span className="absolute right-4 text-slate-400 font-bold bg-slate-50 pl-2">.gzeed.com</span>
+                                <span className="absolute right-4 text-slate-400 font-bold bg-slate-50 pl-2" dir="ltr">.beyacreative.com</span>
                               </div>
                               <button 
                                 onClick={handleSaveSubdomain}
