@@ -441,7 +441,7 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="pt-32 pb-10 px-6 min-h-[90vh] flex items-start relative overflow-hidden bg-white">
         <div className="max-w-7xl mx-auto relative z-10 grid lg:grid-cols-2 gap-12 items-start w-full">
-          <div className={`lg:pb-[20vh] ${isAr ? 'text-center lg:text-right' : 'text-center lg:text-left'}`}>
+          <div className={`lg:pb-[80vh] ${isAr ? 'text-center lg:text-right' : 'text-center lg:text-left'}`}>
             <div className="mb-6 inline-flex items-center justify-center">
               <span className="px-3 py-1 text-xs font-semibold text-slate-500 bg-slate-100 rounded-full border border-slate-200 uppercase tracking-widest">
                 {t.heroBadge}
