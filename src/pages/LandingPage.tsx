@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLang } from '../contexts/LangContext';
-import { ArrowRight, ArrowDown, Code, Scissors, ShoppingBag, Store, Globe, Zap, Star, Settings, ChevronRight, Play, Pause, Volume2, VolumeX, MousePointerClick, MessageSquareText, PhoneCall, Shirt, PenTool, Ruler, Eye, HeartHandshake, X, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, ArrowDown, Code, Scissors, ShoppingBag, Store, Globe, Zap, Star, Settings, ChevronRight, Play, Pause, Volume2, VolumeX, MousePointerClick, MessageSquareText, PhoneCall, Shirt, PenTool, Ruler, Eye, HeartHandshake, X, CheckCircle2, Check } from 'lucide-react';
 import { supabase } from '../supabase';
 import ProjectRequestModal from '../components/ProjectRequestModal';
 
@@ -458,6 +458,25 @@ export default function LandingPage() {
               <Link to="/ecosystem" className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-white border border-slate-200 text-slate-700 font-medium text-lg hover:bg-slate-50 transition-all flex items-center justify-center gap-2 shadow-sm">
                 {t.heroDetails} <ChevronRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
               </Link>
+            </div>
+
+            <div className="mt-8 flex flex-col gap-3.5 animate-in slide-in-from-bottom-8 duration-1000 delay-500 w-full lg:w-fit">
+              <div className="flex items-start gap-3 text-[15px] md:text-base text-slate-700 font-medium">
+                <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center shrink-0 mt-0.5">
+                  <Check className="w-4 h-4 text-green-600" />
+                </div>
+                <span className={`flex-1 ${isAr ? 'text-right' : 'text-left'}`}>
+                  {isAr ? 'نركز على الجودة الفائقة — نبدأ معك من 20 قطعة فما فوق.' : 'Qualité premium garantie — À partir de 20 pièces seulement.'}
+                </span>
+              </div>
+              <div className="flex items-start gap-3 text-[15px] md:text-base text-slate-700 font-medium">
+                <div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
+                  <X className="w-4 h-4 text-red-600" />
+                </div>
+                <span className={`flex-1 ${isAr ? 'text-right' : 'text-left'}`}>
+                  {isAr ? 'لا نقبل الإنتاج التجاري الرخيص أو الجودة الرديئة أبداً.' : 'Nous refusons la production de masse à bas prix et de mauvaise qualité.'}
+                </span>
+              </div>
             </div>
           </div>
 
