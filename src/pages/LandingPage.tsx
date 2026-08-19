@@ -446,11 +446,20 @@ export default function LandingPage() {
 
           <div id="hero-video" ref={heroFocus.ref} style={heroFocus.style} className="relative rounded-2xl md:rounded-[2rem] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.12)] border-b-4 border-[#0071e3] aspect-[2/3] md:aspect-[4/5] w-full h-auto md:h-[680px] md:w-auto mx-auto animate-in slide-in-from-bottom-8 duration-1000 delay-150 group">
             <video
+              ref={heroVideoRef}
               autoPlay
               loop
+              muted
               playsInline
-              controls
-              className="absolute inset-0 w-full h-full object-cover bg-black rounded-2xl md:rounded-[2rem]"
+              onClick={(e) => {
+                const video = e.currentTarget;
+                if (video.paused) {
+                  video.play();
+                } else {
+                  video.pause();
+                }
+              }}
+              className="absolute inset-0 w-full h-full object-cover bg-black rounded-2xl md:rounded-[2rem] cursor-pointer"
             >
               <source src="/videos/beya-creative.mp4" type="video/mp4" />
             </video>
