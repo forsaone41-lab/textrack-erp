@@ -304,13 +304,12 @@ export default function LandingPage() {
   const isAr = currentLang === 'ar';
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.get('scroll') === 'video') {
-      setTimeout(() => {
-        document.getElementById('hero-video')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 800);
-    }
-  }, [location.search]);
+    // Auto-scroll to video for ads: show top info briefly, then scroll to video
+    const timer = setTimeout(() => {
+      document.getElementById('hero-video')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 1500); // 1.5 seconds delay
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
