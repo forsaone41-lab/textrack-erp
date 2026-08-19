@@ -445,7 +445,6 @@ export default function LandingPage() {
             <video
               autoPlay
               loop
-              muted
               playsInline
               controls
               className="absolute inset-0 w-full h-full object-cover bg-black"
