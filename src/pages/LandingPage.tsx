@@ -434,7 +434,7 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-28 pb-8 md:pb-20 px-6 flex items-center relative overflow-hidden bg-white">
+      <section className="pt-28 pb-8 md:pb-20 px-6 flex items-center relative overflow-hidden bg-white min-h-[100dvh] md:min-h-[90vh]">
         <div className="max-w-7xl mx-auto relative z-10 grid lg:grid-cols-2 gap-12 items-center w-full">
           <div className={isAr ? 'text-center lg:text-right' : 'text-center lg:text-left'}>
             <div className="mb-6 inline-flex items-center justify-center">
@@ -443,11 +443,11 @@ export default function LandingPage() {
               </span>
             </div>
 
-            <h1 className={`text-5xl md:text-6xl lg:text-[64px] font-bold tracking-tight text-[#1d1d1f] leading-[1.1] mb-6 text-balance animate-in slide-in-from-bottom-8 duration-1000 ${isAr ? 'font-arabic' : ''}`}>
+            <h1 className={`text-4xl sm:text-5xl md:text-6xl lg:text-[64px] font-bold tracking-tight text-[#1d1d1f] leading-[1.1] mb-6 text-balance animate-in slide-in-from-bottom-8 duration-1000 ${isAr ? 'font-arabic' : ''}`}>
               {t.heroTitle}
             </h1>
 
-            <p className="text-xl md:text-2xl text-[#86868b] leading-relaxed mb-10 animate-in slide-in-from-bottom-8 duration-1000 delay-150 font-medium text-balance">
+            <p className="text-lg sm:text-xl md:text-2xl text-[#86868b] leading-relaxed mb-8 animate-in slide-in-from-bottom-8 duration-1000 delay-150 font-medium text-balance">
               {t.heroDesc}
             </p>
 
@@ -461,8 +461,8 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div id="hero-mobile-container" className="w-full flex flex-col items-center">
-            <div id="hero-video" ref={heroFocus.ref} style={heroFocus.style} className="relative rounded-2xl md:rounded-[2rem] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.12)] border-b-4 border-[#0071e3] aspect-[2/3] md:aspect-[4/5] w-full h-auto md:h-[680px] md:w-auto mx-auto animate-in slide-in-from-bottom-8 duration-1000 delay-150 group">
+          <div id="hero-mobile-container" className="w-full flex flex-col items-center justify-center min-h-[100dvh] md:min-h-0">
+            <div id="hero-video" ref={heroFocus.ref} style={heroFocus.style} className="relative rounded-2xl md:rounded-[2rem] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.12)] border-b-4 border-[#0071e3] w-full h-[calc(100dvh-150px)] md:h-[680px] md:aspect-[4/5] md:w-auto mx-auto animate-in slide-in-from-bottom-8 duration-1000 delay-150 group">
               <video
                 ref={heroVideoRef}
                 autoPlay
