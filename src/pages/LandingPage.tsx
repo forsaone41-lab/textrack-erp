@@ -494,28 +494,28 @@ export default function LandingPage() {
       </section>
 
       {/* Marquee */}
-      <section className="py-5 border-y border-slate-200 bg-slate-50 overflow-hidden flex flex-nowrap w-full">
+      <section className="py-4 border-y border-slate-200 bg-slate-50 overflow-hidden flex flex-nowrap w-full">
         <div className="flex items-center flex-shrink-0 animate-marquee whitespace-nowrap">
           {[...Array(10)].map((_, i) => (
-            <div key={`m1-${i}`} className="flex items-center gap-10 mx-5 text-base font-bold text-slate-800 tracking-wider uppercase">
+            <div key={`m1-${i}`} className="flex items-center gap-8 mx-4 text-[13px] font-semibold text-slate-500 tracking-[0.15em] uppercase">
               <span>{t.marquee1}</span>
-              <span className="w-2 h-2 rounded-full bg-[#0071e3]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#0071e3]/60" />
               <span>{t.marquee2}</span>
-              <span className="w-2 h-2 rounded-full bg-[#0071e3]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#0071e3]/60" />
               <span>{t.marquee3}</span>
-              <span className="w-2 h-2 rounded-full bg-[#0071e3]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#0071e3]/60" />
             </div>
           ))}
         </div>
         <div className="flex items-center flex-shrink-0 animate-marquee whitespace-nowrap" aria-hidden="true">
           {[...Array(10)].map((_, i) => (
-            <div key={`m2-${i}`} className="flex items-center gap-10 mx-5 text-base font-bold text-slate-800 tracking-wider uppercase">
+            <div key={`m2-${i}`} className="flex items-center gap-8 mx-4 text-[13px] font-semibold text-slate-500 tracking-[0.15em] uppercase">
               <span>{t.marquee1}</span>
-              <span className="w-2 h-2 rounded-full bg-[#0071e3]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#0071e3]/60" />
               <span>{t.marquee2}</span>
-              <span className="w-2 h-2 rounded-full bg-[#0071e3]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#0071e3]/60" />
               <span>{t.marquee3}</span>
-              <span className="w-2 h-2 rounded-full bg-[#0071e3]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#0071e3]/60" />
             </div>
           ))}
         </div>
