@@ -267,6 +267,8 @@ export default function LandingPage() {
   const location = useLocation();
   const heroFocus = useScrollFocus();
   const [scrolled, setScrolled] = useState(false);
+  const [headerVisible, setHeaderVisible] = useState(true);
+  const lastScrollY = React.useRef(0);
   const heroVideoRef = React.useRef<HTMLVideoElement>(null);
   const [videoPlaying, setVideoPlaying] = useState(true);
   const [videoMuted, setVideoMuted] = useState(true); // Must be true for mobile autoplay
@@ -317,10 +319,25 @@ export default function LandingPage() {
   }, []);
 
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          setScrolled(currentScrollY > 20);
+          
+          if (currentScrollY > 300) {
+            setHeaderVisible(currentScrollY < lastScrollY.current);
+          } else {
+            setHeaderVisible(true);
+          }
+          lastScrollY.current = currentScrollY;
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -371,7 +388,7 @@ export default function LandingPage() {
       <style>{styles}</style>
 
       {/* Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'glass-header py-3' : 'bg-transparent py-5'}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'glass-header py-3' : 'bg-transparent py-5'} ${!headerVisible ? '-translate-y-full opacity-0' : 'translate-y-0 opacity-100'}`}>
         <div className="max-w-7xl mx-auto px-3 sm:px-6 flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
              <img src="/logo-blue.png" alt="Beya Creative" className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg shrink-0" />
@@ -490,14 +507,15 @@ export default function LandingPage() {
           </button>
         </div>
 
-        {/* Smart Mobile CTA (Fixed to bottom, hides on scroll) */}
-        <div className={`fixed bottom-6 left-0 right-0 z-[100] px-4 transition-all duration-500 flex flex-col items-center lg:hidden ${scrolled ? 'opacity-0 pointer-events-none translate-y-10' : 'opacity-100 translate-y-0'}`}>
-          <a href="https://wa.me/212500000000" target="_blank" rel="noopener noreferrer" className="bg-white px-4 py-1.5 rounded-full shadow-lg text-xs font-bold text-green-600 flex items-center gap-1.5 mb-[-12px] z-10 border border-green-100 animate-bounce">
-            ⭐ {isAr ? 'استشارة مجانية عبر الواتساب' : 'Consultation gratuite WhatsApp'}
+        {/* Smart Mobile CTA (Below video in normal flow) */}
+        <div className="lg:hidden flex flex-col items-center mt-6 w-full px-2 gap-4">
+          <a href="https://wa.me/212500000000" target="_blank" rel="noopener noreferrer" className="w-full bg-white py-4 rounded-full shadow-[0_4px_20px_rgba(34,197,94,0.15)] text-sm font-bold text-green-600 flex items-center justify-center gap-2 border border-green-100 hover:bg-green-50 transition-colors animate-bounce">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+            {isAr ? 'استشارة مجانية عبر الواتساب' : 'Consultation gratuite WhatsApp'}
           </a>
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="w-full py-4 rounded-full bg-[#1d1d1f] text-white font-bold text-lg hover:bg-black shadow-[0_8px_30px_rgba(29,29,31,0.3)] flex items-center justify-center gap-2 animate-pop cursor-pointer relative"
+            className="w-full py-4 rounded-full bg-[#1d1d1f] text-white font-bold text-lg hover:bg-black shadow-[0_8px_30px_rgba(29,29,31,0.2)] flex items-center justify-center gap-2 animate-pop cursor-pointer"
           >
             {t.navStart} <ArrowRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
           </button>
