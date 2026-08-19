@@ -215,32 +215,46 @@ const TRANSLATIONS: any = {
 
 function useScrollFocus() {
   const ref = React.useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
-  const [opacity, setOpacity] = useState(1);
 
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      if (!ref.current) return;
-      const rect = ref.current.getBoundingClientRect();
-      const viewportCenter = window.innerHeight / 2;
-      const elementCenter = rect.top + rect.height / 2;
-      const maxDistance = window.innerHeight;
-      
-      const distance = Math.abs(viewportCenter - elementCenter);
-      let newScale = 1 - (distance / maxDistance) * 0.15;
-      let newOpacity = 1 - (distance / maxDistance) * 0.8;
-      
-      setScale(Math.max(0.85, Math.min(1, newScale)));
-      setOpacity(Math.max(0.2, Math.min(1, newOpacity)));
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          if (!ref.current) return;
+          const rect = ref.current.getBoundingClientRect();
+          const viewportCenter = window.innerHeight / 2;
+          const elementCenter = rect.top + rect.height / 2;
+          const maxDistance = window.innerHeight;
+          
+          const distance = Math.abs(viewportCenter - elementCenter);
+          let newScale = 1 - (distance / maxDistance) * 0.15;
+          let newOpacity = 1 - (distance / maxDistance) * 0.8;
+          
+          const finalScale = Math.max(0.85, Math.min(1, newScale));
+          const finalOpacity = Math.max(0.2, Math.min(1, newOpacity));
+          
+          ref.current.style.transform = `scale(${finalScale})`;
+          ref.current.style.opacity = finalOpacity.toString();
+          
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
+    // Initial call
+    if (ref.current) {
+      ref.current.style.transform = `scale(1)`;
+      ref.current.style.opacity = `1`;
+    }
+    setTimeout(handleScroll, 100);
 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  return { ref, style: { transform: `scale(${scale})`, opacity, transition: 'transform 0.1s ease-out, opacity 0.1s ease-out', willChange: 'transform, opacity' } };
+  return { ref, style: { willChange: 'transform, opacity' } };
 }
 
 export default function LandingPage() {
@@ -250,7 +264,7 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const heroVideoRef = React.useRef<HTMLVideoElement>(null);
   const [videoPlaying, setVideoPlaying] = useState(true);
-  const [videoMuted, setVideoMuted] = useState(false);
+  const [videoMuted, setVideoMuted] = useState(true); // Must be true for mobile autoplay
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
 
