@@ -350,7 +350,7 @@ export default function LandingPage() {
     return () => observer.disconnect();
   }, []);
 
-  // Gradually fade video volume as user scrolls away from it
+  // Gradually fade video volume + pause/resume based on scroll visibility
   useEffect(() => {
     const handleVolumeScroll = () => {
       const video = heroVideoRef.current;
@@ -364,9 +364,26 @@ export default function LandingPage() {
       // Fade volume: full when ≥60% visible, zero when <10% visible
       const vol = visibleRatio >= 0.6 ? 1 : visibleRatio < 0.1 ? 0 : (visibleRatio - 0.1) / 0.5;
       video.volume = Math.max(0, Math.min(1, vol));
+      // Pause video when out of view, resume when back in view
+      if (visibleRatio < 0.1 && !video.paused) {
+        video.pause();
+      } else if (visibleRatio >= 0.2 && video.paused) {
+        video.play().catch(() => {});
+      }
     };
     window.addEventListener('scroll', handleVolumeScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleVolumeScroll);
+  }, []);
+
+  // Stop video completely when navigating away from this page
+  useEffect(() => {
+    return () => {
+      const video = heroVideoRef.current;
+      if (video) {
+        video.pause();
+        video.volume = 0;
+      }
+    };
   }, []);
 
   const toggleVideoPlay = () => {
