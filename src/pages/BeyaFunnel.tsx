@@ -169,6 +169,7 @@ export default function BeyaFunnel() {
   const location = useLocation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDark, setIsDark] = useState(true);
+  const [showLangMenu, setShowLangMenu] = useState(false);
 
   // Use Language Context + URL matching
   const [currentLang, setCurrentLang] = useState<'ar'|'fr'|'en'>(() => {
@@ -197,7 +198,8 @@ export default function BeyaFunnel() {
     setCurrentLang(l);
     localStorage.setItem('funnel_lang', l);
     localStorage.setItem('textrack_lang', l);
-    window.location.hash = `#/funnel/${l}`;
+    const isEcosystem = window.location.hostname.includes('ecosystem.beyacreative.com');
+    window.location.hash = isEcosystem ? `#/${l}` : `#/funnel/${l}`;
   };
 
   const t = TRANSLATIONS[currentLang] || TRANSLATIONS.fr;
@@ -214,17 +216,22 @@ export default function BeyaFunnel() {
             <span className={`font-black text-[12px] sm:text-xl tracking-widest uppercase ${isDark ? 'text-white' : 'text-slate-900'}`}>BEYA CREATIVE</span>
           </Link>
           <div className="flex items-center gap-2 sm:gap-3 md:gap-5">
-            <div className="relative group shrink-0">
-              <button className={`text-[11px] sm:text-xs font-bold uppercase tracking-widest flex items-center gap-1 transition-colors ${isDark ? 'text-slate-300 hover:text-white' : 'text-slate-500 hover:text-slate-900'}`}>
+            <div className="relative shrink-0" onMouseEnter={() => setShowLangMenu(true)} onMouseLeave={() => setShowLangMenu(false)}>
+              <button 
+                onClick={() => setShowLangMenu(!showLangMenu)}
+                className={`text-[11px] sm:text-xs font-bold uppercase tracking-widest flex items-center gap-1 transition-colors h-8 ${isDark ? 'text-slate-300 hover:text-white' : 'text-slate-500 hover:text-slate-900'}`}
+              >
                 {currentLang} <ArrowDown className="w-3 h-3" />
               </button>
-              <div className="absolute top-full right-0 mt-2 w-24 bg-white border border-slate-100 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all flex flex-col overflow-hidden z-[60]">
-                <button onClick={() => changeLang('ar')} className={`px-4 py-2 text-sm text-center hover:bg-slate-50 transition-colors ${currentLang === 'ar' ? 'font-bold text-[#0071e3]' : 'text-slate-600 font-medium'}`}>العربية</button>
-                <div className="h-px bg-slate-100 w-full" />
-                <button onClick={() => changeLang('fr')} className={`px-4 py-2 text-sm text-center hover:bg-slate-50 transition-colors ${currentLang === 'fr' ? 'font-bold text-[#0071e3]' : 'text-slate-600 font-medium'}`}>FR</button>
-                <div className="h-px bg-slate-100 w-full" />
-                <button onClick={() => changeLang('en')} className={`px-4 py-2 text-sm text-center hover:bg-slate-50 transition-colors ${currentLang === 'en' ? 'font-bold text-[#0071e3]' : 'text-slate-600 font-medium'}`}>EN</button>
-              </div>
+              {showLangMenu && (
+                <div className="absolute top-full right-0 mt-1 w-24 bg-white border border-slate-100 rounded-xl shadow-xl animate-fade-in flex flex-col overflow-hidden z-[60]">
+                  <button onClick={() => { changeLang('ar'); setShowLangMenu(false); }} className={`px-4 py-2 text-sm text-center hover:bg-slate-50 transition-colors ${currentLang === 'ar' ? 'font-bold text-[#0071e3]' : 'text-slate-600 font-medium'}`}>العربية</button>
+                  <div className="h-px bg-slate-100 w-full" />
+                  <button onClick={() => { changeLang('fr'); setShowLangMenu(false); }} className={`px-4 py-2 text-sm text-center hover:bg-slate-50 transition-colors ${currentLang === 'fr' ? 'font-bold text-[#0071e3]' : 'text-slate-600 font-medium'}`}>FR</button>
+                  <div className="h-px bg-slate-100 w-full" />
+                  <button onClick={() => { changeLang('en'); setShowLangMenu(false); }} className={`px-4 py-2 text-sm text-center hover:bg-slate-50 transition-colors ${currentLang === 'en' ? 'font-bold text-[#0071e3]' : 'text-slate-600 font-medium'}`}>EN</button>
+                </div>
+              )}
             </div>
 
             <button onClick={() => setIsDark(!isDark)} className={`p-1.5 sm:p-2 rounded-full transition-colors ${isDark ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-500 hover:text-[#0071e3] hover:bg-slate-100'}`}>

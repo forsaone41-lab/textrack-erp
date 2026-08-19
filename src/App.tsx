@@ -361,7 +361,8 @@ function AppContent() {
 
   const hostname = window.location.hostname;
   const isGZeed = hostname === 'gzeed.com' || hostname === 'www.gzeed.com';
-  const isSaaSDomain = hostname === 'beyacreative.com' || hostname === 'www.beyacreative.com' || hostname === 'app.beyacreative.com' || isGZeed || hostname === 'localhost' || hostname.includes('vercel.app');
+  const isEcosystem = hostname === 'ecosystem.beyacreative.com' || hostname === 'www.ecosystem.beyacreative.com';
+  const isSaaSDomain = hostname === 'beyacreative.com' || hostname === 'www.beyacreative.com' || hostname === 'app.beyacreative.com' || isGZeed || isEcosystem || hostname === 'localhost' || hostname.includes('vercel.app');
   const isSubdomain = hostname.includes('.beyacreative.com') && !isSaaSDomain;
   const isCustomDomain = !isSaaSDomain;
   const isLiveStore = isSubdomain || isCustomDomain;
@@ -647,13 +648,13 @@ function AppContent() {
             <SaaSAdminPage />
           </Suspense>
         } />
-        <Route path="/" element={isGZeed ? <PlatformLanding /> : <LandingPage />} />
-        <Route path="/ar" element={<LandingPage />} />
-        <Route path="/fr" element={<LandingPage />} />
-        <Route path="/en" element={<LandingPage />} />
-        <Route path="/AR" element={<LandingPage />} />
-        <Route path="/FR" element={<LandingPage />} />
-        <Route path="/EN" element={<LandingPage />} />
+        <Route path="/" element={isEcosystem ? <BeyaFunnel /> : isGZeed ? <PlatformLanding /> : <LandingPage />} />
+        <Route path="/ar" element={isEcosystem ? <BeyaFunnel /> : <LandingPage />} />
+        <Route path="/fr" element={isEcosystem ? <BeyaFunnel /> : <LandingPage />} />
+        <Route path="/en" element={isEcosystem ? <BeyaFunnel /> : <LandingPage />} />
+        <Route path="/AR" element={isEcosystem ? <BeyaFunnel /> : <LandingPage />} />
+        <Route path="/FR" element={isEcosystem ? <BeyaFunnel /> : <LandingPage />} />
+        <Route path="/EN" element={isEcosystem ? <BeyaFunnel /> : <LandingPage />} />
         <Route path="/beya-old" element={<LandingPage />} />
         <Route path="/ecosystem" element={
           <Suspense fallback={<PageLoader />}>
