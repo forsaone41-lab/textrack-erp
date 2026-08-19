@@ -503,7 +503,7 @@ export default function LandingPage() {
           </div>
 
           <div id="hero-mobile-container" className="w-full flex flex-col items-center justify-center min-h-[100dvh] lg:min-h-0 lg:sticky lg:top-28">
-            <div id="hero-video" ref={heroFocus.ref} style={heroFocus.style} className="relative rounded-2xl md:rounded-[2rem] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.12)] border-b-4 border-[#0071e3] w-full h-[calc(100dvh-150px)] lg:h-[calc(100vh-160px)] lg:max-h-[700px] md:aspect-[4/5] md:w-auto mx-auto animate-in slide-in-from-bottom-8 duration-1000 delay-150 group">
+            <div id="hero-video" ref={heroFocus.ref} style={heroFocus.style} className="relative rounded-2xl md:rounded-[2rem] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.12)] border-b-2 border-[#0071e3] w-full h-[calc(100dvh-150px)] lg:h-[calc(100vh-120px)] lg:max-h-[820px] md:aspect-[4/5] md:w-auto mx-auto animate-in slide-in-from-bottom-8 duration-1000 delay-150 group">
               <video
                 ref={heroVideoRef}
                 autoPlay
