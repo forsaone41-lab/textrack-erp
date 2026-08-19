@@ -48,7 +48,6 @@ export default function GZeedDashboard() {
   
   // Domain States
   const [domainName, setDomainName] = useState(() => localStorage.getItem('beya_domain_name') || 'store-123.beyacreative.com');
-  const [themeFilter, setThemeFilter] = useState('all');
   const [subdomainInput, setSubdomainInput] = useState('');
   const [customDomainInput, setCustomDomainInput] = useState('');
   const [isVerifyingDomain, setIsVerifyingDomain] = useState(false);
