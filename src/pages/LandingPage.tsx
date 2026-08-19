@@ -640,9 +640,9 @@ export default function LandingPage() {
              <Link to="/cookies" className="text-[#86868b] text-sm font-medium hover:text-[#0071e3] transition-colors">
                {t.footerCookies}
              </Link>
-             <Link to="/funnel" className="text-[#86868b] text-sm font-medium hover:text-[#0071e3] transition-colors">
+             <a href="https://ecosystem.beyacreative.com" className="text-[#86868b] text-sm font-medium hover:text-[#0071e3] transition-colors">
                {t.footerIdea}
-             </Link>
+             </a>
            </div>
 
            <p className="text-slate-400 font-semibold uppercase tracking-widest text-xs hidden md:block">Professional Excellence</p>
