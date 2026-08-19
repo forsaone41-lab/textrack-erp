@@ -350,6 +350,25 @@ export default function LandingPage() {
     return () => observer.disconnect();
   }, []);
 
+  // Gradually fade video volume as user scrolls away from it
+  useEffect(() => {
+    const handleVolumeScroll = () => {
+      const video = heroVideoRef.current;
+      const videoEl = document.getElementById('hero-video');
+      if (!video || !videoEl) return;
+      const rect = videoEl.getBoundingClientRect();
+      const vh = window.innerHeight;
+      // Calculate how much of the video is visible (0 = none, 1 = fully visible)
+      const visibleTop = Math.max(0, Math.min(rect.bottom, vh) - Math.max(rect.top, 0));
+      const visibleRatio = Math.max(0, Math.min(1, visibleTop / rect.height));
+      // Fade volume: full when ≥60% visible, zero when <10% visible
+      const vol = visibleRatio >= 0.6 ? 1 : visibleRatio < 0.1 ? 0 : (visibleRatio - 0.1) / 0.5;
+      video.volume = Math.max(0, Math.min(1, vol));
+    };
+    window.addEventListener('scroll', handleVolumeScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleVolumeScroll);
+  }, []);
+
   const toggleVideoPlay = () => {
     const v = heroVideoRef.current;
     if (!v) return;
