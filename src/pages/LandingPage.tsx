@@ -311,7 +311,7 @@ export default function LandingPage() {
   useEffect(() => {
     // Auto-scroll to video for ads: show top info briefly, then scroll to video
     const timer = setTimeout(() => {
-      document.getElementById('hero-video')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      document.getElementById('hero-mobile-container')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 1500); // 1.5 seconds delay
     return () => clearTimeout(timer);
   }, []);
@@ -461,36 +461,38 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div id="hero-video" ref={heroFocus.ref} style={heroFocus.style} className="relative rounded-2xl md:rounded-[2rem] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.12)] border-b-4 border-[#0071e3] aspect-[2/3] md:aspect-[4/5] w-full h-auto md:h-[680px] md:w-auto mx-auto animate-in slide-in-from-bottom-8 duration-1000 delay-150 group">
-            <video
-              ref={heroVideoRef}
-              autoPlay
-              loop
-              muted
-              playsInline
-              controls
-              className="absolute inset-0 w-full h-full object-cover bg-black rounded-2xl md:rounded-[2rem]"
-            >
-              <source src="/videos/beya-creative.mp4" type="video/mp4" />
-            </video>
-          </div>
+          <div id="hero-mobile-container" className="w-full flex flex-col items-center">
+            <div id="hero-video" ref={heroFocus.ref} style={heroFocus.style} className="relative rounded-2xl md:rounded-[2rem] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.12)] border-b-4 border-[#0071e3] aspect-[2/3] md:aspect-[4/5] w-full h-auto md:h-[680px] md:w-auto mx-auto animate-in slide-in-from-bottom-8 duration-1000 delay-150 group">
+              <video
+                ref={heroVideoRef}
+                autoPlay
+                loop
+                muted
+                playsInline
+                controls
+                className="absolute inset-0 w-full h-full object-cover bg-black rounded-2xl md:rounded-[2rem]"
+              >
+                <source src="/videos/beya-creative.mp4" type="video/mp4" />
+              </video>
+            </div>
 
-          {/* Mobile-only CTA below video (in page flow, not fixed) */}
-          <div className="lg:hidden flex flex-col items-center w-full mt-4 gap-3 px-1">
-            <a
-              href="https://wa.me/212500000000"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full py-3.5 rounded-full bg-[#25D366] hover:bg-[#20BA5A] text-white font-bold text-base flex items-center justify-center gap-2 shadow-[0_8px_30px_rgba(37,211,102,0.35)] cursor-pointer transition-all"
-            >
-              ⭐ {isAr ? 'استشارة مجانية عبر الواتساب' : 'Consultation gratuite WhatsApp'}
-            </a>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="w-full py-3.5 rounded-full bg-[#1d1d1f] text-white font-bold text-base hover:bg-black shadow-[0_8px_30px_rgba(29,29,31,0.3)] flex items-center justify-center gap-2 animate-pop cursor-pointer"
-            >
-              {t.navStart} <ArrowRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
-            </button>
+            {/* Mobile-only CTA below video (in page flow, not fixed) */}
+            <div className="lg:hidden flex flex-col items-center w-full mt-4 gap-3 px-1">
+              <a
+                href="https://wa.me/212500000000"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-[95%] py-3 rounded-full bg-[#25D366] hover:bg-[#20BA5A] text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-[0_8px_30px_rgba(37,211,102,0.35)] cursor-pointer transition-all animate-pop"
+              >
+                <MessageSquareText className="w-5 h-5" /> {isAr ? 'استشارة مجانية عبر الواتساب' : 'Consultation gratuite WhatsApp'}
+              </a>
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="w-[95%] py-3 rounded-full bg-[#1d1d1f] text-white font-bold text-sm sm:text-base hover:bg-black shadow-[0_8px_30px_rgba(29,29,31,0.3)] flex items-center justify-center gap-2 animate-pop cursor-pointer"
+              >
+                {t.navStart} <ArrowRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
+              </button>
+            </div>
           </div>
 
         </div>
