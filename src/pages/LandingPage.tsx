@@ -439,106 +439,94 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-10 px-6 min-h-[90vh] flex items-start relative overflow-hidden bg-white">
-        <div className="max-w-7xl mx-auto relative z-10 grid lg:grid-cols-2 gap-12 items-start w-full">
-          <div className={`lg:pb-[80vh] ${isAr ? 'text-center lg:text-right' : 'text-center lg:text-left'}`}>
-            <div className="mb-6 inline-flex items-center justify-center">
-              <span className="px-3 py-1 text-xs font-semibold text-slate-500 bg-slate-100 rounded-full border border-slate-200 uppercase tracking-widest">
-                {t.heroBadge}
-              </span>
+      <section className="pt-32 pb-10 px-6 min-h-[90vh] relative overflow-hidden bg-white">
+        {/* Background decorations */}
+        <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden -z-10">
+           <div className="w-[120%] h-64 bg-gradient-to-b from-slate-50 to-white rounded-[100%] -top-32 absolute left-1/2 -translate-x-1/2" />
+        </div>
+
+        <div className="max-w-7xl mx-auto relative z-10 w-full">
+          {/* 2-col grid: text + video */}
+          <div className="grid lg:grid-cols-2 gap-12 items-start">
+
+            {/* Left: Text content */}
+            <div className={`lg:pb-[80vh] ${isAr ? 'text-center lg:text-right' : 'text-center lg:text-left'}`}>
+              <div className="mb-6 inline-flex items-center justify-center">
+                <span className="px-3 py-1 text-xs font-semibold text-slate-500 bg-slate-100 rounded-full border border-slate-200 uppercase tracking-widest">
+                  {t.heroBadge}
+                </span>
+              </div>
+
+              <h1 className={`text-5xl md:text-6xl lg:text-[64px] font-bold tracking-tight text-[#1d1d1f] leading-[1.1] mb-6 text-balance animate-in slide-in-from-bottom-8 duration-1000 ${isAr ? 'font-arabic' : ''}`}>
+                {t.heroTitle}
+              </h1>
+
+              <p className="text-xl md:text-2xl text-[#86868b] leading-relaxed mb-10 animate-in slide-in-from-bottom-8 duration-1000 delay-150 font-medium text-balance">
+                {t.heroDesc}
+              </p>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 animate-in slide-in-from-bottom-8 duration-1000 delay-300">
+                <button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#0071e3] hover:bg-[#0077ED] text-white font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5 cursor-pointer">
+                  {t.heroStartProject} <ArrowRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
+                </button>
+                <Link to="/ecosystem" className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-white border border-slate-200 text-slate-700 font-medium text-lg hover:bg-slate-50 transition-all flex items-center justify-center gap-2 shadow-sm">
+                  {t.heroDetails} <ChevronRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
+                </Link>
+              </div>
+
+              {/* Mobile CTA — only visible on mobile, placed under buttons */}
+              <div className="lg:hidden flex flex-col items-center mt-6 w-full gap-4">
+                <a href="https://wa.me/212500000000" target="_blank" rel="noopener noreferrer" className="w-full bg-white py-4 rounded-full shadow-[0_4px_20px_rgba(34,197,94,0.15)] text-sm font-bold text-green-600 flex items-center justify-center gap-2 border border-green-100 hover:bg-green-50 transition-colors">
+                  <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                  {isAr ? 'استشارة مجانية عبر الواتساب' : 'Consultation gratuite WhatsApp'}
+                </a>
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="w-full py-4 rounded-full bg-[#1d1d1f] text-white font-bold text-lg hover:bg-black shadow-[0_8px_30px_rgba(29,29,31,0.2)] flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {t.navStart} <ArrowRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
+                </button>
+              </div>
             </div>
 
-            <h1 className={`text-5xl md:text-6xl lg:text-[64px] font-bold tracking-tight text-[#1d1d1f] leading-[1.1] mb-6 text-balance animate-in slide-in-from-bottom-8 duration-1000 ${isAr ? 'font-arabic' : ''}`}>
-              {t.heroTitle}
-            </h1>
-
-            <p className="text-xl md:text-2xl text-[#86868b] leading-relaxed mb-10 animate-in slide-in-from-bottom-8 duration-1000 delay-150 font-medium text-balance">
-              {t.heroDesc}
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 animate-in slide-in-from-bottom-8 duration-1000 delay-300">
-              <button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#0071e3] hover:bg-[#0077ED] text-white font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5 cursor-pointer">
-                {t.heroStartProject} <ArrowRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
-              </button>
-              <Link to="/ecosystem" className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-white border border-slate-200 text-slate-700 font-medium text-lg hover:bg-slate-50 transition-all flex items-center justify-center gap-2 shadow-sm">
-                {t.heroDetails} <ChevronRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
-              </Link>
+            {/* Right: Sticky Video */}
+            <div className="lg:sticky lg:top-28 self-start">
+              <div id="hero-video" ref={heroFocus.ref} style={heroFocus.style} className="relative rounded-2xl md:rounded-[2rem] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.12)] border-b-4 border-[#0071e3] aspect-[2/3] md:aspect-[4/5] w-full h-auto md:h-[680px] md:w-auto mx-auto animate-in slide-in-from-bottom-8 duration-1000 delay-150 group">
+                <video
+                  ref={heroVideoRef}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  controls
+                  onClick={(e) => {
+                    const video = e.currentTarget;
+                    if (video.muted) {
+                      video.muted = false;
+                      if (video.paused) video.play();
+                    } else {
+                      if (video.paused) { video.play(); } else { video.pause(); }
+                    }
+                  }}
+                  className="absolute inset-0 w-full h-full object-cover bg-black rounded-2xl md:rounded-[2rem] cursor-pointer"
+                >
+                  <source src="/videos/beya-creative.mp4" type="video/mp4" />
+                </video>
+              </div>
             </div>
-          </div>
 
-          <div id="hero-video" ref={heroFocus.ref} style={heroFocus.style} className="lg:sticky lg:top-28 relative rounded-2xl md:rounded-[2rem] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.12)] border-b-4 border-[#0071e3] aspect-[2/3] md:aspect-[4/5] w-full h-auto md:h-[680px] md:w-auto mx-auto animate-in slide-in-from-bottom-8 duration-1000 delay-150 group z-20">
-            <video
-              ref={heroVideoRef}
-              autoPlay
-              loop
-              muted
-              playsInline
-              controls
-              onClick={(e) => {
-                const video = e.currentTarget;
-                if (video.muted) {
-                  video.muted = false;
-                  // If it was paused for some reason, ensure it plays when unmuted
-                  if (video.paused) video.play();
-                } else {
-                  if (video.paused) {
-                    video.play();
-                  } else {
-                    video.pause();
-                  }
-                }
-              }}
-              className="absolute inset-0 w-full h-full object-cover bg-black rounded-2xl md:rounded-[2rem] cursor-pointer"
-            >
-              <source src="/videos/beya-creative.mp4" type="video/mp4" />
-            </video>
           </div>
-          </div>
-        {/* Universal Scroll Down Arrow (Desktop only) */}
+        </div>
+
+        {/* Desktop Scroll Arrow */}
         <div className={`hidden lg:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] transition-all duration-500 flex-col items-center animate-bounce ${scrolled ? 'opacity-0 pointer-events-none translate-y-10' : 'opacity-100 translate-y-0'}`}>
-          <button 
+          <button
             onClick={() => document.getElementById('hero-video')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
             className="w-14 h-14 bg-white/95 backdrop-blur-sm rounded-full flex items-center justify-center shadow-[0_8px_30px_rgba(0,113,227,0.25)] border border-[#0071e3]/20 text-[#0071e3] hover:bg-white transition-all hover:scale-110"
             aria-label="Scroll down"
           >
             <ArrowDown className="w-7 h-7" />
           </button>
-        </div>
-
-        {/* Smart Mobile CTA (Below video in normal flow) */}
-        <div className="lg:hidden flex flex-col items-center mt-6 w-full px-2 gap-4">
-          <a href="https://wa.me/212500000000" target="_blank" rel="noopener noreferrer" className="w-full bg-white py-4 rounded-full shadow-[0_4px_20px_rgba(34,197,94,0.15)] text-sm font-bold text-green-600 flex items-center justify-center gap-2 border border-green-100 hover:bg-green-50 transition-colors animate-bounce">
-            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-            {isAr ? 'استشارة مجانية عبر الواتساب' : 'Consultation gratuite WhatsApp'}
-          </a>
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="w-full py-4 rounded-full bg-[#1d1d1f] text-white font-bold text-lg hover:bg-black shadow-[0_8px_30px_rgba(29,29,31,0.2)] flex items-center justify-center gap-2 animate-pop cursor-pointer"
-          >
-            {t.navStart} <ArrowRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
-          </button>
-        </div>
-      </div>
-
-        <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden -z-10">
-           <div className="w-[120%] h-64 bg-gradient-to-b from-slate-50 to-white rounded-[100%] -top-32 absolute left-1/2 -translate-x-1/2" />
-           <div className="absolute top-[20%] left-[10%] text-[#0071e3]" style={{ animation: 'float-slow 15s ease-in-out infinite' }}>
-             <Scissors className="w-12 h-12" />
-           </div>
-           <div className="absolute top-[70%] left-[15%] text-[#1d1d1f]" style={{ animation: 'float 12s ease-in-out infinite' }}>
-             <Store className="w-16 h-16" />
-           </div>
-           <div className="absolute top-[25%] right-[15%] text-[#0071e3]" style={{ animation: 'float-reverse 18s ease-in-out infinite' }}>
-             <Code className="w-14 h-14" />
-           </div>
-           <div className="absolute top-[65%] right-[10%] text-[#1d1d1f]" style={{ animation: 'float-slow 20s ease-in-out infinite' }}>
-             <Globe className="w-20 h-20 opacity-50" />
-           </div>
-           <div className="absolute top-[45%] left-[50%] text-[#0071e3]" style={{ animation: 'float 14s ease-in-out infinite' }}>
-             <Zap className="w-10 h-10" />
-           </div>
-           <div className="absolute top-[10%] right-[35%] w-32 h-32 rounded-full border border-[#0071e3]/10" style={{ animation: 'float-slow 25s linear infinite' }} />
-           <div className="absolute bottom-[20%] left-[40%] w-24 h-24 rounded-2xl border border-[#1d1d1f]/10 rotate-45" style={{ animation: 'float-reverse 22s linear infinite' }} />
         </div>
       </section>
 
