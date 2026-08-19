@@ -508,18 +508,18 @@ export default function LandingPage() {
           </div>
 
           {/* Mobile-only CTA below video (in page flow, not fixed) */}
-          <div className="lg:hidden flex flex-col items-center w-full mt-5 gap-2 px-1">
+          <div className="lg:hidden flex flex-col items-center w-full mt-4 gap-3 px-1">
             <a
               href="https://wa.me/212500000000"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-white px-5 py-2 rounded-full shadow-md text-sm font-bold text-green-600 flex items-center gap-2 border border-green-100 animate-bounce w-fit"
+              className="w-full py-3.5 rounded-full bg-[#25D366] hover:bg-[#20BA5A] text-white font-bold text-base flex items-center justify-center gap-2 shadow-[0_8px_30px_rgba(37,211,102,0.35)] cursor-pointer transition-all"
             >
               ⭐ {isAr ? 'استشارة مجانية عبر الواتساب' : 'Consultation gratuite WhatsApp'}
             </a>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="w-full py-4 rounded-full bg-[#1d1d1f] text-white font-bold text-lg hover:bg-black shadow-[0_8px_30px_rgba(29,29,31,0.3)] flex items-center justify-center gap-2 animate-pop cursor-pointer"
+              className="w-full py-3.5 rounded-full bg-[#1d1d1f] text-white font-bold text-base hover:bg-black shadow-[0_8px_30px_rgba(29,29,31,0.3)] flex items-center justify-center gap-2 animate-pop cursor-pointer"
             >
               {t.navStart} <ArrowRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
             </button>
