@@ -36,8 +36,11 @@ export default function Ecosystem() {
             <Link to="/ecosystem" className={`text-sm font-bold transition-colors ${scrolled ? 'text-[#0071e3]' : 'text-blue-100'}`}>
               {isAr ? 'المنظومة' : 'Écosystème'}
             </Link>
+            <a href="https://ecosystem.beyacreative.com" className={`text-sm font-medium transition-colors ${scrolled ? 'text-slate-600 hover:text-slate-900' : 'text-blue-100 hover:text-white'}`}>
+              {isAr ? 'كيف نطور فكرتك لتنجح؟' : 'Développer votre idée'}
+            </a>
             <a href="/#order-steps" className={`text-sm font-medium transition-colors ${scrolled ? 'text-slate-600 hover:text-slate-900' : 'text-blue-100 hover:text-white'}`}>
-              {isAr ? 'كيف نعمل' : 'Comment ça marche'}
+              {isAr ? 'كيف أبدأ' : 'Comment démarrer'}
             </a>
           </div>
 

@@ -67,7 +67,7 @@ const TRANSLATIONS: any = {
   ar: {
     dir: 'rtl',
     navEcosystem: 'المنظومة',
-    navHowItWorks: 'كيف نعمل',
+    navHowItWorks: 'كيف أبدأ',
     navOrder: 'سجل طلبك',
     navLogin: 'تسجيل الدخول',
     navStart: 'ابدأ الآن',
@@ -116,7 +116,7 @@ const TRANSLATIONS: any = {
   fr: {
     dir: 'ltr',
     navEcosystem: 'Écosystème',
-    navHowItWorks: 'Comment ça marche',
+    navHowItWorks: 'Comment démarrer',
     navOrder: 'Commander',
     navLogin: 'Connexion',
     navStart: 'Commencer',
@@ -165,7 +165,7 @@ const TRANSLATIONS: any = {
   en: {
     dir: 'ltr',
     navEcosystem: 'Ecosystem',
-    navHowItWorks: 'How it works',
+    navHowItWorks: 'How to start',
     navOrder: 'Order',
     navLogin: 'Login',
     navStart: 'Start Now',
@@ -376,6 +376,9 @@ export default function LandingPage() {
             <Link to="/ecosystem" className="text-sm font-bold text-[#0071e3] hover:text-[#0077ED] transition-colors shrink-0">
               {t.navEcosystem}
             </Link>
+            <a href="https://ecosystem.beyacreative.com" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors shrink-0">
+              {t.footerIdea}
+            </a>
             <a href="#how-it-works" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors shrink-0">
               {t.navHowItWorks}
             </a>
