@@ -18,7 +18,7 @@ const PORTFOLIO_ITEMS = [
     id: 2,
     type: 'image',
     category: 'streetwear',
-    src: '/portfolio/download.jpg',
+    src: '/portfolio/jkl.PNG',
     title: 'Instagram Post 2',
     description: 'BEYA Creative Instagram'
   },
