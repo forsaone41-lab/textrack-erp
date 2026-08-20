@@ -9,15 +9,15 @@ const PORTFOLIO_ITEMS = [
     id: 1,
     type: 'image',
     category: 'streetwear',
-    src: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80',
+    src: '/premium_streetwear_hoodie.png',
     title: 'Hoodie Premium Custom',
     description: 'Production streetwear haute qualité avec broderie personnalisée.'
   },
   {
     id: 2,
-    type: 'video',
+    type: 'image',
     category: 'process',
-    src: 'https://images.unsplash.com/photo-1612423284934-2850a4ea6b0f?auto=format&fit=crop&q=80',
+    src: '/workshop_view_1.png',
     title: 'Processus de Couture',
     description: 'Dans nos ateliers : précision et savoir-faire.'
   },
@@ -25,23 +25,23 @@ const PORTFOLIO_ITEMS = [
     id: 3,
     type: 'image',
     category: 'traditional',
-    src: 'https://images.unsplash.com/photo-1603400521630-9f2de124b33b?auto=format&fit=crop&q=80',
-    title: 'Caftan Moderne',
-    description: 'Touche traditionnelle marocaine revisitée.'
+    src: '/beya_creative_streetwear.png',
+    title: 'Streetwear Collection',
+    description: 'Touche moderne marocaine revisitée.'
   },
   {
     id: 4,
     type: 'image',
-    category: 'streetwear',
-    src: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80',
-    title: 'T-Shirt Oversize',
-    description: 'Collection été 100% coton bio.'
+    category: 'process',
+    src: '/patron-sewing-tech.png',
+    title: 'Patronage Digital',
+    description: 'Conception et modélisme haute précision.'
   },
   {
     id: 5,
     type: 'image',
     category: 'corporate',
-    src: 'https://images.unsplash.com/photo-1584273143981-41c073dfe8f8?auto=format&fit=crop&q=80',
+    src: '/ad-bg-1.png',
     title: "Uniforme d'Entreprise",
     description: 'Tenues professionnelles sur-mesure pour restaurants.'
   },
@@ -49,7 +49,7 @@ const PORTFOLIO_ITEMS = [
     id: 6,
     type: 'image',
     category: 'process',
-    src: 'https://images.unsplash.com/photo-1558024920-b41e1887dc32?auto=format&fit=crop&q=80',
+    src: '/factory_bg.jpg',
     title: 'Table de Coupe',
     description: 'Préparation et coupe digitale.'
   },
@@ -77,7 +77,7 @@ export default function Portfolio() {
     <div className={`min-h-screen bg-slate-50 ${isAr ? 'font-sans' : ''}`} dir={isAr ? 'rtl' : 'ltr'}>
       {/* Header / Hero */}
       <div className="bg-slate-900 text-white py-20 px-6 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full bg-[url('https://images.unsplash.com/photo-1558024920-b41e1887dc32?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-10" />
+        <div className="absolute top-0 left-0 w-full h-full bg-[url('/atelier_background.png')] bg-cover bg-center opacity-10" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-slate-900/40" />
         
         <div className="max-w-6xl mx-auto relative z-10 flex flex-col items-center text-center">
