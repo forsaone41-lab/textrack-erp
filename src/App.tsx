@@ -878,6 +878,11 @@ function AppContent() {
         <Route path="kiosk" element={<KioskScanner />} />
         <Route path="fast-scanner" element={can('fast_scanner') ? <FastScanner /> : <Navigate to="/" replace />} />
       </Route>
+      <Route path="/portfolio" element={
+        <Suspense fallback={<PageLoader />}>
+          <Portfolio />
+        </Suspense>
+      } />
       {/* Standalone SaaS Route for BEYA STORE Builder (Accessible by admin via this specific route) */}
       <Route path="/store-builder" element={(currentUser?.role === 'admin') ? <div className="min-h-screen bg-white"><StoreBuilder appCurrentUser={currentUser} /></div> : <Navigate to="/" replace />} />
       <Route path="/store-analytics" element={<Suspense fallback={<PageLoader />}><StoreAnalytics currentUser={currentUser} /></Suspense>} />
