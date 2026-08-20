@@ -3080,9 +3080,9 @@ export default function Demandes() {
       )}
       {/* AI Analysis Modal */}
       {aiAnalysisLead && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 md:p-6 animate-in fade-in zoom-in-95 duration-200">
-          <div className="bg-white rounded-[32px] w-full max-w-5xl max-h-[85vh] overflow-y-auto shadow-2xl relative ring-4 ring-white/20 flex flex-col">
-            <div className="p-6 md:p-8">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm md:p-6 animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white w-full h-[100dvh] md:h-auto md:max-h-[90vh] md:rounded-[32px] md:max-w-6xl overflow-hidden shadow-2xl relative ring-0 md:ring-4 ring-white/20 flex flex-col">
+            <div className="flex-1 h-full overflow-hidden">
               <AISpace initialLead={aiAnalysisLead} onClose={() => setAiAnalysisLead(null)} />
             </div>
           </div>

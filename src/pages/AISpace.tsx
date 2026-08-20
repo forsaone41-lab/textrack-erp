@@ -1181,38 +1181,38 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
 
 
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)] max-w-7xl mx-auto px-4 pb-4 overflow-hidden select-none">
+    <div className="flex flex-col h-full md:h-[calc(100vh-80px)] max-w-7xl mx-auto px-2 md:px-4 pb-2 md:pb-4 pt-2 md:pt-0 overflow-hidden select-none bg-white md:bg-transparent">
       {/* Compact Header Bar */}
-      <div className={`flex items-center justify-between gap-4 py-2 border-b border-slate-100 flex-shrink-0 ${isAr ? 'flex-row-reverse' : ''}`}>
-        <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+      <div className={`flex items-center justify-between gap-2 md:gap-4 py-2 border-b border-slate-100 flex-shrink-0 ${isAr ? 'flex-row-reverse' : ''}`}>
+        <div className={`flex items-center gap-2 md:gap-3 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
           {onClose && (
-            <button onClick={onClose} className="p-2 bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-600 rounded-full transition-all">
-              <X className="w-5 h-5" />
+            <button onClick={onClose} className="p-1.5 md:p-2 bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-600 rounded-full transition-all">
+              <X className="w-4 h-4 md:w-5 md:h-5" />
             </button>
           )}
           <div>
-            <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
-              <h1 className="text-xl font-black text-slate-900 tracking-tight uppercase italic">BEYA <span className="text-indigo-600 not-italic">TACTICAL HUD</span></h1>
-              <span className="px-2 py-0.5 bg-indigo-50 border border-indigo-100 text-indigo-700 text-[10px] font-black rounded-full uppercase tracking-widest">v2.1 Zero-Scroll</span>
+            <div className={`flex items-center gap-1 md:gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+              <h1 className="text-lg md:text-xl font-black text-slate-900 tracking-tight uppercase italic">BEYA <span className="text-indigo-600 not-italic hidden sm:inline">TACTICAL HUD</span></h1>
+              <span className="px-1.5 md:px-2 py-0.5 bg-indigo-50 border border-indigo-100 text-indigo-700 text-[9px] md:text-[10px] font-black rounded-full uppercase tracking-widest whitespace-nowrap">v2.1</span>
             </div>
-            <p className="text-[11px] text-slate-500 font-bold">{isAr ? 'المستشار الذكي لتحليل وتفصيل ومقاسات الموديل (شاشة موحدة بدون تمرير)' : 'Cockpit d\'Analyse Textile & Confection (Zéro Scroll)'}</p>
+            <p className="text-[9px] md:text-[11px] text-slate-500 font-bold hidden sm:block">{isAr ? 'المستشار الذكي لتحليل وتفصيل ومقاسات الموديل (شاشة موحدة بدون تمرير)' : 'Cockpit d\'Analyse Textile & Confection (Zéro Scroll)'}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 md:gap-2">
           <button
             onClick={() => setShowLeadsModal(true)}
-            className="flex items-center gap-1.5 bg-indigo-50 border border-indigo-100 text-indigo-700 px-3.5 py-2 rounded-xl font-black text-xs uppercase hover:bg-indigo-100 transition-all shadow-sm"
+            className="flex items-center gap-1.5 bg-indigo-50 border border-indigo-100 text-indigo-700 px-2.5 md:px-3.5 py-1.5 md:py-2 rounded-lg md:rounded-xl font-black text-[10px] md:text-xs uppercase hover:bg-indigo-100 transition-all shadow-sm"
           >
             <Package className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{isAr ? 'اختيار من الطلبات' : 'Demandes Prospects'}</span>
           </button>
-          <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1.5 bg-indigo-600 text-white px-3.5 py-2 rounded-xl font-black text-xs uppercase hover:bg-indigo-700 transition-all shadow-sm">
-            <Upload className="w-3.5 h-3.5" /> <span>{isAr ? 'رفع صورة' : 'Uploader Image'}</span>
+          <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1.5 bg-indigo-600 text-white px-2.5 md:px-3.5 py-1.5 md:py-2 rounded-lg md:rounded-xl font-black text-[10px] md:text-xs uppercase hover:bg-indigo-700 transition-all shadow-sm">
+            <Upload className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{isAr ? 'رفع صورة' : 'Uploader Image'}</span>
           </button>
           <button
             onClick={() => setShowApiKeyModal(true)}
             title={isAr ? 'إعدادات مفتاح الذكاء الاصطناعي' : 'Paramètres clé API'}
-            className="p-2 bg-slate-100 border border-slate-200 text-slate-500 hover:text-indigo-700 hover:bg-indigo-50 hover:border-indigo-100 rounded-xl transition-all shadow-sm"
+            className="p-1.5 md:p-2 bg-slate-100 border border-slate-200 text-slate-500 hover:text-indigo-700 hover:bg-indigo-50 hover:border-indigo-100 rounded-lg md:rounded-xl transition-all shadow-sm"
           >
             <Settings className="w-4 h-4" />
           </button>
@@ -1220,13 +1220,13 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
         </div>
       </div>
 
-      {/* Main 2-Column Cockpit Grid (Zero-Scroll) */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-5 min-h-0 overflow-hidden mt-3">
+      {/* Main 2-Column Cockpit Grid (Zero-Scroll on Desktop, Scroll on Mobile) */}
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 md:gap-5 min-h-0 overflow-y-auto lg:overflow-hidden mt-2 md:mt-3 pb-safe">
         
         {/* LEFT COLUMN: Photo Cockpit & One-Click Dispatch Engine (lg:col-span-5) */}
-        <div className="lg:col-span-5 flex flex-col gap-4 overflow-hidden h-full">
+        <div className="lg:col-span-5 flex flex-col gap-4 overflow-visible lg:overflow-hidden h-auto lg:h-full">
           {/* Photo Cockpit Box */}
-          <div className="flex-1 bg-slate-900 rounded-3xl overflow-hidden relative flex flex-col min-h-0 shadow-lg border border-slate-800 group">
+          <div className="flex-none lg:flex-1 min-h-[250px] lg:min-h-0 bg-slate-900 rounded-3xl overflow-hidden relative flex flex-col shadow-lg border border-slate-800 group">
             {!image ? (
               <div className="flex-1 flex flex-col items-center justify-center text-slate-400 border-2 border-dashed border-slate-700 rounded-3xl hover:border-indigo-400 hover:text-indigo-300 transition-all cursor-pointer p-6 text-center" onClick={() => fileInputRef.current?.click()}>
                 <Camera className="w-12 h-12 mb-3 text-indigo-400" />
@@ -1361,7 +1361,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
         </div>
 
         {/* RIGHT COLUMN: Tabbed HUD Cockpit (lg:col-span-7) */}
-        <div className="lg:col-span-7 flex flex-col bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden h-full">
+        <div className="lg:col-span-7 flex flex-col bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden min-h-[60vh] lg:min-h-0 lg:h-full">
           {/* Tab Header Bar */}
           <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5 bg-slate-50/70 flex-shrink-0">
             <div className="flex items-center gap-1.5">
