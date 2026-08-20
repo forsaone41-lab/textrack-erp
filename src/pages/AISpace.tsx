@@ -1265,6 +1265,65 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
         </div>
       </div>
 
+      {/* Top Header Navigation Strip (Moved to top header as requested: "ikono hedr lfoq maydkhloch wst chat ok") */}
+      <div className={`flex items-center justify-between px-3 md:px-4 py-2 bg-slate-50/90 border-b border-slate-200/80 flex-shrink-0 gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+        <div className={`flex items-center gap-1.5 md:gap-2 overflow-x-auto no-scrollbar ${isAr ? 'flex-row-reverse' : ''}`}>
+          <button
+            onClick={() => setActiveTab('photo')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+              activeTab === 'photo'
+                ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200'
+                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+            }`}
+          >
+            <Camera className="w-3.5 h-3.5" />
+            <span>{isAr ? 'الصورة' : 'Photo'}</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('chat')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+              activeTab === 'chat'
+                ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200'
+                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+            }`}
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+            <span>{isAr ? '1. المستشار' : '1. Chat IA'}</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('mesures')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+              activeTab === 'mesures'
+                ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200'
+                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+            }`}
+          >
+            <Ruler className="w-3.5 h-3.5" />
+            <span>{isAr ? '2. المقاسات' : '2. Mesures'}</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('fiche')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+              activeTab === 'fiche'
+                ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200'
+                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+            }`}
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>{isAr ? '3. البطاقة والتسعير' : '3. Fiche & Prix'}</span>
+          </button>
+        </div>
+
+        {analysisResult && (
+          <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-black rounded-full border border-emerald-100">
+            <Check className="w-3 h-3" /> {isAr ? 'تحليل مكتمل' : 'Analysé'}
+          </span>
+        )}
+      </div>
+
       {/* Main 2-Column Cockpit Grid (Zero-Scroll on Desktop, Isolated Views on Mobile) */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 md:gap-5 min-h-0 overflow-y-auto lg:overflow-hidden mt-2 md:mt-3 pb-16 md:pb-safe">
         
@@ -1405,96 +1464,8 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Tabbed HUD Cockpit (lg:col-span-7) */}
+        {/* RIGHT COLUMN: HUD Content (lg:col-span-7) */}
         <div className={`lg:col-span-7 ${activeTab !== 'photo' ? 'flex' : 'hidden lg:flex'} flex-col bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden min-h-[60vh] lg:min-h-0 lg:h-full`}>
-          {/* Tab Header Bar with Next / Prev App Step Navigation */}
-          <div className={`flex items-center justify-between border-b border-slate-100 px-3 md:px-4 py-2.5 bg-slate-50/80 flex-shrink-0 gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
-            <div className={`flex items-center gap-1 md:gap-1.5 ${isAr ? 'flex-row-reverse' : ''}`}>
-              <button
-                onClick={() => setActiveTab('photo')}
-                className={`px-2 py-1 rounded-lg text-xs font-black transition-all md:hidden flex items-center gap-1 ${
-                  activeTab === 'photo'
-                    ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70'
-                }`}
-              >
-                <Camera className="w-3.5 h-3.5" />
-                <span>{isAr ? 'الصورة' : 'Photo'}</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('chat')}
-                className={`px-2.5 md:px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 ${
-                  activeTab === 'chat'
-                    ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70'
-                }`}
-              >
-                <MessageSquare className="w-3.5 h-3.5" />
-                <span>{isAr ? '1. المستشار' : '1. Chat IA'}</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('mesures')}
-                className={`px-2.5 md:px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 ${
-                  activeTab === 'mesures'
-                    ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70'
-                }`}
-              >
-                <Ruler className="w-3.5 h-3.5" />
-                <span>{isAr ? '2. المقاسات' : '2. Mesures'}</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('fiche')}
-                className={`px-2.5 md:px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 ${
-                  activeTab === 'fiche'
-                    ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70'
-                }`}
-              >
-                <FileText className="w-3.5 h-3.5" />
-                <span>{isAr ? '3. البطاقة والتسعير' : '3. Fiche & Prix'}</span>
-              </button>
-            </div>
-
-            {/* Next / Prev App Step Control */}
-            <div className={`flex items-center gap-1 md:gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
-              {activeTab !== 'chat' && activeTab !== 'photo' && (
-                <button
-                  onClick={() => {
-                    if (activeTab === 'fiche') setActiveTab('mesures');
-                    else if (activeTab === 'mesures') setActiveTab('chat');
-                  }}
-                  className="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-xs font-black transition-all flex items-center gap-1"
-                  title={isAr ? 'الرجوع للمرحلة السابقة' : 'Étape précédente'}
-                >
-                  <span>{isAr ? 'السابق ⬅️' : '⬅️ Précédent'}</span>
-                </button>
-              )}
-
-              {activeTab !== 'fiche' && (
-                <button
-                  onClick={() => {
-                    if (activeTab === 'photo') setActiveTab('chat');
-                    else if (activeTab === 'chat') setActiveTab('mesures');
-                    else if (activeTab === 'mesures') setActiveTab('fiche');
-                  }}
-                  className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-black transition-all flex items-center gap-1 shadow-sm"
-                  title={isAr ? 'الانتقال للمرحلة التالية' : 'Étape suivante'}
-                >
-                  <span>{isAr ? 'التالي ➔' : 'Suivant ➔'}</span>
-                </button>
-              )}
-
-              {analysisResult && (
-                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-black rounded-full border border-emerald-100">
-                  <Check className="w-3 h-3" /> {isAr ? 'مكتمل' : 'Analysé'}
-                </span>
-              )}
-            </div>
-          </div>
 
           {/* TAB 1: FICHE TECHNIQUE & PRIX (activeTab === 'fiche') */}
           {activeTab === 'fiche' && (
@@ -1718,11 +1689,11 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
               {/* Chat Messages */}
               <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-4 min-h-0">
                 {chat.map((c, i) => (
-                  <div key={i} className={`flex w-full ${c.role === 'user' ? (isAr ? 'justify-start' : 'justify-end') : (isAr ? 'justify-end' : 'justify-start')}`}>
-                    <div dir={isAr ? 'rtl' : 'ltr'} className={`max-w-[80%] p-4 text-xs font-medium leading-relaxed whitespace-pre-line shadow-sm rounded-2xl ${
+                  <div key={i} className={`flex w-full ${c.role === 'user' ? (isAr ? 'justify-start' : 'justify-end') : 'justify-start'}`}>
+                    <div dir={isAr ? 'rtl' : 'ltr'} className={`p-4 text-xs font-medium leading-relaxed whitespace-pre-line shadow-sm rounded-2xl ${
                       c.role === 'user'
-                        ? 'bg-slate-800 text-white rounded-br-none'
-                        : 'bg-white text-slate-700 border border-slate-200/80 rounded-bl-none'
+                        ? 'max-w-[80%] bg-slate-800 text-white rounded-br-none'
+                        : 'w-full max-w-full bg-white text-slate-800 border border-slate-200/90 rounded-bl-none'
                     } ${isAr ? 'text-right' : 'text-left'}`}>
                       {c.text}
                     </div>
