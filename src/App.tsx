@@ -576,6 +576,15 @@ function AppContent() {
           <Route path="fast-scanner" element={<FastScanner />} />
         </Route>
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
+        
+        {/* ✅ STANDALONE APPS — Accessible without login as independent full-screen apps */}
+        <Route path="/ai-space" element={
+          <Suspense fallback={<PageLoader />}>
+            <div className="min-h-screen bg-white">
+              <AISpace />
+            </div>
+          </Suspense>
+        } />
         <Route path="/portal" element={<PortailClient />} />
         <Route path="/info" element={<ClientInfoRoute />} />
         <Route path="/meet" element={<PublicMeet />} />
