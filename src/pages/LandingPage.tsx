@@ -564,16 +564,7 @@ export default function LandingPage() {
 
         </div>
 
-        {/* Universal Scroll Down Arrow (Desktop only) */}
-        <div className={`hidden lg:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] transition-all duration-500 flex-col items-center animate-bounce ${scrolled ? 'opacity-0 pointer-events-none translate-y-10' : 'opacity-100 translate-y-0'}`}>
-          <button 
-            onClick={() => document.getElementById('hero-video')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-            className="w-14 h-14 bg-white/95 backdrop-blur-sm rounded-full flex items-center justify-center shadow-[0_8px_30px_rgba(0,113,227,0.25)] border border-[#0071e3]/20 text-[#0071e3] hover:bg-white transition-all hover:scale-110"
-            aria-label="Scroll down"
-          >
-            <ArrowDown className="w-7 h-7" />
-          </button>
-        </div>
+
 
 
         <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden -z-10">
