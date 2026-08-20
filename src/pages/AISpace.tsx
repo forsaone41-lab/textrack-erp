@@ -1265,55 +1265,55 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
         </div>
       </div>
 
-      {/* Top Header Navigation Strip (Moved to top header as requested: "ikono hedr lfoq maydkhloch wst chat ok") */}
+      {/* Top Header Navigation Strip (Icon-Only Mode as requested: "hyd lktaba khli ghi icon odir chiw whdin kbar chwi") */}
       <div className={`flex items-center justify-between px-3 md:px-4 py-2 bg-slate-50/90 border-b border-slate-200/80 flex-shrink-0 gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
-        <div className={`flex items-center gap-1.5 md:gap-2 overflow-x-auto no-scrollbar ${isAr ? 'flex-row-reverse' : ''}`}>
+        <div className={`flex items-center gap-2 md:gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
           <button
             onClick={() => setActiveTab('photo')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+            title={isAr ? 'صورة الموديل (Photo)' : 'Photo du modèle'}
+            className={`p-2.5 md:p-3 rounded-2xl transition-all flex items-center justify-center ${
               activeTab === 'photo'
-                ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200'
-                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-200 scale-105'
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-indigo-600'
             }`}
           >
-            <Camera className="w-3.5 h-3.5" />
-            <span>{isAr ? 'الصورة' : 'Photo'}</span>
+            <Camera className="w-5 md:w-5.5 h-5 md:h-5.5" />
           </button>
 
           <button
             onClick={() => setActiveTab('chat')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+            title={isAr ? 'المستشار الذكي (Chat IA)' : 'Chat IA'}
+            className={`p-2.5 md:p-3 rounded-2xl transition-all flex items-center justify-center ${
               activeTab === 'chat'
-                ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200'
-                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-200 scale-105'
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-indigo-600'
             }`}
           >
-            <MessageSquare className="w-3.5 h-3.5" />
-            <span>{isAr ? '1. المستشار' : '1. Chat IA'}</span>
+            <MessageSquare className="w-5 md:w-5.5 h-5 md:h-5.5" />
           </button>
 
           <button
             onClick={() => setActiveTab('mesures')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+            title={isAr ? 'جدول المقاسات (Mesures)' : 'Tableau des mesures'}
+            className={`p-2.5 md:p-3 rounded-2xl transition-all flex items-center justify-center ${
               activeTab === 'mesures'
-                ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200'
-                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-200 scale-105'
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-indigo-600'
             }`}
           >
-            <Ruler className="w-3.5 h-3.5" />
-            <span>{isAr ? '2. المقاسات' : '2. Mesures'}</span>
+            <Ruler className="w-5 md:w-5.5 h-5 md:h-5.5" />
           </button>
 
           <button
             onClick={() => setActiveTab('fiche')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+            title={isAr ? 'البطاقة التقنية والتسعير (Fiche & Prix)' : 'Fiche technique & Prix'}
+            className={`p-2.5 md:p-3 rounded-2xl transition-all flex items-center justify-center ${
               activeTab === 'fiche'
-                ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200'
-                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-200 scale-105'
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-indigo-600'
             }`}
           >
-            <FileText className="w-3.5 h-3.5" />
-            <span>{isAr ? '3. البطاقة والتسعير' : '3. Fiche & Prix'}</span>
+            <FileText className="w-5 md:w-5.5 h-5 md:h-5.5" />
           </button>
         </div>
 
