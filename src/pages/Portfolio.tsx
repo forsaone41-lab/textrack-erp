@@ -79,23 +79,12 @@ const PORTFOLIO_ITEMS = [
   }
 ];
 
-const CATEGORIES = [
-  { id: 'all', labelAr: 'الكل', labelFr: 'Tout' },
-  { id: 'streetwear', labelAr: 'ستريتوير', labelFr: 'Streetwear' },
-  { id: 'traditional', labelAr: 'تقليدي', labelFr: 'Traditionnel' },
-  { id: 'corporate', labelAr: 'ملابس العمل', labelFr: 'Corporate' },
-  { id: 'process', labelAr: 'من الورشة', labelFr: 'Atelier' },
-];
+
 
 export default function Portfolio() {
   const { isAr } = useLang();
   const company = loadCompanyProfile();
-  const [activeFilter, setActiveFilter] = useState('all');
   const [hoveredItem, setHoveredItem] = useState<number | null>(null);
-
-  const filteredItems = activeFilter === 'all' 
-    ? PORTFOLIO_ITEMS 
-    : PORTFOLIO_ITEMS.filter(item => item.category === activeFilter);
 
   return (
     <div className={`min-h-screen bg-slate-50 ${isAr ? 'font-sans' : ''}`} dir={isAr ? 'rtl' : 'ltr'}>
@@ -134,39 +123,22 @@ export default function Portfolio() {
 
       <div className="max-w-6xl mx-auto px-4 py-12 md:py-20">
         
-        {/* Filters */}
-        <div className="flex flex-wrap items-center justify-center gap-2 md:gap-4 mb-12">
-          {CATEGORIES.map(cat => (
-            <button
-              key={cat.id}
-              onClick={() => setActiveFilter(cat.id)}
-              className={`px-5 py-2.5 rounded-xl text-xs md:text-sm font-black uppercase tracking-widest transition-all ${
-                activeFilter === cat.id
-                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 scale-105'
-                  : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50 hover:text-indigo-600'
-              }`}
-            >
-              {isAr ? cat.labelAr : cat.labelFr}
-            </button>
-          ))}
-        </div>
-
-        {/* Masonry Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-          {filteredItems.map(item => (
+        {/* Masonry Layout */}
+        <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 md:gap-8 space-y-6 md:space-y-8">
+          {PORTFOLIO_ITEMS.map(item => (
             <div 
               key={item.id}
-              className="group relative bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-slate-100 cursor-pointer"
+              className="group relative bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-slate-100 cursor-pointer break-inside-avoid"
               onMouseEnter={() => setHoveredItem(item.id)}
               onMouseLeave={() => setHoveredItem(null)}
               onClick={() => window.open('https://www.instagram.com/beyacreative/', '_blank')}
             >
               {/* Image / Video Thumbnail */}
-              <div className="relative aspect-[4/5] overflow-hidden bg-slate-100">
+              <div className="relative w-full h-auto overflow-hidden bg-slate-900 group">
                 <img 
                   src={item.src} 
                   alt={item.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  className="w-full h-auto object-contain transition-transform duration-700 group-hover:scale-105"
                 />
                 
                 {/* Overlay on Hover */}
@@ -181,9 +153,6 @@ export default function Portfolio() {
 
                 {/* Content Overlay */}
                 <div className={`absolute bottom-0 left-0 right-0 p-6 transform transition-transform duration-300 ${hoveredItem === item.id ? 'translate-y-0' : 'translate-y-4 md:translate-y-8 translate-y-0'}`}>
-                  <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest rounded-lg mb-3">
-                    {CATEGORIES.find(c => c.id === item.category)?.[isAr ? 'labelAr' : 'labelFr']}
-                  </span>
                   <h3 className="text-xl font-black text-white uppercase tracking-tight mb-2 drop-shadow-md">
                     {item.title}
                   </h3>
