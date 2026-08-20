@@ -1200,6 +1200,30 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
         </div>
 
         <div className="flex items-center gap-1.5 md:gap-2">
+          {/* Language Switcher Button (Moved to top header as requested) */}
+          <button
+            onClick={() => {
+              const nextIsAr = !isAr;
+              toggle();
+              if (analysisResult) {
+                const newReport = buildRapportText(analysisResult, nextIsAr);
+                setChat(prev => {
+                  const lastAiIdx = [...prev].reverse().findIndex(c => c.role === 'ai' && c.text.includes('BEYA EXPERT'));
+                  if (lastAiIdx === -1) return [...prev, { role: 'ai', text: newReport }];
+                  const idx = prev.length - 1 - lastAiIdx;
+                  const updated = [...prev];
+                  updated[idx] = { role: 'ai', text: newReport };
+                  return updated;
+                });
+              }
+            }}
+            className="flex items-center gap-1 bg-slate-100 border border-slate-200 text-slate-700 hover:bg-indigo-50 hover:border-indigo-100 hover:text-indigo-600 px-2.5 md:px-3 py-1.5 md:py-2 rounded-lg md:rounded-xl font-black text-xs transition-all shadow-sm"
+            title={isAr ? 'التبديل إلى الفرنسية' : 'Switch language'}
+          >
+            <Languages className="w-3.5 h-3.5 text-indigo-600" />
+            <span className="font-black text-xs uppercase">{isAr ? 'AR' : 'FR'}</span>
+          </button>
+
           <button
             onClick={() => setShowLeadsModal(true)}
             className="flex items-center gap-1.5 bg-indigo-50 border border-indigo-100 text-indigo-700 px-2.5 md:px-3.5 py-1.5 md:py-2 rounded-lg md:rounded-xl font-black text-[10px] md:text-xs uppercase hover:bg-indigo-100 transition-all shadow-sm"
@@ -1362,73 +1386,80 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
 
         {/* RIGHT COLUMN: Tabbed HUD Cockpit (lg:col-span-7) */}
         <div className="lg:col-span-7 flex flex-col bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden min-h-[60vh] lg:min-h-0 lg:h-full">
-          {/* Tab Header Bar */}
-          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5 bg-slate-50/70 flex-shrink-0">
-            <div className="flex items-center gap-1.5">
+          {/* Tab Header Bar with Next / Prev App Step Navigation */}
+          <div className={`flex items-center justify-between border-b border-slate-100 px-3 md:px-4 py-2.5 bg-slate-50/80 flex-shrink-0 gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+            <div className={`flex items-center gap-1 md:gap-1.5 ${isAr ? 'flex-row-reverse' : ''}`}>
               <button
                 onClick={() => setActiveTab('chat')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                className={`px-2.5 md:px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 ${
                   activeTab === 'chat'
-                    ? 'bg-indigo-600 text-white shadow-sm'
+                    ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70'
                 }`}
               >
                 <MessageSquare className="w-3.5 h-3.5" />
-                <span>{isAr ? 'المستشار الذكي' : 'Chat IA'}</span>
+                <span>{isAr ? '1. المستشار' : '1. Chat IA'}</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('mesures')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                className={`px-2.5 md:px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 ${
                   activeTab === 'mesures'
-                    ? 'bg-indigo-600 text-white shadow-sm'
+                    ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70'
                 }`}
               >
                 <Ruler className="w-3.5 h-3.5" />
-                <span>{isAr ? 'جدول المقاسات' : 'Mesures'}</span>
+                <span>{isAr ? '2. المقاسات' : '2. Mesures'}</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('fiche')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                className={`px-2.5 md:px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 ${
                   activeTab === 'fiche'
-                    ? 'bg-indigo-600 text-white shadow-sm'
+                    ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70'
                 }`}
               >
                 <FileText className="w-3.5 h-3.5" />
-                <span>{isAr ? 'البطاقة التقنية' : 'Fiche & Prix'}</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  const nextIsAr = !isAr;
-                  toggle();
-                  if (analysisResult) {
-                    const newReport = buildRapportText(analysisResult, nextIsAr);
-                    setChat(prev => {
-                      const lastAiIdx = [...prev].reverse().findIndex(c => c.role === 'ai' && c.text.includes('BEYA EXPERT'));
-                      if (lastAiIdx === -1) return [...prev, { role: 'ai', text: newReport }];
-                      const idx = prev.length - 1 - lastAiIdx;
-                      const updated = [...prev];
-                      updated[idx] = { role: 'ai', text: newReport };
-                      return updated;
-                    });
-                  }
-                }}
-                className="px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 border border-slate-200/80 transition-all flex items-center gap-1.5 shadow-sm"
-                title={isAr ? "التبديل إلى الفرنسية" : "Basculer en Arabe (Darija)"}
-              >
-                <span>{isAr ? 'Français' : 'العربية'}</span>
+                <span>{isAr ? '3. البطاقة والتسعير' : '3. Fiche & Prix'}</span>
               </button>
             </div>
 
-            {analysisResult && (
-              <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-black rounded-full border border-emerald-100">
-                <Check className="w-3 h-3" /> {isAr ? 'تحليل مكتمل' : 'Analysé'}
-              </span>
-            )}
+            {/* Next / Prev App Step Control */}
+            <div className={`flex items-center gap-1 md:gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+              {activeTab !== 'chat' && (
+                <button
+                  onClick={() => {
+                    if (activeTab === 'fiche') setActiveTab('mesures');
+                    else if (activeTab === 'mesures') setActiveTab('chat');
+                  }}
+                  className="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-xs font-black transition-all flex items-center gap-1"
+                  title={isAr ? 'الرجوع للمرحلة السابقة' : 'Étape précédente'}
+                >
+                  <span>{isAr ? 'السابق ⬅️' : '⬅️ Précédent'}</span>
+                </button>
+              )}
+
+              {activeTab !== 'fiche' && (
+                <button
+                  onClick={() => {
+                    if (activeTab === 'chat') setActiveTab('mesures');
+                    else if (activeTab === 'mesures') setActiveTab('fiche');
+                  }}
+                  className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-black transition-all flex items-center gap-1 shadow-sm"
+                  title={isAr ? 'الانتقال للمرحلة التالية' : 'Étape suivante'}
+                >
+                  <span>{isAr ? 'التالي ➔' : 'Suivant ➔'}</span>
+                </button>
+              )}
+
+              {analysisResult && (
+                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-black rounded-full border border-emerald-100">
+                  <Check className="w-3 h-3" /> {isAr ? 'مكتمل' : 'Analysé'}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* TAB 1: FICHE TECHNIQUE & PRIX (activeTab === 'fiche') */}
