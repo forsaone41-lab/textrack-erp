@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLang } from '../contexts/LangContext';
 import { Camera, ExternalLink, ChevronRight, Filter, Play } from 'lucide-react';
 import { loadCompanyProfile } from '../types';
+import ProjectRequestModal from '../components/ProjectRequestModal';
 
 // Mock data representing BEYA Creative's Instagram portfolio
 const PORTFOLIO_ITEMS = [
@@ -85,6 +86,7 @@ export default function Portfolio() {
   const { isAr } = useLang();
   const company = loadCompanyProfile();
   const [hoveredItem, setHoveredItem] = useState<number | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <div className={`min-h-screen bg-slate-50 ${isAr ? 'font-sans' : ''}`} dir={isAr ? 'rtl' : 'ltr'}>
@@ -181,16 +183,23 @@ export default function Portfolio() {
               ? 'تواصل معنا الآن لتحويل فكرتك إلى واقع. نحن هنا لتصنيع أفضل الملابس لعلامتك التجارية.'
               : 'Contactez-nous dès maintenant pour transformer votre idée en réalité. Nous sommes là pour confectionner les meilleurs vêtements pour votre marque.'}
           </p>
-          <a 
-            href="/#/store-landing"
+          <button 
+            onClick={() => setIsModalOpen(true)}
             className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-500 transition-all shadow-lg flex items-center gap-2"
           >
             {isAr ? 'ابدأ مشروعك معنا' : 'Démarrer votre projet'}
             <ChevronRight className="w-5 h-5" />
-          </a>
+          </button>
         </div>
 
       </div>
+
+      {/* Project Request Modal */}
+      <ProjectRequestModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        isDark={false}
+      />
     </div>
   );
 }
