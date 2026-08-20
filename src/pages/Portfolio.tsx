@@ -8,51 +8,75 @@ const PORTFOLIO_ITEMS = [
   {
     id: 1,
     type: 'image',
-    category: 'streetwear',
-    src: '/premium_streetwear_hoodie.png',
-    title: 'Hoodie Premium Custom',
-    description: 'Production streetwear haute qualité avec broderie personnalisée.'
+    category: 'traditional',
+    src: '/portfolio/Capture.PNG',
+    title: 'Instagram Post 1',
+    description: 'BEYA Creative Instagram'
   },
   {
     id: 2,
     type: 'image',
-    category: 'process',
-    src: '/workshop_view_1.png',
-    title: 'Processus de Couture',
-    description: 'Dans nos ateliers : précision et savoir-faire.'
+    category: 'streetwear',
+    src: '/portfolio/download.jpg',
+    title: 'Instagram Post 2',
+    description: 'BEYA Creative Instagram'
   },
   {
     id: 3,
     type: 'image',
     category: 'traditional',
-    src: '/beya_creative_streetwear.png',
-    title: 'Streetwear Collection',
-    description: 'Touche moderne marocaine revisitée.'
+    src: '/portfolio/download.png',
+    title: 'Instagram Post 3',
+    description: 'BEYA Creative Instagram'
   },
   {
     id: 4,
     type: 'image',
-    category: 'process',
-    src: '/patron-sewing-tech.png',
-    title: 'Patronage Digital',
-    description: 'Conception et modélisme haute précision.'
+    category: 'streetwear',
+    src: '/portfolio/h.jpg',
+    title: 'Instagram Post 4',
+    description: 'BEYA Creative Instagram'
   },
   {
     id: 5,
     type: 'image',
-    category: 'corporate',
-    src: '/ad-bg-1.png',
-    title: "Uniforme d'Entreprise",
-    description: 'Tenues professionnelles sur-mesure pour restaurants.'
+    category: 'process',
+    src: '/portfolio/hh.jpg',
+    title: 'Instagram Post 5',
+    description: 'BEYA Creative Instagram'
   },
   {
     id: 6,
     type: 'image',
-    category: 'process',
-    src: '/factory_bg.jpg',
-    title: 'Table de Coupe',
-    description: 'Préparation et coupe digitale.'
+    category: 'traditional',
+    src: '/portfolio/j.jpg',
+    title: 'Instagram Post 6',
+    description: 'BEYA Creative Instagram'
   },
+  {
+    id: 7,
+    type: 'image',
+    category: 'corporate',
+    src: '/portfolio/jok.PNG',
+    title: 'Instagram Post 7',
+    description: 'BEYA Creative Instagram'
+  },
+  {
+    id: 8,
+    type: 'image',
+    category: 'streetwear',
+    src: '/portfolio/k.PNG',
+    title: 'Instagram Post 8',
+    description: 'BEYA Creative Instagram'
+  },
+  {
+    id: 9,
+    type: 'image',
+    category: 'corporate',
+    src: '/portfolio/s.jpg',
+    title: 'Instagram Post 9',
+    description: 'BEYA Creative Instagram'
+  }
 ];
 
 const CATEGORIES = [
