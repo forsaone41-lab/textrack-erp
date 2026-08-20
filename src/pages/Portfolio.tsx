@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLang } from '../contexts/LangContext';
-import { Camera, Instagram, ExternalLink, ChevronRight, Filter, Play } from 'lucide-react';
+import { Camera, ExternalLink, ChevronRight, Filter, Play } from 'lucide-react';
 import { loadCompanyProfile } from '../types';
 
 // Mock data representing BEYA Creative's Instagram portfolio
@@ -42,7 +42,7 @@ const PORTFOLIO_ITEMS = [
     type: 'image',
     category: 'corporate',
     src: 'https://images.unsplash.com/photo-1584273143981-41c073dfe8f8?auto=format&fit=crop&q=80',
-    title: 'Uniforme d\\'Entreprise',
+    title: "Uniforme d'Entreprise",
     description: 'Tenues professionnelles sur-mesure pour restaurants.'
   },
   {
@@ -83,7 +83,7 @@ export default function Portfolio() {
         <div className="max-w-6xl mx-auto relative z-10 flex flex-col items-center text-center">
           <div className="w-20 h-20 bg-gradient-to-tr from-pink-500 via-red-500 to-yellow-500 rounded-full p-1 mb-6 shadow-2xl">
             <div className="w-full h-full bg-slate-900 rounded-full flex items-center justify-center border-4 border-slate-900">
-              <Instagram className="w-8 h-8 text-white" />
+              <ExternalLink className="w-8 h-8 text-white" />
             </div>
           </div>
           
@@ -102,7 +102,7 @@ export default function Portfolio() {
             rel="noreferrer"
             className="flex items-center gap-2 bg-white text-slate-900 px-8 py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-100 hover:scale-105 transition-all shadow-xl"
           >
-            <Instagram className="w-5 h-5 text-pink-600" />
+            <ExternalLink className="w-5 h-5 text-pink-600" />
             {isAr ? 'تابعنا على إنستغرام' : 'Suivez-nous sur Instagram'}
           </a>
         </div>
@@ -168,7 +168,7 @@ export default function Portfolio() {
                   </p>
                   
                   <div className={`mt-4 flex items-center gap-2 text-white/80 text-xs font-bold uppercase tracking-widest transition-opacity duration-300 ${hoveredItem === item.id ? 'opacity-100' : 'opacity-0'}`}>
-                    <Instagram className="w-4 h-4" />
+                    <ExternalLink className="w-4 h-4" />
                     <span>{isAr ? 'عرض على إنستغرام' : 'Voir sur Instagram'}</span>
                   </div>
                 </div>
