@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check, Languages, Maximize2, Minimize2, Download, FileText, Printer, Settings, KeyRound } from 'lucide-react';
+import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check, Languages, Maximize2, Minimize2, Download, FileText, Printer, Settings, KeyRound, Smartphone } from 'lucide-react';
+import { usePWAInstall } from '../hooks/usePWAInstall';
 import { useLang } from '../contexts/LangContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { saveRecord, genId, FicheTechnique, loadLeads, Lead, loadCompanyProfile, loadLeadPhoto } from '../types';
@@ -227,6 +228,7 @@ function buildRapportText(result: any, arLang: boolean): string {
 export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, onClose?: () => void }) {
   const { isAr, toggle } = useLang();
   const company = loadCompanyProfile();
+  const { canInstall, isInstalled, promptInstall } = usePWAInstall('/manifest-ai.json');
   const [pdfChatText, setPdfChatText] = useState('');
   const [aiLangOverride, setAiLangOverride] = useState<'ar' | 'fr' | null>(null);
   const [image, setImage] = useState<string | null>(null);
@@ -1254,6 +1256,16 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
           <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1.5 bg-indigo-600 text-white px-2.5 md:px-3.5 py-1.5 md:py-2 rounded-lg md:rounded-xl font-black text-[10px] md:text-xs uppercase hover:bg-indigo-700 transition-all shadow-sm">
             <Upload className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{isAr ? 'رفع صورة' : 'Uploader Image'}</span>
           </button>
+          {canInstall && !isInstalled && (
+            <button
+              onClick={promptInstall}
+              title={isAr ? 'تثبيت كتطبيق مستقل على الهاتف' : 'Installer comme application'}
+              className="flex items-center gap-1 bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-2.5 md:px-3 py-1.5 md:py-2 rounded-lg md:rounded-xl font-black text-[10px] md:text-xs uppercase hover:brightness-110 transition-all shadow-md active:scale-95 animate-pulse"
+            >
+              <Smartphone className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{isAr ? 'تثبيت APP' : 'Installer'}</span>
+            </button>
+          )}
           <button
             onClick={() => setShowApiKeyModal(true)}
             title={isAr ? 'إعدادات مفتاح الذكاء الاصطناعي' : 'Paramètres clé API'}

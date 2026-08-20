@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
-import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2, Store } from 'lucide-react';
+import { Search, Package, CircleCheck, Clock, Truck, Globe, Bell, Receipt, MessageCircle, ArrowRight, X, Download, Scissors, Layers, Sparkles, Wind, ShieldCheck, Box, FileText, Eye, Plus, Camera, RotateCw, CreditCard, Building, Upload, Send, Check, Info, Star, Trash2, Edit2, Store, Smartphone } from 'lucide-react';
+import { usePWAInstall } from '../hooks/usePWAInstall';
 import {
   Commande, Facture, FicheTechnique, loadData, PHASE_LABELS, PHASE_ORDER, PHASE_COLORS, User, CompanyProfile, loadCompanyProfile, saveLead, syncCompanyProfile, saveRecord, Lead, loadLeads, loadLeadPhoto, deleteRecord, genId
 } from '../types';
@@ -52,6 +53,7 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
   const [feedbackData, setFeedbackData] = useState<{rating: number, fabricNotes: string, sizeNotes: string, generalNotes: string, useSizeTable: boolean, sizeTableNotes: Record<string, string>, mesuresFeedback: { nom: string; valeurs: Record<string, string> }[]}>({ rating: 0, fabricNotes: '', sizeNotes: '', generalNotes: '', useSizeTable: false, sizeTableNotes: {}, mesuresFeedback: [] });
   const [hoverRating, setHoverRating] = useState<number>(0);
   const { isAr, toggle } = useLang();
+  const { canInstall, isInstalled, promptInstall } = usePWAInstall('/manifest-portal.json');
 
   useEffect(() => {
     const sync = async () => {
@@ -481,6 +483,16 @@ export default function PortailClient({ currentUser, onLogout }: PortailClientPr
               <button onClick={toggle} className="px-5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-100 transition-colors">
                  {isAr ? 'FR' : 'عربية'}
               </button>
+              {canInstall && !isInstalled && (
+                <button
+                  onClick={promptInstall}
+                  title={isAr ? 'تثبيت كتطبيق مستقل على الهاتف' : 'Installer comme application'}
+                  className="flex items-center gap-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-md active:scale-95 animate-pulse"
+                >
+                  <Smartphone className="w-4 h-4" />
+                  <span className="hidden sm:inline">{isAr ? 'تثبيت APP' : 'Installer'}</span>
+                </button>
+              )}
               
               <div className="relative">
                  <button 
