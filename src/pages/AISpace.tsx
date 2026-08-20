@@ -254,7 +254,8 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     fabricAlternatives?: { name: string; pros: string; cons: string }[];
   }>(null);
   const [activePieceIdx, setActivePieceIdx] = useState(0);
-  const [activeTab, setActiveTab] = useState<'fiche' | 'mesures' | 'chat'>('chat');
+  const [activeTab, setActiveTab] = useState<'fiche' | 'mesures' | 'chat' | 'photo'>('chat');
+  const [showDispatchModal, setShowDispatchModal] = useState(false);
   const [chat, setChat] = useState<{ role: 'ai' | 'user'; text: string }[]>([
     { role: 'ai', text: isAr ? 'مرحباً بك في المستشار الذكي لتحليل الموديلات. ارفع صورة الموديل للبدء في التحليل الفوري للثوب والتكلفة والقياسات.' : 'Bienvenue dans l\'espace d\'analyse. Uploadez une photo de modèle pour commencer.' }
   ]);
@@ -1200,6 +1201,26 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
         </div>
 
         <div className="flex items-center gap-1.5 md:gap-2">
+          {/* Top Header Export/Send Button (Red boxed in user diagram 1) */}
+          <button
+            onClick={() => {
+              if (!analysisResult) {
+                setCustomAlert({
+                  title: isAr ? 'تنبيه' : 'Attention',
+                  message: isAr ? 'يرجى تحليل موديل أولاً من الصورة!' : 'Veuillez analyser un modèle d\'abord !',
+                  isError: true
+                });
+                return;
+              }
+              setShowDispatchModal(true);
+            }}
+            className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-2.5 md:px-3.5 py-1.5 md:py-2 rounded-lg md:rounded-xl font-black text-xs uppercase hover:brightness-110 transition-all shadow-md active:scale-95"
+            title={isAr ? 'تصدير البيانات وإرسالها إلى Devis, Atelier, Achats...' : 'Exporter vers les modules'}
+          >
+            <Send className="w-3.5 h-3.5" />
+            <span className="font-black">{isAr ? 'تصدير 🚀' : 'Exporter'}</span>
+          </button>
+
           {/* Language Switcher Button (Moved to top header as requested) */}
           <button
             onClick={() => {
@@ -1244,11 +1265,11 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
         </div>
       </div>
 
-      {/* Main 2-Column Cockpit Grid (Zero-Scroll on Desktop, Scroll on Mobile) */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 md:gap-5 min-h-0 overflow-y-auto lg:overflow-hidden mt-2 md:mt-3 pb-safe">
+      {/* Main 2-Column Cockpit Grid (Zero-Scroll on Desktop, Isolated Views on Mobile) */}
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 md:gap-5 min-h-0 overflow-y-auto lg:overflow-hidden mt-2 md:mt-3 pb-16 md:pb-safe">
         
-        {/* LEFT COLUMN: Photo Cockpit & One-Click Dispatch Engine (lg:col-span-5) */}
-        <div className="lg:col-span-5 flex flex-col gap-4 overflow-visible lg:overflow-hidden h-auto lg:h-full">
+        {/* LEFT COLUMN: Photo Cockpit (lg:col-span-5) */}
+        <div className={`lg:col-span-5 ${activeTab === 'photo' ? 'flex' : 'hidden lg:flex'} flex-col gap-4 overflow-visible lg:overflow-hidden h-auto lg:h-full`}>
           {/* Photo Cockpit Box */}
           <div className="flex-none lg:flex-1 min-h-[250px] lg:min-h-0 bg-slate-900 rounded-3xl overflow-hidden relative flex flex-col shadow-lg border border-slate-800 group">
             {!image ? (
@@ -1277,8 +1298,8 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
             )}
           </div>
 
-          {/* ONE-CLICK DISPATCH ENGINE (محرك التوزيع الفوري) */}
-          <div className="flex-shrink-0 bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
+          {/* ONE-CLICK DISPATCH ENGINE (Desktop Only Sidebar) */}
+          <div className="hidden lg:block flex-shrink-0 bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
             <div className={`flex items-center justify-between ${isAr ? 'flex-row-reverse' : ''}`}>
               <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
                 <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
@@ -1385,10 +1406,22 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
         </div>
 
         {/* RIGHT COLUMN: Tabbed HUD Cockpit (lg:col-span-7) */}
-        <div className="lg:col-span-7 flex flex-col bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden min-h-[60vh] lg:min-h-0 lg:h-full">
+        <div className={`lg:col-span-7 ${activeTab !== 'photo' ? 'flex' : 'hidden lg:flex'} flex-col bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden min-h-[60vh] lg:min-h-0 lg:h-full`}>
           {/* Tab Header Bar with Next / Prev App Step Navigation */}
           <div className={`flex items-center justify-between border-b border-slate-100 px-3 md:px-4 py-2.5 bg-slate-50/80 flex-shrink-0 gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
             <div className={`flex items-center gap-1 md:gap-1.5 ${isAr ? 'flex-row-reverse' : ''}`}>
+              <button
+                onClick={() => setActiveTab('photo')}
+                className={`px-2 py-1 rounded-lg text-xs font-black transition-all md:hidden flex items-center gap-1 ${
+                  activeTab === 'photo'
+                    ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70'
+                }`}
+              >
+                <Camera className="w-3.5 h-3.5" />
+                <span>{isAr ? 'الصورة' : 'Photo'}</span>
+              </button>
+
               <button
                 onClick={() => setActiveTab('chat')}
                 className={`px-2.5 md:px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 ${
@@ -1428,7 +1461,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
 
             {/* Next / Prev App Step Control */}
             <div className={`flex items-center gap-1 md:gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
-              {activeTab !== 'chat' && (
+              {activeTab !== 'chat' && activeTab !== 'photo' && (
                 <button
                   onClick={() => {
                     if (activeTab === 'fiche') setActiveTab('mesures');
@@ -1444,7 +1477,8 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
               {activeTab !== 'fiche' && (
                 <button
                   onClick={() => {
-                    if (activeTab === 'chat') setActiveTab('mesures');
+                    if (activeTab === 'photo') setActiveTab('chat');
+                    else if (activeTab === 'chat') setActiveTab('mesures');
                     else if (activeTab === 'mesures') setActiveTab('fiche');
                   }}
                   className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-black transition-all flex items-center gap-1 shadow-sm"
@@ -1888,6 +1922,176 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
           </div>
         </div>
       )}
+
+      {/* EXPORT / DISPATCH POPUP MODAL (Triggered from Top Exporter Button) */}
+      {showDispatchModal && (
+        <div className="fixed inset-0 z-[210] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setShowDispatchModal(false)}>
+          <div className="bg-white rounded-[32px] border border-slate-200/80 w-full max-w-md p-6 flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+            <div className={`flex items-center justify-between pb-4 border-b border-slate-100 mb-4 ${isAr ? 'flex-row-reverse' : ''}`}>
+              <div className={`flex items-center gap-2.5 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                  <Send className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900">{isAr ? 'تصدير بيانات التحليل فورا 🚀' : 'Exporter vers les modules'}</h3>
+                  <p className="text-[10px] text-slate-400 font-bold">{isAr ? 'اختر القسم المراد إرسال القياسات والثوب إليه' : 'Export direct en 1-clic'}</p>
+                </div>
+              </div>
+              <button onClick={() => setShowDispatchModal(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-400 hover:text-slate-700">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2.5">
+              <button
+                onClick={() => {
+                  setShowDispatchModal(false);
+                  const chatHistory = chat.map(c => c.text).join('\n');
+                  sendToDevis(chatHistory + '\n\n' + (analysisResult?.rawAnalysis || JSON.stringify(analysisResult)));
+                }}
+                className={`flex items-center justify-between p-3.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/60 text-emerald-800 rounded-2xl font-black text-xs transition-all shadow-sm group ${isAr ? 'flex-row-reverse' : ''}`}
+              >
+                <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                  <DollarSign className="w-5 h-5 text-emerald-600 group-hover:scale-110 transition-transform flex-shrink-0" />
+                  <div>
+                    <div className="font-black">{isAr ? 'تسعير Devis PRO' : 'Devis PRO'}</div>
+                    <div className="text-[10px] font-bold text-emerald-600/80">{isAr ? 'إنشاء حساب وتكلفة للزبون' : 'Calcul de devis client'}</div>
+                  </div>
+                </div>
+                <ChevronRight className={`w-4 h-4 text-emerald-600 ${isAr ? 'rotate-180' : ''}`} />
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowDispatchModal(false);
+                  exportToFicheTechnique();
+                }}
+                className={`flex items-center justify-between p-3.5 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/60 text-indigo-800 rounded-2xl font-black text-xs transition-all shadow-sm group ${isAr ? 'flex-row-reverse' : ''}`}
+              >
+                <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                  <FileText className="w-5 h-5 text-indigo-600 group-hover:scale-110 transition-transform flex-shrink-0" />
+                  <div>
+                    <div className="font-black">{isAr ? 'البطاقة التقنية Fiche Technique' : 'Fiche Technique'}</div>
+                    <div className="text-[10px] font-bold text-indigo-600/80">{isAr ? 'حفظ بطاقة التفصيل للموديل' : 'Génération fiche technique'}</div>
+                  </div>
+                </div>
+                <ChevronRight className={`w-4 h-4 text-indigo-600 ${isAr ? 'rotate-180' : ''}`} />
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowDispatchModal(false);
+                  const atelierData = {
+                    modelName: analysisResult?.category || 'Modèle Atelier',
+                    tissuMetrage: analysisResult?.consumption || '2.0m',
+                    complexity: analysisResult?.complexity || 'Moyenne',
+                    prixEstimation: analysisResult?.costEstimate || '150 MAD',
+                    pieces: analysisResult?.pieces || [],
+                    timestamp: Date.now()
+                  };
+                  localStorage.setItem('beya_atelier_import', JSON.stringify(atelierData));
+                  window.open('/#/atelier-calculator', '_blank');
+                }}
+                className={`flex items-center justify-between p-3.5 bg-amber-50 hover:bg-amber-100 border border-amber-200/60 text-amber-900 rounded-2xl font-black text-xs transition-all shadow-sm group ${isAr ? 'flex-row-reverse' : ''}`}
+              >
+                <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                  <Scissors className="w-5 h-5 text-amber-700 group-hover:scale-110 transition-transform flex-shrink-0" />
+                  <div>
+                    <div className="font-black">{isAr ? 'إرسال لورشة الخياطة Atelier' : 'Atelier Production'}</div>
+                    <div className="text-[10px] font-bold text-amber-700/80">{isAr ? 'حساب المراحل وتكلفة الخياطة' : 'Calcul de temps & coût atelier'}</div>
+                  </div>
+                </div>
+                <ChevronRight className={`w-4 h-4 text-amber-700 ${isAr ? 'rotate-180' : ''}`} />
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowDispatchModal(false);
+                  const achData = {
+                    tissuSuggested: analysisResult?.fabricSuggested || '',
+                    consumption: analysisResult?.consumption || '',
+                    modelName: analysisResult?.category || '',
+                    timestamp: Date.now()
+                  };
+                  localStorage.setItem('beya_achats_import', JSON.stringify(achData));
+                  window.open('/#/achats', '_blank');
+                }}
+                className={`flex items-center justify-between p-3.5 bg-purple-50 hover:bg-purple-100 border border-purple-200/60 text-purple-800 rounded-2xl font-black text-xs transition-all shadow-sm group ${isAr ? 'flex-row-reverse' : ''}`}
+              >
+                <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                  <Package className="w-5 h-5 text-purple-600 group-hover:scale-110 transition-transform flex-shrink-0" />
+                  <div>
+                    <div className="font-black">{isAr ? 'الأثواب والمشتريات Achats' : 'Achats Tissus'}</div>
+                    <div className="text-[10px] font-bold text-purple-600/80">{isAr ? 'طلب وتوفير الثوب والمواد' : 'Gestion des achats matières'}</div>
+                  </div>
+                </div>
+                <ChevronRight className={`w-4 h-4 text-purple-600 ${isAr ? 'rotate-180' : ''}`} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MOBILE APP FIXED BOTTOM NAVIGATION BAR (FIX BOTTOM) */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[150] bg-white/95 backdrop-blur-xl border-t border-slate-200 shadow-2xl px-2 py-1.5 flex items-center justify-around">
+        <button
+          onClick={() => setActiveTab('photo')}
+          className={`flex flex-col items-center gap-0.5 py-1 px-3 rounded-xl transition-all ${
+            activeTab === 'photo' ? 'text-indigo-600 font-black scale-105' : 'text-slate-500 font-bold hover:text-slate-700'
+          }`}
+        >
+          <Camera className="w-4.5 h-4.5" />
+          <span className="text-[9px] font-black">{isAr ? 'الصورة' : 'Photo'}</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('chat')}
+          className={`flex flex-col items-center gap-0.5 py-1 px-3 rounded-xl transition-all ${
+            activeTab === 'chat' ? 'text-indigo-600 font-black scale-105' : 'text-slate-500 font-bold hover:text-slate-700'
+          }`}
+        >
+          <MessageSquare className="w-4.5 h-4.5" />
+          <span className="text-[9px] font-black">{isAr ? 'المستشار' : 'Chat IA'}</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('mesures')}
+          className={`flex flex-col items-center gap-0.5 py-1 px-3 rounded-xl transition-all ${
+            activeTab === 'mesures' ? 'text-indigo-600 font-black scale-105' : 'text-slate-500 font-bold hover:text-slate-700'
+          }`}
+        >
+          <Ruler className="w-4.5 h-4.5" />
+          <span className="text-[9px] font-black">{isAr ? 'المقاسات' : 'Mesures'}</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('fiche')}
+          className={`flex flex-col items-center gap-0.5 py-1 px-3 rounded-xl transition-all ${
+            activeTab === 'fiche' ? 'text-indigo-600 font-black scale-105' : 'text-slate-500 font-bold hover:text-slate-700'
+          }`}
+        >
+          <FileText className="w-4.5 h-4.5" />
+          <span className="text-[9px] font-black">{isAr ? 'البطاقة' : 'Fiche'}</span>
+        </button>
+
+        <button
+          onClick={() => {
+            if (!analysisResult) {
+              setCustomAlert({
+                title: isAr ? 'تنبيه' : 'Attention',
+                message: isAr ? 'يرجى تحليل موديل أولاً من الصورة!' : 'Veuillez analyser un modèle d\'abord !',
+                isError: true
+              });
+              return;
+            }
+            setShowDispatchModal(true);
+          }}
+          className="flex flex-col items-center gap-0.5 py-1 px-3 rounded-xl text-emerald-600 font-black active:scale-95"
+        >
+          <Send className="w-4.5 h-4.5" />
+          <span className="text-[9px] font-black">{isAr ? 'تصدير 🚀' : 'Export'}</span>
+        </button>
+      </div>
     </div>
   );
 }
