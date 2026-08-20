@@ -7,23 +7,48 @@ export default function Calculator() {
   const [equation, setEquation] = useState('');
 
   const handleNumber = (num: string) => {
-    setDisplay(prev => prev === '0' ? num : prev + num);
+    setDisplay(prev => {
+      if (prev === 'Error') return num === '.' ? '0.' : num;
+      if (num === '.' && prev.includes('.')) return prev;
+      if (prev === '0' && num !== '.') return num;
+      return prev + num;
+    });
   };
 
   const handleOperator = (op: string) => {
-    setEquation(display + ' ' + op + ' ');
+    if (display === 'Error') {
+      setDisplay('0');
+      setEquation('0 ' + op + ' ');
+      return;
+    }
+    if (display === '0' && equation !== '') {
+      setEquation(equation.slice(0, -2) + op + ' ');
+      return;
+    }
+    setEquation(equation + display + ' ' + op + ' ');
     setDisplay('0');
   };
 
   const calculate = () => {
     try {
-      // Sanitize input to only allow numbers and basic operators to mitigate eval/Function risks
+      if (display === 'Error') return;
       const sanitized = (equation + display).replace(/[^-()\\d/*+.]/g, '');
+      if (!sanitized) return;
+      
       const result = new Function('return ' + sanitized)();
-      setDisplay(String(result));
+      
+      let finalResult = String(result);
+      if (finalResult === 'Infinity' || finalResult === 'NaN') {
+        finalResult = 'Error';
+      } else if (finalResult.includes('.')) {
+        finalResult = parseFloat(Number(result).toFixed(4)).toString();
+      }
+      
+      setDisplay(finalResult);
       setEquation('');
     } catch (e) {
       setDisplay('Error');
+      setEquation('');
     }
   };
 

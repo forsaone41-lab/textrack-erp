@@ -207,7 +207,7 @@ function AdminLayout({
       
       {/* Mobile Calculator - Bottom Right - Admin Only */}
       {currentUser.role === 'admin' && location.pathname !== '/partenaire-portal' && (
-        <div className={`md:hidden fixed bottom-6 ${isAr ? 'left-6' : 'right-6'} z-[140] scale-90 print:hidden`}>
+        <div className={`md:hidden fixed bottom-24 ${isAr ? 'left-6' : 'right-6'} z-[140] scale-90 print:hidden`}>
           <Calculator />
         </div>
       )}
