@@ -157,12 +157,21 @@ export default function Demandes() {
   useEffect(() => {
     // 1. Show cached data INSTANTLY — no blank screen
     let hasCached = false;
+    
+    const sanitizeLead = (l: any) => ({
+      ...l,
+      type: l.type || '',
+      phone: String(l.phone || ''),
+      name: l.name || '',
+      email: l.email || '',
+    });
+
     try {
       const cachedLeads = localStorage.getItem('textrack_data_leads');
       if (cachedLeads) {
         const parsed = JSON.parse(cachedLeads);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setLeads(parsed.filter((l: any) => l && !l.type?.startsWith('__') && !l.name?.startsWith('__')));
+          setLeads(parsed.filter((l: any) => l && !l.type?.startsWith('__') && !l.name?.startsWith('__')).map(sanitizeLead));
           hasCached = true;
         }
       }
@@ -185,7 +194,7 @@ export default function Demandes() {
         ]);
         if (tissusData) setTissus(tissusData);
         if (leadsData) {
-          let validLeads = (leadsData as Lead[]).filter(l => l && !l.type?.startsWith('__') && !l.name?.startsWith('__'));
+          let validLeads = (leadsData as Lead[]).filter(l => l && !l.type?.startsWith('__') && !l.name?.startsWith('__')).map(sanitizeLead);
           
           // Auto-delete logic: remove if crmStage === 'annule' and rejectedAt is > 48 hours ago
           const now = Date.now();
