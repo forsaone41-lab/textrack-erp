@@ -6,9 +6,12 @@ import App from "./App";
 // Force React to be global to prevent "React is not defined" ReferenceErrors in some environments
 (window as any).React = React;
 
-// Auto-redirect missing hash for WhatsApp links
+// Auto-redirect missing hash for WhatsApp links or direct links
 if (window.location.pathname === '/recrutement' || window.location.pathname === '/recrutemen' || window.location.pathname === '/recrutemben' || window.location.pathname === '/recrut') {
   window.location.replace('/#/recrutement');
+}
+if (window.location.pathname === '/portfolio') {
+  window.location.replace('/#/portfolio');
 }
 
 createRoot(document.getElementById("root")!).render(
