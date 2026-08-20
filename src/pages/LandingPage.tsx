@@ -473,8 +473,8 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-28 pb-8 md:pb-32 px-6 flex items-center lg:items-start relative overflow-hidden bg-white min-h-[100dvh] lg:min-h-0">
-        <div className="max-w-7xl mx-auto relative z-10 grid lg:grid-cols-2 gap-12 items-center lg:items-start w-full">
+      <section className="pt-28 pb-8 md:pb-32 px-6 flex items-center relative overflow-hidden bg-white min-h-[100dvh]">
+        <div className="max-w-7xl mx-auto relative z-10 grid lg:grid-cols-2 gap-12 items-center w-full">
           <div className={isAr ? 'text-center lg:text-right' : 'text-center lg:text-left'}>
             <div className="mb-6 inline-flex items-center justify-center">
               <span className="px-3 py-1 text-xs font-semibold text-slate-500 bg-slate-100 rounded-full border border-slate-200 uppercase tracking-widest">
@@ -482,11 +482,11 @@ export default function LandingPage() {
               </span>
             </div>
 
-            <h1 className={`text-4xl sm:text-5xl md:text-6xl lg:text-[64px] font-bold tracking-tight text-[#1d1d1f] leading-[1.1] mb-6 text-balance animate-in slide-in-from-bottom-8 duration-1000 ${isAr ? 'font-arabic' : ''}`}>
+            <h1 className={`text-3xl sm:text-4xl md:text-5xl lg:text-[44px] xl:text-[48px] font-bold tracking-tight text-[#1d1d1f] leading-[1.15] mb-6 text-balance animate-in slide-in-from-bottom-8 duration-1000 ${isAr ? 'font-arabic' : ''}`}>
               {t.heroTitle}
             </h1>
 
-            <p className="text-lg sm:text-xl md:text-2xl text-[#86868b] leading-relaxed mb-8 animate-in slide-in-from-bottom-8 duration-1000 delay-150 font-medium text-balance">
+            <p className="text-base sm:text-lg lg:text-[18px] text-[#86868b] leading-relaxed mb-8 animate-in slide-in-from-bottom-8 duration-1000 delay-150 font-medium text-balance">
               {t.heroDesc}
             </p>
 
