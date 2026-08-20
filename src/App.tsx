@@ -55,6 +55,7 @@ const BeyaFunnel       = lazy(() => import('./pages/BeyaFunnel'));
 const DownloadApp      = lazy(() => import('./pages/DownloadApp'));
 const AdsLanding       = lazy(() => import('./pages/AdsLanding'));
 const NewLanding       = lazy(() => import('./pages/NewLanding'));
+const Catalogue        = lazy(() => import('./pages/Catalogue'));
 const KioskScanner     = lazy(() => import('./pages/KioskScanner'));
 const FastScanner      = lazy(() => import('./pages/FastScanner'));
 const PlanningView     = lazy(() => import('./pages/PlanningView'));
@@ -586,6 +587,11 @@ function AppContent() {
         <Route path="/devis-express" element={<AdsLanding />} />
         <Route path="/new" element={<NewLanding />} />
         <Route path="/commencer" element={<NewLanding standalone />} />
+        <Route path="/catalogue" element={
+          <Suspense fallback={<PageLoader />}>
+            <Catalogue />
+          </Suspense>
+        } />
         <Route path="/store-landing" element={<StoreLanding />} />
         <Route path="/store-landing-v2" element={<StoreLandingV2 />} />
         <Route path="/store-landing-v3" element={<StoreLandingV3 />} />
