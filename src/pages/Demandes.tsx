@@ -1904,7 +1904,7 @@ export default function Demandes() {
                       </div>
                     </div>
                     {/* CLIENT ACTIONS */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 w-full mt-2 md:mt-0 md:w-auto">
                       <button onClick={() => setDetailsLead({ ...client, details: requests.map(r => r.details).filter(Boolean).join('\n\n---\n\n') } as Lead)}
                         className="h-9 px-3 bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white rounded-xl flex items-center gap-2 text-xs font-black transition-all border border-amber-200 shadow-sm"
                         title={isAr ? 'معلومات المشروع' : 'Informations du projet'}
@@ -2117,7 +2117,7 @@ export default function Demandes() {
                         </div>
 
                         {/* REQUEST ACTIONS */}
-                        <div className="flex items-center gap-1.5 flex-wrap w-full md:w-auto justify-end shrink-0">
+                        <div className="flex items-center gap-1.5 flex-wrap w-full md:w-auto justify-start md:justify-end shrink-0 mt-2 md:mt-0">
                           <button onClick={() => togglePriority(lead)} title={lead.crmPriority ? 'Retirer priorité' : 'Marquer important'}
                             className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all border ${lead.crmPriority ? 'bg-amber-50 border-amber-200 shadow-sm' : 'bg-white border-slate-200 opacity-50 hover:opacity-100'}`}>
                             ⭐
