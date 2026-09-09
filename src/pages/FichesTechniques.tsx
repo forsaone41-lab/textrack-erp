@@ -446,42 +446,50 @@ export default function FichesTechniques() {
       loadData<any>('users'),
       loadData<Commande>('commandes')
     ]).then(([f, t, u, c]) => {
-      setFiches(f);
-      setTissus(t);
-      setClients(u.filter((x: any) => x.role === 'client'));
-      setModelistes(u.filter((x: any) => x.role === 'modeliste'));
-      setCommandes(c);
+      try {
+        setFiches(f);
+        setTissus(t);
+        setClients(u.filter((x: any) => x.role === 'client'));
+        setModelistes(u.filter((x: any) => x.role === 'modeliste'));
+        setCommandes(c);
 
-      // Check for lead pre-filling from location state (via HashRouter)
-      const state = (window as any).history.state?.usr;
-      if (state && state.fromLead) {
-        setForm({
-          modele: `${state.fromLead.type} - ${state.fromLead.name.split(' ')[0]}`,
-          type: state.fromLead.type,
-          client: state.fromLead.name,
-          photo: state.fromLead.photo,
-          description: `Demande reçue via Landing Page (${state.fromLead.phone}).\n${state.fromLead.details ? `Détails du client : ${state.fromLead.details}` : ''}`,
-          tailles: state.fromLead.tailles 
-            ? Object.entries(state.fromLead.tailles as Record<string, number>).filter(([_, v]) => v > 0).map(([k]) => k) 
-            : [],
-          mesures: [],
-          tissuConsommation: 0
-        });
-        setShowModal(true);
-        // Clear history state to avoid re-opening on refresh
-        window.history.replaceState({}, document.title);
-      }
-
-      // Check for AI pre-filling from Tactical HUD (One-Click Dispatch)
-      const aiFT = localStorage.getItem('beya_ai_to_ft');
-      if (aiFT) {
-        try {
-          const parsedFT = JSON.parse(aiFT);
-          setForm(parsedFT);
+        // Check for lead pre-filling from location state (via HashRouter)
+        const state = (window as any).history.state?.usr;
+        if (state && state.fromLead) {
+          setForm({
+            modele: `${state.fromLead.type || ''} - ${(state.fromLead.name || '').split(' ')[0]}`,
+            type: state.fromLead.type,
+            client: state.fromLead.name,
+            photo: state.fromLead.photo,
+            description: `Demande reçue via Landing Page (${state.fromLead.phone}).\n${state.fromLead.details ? `Détails du client : ${state.fromLead.details}` : ''}`,
+            tailles: state.fromLead.tailles 
+              ? Object.entries(state.fromLead.tailles as Record<string, number>).filter(([_, v]) => v > 0).map(([k]) => k) 
+              : [],
+            mesures: [],
+            tissuConsommation: 0
+          });
           setShowModal(true);
-          localStorage.removeItem('beya_ai_to_ft');
-        } catch (e) { /* ignore */ }
+          // Clear history state to avoid re-opening on refresh
+          window.history.replaceState({}, document.title);
+        }
+
+        // Check for AI pre-filling from Tactical HUD (One-Click Dispatch)
+        const aiFT = localStorage.getItem('beya_ai_to_ft');
+        if (aiFT) {
+          try {
+            const parsedFT = JSON.parse(aiFT);
+            setForm(parsedFT);
+            setShowModal(true);
+            localStorage.removeItem('beya_ai_to_ft');
+          } catch (e) { /* ignore */ }
+        }
+      } catch (err) {
+        console.error('Error in FichesTechniques init:', err);
+      } finally {
+        setLoading(false);
       }
+    }).catch(err => {
+      console.error('Error fetching FichesTechniques data:', err);
       setLoading(false);
     });
   }, []);
