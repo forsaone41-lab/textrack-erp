@@ -567,10 +567,15 @@ export default function FichesTechniques() {
       photo: form.photo, 
       patronagePhoto: form.patronagePhoto,
       patronageFileName: form.patronageFileName,
-      fit: form.fit,
-      complexity: form.complexity,
       createdAt: form.createdAt || new Date().toISOString().split('T')[0],
     };
+
+    // Safely append fit and complexity to description if they exist, so data isn't lost
+    // but without causing Supabase column mismatch errors.
+    let finalDesc = fData.description;
+    if (form.fit && !finalDesc.includes(form.fit)) finalDesc += ` | Coupe: ${form.fit}`;
+    if (form.complexity && !finalDesc.includes(form.complexity)) finalDesc += ` | Complexité: ${form.complexity}`;
+    fData.description = finalDesc;
 
     const updated = isNew
       ? [...fiches, fData]
