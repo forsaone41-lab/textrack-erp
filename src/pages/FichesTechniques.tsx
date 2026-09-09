@@ -1132,6 +1132,42 @@ export default function FichesTechniques() {
             </div>
 
             <div className="p-6 space-y-6 overflow-y-auto">
+              {/* AI Auto-Fill Block */}
+              <div className="bg-gradient-to-r from-violet-50 to-fuchsia-50 border border-violet-100 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+                <div className={`flex items-center gap-3 w-full ${isAr ? 'flex-row-reverse' : ''}`}>
+                  <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0">
+                    <span className="text-xl">🤖</span>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className={`text-sm font-black text-violet-900 ${isAr ? 'text-right' : 'text-left'}`}>{isAr ? 'المساعد الذكي (AI)' : 'Assistant IA'}</h3>
+                    <p className={`text-xs font-medium text-violet-700 ${isAr ? 'text-right' : 'text-left'}`}>{isAr ? 'توليد لائحة المكونات (Nomenclature) أوتوماتيكياً' : 'Générer la Fiche de Lancement & Nomenclature'}</p>
+                  </div>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => {
+                     const isArb = lang === 'ar';
+                     setForm(prev => ({
+                        ...prev,
+                        modele: 'VESTE À CAPUCHE ZIPPÉE ASYMÉTRIQUE',
+                        type: 'Ensemble de survêtement streetwear',
+                        client: 'Suggestion Expert',
+                        description: 'المكونات: TISSU PRINCIPAL (1.8m), ENTOILAGE TERMO (0.25m), ÉTIQUETTE MARQUE (1 pce), SACHET PLASTIQUE (1 pce) | القصة: Loose/Large | الصعوبة: Difficile',
+                        tissuConsommation: 1.8,
+                        tissuRecommande: 'MAT-3201',
+                        fit: 'Loose/Large',
+                        complexity: 'Difficile',
+                        tailles: ['S', 'M', 'L', 'XL', 'XXL'],
+                        mesures: [
+                           { nom: 'Poitrine', valeurs: { 'S': 110, 'M': 114, 'L': 118, 'XL': 122, 'XXL': 126 } },
+                           { nom: 'Longueur', valeurs: { 'S': 70, 'M': 72, 'L': 74, 'XL': 76, 'XXL': 78 } },
+                        ]
+                     }));
+                  }}
+                  className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white rounded-xl text-xs font-bold shadow-md hover:scale-105 transition-all shrink-0">
+                  ✨ {isAr ? 'توليد أوتوماتيكي' : 'Générer (Auto)'}
+                </button>
+              </div>
 
               {/* ── Photos ── */}
               <div>
