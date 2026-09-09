@@ -592,7 +592,9 @@ export default function GZeedDashboard() {
                 <button 
                   onClick={() => {
                     setShowUserMenu(false);
-                    navigate('/login');
+                    localStorage.removeItem('textrack_auth');
+                    window.location.hash = '#/login';
+                    window.location.reload();
                   }}
                   className="w-full text-start px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors"
                 >
