@@ -623,7 +623,14 @@ export async function printDossierTechniqueMarwa(fiche: FicheTechnique) {
 
   // Parse descriptions for BOM / Matelassage
   const desc = fiche.description || '';
-  const components = desc.includes('المكونات:') ? desc.split(/المكونات:|Composants:/)[1].trim().split(/[,،]/) : [];
+  let componentsStr = '';
+  if (desc.includes('المكونات:') || desc.includes('Composants:')) {
+    componentsStr = desc.split(/المكونات:|Composants:/)[1].trim();
+    if (componentsStr.includes('|')) {
+      componentsStr = componentsStr.split('|')[0].trim();
+    }
+  }
+  const components = componentsStr ? componentsStr.split(/[,،]/).map(c => c.trim()).filter(Boolean) : [];
   
   // Date format
   const fmtDate = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' });
