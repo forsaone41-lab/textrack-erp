@@ -1474,6 +1474,51 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
               </button>
             </div>
           </div>
+
+          {/* AI SUMMARY WIDGETS (Desktop Only) */}
+          {analysisResult && (
+            <div className="hidden lg:grid grid-cols-2 gap-2.5 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              {/* Cost Widget */}
+              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-2xl p-3.5 border border-emerald-200/60 shadow-sm flex flex-col justify-center transition-all hover:scale-[1.02]">
+                <span className={`text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1.5 flex items-center gap-1.5 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                  <DollarSign className="w-3.5 h-3.5" /> {isAr ? 'التكلفة الإجمالية' : 'Prix Total'}
+                </span>
+                <span className={`text-sm font-black text-emerald-900 ${isAr ? 'text-right' : 'text-left'}`}>
+                  {analysisResult.costEstimate || '—'}
+                </span>
+              </div>
+              
+              {/* Fabric Type Widget */}
+              <div className="bg-gradient-to-br from-indigo-50 to-indigo-100/50 rounded-2xl p-3.5 border border-indigo-200/60 shadow-sm flex flex-col justify-center transition-all hover:scale-[1.02]">
+                <span className={`text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1.5 flex items-center gap-1.5 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                  <Package className="w-3.5 h-3.5" /> {isAr ? 'نوع الثوب' : 'Type Tissu'}
+                </span>
+                <span className={`text-sm font-black text-indigo-900 truncate ${isAr ? 'text-right' : 'text-left'}`} title={analysisResult.fabricSuggested || '—'}>
+                  {analysisResult.fabricSuggested || '—'}
+                </span>
+              </div>
+
+              {/* Consumption Widget */}
+              <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-2xl p-3.5 border border-amber-200/60 shadow-sm flex flex-col justify-center transition-all hover:scale-[1.02]">
+                <span className={`text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1.5 flex items-center gap-1.5 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                  <Scissors className="w-3.5 h-3.5" /> {isAr ? 'كمية الثوب' : 'Métrage'}
+                </span>
+                <span className={`text-sm font-black text-amber-900 ${isAr ? 'text-right' : 'text-left'}`}>
+                  {analysisResult.consumption || '—'}
+                </span>
+              </div>
+
+              {/* Components / Sel3a Widget */}
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-2xl p-3.5 border border-purple-200/60 shadow-sm flex flex-col justify-center transition-all hover:scale-[1.02]">
+                <span className={`text-[10px] font-black text-purple-600 uppercase tracking-widest mb-1.5 flex items-center gap-1.5 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                  <Sparkles className="w-3.5 h-3.5" /> {isAr ? 'السلعة / المكونات' : 'Composants'}
+                </span>
+                <span className={`text-[11px] font-black text-purple-900 leading-tight ${isAr ? 'text-right' : 'text-left'} line-clamp-2`} title={analysisResult.components?.join('، ') || '—'}>
+                  {analysisResult.components?.join('، ') || '—'}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* RIGHT COLUMN: HUD Content (lg:col-span-7) */}
