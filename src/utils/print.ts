@@ -627,8 +627,18 @@ export async function printDossierTechniqueMarwa(fiche: FicheTechnique) {
   
   // Date format
   const fmtDate = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' });
-  const ofNumber = Math.floor(10000 + Math.random() * 90000);
-  const refPatronage = "PTR-" + new Date().getFullYear() + "-" + Math.floor(100 + Math.random() * 900);
+  
+  // Deterministic references based on ID
+  let seed = 0;
+  for (let i = 0; i < fiche.id.length; i++) {
+    seed += fiche.id.charCodeAt(i);
+  }
+  const ofNumber = 10000 + (seed % 90000);
+  const refPatronage = "PTR-" + new Date(fiche.createdAt || Date.now()).getFullYear() + "-" + (100 + (seed % 900));
+  const stableMat = "MAT-" + (1000 + (seed % 9000));
+  
+  const parsedCost = parseFloat(String(fiche.costEstimate || '0').match(/[\d.]+/)?.[0] || '0');
+  const coutEstime = parsedCost > 0 ? parsedCost.toFixed(2) + ' MAD' : (fiche.complexity === 'Moyenne' || fiche.complexity?.includes('متوسط') ? '45.50 MAD' : '65.00 MAD');
   
   // Total sizes calculation (Echantillon logic = 1 piece per size)
   const defaultRepartition: Record<string, number> = {};
@@ -777,52 +787,34 @@ export async function printDossierTechniqueMarwa(fiche: FicheTechnique) {
           <tr>
             <td class="font-bold">PRINCIPAL</td>
             <td class="text-left">${fiche.tissuRecommande || 'TISSU PRINCIPAL'}</td>
-            <td>MAT-${Math.floor(Math.random()*9000)}</td>
+            <td>${stableMat}</td>
             <td>${consoUnitaire}</td>
             <td>m</td>
             <td>${fiche.fit || ''}</td>
           </tr>
-          <tr>
-            <td class="font-bold">VISLINE</td>
-            <td class="text-left">ENTOILAGE TERMO</td>
-            <td>VIS-001</td>
-            <td>0.25</td>
-            <td>m</td>
-            <td>COL/POIGNETS</td>
-          </tr>
-          ${components.map((c: any) => `
-          <tr>
-            <td>COMPOSANT</td>
-            <td class="text-left">${c}</td>
-            <td>—</td>
-            <td>—</td>
-            <td>—</td>
-            <td>MONTAGE</td>
-          </tr>
-          `).join('')}
-          <tr>
-            <td class="font-bold">ACCESSOIRE</td>
-            <td class="text-left">ÉTIQUETTE MARQUE</td>
-            <td>ETI-MQ</td>
-            <td>1</td>
-            <td>Pce</td>
-            <td>MILIEU DOS</td>
-          </tr>
-          <tr>
-            <td class="font-bold">EMBALLAGE</td>
-            <td class="text-left">SACHET PLASTIQUE</td>
-            <td>SAC-01</td>
-            <td>1</td>
-            <td>Pce</td>
-            <td>—</td>
-          </tr>
+          ${components.map((c: any, index: number) => {
+            const isFourniture = c.toLowerCase().match(/zip|سحاب|fermeture|bouton|أزرار|elastique|شريط|صدف/);
+            const type = isFourniture ? 'FOURNITURE' : 'COMPOSANT';
+            const unit = isFourniture ? 'Pce' : '—';
+            const ref = isFourniture ? \`FRN-\${100 + ((seed + index) % 900)}\` : '—';
+            return \`
+            <tr>
+              <td class="font-bold">\${type}</td>
+              <td class="text-left">\${c}</td>
+              <td>\${ref}</td>
+              <td>\${isFourniture ? '1' : '—'}</td>
+              <td>\${unit}</td>
+              <td>MONTAGE</td>
+            </tr>
+            \`;
+          }).join('')}
         </table>
         
         <div style="display:flex; justify-content:flex-end; margin-top:15px;">
            <table style="width: 250px;">
               <tr>
                  <td class="bg-dark font-bold" style="font-size:12px; padding:8px;">COUT ESTIMÉ</td>
-                 <td style="font-size:14px; font-weight:900; padding:8px;">${fiche.complexity === 'Moyenne' || fiche.complexity?.includes('متوسط') ? '45.50' : '65.00'} MAD</td>
+                 <td style="font-size:14px; font-weight:900; padding:8px;">${coutEstime}</td>
               </tr>
            </table>
         </div>

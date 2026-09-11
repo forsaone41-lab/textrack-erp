@@ -500,7 +500,8 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
         createdAt: new Date().toISOString().split('T')[0],
         photo: image || undefined,
         fit: mode === 'current' && analysisResult.pieces?.[activePieceIdx]?.fit ? analysisResult.pieces[activePieceIdx].fit : fitStr,
-        complexity: mode === 'current' && analysisResult.pieces?.[activePieceIdx]?.complexity ? analysisResult.pieces[activePieceIdx].complexity : compStr
+        complexity: mode === 'current' && analysisResult.pieces?.[activePieceIdx]?.complexity ? analysisResult.pieces[activePieceIdx].complexity : compStr,
+        costEstimate: mode === 'current' && analysisResult.pieces?.[activePieceIdx]?.costEstimate ? analysisResult.pieces[activePieceIdx].costEstimate : (analysisResult.costEstimate || '')
       };
 
       await saveRecord('fiches', newFT);

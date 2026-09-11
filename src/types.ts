@@ -60,6 +60,7 @@ export interface FicheTechnique {
   patronageFileName?: string;
   fit?: string;
   complexity?: string;
+  costEstimate?: string;
   clientId?: string;
   modelisteId?: string;
 }
