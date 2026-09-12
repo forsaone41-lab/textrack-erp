@@ -1206,7 +1206,31 @@ export async function loadData<T>(table: string): Promise<T[]> {
       if (localData && Array.isArray(localData)) return localData;
       return [];
     }
-    const result = Array.isArray(data) ? data : [];
+    let result = Array.isArray(data) ? data : [];
+    
+    // --- BEYA MAGIC META RESTORE ---
+    if (table === 'fiches') {
+      result = result.map((r: any) => {
+        if (typeof r.description === 'string') {
+          const desc = r.description;
+          const coutMatch = desc.match(/\|COUT:([^|]*)\|/);
+          const aiNotesMatch = desc.match(/\|AINOTES:([^|]*)\|/);
+          const fitMatch = desc.match(/\|FIT:([^|]*)\|/);
+          const compMatch = desc.match(/\|COMPLEXITY:([^|]*)\|/);
+          
+          if (coutMatch) r.costEstimate = coutMatch[1];
+          if (aiNotesMatch) r.aiNotes = aiNotesMatch[1];
+          if (fitMatch) r.fit = fitMatch[1];
+          if (compMatch) r.complexity = compMatch[1];
+          
+          r.description = desc.replace(/\|COUT:[^|]*\|/g, '')
+                              .replace(/\|AINOTES:[^|]*\|/g, '')
+                              .replace(/\|FIT:[^|]*\|/g, '')
+                              .replace(/\|COMPLEXITY:[^|]*\|/g, '').trim();
+        }
+        return r;
+      });
+    }
     
     // 4. Update both caches
     _cache[table] = { data: result, ts: Date.now() };
@@ -1267,6 +1291,21 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
       
       if (isMissingColumn) {
         const fallbackRecord = { ...payload };
+        
+        // --- BEYA MAGIC META ---
+        // If the table is 'fiches', embed non-schema fields into the description so they persist!
+        if (table === 'fiches' && typeof fallbackRecord.description === 'string') {
+          let extras = '';
+          if (fallbackRecord.costEstimate) extras += `\n|COUT:${fallbackRecord.costEstimate}|`;
+          if (fallbackRecord.aiNotes) extras += `\n|AINOTES:${fallbackRecord.aiNotes}|`;
+          if (fallbackRecord.fit) extras += `\n|FIT:${fallbackRecord.fit}|`;
+          if (fallbackRecord.complexity) extras += `\n|COMPLEXITY:${fallbackRecord.complexity}|`;
+          
+          if (extras) {
+             fallbackRecord.description += extras;
+          }
+        }
+        
         const newCols = [
           'tissuPrix', 'coutMainOeuvre', 'tissuSourcing', 
           'tissuConsommation', 'fournisseurTel', 'fournisseurEmail',
@@ -1280,7 +1319,7 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
           'photo', 'adresse', 'notes',
           'crmStage', 'crmContactMethod', 'crmRdvDate', 'crmNotes', 'crmPrice', 'crmPriceConfirmed', 'crmPriority',
           'preuveClient', 'annulationRaison', 'cv', 'sampleFeedback', 'prixEchantillon', 'phone2', 'contactedBy',
-          'tissuRecommande', 'aiNotes', 'fit', 'complexity', 'patronageFileName', 'patronagePhoto', 'modelisteId'
+          'tissuRecommande', 'aiNotes', 'fit', 'complexity', 'patronageFileName', 'patronagePhoto', 'modelisteId', 'costEstimate'
         ];
         newCols.forEach(col => delete fallbackRecord[col]);
         
