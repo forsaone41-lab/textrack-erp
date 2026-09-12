@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check, Languages, Maximize2, Minimize2, Download, FileText, Printer, Settings, KeyRound, Smartphone, Copy } from 'lucide-react';
+import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check, Languages, Maximize2, Minimize2, Download, FileText, Printer, Settings, KeyRound, Smartphone, Copy, Save, Search } from 'lucide-react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { useLang } from '../contexts/LangContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -1355,6 +1355,26 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
             }`}
           >
             <FileText className="w-5 md:w-5.5 h-5 md:h-5.5" />
+          </button>
+
+          <div className="w-px h-8 bg-slate-300 mx-1"></div>
+
+          <button
+            onClick={() => {
+              if (analysisResult) {
+                exportToFicheTechnique('complete');
+              } else {
+                setCustomAlert({
+                  title: isAr ? 'تنبيه' : 'Attention',
+                  message: isAr ? 'يرجى تحليل موديل أولاً من الصورة!' : 'Veuillez analyser un modèle d\'abord !',
+                  isError: true
+                });
+              }
+            }}
+            title={isAr ? 'حفظ الموديل في قاعدة البيانات' : 'Sauvegarder le modèle'}
+            className="p-2.5 md:p-3 rounded-2xl transition-all flex items-center justify-center bg-emerald-500 text-white shadow-md hover:bg-emerald-600 hover:scale-105 active:scale-95 border border-emerald-600"
+          >
+            <Save className="w-5 md:w-5.5 h-5 md:h-5.5" />
           </button>
         </div>
 
