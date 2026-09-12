@@ -256,7 +256,31 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     fabricAlternatives?: { name: string; pros: string; cons: string }[];
     tissuPhoto?: string;
   }>(null);
+  const [unsplashPhotos, setUnsplashPhotos] = useState<string[]>([]);
+  const [isSearchingFabric, setIsSearchingFabric] = useState(false);
   const fabricPhotoRef = useRef<HTMLInputElement>(null);
+
+  const handleSearchFabric = async (fabricName: string) => {
+    try {
+      setIsSearchingFabric(true);
+      const query = `${fabricName} fabric texture textile`;
+      const UNSPLASH_ACCESS_KEY = '-9T6_bObqAOMmPEAo_lhLYpyYXeyDrmhNNuCSxBpCM8';
+      const res = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=4&orientation=landscape`, {
+         headers: { Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}` }
+      });
+      const data = await res.json();
+      if (data.results && data.results.length > 0) {
+        setUnsplashPhotos(data.results.map((r: any) => r.urls.small));
+      } else {
+        setUnsplashPhotos(['https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=800']); // Fallback fabric
+      }
+    } catch (err) {
+      console.error(err);
+      setUnsplashPhotos(['https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=800']);
+    } finally {
+      setIsSearchingFabric(false);
+    }
+  };
   const [activePieceIdx, setActivePieceIdx] = useState(0);
   const [activeTab, setActiveTab] = useState<'fiche' | 'mesures' | 'chat' | 'photo'>('chat');
   const [showDispatchModal, setShowDispatchModal] = useState(false);
@@ -1556,11 +1580,26 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
                                       </button>
                                     </div>
                                   </div>
+                                ) : unsplashPhotos.length > 0 ? (
+                                  <div className="grid grid-cols-2 gap-2 mt-2">
+                                    {unsplashPhotos.map((url, idx) => (
+                                      <div key={idx} onClick={() => { setAnalysisResult({ ...analysisResult, tissuPhoto: url }); setUnsplashPhotos([]); }} className="aspect-[4/3] rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all shadow-sm">
+                                        <img src={url} className="w-full h-full object-cover" alt="Tissu" />
+                                      </div>
+                                    ))}
+                                    <button onClick={() => setUnsplashPhotos([])} className="col-span-2 py-1.5 text-[10px] font-black text-slate-500 hover:text-slate-800 bg-slate-100 rounded-lg transition-all">{isAr ? 'إلغاء' : 'Annuler'}</button>
+                                  </div>
                                 ) : (
-                                  <button onClick={() => fabricPhotoRef.current?.click()} className="w-full flex items-center justify-center gap-2 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-black transition-all border border-indigo-100 border-dashed">
-                                    <Camera className="w-3.5 h-3.5" />
-                                    {isAr ? 'إضافة صورة الثوب' : 'Ajouter Photo Tissu'}
-                                  </button>
+                                  <div className="flex gap-2 w-full">
+                                    <button onClick={() => fabricPhotoRef.current?.click()} className="flex-1 flex flex-col items-center justify-center gap-1.5 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-[10px] font-black transition-all border border-indigo-100 border-dashed">
+                                      <Camera className="w-4 h-4" />
+                                      {isAr ? 'رفع صورة' : 'Uploader'}
+                                    </button>
+                                    <button onClick={() => handleSearchFabric(pFabInfo.frName)} disabled={isSearchingFabric} className="flex-1 flex flex-col items-center justify-center gap-1.5 py-2.5 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-xl text-[10px] font-black transition-all border border-sky-100 disabled:opacity-50">
+                                      {isSearchingFabric ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                                      {isAr ? 'بحث بالذكاء' : 'Chercher Web'}
+                                    </button>
+                                  </div>
                                 )}
                                 <input 
                                   type="file" 
