@@ -321,13 +321,36 @@ export function printFicheTechnique(fiche: FicheTechnique) {
         <div class="info-grid">
           <div class="info-item"><div class="info-label">Modèle</div><div class="info-value">${fiche.modele}</div></div>
           <div class="info-item"><div class="info-label">Client</div><div class="info-value">${fiche.client}</div></div>
-          <div class="info-item"><div class="info-label">Type</div><div class="info-value">${fiche.type || '—'}</div></div>
-          <div class="info-item"><div class="info-label">Consommation</div><div class="info-value">${fiche.tissuConsommation} m / pièce</div></div>
-          <div class="info-item" style="grid-column: span 2;"><div class="info-label">Description</div><div class="info-value" style="font-weight: 400; font-size: 14px;">${fiche.description || 'Pas de description.'}</div></div>
+          <div class="info-item"><div class="info-label">Type de Vêtement</div><div class="info-value">${fiche.type || '—'}</div></div>
+          <div class="info-item"><div class="info-label">Consommation Tissu</div><div class="info-value">${fiche.tissuConsommation} m / pièce</div></div>
         </div>
         
-        <div style="margin-top: 20px;">
-          <h2>Tailles & Gradations</h2>
+        <h2 style="margin-top: 25px;">Recommandations & Fabrication</h2>
+        <div class="info-grid" style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px dashed #cbd5e1;">
+          <div class="info-item"><div class="info-label">Tissu Recommandé</div><div class="info-value" style="color: #4f46e5; font-size: 14px;">${fiche.tissuRecommande || 'À définir selon cahier des charges'}</div></div>
+          <div class="info-item"><div class="info-label">Fourchette de Prix Estimée</div>
+            <div class="info-value" style="color: #059669; font-size: 14px;">
+              ${(() => {
+                if (fiche.costEstimate) {
+                  const match = fiche.costEstimate.match(/[\d.]+/);
+                  if (match) {
+                    const val = parseFloat(match[0]);
+                    const min = Math.round(val * 0.85);
+                    const max = Math.round(val * 1.25);
+                    return `${min}.00 - ${max}.00 MAD / pce`;
+                  }
+                }
+                return 'Sur devis technique';
+              })()}
+            </div>
+          </div>
+          <div class="info-item"><div class="info-label">Délai de Production Estimé</div><div class="info-value" style="font-size: 14px;">15 - 20 jours ouvrables</div></div>
+          <div class="info-item"><div class="info-label">Quantité Minimum (MOQ)</div><div class="info-value" style="font-size: 14px;">100 pièces / couleur</div></div>
+          <div class="info-item" style="grid-column: span 2;"><div class="info-label">Détails et Spécifications</div><div class="info-value" style="font-weight: 400; font-size: 13px; color: #475569;">${fiche.description || 'Spécifications standards de l\'atelier.'}</div></div>
+        </div>
+        
+        <div style="margin-top: 25px;">
+          <h2>Tailles & Gradations Disponibles</h2>
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             ${fiche.tailles.map((t: string) => `<span style="background: #1e293b; color: white; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 700;">${t}</span>`).join('')}
           </div>
