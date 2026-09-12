@@ -1745,7 +1745,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
               <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-4 min-h-0">
                 {chat.map((c, i) => (
                   <div key={i} className={`flex w-full ${c.role === 'user' ? (isAr ? 'justify-start' : 'justify-end') : 'justify-start'}`}>
-                    <div dir={isAr ? 'rtl' : 'ltr'} className={`relative group p-4 text-xs font-medium leading-relaxed whitespace-pre-line shadow-sm rounded-2xl ${
+                    <div dir={isAr ? 'rtl' : 'ltr'} className={`relative group p-4 text-xs font-medium leading-relaxed whitespace-pre-line shadow-sm rounded-2xl select-text cursor-text ${
                       c.role === 'user'
                         ? 'max-w-[80%] bg-slate-800 text-white rounded-br-none'
                         : 'w-full max-w-full bg-white text-slate-800 border border-slate-200/90 rounded-bl-none'
