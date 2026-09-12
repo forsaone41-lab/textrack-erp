@@ -323,11 +323,42 @@ export function printFicheTechnique(fiche: FicheTechnique) {
           <div class="info-item"><div class="info-label">Client</div><div class="info-value">${fiche.client}</div></div>
           <div class="info-item"><div class="info-label">Type de Vêtement</div><div class="info-value">${fiche.type || '—'}</div></div>
           <div class="info-item"><div class="info-label">Consommation Tissu</div><div class="info-value">${fiche.tissuConsommation} m / pièce</div></div>
+          <div class="info-item" style="grid-column: span 2;"><div class="info-label">Détails et Spécifications</div><div class="info-value" style="font-weight: 400; font-size: 13px; color: #475569;">${fiche.description || 'Spécifications standards de l\'atelier.'}</div></div>
         </div>
         
-        <h2 style="margin-top: 25px;">Recommandations & Fabrication</h2>
+        <div style="margin-top: 25px;">
+          <h2>Tailles & Gradations Disponibles</h2>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            ${fiche.tailles.map((t: string) => `<span style="background: #1e293b; color: white; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 700;">${t}</span>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>Généré par Textrack ERP · ${company.name}</div>
+      <div>Date: ${new Date().toLocaleDateString('fr-MA')}</div>
+    </div>
+  </div>
+
+  <!-- PAGE 2 : SOURCING & MESURES -->
+  <div class="page" style="page-break-before: always;">
+    <div class="header">
+      <div>
+        <div class="brand-name">${company.name}</div>
+        <div class="brand-sub">${company.subtitle}</div>
+      </div>
+      <div class="doc-title">
+        <h1>APPROVISIONNEMENT & MESURES</h1>
+        <p>Référence Modèle: <strong>${fiche.modele}</strong></p>
+      </div>
+    </div>
+
+    <div class="main-grid" style="grid-template-columns: 1fr 200px;">
+      <div>
+        <h2 style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px; margin-bottom: 15px;">Informations d'Achat & Conseils</h2>
         <div class="info-grid" style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px dashed #cbd5e1;">
-          <div class="info-item"><div class="info-label">Tissu Recommandé</div><div class="info-value" style="color: #4f46e5; font-size: 14px;">${fiche.tissuRecommande || 'À définir selon cahier des charges'}</div></div>
+          <div class="info-item"><div class="info-label">Tissu Recommandé</div><div class="info-value" style="color: #4f46e5; font-size: 14px;">${fiche.tissuRecommande || 'À définir selon modèle'}</div></div>
           <div class="info-item"><div class="info-label">Fourchette de Prix Estimée</div>
             <div class="info-value" style="color: #059669; font-size: 14px;">
               ${(() => {
@@ -344,21 +375,19 @@ export function printFicheTechnique(fiche: FicheTechnique) {
               })()}
             </div>
           </div>
-          <div class="info-item"><div class="info-label">Délai de Production Estimé</div><div class="info-value" style="font-size: 14px;">15 - 20 jours ouvrables</div></div>
-          <div class="info-item"><div class="info-label">Quantité Minimum (MOQ)</div><div class="info-value" style="font-size: 14px;">100 pièces / couleur</div></div>
-          <div class="info-item" style="grid-column: span 2;"><div class="info-label">Détails et Spécifications</div><div class="info-value" style="font-weight: 400; font-size: 13px; color: #475569;">${fiche.description || 'Spécifications standards de l\'atelier.'}</div></div>
+          <div class="info-item"><div class="info-label">Lieux d'Achat Suggérés</div><div class="info-value" style="font-size: 13px;">Marché de Gros (Derb Omar / El Korea...)</div></div>
+          <div class="info-item"><div class="info-label">Conseils de Coupe / Couture</div><div class="info-value" style="font-size: 13px; color: #475569;">${fiche.aiNotes ? fiche.aiNotes.slice(0, 150) + '...' : 'Utiliser un fil résistant, repassage doux recommandé.'}</div></div>
         </div>
-        
-        <div style="margin-top: 25px;">
-          <h2>Tailles & Gradations Disponibles</h2>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            ${fiche.tailles.map((t: string) => `<span style="background: #1e293b; color: white; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 700;">${t}</span>`).join('')}
-          </div>
+      </div>
+      <div style="display: flex; flex-direction: column;">
+        <h2 style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px; margin-bottom: 15px;">Échantillon Tissu</h2>
+        <div style="flex-grow: 1; border: 2px dashed #cbd5e1; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: #f8fafc;">
+          <span style="color: #94a3b8; font-size: 12px; text-align: center; padding: 10px;">Coller l'échantillon<br/>du tissu ici</span>
         </div>
       </div>
     </div>
 
-    <h2>Tableau des Mesures (cm)</h2>
+    <h2 style="font-size: 14px; font-weight: 700; color: #1e293b; margin-top: 10px; margin-bottom: 10px;">Tableau des Mesures (cm)</h2>
     <table>
       <thead>
         <tr>
