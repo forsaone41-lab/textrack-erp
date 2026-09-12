@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check, Languages, Maximize2, Minimize2, Download, FileText, Printer, Settings, KeyRound, Smartphone } from 'lucide-react';
+import { Sparkles, Upload, MessageSquare, Ruler, Scissors, DollarSign, Camera, RefreshCw, Send, Image as ImageIcon, ChevronRight, Zap, Info, Trash2, Package, X, Eye, Check, Languages, Maximize2, Minimize2, Download, FileText, Printer, Settings, KeyRound, Smartphone, Copy } from 'lucide-react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { useLang } from '../contexts/LangContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -1748,12 +1748,22 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
               <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-4 min-h-0">
                 {chat.map((c, i) => (
                   <div key={i} className={`flex w-full ${c.role === 'user' ? (isAr ? 'justify-start' : 'justify-end') : 'justify-start'}`}>
-                    <div dir={isAr ? 'rtl' : 'ltr'} className={`p-4 text-xs font-medium leading-relaxed whitespace-pre-line shadow-sm rounded-2xl ${
+                    <div dir={isAr ? 'rtl' : 'ltr'} className={`relative group p-4 text-xs font-medium leading-relaxed whitespace-pre-line shadow-sm rounded-2xl ${
                       c.role === 'user'
                         ? 'max-w-[80%] bg-slate-800 text-white rounded-br-none'
                         : 'w-full max-w-full bg-white text-slate-800 border border-slate-200/90 rounded-bl-none'
                     } ${isAr ? 'text-right' : 'text-left'}`}>
                       {c.text}
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(c.text);
+                          setCustomAlert({ title: isAr ? 'تم النسخ' : 'Copié', message: isAr ? 'تم نسخ النص بنجاح!' : 'Texte copié avec succès !', isError: false });
+                        }}
+                        className={`absolute top-2 ${isAr ? 'left-2' : 'right-2'} p-1.5 bg-slate-100/80 backdrop-blur text-slate-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:text-indigo-600 hover:bg-indigo-50 shadow-sm border border-slate-200/50`}
+                        title={isAr ? 'نسخ النص' : 'Copier'}
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
                 ))}
