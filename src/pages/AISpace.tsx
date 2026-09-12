@@ -254,7 +254,9 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     rawAnalysis?: string;
     fabricSuggested?: string;
     fabricAlternatives?: { name: string; pros: string; cons: string }[];
+    tissuPhoto?: string;
   }>(null);
+  const fabricPhotoRef = useRef<HTMLInputElement>(null);
   const [activePieceIdx, setActivePieceIdx] = useState(0);
   const [activeTab, setActiveTab] = useState<'fiche' | 'mesures' | 'chat' | 'photo'>('chat');
   const [showDispatchModal, setShowDispatchModal] = useState(false);
@@ -502,7 +504,8 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
         fit: mode === 'current' && analysisResult.pieces?.[activePieceIdx]?.fit ? analysisResult.pieces[activePieceIdx].fit : fitStr,
         complexity: mode === 'current' && analysisResult.pieces?.[activePieceIdx]?.complexity ? analysisResult.pieces[activePieceIdx].complexity : compStr,
         costEstimate: mode === 'current' && analysisResult.pieces?.[activePieceIdx]?.costEstimate ? analysisResult.pieces[activePieceIdx].costEstimate : (analysisResult.costEstimate || ''),
-        aiNotes: chat.filter(c => c.role === 'ai').map(c => c.text).join('\n\n---\n\n')
+        aiNotes: chat.filter(c => c.role === 'ai').map(c => c.text).join('\n\n---\n\n'),
+        tissuPhoto: analysisResult.tissuPhoto || undefined
       };
 
       await saveRecord('fiches', newFT);
@@ -1538,10 +1541,46 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-1">
+                            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-1 relative overflow-hidden">
                               <span className="text-[10px] font-black text-slate-400 uppercase">{isAr ? 'الثوب المقترح للموديل:' : 'Tissu Suggéré :'}</span>
                               <p className="text-base font-black text-slate-900">{pFabInfo.arName}</p>
-                              <p className="text-xs font-bold text-indigo-600">{pFabInfo.frName}</p>
+                              <p className="text-xs font-bold text-indigo-600 mb-2">{pFabInfo.frName}</p>
+                              
+                              <div className="mt-3">
+                                {analysisResult.tissuPhoto ? (
+                                  <div className="relative group rounded-xl overflow-hidden border border-slate-200 aspect-[3/2] flex items-center justify-center bg-slate-50">
+                                    <img src={analysisResult.tissuPhoto} className="w-full h-full object-cover" alt="Tissu" />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                                      <button onClick={() => setAnalysisResult({ ...analysisResult, tissuPhoto: undefined })} className="p-2 bg-rose-600 text-white rounded-lg shadow-lg hover:bg-rose-700 transition-all">
+                                        <RefreshCw className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <button onClick={() => fabricPhotoRef.current?.click()} className="w-full flex items-center justify-center gap-2 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-black transition-all border border-indigo-100 border-dashed">
+                                    <Camera className="w-3.5 h-3.5" />
+                                    {isAr ? 'إضافة صورة الثوب' : 'Ajouter Photo Tissu'}
+                                  </button>
+                                )}
+                                <input 
+                                  type="file" 
+                                  ref={fabricPhotoRef} 
+                                  className="hidden" 
+                                  accept="image/*"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      const reader = new FileReader();
+                                      reader.onload = (ev) => {
+                                        if (ev.target?.result && analysisResult) {
+                                          setAnalysisResult({ ...analysisResult, tissuPhoto: ev.target.result as string });
+                                        }
+                                      };
+                                      reader.readAsDataURL(file);
+                                    }
+                                  }}
+                                />
+                              </div>
                             </div>
                             <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-1">
                               <span className="text-[10px] font-black text-slate-400 uppercase">{isAr ? 'ثمن الجملة التقديري:' : 'Prix Gros au Mètre :'}</span>

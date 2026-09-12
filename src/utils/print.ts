@@ -381,8 +381,11 @@ export function printFicheTechnique(fiche: FicheTechnique) {
       </div>
       <div style="display: flex; flex-direction: column;">
         <h2 style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px; margin-bottom: 15px;">Échantillon Tissu</h2>
-        <div style="flex-grow: 1; border: 2px dashed #cbd5e1; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: #f8fafc;">
-          <span style="color: #94a3b8; font-size: 12px; text-align: center; padding: 10px;">Coller l'échantillon<br/>du tissu ici</span>
+        <div style="flex-grow: 1; border: ${fiche.tissuPhoto ? 'none' : '2px dashed #cbd5e1'}; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: #f8fafc; overflow: hidden; max-height: 200px;">
+          ${fiche.tissuPhoto 
+            ? `<img src="${fiche.tissuPhoto}" style="width: 100%; height: 100%; object-fit: cover;" alt="Tissu" />` 
+            : `<span style="color: #94a3b8; font-size: 12px; text-align: center; padding: 10px;">Coller l'échantillon<br/>du tissu ici</span>`
+          }
         </div>
       </div>
     </div>

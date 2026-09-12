@@ -64,6 +64,7 @@ export interface FicheTechnique {
   clientId?: string;
   modelisteId?: string;
   aiNotes?: string;
+  tissuPhoto?: string;
 }
 
 export interface OrdreDeCoupe {
@@ -1217,16 +1218,19 @@ export async function loadData<T>(table: string): Promise<T[]> {
           const aiNotesMatch = desc.match(/\|AINOTES:([^|]*)\|/);
           const fitMatch = desc.match(/\|FIT:([^|]*)\|/);
           const compMatch = desc.match(/\|COMPLEXITY:([^|]*)\|/);
+          const tissuPhotoMatch = desc.match(/\|TISSUPHOTO:([^|]*)\|/);
           
           if (coutMatch) r.costEstimate = coutMatch[1];
           if (aiNotesMatch) r.aiNotes = aiNotesMatch[1];
           if (fitMatch) r.fit = fitMatch[1];
           if (compMatch) r.complexity = compMatch[1];
+          if (tissuPhotoMatch) r.tissuPhoto = tissuPhotoMatch[1];
           
           r.description = desc.replace(/\|COUT:[^|]*\|/g, '')
                               .replace(/\|AINOTES:[^|]*\|/g, '')
                               .replace(/\|FIT:[^|]*\|/g, '')
-                              .replace(/\|COMPLEXITY:[^|]*\|/g, '').trim();
+                              .replace(/\|COMPLEXITY:[^|]*\|/g, '')
+                              .replace(/\|TISSUPHOTO:[^|]*\|/g, '').trim();
         }
         return r;
       });
@@ -1300,6 +1304,7 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
           if (fallbackRecord.aiNotes) extras += `\n|AINOTES:${fallbackRecord.aiNotes}|`;
           if (fallbackRecord.fit) extras += `\n|FIT:${fallbackRecord.fit}|`;
           if (fallbackRecord.complexity) extras += `\n|COMPLEXITY:${fallbackRecord.complexity}|`;
+          if (fallbackRecord.tissuPhoto) extras += `\n|TISSUPHOTO:${fallbackRecord.tissuPhoto}|`;
           
           if (extras) {
              fallbackRecord.description += extras;
@@ -1319,7 +1324,7 @@ export async function saveRecord<T>(table: string, record: T, silent: boolean = 
           'photo', 'adresse', 'notes',
           'crmStage', 'crmContactMethod', 'crmRdvDate', 'crmNotes', 'crmPrice', 'crmPriceConfirmed', 'crmPriority',
           'preuveClient', 'annulationRaison', 'cv', 'sampleFeedback', 'prixEchantillon', 'phone2', 'contactedBy',
-          'tissuRecommande', 'aiNotes', 'fit', 'complexity', 'patronageFileName', 'patronagePhoto', 'modelisteId', 'costEstimate'
+          'tissuRecommande', 'aiNotes', 'fit', 'complexity', 'patronageFileName', 'patronagePhoto', 'modelisteId', 'costEstimate', 'tissuPhoto'
         ];
         newCols.forEach(col => delete fallbackRecord[col]);
         
