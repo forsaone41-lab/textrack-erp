@@ -501,7 +501,8 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
         photo: image || undefined,
         fit: mode === 'current' && analysisResult.pieces?.[activePieceIdx]?.fit ? analysisResult.pieces[activePieceIdx].fit : fitStr,
         complexity: mode === 'current' && analysisResult.pieces?.[activePieceIdx]?.complexity ? analysisResult.pieces[activePieceIdx].complexity : compStr,
-        costEstimate: mode === 'current' && analysisResult.pieces?.[activePieceIdx]?.costEstimate ? analysisResult.pieces[activePieceIdx].costEstimate : (analysisResult.costEstimate || '')
+        costEstimate: mode === 'current' && analysisResult.pieces?.[activePieceIdx]?.costEstimate ? analysisResult.pieces[activePieceIdx].costEstimate : (analysisResult.costEstimate || ''),
+        aiNotes: chat.filter(c => c.role === 'ai').map(c => c.text).join('\n\n---\n\n')
       };
 
       await saveRecord('fiches', newFT);

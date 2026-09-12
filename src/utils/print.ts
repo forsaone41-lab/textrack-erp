@@ -968,6 +968,28 @@ export async function printDossierTechniqueMarwa(fiche: FicheTechnique) {
     </div>
   </div>
 
+  ${fiche.aiNotes ? `
+  <!-- PAGE 4: ANALYSE IA -->
+  <div class="page page-break">
+    <div class="header-grid">
+      <div class="logo-cell">${company.name}</div>
+      <div class="ref-cell" style="justify-content:center; text-align:center;">
+        <span style="font-size:16px; font-weight:900;">ANALYSE DÉTAILLÉE DE L'IA</span>
+      </div>
+      <div class="of-cell">
+        <div class="of-row">
+          <div class="of-label">MODÈLE:</div>
+          <div class="of-val">${fiche.modele}</div>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:10px; white-space:pre-wrap; line-height:1.6; padding:15px; border:1px solid #000; background:#fff; direction: rtl; text-align: right;">${fiche.aiNotes.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+    <div style="position:absolute; bottom:15px; left:15px; font-size:8px; color:#999;">
+       Généré par BEYA CREATIVE ERP • Dossier Technique Complet
+    </div>
+  </div>
+  ` : ''}
+
   <button class="print-btn no-print" onclick="window.print()">🖨️ IMPRIMER / SAUVEGARDER PDF</button>
 </body>
 </html>`;

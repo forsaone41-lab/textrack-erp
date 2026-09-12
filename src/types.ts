@@ -63,6 +63,7 @@ export interface FicheTechnique {
   costEstimate?: string;
   clientId?: string;
   modelisteId?: string;
+  aiNotes?: string;
 }
 
 export interface OrdreDeCoupe {
