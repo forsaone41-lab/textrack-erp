@@ -803,17 +803,17 @@ export async function printDossierTechniqueMarwa(fiche: FicheTechnique) {
             const isFourniture = c.toLowerCase().match(/zip|سحاب|fermeture|bouton|أزرار|elastique|شريط|صدف/);
             const type = isFourniture ? 'FOURNITURE' : 'COMPOSANT';
             const unit = isFourniture ? 'Pce' : '—';
-            const ref = isFourniture ? \`FRN-\${100 + ((seed + index) % 900)}\` : '—';
-            return \`
+            const ref = isFourniture ? `FRN-${100 + ((seed + index) % 900)}` : '—';
+            return `
             <tr>
-              <td class="font-bold">\${type}</td>
-              <td class="text-left">\${c}</td>
-              <td>\${ref}</td>
-              <td>\${isFourniture ? '1' : '—'}</td>
-              <td>\${unit}</td>
+              <td class="font-bold">${type}</td>
+              <td class="text-left">${c}</td>
+              <td>${ref}</td>
+              <td>${isFourniture ? '1' : '—'}</td>
+              <td>${unit}</td>
               <td>MONTAGE</td>
             </tr>
-            \`;
+            `;
           }).join('')}
         </table>
         
