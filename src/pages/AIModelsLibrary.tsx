@@ -17,11 +17,8 @@ export default function AIModelsLibrary() {
     try {
       setLoading(true);
       // We read from the standard fiches table but filter by client="Suggestion Expert"
-      // to avoid breaking the data structure, but conceptually keeping them isolated in UI.
-      // Wait, earlier I said I'll save them to 'ai_models' to completely separate them!
-      // Let's use 'ai_models' collection to be 100% separate from Fiches Techniques.
-      const data = await loadData<FicheTechnique>('ai_models');
-      setModels(data || []);
+      const data = await loadData<FicheTechnique>('fiches');
+      setModels((data || []).filter(f => f.client === 'Suggestion Expert'));
     } catch (err) {
       console.error(err);
     } finally {
@@ -31,7 +28,7 @@ export default function AIModelsLibrary() {
 
   const removeModel = async (id: string) => {
     if (window.confirm(isAr ? 'هل أنت متأكد من حذف هذا الموديل؟' : 'Voulez-vous vraiment supprimer ce modèle ?')) {
-      await deleteRecord('ai_models', id);
+      await deleteRecord('fiches', id);
       setModels(models.filter(m => m.id !== id));
     }
   };
