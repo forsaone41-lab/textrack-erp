@@ -65,6 +65,7 @@ const Recrutement     = lazy(() => import('./pages/Recrutement'));
 const ListeAttente    = lazy(() => import('./pages/ListeAttente'));
 const Notifications   = lazy(() => import('./pages/Notifications'));
 const AISpace         = lazy(() => import('./pages/AISpace'));
+const AIModelsLibrary = lazy(() => import('./pages/AIModelsLibrary'));
 const Achats          = lazy(() => import('./pages/Achats'));
 const Fournisseurs    = lazy(() => import('./pages/Fournisseurs'));
 const Reclamations    = lazy(() => import('./pages/Reclamations'));
@@ -847,8 +848,10 @@ function AppContent() {
         {/* Shared / Public ERP Routes */}
         <Route path="stocks" element={can('stocks') ? <StockMateriaux /> : <Navigate to="/" replace />} />
         <Route path="achats" element={can('achats') ? <Achats /> : <Navigate to="/" replace />} />
-        <Route path="commandes" element={can('commandes') ? <Commandes /> : <Navigate to="/" replace />} />
-        <Route path="agenda" element={can('agenda') ? <Agenda /> : <Navigate to="/" replace />} />
+        <Route path="commandes" element={can('sales_dashboard') ? <Commandes /> : <Navigate to="/" replace />} />
+        
+        <Route path="ai-models" element={<AIModelsLibrary />} />
+        <Route path="manage-order/:id" element={can('sales_dashboard') ? <ManageOrder /> : <Navigate to="/" replace />} />
         <Route path="commandes/manage" element={can('commandes') ? <ManageOrder /> : <Navigate to="/" replace />} />
         <Route path="liste-attente" element={can('rh') ? <ListeAttente /> : <Navigate to="/" replace />} />
         <Route path="notifications" element={can('notifications') ? <Notifications /> : <Navigate to="/" replace />} />

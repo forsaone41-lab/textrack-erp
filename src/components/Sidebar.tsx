@@ -22,7 +22,8 @@ import {
   Crown,
   Calculator,
   Bot,
-  Handshake
+  Handshake,
+  FolderHeart
 } from 'lucide-react';
 
 import { User, CompanyProfile, loadPermissions, AppPage, syncCompanyProfile } from '../types';
@@ -306,7 +307,10 @@ export default function Sidebar({ currentUser, onLogout, mobileOpen, setMobileOp
               <NavItem to="/evaluation-patronage" icon={Scissors} label={isAr ? 'تسعير الباترون' : 'Prix Patronage'} />
             )}
             {can('ai_space') && (
-              <NavItem to="/ai-space" icon={Sparkles} label={isAr ? 'المساعد الذكي' : 'Assistant IA'} pro />
+              <>
+                <NavItem to="/ai-space" icon={Sparkles} label={isAr ? 'المساعد الذكي' : 'Assistant IA'} pro />
+                <NavItem to="/ai-models" icon={FolderHeart || Package} label={isAr ? 'مكتبة الموديلات' : 'Bibliothèque IA'} />
+              </>
             )}
             {currentUser?.role === 'admin' && (
               <NavItem to="/beya-studio-tryon" icon={Sparkles} label={isAr ? '?????? ??????? ??????????' : 'Studio Essayage Virtuel'} pro />

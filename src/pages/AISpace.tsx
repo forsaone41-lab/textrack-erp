@@ -532,9 +532,10 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
         tissuPhoto: analysisResult.tissuPhoto || undefined
       };
 
-      await saveRecord('fiches', newFT);
+      // Instead of fiches, save to ai_models to keep them in their own dedicated library
+      await saveRecord('ai_models', newFT);
       localStorage.setItem('beya_ai_to_ft', JSON.stringify(newFT));
-      window.open('/#/fiches-techniques', '_blank');
+      window.open('/#/ai-models', '_blank');
     } catch (err) {
       console.error("Export Error:", err);
       setCustomAlert({
