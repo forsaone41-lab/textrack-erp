@@ -63,7 +63,21 @@ export default function AIModelsLibrary() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {models.map(m => (
+          {models.map(m => {
+            // Extractor for old models that didn't save tissuRecommande / costEstimate correctly
+            let displayTissu = m.tissuRecommande && m.tissuRecommande !== '—' && m.tissuRecommande !== '-' ? m.tissuRecommande : null;
+            let displayCost = m.costEstimate && m.costEstimate !== '—' && m.costEstimate !== '-' ? m.costEstimate : null;
+
+            if (!displayTissu && m.aiNotes) {
+              const tissuMatch = m.aiNotes.match(/(?:Type de tissu|نوع الثوب)[^\n:]*:\s*([^\n]+)/i);
+              if (tissuMatch) displayTissu = tissuMatch[1].trim();
+            }
+            if (!displayCost && m.aiNotes) {
+              const costMatch = m.aiNotes.match(/(?:Coût total|التكلفة)[^\n:]*:\s*([^\n]+)/i);
+              if (costMatch) displayCost = costMatch[1].trim();
+            }
+
+            return (
             <div key={m.id} className="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden group hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300">
               <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
                 {m.photo ? (
@@ -102,11 +116,11 @@ export default function AIModelsLibrary() {
                 <div className="grid grid-cols-2 gap-2 mt-4">
                   <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                     <span className="text-[9px] font-black text-slate-400 uppercase block mb-0.5">{isAr ? 'الثوب المقترح' : 'Tissu'}</span>
-                    <span className="text-xs font-black text-slate-800 line-clamp-1">{m.tissuRecommande || '-'}</span>
+                    <span className="text-xs font-black text-slate-800 line-clamp-1" title={displayTissu || '-'}>{displayTissu || '-'}</span>
                   </div>
                   <div className="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100">
                     <span className="text-[9px] font-black text-emerald-600 uppercase block mb-0.5">{isAr ? 'التكلفة' : 'Coût'}</span>
-                    <span className="text-xs font-black text-emerald-700">{m.costEstimate || '-'}</span>
+                    <span className="text-xs font-black text-emerald-700" title={displayCost || '-'}>{displayCost || '-'}</span>
                   </div>
                 </div>
 
