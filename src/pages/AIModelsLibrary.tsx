@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { loadData, saveRecord, deleteRecord, FicheTechnique } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { printFicheTechnique } from '../utils/print';
+import { getFabricInfo } from './AISpace';
 
 export default function AIModelsLibrary() {
   const { isAr } = useLang();
@@ -77,6 +78,8 @@ export default function AIModelsLibrary() {
               if (costMatch) displayCost = costMatch[1].trim();
             }
 
+            const fabricInfo = getFabricInfo(displayTissu || '');
+
             return (
             <div key={m.id} className="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden group hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300">
               <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
@@ -113,14 +116,24 @@ export default function AIModelsLibrary() {
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-2 mt-4">
-                  <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                    <span className="text-[9px] font-black text-slate-400 uppercase block mb-0.5">{isAr ? 'الثوب المقترح' : 'Tissu'}</span>
-                    <span className="text-xs font-black text-slate-800 line-clamp-1" title={displayTissu || '-'}>{displayTissu || '-'}</span>
+                <div className="grid grid-cols-1 gap-2 mt-4">
+                  <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 flex flex-col gap-1">
+                    <div className="flex justify-between items-center w-full">
+                      <span className="text-[9px] font-black text-slate-400 uppercase">{isAr ? 'الثوب المقترح' : 'Tissu'}</span>
+                      <span className="text-[9px] font-bold text-slate-400">{isAr ? 'ثمن الجملة:' : 'Prix gros:'}</span>
+                    </div>
+                    <div className="flex justify-between items-center w-full gap-2">
+                      <span className="text-xs font-black text-slate-800 line-clamp-1 flex-1" title={displayTissu || '-'}>{displayTissu || '-'}</span>
+                      <span className="text-xs font-black text-indigo-600 text-right shrink-0">{isAr ? fabricInfo.pricePerMeterMAD : fabricInfo.pricePerMeterMADFr}</span>
+                    </div>
                   </div>
-                  <div className="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100">
-                    <span className="text-[9px] font-black text-emerald-600 uppercase block mb-0.5">{isAr ? 'التكلفة' : 'Coût'}</span>
-                    <span className="text-xs font-black text-emerald-700" title={displayCost || '-'}>{displayCost || '-'}</span>
+                  
+                  <div className="bg-emerald-50 p-3 rounded-2xl border border-emerald-100 flex flex-col gap-0.5">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-black text-emerald-600 uppercase block">{isAr ? 'التكلفة التقديرية للإنتاج' : 'Coût total estimé'}</span>
+                      <span className="text-sm font-black text-emerald-700" title={displayCost || '-'}>{displayCost || '-'}</span>
+                    </div>
+                    <span className="text-[9px] font-bold text-emerald-600/70">{isAr ? 'تشمل الثوب واليد العاملة بالورشة' : 'Tissu + Façon inclus'}</span>
                   </div>
                 </div>
 

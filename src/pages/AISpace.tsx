@@ -39,7 +39,7 @@ const STANDARD_MESURES: Record<string, { nom: string; valeurs: Record<string, nu
   ]
 };
 
-const FABRIC_CATALOG: Record<string, {
+export const FABRIC_CATALOG: Record<string, {
   arName: string;
   frName: string;
   pricePerMeterMAD: string;
@@ -125,7 +125,7 @@ const FABRIC_CATALOG: Record<string, {
   }
 };
 
-function getFabricInfo(fabricName: string = '') {
+export function getFabricInfo(fabricName: string = '') {
   const lower = fabricName.toLowerCase();
   for (const key of Object.keys(FABRIC_CATALOG)) {
     if (lower.includes(key) || (key === 'crêpe' && (lower.includes('crepe') || lower.includes('كريب'))) || (key === 'satin' && (lower.includes('satin') || lower.includes('ساتان'))) || (key === 'dentelle' && (lower.includes('dentelle') || lower.includes('lace') || lower.includes('دانتيلا')))) {
