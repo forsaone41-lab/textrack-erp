@@ -148,7 +148,8 @@ export default function AIModelsLibrary() {
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
