@@ -303,6 +303,39 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
   const navigate = useNavigate();
   const location = useLocation();
 
+  useEffect(() => {
+    if (location.state?.resumeModel) {
+      const rm = location.state.resumeModel;
+      setImage(rm.photo || null);
+      
+      const restoredChat: {role: 'ai' | 'user', text: string}[] = [{ role: 'ai', text: isAr ? 'تمت استعادة الموديل! كيف يمكنني مساعدتك في هذا الموديل اليوم؟ (مثال: هل يمكن خياطته بثوب آخر؟ أو كم سأحتاج من الثوب لمقاس XXXL؟)' : 'Modèle restauré ! Comment puis-je vous aider ? (ex: Est-il possible de le coudre avec un autre tissu ?)' }];
+      if (rm.aiNotes) {
+        const notesArr = rm.aiNotes.split('\n\n---\n\n');
+        notesArr.forEach((txt: string) => {
+           if(txt.trim()) restoredChat.push({ role: 'ai', text: txt });
+        });
+      }
+      setChat(restoredChat);
+      
+      setAnalysisResult({
+        category: rm.type || 'creations',
+        complexity: rm.complexity || 'Moyenne',
+        consumption: rm.tissuConsommation || '1.5m',
+        components: rm.description?.replace(/Composants: |المكونات: /g, '').split(', ') || [],
+        costEstimate: rm.costEstimate || '-',
+        fabricSuggested: rm.tissuRecommande || '',
+        tissuPhoto: rm.tissuPhoto || undefined
+      });
+      
+      if (rm.mesures && rm.mesures.length > 0) {
+        setCustomMesures(rm.mesures);
+      }
+      
+      // Clear location state so it doesn't trigger again on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, isAr]);
+
   // Gemini API integration
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState('');

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, FileText, Download, Trash2, Sparkles, FolderHeart } from 'lucide-react';
+import { Camera, FileText, Download, Trash2, Sparkles, FolderHeart, MessageSquare } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { loadData, saveRecord, deleteRecord, FicheTechnique } from '../types';
 import { useLang } from '../contexts/LangContext';
 import { printFicheTechnique } from '../utils/print';
 
 export default function AIModelsLibrary() {
   const { isAr } = useLang();
+  const navigate = useNavigate();
   const [models, setModels] = useState<FicheTechnique[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -106,6 +108,16 @@ export default function AIModelsLibrary() {
                     <span className="text-[9px] font-black text-emerald-600 uppercase block mb-0.5">{isAr ? 'التكلفة' : 'Coût'}</span>
                     <span className="text-xs font-black text-emerald-700">{m.costEstimate || '-'}</span>
                   </div>
+                </div>
+
+                <div className="pt-3 border-t border-slate-100 mt-3">
+                  <button 
+                    onClick={() => navigate('/ai-space', { state: { resumeModel: m } })}
+                    className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl text-xs font-black hover:shadow-lg hover:shadow-indigo-500/30 transition-all active:scale-95 group"
+                  >
+                    <MessageSquare className="w-4 h-4 group-hover:animate-bounce" />
+                    {isAr ? 'استشارة الذكاء الاصطناعي حول الموديل' : 'Consulter l\'IA sur ce modèle'}
+                  </button>
                 </div>
               </div>
             </div>
