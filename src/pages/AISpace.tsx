@@ -1604,8 +1604,22 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
                                 ) : unsplashPhotos.length > 0 ? (
                                   <div className="grid grid-cols-2 gap-2 mt-2">
                                     {unsplashPhotos.map((url, idx) => (
-                                      <div key={idx} onClick={() => { setAnalysisResult({ ...analysisResult, tissuPhoto: url }); setUnsplashPhotos([]); }} className="aspect-[4/3] rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all shadow-sm">
-                                        <img src={url} className="w-full h-full object-cover" alt="Tissu" />
+                                      <div key={idx} className="relative aspect-[4/3] rounded-lg overflow-hidden shadow-sm group">
+                                        <img src={url} onClick={() => window.open(url, '_blank')} className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform" alt="Tissu" />
+                                        <div className="absolute bottom-1.5 right-1.5 flex gap-1.5">
+                                          <button 
+                                            onClick={(e) => { e.stopPropagation(); window.open(url, '_blank'); }} 
+                                            className="p-1.5 bg-white/80 backdrop-blur text-slate-800 hover:text-indigo-600 rounded-md shadow-sm transition-colors"
+                                          >
+                                            <Eye className="w-3.5 h-3.5" />
+                                          </button>
+                                          <button 
+                                            onClick={(e) => { e.stopPropagation(); setAnalysisResult({ ...analysisResult, tissuPhoto: url }); setUnsplashPhotos([]); }} 
+                                            className="p-1.5 bg-indigo-600/90 backdrop-blur text-white hover:bg-indigo-700 rounded-md shadow-sm transition-colors"
+                                          >
+                                            <Check className="w-3.5 h-3.5" />
+                                          </button>
+                                        </div>
                                       </div>
                                     ))}
                                     <button onClick={() => setUnsplashPhotos([])} className="col-span-2 py-1.5 text-[10px] font-black text-slate-500 hover:text-slate-800 bg-slate-100 rounded-lg transition-all">{isAr ? 'إلغاء' : 'Annuler'}</button>
