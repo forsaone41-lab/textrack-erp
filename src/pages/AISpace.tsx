@@ -567,7 +567,11 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
 
       // Save to fiches, but we'll use client="Suggestion Expert" to identify them
       await saveRecord('fiches', newFT);
-      localStorage.setItem('beya_ai_to_ft', JSON.stringify(newFT));
+      try {
+        localStorage.setItem('beya_ai_to_ft', JSON.stringify(newFT));
+      } catch (e) {
+        console.warn('LocalStorage limit exceeded, skipping local cache for export.');
+      }
       window.open('/#/ai-models', '_blank');
     } catch (err) {
       console.error("Export Error:", err);
