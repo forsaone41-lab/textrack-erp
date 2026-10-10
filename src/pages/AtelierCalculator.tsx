@@ -270,6 +270,7 @@ function isSupportRole(e: Employe): boolean {
   const [activeInputRaw, setActiveInputRaw] = useState<string>('');
   const [customModelPhoto, setCustomModelPhoto] = useState<string | null>(null);
   const [isPhotoPreviewOpen, setIsPhotoPreviewOpen] = useState(false);
+  const [showEssentialBox, setShowEssentialBox] = useState(true);
   const [calcPage, setCalcPage] = useState<1 | 2 | 3>(1);
   const modelPhotoInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -555,6 +556,11 @@ function isSupportRole(e: Employe): boolean {
   const netMarginPct = pricePerPiece > 0 && costPerPiece > 0
     ? (((pricePerPiece - costPerPiece) / pricePerPiece) * 100)
     : 0;
+  const realisticDaysFromGamme = Math.max(
+    0.25,
+    Number((((quantity || 0) * activeGammeMinutes) / Math.max(1, workers * 480)).toFixed(2))
+  );
+  const isDurationMismatch = (days > realisticDaysFromGamme * 1.35) || (difference < 0 && Math.abs(days - realisticDaysFromGamme) > 0.5);
 
   return (
     <div 
@@ -640,6 +646,15 @@ function isSupportRole(e: Employe): boolean {
 
         {/* Smart Actions Toolbar (Single Row) */}
         <div className="flex items-center gap-1.5 flex-nowrap overflow-x-auto py-0.5">
+          <button
+            type="button"
+            onClick={() => setShowEssentialBox(true)}
+            className="px-2.5 py-1.5 bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700 text-white rounded-xl text-[11px] font-black flex items-center gap-1.5 transition-all shadow-sm active:scale-95 shrink-0 whitespace-nowrap"
+          >
+            <span>🎯</span>
+            <span>{isAr ? 'الأسئلة الـ 4 الأساسية' : '4 Questions Clés'}</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setIsFichePickerOpen(true)}
@@ -1068,6 +1083,157 @@ function isSupportRole(e: Employe): boolean {
                   );
                 })}
               </div>
+            </div>
+
+            {/* HIGHLIGHTED 4-PILLAR MASTER BAR ("HAD LASILA MOHIMA KHS IBQAW F BOX HOMA LWALA BCHI LOWN MANGHLTCH FIHOM") */}
+            <div className="mx-4 mt-3.5 p-3 rounded-2xl bg-gradient-to-r from-amber-50 via-rose-50/70 to-indigo-50 border-2 border-amber-400 shadow-sm space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="px-2 py-0.5 bg-rose-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider shadow-2xs">
+                    {isAr ? '🎯 الخانات الـ 4 الأساسية' : '🎯 4 Champs Critiques'}
+                  </span>
+                  <span className="text-[11px] font-black text-slate-900">
+                    {isAr ? 'تأكد من هاد 4 أرقام أولاً باش ما تغلطش فالحساب!' : 'Vérifiez toujours ces 4 valeurs clés en premier !'}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setExtraHours(0);
+                      setDays(realisticDaysFromGamme);
+                    }}
+                    title={isAr ? 'ضبط أيام العمل أوتوماتيكياً على حساب الكمية وعدد العمال والغام' : 'Ajuster automatiquement les jours selon la quantité et la gamme'}
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-black flex items-center gap-1 transition-all shadow-2xs ${
+                      isDurationMismatch
+                        ? 'bg-rose-600 hover:bg-rose-700 text-white ring-2 ring-rose-300'
+                        : 'bg-white hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-200'
+                    }`}
+                  >
+                    <span>⚡</span>
+                    <span>{isAr ? `الوقت الواقعي للطلبية: ${realisticDaysFromGamme} يوم (اضغط للتطبيق)` : `Durée réaliste : ${realisticDaysFromGamme} j (Appliquer)`}</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {/* 1. Quantity */}
+                <div className="bg-white p-2 rounded-xl border-2 border-indigo-400 shadow-2xs">
+                  <label className="block text-[10px] font-black text-indigo-900 mb-1 text-center">
+                    {isAr ? '1️⃣ الكمية المعتمدة (بياسة)' : '1️⃣ Quantité (pcs)'}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={getSyncValue('top_qty', quantity, 2)}
+                    onFocus={() => {
+                      setActiveInputKey('top_qty');
+                      setActiveInputRaw(quantity === 0 ? '' : String(Number(quantity.toFixed(2))));
+                    }}
+                    onBlur={() => setActiveInputKey(null)}
+                    onChange={(e) => {
+                      setActiveInputRaw(e.target.value);
+                      setQuantity(e.target.value === '' ? 0 : Number(e.target.value));
+                    }}
+                    className="w-full px-2 py-1 bg-indigo-50/70 focus:bg-white border border-indigo-300 focus:border-indigo-600 rounded-lg font-black text-indigo-700 text-sm text-center outline-none"
+                  />
+                </div>
+
+                {/* 2. Sale Price per Piece */}
+                <div className="bg-white p-2 rounded-xl border-2 border-emerald-400 shadow-2xs">
+                  <label className="block text-[10px] font-black text-emerald-900 mb-1 text-center">
+                    {isAr ? '2️⃣ ثمن البيع للبياسة (DH)' : '2️⃣ Prix vente / pc (DH)'}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={getSyncValue('top_price', pricePerPiece, 2)}
+                    onFocus={() => {
+                      setActiveInputKey('top_price');
+                      setActiveInputRaw(pricePerPiece === 0 ? '' : String(pricePerPiece));
+                    }}
+                    onBlur={() => setActiveInputKey(null)}
+                    onChange={(e) => {
+                      setActiveInputRaw(e.target.value);
+                      setPricePerPiece(e.target.value === '' ? 0 : Number(e.target.value));
+                    }}
+                    className="w-full px-2 py-1 bg-emerald-50/70 focus:bg-white border border-emerald-300 focus:border-emerald-600 rounded-lg font-black text-emerald-700 text-sm text-center outline-none"
+                  />
+                </div>
+
+                {/* 3. Workers Count */}
+                <div className="bg-white p-2 rounded-xl border-2 border-violet-400 shadow-2xs">
+                  <label className="block text-[10px] font-black text-violet-900 mb-1 text-center">
+                    {isAr ? '3️⃣ عدد العمال (👥)' : '3️⃣ Ouvriers (👥)'}
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={workers}
+                    onChange={(e) => setWorkers(Math.max(1, Number(e.target.value) || 1))}
+                    className="w-full px-2 py-1 bg-violet-50/70 focus:bg-white border border-violet-300 focus:border-violet-600 rounded-lg font-black text-violet-700 text-sm text-center outline-none"
+                  />
+                </div>
+
+                {/* 4. Work Duration in Days (8h) */}
+                <div className={`bg-white p-2 rounded-xl border-2 shadow-2xs ${
+                  isDurationMismatch ? 'border-rose-500 ring-2 ring-rose-300/60' : 'border-amber-400'
+                }`}>
+                  <label className="block text-[10px] font-black text-amber-900 mb-1 text-center">
+                    {isAr ? '4️⃣ أيام العمل (8س)' : '4️⃣ Jours travail (8h)'}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={getSyncValue('top_days', days + (extraHours / 8), 3)}
+                    onFocus={() => {
+                      setActiveInputKey('top_days');
+                      const d = days + (extraHours / 8);
+                      setActiveInputRaw(d === 0 ? '' : fmtNum(d, 3));
+                    }}
+                    onBlur={() => setActiveInputKey(null)}
+                    onChange={(e) => {
+                      setActiveInputRaw(e.target.value);
+                      const dayVal = e.target.value === '' ? 0 : Number(e.target.value);
+                      setExtraHours(0);
+                      setDays(dayVal);
+                    }}
+                    className={`w-full px-2 py-1 focus:bg-white border rounded-lg font-black text-sm text-center outline-none ${
+                      isDurationMismatch
+                        ? 'bg-rose-50 border-rose-400 text-rose-700 focus:border-rose-600'
+                        : 'bg-amber-50/70 border-amber-300 text-amber-800 focus:border-amber-600'
+                    }`}
+                  />
+                </div>
+              </div>
+
+              {/* Smart Anti-Mistake Warning Banner if Days vs Quantity mismatch */}
+              {isDurationMismatch && (
+                <div className="px-3 py-1.5 rounded-xl bg-rose-600 text-white text-[11px] font-black flex flex-wrap items-center justify-between gap-2 shadow-xs">
+                  <div className="flex items-center gap-1.5">
+                    <AlertTriangle className="w-4 h-4 shrink-0 text-amber-300" />
+                    <span>
+                      {isAr
+                        ? `⚠️ انتبه! داير ${fmtNum(days, 2)} يوم عمل لـ ${workers} عمال مقابل ${fmtNum(quantity, 0)} بياسة فقط! الوقت الواقعي لي خاصها هو ${realisticDaysFromGamme} يوم.`
+                        : `⚠️ Attention ! Vous avez mis ${fmtNum(days, 2)} jours pour ${fmtNum(quantity, 0)} pcs. La durée réaliste est ${realisticDaysFromGamme} jours.`}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setExtraHours(0);
+                      setDays(realisticDaysFromGamme);
+                    }}
+                    className="px-2.5 py-0.5 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-lg text-[10px] font-black shrink-0"
+                  >
+                    {isAr ? `✓ صحح إلى ${realisticDaysFromGamme} يوم` : `✓ Corriger (${realisticDaysFromGamme}j)`}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* ACTIVE PAGE BODY (Clean, Organized, Zero Scroll) */}
@@ -2098,6 +2264,232 @@ function isSupportRole(e: Employe): boolean {
           </div>
         </div>
       </div>
+
+      {/* STARTUP PRIORITY BOX MODAL: THE 4 CRITICAL QUESTIONS ("ITL3O F BOX HOMA LWALA FACH NDKHL LABAG MANGHLTCH FIHOM") */}
+      {showEssentialBox && (
+        <div
+          onClick={() => setShowEssentialBox(false)}
+          className="no-print fixed inset-0 z-[1450] bg-slate-900/75 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl max-w-xl w-full shadow-2xl border-2 border-amber-400 overflow-hidden"
+          >
+            {/* Header */}
+            <div className="p-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex items-center justify-between gap-3 border-b border-amber-400/40">
+              <div className="flex items-center gap-3">
+                <img
+                  src={activeModelPhoto}
+                  alt={itemName}
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK_GARMENT_SVG; }}
+                  className="w-11 h-11 rounded-xl object-cover border-2 border-amber-400 shrink-0 bg-white"
+                />
+                <div>
+                  <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-400 text-slate-950 rounded-md text-[10px] font-black uppercase">
+                    🎯 {isAr ? 'خطوة إجبارية سريعة قبل الحساب' : 'Étape Clé Prioritaire'}
+                  </div>
+                  <h3 className="font-black text-sm sm:text-base mt-0.5 text-white">
+                    {isAr ? 'الأسئلة الـ 4 الأساسية (تأكد منهم باش ما تغلطش فالحساب!)' : 'Les 4 Questions Essentielles du Calcul'}
+                  </h3>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowEssentialBox(false)}
+                className="p-1.5 rounded-xl bg-white/10 hover:bg-rose-500 text-slate-300 hover:text-white transition-all"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-5 space-y-4">
+              {/* Model Name Quick Check */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-slate-50 p-2.5 rounded-2xl border border-slate-200">
+                <span className="text-xs font-black text-slate-700 shrink-0">
+                  🏷️ {isAr ? 'نوع البياسة / الموديل:' : 'Article / Modèle :'}
+                </span>
+                <input
+                  type="text"
+                  value={itemName}
+                  onChange={(e) => setItemName(e.target.value)}
+                  className="flex-1 px-3 py-1.5 bg-white border border-slate-300 rounded-xl font-black text-slate-900 text-xs focus:border-indigo-600 outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEssentialBox(false);
+                    setIsFichePickerOpen(true);
+                  }}
+                  className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-xl text-[10px] font-black border border-indigo-200 transition-all shrink-0"
+                >
+                  📋 {isAr ? 'من الفيش تكنيك' : 'Fiche Tech'}
+                </button>
+              </div>
+
+              {/* The 4 Critical Questions in 2x2 Color-Coded Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Question 1: Quantity */}
+                <div className="p-3.5 rounded-2xl bg-indigo-50/70 border-2 border-indigo-400 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="px-2 py-0.5 bg-indigo-600 text-white rounded-md text-[10px] font-black">1️⃣ {isAr ? 'السؤال الأول' : 'Question 1'}</span>
+                    <span className="text-[10px] font-bold text-indigo-700">{isAr ? 'عدد البياسات' : 'Volume'}</span>
+                  </div>
+                  <label className="block text-xs font-black text-slate-900">
+                    {isAr ? 'شحال الكمية المعتمدة فـ الطلبية؟ (بياسة)' : 'Quelle est la quantité totale (pièces) ?'}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={getSyncValue('modal_qty', quantity, 2)}
+                    onFocus={() => {
+                      setActiveInputKey('modal_qty');
+                      setActiveInputRaw(quantity === 0 ? '' : String(Number(quantity.toFixed(2))));
+                    }}
+                    onBlur={() => setActiveInputKey(null)}
+                    onChange={(e) => {
+                      setActiveInputRaw(e.target.value);
+                      setQuantity(e.target.value === '' ? 0 : Number(e.target.value));
+                    }}
+                    className="w-full px-3 py-2 bg-white border-2 border-indigo-300 focus:border-indigo-600 rounded-xl font-black text-indigo-700 text-base text-center outline-none"
+                  />
+                </div>
+
+                {/* Question 2: Unit Sale Price */}
+                <div className="p-3.5 rounded-2xl bg-emerald-50/70 border-2 border-emerald-400 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="px-2 py-0.5 bg-emerald-600 text-white rounded-md text-[10px] font-black">2️⃣ {isAr ? 'السؤال الثاني' : 'Question 2'}</span>
+                    <span className="text-[10px] font-bold text-emerald-700">{isAr ? `الإجمالي: ${totalPriceClient.toFixed(0)} DH` : `Total: ${totalPriceClient.toFixed(0)} DH`}</span>
+                  </div>
+                  <label className="block text-xs font-black text-slate-900">
+                    {isAr ? 'بشحال غتبيع البياسة الواحدة؟ (درهم)' : 'Quel est le prix de vente par pièce (DH) ?'}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={getSyncValue('modal_price', pricePerPiece, 2)}
+                    onFocus={() => {
+                      setActiveInputKey('modal_price');
+                      setActiveInputRaw(pricePerPiece === 0 ? '' : String(pricePerPiece));
+                    }}
+                    onBlur={() => setActiveInputKey(null)}
+                    onChange={(e) => {
+                      setActiveInputRaw(e.target.value);
+                      setPricePerPiece(e.target.value === '' ? 0 : Number(e.target.value));
+                    }}
+                    className="w-full px-3 py-2 bg-white border-2 border-emerald-300 focus:border-emerald-600 rounded-xl font-black text-emerald-700 text-base text-center outline-none"
+                  />
+                </div>
+
+                {/* Question 3: Workers Count */}
+                <div className="p-3.5 rounded-2xl bg-violet-50/70 border-2 border-violet-400 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="px-2 py-0.5 bg-violet-600 text-white rounded-md text-[10px] font-black">3️⃣ {isAr ? 'السؤال الثالث' : 'Question 3'}</span>
+                    <button
+                      type="button"
+                      onClick={() => setWorkers(activePostesCount)}
+                      className="text-[10px] font-black text-violet-700 underline"
+                    >
+                      {isAr ? `= ${activePostesCount} بوستات الغام` : `= ${activePostesCount} postes`}
+                    </button>
+                  </div>
+                  <label className="block text-xs font-black text-slate-900">
+                    {isAr ? 'شحال عدد العمال اللي غيخدمو فيها؟' : 'Combien d\'ouvriers travaillent dessus ?'}
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={workers}
+                    onChange={(e) => setWorkers(Math.max(1, Number(e.target.value) || 1))}
+                    className="w-full px-3 py-2 bg-white border-2 border-violet-300 focus:border-violet-600 rounded-xl font-black text-violet-700 text-base text-center outline-none"
+                  />
+                </div>
+
+                {/* Question 4: Work Duration (Days) */}
+                <div className="p-3.5 rounded-2xl bg-amber-50/80 border-2 border-amber-400 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="px-2 py-0.5 bg-amber-500 text-slate-950 rounded-md text-[10px] font-black">4️⃣ {isAr ? 'السؤال الرابع' : 'Question 4'}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setExtraHours(0);
+                        setDays(realisticDaysFromGamme);
+                      }}
+                      className="px-1.5 py-0.5 bg-rose-600 text-white rounded text-[9px] font-black"
+                    >
+                      ⚡ {isAr ? `الواقعي: ${realisticDaysFromGamme} يوم` : `Réaliste: ${realisticDaysFromGamme}j`}
+                    </button>
+                  </div>
+                  <label className="block text-xs font-black text-slate-900">
+                    {isAr ? 'شحال من نهار عمل (8س) غتشد الخدمة؟' : 'Combien de jours de travail (8h) ?'}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={getSyncValue('modal_days', days + (extraHours / 8), 3)}
+                    onFocus={() => {
+                      setActiveInputKey('modal_days');
+                      const d = days + (extraHours / 8);
+                      setActiveInputRaw(d === 0 ? '' : fmtNum(d, 3));
+                    }}
+                    onBlur={() => setActiveInputKey(null)}
+                    onChange={(e) => {
+                      setActiveInputRaw(e.target.value);
+                      const dayVal = e.target.value === '' ? 0 : Number(e.target.value);
+                      setExtraHours(0);
+                      setDays(dayVal);
+                    }}
+                    className="w-full px-3 py-2 bg-white border-2 border-amber-300 focus:border-amber-600 rounded-xl font-black text-amber-800 text-base text-center outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Instant Live Preview inside the Modal */}
+              <div className={`p-3 rounded-2xl border flex items-center justify-between ${
+                resultStatus === 'profit'
+                  ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
+                  : 'bg-rose-50 border-rose-300 text-rose-900'
+              }`}>
+                <div className="text-xs font-black">
+                  {resultStatus === 'profit' ? (isAr ? '✅ النتيجة المباشرة: ربح صافي' : '✅ Profit Net') : (isAr ? '⚠️ النتيجة المباشرة: خسارة محققة' : '⚠️ Perte Nette')}
+                  <div className="text-[10px] font-bold opacity-80">
+                    {isAr ? `تكلفة البياسة: ${costPerPiece.toFixed(2)} DH | ثمن البيع: ${pricePerPiece.toFixed(2)} DH` : `Coût/pc: ${costPerPiece.toFixed(2)} DH | Vente: ${pricePerPiece.toFixed(2)} DH`}
+                  </div>
+                </div>
+                <div className="text-lg font-black">
+                  {difference >= 0 ? '+' : ''}{difference.toFixed(2)} DH
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-5 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setExtraHours(0);
+                  setDays(realisticDaysFromGamme);
+                }}
+                className="px-3 py-2 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-xl text-xs font-black transition-all"
+              >
+                ⚡ {isAr ? `ضبط الوقت أوتوماتيك (${realisticDaysFromGamme} يوم)` : `Auto-ajuster (${realisticDaysFromGamme}j)`}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowEssentialBox(false)}
+                className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl font-black text-xs shadow-md transition-all flex items-center gap-1.5"
+              >
+                <Check className="w-4 h-4" />
+                <span>{isAr ? '✓ تأكيد الخانات الـ 4 والدخول للحاسبة' : '✓ Confirmer et calculer'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL: MODEL PHOTO LARGE PREVIEW & UPLOAD */}
       {isPhotoPreviewOpen && (
