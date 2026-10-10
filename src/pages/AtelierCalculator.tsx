@@ -644,68 +644,85 @@ function isSupportRole(e: Employe): boolean {
           </div>
         </div>
 
-        {/* Smart Actions Toolbar (Single Row) */}
-        <div className="flex items-center gap-1.5 flex-nowrap overflow-x-auto py-0.5">
+        {/* Smart Actions Icon Buttons Toolbar ("ICON BOTON HSN HIT JAIN MABAYNINCH") */}
+        <div className="flex items-center gap-2 shrink-0">
+          {/* 1. 4 Essential Questions Box Icon Button */}
           <button
             type="button"
             onClick={() => setShowEssentialBox(true)}
-            className="px-2.5 py-1.5 bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700 text-white rounded-xl text-[11px] font-black flex items-center gap-1.5 transition-all shadow-sm active:scale-95 shrink-0 whitespace-nowrap"
+            title={isAr ? '🎯 الأسئلة الـ 4 الأساسية قبل الحساب' : '🎯 Les 4 Questions Essentielles'}
+            className="relative group w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-white flex flex-col items-center justify-center shadow-sm transition-all active:scale-95 shrink-0"
           >
-            <span>🎯</span>
-            <span>{isAr ? 'الأسئلة الـ 4 الأساسية' : '4 Questions Clés'}</span>
+            <span className="text-sm leading-none">🎯</span>
+            <span className="text-[8px] font-black leading-none mt-0.5">{isAr ? '4 أسئلة' : '4 Clés'}</span>
           </button>
 
+          {/* 2. Fiches Techniques Icon Button */}
           <button
             type="button"
             onClick={() => setIsFichePickerOpen(true)}
-            className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-xl text-[11px] font-black flex items-center gap-1.5 transition-all shadow-2xs border border-indigo-100 active:scale-95 group shrink-0 whitespace-nowrap"
+            title={isAr ? '📋 اختيار موديل من الفيش تكنيك (Fiches Techniques)' : '📋 Choisir une Fiche Technique'}
+            className="relative group w-10 h-10 rounded-xl bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-200 flex flex-col items-center justify-center shadow-2xs transition-all active:scale-95 shrink-0"
           >
-            <FileText className="w-3.5 h-3.5 text-indigo-600 group-hover:text-white" />
-            {isAr ? 'اختيار من الفيش تكنيك' : 'Fiches Tech'}
+            <FileText className="w-4 h-4" />
+            <span className="text-[8px] font-black leading-none mt-0.5">{isAr ? 'فيش' : 'Fiche'}</span>
           </button>
 
-          <button
-            onClick={() => setShowWorkersModal(true)}
-            className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-xl text-[11px] font-black flex items-center gap-1.5 transition-all shadow-2xs border border-indigo-100 active:scale-95 shrink-0 whitespace-nowrap"
-          >
-            <Users className="w-3.5 h-3.5" />
-            {isAr ? `عمال الأتوليي (${selectedWorkerIds.length})` : `Ouvriers (${selectedWorkerIds.length})`}
-          </button>
-
+          {/* 3. Atelier Workers Icon Button with Count Badge */}
           <button
             type="button"
-            onClick={() => setShowGammeModal(!showGammeModal)}
-            className={`px-2.5 py-1.5 rounded-xl text-[11px] font-black flex items-center gap-1.5 transition-all shadow-sm border active:scale-95 shrink-0 whitespace-nowrap ${
-              showGammeModal
-                ? 'bg-slate-900 text-amber-400 border-amber-400 ring-2 ring-amber-400/30'
-                : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-amber-400/60'
-            }`}
+            onClick={() => setShowWorkersModal(true)}
+            title={isAr ? `👥 تحديد عمال الأتوليي (${selectedWorkerIds.length} عمال)` : `👥 Ouvriers d'atelier (${selectedWorkerIds.length})`}
+            className="relative group w-10 h-10 rounded-xl bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 flex flex-col items-center justify-center shadow-2xs transition-all active:scale-95 shrink-0"
           >
-            <Wrench className="w-3.5 h-3.5" />
-            <span>{showGammeModal ? (isAr ? '← الرجوع للحاسبة' : '← Retour Calculateur') : (isAr ? '🏭 بوستات الخياطة (Gamme)' : '🏭 Gamme de Montage')}</span>
-            <span className="px-1.5 py-0.5 bg-black/20 rounded-md text-[10px] text-amber-100 font-extrabold flex items-center gap-1">
-              <span>{activePostesCount} {isAr ? 'بوست' : 'postes'}</span>
-              <span>•</span>
-              <span>{activeGammeMinutes} {isAr ? 'د/بياسة' : 'min/pc'}</span>
+            <Users className="w-4 h-4" />
+            <span className="text-[8px] font-black leading-none mt-0.5">{isAr ? 'عمال' : 'Équipe'}</span>
+            <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-blue-600 text-white text-[9px] font-black flex items-center justify-center border-2 border-white shadow-2xs">
+              {selectedWorkerIds.length}
             </span>
           </button>
 
+          {/* 4. Gamme de Montage (Workstations) Icon Button with Postes Badge */}
           <button
+            type="button"
+            onClick={() => setShowGammeModal(!showGammeModal)}
+            title={isAr ? `🏭 بوستات الخياطة (Gamme) — ${activePostesCount} بوست • ${activeGammeMinutes} د/بياسة` : `🏭 Gamme de Montage (${activePostesCount} postes • ${activeGammeMinutes} min/pc)`}
+            className={`relative group w-10 h-10 rounded-xl flex flex-col items-center justify-center transition-all shadow-sm border active:scale-95 shrink-0 ${
+              showGammeModal
+                ? 'bg-slate-900 text-amber-400 border-amber-400 ring-2 ring-amber-400/40'
+                : 'bg-gradient-to-br from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-amber-400/60'
+            }`}
+          >
+            <Wrench className="w-4 h-4" />
+            <span className="text-[8px] font-black leading-none mt-0.5">{isAr ? 'الغام' : 'Gamme'}</span>
+            <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-slate-900 text-amber-300 text-[9px] font-black flex items-center justify-center border-2 border-white shadow-2xs">
+              {activePostesCount}
+            </span>
+          </button>
+
+          {/* 5. AI Expert Icon Button */}
+          <button
+            type="button"
             onClick={() => navigate('/atelier-ai-expert', { state: { itemName, quantity: qty, workers, customPostes, selectedModelCategory } })}
-            className="px-2.5 py-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl text-[11px] font-black flex items-center gap-1.5 transition-all shadow-sm shadow-indigo-200 active:scale-95 shrink-0 whitespace-nowrap"
+            title={isAr ? '✨ الذكاء الاصطناعي (AI Expert)' : '✨ Estimation IA Expert'}
+            className="relative group w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white flex flex-col items-center justify-center shadow-sm shadow-indigo-200 transition-all active:scale-95 shrink-0"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            {isAr ? 'الذكاء الاصطناعي (AI Expert)' : 'Estimation IA'}
+            <Sparkles className="w-4 h-4" />
+            <span className="text-[8px] font-black leading-none mt-0.5">AI</span>
           </button>
 
+          {/* 6. Print / PDF Pro Icon Button */}
           <button
+            type="button"
             onClick={() => window.print()}
-            className="px-2.5 py-1.5 bg-slate-900 hover:bg-indigo-600 text-white rounded-xl text-[11px] font-black flex items-center gap-1.5 transition-all shadow-2xs shrink-0 whitespace-nowrap"
+            title={isAr ? '🖨️ طباعة تقرير PDF احترافي (A4 Pro)' : '🖨️ Imprimer Rapport PDF Pro'}
+            className="relative group w-10 h-10 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white flex flex-col items-center justify-center shadow-sm transition-all active:scale-95 shrink-0"
           >
-            <Printer className="w-3.5 h-3.5" />
-            {isAr ? 'طباعة / PDF Pro' : 'Imprimer PDF Pro'}
+            <Printer className="w-4 h-4" />
+            <span className="text-[8px] font-black leading-none mt-0.5">PDF</span>
           </button>
 
+          {/* 7. Reset / Clear All Icon Button */}
           <button
             type="button"
             onClick={() => {
@@ -722,16 +739,19 @@ function isSupportRole(e: Employe): boolean {
               setCustomPostes(null);
               setIsPostesBoxExpanded(false);
             }}
-            title={isAr ? 'مسح وإفراغ جميع الخانات للبدء من جديد (Vider / Reset)' : 'Vider tous les champs (Reset)'}
-            className="p-1.5 bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white rounded-xl transition-all shadow-2xs border border-rose-200 active:scale-95 group shrink-0"
+            title={isAr ? '🗑️ مسح وإفراغ جميع الخانات للبدء من جديد (Vider / Reset)' : '🗑️ Vider tous les champs (Reset)'}
+            className="relative group w-10 h-10 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 flex flex-col items-center justify-center shadow-2xs transition-all active:scale-95 shrink-0"
           >
-            <Trash2 className="w-3.5 h-3.5 text-rose-600 group-hover:text-white transition-transform duration-300 group-hover:scale-110" />
+            <Trash2 className="w-4 h-4" />
+            <span className="text-[8px] font-black leading-none mt-0.5">{isAr ? 'مسح' : 'Vider'}</span>
           </button>
 
           {isModal && onClose && (
             <button
+              type="button"
               onClick={onClose}
-              className="p-1.5 bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl transition-all shrink-0"
+              title={isAr ? 'إغلاق' : 'Fermer'}
+              className="w-10 h-10 bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 rounded-xl flex items-center justify-center transition-all shrink-0 font-black"
             >
               ✕
             </button>
