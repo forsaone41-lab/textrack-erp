@@ -579,7 +579,7 @@ function isSupportRole(e: Employe): boolean {
 
   return (
     <div 
-      className={`w-full print:p-0 print:m-0 print:bg-white print:gap-0 ${isModal ? 'p-3' : 'p-3 md:px-5 md:py-3.5 flex flex-col gap-3 bg-slate-50/50'}`} 
+      className={`atelier-calc-root w-full print:p-0 print:m-0 print:bg-white print:gap-0 ${isModal ? 'p-3' : 'p-3 md:px-5 md:py-3.5 flex flex-col gap-3 bg-slate-50/50'}`} 
       dir={isAr ? 'rtl' : 'ltr'}
     >
       {/* Hidden File Input for Custom Model Photo Upload */}
@@ -609,7 +609,8 @@ function isSupportRole(e: Employe): boolean {
             padding: 0 !important;
             margin: 0 !important;
           }
-          .no-print {
+          .no-print,
+          .atelier-calc-root > *:not(.print-only) {
             display: none !important;
           }
           .print-only {
@@ -3074,7 +3075,7 @@ function isSupportRole(e: Employe): boolean {
 
       {/* MODAL 1: ATELIER WORKERS SELECTION (Smart Feature 1) */}
       {showWorkersModal && (
-        <div className="fixed inset-0 z-[1200] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+        <div className="no-print fixed inset-0 z-[1200] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[85vh]">
             {/* Header */}
             <div className="p-5 bg-slate-900 text-white flex items-center justify-between">
@@ -3248,7 +3249,7 @@ function isSupportRole(e: Employe): boolean {
 
       {/* MODAL: FICHE TECHNIQUE SELECTOR */}
       {isFichePickerOpen && (
-        <div className="fixed inset-0 z-[1300] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+        <div className="no-print fixed inset-0 z-[1300] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl max-w-3xl w-full shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
             {/* Header */}
             <div className="p-5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex items-center justify-between">
@@ -3404,7 +3405,7 @@ function isSupportRole(e: Employe): boolean {
         };
 
         return (
-          <div className="w-full bg-slate-900 text-white rounded-3xl border border-amber-400/60 shadow-2xl shadow-amber-500/10 overflow-hidden flex flex-col animate-fadeIn">
+          <div className="no-print w-full bg-slate-900 text-white rounded-3xl border border-amber-400/60 shadow-2xl shadow-amber-500/10 overflow-hidden flex flex-col animate-fadeIn">
             {/* Full-Page Header */}
             <div className="p-5 bg-slate-800/90 border-b border-slate-700 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3">
