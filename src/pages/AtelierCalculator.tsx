@@ -562,9 +562,20 @@ function isSupportRole(e: Employe): boolean {
   );
   const isDurationMismatch = (days > realisticDaysFromGamme * 1.35) || (difference < 0 && Math.abs(days - realisticDaysFromGamme) > 0.5);
 
+  const bottleneckPoste = activePostesList.reduce(
+    (max, p) => ((Number(p.tempsMin) || 0) > (Number(max.tempsMin) || 0) ? p : max),
+    activePostesList[0] || { nomAr: 'الخياطة الرئيسية', nomFr: 'Assemblage principal', machine: 'Piqueuse Plate', tempsMin: 10, roleOuvrier: 'خياط' }
+  );
+  const unitLaborCostReal = quantity > 0 ? (totalLaborCost / quantity) : 0;
+  const unitAtelierCostReal = quantity > 0 ? (allocatedExpenses / quantity) : 0;
+  const unitProfitReal = pricePerPiece - costPerPiece;
+  const matSharePct = realCost > 0 ? ((materials / realCost) * 100) : 0;
+  const laborSharePct = realCost > 0 ? ((totalLaborCost / realCost) * 100) : 0;
+  const atelierSharePct = realCost > 0 ? ((allocatedExpenses / realCost) * 100) : 0;
+
   return (
     <div 
-      className={`w-full ${isModal ? 'p-3' : 'p-3 md:px-5 md:py-3.5 flex flex-col gap-3 bg-slate-50/50'}`} 
+      className={`w-full print:p-0 print:m-0 print:bg-white print:gap-0 ${isModal ? 'p-3' : 'p-3 md:px-5 md:py-3.5 flex flex-col gap-3 bg-slate-50/50'}`} 
       dir={isAr ? 'rtl' : 'ltr'}
     >
       {/* Hidden File Input for Custom Model Photo Upload */}
@@ -576,19 +587,21 @@ function isSupportRole(e: Employe): boolean {
         onChange={handleModelPhotoUpload}
       />
 
-      {/* Print styles for Pro Single-Page A4 PDF */}
+      {/* Print styles for Pro 2-Page Full-A4 Executive PDF (Zero Bottom Whitespace) */}
       <style>{`
         @media print {
           @page {
             size: A4 portrait;
-            margin: 8mm;
+            margin: 0mm;
           }
           * {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
+            box-sizing: border-box !important;
           }
-          body {
-            background-color: #fff !important;
+          html, body {
+            width: 210mm !important;
+            background-color: #ffffff !important;
             padding: 0 !important;
             margin: 0 !important;
           }
@@ -597,10 +610,28 @@ function isSupportRole(e: Employe): boolean {
           }
           .print-only {
             display: block !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
           }
-          .print-border {
-            border: 1px solid #cbd5e1 !important;
-            box-shadow: none !important;
+          .print-page {
+            width: 210mm !important;
+            height: 296mm !important;
+            min-height: 296mm !important;
+            max-height: 296mm !important;
+            padding: 7mm 8mm !important;
+            margin: 0 auto !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            background: #ffffff !important;
+            overflow: hidden !important;
+            page-break-after: always !important;
+            break-after: page !important;
+          }
+          .print-page:last-child {
+            page-break-after: auto !important;
+            break-after: auto !important;
           }
         }
       `}</style>
@@ -2127,160 +2158,624 @@ function isSupportRole(e: Employe): boolean {
       </div>
       )}
 
-      {/* ================= EXECUTIVE A4 PDF PRINT SHEET (PRO SINGLE-PAGE REPORT) ================= */}
-      <div className="hidden print-only bg-white text-slate-900 space-y-3 text-xs">
-        {/* Top Executive PDF Banner */}
-        <div className="flex items-center justify-between border-b-2 border-slate-900 pb-2.5">
-          <div className="flex items-center gap-3">
-            <img
-              src={activeModelPhoto}
-              alt={itemName}
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK_GARMENT_SVG; }}
-              className="w-16 h-16 rounded-2xl object-cover border-2 border-slate-800"
-            />
-            <div>
-              <div className="text-[10px] font-black uppercase tracking-widest text-indigo-700">
-                BEYA CREATIVE — FICHE OFFICIELLE DE RENTABILITÉ & COÛT DE REVIENT
+      {/* ================= EXECUTIVE 2-PAGE A4 PDF PRINT REPORT (ZERO BOTTOM WHITESPACE) ================= */}
+      <div className="hidden print-only bg-white text-slate-900 text-xs">
+        {/* ==================== PAGE 1 / 2 : FINANCIAL & TECHNICAL COST REPORT ==================== */}
+        <div className="print-page">
+          <div className="h-full w-full border-2 border-slate-900 rounded-2xl p-4 flex flex-col justify-between bg-white">
+            
+            {/* 1. Top Executive PDF Banner */}
+            <div className="flex items-center justify-between border-b-2 border-slate-900 pb-3 gap-3">
+              <div className="flex items-center gap-3.5">
+                <img
+                  src={activeModelPhoto}
+                  alt={itemName}
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK_GARMENT_SVG; }}
+                  className="w-16 h-16 rounded-2xl object-cover border-2 border-slate-900 shadow-xs shrink-0"
+                />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-slate-900 text-white rounded text-[9px] font-black tracking-wider uppercase" dir="ltr">
+                      BEYA CREATIVE • PAGE 1 / 2
+                    </span>
+                    <span className="text-[10px] font-black text-indigo-700">
+                      {isAr ? 'وثيقة رسمية لدراسة التكلفة والمردودية' : 'FICHE OFFICIELLE DE RENTABILITÉ'}
+                    </span>
+                  </div>
+                  <h1 className="text-lg font-black text-slate-950 mt-0.5">
+                    {isAr ? `تقرير تكلفة وأرباح الموديل: ${itemName || 'موديل جديد'}` : `Rapport de Rentabilité : ${itemName || 'Modèle'}`}
+                  </h1>
+                  <div className="text-[11px] font-bold text-slate-600 flex items-center gap-2 mt-0.5">
+                    <span>{isAr ? `التاريخ: ${todayStr}` : `Date : ${todayStr}`}</span>
+                    <span>•</span>
+                    <span>{isAr ? 'الكمية المعتمدة:' : 'Quantité :'} <strong dir="ltr" className="inline-block text-slate-900">{fmtNum(quantity, 0)} pcs</strong></span>
+                    <span>•</span>
+                    <span>{isAr ? 'ثمن البيع:' : 'Prix vente :'} <strong dir="ltr" className="inline-block text-emerald-700">{pricePerPiece.toFixed(2)} DH/pc</strong></span>
+                  </div>
+                </div>
               </div>
-              <h1 className="text-lg font-black text-slate-950">
-                {isAr ? `تقرير تكلفة وأرباح الموديل: ${itemName || 'بدون اسم'}` : `Rapport de Rentabilité : ${itemName || 'Modèle'}`}
-              </h1>
-              <div className="text-[11px] font-bold text-slate-600">
-                {isAr ? `التاريخ: ${todayStr} | الكمية المعتمدة: ${fmtNum(quantity, 0)} بياسة | ثمن البيع للبياسة: ${pricePerPiece.toFixed(2)} درهم` : `Date : ${todayStr} | Quantité : ${fmtNum(quantity, 0)} pcs | Prix vente : ${pricePerPiece.toFixed(2)} DH/pc`}
+
+              <div className={`text-center border-2 rounded-2xl px-4 py-2 min-w-[195px] ${
+                resultStatus === 'profit' ? 'border-emerald-700 bg-emerald-50/70' : 'border-rose-700 bg-rose-50/70'
+              }`}>
+                <div className="text-[10px] font-black text-slate-700">
+                  {resultStatus === 'profit' ? (isAr ? '✅ الربح الصافي للطلبية' : '✅ PROFIT NET TOTAL') : (isAr ? '🚨 الخسارة الصافية للطلبية' : '🚨 PERTE NETTE')}
+                </div>
+                <div dir="ltr" className={`text-xl font-black leading-tight my-0.5 ${resultStatus === 'profit' ? 'text-emerald-700' : 'text-rose-700'}`}>
+                  {difference >= 0 ? `+${difference.toFixed(2)} DH` : `${difference.toFixed(2)} DH`}
+                </div>
+                <div className="text-[10px] font-black text-slate-700 flex items-center justify-center gap-1.5">
+                  <span>{isAr ? 'تكلفة البياسة:' : 'Coût/pc:'} <strong dir="ltr" className="inline-block">{costPerPiece.toFixed(2)} DH</strong></span>
+                  <span>|</span>
+                  <span>{isAr ? 'الهامش:' : 'Marge:'} <strong dir="ltr" className="inline-block">{netMarginPct.toFixed(1)}%</strong></span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="text-end border-2 border-slate-900 rounded-2xl px-3.5 py-2 bg-slate-50">
-            <div className="text-[10px] font-black text-slate-500">
-              {resultStatus === 'profit' ? (isAr ? 'الربح الصافي للطلبية' : 'PROFIT NET') : (isAr ? 'الخسارة الصافية' : 'PERTE NETTE')}
-            </div>
-            <div className={`text-xl font-black ${resultStatus === 'profit' ? 'text-emerald-700' : 'text-rose-700'}`}>
-              {difference >= 0 ? '+' : ''}{difference.toFixed(2)} DH
-            </div>
-            <div className="text-[10px] font-bold text-slate-700">
-              {isAr ? `تكلفة البياسة: ${costPerPiece.toFixed(2)} DH | الهامش: ${netMarginPct.toFixed(1)}%` : `Coût/pc : ${costPerPiece.toFixed(2)} DH | Marge : ${netMarginPct.toFixed(1)}%`}
-            </div>
-          </div>
-        </div>
-
-        {/* 4 Executive Summary Boxes (Carreau) */}
-        <div className="grid grid-cols-4 gap-2 text-center">
-          <div className="p-2.5 rounded-xl border border-slate-300 bg-slate-50">
-            <span className="block text-[10px] font-bold text-slate-500">{isAr ? 'إجمالي المبيعات (CA)' : 'Chiffre d\'Affaires'}</span>
-            <strong className="text-sm font-black text-emerald-700">{totalPriceClient.toFixed(2)} DH</strong>
-          </div>
-          <div className="p-2.5 rounded-xl border border-slate-300 bg-slate-50">
-            <span className="block text-[10px] font-bold text-slate-500">{isAr ? 'التكلفة الإجمالية للإنتاج' : 'Coût Total Production'}</span>
-            <strong className="text-sm font-black text-slate-900">{realCost.toFixed(2)} DH</strong>
-          </div>
-          <div className="p-2.5 rounded-xl border border-slate-300 bg-slate-50">
-            <span className="block text-[10px] font-bold text-slate-500">{isAr ? 'تكلفة البياسة الشاملة' : 'Coût Unitaire Complet'}</span>
-            <strong className="text-sm font-black text-indigo-700">{costPerPiece.toFixed(2)} DH / pc</strong>
-          </div>
-          <div className="p-2.5 rounded-xl border border-slate-300 bg-slate-50">
-            <span className="block text-[10px] font-bold text-slate-500">{isAr ? 'العمال ومدة الإنجاز' : 'Équipe & Durée'}</span>
-            <strong className="text-sm font-black text-slate-900">{workers} {isAr ? 'عمال' : 'ouv.'} • {fmtNum(days, 2)} {isAr ? 'يوم' : 'j'} ({fmtNum(totalHoursPerWorker, 1)}h)</strong>
-          </div>
-        </div>
-
-        {/* All 3 Sections Printed Side-by-Side Cleanly */}
-        <div className="grid grid-cols-3 gap-2.5">
-          <div className="p-3 rounded-xl border border-slate-300 space-y-1">
-            <div className="font-black text-slate-900 border-b border-slate-200 pb-1 mb-1">
-              {isAr ? '1. الطلبية ووتيرة الإنتاج' : '1. Commande & Cadence'}
-            </div>
-            <div className="flex justify-between"><span>{isAr ? 'الكمية المعتمدة:' : 'Quantité :'}</span><strong>{fmtNum(quantity, 2)} pcs</strong></div>
-            <div className="flex justify-between"><span>{isAr ? 'إنتاج / دقيقة:' : 'Pièces / min :'}</span><strong>{fmtNum(pcsPerMin, 3)} pc/min</strong></div>
-            <div className="flex justify-between"><span>{isAr ? 'إنتاج / ساعة:' : 'Pièces / heure :'}</span><strong>{fmtNum(pcsPerHour, 2)} pc/h</strong></div>
-            <div className="flex justify-between"><span>{isAr ? 'إنتاج / نهار (8س):' : 'Pièces / jour (8h) :'}</span><strong>{fmtNum(pcsPerDay, 2)} pc/j</strong></div>
-            <div className="flex justify-between"><span>{isAr ? 'إنتاج / شهر (26ي):' : 'Pièces / mois (26j) :'}</span><strong>{fmtNum(pcsPerMonth, 0)} pc/mois</strong></div>
-          </div>
-
-          <div className="p-3 rounded-xl border border-slate-300 space-y-1">
-            <div className="font-black text-slate-900 border-b border-slate-200 pb-1 mb-1">
-              {isAr ? '2. اليد العاملة والوقت الدقيق' : '2. Main-d\'œuvre & Temps'}
-            </div>
-            <div className="flex justify-between"><span>{isAr ? 'عدد العمال:' : 'Ouvriers :'}</span><strong>{workers}</strong></div>
-            <div className="flex justify-between"><span>{isAr ? 'الوقت (دقيقة / ساعة):' : 'Temps (min / h) :'}</span><strong>{fmtNum(totalMinutesPerWorker, 0)} د ({fmtNum(totalHoursPerWorker, 2)} س)</strong></div>
-            <div className="flex justify-between"><span>{isAr ? 'أجر الساعة / الدقيقة:' : 'Taux (h / min) :'}</span><strong>{ratePerHour.toFixed(2)} DH/h ({ratePerMin.toFixed(3)} DH/د)</strong></div>
-            <div className="flex justify-between"><span>{isAr ? 'أجر النهار / الشهر:' : 'Taux (j / mois) :'}</span><strong>{ratePerDay.toFixed(1)} DH/j ({ratePerMonth.toFixed(0)} DH/m)</strong></div>
-            <div className="flex justify-between font-black text-indigo-800 pt-0.5 border-t border-slate-200"><span>{isAr ? 'إجمالي اليد العاملة:' : 'Total MOD :'}</span><span>{totalLaborCost.toFixed(2)} DH</span></div>
-          </div>
-
-          <div className="p-3 rounded-xl border border-slate-300 space-y-1">
-            <div className="font-black text-slate-900 border-b border-slate-200 pb-1 mb-1">
-              {isAr ? '3. السلعة ومصاريف الأتوليي' : '3. Matière & Frais Atelier'}
-            </div>
-            <div className="flex justify-between"><span>{isAr ? 'السلعة للبياسة:' : 'Matière / pièce :'}</span><strong>{unitMatCost.toFixed(2)} DH/pc</strong></div>
-            <div className="flex justify-between"><span>{isAr ? 'إجمالي السلعة:' : 'Total Matière :'}</span><strong>{materials.toFixed(2)} DH</strong></div>
-            <div className="flex justify-between"><span>{isAr ? 'مصاريف الأتوليي (شهر):' : 'Frais fixes / mois :'}</span><strong>{monthlyOther.toFixed(2)} DH ({totalMachines} آلات)</strong></div>
-            <div className="flex justify-between"><span>{isAr ? 'مصاريف (نهار / ساعة):' : 'Frais (jour / h) :'}</span><strong>{monthlyAtelierDay.toFixed(1)} DH/j ({monthlyAtelierHour.toFixed(2)} DH/h)</strong></div>
-            <div className="flex justify-between font-black text-indigo-800 pt-0.5 border-t border-slate-200"><span>{isAr ? 'نصيب الطلبية من المصاريف:' : 'Frais alloués :'}</span><span>{allocatedExpenses.toFixed(2)} DH</span></div>
-          </div>
-        </div>
-
-        {/* 4-Timeframe Precision Table in PDF */}
-        <div className="border border-slate-300 rounded-xl overflow-hidden">
-          <div className="bg-slate-900 text-white px-3 py-1.5 font-black text-[11px]">
-            {isAr ? '📊 جدول الحساب الدقيق الأوتوماتيكي (فالدقيقة • فالساعة • فالنهار • فالشهر)' : '📊 Tableau Récapitulatif Multi-Unités (Minute • Heure • Jour • Mois)'}
-          </div>
-          <table className="w-full text-[11px] border-collapse text-center">
-            <thead>
-              <tr className="bg-slate-100 border-b border-slate-300 font-black">
-                <th className="p-1.5 border-e border-slate-300">{isAr ? 'الوحدة الزمنية' : 'Unité de Temps'}</th>
-                <th className="p-1.5 border-e border-slate-300">{isAr ? 'كمية الإنتاج (بياسة)' : 'Production (pcs)'}</th>
-                <th className="p-1.5 border-e border-slate-300">{isAr ? 'إيرادات البيع (DH)' : 'Chiffre d\'Affaires (DH)'}</th>
-                <th className="p-1.5 border-e border-slate-300">{isAr ? 'التكلفة الشاملة (DH)' : 'Coût Total (DH)'}</th>
-                <th className="p-1.5">{isAr ? 'الربح الصافي (DH)' : 'Profit Net (DH)'}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                { label: isAr ? '⏱️ فالدقيقة (1 د)' : '⏱️ Par Minute (1 min)', pcs: fmtNum(pcsPerMin, 3), rev: revMin.toFixed(2), cost: totalCostMin.toFixed(2), prof: profitMin.toFixed(2) },
-                { label: isAr ? '🕐 فالساعة (60 د)' : '🕐 Par Heure (60 min)', pcs: fmtNum(pcsPerHour, 2), rev: revHour.toFixed(2), cost: totalCostHour.toFixed(2), prof: profitHour.toFixed(2) },
-                { label: isAr ? '☀️ فالنهار (8 سوايع = 480 د)' : '☀️ Par Jour (8h = 480 min)', pcs: fmtNum(pcsPerDay, 2), rev: revDay.toFixed(2), cost: totalCostDay.toFixed(2), prof: profitDay.toFixed(2) },
-                { label: isAr ? '📅 فالشهر (26 يوم = 12,480 د)' : '📅 Par Mois (26j = 12 480 min)', pcs: fmtNum(pcsPerMonth, 0), rev: revMonth.toFixed(2), cost: totalCostMonth.toFixed(2), prof: profitMonth.toFixed(2) },
-              ].map((r, i) => (
-                <tr key={i} className="border-b border-slate-200 last:border-0">
-                  <td className="p-1.5 font-black border-e border-slate-300 text-start px-3">{r.label}</td>
-                  <td className="p-1.5 font-bold border-e border-slate-300">{r.pcs}</td>
-                  <td className="p-1.5 font-bold border-e border-slate-300">{r.rev} DH</td>
-                  <td className="p-1.5 font-bold border-e border-slate-300">{r.cost} DH</td>
-                  <td className="p-1.5 font-black text-emerald-700">{r.prof} DH</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Gamme de Montage Table in PDF */}
-        <div className="border border-slate-300 rounded-xl overflow-hidden">
-          <div className="bg-slate-100 px-3 py-1.5 border-b border-slate-300 flex items-center justify-between font-black text-[11px]">
-            <span>{isAr ? `🏭 مراحل الخياطة وبوستات العمل (Gamme de Montage — ${activePostesCount} بوستات)` : `🏭 Gamme de Montage (${activePostesCount} postes)`}</span>
-            <span>{isAr ? `مجموع وقت خياطة البياسة: ${activeGammeMinutes} دقيقة` : `Temps total : ${activeGammeMinutes} min/pièce`}</span>
-          </div>
-          <div className="grid grid-cols-2 gap-0">
-            {activePostesList.map((p, idx) => (
-              <div key={idx} className="px-3 py-1 border-b border-e border-slate-200 flex items-center justify-between text-[10px]">
-                <span className="font-bold truncate">
-                  <strong>#{idx + 1}</strong> {isAr ? p.nomAr : p.nomFr} <span className="text-slate-500">({p.machine})</span>
-                </span>
-                <strong className="font-black text-indigo-700 ms-2 shrink-0">{p.tempsMin} {isAr ? 'د' : 'min'}</strong>
+            {/* 2. The 4 Essential Pillars + 4 Financial Summary KPIs (8-Box Executive Grid) */}
+            <div className="grid grid-cols-4 gap-2 text-center">
+              <div className="p-2 rounded-xl border-2 border-indigo-200 bg-indigo-50/50">
+                <span className="block text-[9px] font-black text-indigo-700">{isAr ? '1️⃣ الكمية المعتمدة للطلبية' : '1️⃣ Quantité Commandée'}</span>
+                <strong dir="ltr" className="text-sm font-black text-slate-950 block mt-0.5">{fmtNum(quantity, 0)} pcs</strong>
+                <span className="block text-[9px] font-bold text-slate-500">{isAr ? 'مجموع البياسات' : 'Volume total'}</span>
               </div>
-            ))}
+              <div className="p-2 rounded-xl border-2 border-emerald-200 bg-emerald-50/50">
+                <span className="block text-[9px] font-black text-emerald-700">{isAr ? '2️⃣ ثمن البيع وإجمالي المبيعات' : '2️⃣ Prix Vente & CA Total'}</span>
+                <strong dir="ltr" className="text-sm font-black text-emerald-700 block mt-0.5">{totalPriceClient.toFixed(2)} DH</strong>
+                <span className="block text-[9px] font-bold text-slate-600">{isAr ? 'للبياسة:' : 'Unitaire:'} <strong dir="ltr" className="inline-block">{pricePerPiece.toFixed(2)} DH/pc</strong></span>
+              </div>
+              <div className="p-2 rounded-xl border-2 border-violet-200 bg-violet-50/50">
+                <span className="block text-[9px] font-black text-violet-700">{isAr ? '3️⃣ الفريق والتكلفة الشاملة' : '3️⃣ Équipe & Coût Total'}</span>
+                <strong dir="ltr" className="text-sm font-black text-slate-950 block mt-0.5">{realCost.toFixed(2)} DH</strong>
+                <span className="block text-[9px] font-bold text-slate-600">{workers} {isAr ? 'عمال' : 'ouv.'} • <strong dir="ltr" className="inline-block">{costPerPiece.toFixed(2)} DH/pc</strong></span>
+              </div>
+              <div className="p-2 rounded-xl border-2 border-amber-300 bg-amber-50/50">
+                <span className="block text-[9px] font-black text-amber-800">{isAr ? '4️⃣ مدة الإنجاز وربح البياسة' : '4️⃣ Durée & Marge Unitaire'}</span>
+                <strong dir="ltr" className="text-sm font-black text-slate-950 block mt-0.5">{fmtNum(days, 2)} j ({fmtNum(totalHoursPerWorker, 1)} h)</strong>
+                <span className="block text-[9px] font-bold text-slate-600">{isAr ? 'ربح البياسة:' : 'Profit/pc:'} <strong dir="ltr" className={`inline-block ${unitProfitReal >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>{unitProfitReal >= 0 ? '+' : ''}{unitProfitReal.toFixed(2)} DH</strong></span>
+              </div>
+            </div>
+
+            {/* 3. All 3 Detailed Operational Cards Side-by-Side (Zero BiDi Scrambling) */}
+            <div className="grid grid-cols-3 gap-2.5">
+              {/* Card 1: Production Cadence */}
+              <div className="p-3 rounded-xl border border-slate-300 bg-slate-50/30 flex flex-col justify-between">
+                <div className="font-black text-slate-950 border-b-2 border-indigo-600 pb-1 mb-1.5 text-[11px] flex items-center justify-between">
+                  <span>{isAr ? '1. الطلبية ووتيرة الإنتاج' : '1. Commande & Cadence'}</span>
+                  <span className="text-[9px] px-1.5 py-0.5 bg-indigo-100 text-indigo-800 rounded font-black" dir="ltr">CADENCE</span>
+                </div>
+                <div className="space-y-1 text-[10.5px]">
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/70">
+                    <span className="text-slate-600 font-bold">{isAr ? 'الكمية المعتمدة:' : 'Quantité totale :'}</span>
+                    <strong dir="ltr" className="font-black text-slate-900">{fmtNum(quantity, 0)} pcs</strong>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/70">
+                    <span className="text-slate-600 font-bold">{isAr ? 'الإنتاج في الدقيقة (1 د):' : 'Production / min :'}</span>
+                    <strong dir="ltr" className="font-black text-slate-900">{fmtNum(pcsPerMin, 3)} pc/min</strong>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/70">
+                    <span className="text-slate-600 font-bold">{isAr ? 'الإنتاج في الساعة (60 د):' : 'Production / heure :'}</span>
+                    <strong dir="ltr" className="font-black text-indigo-700">{fmtNum(pcsPerHour, 2)} pc/h</strong>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/70">
+                    <span className="text-slate-600 font-bold">{isAr ? 'الإنتاج في النهار (8 سوايع):' : 'Production / jour (8h) :'}</span>
+                    <strong dir="ltr" className="font-black text-emerald-700">{fmtNum(pcsPerDay, 2)} pc/j</strong>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/70">
+                    <span className="text-slate-600 font-bold">{isAr ? 'الإنتاج في الشهر (26 يوم):' : 'Production / mois (26j) :'}</span>
+                    <strong dir="ltr" className="font-black text-slate-900">{fmtNum(pcsPerMonth, 0)} pc/mois</strong>
+                  </div>
+                  <div className="flex justify-between items-center pt-1 font-black text-indigo-900 bg-indigo-50 px-2 py-1 rounded-lg">
+                    <span>{isAr ? 'إجمالي المبيعات:' : 'Total Ventes (CA) :'}</span>
+                    <span dir="ltr">{totalPriceClient.toFixed(2)} DH</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 2: Labor & Time Precision */}
+              <div className="p-3 rounded-xl border border-slate-300 bg-slate-50/30 flex flex-col justify-between">
+                <div className="font-black text-slate-950 border-b-2 border-violet-600 pb-1 mb-1.5 text-[11px] flex items-center justify-between">
+                  <span>{isAr ? '2. اليد العاملة والوقت الدقيق' : '2. Main-d\'œuvre & Temps'}</span>
+                  <span className="text-[9px] px-1.5 py-0.5 bg-violet-100 text-violet-800 rounded font-black" dir="ltr">MOD & TEMPS</span>
+                </div>
+                <div className="space-y-1 text-[10.5px]">
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/70">
+                    <span className="text-slate-600 font-bold">{isAr ? 'عدد العمال المباشرين:' : 'Nombre d\'ouvriers :'}</span>
+                    <strong className="font-black text-slate-900">{workers} {isAr ? 'عمال' : 'ouvriers'}</strong>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/70">
+                    <span className="text-slate-600 font-bold">{isAr ? 'مدة العمل (ساعة / دقيقة):' : 'Durée (heures / min) :'}</span>
+                    <strong dir="ltr" className="font-black text-slate-900">{fmtNum(totalHoursPerWorker, 1)} h ({fmtNum(totalMinutesPerWorker, 0)} min)</strong>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/70">
+                    <span className="text-slate-600 font-bold">{isAr ? 'أجر العامل (ساعة / دقيقة):' : 'Taux (heure / min) :'}</span>
+                    <strong dir="ltr" className="font-black text-slate-900">{ratePerHour.toFixed(2)} DH/h ({ratePerMin.toFixed(3)} DH/m)</strong>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/70">
+                    <span className="text-slate-600 font-bold">{isAr ? 'أجر العامل (نهار / شهر):' : 'Taux (jour / mois) :'}</span>
+                    <strong dir="ltr" className="font-black text-slate-900">{ratePerDay.toFixed(1)} DH/j ({ratePerMonth.toFixed(0)} DH/mois)</strong>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/70">
+                    <span className="text-slate-600 font-bold">{isAr ? 'اليد العاملة للبياسة:' : 'MOD par pièce :'}</span>
+                    <strong dir="ltr" className="font-black text-violet-700">{unitLaborCostReal.toFixed(2)} DH/pc</strong>
+                  </div>
+                  <div className="flex justify-between items-center pt-1 font-black text-violet-900 bg-violet-50 px-2 py-1 rounded-lg">
+                    <span>{isAr ? 'إجمالي اليد العاملة:' : 'Total Main-d\'œuvre :'}</span>
+                    <span dir="ltr">{totalLaborCost.toFixed(2)} DH</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 3: Materials & Fixed Expenses */}
+              <div className="p-3 rounded-xl border border-slate-300 bg-slate-50/30 flex flex-col justify-between">
+                <div className="font-black text-slate-950 border-b-2 border-amber-500 pb-1 mb-1.5 text-[11px] flex items-center justify-between">
+                  <span>{isAr ? '3. السلعة ومصاريف الأتوليي' : '3. Matière & Frais Atelier'}</span>
+                  <span className="text-[9px] px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded font-black" dir="ltr">CHARGES</span>
+                </div>
+                <div className="space-y-1 text-[10.5px]">
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/70">
+                    <span className="text-slate-600 font-bold">{isAr ? 'تكلفة السلعة للبياسة:' : 'Matière par pièce :'}</span>
+                    <strong dir="ltr" className="font-black text-slate-900">{unitMatCost.toFixed(2)} DH/pc</strong>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/70">
+                    <span className="text-slate-600 font-bold">{isAr ? 'إجمالي السلعة للطلبية:' : 'Total Matière 1ère :'}</span>
+                    <strong dir="ltr" className="font-black text-slate-900">{materials.toFixed(2)} DH</strong>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/70">
+                    <span className="text-slate-600 font-bold">{isAr ? `مصاريف الشهر (${totalMachines} آلات):` : `Frais mois (${totalMachines} mach.) :`}</span>
+                    <strong dir="ltr" className="font-black text-slate-900">{monthlyOther.toFixed(2)} DH/mois</strong>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/70">
+                    <span className="text-slate-600 font-bold">{isAr ? 'مصاريف الأتوليي (نهار / ساعة):' : 'Frais (jour / heure) :'}</span>
+                    <strong dir="ltr" className="font-black text-slate-900">{monthlyAtelierDay.toFixed(1)} DH/j ({monthlyAtelierHour.toFixed(2)} DH/h)</strong>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/70">
+                    <span className="text-slate-600 font-bold">{isAr ? 'مصاريف الأتوليي للبياسة:' : 'Frais fixes / pièce :'}</span>
+                    <strong dir="ltr" className="font-black text-amber-800">{unitAtelierCostReal.toFixed(2)} DH/pc</strong>
+                  </div>
+                  <div className="flex justify-between items-center pt-1 font-black text-amber-950 bg-amber-50 px-2 py-1 rounded-lg">
+                    <span>{isAr ? 'نصيب الطلبية من المصاريف:' : 'Total Frais Alloués :'}</span>
+                    <span dir="ltr">{allocatedExpenses.toFixed(2)} DH</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 4. 4-Timeframe Precision Table in PDF */}
+            <div className="border border-slate-300 rounded-xl overflow-hidden">
+              <div className="bg-slate-900 text-white px-3 py-1.5 font-black text-[11px] flex items-center justify-between">
+                <span>{isAr ? '📊 جدول الحساب الدقيق الأوتوماتيكي (فالدقيقة • فالساعة • فالنهار • فالشهر)' : '📊 Tableau Récapitulatif Multi-Unités (Minute • Heure • Jour • Mois)'}</span>
+                <span className="text-[9px] text-amber-300 font-bold">{isAr ? 'حساب متزامن 100% لجميع الوحدات الزمنية' : 'Synchronisation temps réel'}</span>
+              </div>
+              <table className="w-full text-[10.5px] border-collapse text-center">
+                <thead>
+                  <tr className="bg-slate-100 border-b border-slate-300 font-black text-slate-800">
+                    <th className="p-1.5 border-e border-slate-300 text-start px-3">{isAr ? 'الوحدة الزمنية المعتمدة' : 'Unité de Temps'}</th>
+                    <th className="p-1.5 border-e border-slate-300">{isAr ? 'كمية الإنتاج' : 'Production'}</th>
+                    <th className="p-1.5 border-e border-slate-300">{isAr ? 'المبيعات (CA)' : 'Ventes (CA)'}</th>
+                    <th className="p-1.5 border-e border-slate-300">{isAr ? 'اليد العاملة' : 'Coût MOD'}</th>
+                    <th className="p-1.5 border-e border-slate-300">{isAr ? 'السلعة والمصاريف' : 'Matière + Frais'}</th>
+                    <th className="p-1.5 border-e border-slate-300">{isAr ? 'التكلفة الشاملة' : 'Coût Total'}</th>
+                    <th className="p-1.5">{isAr ? 'الربح الصافي' : 'Profit Net'}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { label: isAr ? '⏱️ فالدقيقة الواحدة (1 دقيقة)' : '⏱️ Par Minute (1 min)', pcs: `${fmtNum(pcsPerMin, 3)} pcs`, rev: `${revMin.toFixed(2)} DH`, mod: `${teamLaborMin.toFixed(2)} DH`, matFrais: `${(matMin + teamAtelierMin).toFixed(2)} DH`, cost: `${totalCostMin.toFixed(2)} DH`, prof: `${profitMin >= 0 ? '+' : ''}${profitMin.toFixed(2)} DH`, isPos: profitMin >= 0 },
+                    { label: isAr ? '🕐 فالساعة الواحدة (60 دقيقة)' : '🕐 Par Heure (60 min)', pcs: `${fmtNum(pcsPerHour, 2)} pcs`, rev: `${revHour.toFixed(2)} DH`, mod: `${teamLaborHour.toFixed(2)} DH`, matFrais: `${(matHour + teamAtelierHour).toFixed(2)} DH`, cost: `${totalCostHour.toFixed(2)} DH`, prof: `${profitHour >= 0 ? '+' : ''}${profitHour.toFixed(2)} DH`, isPos: profitHour >= 0 },
+                    { label: isAr ? '☀️ فالنهار الواحد (8 سوايع = 480 د)' : '☀️ Par Jour (8h = 480 min)', pcs: `${fmtNum(pcsPerDay, 2)} pcs`, rev: `${revDay.toFixed(2)} DH`, mod: `${teamLaborDay.toFixed(2)} DH`, matFrais: `${(matDay + teamAtelierDay).toFixed(2)} DH`, cost: `${totalCostDay.toFixed(2)} DH`, prof: `${profitDay >= 0 ? '+' : ''}${profitDay.toFixed(2)} DH`, isPos: profitDay >= 0 },
+                    { label: isAr ? '📅 فالشهر الكامل (26 يوم = 12,480 د)' : '📅 Par Mois (26j = 12 480 min)', pcs: `${fmtNum(pcsPerMonth, 0)} pcs`, rev: `${revMonth.toFixed(2)} DH`, mod: `${teamLaborMonth.toFixed(2)} DH`, matFrais: `${(matMonth + teamAtelierMonth).toFixed(2)} DH`, cost: `${totalCostMonth.toFixed(2)} DH`, prof: `${profitMonth >= 0 ? '+' : ''}${profitMonth.toFixed(2)} DH`, isPos: profitMonth >= 0 },
+                  ].map((r, i) => (
+                    <tr key={i} className="border-b border-slate-200 last:border-0 odd:bg-white even:bg-slate-50/60">
+                      <td className="p-1.5 font-black border-e border-slate-300 text-start px-3">{r.label}</td>
+                      <td dir="ltr" className="p-1.5 font-black border-e border-slate-300 text-indigo-800">{r.pcs}</td>
+                      <td dir="ltr" className="p-1.5 font-bold border-e border-slate-300">{r.rev}</td>
+                      <td dir="ltr" className="p-1.5 font-bold border-e border-slate-300 text-slate-700">{r.mod}</td>
+                      <td dir="ltr" className="p-1.5 font-bold border-e border-slate-300 text-slate-700">{r.matFrais}</td>
+                      <td dir="ltr" className="p-1.5 font-black border-e border-slate-300 text-slate-900">{r.cost}</td>
+                      <td dir="ltr" className={`p-1.5 font-black ${r.isPos ? 'text-emerald-700 bg-emerald-50/40' : 'text-rose-700 bg-rose-50/40'}`}>{r.prof}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* 5. Cost Breakdown Bar + Gamme de Montage Table */}
+            <div className="space-y-2">
+              {/* Cost Structure Strip */}
+              <div className="px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 flex items-center justify-between gap-4 text-[10px] font-black">
+                <span className="text-slate-800 shrink-0">{isAr ? '🔍 تحليل بنية تكلفة البياسة الواحدة:' : '🔍 Structure du Coût Unitaire :'}</span>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="px-2 py-0.5 rounded bg-indigo-100 text-indigo-900">
+                    {isAr ? 'اليد العاملة:' : 'MOD:'} <strong dir="ltr" className="inline-block">{unitLaborCostReal.toFixed(2)} DH ({laborSharePct.toFixed(1)}%)</strong>
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-900">
+                    {isAr ? 'السلعة:' : 'Matière:'} <strong dir="ltr" className="inline-block">{unitMatCost.toFixed(2)} DH ({matSharePct.toFixed(1)}%)</strong>
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-800">
+                    {isAr ? 'مصاريف الأتوليي:' : 'Frais fixes:'} <strong dir="ltr" className="inline-block">{unitAtelierCostReal.toFixed(2)} DH ({atelierSharePct.toFixed(1)}%)</strong>
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-900">
+                    {isAr ? 'المجموع للبياسة:' : 'Total/pc:'} <strong dir="ltr" className="inline-block">{costPerPiece.toFixed(2)} DH</strong>
+                  </span>
+                </div>
+              </div>
+
+              {/* Gamme de Montage Table */}
+              <div className="border border-slate-300 rounded-xl overflow-hidden">
+                <div className="bg-slate-100 px-3 py-1.5 border-b border-slate-300 flex items-center justify-between font-black text-[11px]">
+                  <span>{isAr ? `🏭 مراحل الخياطة وبوستات العمل المعتمدة — عدد البوستات: ${activePostesCount}` : `🏭 Gamme de Montage Officielle — ${activePostesCount} Postes`}</span>
+                  <span>{isAr ? `مجموع وقت خياطة البياسة: ${activeGammeMinutes} دقيقة` : `Temps total : ${activeGammeMinutes} min/pièce`}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-0">
+                  {activePostesList.slice(0, 10).map((p, idx) => (
+                    <div key={idx} className="px-3 py-1.5 border-b border-e border-slate-200 flex items-center justify-between text-[10px]">
+                      <div className="flex items-center gap-1.5 min-w-0 truncate">
+                        <span className="px-1.5 py-0.2 bg-slate-900 text-white rounded text-[9px] font-black shrink-0" dir="ltr">#{idx + 1}</span>
+                        <span className="font-black text-slate-800 truncate">{isAr ? p.nomAr : p.nomFr}</span>
+                        <span className="text-slate-500 font-bold text-[9px] shrink-0" dir="ltr">[{p.machine}]</span>
+                      </div>
+                      <strong dir="ltr" className="font-black text-indigo-700 ms-2 shrink-0">{p.tempsMin} min</strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* 6. Signatures Footer (Page 1 Bottom) */}
+            <div className="grid grid-cols-2 gap-4 pt-1 text-[10.5px] font-bold text-slate-800">
+              <div className="border-2 border-dashed border-slate-400 rounded-xl px-3.5 py-2.5 h-16 flex flex-col justify-between bg-slate-50/40">
+                <div className="flex items-center justify-between">
+                  <span className="font-black">{isAr ? '✍️ إمضاء المسؤول التقني / الشاف ديال لاشين:' : '✍️ Visa Responsable Technique / Chef d\'Atelier :'}</span>
+                  <span className="text-[9px] text-slate-500 font-bold">{isAr ? 'مراجعة البوستات والوقت' : 'Vérification Gamme'}</span>
+                </div>
+                <span className="text-[9px] text-slate-400">{isAr ? 'التاريخ، الإمضاء والختم: ...........................................................' : 'Date, Signature & Cachet : ...................................................'}</span>
+              </div>
+              <div className="border-2 border-dashed border-slate-400 rounded-xl px-3.5 py-2.5 h-16 flex flex-col justify-between bg-slate-50/40">
+                <div className="flex items-center justify-between">
+                  <span className="font-black">{isAr ? '✅ مصادقة الإدارة العامة (BEYA CREATIVE):' : '✅ Validation Direction Générale (BEYA CREATIVE) :'}</span>
+                  <span className="text-[9px] text-emerald-700 font-black">{isAr ? 'الصفحة 1/2 — يتبع في الصفحة 2 (شروط النجاح)' : 'Page 1/2 — Suite Page 2'}</span>
+                </div>
+                <span className="text-[9px] text-slate-400">{isAr ? 'قرار اعتماد الميزانية: ..............................................................' : 'Décision & Cachet Direction : ................................................'}</span>
+              </div>
+            </div>
+
           </div>
         </div>
 
-        {/* Signatures Footer */}
-        <div className="grid grid-cols-2 gap-6 pt-3 text-[11px] font-bold text-slate-700">
-          <div className="border border-dashed border-slate-400 rounded-xl p-3 h-16 flex flex-col justify-between">
-            <span>{isAr ? '✍️ إمضاء المسؤول التقني / الشاف ديال لاشين:' : '✍️ Visa Responsable Technique / Chef d\'Atelier :'}</span>
-            <span className="text-[9px] text-slate-400">{isAr ? 'التاريخ والختم' : 'Date & Cachet'}</span>
-          </div>
-          <div className="border border-dashed border-slate-400 rounded-xl p-3 h-16 flex flex-col justify-between">
-            <span>{isAr ? '✅ مصادقة الإدارة العامة (BEYA CREATIVE):' : '✅ Validation Direction Générale (BEYA CREATIVE) :'}</span>
-            <span className="text-[9px] text-slate-400">{isAr ? 'اعتماد إطلاق الإنتاج' : 'Bon pour lancement en production'}</span>
+        {/* ==================== PAGE 2 / 2 : CHARTE & CONDITIONS OBLIGATOIRES DE RÉUSSITE DU PLAN ==================== */}
+        <div className="print-page">
+          <div className="h-full w-full border-2 border-slate-900 rounded-2xl p-4 flex flex-col justify-between bg-white">
+            
+            {/* 1. Top Header Banner (Page 2 / 2) */}
+            <div className="flex items-center justify-between border-b-2 border-slate-900 pb-3 gap-3">
+              <div className="flex items-center gap-3.5">
+                <img
+                  src={activeModelPhoto}
+                  alt={itemName}
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK_GARMENT_SVG; }}
+                  className="w-15 h-15 rounded-2xl object-cover border-2 border-slate-900 shrink-0"
+                />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-amber-500 text-slate-950 rounded text-[9px] font-black tracking-wider uppercase" dir="ltr">
+                      BEYA CREATIVE • PAGE 2 / 2
+                    </span>
+                    <span className="text-[10px] font-black text-rose-700">
+                      {isAr ? 'وثيقة إلزامية للتطبيق داخل الأتوليي ولاشين' : 'CHARTE D\'EXÉCUTION & CONDITIONS DE RÉUSSITE'}
+                    </span>
+                  </div>
+                  <h2 className="text-base font-black text-slate-950 mt-0.5">
+                    {isAr
+                      ? `شروط وضوابط نجاح الخطة الإنتاجية والتقرير المالي — الموديل: ${itemName || 'موديل جديد'}`
+                      : `Conditions Obligatoires de Réussite du Plan — Modèle : ${itemName || 'Modèle'}`}
+                  </h2>
+                  <div className="text-[10.5px] font-bold text-slate-600 mt-0.5">
+                    {isAr
+                      ? 'باش ينجح هاد التقرير وتخرج الأرباح مضبوطة فالواقع، خاص احترام هاد الشروط الـ 6 بالحرف ومنع أي انحراف فالأتوليي.'
+                      : 'Pour garantir le profit prévu à la Page 1, ces 6 conditions opérationnelles doivent être strictement respectées.'}
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-center border-2 border-slate-900 rounded-2xl px-3.5 py-2 bg-amber-50 min-w-[185px]">
+                <div className="text-[9.5px] font-black text-amber-900">
+                  {isAr ? '🎯 الهدف المالي الواجب حمايته' : '🎯 OBJECTIF À PROTÉGER'}
+                </div>
+                <div dir="ltr" className="text-lg font-black text-slate-950 my-0.5">
+                  {difference >= 0 ? `+${difference.toFixed(2)} DH` : `${difference.toFixed(2)} DH`}
+                </div>
+                <div className="text-[9.5px] font-bold text-slate-700">
+                  {isAr ? 'تكلفة كل ساعة روطار:' : 'Coût 1h retard:'}{' '}
+                  <strong dir="ltr" className="inline-block text-rose-700">-{totalCostPerHourOfWork.toFixed(2)} DH/h</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Golden Rule Alert Strip */}
+            <div className="p-2.5 rounded-xl border-2 border-rose-300 bg-rose-50/70 flex items-center justify-between gap-3 text-[10.5px]">
+              <div className="font-black text-rose-950">
+                {isAr
+                  ? `⚠️ تنبيه صارم للشاف ديال لاشين والفريق (${workers} عمال): أي تأخير فمدة الإنجاز كياكل مباشرة من الربح بـ `
+                  : `⚠️ Règle d'Or pour l'équipe (${workers} ouvriers) : Tout retard consomme directement la marge à raison de `}
+                <strong dir="ltr" className="inline-block text-rose-700 underline">{totalCostPerHourOfWork.toFixed(2)} DH/h</strong>
+                {isAr ? ' (أي ' : ' (soit '}
+                <strong dir="ltr" className="inline-block text-rose-700 underline">{(totalCostPerHourOfWork * 8).toFixed(2)} DH/jour</strong>
+                {isAr ? ' فكل نهار تأخير).' : ' par jour de retard).'}
+              </div>
+              <span className="px-2.5 py-1 bg-rose-700 text-white rounded-lg font-black text-[9.5px] shrink-0">
+                {isAr ? `أقصى سقف قبل الخسارة: ${maxDaysAllowed} يوم و ${maxHoursAllowed} س` : `Plafond Max: ${maxDaysAllowed}j ${maxHoursAllowed}h`}
+              </span>
+            </div>
+
+            {/* 3. The 6 Mandatory Conditions Grid (2x3 Structured Cards) */}
+            <div className="grid grid-cols-2 gap-2.5">
+              {/* Condition 1: Strict Time & Duration Ceiling */}
+              <div className="p-2.5 rounded-xl border border-slate-300 bg-slate-50/50 space-y-1">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-1">
+                  <span className="font-black text-[11px] text-indigo-900">
+                    {isAr ? '1️⃣ الشرط الأول: احترام سقف الوقت والمدة القصوى' : '1️⃣ Condition 1 : Respect du Délai & Plafond Horaire'}
+                  </span>
+                  <span className="px-1.5 py-0.5 bg-indigo-600 text-white rounded text-[8.5px] font-black">{isAr ? 'إجباري' : 'STRICT'}</span>
+                </div>
+                <div className="text-[10px] space-y-0.5 text-slate-700 font-bold">
+                  <div className="flex justify-between">
+                    <span>{isAr ? '• المدة المعتمدة لإنجاز الطلبية بالكامل:' : '• Durée officielle allouée :'}</span>
+                    <strong dir="ltr" className="text-slate-950 font-black">{fmtNum(days, 2)} j ({fmtNum(totalHoursPerWorker, 1)} h)</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>{isAr ? '• السقف الأقصى للوقت قبل الدخول في الخسارة:' : '• Seuil critique (Point Mort) :'}</span>
+                    <strong dir="ltr" className="text-rose-700 font-black">{maxDaysAllowed} j + {maxHoursAllowed} h max</strong>
+                  </div>
+                  <div className="text-[9.5px] text-slate-600 pt-0.5">
+                    {isAr
+                      ? '✅ الضابط: انطلاق الخدمة فالوقت المحدد ومنع الضياع الزمني بين البوستات.'
+                      : '✅ Règle : Démarrage à l\'heure exacte et zéro temps mort entre postes.'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Condition 2: Mandatory Production Cadence */}
+              <div className="p-2.5 rounded-xl border border-slate-300 bg-slate-50/50 space-y-1">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-1">
+                  <span className="font-black text-[11px] text-emerald-900">
+                    {isAr ? '2️⃣ الشرط الثاني: تحقيق وتيرة الإنتاج في الساعة والنهار' : '2️⃣ Condition 2 : Cadence Horaire & Journalière'}
+                  </span>
+                  <span className="px-1.5 py-0.5 bg-emerald-600 text-white rounded text-[8.5px] font-black">{isAr ? 'الوتيرة' : 'CADENCE'}</span>
+                </div>
+                <div className="text-[10px] space-y-0.5 text-slate-700 font-bold">
+                  <div className="flex justify-between">
+                    <span>{isAr ? '• الهدف الإجباري للفريق في الساعة / النهار:' : '• Objectif équipe (Heure / Jour) :'}</span>
+                    <strong dir="ltr" className="text-emerald-700 font-black">{fmtNum(pcsPerHour, 1)} pc/h • {fmtNum(pcsPerDay, 0)} pc/j</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>{isAr ? `• المعدل المطلوب من كل عامل (من أصل ${workers} عمال):` : `• Quota individuel (sur ${workers} ouv.) :`}</span>
+                    <strong dir="ltr" className="text-slate-950 font-black">{fmtNum(pcsPerDay / Math.max(1, workers), 1)} pc/j/ouv</strong>
+                  </div>
+                  <div className="text-[9.5px] text-slate-600 pt-0.5">
+                    {isAr
+                      ? '✅ الضابط: مراقبة عدد البياسات المخروجة على رأس كل ساعتين (2h) لتفادي تراكم الروطار.'
+                      : '✅ Règle : Pointage de la production toutes les 2 heures sur la chaîne.'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Condition 3: Fabric & Cutting Control */}
+              <div className="p-2.5 rounded-xl border border-slate-300 bg-slate-50/50 space-y-1">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-1">
+                  <span className="font-black text-[11px] text-amber-900">
+                    {isAr ? '3️⃣ الشرط الثالث: ضبط استهلاك السلعة والفصالة' : '3️⃣ Condition 3 : Maîtrise Matière Première & Coupe'}
+                  </span>
+                  <span className="px-1.5 py-0.5 bg-amber-500 text-slate-950 rounded text-[8.5px] font-black">{isAr ? 'السلعة' : 'MATIÈRE'}</span>
+                </div>
+                <div className="text-[10px] space-y-0.5 text-slate-700 font-bold">
+                  <div className="flex justify-between">
+                    <span>{isAr ? '• سقف تكلفة السلعة المسموح به للبياسة:' : '• Plafond matière unitaire :'}</span>
+                    <strong dir="ltr" className="text-slate-950 font-black">{unitMatCost.toFixed(2)} DH / pc</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>{isAr ? '• الميزانية القصوى للسلعة (الثوب + السلعة):' : '• Budget matière global max :'}</span>
+                    <strong dir="ltr" className="text-amber-800 font-black">{materials.toFixed(2)} DH</strong>
+                  </div>
+                  <div className="text-[9.5px] text-slate-600 pt-0.5">
+                    {isAr
+                      ? '✅ الضابط: تحسين التراصاج (Placement) فالفصالة وحصر الضياع (Chutes) فـ أقل من 2%.'
+                      : '✅ Règle : Optimiser le placement de coupe et limiter la chute à < 2%.'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Condition 4: Workstation Balancing & Bottleneck */}
+              <div className="p-2.5 rounded-xl border border-slate-300 bg-slate-50/50 space-y-1">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-1">
+                  <span className="font-black text-[11px] text-violet-900">
+                    {isAr ? '4️⃣ الشرط الرابع: توازن البوستات والمرحلة الحرجة' : '4️⃣ Condition 4 : Équilibrage & Poste Goulot'}
+                  </span>
+                  <span className="px-1.5 py-0.5 bg-violet-600 text-white rounded text-[8.5px] font-black">{isAr ? 'لاشين' : 'CHAÎNE'}</span>
+                </div>
+                <div className="text-[10px] space-y-0.5 text-slate-700 font-bold">
+                  <div className="flex justify-between">
+                    <span>{isAr ? '• البوستات المعتمدة ووقت خياطة البياسة:' : '• Postes & temps gamme :'}</span>
+                    <strong dir="ltr" className="text-slate-950 font-black">{activePostesCount} postes • {activeGammeMinutes} min/pc</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>{isAr ? '• أطول بوست للمراقبة (Goulot):' : '• Poste critique (Goulot) :'}</span>
+                    <strong className="text-violet-800 font-black truncate max-w-[170px]">
+                      {isAr ? bottleneckPoste.nomAr : bottleneckPoste.nomFr} ({bottleneckPoste.tempsMin} د)
+                    </strong>
+                  </div>
+                  <div className="text-[9.5px] text-slate-600 pt-0.5">
+                    {isAr
+                      ? `✅ الضابط: تجهيز الـ ${totalMachines} ماكينات (إبر، خيط، بواط) قبل انطلاق الخدمة لتفادي توقف البوستات.`
+                      : `✅ Règle : Préparer les ${totalMachines} machines avant 8h00 pour éviter tout arrêt.`}
+                  </div>
+                </div>
+              </div>
+
+              {/* Condition 5: Zero Retouche & Quality Control */}
+              <div className="p-2.5 rounded-xl border border-slate-300 bg-slate-50/50 space-y-1">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-1">
+                  <span className="font-black text-[11px] text-teal-900">
+                    {isAr ? '5️⃣ الشرط الخامس: الجودة من البياسة الأولى (0 روتوش)' : '5️⃣ Condition 5 : Qualité 1er Choix & Zéro Retouche'}
+                  </span>
+                  <span className="px-1.5 py-0.5 bg-teal-600 text-white rounded text-[8.5px] font-black">{isAr ? 'الجودة' : 'QUALITÉ'}</span>
+                </div>
+                <div className="text-[10px] space-y-0.5 text-slate-700 font-bold">
+                  <div className="flex justify-between">
+                    <span>{isAr ? '• تكلفة كل بياسة خاسرة أو معادة:' : '• Perte par pièce défectueuse :'}</span>
+                    <strong dir="ltr" className="text-rose-700 font-black">-{costPerPiece.toFixed(2)} DH / pc</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>{isAr ? '• شرط الانطلاق الإجباري:' : '• Condition de lancement :'}</span>
+                    <strong className="text-teal-800 font-black">{isAr ? 'المصادقة على Tête de Série' : 'Validation Tête de Série'}</strong>
+                  </div>
+                  <div className="text-[9.5px] text-slate-600 pt-0.5">
+                    {isAr
+                      ? '✅ الضابط: مراقبة القياسات والخياطة فـ أول 5 بياسات قبل إطلاق السيري الكامل.'
+                      : '✅ Règle : Contrôle strict des 5 premières pièces avant lancement série.'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Condition 6: Commercial Price & Cost Ceiling Protection */}
+              <div className="p-2.5 rounded-xl border border-slate-300 bg-slate-50/50 space-y-1">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-1">
+                  <span className="font-black text-[11px] text-slate-900">
+                    {isAr ? '6️⃣ الشرط السادس: حماية ثمن البيع وسقف التكلفة' : '6️⃣ Condition 6 : Protection du Prix & Marge'}
+                  </span>
+                  <span className="px-1.5 py-0.5 bg-slate-900 text-white rounded text-[8.5px] font-black">{isAr ? 'المالية' : 'FINANCE'}</span>
+                </div>
+                <div className="text-[10px] space-y-0.5 text-slate-700 font-bold">
+                  <div className="flex justify-between">
+                    <span>{isAr ? '• سقف التكلفة الشاملة للبياسة الواحدة:' : '• Coût de revient plafond :'}</span>
+                    <strong dir="ltr" className="text-slate-950 font-black">{costPerPiece.toFixed(2)} DH / pc</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>{isAr ? '• ثمن البيع المعتمد وربح البياسة:' : '• Prix vente & marge/pc :'}</span>
+                    <strong dir="ltr" className="text-emerald-700 font-black">{pricePerPiece.toFixed(2)} DH ({unitProfitReal >= 0 ? '+' : ''}{unitProfitReal.toFixed(2)} DH)</strong>
+                  </div>
+                  <div className="text-[9.5px] text-slate-600 pt-0.5">
+                    {isAr
+                      ? '✅ الضابط: ممنوع البيع بأقل من التكلفة الشاملة أو زيادة ساعات إضافية غير مرخصة.'
+                      : '✅ Règle : Aucune remise sous le coût complet ni heures supp. non validées.'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 4. Impact Simulation Table (What happens if conditions are respected vs delayed) */}
+            <div className="border border-slate-300 rounded-xl overflow-hidden">
+              <div className="bg-slate-900 text-white px-3 py-1.5 font-black text-[10.5px] flex items-center justify-between">
+                <span>{isAr ? '📈 جدول محاكاة احترام الخطة مقابل الروطار (تأثير الانضباط على الربح الصافي)' : '📈 Simulation d\'Impact : Respect du Plan vs Retard d\'Exécution'}</span>
+                <span className="text-[9px] text-amber-300 font-bold">{isAr ? 'أرقام حقيقية مبنية على معطيات الموديل' : 'Basé sur vos données réelles'}</span>
+              </div>
+              <table className="w-full text-[10px] border-collapse text-center">
+                <thead>
+                  <tr className="bg-slate-100 border-b border-slate-300 font-black text-slate-800">
+                    <th className="p-1.5 border-e border-slate-300 text-start px-2.5">{isAr ? 'سيناريو التنفيذ في الأتوليي' : 'Scénario d\'Exécution'}</th>
+                    <th className="p-1.5 border-e border-slate-300">{isAr ? 'المدة المستغرقة' : 'Durée Réelle'}</th>
+                    <th className="p-1.5 border-e border-slate-300">{isAr ? 'تكلفة البياسة' : 'Coût / Pièce'}</th>
+                    <th className="p-1.5 border-e border-slate-300">{isAr ? 'التكلفة الإجمالية' : 'Coût Total'}</th>
+                    <th className="p-1.5 border-e border-slate-300">{isAr ? 'الربح أو الخسارة' : 'Résultat Net'}</th>
+                    <th className="p-1.5">{isAr ? 'الحكم التقني' : 'Statut'}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    {
+                      name: isAr ? '🚀 إنجاز أسرع بـ 10% (فعالية عالية)' : '🚀 Avance de -10% (Haute efficacité)',
+                      dur: `${fmtNum(days * 0.9, 2)} j (${fmtNum(totalHoursPerWorker * 0.9, 1)} h)`,
+                      unit: `${((materials + (totalLaborCost + allocatedExpenses) * 0.9) / qty).toFixed(2)} DH`,
+                      tot: `${(materials + (totalLaborCost + allocatedExpenses) * 0.9).toFixed(2)} DH`,
+                      res: `${(totalPriceClient - (materials + (totalLaborCost + allocatedExpenses) * 0.9)) >= 0 ? '+' : ''}${(totalPriceClient - (materials + (totalLaborCost + allocatedExpenses) * 0.9)).toFixed(2)} DH`,
+                      badge: isAr ? 'ممتاز (+ربح إضافي)' : 'Excellent (+Bonus)',
+                      cls: 'text-emerald-800 font-black bg-emerald-50/60'
+                    },
+                    {
+                      name: isAr ? '✅ احترام الخطة 100% (الهدف المعتمد)' : '✅ Respect strict 100% (Objectif)',
+                      dur: `${fmtNum(days, 2)} j (${fmtNum(totalHoursPerWorker, 1)} h)`,
+                      unit: `${costPerPiece.toFixed(2)} DH`,
+                      tot: `${realCost.toFixed(2)} DH`,
+                      res: `${difference >= 0 ? '+' : ''}${difference.toFixed(2)} DH`,
+                      badge: isAr ? 'خطة ناجحة 100%' : 'Plan Réussi 100%',
+                      cls: 'text-indigo-900 font-black bg-indigo-50/60'
+                    },
+                    {
+                      name: isAr ? '⚠️ تأخير بـ +15% عن الوقت المحدد' : '⚠️ Retard de +15% sur le délai',
+                      dur: `${fmtNum(days * 1.15, 2)} j (${fmtNum(totalHoursPerWorker * 1.15, 1)} h)`,
+                      unit: `${((materials + (totalLaborCost + allocatedExpenses) * 1.15) / qty).toFixed(2)} DH`,
+                      tot: `${(materials + (totalLaborCost + allocatedExpenses) * 1.15).toFixed(2)} DH`,
+                      res: `${(totalPriceClient - (materials + (totalLaborCost + allocatedExpenses) * 1.15)) >= 0 ? '+' : ''}${(totalPriceClient - (materials + (totalLaborCost + allocatedExpenses) * 1.15)).toFixed(2)} DH`,
+                      badge: isAr ? 'تآكل الهامش الربحي' : 'Érosion de marge',
+                      cls: 'text-amber-800 font-black bg-amber-50/50'
+                    },
+                    {
+                      name: isAr ? '🚨 تجاوز السقف الأقصى للوقت (نقطة الخسارة)' : '🚨 Dépassement du Seuil Critique',
+                      dur: `> ${maxDaysAllowed} j ${maxHoursAllowed} h`,
+                      unit: `> ${pricePerPiece.toFixed(2)} DH`,
+                      tot: `> ${totalPriceClient.toFixed(2)} DH`,
+                      res: `-0.00 DH (${isAr ? 'خسارة' : 'Perte'})`,
+                      badge: isAr ? 'ممنوع (خسارة مباشرة)' : 'Interdit (Perte)',
+                      cls: 'text-rose-700 font-black bg-rose-50/60'
+                    }
+                  ].map((s, idx) => (
+                    <tr key={idx} className="border-b border-slate-200 last:border-0">
+                      <td className="p-1.5 font-black border-e border-slate-300 text-start px-2.5">{s.name}</td>
+                      <td dir="ltr" className="p-1.5 font-bold border-e border-slate-300">{s.dur}</td>
+                      <td dir="ltr" className="p-1.5 font-bold border-e border-slate-300">{s.unit}</td>
+                      <td dir="ltr" className="p-1.5 font-bold border-e border-slate-300">{s.tot}</td>
+                      <td dir="ltr" className={`p-1.5 border-e border-slate-300 ${s.cls}`}>{s.res}</td>
+                      <td className={`p-1.5 text-[9.5px] ${s.cls}`}>{s.badge}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* 5. Daily Execution Checklist for the Chef de Chaîne */}
+            <div className="border border-slate-300 rounded-xl p-2.5 bg-slate-50/60">
+              <div className="font-black text-[10.5px] text-slate-900 mb-1.5 flex items-center justify-between border-b border-slate-200 pb-1">
+                <span>{isAr ? '☑️ قائمة المراقبة اليومية الإجبارية (يؤشر عليها الشاف ديال لاشين كل نهار):' : '☑️ Checklist de Contrôle Quotidien (Chef de Chaîne) :'}</span>
+                <span className="text-[9px] text-slate-500 font-bold">{isAr ? 'تعلق أمام خط الإنتاج' : 'À afficher sur la chaîne'}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-[9.5px] font-bold text-slate-700">
+                <div className="bg-white p-2 rounded-lg border border-slate-200 space-y-1">
+                  <div className="font-black text-indigo-800">{isAr ? '🕗 1. قبل انطلاق الصباح (8h00)' : '🕗 1. Avant Démarrage (8h00)'}</div>
+                  <div>☐ {isAr ? `حضور الـ ${workers} عمال فالبوستات` : `Présence des ${workers} ouvriers`}</div>
+                  <div>☐ {isAr ? `فحص الـ ${totalMachines} آلات وتوفر الخيط` : `Vérification des ${totalMachines} machines`}</div>
+                  <div>☐ {isAr ? 'توزيع الحزم المقطوعة (Paquets)' : 'Distribution des paquets coupés'}</div>
+                </div>
+                <div className="bg-white p-2 rounded-lg border border-slate-200 space-y-1">
+                  <div className="font-black text-emerald-800">{isAr ? '🕛 2. مراقبة وسط النهار (كل 2 سوايع)' : '🕛 2. Suivi Mi-Journée (Chaque 2h)'}</div>
+                  <div>☐ {isAr ? `تحقيق وتيرة ${fmtNum(pcsPerHour, 1)} بياسة/ساعة` : `Cadence ${fmtNum(pcsPerHour, 1)} pcs/heure`}</div>
+                  <div>☐ {isAr ? 'عدم تراكم الخدمة فالبوست الحرج' : 'Absence de blocage au poste goulot'}</div>
+                  <div>☐ {isAr ? 'مراقبة الجودة (0 ديفو / 0 روتوش)' : 'Contrôle qualité (0 retouche)'}</div>
+                </div>
+                <div className="bg-white p-2 rounded-lg border border-slate-200 space-y-1">
+                  <div className="font-black text-amber-900">{isAr ? '🕔 3. حصيلة نهاية النهار (8 سوايع)' : '🕔 3. Bilan Fin de Journée (8h)'}</div>
+                  <div>☐ {isAr ? `إخراج الهدف اليومي: ${fmtNum(pcsPerDay, 0)} بياسة` : `Sortie quota : ${fmtNum(pcsPerDay, 0)} pcs/jour`}</div>
+                  <div>☐ {isAr ? 'إحصاء الباقي وتحديث الفيش' : 'Comptage du reste à produire'}</div>
+                  <div>☐ {isAr ? 'توقيع تقرير المردودية اليومي' : 'Validation du rapport journalier'}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* 6. Official Signatures & Commitment Footer (Page 2 Bottom) */}
+            <div className="grid grid-cols-3 gap-3 pt-1 text-[10px] font-bold text-slate-800">
+              <div className="border-2 border-dashed border-slate-400 rounded-xl p-2.5 h-15 flex flex-col justify-between bg-slate-50/40">
+                <span className="font-black">{isAr ? '✍️ التزام الشاف ديال لاشين (الإنتاج):' : '✍️ Engagement Chef de Chaîne :'}</span>
+                <span className="text-[8.5px] text-slate-500">{isAr ? `ألتزم بوتيرة ${fmtNum(pcsPerDay, 0)} بياسة/نهار والمدة المحددة` : `Engagement sur ${fmtNum(pcsPerDay, 0)} pcs/j`}</span>
+              </div>
+              <div className="border-2 border-dashed border-slate-400 rounded-xl p-2.5 h-15 flex flex-col justify-between bg-slate-50/40">
+                <span className="font-black">{isAr ? '✂️ التزام مسؤول الفصالة والجودة:' : '✂️ Engagement Coupe & Qualité :'}</span>
+                <span className="text-[8.5px] text-slate-500">{isAr ? `ألتزم بسقف السلعة (${unitMatCost.toFixed(2)} DH/pc) و0 روتوش` : 'Respect matière & zéro retouche'}</span>
+              </div>
+              <div className="border-2 border-dashed border-slate-400 rounded-xl p-2.5 h-15 flex flex-col justify-between bg-slate-50/40">
+                <span className="font-black">{isAr ? '✅ مصادقة الإدارة العامة (BEYA CREATIVE):' : '✅ Approbation Direction Générale :'}</span>
+                <span className="text-[8.5px] text-emerald-700 font-black">{isAr ? 'الصفحة 2/2 — أمر رسمي بإطلاق الإنتاج' : 'Page 2/2 — Bon pour exécution'}</span>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
