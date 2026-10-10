@@ -331,6 +331,7 @@ Réponds uniquement en JSON valide, sans texte avant ni après.`;
       materials: Math.round(((breakdown.consommationMetrage * breakdown.prixMetreEstime) + breakdown.fournituresEstimees) * quantity),
       days: aiRealisticDays,
       workers: activeWorkersCount,
+      photo: preset.photo,
       customPostes: visionBreakdown ? (customPostes || breakdown.postesTravail) : null
     }));
 

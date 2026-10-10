@@ -74,6 +74,7 @@ export const DEFAULT_FICHES_TECHNIQUES: FicheTechnique[] = [
     description: 'عباية واسعة بقصة فراشة مع تطريز خفيف على الأكمام',
     tailles: ['S', 'M', 'L', 'XL'],
     mesures: [],
+    photo: 'https://images.unsplash.com/photo-1585487000160-6ebcfceb0d03?auto=format&fit=crop&w=400&q=80',
     createdAt: '2026-07-30'
   },
   {
@@ -86,6 +87,7 @@ export const DEFAULT_FICHES_TECHNIQUES: FicheTechnique[] = [
     description: 'هودي وبنطلون رياضي واسع بقصة أوفَرسَايز شتوي',
     tailles: ['M', 'L', 'XL', 'XXL'],
     mesures: [],
+    photo: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=400&q=80',
     createdAt: '2026-07-30'
   },
   {
@@ -98,6 +100,7 @@ export const DEFAULT_FICHES_TECHNIQUES: FicheTechnique[] = [
     description: 'قفطان جوهرة قطعتين مع سفيفة حرير وعقاد يدوي',
     tailles: ['Standard 38-44'],
     mesures: [],
+    photo: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=400&q=80',
     createdAt: '2026-07-30'
   },
   {
@@ -110,6 +113,7 @@ export const DEFAULT_FICHES_TECHNIQUES: FicheTechnique[] = [
     description: 'تيشرت قطن ممتاز بوزن ثقيل وياقة دائرية مدعمة',
     tailles: ['S', 'M', 'L', 'XL'],
     mesures: [],
+    photo: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=400&q=80',
     createdAt: '2026-07-30'
   },
   {
@@ -122,6 +126,7 @@ export const DEFAULT_FICHES_TECHNIQUES: FicheTechnique[] = [
     description: 'بنطلون كارجو بـ 6 جيوب مع خياطة مزدوجة وقصة مريحة',
     tailles: ['38', '40', '42', '44', '46'],
     mesures: [],
+    photo: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=400&q=80',
     createdAt: '2026-07-30'
   }
 ];

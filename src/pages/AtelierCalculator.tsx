@@ -1,14 +1,53 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLang } from '../contexts/LangContext';
 import {
   Calculator, Printer, CheckCircle2, AlertTriangle,
   Clock, Package, Users, Scissors, ShoppingCart, ArrowLeft,
   DollarSign, Sparkles, Check, X, RefreshCw, UserCheck,
-  Ruler, Image as ImageIcon, Search, FileText, Wrench, Trash2, RotateCcw, Maximize2, Minimize2, Plus, Copy
+  Ruler, Image as ImageIcon, Search, FileText, Wrench, Trash2, RotateCcw, Maximize2, Minimize2, Plus, Copy,
+  Camera, ChevronLeft, ChevronRight, Layers
 } from 'lucide-react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { loadData, Employe, FicheTechnique, Charge } from '../types';
 import { PosteTravail, getGarmentTechnicalBreakdown, DEFAULT_FICHES_TECHNIQUES } from '../lib/atelierAi';
+
+const FALLBACK_GARMENT_SVG = "data:image/svg+xml;utf8," + encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <rect width="120" height="120" rx="24" fill="#EEF2FF"/>
+  <path d="M42 28L22 42L30 58L42 50V92H78V50L90 58L98 42L78 28C74 35 67 38 60 38C53 38 46 35 42 28Z" fill="#4F46E5" fill-opacity="0.15" stroke="#4F46E5" stroke-width="4" stroke-linejoin="round"/>
+</svg>
+`);
+
+function getSmartModelPhoto(itemName: string, fichePhoto?: string | null, customPhoto?: string | null): string {
+  if (customPhoto) return customPhoto;
+  if (fichePhoto) return fichePhoto;
+  const text = (itemName || '').toLowerCase();
+  if (text.includes('sous-vêtement') || text.includes('sous vetement') || text.includes('boxer') || text.includes('caleçon') || text.includes('داخلي')) {
+    return 'https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?auto=format&fit=crop&w=400&q=80';
+  }
+  if (text.includes('abaya') || text.includes('عباية') || text.includes('jilbab')) {
+    return 'https://images.unsplash.com/photo-1585487000160-6ebcfceb0d03?auto=format&fit=crop&w=400&q=80';
+  }
+  if (text.includes('caftan') || text.includes('قفطان') || text.includes('جلابة') || text.includes('djellaba') || text.includes('takchita')) {
+    return 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=400&q=80';
+  }
+  if (text.includes('hoodie') || text.includes('sport') || text.includes('ensemble') || text.includes('هودي') || text.includes('رياضي')) {
+    return 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=400&q=80';
+  }
+  if (text.includes('pantalon') || text.includes('cargo') || text.includes('jean') || text.includes('سروال') || text.includes('بنطلون')) {
+    return 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=400&q=80';
+  }
+  if (text.includes('chemise') || text.includes('قميص')) {
+    return 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=400&q=80';
+  }
+  if (text.includes('veste') || text.includes('manteau') || text.includes('جاكيت') || text.includes('معطف')) {
+    return 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=400&q=80';
+  }
+  if (text.includes('sac') || text.includes('sak') || text.includes('حقيبة') || text.includes('صاك')) {
+    return 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=400&q=80';
+  }
+  return 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=400&q=80';
+}
 
 interface AtelierCalculatorProps {
   isModal?: boolean;
@@ -120,6 +159,7 @@ export default function AtelierCalculator({
       try {
         const data = JSON.parse(imported);
         if (data.modelName) setItemName(data.modelName);
+        if (data.photo) setCustomModelPhoto(data.photo);
         if (data.prixEstimation) {
           const m = String(data.prixEstimation).match(/[\d.]+/);
           if (m) setPricePerPiece(parseFloat(m[0]) || 120);
@@ -228,6 +268,22 @@ function isSupportRole(e: Employe): boolean {
   const [selectedQuickMachine, setSelectedQuickMachine] = useState<string>(ATELIER_MACHINES_PRESETS[0].machine);
   const [activeInputKey, setActiveInputKey] = useState<string | null>(null);
   const [activeInputRaw, setActiveInputRaw] = useState<string>('');
+  const [customModelPhoto, setCustomModelPhoto] = useState<string | null>(null);
+  const [isPhotoPreviewOpen, setIsPhotoPreviewOpen] = useState(false);
+  const [calcPage, setCalcPage] = useState<1 | 2 | 3>(1);
+  const modelPhotoInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleModelPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setCustomModelPhoto(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Pull the monthly recurring charges from Charges & Dépenses instead of retyping them here
   useEffect(() => {
@@ -280,6 +336,7 @@ function isSupportRole(e: Employe): boolean {
        if (exported) {
          const data = JSON.parse(exported);
          if (data.itemName) setItemName(data.itemName);
+         if (data.photo) setCustomModelPhoto(data.photo);
          if (data.customPostes && Array.isArray(data.customPostes)) {
            setCustomPostes(data.customPostes);
          } else if (data.customPostes === null) {
@@ -298,6 +355,7 @@ function isSupportRole(e: Employe): boolean {
 
   const selectAndApplyFicheDirectly = (f: FicheTechnique) => {
      setSelectedFiche(f);
+     if (f.photo) setCustomModelPhoto(f.photo);
      setItemName(`${f.modele}${f.type ? ` (${f.type})` : ''}`);
      const cons = f.tissuConsommation && f.tissuConsommation > 0 ? f.tissuConsommation : 1.5;
      const calcMaterials = Math.round(cons * 35 * (quantity || 1));
@@ -493,14 +551,32 @@ function isSupportRole(e: Employe): boolean {
     day: 'numeric'
   });
 
+  const activeModelPhoto = getSmartModelPhoto(itemName, selectedFiche?.photo, customModelPhoto);
+  const netMarginPct = pricePerPiece > 0 && costPerPiece > 0
+    ? (((pricePerPiece - costPerPiece) / pricePerPiece) * 100)
+    : 0;
+
   return (
     <div 
-      className={`w-full ${isModal ? 'p-4' : 'p-4 md:p-6 flex flex-col gap-4 bg-slate-50/50'}`} 
+      className={`w-full ${isModal ? 'p-3' : 'p-3 md:px-5 md:py-3.5 flex flex-col gap-3 bg-slate-50/50'}`} 
       dir={isAr ? 'rtl' : 'ltr'}
     >
-      {/* Print styles */}
+      {/* Hidden File Input for Custom Model Photo Upload */}
+      <input
+        ref={modelPhotoInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleModelPhotoUpload}
+      />
+
+      {/* Print styles for Pro Single-Page A4 PDF */}
       <style>{`
         @media print {
+          @page {
+            size: A4 portrait;
+            margin: 8mm;
+          }
           * {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
@@ -508,36 +584,62 @@ function isSupportRole(e: Employe): boolean {
           body {
             background-color: #fff !important;
             padding: 0 !important;
+            margin: 0 !important;
           }
           .no-print {
             display: none !important;
           }
+          .print-only {
+            display: block !important;
+          }
           .print-border {
-            border: 1px solid #222 !important;
+            border: 1px solid #cbd5e1 !important;
             box-shadow: none !important;
           }
         }
       `}</style>
 
-      {/* COMPACT TOP HEADER WITH SMART ACTIONS (QDIA DKYA) */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between bg-white px-5 py-3 rounded-2xl border border-slate-100 shadow-sm print-border gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-emerald-200 shrink-0">
-            <Calculator className="w-5 h-5" />
+      {/* COMPACT TOP HEADER WITH MODEL PHOTO NEXT TO TITLE & SMART ACTIONS */}
+      <div className="no-print flex flex-col sm:flex-row items-stretch sm:items-center justify-between bg-white px-4 py-2.5 rounded-2xl border border-slate-200/80 shadow-2xs gap-2.5">
+        <div className="flex items-center gap-3 min-w-0">
+          {/* Square Model Photo Thumbnail right next to the Header Title */}
+          <div className="relative group shrink-0">
+            <img
+              src={activeModelPhoto}
+              alt={itemName || 'Modèle'}
+              onClick={() => setIsPhotoPreviewOpen(true)}
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK_GARMENT_SVG; }}
+              title={isAr ? 'اضغط لتكبير صورة الموديل' : 'Cliquer pour agrandir la photo du modèle'}
+              className="w-11 h-11 rounded-xl object-cover border-2 border-indigo-200 shadow-sm cursor-pointer group-hover:border-indigo-600 transition-all bg-indigo-50"
+            />
+            <button
+              type="button"
+              onClick={() => modelPhotoInputRef.current?.click()}
+              title={isAr ? 'تغيير صورة الموديل من جهازك' : 'Changer la photo du modèle'}
+              className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center shadow-md border border-white transition-transform active:scale-90"
+            >
+              <Camera className="w-2.5 h-2.5" />
+            </button>
           </div>
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <h1 className="text-lg font-black text-slate-900 tracking-tight">
-              {isAr ? 'حاسبة أرباح وتكلفة الإنتاج' : 'Calculateur de Rentabilité Atelier'}
-            </h1>
-            <span className="px-2 py-0.5 bg-rose-100 text-rose-700 rounded-lg text-[9px] font-black uppercase tracking-wider">
-              Admin VIP
-            </span>
-            <span className="text-xs font-bold text-slate-400">| {todayStr}</span>
+
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-base sm:text-lg font-black text-slate-900 tracking-tight truncate">
+                {isAr ? 'حاسبة أرباح وتكلفة الإنتاج' : 'Calculateur de Rentabilité Atelier'}
+              </h1>
+              <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg text-[10px] font-black truncate max-w-[180px]">
+                🏷️ {itemName || (isAr ? 'موديل جديد' : 'Nouveau modèle')}
+              </span>
+              <span className="px-2 py-0.5 bg-rose-100 text-rose-700 rounded-lg text-[9px] font-black uppercase tracking-wider">
+                Admin VIP
+              </span>
+              <span className="text-[11px] font-bold text-slate-400 hidden xl:inline">| {todayStr}</span>
+            </div>
           </div>
         </div>
 
-        {/* Smart Actions Toolbar (ONE SINGLE ROW "F SF WAHD MSTFIN", NO BLINKING/PULSING) */}
-        <div className="flex items-center gap-1.5 no-print flex-nowrap overflow-x-auto py-0.5">
+        {/* Smart Actions Toolbar (Single Row) */}
+        <div className="flex items-center gap-1.5 flex-nowrap overflow-x-auto py-0.5">
           <button
             type="button"
             onClick={() => setIsFichePickerOpen(true)}
@@ -583,10 +685,10 @@ function isSupportRole(e: Employe): boolean {
 
           <button
             onClick={() => window.print()}
-            className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[11px] font-bold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap"
+            className="px-2.5 py-1.5 bg-slate-900 hover:bg-indigo-600 text-white rounded-xl text-[11px] font-black flex items-center gap-1.5 transition-all shadow-2xs shrink-0 whitespace-nowrap"
           >
             <Printer className="w-3.5 h-3.5" />
-            {isAr ? 'طباعة / PDF' : 'Imprimer'}
+            {isAr ? 'طباعة / PDF Pro' : 'Imprimer PDF Pro'}
           </button>
 
           <button
@@ -601,6 +703,7 @@ function isSupportRole(e: Employe): boolean {
               setMonthlyOther(0);
               setSelectedModelCategory(undefined);
               setSelectedFiche(null);
+              setCustomModelPhoto(null);
               setCustomPostes(null);
               setIsPostesBoxExpanded(false);
             }}
@@ -621,84 +724,99 @@ function isSupportRole(e: Employe): boolean {
         </div>
       </div>
 
-      {/* MAIN SINGLE-SCREEN 2-COLUMN HUD (Hidden when Full-Page Gamme is open) */}
+      {/* MAIN NO-SCROLL 2-COLUMN HUD (Hidden when Full-Page Gamme is open) */}
       {!showGammeModal && (
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+      <div className="no-print grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-start">
         
-        {/* LEFT COLUMN: RESULT DISPLAY HUD (4 cols on lg) */}
-        <div className="lg:col-span-5 flex flex-col justify-between gap-3">
-          
-          {/* Main Result Card */}
+        {/* COLUMN 1 (Right in RTL): COMPACT CARREAU RESULT CARD ("MAQADA CAROU MRB3 OLA MOUSTATILA" — ZERO EMPTY GAP!) */}
+        <div className="lg:col-span-5">
           <div
-            className={`p-5 rounded-3xl border-2 flex-1 flex flex-col justify-between print-border ${
+            className={`p-4 rounded-3xl border-2 shadow-sm space-y-2.5 ${
               resultStatus === 'profit'
-                ? 'bg-gradient-to-br from-emerald-500/10 via-emerald-50 to-white border-emerald-300 text-emerald-950'
+                ? 'bg-gradient-to-br from-emerald-500/10 via-emerald-50/80 to-white border-emerald-300 text-emerald-950'
                 : resultStatus === 'loss'
-                ? 'bg-gradient-to-br from-rose-500/10 via-rose-50 to-white border-rose-300 text-rose-950'
+                ? 'bg-gradient-to-br from-rose-500/10 via-rose-50/80 to-white border-rose-300 text-rose-950'
                 : 'bg-white border-slate-200 text-slate-800'
             }`}
           >
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <div className="inline-flex items-center gap-1.5 font-black text-sm uppercase tracking-wider">
-                  {resultStatus === 'profit' ? (
-                    <>
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                      <span className="text-emerald-700">{isAr ? 'ربح صافي ✔' : 'Profit Net ✔'}</span>
-                    </>
-                  ) : resultStatus === 'loss' ? (
-                    <>
-                      <AlertTriangle className="w-4 h-4 text-rose-600" />
-                      <span className="text-rose-700">{isAr ? 'خسارة محققة ✘' : 'Perte Nette ✘'}</span>
-                    </>
-                  ) : (
-                    <span>{isAr ? 'تعادل' : 'Neutre'}</span>
-                  )}
-                </div>
-
-                <CostTooltip
-                  title={isAr ? "📊 تفكيك تكلفة البياسة الواحدة" : "📊 Coût unitaire détaillé"}
-                  align="left"
-                  content={
-                    <>
-                      <div className="flex justify-between">
-                        <span>🧵 قماش ولوازم للبياسة:</span>
-                        <strong className="text-white">{(materials / (quantity || 1)).toFixed(2)} DH</strong>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>👷 خياطة ويد عاملة للبياسة:</span>
-                        <strong className="text-white">{(totalLaborCost / (quantity || 1)).toFixed(2)} DH</strong>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>🏢 نصيب البياسة من مصاريف الأتوليي:</span>
-                        <strong className="text-white">{(allocatedExpenses / (quantity || 1)).toFixed(2)} DH</strong>
-                      </div>
-                      <div className="border-t border-white/10 pt-1 mt-1 flex justify-between font-black text-emerald-400">
-                        <span>✅ المجموع الإجمالي:</span>
-                        <span>{costPerPiece.toFixed(2)} DH</span>
-                      </div>
-                      <div className="text-[10px] text-slate-400 pt-0.5">
-                        {isAr ? "• نعم! هذا الثمن شامل لكل شيء (خياطة، قماش، كرا، ضو، إدارة)." : "• Oui ! Ce coût inclut TOUT (tissu, MOD, MOI, frais fixes)."}
-                      </div>
-                    </>
-                  }
-                >
-                  <div className="px-2.5 py-1 bg-white/90 rounded-xl border border-black/5 text-xs font-black text-indigo-700 shadow-2xs hover:bg-white transition-all">
-                    {isAr ? 'البياسة الواحدة:' : 'Coût/pièce :'} {costPerPiece.toFixed(2)} {isAr ? 'درهم' : 'DH'}
+            {/* Row 1: Model Thumbnail + Model Title + Profit Status Badge + Unit Cost Tooltip */}
+            <div className="flex items-center justify-between gap-2 pb-2 border-b border-black/10">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <img
+                  src={activeModelPhoto}
+                  alt={itemName}
+                  onClick={() => setIsPhotoPreviewOpen(true)}
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK_GARMENT_SVG; }}
+                  className="w-10 h-10 rounded-xl object-cover border border-black/15 shadow-2xs shrink-0 cursor-pointer bg-white"
+                />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 font-black text-xs uppercase tracking-wider">
+                    {resultStatus === 'profit' ? (
+                      <>
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span className="text-emerald-700">{isAr ? 'ربح صافي ✔' : 'Profit Net ✔'}</span>
+                      </>
+                    ) : resultStatus === 'loss' ? (
+                      <>
+                        <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                        <span className="text-rose-700">{isAr ? 'خسارة محققة ✘' : 'Perte Nette ✘'}</span>
+                      </>
+                    ) : (
+                      <span>{isAr ? 'تعادل' : 'Neutre'}</span>
+                    )}
                   </div>
-                </CostTooltip>
+                  <div className="text-[11px] font-black text-slate-800 truncate">
+                    {itemName || (isAr ? 'بدون اسم' : 'Sans nom')} • <span className="text-indigo-700">{fmtNum(quantity, 0)} {isAr ? 'بياسة' : 'pcs'}</span>
+                  </div>
+                </div>
               </div>
 
-              {/* Huge Amount Display */}
-              <div className="my-3 text-center">
+              <CostTooltip
+                title={isAr ? "📊 تفكيك تكلفة البياسة الواحدة" : "📊 Coût unitaire détaillé"}
+                align="left"
+                content={
+                  <>
+                    <div className="flex justify-between">
+                      <span>🧵 قماش ولوازم للبياسة:</span>
+                      <strong className="text-white">{(materials / (quantity || 1)).toFixed(2)} DH</strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>👷 خياطة ويد عاملة للبياسة:</span>
+                      <strong className="text-white">{(totalLaborCost / (quantity || 1)).toFixed(2)} DH</strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>🏢 نصيب البياسة من مصاريف الأتوليي:</span>
+                      <strong className="text-white">{(allocatedExpenses / (quantity || 1)).toFixed(2)} DH</strong>
+                    </div>
+                    <div className="border-t border-white/10 pt-1 mt-1 flex justify-between font-black text-emerald-400">
+                      <span>✅ المجموع الإجمالي:</span>
+                      <span>{costPerPiece.toFixed(2)} DH</span>
+                    </div>
+                  </>
+                }
+              >
+                <div className="px-2.5 py-1 bg-white rounded-xl border border-black/10 text-[11px] font-black text-indigo-700 shadow-2xs hover:bg-indigo-50 transition-all whitespace-nowrap">
+                  {isAr ? 'البياسة:' : 'Coût/pc:'} {costPerPiece.toFixed(2)} DH
+                </div>
+              </CostTooltip>
+            </div>
+
+            {/* Row 2: Compact Rectangular Profit & KPIs Carreau (No empty vertical gap!) */}
+            <div className="p-3 rounded-2xl bg-white/85 border border-black/5 flex flex-col sm:flex-row items-center justify-between gap-2.5 shadow-2xs">
+              <div className="text-center sm:text-start">
+                <div className="text-[10px] font-bold text-slate-500 mb-0.5">
+                  {resultStatus === 'profit'
+                    ? (isAr ? '💰 الصافي ديال الربح فـ الطلبية:' : '💰 Bénéfice Net Commande :')
+                    : (isAr ? '⚠️ قيمة الخسارة فـ الطلبية:' : '⚠️ Perte Nette Commande :')}
+                </div>
                 <CostTooltip
                   title={isAr ? "💰 معادلة الربح والإيرادات" : "💰 Équation de Rentabilité"}
                   align="center"
                   content={
                     <>
                       <div className="flex justify-between">
-                        <span>📈 إيرادات البيع ({quantity} × {pricePerPiece} DH):</span>
-                        <strong className="text-emerald-400">+{(quantity * pricePerPiece).toLocaleString()} DH</strong>
+                        <span>📈 إيرادات البيع ({fmtNum(quantity, 0)} × {pricePerPiece} DH):</span>
+                        <strong className="text-emerald-400">+{totalPriceClient.toLocaleString()} DH</strong>
                       </div>
                       <div className="flex justify-between">
                         <span>📉 التكلفة الإجمالية (سلعة + عمال + أتوليي):</span>
@@ -706,57 +824,42 @@ function isSupportRole(e: Employe): boolean {
                       </div>
                       <div className="border-t border-white/10 pt-1 mt-1 flex justify-between font-black text-indigo-300">
                         <span>✅ هامش الربح الصافي:</span>
-                        <span>{pricePerPiece > 0 && costPerPiece > 0 ? (((pricePerPiece - costPerPiece) / pricePerPiece) * 100).toFixed(1) : 0}% ({isAr ? 'ربح صافي' : 'Marge'})</span>
+                        <span>{netMarginPct.toFixed(1)}%</span>
                       </div>
                     </>
                   }
                 >
                   <div
-                    className={`text-4xl xl:text-5xl font-black tracking-tight leading-none inline-block ${
+                    className={`text-2xl xl:text-3xl font-black tracking-tight leading-none ${
                       resultStatus === 'profit' ? 'text-emerald-600' : resultStatus === 'loss' ? 'text-rose-600' : 'text-slate-700'
                     }`}
                   >
                     {Math.abs(difference).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{' '}
-                    <span className="text-xl font-bold">{isAr ? 'درهم' : 'DH'}</span>
+                    <span className="text-sm font-extrabold">{isAr ? 'درهم' : 'DH'}</span>
                   </div>
                 </CostTooltip>
+              </div>
 
-                <div className="text-xs font-bold text-slate-500 mt-1">
-                  <CostTooltip
-                    title={isAr ? "📉 التكلفة الإجمالية للإنتاج" : "📉 Coût Total"}
-                    align="center"
-                    content={
-                      <>
-                        <div className="flex justify-between">
-                          <span>• اليد العاملة:</span>
-                          <strong className="text-white">{totalLaborCost.toFixed(2)} DH</strong>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>• السلعة والقماش:</span>
-                          <strong className="text-white">{materials.toFixed(2)} DH</strong>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>• مصاريف الأتوليي الثابتة:</span>
-                          <strong className="text-white">{allocatedExpenses.toFixed(2)} DH</strong>
-                        </div>
-                        <div className="border-t border-white/10 pt-1 mt-1 flex justify-between font-black text-amber-300">
-                          <span>✅ إجمالي تكلفة الطلبية:</span>
-                          <span>{realCost.toFixed(2)} DH</span>
-                        </div>
-                      </>
-                    }
-                  >
-                    <span className="hover:text-slate-800 transition-colors">
-                      {isAr ? 'التكلفة الإجمالية للإنتاج:' : 'Coût total de production :'}{' '}
-                      <span className="font-black text-slate-800">{realCost.toFixed(2)} {isAr ? 'درهم' : 'DH'}</span>
-                    </span>
-                  </CostTooltip>
+              <div className="grid grid-cols-3 gap-1.5 w-full sm:w-auto text-center">
+                <div className="px-2 py-1 bg-emerald-50/80 border border-emerald-200/70 rounded-xl">
+                  <span className="block text-[9px] font-bold text-slate-500">{isAr ? 'إجمالي البيع' : 'Vente'}</span>
+                  <strong className="text-[11px] font-black text-emerald-700">{totalPriceClient.toFixed(0)} DH</strong>
+                </div>
+                <div className="px-2 py-1 bg-slate-100/90 border border-slate-200 rounded-xl">
+                  <span className="block text-[9px] font-bold text-slate-500">{isAr ? 'التكلفة الكلية' : 'Coût Total'}</span>
+                  <strong className="text-[11px] font-black text-slate-800">{realCost.toFixed(0)} DH</strong>
+                </div>
+                <div className="px-2 py-1 bg-indigo-50/80 border border-indigo-200/70 rounded-xl">
+                  <span className="block text-[9px] font-bold text-slate-500">{isAr ? 'هامش الربح' : 'Marge'}</span>
+                  <strong className={`text-[11px] font-black ${netMarginPct >= 0 ? 'text-indigo-700' : 'text-rose-600'}`}>
+                    {netMarginPct.toFixed(1)}%
+                  </strong>
                 </div>
               </div>
             </div>
 
-            {/* Tight 3-Column Cost Breakdown */}
-            <div className="grid grid-cols-3 gap-2 pt-3 border-t border-black/10 text-center">
+            {/* Row 3: Tight 3-Column Cost Breakdown */}
+            <div className="grid grid-cols-3 gap-2 text-center">
               <CostTooltip
                 title={isAr ? "👷 تفكيك تكلفة اليد العاملة والرواتب" : "👷 Détail Main-d'œuvre"}
                 align="right"
@@ -781,8 +884,8 @@ function isSupportRole(e: Employe): boolean {
                   </>
                 }
               >
-                <div className="bg-white/70 p-2 rounded-xl border border-black/5 hover:bg-white hover:border-indigo-200 transition-all w-full">
-                  <span className="text-[10px] font-bold text-slate-500 block leading-tight">{isAr ? 'اليد العاملة' : 'Main d\'œuvre'}</span>
+                <div className="bg-white/85 p-2 rounded-xl border border-black/5 hover:bg-white hover:border-indigo-200 transition-all w-full">
+                  <span className="text-[10px] font-bold text-slate-500 block leading-tight">{isAr ? '👷 اليد العاملة' : '👷 Main d\'œuvre'}</span>
                   <strong className="text-xs font-black text-slate-900">{totalLaborCost.toFixed(2)} DH</strong>
                 </div>
               </CostTooltip>
@@ -807,8 +910,8 @@ function isSupportRole(e: Employe): boolean {
                   </>
                 }
               >
-                <div className="bg-white/70 p-2 rounded-xl border border-black/5 hover:bg-white hover:border-indigo-200 transition-all w-full">
-                  <span className="text-[10px] font-bold text-slate-500 block leading-tight">{isAr ? 'السلعة' : 'Matière'}</span>
+                <div className="bg-white/85 p-2 rounded-xl border border-black/5 hover:bg-white hover:border-indigo-200 transition-all w-full">
+                  <span className="text-[10px] font-bold text-slate-500 block leading-tight">{isAr ? '🧵 السلعة' : '🧵 Matière'}</span>
                   <strong className="text-xs font-black text-slate-900">{materials.toFixed(2)} DH</strong>
                 </div>
               </CostTooltip>
@@ -833,19 +936,19 @@ function isSupportRole(e: Employe): boolean {
                   </>
                 }
               >
-                <div className="bg-white/70 p-2 rounded-xl border border-black/5 hover:bg-white hover:border-indigo-200 transition-all w-full">
-                  <span className="text-[10px] font-bold text-slate-500 block leading-tight">{isAr ? 'مصاريف الأتوليي' : 'Frais atelier'}</span>
+                <div className="bg-white/85 p-2 rounded-xl border border-black/5 hover:bg-white hover:border-indigo-200 transition-all w-full">
+                  <span className="text-[10px] font-bold text-slate-500 block leading-tight">{isAr ? '🏢 مصاريف الأتوليي' : '🏢 Frais atelier'}</span>
                   <strong className="text-xs font-black text-slate-900">{allocatedExpenses.toFixed(2)} DH</strong>
                 </div>
               </CostTooltip>
             </div>
 
-            {/* LIVE AUTOMATIC 4-TIMEFRAME MATRIX (الدقيقة | الساعة | النهار | الشهر أوتوماتيك) */}
-            <div className="mt-3 pt-3 border-t border-black/10">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-black text-slate-800 flex items-center gap-1.5">
+            {/* Row 4: LIVE AUTOMATIC 4-TIMEFRAME MATRIX (الدقيقة | الساعة | النهار | الشهر أوتوماتيك) */}
+            <div className="pt-2 border-t border-black/10">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] font-black text-slate-800 flex items-center gap-1">
                   <span>📊</span>
-                  {isAr ? 'الحساب الدقيق الأوتوماتيكي (الدقيقة • الساعة • النهار • الشهر):' : 'Calcul Automatique Précis (Min • Heure • Jour • Mois) :'}
+                  {isAr ? 'الحساب الدقيق الأوتوماتيكي (دقيقة • ساعة • نهار • شهر):' : 'Calcul Automatique (Min • Heure • Jour • Mois) :'}
                 </span>
                 <span className="text-[9px] font-bold text-slate-500">
                   {isAr ? 'اضغط لتطبيق المدة' : 'Cliquer pour appliquer'}
@@ -854,10 +957,10 @@ function isSupportRole(e: Employe): boolean {
 
               <div className="grid grid-cols-4 gap-1.5 text-center">
                 {[
-                  { id: 'min', label: isAr ? '⏱️ فالدقيقة' : '⏱️ / Minute', targetMin: 1, pcs: pcsPerMin, rev: revMin, cost: totalCostMin, profit: profitMin, dec: 3 },
-                  { id: 'hour', label: isAr ? '🕐 فالساعة' : '🕐 / Heure', targetMin: 60, pcs: pcsPerHour, rev: revHour, cost: totalCostHour, profit: profitHour, dec: 2 },
-                  { id: 'day', label: isAr ? '☀️ فالنهار (8س)' : '☀️ / Jour (8h)', targetMin: 480, pcs: pcsPerDay, rev: revDay, cost: totalCostDay, profit: profitDay, dec: 2 },
-                  { id: 'month', label: isAr ? '📅 فالشهر (26ي)' : '📅 / Mois (26j)', targetMin: 12480, pcs: pcsPerMonth, rev: revMonth, cost: totalCostMonth, profit: profitMonth, dec: 2 },
+                  { id: 'min', label: isAr ? '⏱️ فالدقيقة' : '⏱️ / Min', targetMin: 1, pcs: pcsPerMin, rev: revMin, cost: totalCostMin, profit: profitMin, dec: 2 },
+                  { id: 'hour', label: isAr ? '🕐 فالساعة' : '🕐 / Heure', targetMin: 60, pcs: pcsPerHour, rev: revHour, cost: totalCostHour, profit: profitHour, dec: 1 },
+                  { id: 'day', label: isAr ? '☀️ فالنهار' : '☀️ / Jour', targetMin: 480, pcs: pcsPerDay, rev: revDay, cost: totalCostDay, profit: profitDay, dec: 0 },
+                  { id: 'month', label: isAr ? '📅 فالشهر' : '📅 / Mois', targetMin: 12480, pcs: pcsPerMonth, rev: revMonth, cost: totalCostMonth, profit: profitMonth, dec: 0 },
                 ].map((tf) => {
                   const isCurrentDuration = Math.abs(totalMinutesPerWorker - tf.targetMin) < 0.05;
                   return (
@@ -865,19 +968,19 @@ function isSupportRole(e: Employe): boolean {
                       key={tf.id}
                       onClick={() => switchDurationWithScale(tf.targetMin)}
                       title={isAr ? `اضغط لتحويل الحاسبة بالكامل إلى ${tf.label}` : `Cliquer pour basculer le calcul sur ${tf.label}`}
-                      className={`p-2 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between gap-1 ${
+                      className={`p-1.5 rounded-xl border cursor-pointer transition-all flex flex-col justify-between gap-0.5 ${
                         isCurrentDuration
-                          ? 'bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-indigo-500/40'
-                          : 'bg-white/85 hover:bg-white text-slate-800 border-black/10 hover:border-indigo-400'
+                          ? 'bg-slate-900 text-white border-slate-900 shadow-sm ring-2 ring-indigo-500/40'
+                          : 'bg-white/90 hover:bg-white text-slate-800 border-black/10 hover:border-indigo-400'
                       }`}
                     >
-                      <div className={`text-[10px] font-black pb-1 border-b ${isCurrentDuration ? 'text-amber-300 border-white/15' : 'text-indigo-700 border-slate-200'}`}>
+                      <div className={`text-[9px] font-black pb-0.5 border-b ${isCurrentDuration ? 'text-amber-300 border-white/15' : 'text-indigo-700 border-slate-200'}`}>
                         {tf.label}
                       </div>
-                      <div className="space-y-0.5 text-[10px]">
+                      <div className="space-y-0.5 text-[9px]">
                         <div className="flex items-center justify-between">
                           <span className={isCurrentDuration ? 'text-slate-300' : 'text-slate-500'}>{isAr ? 'إنتاج:' : 'Pcs:'}</span>
-                          <strong className="font-black">{fmtNum(tf.pcs, 2)} {isAr ? 'ب' : 'p'}</strong>
+                          <strong className="font-black">{fmtNum(tf.pcs, 1)}</strong>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className={isCurrentDuration ? 'text-slate-300' : 'text-slate-500'}>{isAr ? 'بيع:' : 'Vente:'}</span>
@@ -888,7 +991,7 @@ function isSupportRole(e: Employe): boolean {
                           <strong className="font-bold">{tf.cost.toFixed(tf.dec)}</strong>
                         </div>
                       </div>
-                      <div className={`pt-1 border-t text-[10px] font-black ${
+                      <div className={`pt-0.5 border-t text-[9px] font-black ${
                         isCurrentDuration ? 'border-white/15' : 'border-slate-200'
                       } ${tf.profit >= 0 ? (isCurrentDuration ? 'text-emerald-400' : 'text-emerald-700') : (isCurrentDuration ? 'text-rose-400' : 'text-rose-600')}`}>
                         {tf.profit >= 0 ? '+' : ''}{tf.profit.toFixed(tf.dec)} DH
@@ -898,772 +1001,1162 @@ function isSupportRole(e: Employe): boolean {
                 })}
               </div>
             </div>
+
+            {/* Row 5: Compact Max Time Alert + Validate Command Button inside the Carreau */}
+            <div className="pt-1 space-y-2">
+              <div
+                className={`px-3 py-2 rounded-xl border font-bold text-[11px] flex items-center gap-2 ${
+                  alertType === 'danger'
+                    ? 'bg-rose-100 border-rose-300 text-rose-800'
+                    : 'bg-amber-50/90 border-amber-200 text-amber-900'
+                }`}
+              >
+                <Clock className="w-3.5 h-3.5 shrink-0 text-amber-600" />
+                <div className="leading-snug truncate" title={alertMessage}>{alertMessage}</div>
+              </div>
+
+              <button
+                onClick={handleCreateCommand}
+                className="w-full py-2.5 bg-slate-900 hover:bg-indigo-600 text-white rounded-xl font-black text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2"
+              >
+                <ShoppingCart className="w-3.5 h-3.5" />
+                {isAr ? '✓ اعتماد الحساب وإطلاق الطلبية الآن' : '✓ Valider le calcul et créer la commande'}
+              </button>
+            </div>
           </div>
-
-          {/* Max Time Alert Banner */}
-          <div
-            className={`p-3 rounded-2xl border font-bold text-xs flex items-center gap-2.5 print-border ${
-              alertType === 'danger'
-                ? 'bg-rose-100 border-rose-300 text-rose-800'
-                : 'bg-amber-50 border-amber-200 text-amber-800'
-            }`}
-          >
-            <Clock className="w-4 h-4 shrink-0 text-amber-600" />
-            <div className="leading-tight">{alertMessage}</div>
-          </div>
-
-          {/* Action Button */}
-          <button
-            onClick={handleCreateCommand}
-            className="w-full py-3.5 bg-slate-900 hover:bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-slate-300 flex items-center justify-center gap-2 no-print shrink-0"
-          >
-            <ShoppingCart className="w-4 h-4" />
-            {isAr ? '✓ اعتماد الحساب وإطلاق الطلبية الآن' : '✓ Valider le calcul et créer la commande'}
-          </button>
-
         </div>
 
-        {/* RIGHT COLUMN: 3 MULTI-UNIT PROFESSIONAL INPUT CARDS (7 cols on lg) */}
-        <div className="lg:col-span-7 flex flex-col justify-between gap-3">
-          
-          {/* Card 1: Order, Sale & Automatic Multi-Unit Quantity (الدقيقة / الساعة / النهار / الشهر) */}
-          <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm print-border space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
-              <h3 className="text-xs font-black text-slate-800 flex items-center gap-2">
-                <Package className="w-3.5 h-3.5 text-indigo-600" />
-                {isAr ? '📦 معلومات الطلبية والبيع والإنتاج (دقيقة • ساعة • نهار • شهر)' : '📦 Infos Commande, Vente & Cadence (Min • Heure • Jour • Mois)'}
-              </h3>
-              <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-lg text-[10px] font-black border border-indigo-100">
-                {isAr ? '🔄 تحويل أوتوماتيكي فوري' : '🔄 Conversion auto instantanée'}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                  {isAr ? 'نوع البياسة / الموديل' : 'Article / Modèle'}
-                </label>
-                <input
-                  type="text"
-                  value={itemName}
-                  onChange={(e) => setItemName(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 text-xs focus:bg-white focus:border-indigo-600 outline-none"
-                />
-                {selectedFiche && (
-                  <div className="mt-1.5 px-2 py-1 bg-indigo-50/90 border border-indigo-200 rounded-lg flex items-center justify-between text-[10px] text-indigo-800 font-bold">
-                    <span className="truncate" title={isAr ? `استهلاك المتر للبياسة: ${selectedFiche.tissuConsommation || 1.5}m` : `Consommation: ${selectedFiche.tissuConsommation || 1.5}m/p`}>
-                      ✨ {isAr ? `فيش: ${selectedFiche.modele} (${selectedFiche.tissuConsommation || 1.5}m/p)` : `Fiche: ${selectedFiche.modele} (${selectedFiche.tissuConsommation || 1.5}m/p)`}
-                    </span>
+        {/* COLUMN 2 (Left in RTL): ORGANIZED 3-PAGE STEP WIZARD ("MAYCHTCH L3NION + NO SCROLL + NEXT PAGE") */}
+        <div className="lg:col-span-7">
+          <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden flex flex-col">
+            
+            {/* Step Navigation Header (Pages 1 • 2 • 3) */}
+            <div className="p-2.5 bg-slate-900 text-white flex items-center justify-between gap-1.5 border-b border-slate-800">
+              <div className="grid grid-cols-3 gap-1.5 flex-1">
+                {[
+                  { step: 1 as const, icon: Package, titleAr: '1. الموديل والطلبية والإنتاج', titleFr: '1. Modèle & Production', subAr: 'الصورة + البيع + الدقيقة/الساعة', subFr: 'Photo + Vente + Cadence' },
+                  { step: 2 as const, icon: Users, titleAr: '2. اليد العاملة والوقت الدقيق', titleFr: '2. Main-d\'œuvre & Temps', subAr: 'العمال + الوقت + الأجر', subFr: 'Ouvriers + Durée + Taux' },
+                  { step: 3 as const, icon: Scissors, titleAr: '3. السلعة ومصاريف الأتوليي', titleFr: '3. Matière & Frais Atelier', subAr: 'القماش + الآلات + المصاريف', subFr: 'Tissu + Machines + Frais' },
+                ].map((tab) => {
+                  const Icon = tab.icon;
+                  const active = calcPage === tab.step;
+                  return (
                     <button
+                      key={tab.step}
                       type="button"
-                      onClick={() => setSelectedFiche(null)}
-                      className="ml-1 text-indigo-400 hover:text-rose-600 font-bold"
+                      onClick={() => setCalcPage(tab.step)}
+                      className={`px-3 py-2 rounded-2xl text-start transition-all flex items-center gap-2 border ${
+                        active
+                          ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white border-indigo-400 shadow-md'
+                          : 'bg-slate-800/80 hover:bg-slate-800 text-slate-300 border-slate-700/80'
+                      }`}
                     >
-                      ✕
+                      <div className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 font-black text-xs ${
+                        active ? 'bg-white/20 text-white' : 'bg-slate-700 text-slate-300'
+                      }`}>
+                        <Icon className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-[11px] font-black truncate leading-tight">
+                          {isAr ? tab.titleAr : tab.titleFr}
+                        </div>
+                        <div className={`text-[9px] font-bold truncate hidden sm:block ${active ? 'text-indigo-100' : 'text-slate-400'}`}>
+                          {isAr ? tab.subAr : tab.subFr}
+                        </div>
+                      </div>
                     </button>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                  {isAr ? 'الكمية المعتمدة (بياسة)' : 'Quantité totale (pcs)'}
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={getSyncValue('qty_total', quantity, 2)}
-                  onFocus={() => {
-                    setActiveInputKey('qty_total');
-                    setActiveInputRaw(quantity === 0 ? '' : String(Number(quantity.toFixed(2))));
-                  }}
-                  onBlur={() => setActiveInputKey(null)}
-                  onChange={(e) => {
-                    setActiveInputRaw(e.target.value);
-                    setQuantity(e.target.value === '' ? 0 : Number(e.target.value));
-                  }}
-                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-black text-indigo-600 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                  {isAr ? 'ثمن البيع للبياسة (DH)' : 'Prix unitaire (DH)'}
-                </label>
-                <input
-                  type="number"
-                  step="any"
-                  min="0"
-                  value={getSyncValue('price_unit', pricePerPiece, 2)}
-                  onFocus={() => {
-                    setActiveInputKey('price_unit');
-                    setActiveInputRaw(pricePerPiece === 0 ? '' : String(pricePerPiece));
-                  }}
-                  onBlur={() => setActiveInputKey(null)}
-                  onChange={(e) => {
-                    setActiveInputRaw(e.target.value);
-                    setPricePerPiece(e.target.value === '' ? 0 : Number(e.target.value));
-                  }}
-                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-indigo-600 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                  {isAr ? 'الثمن الإجمالي (DH)' : 'Total Vente (DH)'}
-                </label>
-                <input
-                  type="text"
-                  readOnly
-                  value={totalPriceClient.toFixed(2)}
-                  className="w-full px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl font-black text-xs text-center cursor-not-allowed"
-                />
+                  );
+                })}
               </div>
             </div>
 
-            {/* Synchronized Quantity Rate Inputs: Minute | Hour | Day | Month */}
-            <div className="p-3 bg-gradient-to-r from-indigo-50/70 via-slate-50 to-amber-50/60 rounded-2xl border border-indigo-100/90">
-              <div className="flex flex-wrap items-center justify-between gap-1 mb-2">
-                <span className="text-[10px] font-black text-indigo-900">
-                  {isAr
-                    ? '⚡ إدخال وحساب كمية الإنتاج (اكتب فـ الدقيقة أو الساعة أو النهار أو الشهر وكيعطيك الباقي أوتوماتيك):'
-                    : '⚡ Cadence de production (saisissez par Minute, Heure, Jour ou Mois — calcul automatique) :'}
-                </span>
-                <span className="text-[10px] font-bold text-emerald-700">
-                  {isAr ? `1 شهر = 26 يوم = 208 ساعة = 12,480 دقيقة` : `1 mois = 26j = 208h = 12 480 min`}
-                </span>
-              </div>
+            {/* ACTIVE PAGE BODY (Clean, Organized, Zero Scroll) */}
+            <div className="p-4 space-y-3.5">
+              
+              {/* ================= PAGE 1: MODEL PHOTO + ORDER + 4-UNIT PRODUCTION CADENCE ================= */}
+              {calcPage === 1 && (
+                <div className="space-y-3.5 animate-in fade-in duration-150">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
+                    <h3 className="text-xs font-black text-slate-800 flex items-center gap-2">
+                      <Package className="w-4 h-4 text-indigo-600" />
+                      {isAr ? '📦 الصفحة 1: صورة الموديل، معلومات الطلبية، وكمية الإنتاج الأوتوماتيكية' : '📦 Page 1 : Photo du Modèle, Commande & Cadence Automatique'}
+                    </h3>
+                    <span className="px-2.5 py-0.5 bg-indigo-50 text-indigo-700 rounded-lg text-[10px] font-black border border-indigo-100">
+                      {isAr ? '🔄 تحويل أوتوماتيكي فوري' : '🔄 Conversion auto instantanée'}
+                    </span>
+                  </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {/* Pieces per Minute */}
-                <div className="bg-white p-2 rounded-xl border border-indigo-100 shadow-2xs">
-                  <label className="block text-[10px] font-black text-slate-600 mb-1 text-center">
-                    {isAr ? '⏱️ بياسة / دقيقة' : '⏱️ Pièces / Minute'}
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    placeholder="0"
-                    value={getSyncValue('pcs_min', pcsPerMin, 3)}
-                    onFocus={() => {
-                      setActiveInputKey('pcs_min');
-                      setActiveInputRaw(pcsPerMin === 0 ? '' : fmtNum(pcsPerMin, 3));
-                    }}
-                    onBlur={() => setActiveInputKey(null)}
-                    onChange={(e) => {
-                      setActiveInputRaw(e.target.value);
-                      const val = e.target.value === '' ? 0 : Number(e.target.value);
-                      setQuantity(Math.round(val * effectiveDurationMin * 100) / 100);
-                    }}
-                    className="w-full px-2 py-1 bg-indigo-50/60 focus:bg-white border border-indigo-200 focus:border-indigo-600 rounded-lg font-black text-indigo-700 text-xs text-center outline-none"
-                  />
-                  <div className="mt-1 text-[9px] font-bold text-slate-500 text-center flex justify-between px-1">
-                    <span>{isAr ? 'البيع:' : 'Vente:'}</span>
-                    <strong className="text-emerald-700">{revMin.toFixed(2)} DH/د</strong>
+                  {/* Model Photo Carreau + Model Name + Quantity + Price + Total */}
+                  <div className="p-3 bg-slate-50/90 rounded-2xl border border-slate-200/80 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    {/* Prominent Square Model Photo ("FBLSA DIAL TITL IKON HDAHA TSWIRA DIAL LMODEL") */}
+                    <div className="flex items-center gap-2.5 shrink-0 bg-white p-2 rounded-2xl border border-indigo-100 shadow-2xs">
+                      <div className="relative group shrink-0">
+                        <img
+                          src={activeModelPhoto}
+                          alt={itemName}
+                          onClick={() => setIsPhotoPreviewOpen(true)}
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK_GARMENT_SVG; }}
+                          className="w-16 h-16 rounded-xl object-cover border-2 border-indigo-200 cursor-pointer group-hover:border-indigo-600 transition-all bg-indigo-50"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => modelPhotoInputRef.current?.click()}
+                          title={isAr ? 'رفع صورة الموديل من الجهاز' : 'Importer une photo'}
+                          className="absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[9px] font-black flex items-center gap-0.5 shadow border border-white"
+                        >
+                          <Camera className="w-2.5 h-2.5" />
+                          <span>{isAr ? 'صورة' : 'Photo'}</span>
+                        </button>
+                      </div>
+                      <div className="flex flex-col gap-1 sm:hidden">
+                        <span className="text-xs font-black text-slate-800">{isAr ? 'صورة الموديل' : 'Photo Modèle'}</span>
+                        <button
+                          type="button"
+                          onClick={() => setIsFichePickerOpen(true)}
+                          className="text-[10px] font-black text-indigo-600 underline text-start"
+                        >
+                          {isAr ? 'اختيار من الفيش تكنيك' : 'Choisir Fiche Tech'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 4 Main Order Inputs right beside the Model Photo */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 flex-1">
+                      <div>
+                        <label className="block text-[10px] font-black text-slate-700 mb-1">
+                          {isAr ? '🏷️ نوع البياسة / الموديل' : '🏷️ Article / Modèle'}
+                        </label>
+                        <input
+                          type="text"
+                          value={itemName}
+                          onChange={(e) => setItemName(e.target.value)}
+                          placeholder={isAr ? 'اسم الموديل...' : 'Nom du modèle...'}
+                          className="w-full px-2.5 py-2 bg-white border border-slate-300 rounded-xl font-black text-slate-900 text-xs focus:border-indigo-600 outline-none shadow-2xs"
+                        />
+                        {selectedFiche && (
+                          <div className="mt-1 px-1.5 py-0.5 bg-indigo-50 border border-indigo-200 rounded-md flex items-center justify-between text-[9px] text-indigo-800 font-bold">
+                            <span className="truncate">✨ {selectedFiche.modele} ({selectedFiche.tissuConsommation || 1.5}m)</span>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedFiche(null)}
+                              className="ml-1 text-indigo-400 hover:text-rose-600 font-bold"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-black text-slate-700 mb-1 text-center">
+                          {isAr ? '📦 الكمية المعتمدة (بياسة)' : '📦 Quantité (pcs)'}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          value={getSyncValue('qty_total', quantity, 2)}
+                          onFocus={() => {
+                            setActiveInputKey('qty_total');
+                            setActiveInputRaw(quantity === 0 ? '' : String(Number(quantity.toFixed(2))));
+                          }}
+                          onBlur={() => setActiveInputKey(null)}
+                          onChange={(e) => {
+                            setActiveInputRaw(e.target.value);
+                            setQuantity(e.target.value === '' ? 0 : Number(e.target.value));
+                          }}
+                          className="w-full px-2.5 py-2 bg-white border border-slate-300 rounded-xl font-black text-indigo-600 text-xs text-center focus:border-indigo-600 outline-none shadow-2xs"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-black text-slate-700 mb-1 text-center">
+                          {isAr ? '💵 ثمن البيع للبياسة (DH)' : '💵 Prix vente / pc (DH)'}
+                        </label>
+                        <input
+                          type="number"
+                          step="any"
+                          min="0"
+                          value={getSyncValue('price_unit', pricePerPiece, 2)}
+                          onFocus={() => {
+                            setActiveInputKey('price_unit');
+                            setActiveInputRaw(pricePerPiece === 0 ? '' : String(pricePerPiece));
+                          }}
+                          onBlur={() => setActiveInputKey(null)}
+                          onChange={(e) => {
+                            setActiveInputRaw(e.target.value);
+                            setPricePerPiece(e.target.value === '' ? 0 : Number(e.target.value));
+                          }}
+                          className="w-full px-2.5 py-2 bg-white border border-slate-300 rounded-xl font-black text-indigo-600 text-xs text-center focus:border-indigo-600 outline-none shadow-2xs"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-black text-emerald-800 mb-1 text-center">
+                          {isAr ? '💰 الثمن الإجمالي (DH)' : '💰 Total Vente (DH)'}
+                        </label>
+                        <input
+                          type="text"
+                          readOnly
+                          value={totalPriceClient.toFixed(2)}
+                          className="w-full px-2.5 py-2 bg-emerald-50 border border-emerald-300 text-emerald-700 rounded-xl font-black text-xs text-center cursor-not-allowed"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Synchronized Quantity Rate Inputs: Minute | Hour | Day | Month */}
+                  <div className="p-3.5 bg-gradient-to-r from-indigo-50/80 via-slate-50 to-amber-50/60 rounded-2xl border border-indigo-100">
+                    <div className="flex flex-wrap items-center justify-between gap-1 mb-2.5">
+                      <span className="text-[11px] font-black text-indigo-950">
+                        {isAr
+                          ? '⚡ وتيرة الإنتاج الأوتوماتيكية (اكتب فـ الدقيقة أو الساعة أو النهار أو الشهر وكيعطيك الباقي أوتوماتيك):'
+                          : '⚡ Cadence de production (saisissez par Minute, Heure, Jour ou Mois — calcul automatique) :'}
+                      </span>
+                      <span className="text-[10px] font-black text-emerald-700 bg-white px-2 py-0.5 rounded-lg border border-emerald-200">
+                        {isAr ? `1 شهر = 26 يوم = 208 ساعة = 12,480 دقيقة` : `1 mois = 26j = 208h = 12 480 min`}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                      {/* Pieces per Minute */}
+                      <div className="bg-white p-2.5 rounded-xl border border-indigo-100 shadow-2xs">
+                        <label className="block text-[10px] font-black text-slate-600 mb-1 text-center">
+                          {isAr ? '⏱️ بياسة / دقيقة' : '⏱️ Pièces / Minute'}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          placeholder="0"
+                          value={getSyncValue('pcs_min', pcsPerMin, 3)}
+                          onFocus={() => {
+                            setActiveInputKey('pcs_min');
+                            setActiveInputRaw(pcsPerMin === 0 ? '' : fmtNum(pcsPerMin, 3));
+                          }}
+                          onBlur={() => setActiveInputKey(null)}
+                          onChange={(e) => {
+                            setActiveInputRaw(e.target.value);
+                            const val = e.target.value === '' ? 0 : Number(e.target.value);
+                            setQuantity(Math.round(val * effectiveDurationMin * 100) / 100);
+                          }}
+                          className="w-full px-2 py-1.5 bg-indigo-50/60 focus:bg-white border border-indigo-200 focus:border-indigo-600 rounded-lg font-black text-indigo-700 text-xs text-center outline-none"
+                        />
+                        <div className="mt-1.5 text-[9px] font-bold text-slate-500 text-center flex justify-between px-1">
+                          <span>{isAr ? 'البيع:' : 'Vente:'}</span>
+                          <strong className="text-emerald-700">{revMin.toFixed(2)} DH/د</strong>
+                        </div>
+                      </div>
+
+                      {/* Pieces per Hour */}
+                      <div className="bg-white p-2.5 rounded-xl border border-indigo-100 shadow-2xs">
+                        <label className="block text-[10px] font-black text-slate-600 mb-1 text-center">
+                          {isAr ? '🕐 بياسة / ساعة' : '🕐 Pièces / Heure'}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          placeholder="0"
+                          value={getSyncValue('pcs_hour', pcsPerHour, 2)}
+                          onFocus={() => {
+                            setActiveInputKey('pcs_hour');
+                            setActiveInputRaw(pcsPerHour === 0 ? '' : fmtNum(pcsPerHour, 2));
+                          }}
+                          onBlur={() => setActiveInputKey(null)}
+                          onChange={(e) => {
+                            setActiveInputRaw(e.target.value);
+                            const val = e.target.value === '' ? 0 : Number(e.target.value);
+                            const newPcsMin = val / 60;
+                            setQuantity(Math.round(newPcsMin * effectiveDurationMin * 100) / 100);
+                          }}
+                          className="w-full px-2 py-1.5 bg-indigo-50/60 focus:bg-white border border-indigo-200 focus:border-indigo-600 rounded-lg font-black text-indigo-700 text-xs text-center outline-none"
+                        />
+                        <div className="mt-1.5 text-[9px] font-bold text-slate-500 text-center flex justify-between px-1">
+                          <span>{isAr ? 'البيع:' : 'Vente:'}</span>
+                          <strong className="text-emerald-700">{revHour.toFixed(2)} DH/س</strong>
+                        </div>
+                      </div>
+
+                      {/* Pieces per Day (8h) */}
+                      <div className="bg-white p-2.5 rounded-xl border border-indigo-100 shadow-2xs">
+                        <label className="block text-[10px] font-black text-slate-600 mb-1 text-center">
+                          {isAr ? '☀️ بياسة / نهار (8س)' : '☀️ Pièces / Jour (8h)'}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          placeholder="0"
+                          value={getSyncValue('pcs_day', pcsPerDay, 2)}
+                          onFocus={() => {
+                            setActiveInputKey('pcs_day');
+                            setActiveInputRaw(pcsPerDay === 0 ? '' : fmtNum(pcsPerDay, 2));
+                          }}
+                          onBlur={() => setActiveInputKey(null)}
+                          onChange={(e) => {
+                            setActiveInputRaw(e.target.value);
+                            const val = e.target.value === '' ? 0 : Number(e.target.value);
+                            const newPcsMin = val / 480;
+                            setQuantity(Math.round(newPcsMin * effectiveDurationMin * 100) / 100);
+                          }}
+                          className="w-full px-2 py-1.5 bg-indigo-50/60 focus:bg-white border border-indigo-200 focus:border-indigo-600 rounded-lg font-black text-indigo-700 text-xs text-center outline-none"
+                        />
+                        <div className="mt-1.5 text-[9px] font-bold text-slate-500 text-center flex justify-between px-1">
+                          <span>{isAr ? 'البيع:' : 'Vente:'}</span>
+                          <strong className="text-emerald-700">{revDay.toFixed(2)} DH/يوم</strong>
+                        </div>
+                      </div>
+
+                      {/* Pieces per Month (26j = 208h = 12,480 min) */}
+                      <div className="bg-white p-2.5 rounded-xl border border-indigo-100 shadow-2xs">
+                        <label className="block text-[10px] font-black text-slate-600 mb-1 text-center">
+                          {isAr ? '📅 بياسة / شهر (26ي)' : '📅 Pièces / Mois (26j)'}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          placeholder="0"
+                          value={getSyncValue('pcs_month', pcsPerMonth, 2)}
+                          onFocus={() => {
+                            setActiveInputKey('pcs_month');
+                            setActiveInputRaw(pcsPerMonth === 0 ? '' : fmtNum(pcsPerMonth, 2));
+                          }}
+                          onBlur={() => setActiveInputKey(null)}
+                          onChange={(e) => {
+                            setActiveInputRaw(e.target.value);
+                            const val = e.target.value === '' ? 0 : Number(e.target.value);
+                            const newPcsMin = val / 12480;
+                            setQuantity(Math.round(newPcsMin * effectiveDurationMin * 100) / 100);
+                          }}
+                          className="w-full px-2 py-1.5 bg-indigo-50/60 focus:bg-white border border-indigo-200 focus:border-indigo-600 rounded-lg font-black text-indigo-700 text-xs text-center outline-none"
+                        />
+                        <div className="mt-1.5 text-[9px] font-bold text-slate-500 text-center flex justify-between px-1">
+                          <span>{isAr ? 'البيع:' : 'Vente:'}</span>
+                          <strong className="text-emerald-700">{revMonth.toFixed(2)} DH/شهر</strong>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
+              )}
 
-                {/* Pieces per Hour */}
-                <div className="bg-white p-2 rounded-xl border border-indigo-100 shadow-2xs">
-                  <label className="block text-[10px] font-black text-slate-600 mb-1 text-center">
-                    {isAr ? '🕐 بياسة / ساعة' : '🕐 Pièces / Heure'}
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    placeholder="0"
-                    value={getSyncValue('pcs_hour', pcsPerHour, 2)}
-                    onFocus={() => {
-                      setActiveInputKey('pcs_hour');
-                      setActiveInputRaw(pcsPerHour === 0 ? '' : fmtNum(pcsPerHour, 2));
-                    }}
-                    onBlur={() => setActiveInputKey(null)}
-                    onChange={(e) => {
-                      setActiveInputRaw(e.target.value);
-                      const val = e.target.value === '' ? 0 : Number(e.target.value);
-                      const newPcsMin = val / 60;
-                      setQuantity(Math.round(newPcsMin * effectiveDurationMin * 100) / 100);
-                    }}
-                    className="w-full px-2 py-1 bg-indigo-50/60 focus:bg-white border border-indigo-200 focus:border-indigo-600 rounded-lg font-black text-indigo-700 text-xs text-center outline-none"
-                  />
-                  <div className="mt-1 text-[9px] font-bold text-slate-500 text-center flex justify-between px-1">
-                    <span>{isAr ? 'البيع:' : 'Vente:'}</span>
-                    <strong className="text-emerald-700">{revHour.toFixed(2)} DH/س</strong>
+              {/* ================= PAGE 2: LABOR, 4-UNIT DURATION & 4-UNIT WAGE ================= */}
+              {calcPage === 2 && (
+                <div className="space-y-3.5 animate-in fade-in duration-150">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
+                    <h3 className="text-xs font-black text-slate-800 flex items-center gap-2">
+                      <Users className="w-4 h-4 text-indigo-600" />
+                      {isAr ? '👷 الصفحة 2: اليد العاملة، وقت الخدمة الدقيق، والأجر (دقيقة • ساعة • نهار • شهر)' : '👷 Page 2 : Main-d\'œuvre, Temps Précis & Salaire'}
+                    </h3>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setWorkers(activePostesCount)}
+                        className="px-2 py-0.5 bg-amber-50 hover:bg-amber-500 text-amber-700 hover:text-white rounded-md text-[10px] font-black transition-all border border-amber-200"
+                      >
+                        = {activePostesCount} {isAr ? 'بوستات في الغام' : 'postes (Gamme)'}
+                      </button>
+                      <button
+                        onClick={() => setShowWorkersModal(true)}
+                        className="text-[10px] font-black text-indigo-600 hover:text-indigo-800 flex items-center gap-1 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100"
+                      >
+                        <UserCheck className="w-3 h-3" />
+                        {isAr ? 'تحديد أسماء العمال' : 'Sélectionner ouvriers'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Row 1: Workers Count + Synchronized Work Duration in 4 Units */}
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                    <div>
+                      <label className="block text-[10px] font-black text-slate-600 mb-1 text-center">
+                        {isAr ? '👥 عدد العمال' : '👥 Ouvriers'}
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={workers}
+                        onChange={(e) => setWorkers(Math.max(1, Number(e.target.value) || 1))}
+                        className="w-full px-2 py-2 bg-indigo-50 border border-indigo-200 rounded-xl font-black text-indigo-700 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-black text-amber-700 mb-1 text-center">
+                        {isAr ? '⏱️ دقائق العمل' : '⏱️ Minutes trav.'}
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        placeholder="0"
+                        value={getSyncValue('dur_min', totalMinutesPerWorker, 2)}
+                        onFocus={() => {
+                          setActiveInputKey('dur_min');
+                          setActiveInputRaw(totalMinutesPerWorker === 0 ? '' : fmtNum(totalMinutesPerWorker, 2));
+                        }}
+                        onBlur={() => setActiveInputKey(null)}
+                        onChange={(e) => {
+                          setActiveInputRaw(e.target.value);
+                          const minVal = e.target.value === '' ? 0 : Number(e.target.value);
+                          setExtraHours(0);
+                          setDays(minVal / 480);
+                        }}
+                        className="w-full px-2 py-2 bg-amber-50/60 border border-amber-200 rounded-xl font-black text-amber-800 text-xs text-center focus:bg-white focus:border-amber-500 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-black text-indigo-700 mb-1 text-center">
+                        {isAr ? '🕐 ساعات العمل' : '🕐 Heures trav.'}
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        placeholder="0"
+                        value={getSyncValue('dur_hour', totalHoursPerWorker, 2)}
+                        onFocus={() => {
+                          setActiveInputKey('dur_hour');
+                          setActiveInputRaw(totalHoursPerWorker === 0 ? '' : fmtNum(totalHoursPerWorker, 2));
+                        }}
+                        onBlur={() => setActiveInputKey(null)}
+                        onChange={(e) => {
+                          setActiveInputRaw(e.target.value);
+                          const hrVal = e.target.value === '' ? 0 : Number(e.target.value);
+                          setExtraHours(0);
+                          setDays(hrVal / 8);
+                        }}
+                        className="w-full px-2 py-2 bg-indigo-50/50 border border-indigo-200 rounded-xl font-black text-indigo-700 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-black text-slate-700 mb-1 text-center">
+                        {isAr ? '☀️ أيام العمل (8س)' : '☀️ Jours (8h)'}
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        placeholder="0"
+                        value={getSyncValue('dur_day', days + (extraHours / 8), 3)}
+                        onFocus={() => {
+                          setActiveInputKey('dur_day');
+                          const d = days + (extraHours / 8);
+                          setActiveInputRaw(d === 0 ? '' : fmtNum(d, 3));
+                        }}
+                        onBlur={() => setActiveInputKey(null)}
+                        onChange={(e) => {
+                          setActiveInputRaw(e.target.value);
+                          const dayVal = e.target.value === '' ? 0 : Number(e.target.value);
+                          setExtraHours(0);
+                          setDays(dayVal);
+                        }}
+                        className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-xl font-black text-indigo-600 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-black text-emerald-700 mb-1 text-center">
+                        {isAr ? '📅 أشهر العمل (26ي)' : '📅 Mois (26j)'}
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        placeholder="0"
+                        value={getSyncValue('dur_month', totalHoursPerWorker / 208, 4)}
+                        onFocus={() => {
+                          setActiveInputKey('dur_month');
+                          const m = totalHoursPerWorker / 208;
+                          setActiveInputRaw(m === 0 ? '' : fmtNum(m, 4));
+                        }}
+                        onBlur={() => setActiveInputKey(null)}
+                        onChange={(e) => {
+                          setActiveInputRaw(e.target.value);
+                          const monthVal = e.target.value === '' ? 0 : Number(e.target.value);
+                          setExtraHours(0);
+                          setDays(monthVal * 26);
+                        }}
+                        className="w-full px-2 py-2 bg-emerald-50/50 border border-emerald-200 rounded-xl font-black text-emerald-700 text-xs text-center focus:bg-white focus:border-emerald-600 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Row 2: Synchronized Worker Wage Rate in 4 Units */}
+                  <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80">
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                      <span className="text-[10px] font-black text-slate-700">
+                        {isAr
+                          ? '💵 أجر العامل الواحد (عدّل أي خانة: دقيقة أو ساعة أو نهار أو شهر وكيتحسب الباقي أوتوماتيك):'
+                          : '💵 Salaire d\'un ouvrier (modifiable par Minute, Heure, Jour ou Mois) :'}
+                      </span>
+                      <div className="flex items-center bg-white p-0.5 rounded-lg border border-slate-200">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRateMode('smig');
+                            setRate(17.10);
+                          }}
+                          className={`px-2 py-0.5 rounded-md text-[9px] font-black transition-all ${
+                            rateMode === 'smig'
+                              ? 'bg-amber-500 text-white shadow-2xs'
+                              : 'text-slate-500 hover:text-slate-800'
+                          }`}
+                        >
+                          SMIG (17.10 DH/h)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRateMode('rh');
+                            const sel = allWorkers.filter(w => selectedWorkerIds.includes(w.id));
+                            const sum = sel.reduce((acc, w) => {
+                              const monthly = w.salaireMensuel && w.salaireMensuel > 0 ? w.salaireMensuel : 3556.80;
+                              return acc + (monthly / 208);
+                            }, 0);
+                            const avg = sel.length > 0 ? Number((sum / sel.length).toFixed(2)) : 17.10;
+                            setRate(avg);
+                          }}
+                          className={`px-2 py-0.5 rounded-md text-[9px] font-black transition-all flex items-center gap-0.5 ${
+                            rateMode === 'rh'
+                              ? 'bg-indigo-600 text-white shadow-2xs'
+                              : 'text-slate-500 hover:text-slate-800'
+                          }`}
+                        >
+                          👥 {isAr ? 'رواتب RH' : 'RH Data'}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 mb-1 text-center">
+                          {isAr ? 'ثمن الدقيقة (DH/د)' : 'Taux / Minute'}
+                        </label>
+                        <input
+                          type="number"
+                          step="any"
+                          min="0"
+                          value={getSyncValue('rate_min', ratePerMin, 4)}
+                          onFocus={() => {
+                            setActiveInputKey('rate_min');
+                            setActiveInputRaw(fmtNum(ratePerMin, 4));
+                          }}
+                          onBlur={() => setActiveInputKey(null)}
+                          onChange={(e) => {
+                            setActiveInputRaw(e.target.value);
+                            const v = e.target.value === '' ? 0 : Number(e.target.value);
+                            setRate(v * 60);
+                            if (rateMode === 'rh') setRateMode('smig');
+                          }}
+                          className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg font-black text-indigo-600 text-xs text-center focus:border-indigo-600 outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 mb-1 text-center">
+                          {isAr ? 'ثمن الساعة (DH/س)' : 'Taux / Heure'}
+                        </label>
+                        <input
+                          type="number"
+                          step="any"
+                          min="0"
+                          value={getSyncValue('rate_hour', ratePerHour, 2)}
+                          onFocus={() => {
+                            setActiveInputKey('rate_hour');
+                            setActiveInputRaw(fmtNum(ratePerHour, 2));
+                          }}
+                          onBlur={() => setActiveInputKey(null)}
+                          onChange={(e) => {
+                            setActiveInputRaw(e.target.value);
+                            const v = e.target.value === '' ? 0 : Number(e.target.value);
+                            setRate(v);
+                            if (rateMode === 'rh') setRateMode('smig');
+                          }}
+                          className="w-full px-2 py-1.5 bg-white border border-indigo-300 rounded-lg font-black text-indigo-700 text-xs text-center focus:border-indigo-600 outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 mb-1 text-center">
+                          {isAr ? 'ثمن النهار (DH/يوم)' : 'Taux / Jour (8h)'}
+                        </label>
+                        <input
+                          type="number"
+                          step="any"
+                          min="0"
+                          value={getSyncValue('rate_day', ratePerDay, 2)}
+                          onFocus={() => {
+                            setActiveInputKey('rate_day');
+                            setActiveInputRaw(fmtNum(ratePerDay, 2));
+                          }}
+                          onBlur={() => setActiveInputKey(null)}
+                          onChange={(e) => {
+                            setActiveInputRaw(e.target.value);
+                            const v = e.target.value === '' ? 0 : Number(e.target.value);
+                            setRate(v / 8);
+                            if (rateMode === 'rh') setRateMode('smig');
+                          }}
+                          className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg font-black text-indigo-600 text-xs text-center focus:border-indigo-600 outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 mb-1 text-center">
+                          {isAr ? 'ثمن الشهر (DH/شهر)' : 'Salaire / Mois'}
+                        </label>
+                        <input
+                          type="number"
+                          step="any"
+                          min="0"
+                          value={getSyncValue('rate_month', ratePerMonth, 2)}
+                          onFocus={() => {
+                            setActiveInputKey('rate_month');
+                            setActiveInputRaw(fmtNum(ratePerMonth, 2));
+                          }}
+                          onBlur={() => setActiveInputKey(null)}
+                          onChange={(e) => {
+                            setActiveInputRaw(e.target.value);
+                            const v = e.target.value === '' ? 0 : Number(e.target.value);
+                            setRate(v / 208);
+                            if (rateMode === 'rh') setRateMode('smig');
+                          }}
+                          className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg font-black text-emerald-700 text-xs text-center focus:border-emerald-600 outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Live Production Capacity Indicator & Gamme Minutes Connection */}
+                  <div className="p-2.5 bg-gradient-to-r from-indigo-50/90 to-amber-50/80 rounded-2xl border border-indigo-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 shrink-0" />
+                      <span className="font-extrabold text-slate-800">
+                        {isAr ? '⚡ قدرة الغام (Gamme):' : '⚡ Capacité Gamme :'}
+                      </span>
+                      <span className="px-2 py-0.5 bg-amber-500/10 text-amber-800 rounded-lg text-[11px] font-black border border-amber-500/20">
+                        {activePostesCount} {isAr ? 'بوستات' : 'postes'} • {activeGammeMinutes} {isAr ? 'دقيقة/بياسة' : 'min/pc'}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 font-black text-indigo-700 text-[11px]">
+                      <span>{fmtNum((workers * 60) / activeGammeMinutes, 1)} {isAr ? 'بياسة/ساعة' : 'pcs/h'}</span>
+                      <span className="text-slate-300">|</span>
+                      <span>{Math.max(1, Math.floor((workers * 8 * 60) / activeGammeMinutes))} {isAr ? 'بياسة/يوم' : 'pcs/j'}</span>
+                      <button
+                        type="button"
+                        onClick={() => setShowGammeModal(true)}
+                        className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[10px] font-black transition-all"
+                      >
+                        {isAr ? '🏭 تعديل البوستات' : '🏭 Éditer Gamme'}
+                      </button>
+                    </div>
                   </div>
                 </div>
+              )}
 
-                {/* Pieces per Day (8h) */}
-                <div className="bg-white p-2 rounded-xl border border-indigo-100 shadow-2xs">
-                  <label className="block text-[10px] font-black text-slate-600 mb-1 text-center">
-                    {isAr ? '☀️ بياسة / نهار (8س)' : '☀️ Pièces / Jour (8h)'}
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    placeholder="0"
-                    value={getSyncValue('pcs_day', pcsPerDay, 2)}
-                    onFocus={() => {
-                      setActiveInputKey('pcs_day');
-                      setActiveInputRaw(pcsPerDay === 0 ? '' : fmtNum(pcsPerDay, 2));
-                    }}
-                    onBlur={() => setActiveInputKey(null)}
-                    onChange={(e) => {
-                      setActiveInputRaw(e.target.value);
-                      const val = e.target.value === '' ? 0 : Number(e.target.value);
-                      const newPcsMin = val / 480;
-                      setQuantity(Math.round(newPcsMin * effectiveDurationMin * 100) / 100);
-                    }}
-                    className="w-full px-2 py-1 bg-indigo-50/60 focus:bg-white border border-indigo-200 focus:border-indigo-600 rounded-lg font-black text-indigo-700 text-xs text-center outline-none"
-                  />
-                  <div className="mt-1 text-[9px] font-bold text-slate-500 text-center flex justify-between px-1">
-                    <span>{isAr ? 'البيع:' : 'Vente:'}</span>
-                    <strong className="text-emerald-700">{revDay.toFixed(2)} DH/يوم</strong>
+              {/* ================= PAGE 3: MATERIALS & 4-UNIT ATELIER EXPENSES ================= */}
+              {calcPage === 3 && (
+                <div className="space-y-3.5 animate-in fade-in duration-150">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
+                    <h3 className="text-xs font-black text-slate-800 flex items-center gap-2">
+                      <Scissors className="w-4 h-4 text-indigo-600" />
+                      {isAr ? '🧵 الصفحة 3: السلعة والقماش ومصاريف الأتوليي (دقيقة • ساعة • نهار • شهر)' : '🧵 Page 3 : Matière Première & Frais d\'Atelier'}
+                    </h3>
+                    {monthlyChargesSynced && (
+                      <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-lg px-2 py-0.5">
+                        {isAr ? '✓ مرتبط بصفحة المصاريف' : '✓ Synchro Charges'}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1 text-center">
+                        {isAr ? '🧵 ثمن القماش واللوازم (الإجمالي DH)' : '🧵 Coût matière total (DH)'}
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        value={getSyncValue('mat_total', materials, 2)}
+                        onFocus={() => {
+                          setActiveInputKey('mat_total');
+                          setActiveInputRaw(materials === 0 ? '' : fmtNum(materials, 2));
+                        }}
+                        onBlur={() => setActiveInputKey(null)}
+                        onChange={(e) => {
+                          setActiveInputRaw(e.target.value);
+                          setMaterials(e.target.value === '' ? 0 : Number(e.target.value));
+                        }}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-black text-indigo-600 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1 text-center">
+                        {isAr ? '🧶 ثمن السلعة للبياسة الواحدة (DH/بياسة)' : '🧶 Coût matière / pièce (DH)'}
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        value={getSyncValue('mat_unit', unitMatCost, 3)}
+                        onFocus={() => {
+                          setActiveInputKey('mat_unit');
+                          setActiveInputRaw(unitMatCost === 0 ? '' : fmtNum(unitMatCost, 3));
+                        }}
+                        onBlur={() => setActiveInputKey(null)}
+                        onChange={(e) => {
+                          setActiveInputRaw(e.target.value);
+                          const u = e.target.value === '' ? 0 : Number(e.target.value);
+                          setMaterials(Math.round(u * (quantity || 1) * 100) / 100);
+                        }}
+                        className="w-full px-3 py-2 bg-emerald-50/50 border border-emerald-200 rounded-xl font-black text-emerald-700 text-xs text-center focus:bg-white focus:border-emerald-600 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1 text-center">
+                        {isAr ? '⚙️ عدد آلات الأتوليي' : '⚙️ Machines atelier (total)'}
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={totalMachines}
+                        onChange={(e) => setTotalMachines(Math.max(1, Number(e.target.value) || 1))}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-black text-indigo-600 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Atelier Fixed Expenses in 4 Synchronized Units */}
+                  <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-black text-slate-700 flex items-center gap-1">
+                        <span>🏢</span>
+                        {isAr ? 'مصاريف الأتوليي الثابتة (الكرا، الضو...) — بالدقيقة / الساعة / النهار / الشهر:' : 'Frais fixes d\'atelier (Loyer, élec...) — Min / Heure / Jour / Mois :'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <div>
+                        <label className="block text-[9px] font-bold text-slate-500 mb-1 text-center">
+                          {isAr ? 'مصاريف الدقيقة (DH/د)' : 'Frais / Minute'}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          value={getSyncValue('frais_min', monthlyAtelierMin, 3)}
+                          onFocus={() => {
+                            setActiveInputKey('frais_min');
+                            setActiveInputRaw(fmtNum(monthlyAtelierMin, 3));
+                          }}
+                          onBlur={() => setActiveInputKey(null)}
+                          onChange={(e) => {
+                            setActiveInputRaw(e.target.value);
+                            const v = e.target.value === '' ? 0 : Number(e.target.value);
+                            setMonthlyOther(Math.round(v * 12480 * 100) / 100);
+                            setMonthlyChargesSynced(false);
+                          }}
+                          className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg font-black text-slate-700 text-xs text-center focus:border-indigo-600 outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[9px] font-bold text-slate-500 mb-1 text-center">
+                          {isAr ? 'مصاريف الساعة (DH/س)' : 'Frais / Heure'}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          value={getSyncValue('frais_hour', monthlyAtelierHour, 2)}
+                          onFocus={() => {
+                            setActiveInputKey('frais_hour');
+                            setActiveInputRaw(fmtNum(monthlyAtelierHour, 2));
+                          }}
+                          onBlur={() => setActiveInputKey(null)}
+                          onChange={(e) => {
+                            setActiveInputRaw(e.target.value);
+                            const v = e.target.value === '' ? 0 : Number(e.target.value);
+                            setMonthlyOther(Math.round(v * 208 * 100) / 100);
+                            setMonthlyChargesSynced(false);
+                          }}
+                          className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg font-black text-slate-700 text-xs text-center focus:border-indigo-600 outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[9px] font-bold text-slate-500 mb-1 text-center">
+                          {isAr ? 'مصاريف النهار (DH/يوم)' : 'Frais / Jour (8h)'}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          value={getSyncValue('frais_day', monthlyAtelierDay, 2)}
+                          onFocus={() => {
+                            setActiveInputKey('frais_day');
+                            setActiveInputRaw(fmtNum(monthlyAtelierDay, 2));
+                          }}
+                          onBlur={() => setActiveInputKey(null)}
+                          onChange={(e) => {
+                            setActiveInputRaw(e.target.value);
+                            const v = e.target.value === '' ? 0 : Number(e.target.value);
+                            setMonthlyOther(Math.round(v * 26 * 100) / 100);
+                            setMonthlyChargesSynced(false);
+                          }}
+                          className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg font-black text-slate-700 text-xs text-center focus:border-indigo-600 outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[9px] font-bold text-indigo-700 mb-1 text-center">
+                          {isAr ? 'مصاريف الشهر (DH/شهر)' : 'Frais / Mois (26j)'}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          value={getSyncValue('frais_month', monthlyOther, 2)}
+                          onFocus={() => {
+                            setActiveInputKey('frais_month');
+                            setActiveInputRaw(monthlyOther === 0 ? '' : fmtNum(monthlyOther, 2));
+                          }}
+                          onBlur={() => setActiveInputKey(null)}
+                          onChange={(e) => {
+                            setActiveInputRaw(e.target.value);
+                            setMonthlyOther(e.target.value === '' ? 0 : Number(e.target.value));
+                            setMonthlyChargesSynced(false);
+                          }}
+                          className="w-full px-2 py-1.5 bg-white border border-indigo-300 rounded-lg font-black text-indigo-700 text-xs text-center focus:border-indigo-600 outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Compact Carreau Summary of Exact Cost Per Piece */}
+                  <div className="p-3 bg-gradient-to-r from-emerald-50 to-indigo-50 rounded-2xl border border-emerald-200/80 grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                    <div className="bg-white/90 p-2 rounded-xl border border-slate-200/80">
+                      <span className="block text-[9px] font-bold text-slate-500">{isAr ? '🧵 سلعة / بياسة' : '🧵 Matière / pc'}</span>
+                      <strong className="text-xs font-black text-slate-800">{unitMatCost.toFixed(2)} DH</strong>
+                    </div>
+                    <div className="bg-white/90 p-2 rounded-xl border border-slate-200/80">
+                      <span className="block text-[9px] font-bold text-slate-500">{isAr ? '👷 يد عاملة / بياسة' : '👷 MOD / pc'}</span>
+                      <strong className="text-xs font-black text-slate-800">{(totalLaborCost / qty).toFixed(2)} DH</strong>
+                    </div>
+                    <div className="bg-white/90 p-2 rounded-xl border border-slate-200/80">
+                      <span className="block text-[9px] font-bold text-slate-500">{isAr ? '🏢 أتوليي / بياسة' : '🏢 Atelier / pc'}</span>
+                      <strong className="text-xs font-black text-slate-800">{(allocatedExpenses / qty).toFixed(2)} DH</strong>
+                    </div>
+                    <div className="bg-emerald-600 text-white p-2 rounded-xl shadow-2xs">
+                      <span className="block text-[9px] font-bold text-emerald-100">{isAr ? '✅ التكلفة الصافية / بياسة' : '✅ Coût Revient / pc'}</span>
+                      <strong className="text-xs font-black">{costPerPiece.toFixed(2)} DH</strong>
+                    </div>
                   </div>
                 </div>
+              )}
 
-                {/* Pieces per Month (26j = 208h = 12,480 min) */}
-                <div className="bg-white p-2 rounded-xl border border-indigo-100 shadow-2xs">
-                  <label className="block text-[10px] font-black text-slate-600 mb-1 text-center">
-                    {isAr ? '📅 بياسة / شهر (26ي)' : '📅 Pièces / Mois (26j)'}
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    placeholder="0"
-                    value={getSyncValue('pcs_month', pcsPerMonth, 2)}
-                    onFocus={() => {
-                      setActiveInputKey('pcs_month');
-                      setActiveInputRaw(pcsPerMonth === 0 ? '' : fmtNum(pcsPerMonth, 2));
-                    }}
-                    onBlur={() => setActiveInputKey(null)}
-                    onChange={(e) => {
-                      setActiveInputRaw(e.target.value);
-                      const val = e.target.value === '' ? 0 : Number(e.target.value);
-                      const newPcsMin = val / 12480;
-                      setQuantity(Math.round(newPcsMin * effectiveDurationMin * 100) / 100);
-                    }}
-                    className="w-full px-2 py-1 bg-indigo-50/60 focus:bg-white border border-indigo-200 focus:border-indigo-600 rounded-lg font-black text-indigo-700 text-xs text-center outline-none"
-                  />
-                  <div className="mt-1 text-[9px] font-bold text-slate-500 text-center flex justify-between px-1">
-                    <span>{isAr ? 'البيع:' : 'Vente:'}</span>
-                    <strong className="text-emerald-700">{revMonth.toFixed(2)} DH/شهر</strong>
-                  </div>
-                </div>
-              </div>
             </div>
-          </div>
 
-          {/* Card 2: Labor, Multi-Unit Work Duration (دقيقة / ساعة / نهار / شهر) & Multi-Unit Wage Rate */}
-          <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm print-border space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
-              <h3 className="text-xs font-black text-slate-800 flex items-center gap-2">
-                <Users className="w-3.5 h-3.5 text-indigo-600" />
-                {isAr ? '👷 اليد العاملة والوقت الدقيق (بالدقيقة • بالساعة • بالنهار • بالشهر)' : '👷 Main-d\'œuvre & Temps Précis (Min • Heure • Jour • Mois)'}
-              </h3>
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setWorkers(activePostesCount)}
-                  title={isAr ? "مطابقة مع عدد بوستات الخياطة في الغام" : "Synchroniser avec les postes de la gamme"}
-                  className="px-2 py-0.5 bg-amber-50 hover:bg-amber-500 text-amber-700 hover:text-white rounded-md text-[10px] font-black transition-all border border-amber-200"
-                >
-                  = {activePostesCount} {isAr ? 'بوستات في الغام' : 'postes (Gamme)'}
-                </button>
-                <button
-                  onClick={() => setShowWorkersModal(true)}
-                  className="text-[10px] font-black text-indigo-600 hover:text-indigo-800 flex items-center gap-1 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100"
-                >
-                  <UserCheck className="w-3 h-3" />
-                  {isAr ? 'تحديد أسماء العمال' : 'Sélectionner ouvriers'}
-                </button>
-              </div>
-            </div>
-
-            {/* Row 1: Workers Count + Synchronized Work Duration in 4 Units (Minute / Hour / Day / Month) */}
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            {/* BOTTOM STEP NAVIGATION BAR ("NEXT PAGE" / "الصفحة التالية" — ZERO SCROLL) */}
+            <div className="px-4 py-3 bg-slate-50 border-t border-slate-200/80 flex items-center justify-between gap-2">
               <div>
-                <label className="block text-[10px] font-black text-slate-600 mb-1 text-center">
-                  {isAr ? '👥 عدد العمال' : '👥 Ouvriers'}
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={workers}
-                  onChange={(e) => setWorkers(Math.max(1, Number(e.target.value) || 1))}
-                  className="w-full px-2 py-1.5 bg-indigo-50 border border-indigo-200 rounded-xl font-black text-indigo-700 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
-                />
-              </div>
-
-              {/* Duration in Minutes */}
-              <div>
-                <label className="block text-[10px] font-black text-amber-700 mb-1 text-center">
-                  {isAr ? '⏱️ دقائق العمل' : '⏱️ Minutes trav.'}
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  placeholder="0"
-                  value={getSyncValue('dur_min', totalMinutesPerWorker, 2)}
-                  onFocus={() => {
-                    setActiveInputKey('dur_min');
-                    setActiveInputRaw(totalMinutesPerWorker === 0 ? '' : fmtNum(totalMinutesPerWorker, 2));
-                  }}
-                  onBlur={() => setActiveInputKey(null)}
-                  onChange={(e) => {
-                    setActiveInputRaw(e.target.value);
-                    const minVal = e.target.value === '' ? 0 : Number(e.target.value);
-                    setExtraHours(0);
-                    setDays(minVal / 480);
-                  }}
-                  className="w-full px-2 py-1.5 bg-amber-50/60 border border-amber-200 rounded-xl font-black text-amber-800 text-xs text-center focus:bg-white focus:border-amber-500 outline-none"
-                />
-              </div>
-
-              {/* Duration in Hours */}
-              <div>
-                <label className="block text-[10px] font-black text-indigo-700 mb-1 text-center">
-                  {isAr ? '🕐 ساعات العمل' : '🕐 Heures trav.'}
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  placeholder="0"
-                  value={getSyncValue('dur_hour', totalHoursPerWorker, 2)}
-                  onFocus={() => {
-                    setActiveInputKey('dur_hour');
-                    setActiveInputRaw(totalHoursPerWorker === 0 ? '' : fmtNum(totalHoursPerWorker, 2));
-                  }}
-                  onBlur={() => setActiveInputKey(null)}
-                  onChange={(e) => {
-                    setActiveInputRaw(e.target.value);
-                    const hrVal = e.target.value === '' ? 0 : Number(e.target.value);
-                    setExtraHours(0);
-                    setDays(hrVal / 8);
-                  }}
-                  className="w-full px-2 py-1.5 bg-indigo-50/50 border border-indigo-200 rounded-xl font-black text-indigo-700 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
-                />
-              </div>
-
-              {/* Duration in Days (8h) */}
-              <div>
-                <label className="block text-[10px] font-black text-slate-700 mb-1 text-center">
-                  {isAr ? '☀️ أيام العمل (8س)' : '☀️ Jours (8h)'}
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  placeholder="0"
-                  value={getSyncValue('dur_day', days + (extraHours / 8), 3)}
-                  onFocus={() => {
-                    setActiveInputKey('dur_day');
-                    const d = days + (extraHours / 8);
-                    setActiveInputRaw(d === 0 ? '' : fmtNum(d, 3));
-                  }}
-                  onBlur={() => setActiveInputKey(null)}
-                  onChange={(e) => {
-                    setActiveInputRaw(e.target.value);
-                    const dayVal = e.target.value === '' ? 0 : Number(e.target.value);
-                    setExtraHours(0);
-                    setDays(dayVal);
-                  }}
-                  className="w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-black text-indigo-600 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
-                />
-              </div>
-
-              {/* Duration in Months (26j = 208h = 12,480 min) */}
-              <div>
-                <label className="block text-[10px] font-black text-emerald-700 mb-1 text-center">
-                  {isAr ? '📅 أشهر العمل (26ي)' : '📅 Mois (26j)'}
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  placeholder="0"
-                  value={getSyncValue('dur_month', totalHoursPerWorker / 208, 4)}
-                  onFocus={() => {
-                    setActiveInputKey('dur_month');
-                    const m = totalHoursPerWorker / 208;
-                    setActiveInputRaw(m === 0 ? '' : fmtNum(m, 4));
-                  }}
-                  onBlur={() => setActiveInputKey(null)}
-                  onChange={(e) => {
-                    setActiveInputRaw(e.target.value);
-                    const monthVal = e.target.value === '' ? 0 : Number(e.target.value);
-                    setExtraHours(0);
-                    setDays(monthVal * 26);
-                  }}
-                  className="w-full px-2 py-1.5 bg-emerald-50/50 border border-emerald-200 rounded-xl font-black text-emerald-700 text-xs text-center focus:bg-white focus:border-emerald-600 outline-none"
-                />
-              </div>
-            </div>
-
-            {/* Row 2: Synchronized Worker Wage Rate in 4 Units (ثمن الدقيقة | ثمن الساعة | ثمن النهار | ثمن الشهر) */}
-            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80">
-              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                <span className="text-[10px] font-black text-slate-700">
-                  {isAr
-                    ? '💵 أجر العامل الواحد (عدّل أي خانة: دقيقة أو ساعة أو نهار أو شهر وكيتحسب الباقي أوتوماتيك):'
-                    : '💵 Salaire d\'un ouvrier (modifiable par Minute, Heure, Jour ou Mois) :'}
-                </span>
-                <div className="flex items-center bg-white p-0.5 rounded-lg border border-slate-200">
+                {calcPage > 1 ? (
                   <button
                     type="button"
-                    onClick={() => {
-                      setRateMode('smig');
-                      setRate(17.10);
-                    }}
-                    className={`px-2 py-0.5 rounded-md text-[9px] font-black transition-all ${
-                      rateMode === 'smig'
-                        ? 'bg-amber-500 text-white shadow-2xs'
-                        : 'text-slate-500 hover:text-slate-800'
-                    }`}
+                    onClick={() => setCalcPage((calcPage - 1) as 1 | 2 | 3)}
+                    className="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all active:scale-95 shadow-2xs"
                   >
-                    SMIG (17.10 DH/h)
+                    {isAr ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+                    <span>{isAr ? 'الصفحة السابقة' : 'Page Précédente'}</span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setRateMode('rh');
-                      const sel = allWorkers.filter(w => selectedWorkerIds.includes(w.id));
-                      const sum = sel.reduce((acc, w) => {
-                        const monthly = w.salaireMensuel && w.salaireMensuel > 0 ? w.salaireMensuel : 3556.80;
-                        return acc + (monthly / 208);
-                      }, 0);
-                      const avg = sel.length > 0 ? Number((sum / sel.length).toFixed(2)) : 17.10;
-                      setRate(avg);
-                    }}
-                    className={`px-2 py-0.5 rounded-md text-[9px] font-black transition-all flex items-center gap-0.5 ${
-                      rateMode === 'rh'
-                        ? 'bg-indigo-600 text-white shadow-2xs'
-                        : 'text-slate-500 hover:text-slate-800'
-                    }`}
-                  >
-                    👥 {isAr ? 'رواتب RH' : 'RH Data'}
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {/* Wage per Minute */}
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 mb-1 text-center">
-                    {isAr ? 'ثمن الدقيقة (DH/د)' : 'Taux / Minute'}
-                  </label>
-                  <input
-                    type="number"
-                    step="any"
-                    min="0"
-                    value={getSyncValue('rate_min', ratePerMin, 4)}
-                    onFocus={() => {
-                      setActiveInputKey('rate_min');
-                      setActiveInputRaw(fmtNum(ratePerMin, 4));
-                    }}
-                    onBlur={() => setActiveInputKey(null)}
-                    onChange={(e) => {
-                      setActiveInputRaw(e.target.value);
-                      const v = e.target.value === '' ? 0 : Number(e.target.value);
-                      setRate(v * 60);
-                      if (rateMode === 'rh') setRateMode('smig');
-                    }}
-                    className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg font-black text-indigo-600 text-xs text-center focus:border-indigo-600 outline-none"
-                  />
-                </div>
-
-                {/* Wage per Hour */}
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 mb-1 text-center">
-                    {isAr ? 'ثمن الساعة (DH/س)' : 'Taux / Heure'}
-                  </label>
-                  <input
-                    type="number"
-                    step="any"
-                    min="0"
-                    value={getSyncValue('rate_hour', ratePerHour, 2)}
-                    onFocus={() => {
-                      setActiveInputKey('rate_hour');
-                      setActiveInputRaw(fmtNum(ratePerHour, 2));
-                    }}
-                    onBlur={() => setActiveInputKey(null)}
-                    onChange={(e) => {
-                      setActiveInputRaw(e.target.value);
-                      const v = e.target.value === '' ? 0 : Number(e.target.value);
-                      setRate(v);
-                      if (rateMode === 'rh') setRateMode('smig');
-                    }}
-                    className="w-full px-2 py-1 bg-white border border-indigo-300 rounded-lg font-black text-indigo-700 text-xs text-center focus:border-indigo-600 outline-none"
-                  />
-                </div>
-
-                {/* Wage per Day (8h) */}
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 mb-1 text-center">
-                    {isAr ? 'ثمن النهار (DH/يوم)' : 'Taux / Jour (8h)'}
-                  </label>
-                  <input
-                    type="number"
-                    step="any"
-                    min="0"
-                    value={getSyncValue('rate_day', ratePerDay, 2)}
-                    onFocus={() => {
-                      setActiveInputKey('rate_day');
-                      setActiveInputRaw(fmtNum(ratePerDay, 2));
-                    }}
-                    onBlur={() => setActiveInputKey(null)}
-                    onChange={(e) => {
-                      setActiveInputRaw(e.target.value);
-                      const v = e.target.value === '' ? 0 : Number(e.target.value);
-                      setRate(v / 8);
-                      if (rateMode === 'rh') setRateMode('smig');
-                    }}
-                    className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg font-black text-indigo-600 text-xs text-center focus:border-indigo-600 outline-none"
-                  />
-                </div>
-
-                {/* Wage per Month (208h) */}
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 mb-1 text-center">
-                    {isAr ? 'ثمن الشهر (DH/شهر)' : 'Salaire / Mois'}
-                  </label>
-                  <input
-                    type="number"
-                    step="any"
-                    min="0"
-                    value={getSyncValue('rate_month', ratePerMonth, 2)}
-                    onFocus={() => {
-                      setActiveInputKey('rate_month');
-                      setActiveInputRaw(fmtNum(ratePerMonth, 2));
-                    }}
-                    onBlur={() => setActiveInputKey(null)}
-                    onChange={(e) => {
-                      setActiveInputRaw(e.target.value);
-                      const v = e.target.value === '' ? 0 : Number(e.target.value);
-                      setRate(v / 208);
-                      if (rateMode === 'rh') setRateMode('smig');
-                    }}
-                    className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg font-black text-emerald-700 text-xs text-center focus:border-emerald-600 outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Live Production Capacity Indicator & Gamme Minutes Connection */}
-            <div className="p-2.5 bg-gradient-to-r from-indigo-50/90 to-amber-50/80 rounded-2xl border border-indigo-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs shadow-2xs">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 shrink-0 animate-pulse" />
-                <span className="font-extrabold text-slate-800">
-                  {isAr ? '⚡ قدرة الغام (Gamme):' : '⚡ Capacité Gamme :'}
-                </span>
-                <span className="px-2 py-0.5 bg-amber-500/10 text-amber-800 rounded-lg text-[11px] font-black border border-amber-500/20">
-                  {activePostesCount} {isAr ? 'بوستات' : 'postes'} • {activeGammeMinutes} {isAr ? 'دقيقة/بياسة' : 'min/pc'}
-                </span>
-              </div>
-              <div className="flex flex-wrap items-center gap-2 font-black text-indigo-700 text-[11px]">
-                <span>{fmtNum((workers * 60) / activeGammeMinutes, 1)} {isAr ? 'بياسة/ساعة' : 'pcs/h'}</span>
-                <span className="text-slate-300">|</span>
-                <span>{Math.max(1, Math.floor((workers * 8 * 60) / activeGammeMinutes))} {isAr ? 'بياسة/يوم' : 'pcs/j'}</span>
-                <span className="text-slate-300">|</span>
-                <span className="text-emerald-700">
-                  {Math.max(1, Math.floor((workers * totalMinutesPerWorker) / activeGammeMinutes))} {isAr ? 'بياسة فـ المدة' : 'pcs total'}
-                </span>
-                <span className="px-2 py-0.5 bg-emerald-600 text-white rounded-lg text-[10px] font-black">
-                  {isAr ? `تكلفة الغام: ${exactCostPerPiece.toFixed(2)} DH` : `Coût Gamme: ${exactCostPerPiece.toFixed(2)} DH`}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 3: Materials & Multi-Unit Atelier Fixed Expenses (دقيقة • ساعة • نهار • شهر) */}
-          <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm print-border space-y-3">
-            <h3 className="text-xs font-black text-slate-800 flex items-center gap-2 pb-2 border-b border-slate-100">
-              <Scissors className="w-3.5 h-3.5 text-indigo-600" />
-              {isAr ? '🧵 السلعة ومصاريف الأتوليي (بالدقيقة • بالساعة • بالنهار • بالشهر)' : '🧵 Matière & Frais d\'Atelier (Min • Heure • Jour • Mois)'}
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                  {isAr ? 'ثمن القماش واللوازم (الإجمالي DH)' : 'Coût matière total (DH)'}
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={getSyncValue('mat_total', materials, 2)}
-                  onFocus={() => {
-                    setActiveInputKey('mat_total');
-                    setActiveInputRaw(materials === 0 ? '' : fmtNum(materials, 2));
-                  }}
-                  onBlur={() => setActiveInputKey(null)}
-                  onChange={(e) => {
-                    setActiveInputRaw(e.target.value);
-                    setMaterials(e.target.value === '' ? 0 : Number(e.target.value));
-                  }}
-                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-indigo-600 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                  {isAr ? 'ثمن السلعة للبياسة الواحدة (DH/بياسة)' : 'Coût matière / pièce (DH)'}
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={getSyncValue('mat_unit', unitMatCost, 3)}
-                  onFocus={() => {
-                    setActiveInputKey('mat_unit');
-                    setActiveInputRaw(unitMatCost === 0 ? '' : fmtNum(unitMatCost, 3));
-                  }}
-                  onBlur={() => setActiveInputKey(null)}
-                  onChange={(e) => {
-                    setActiveInputRaw(e.target.value);
-                    const u = e.target.value === '' ? 0 : Number(e.target.value);
-                    setMaterials(Math.round(u * (quantity || 1) * 100) / 100);
-                  }}
-                  className="w-full px-3 py-1.5 bg-emerald-50/50 border border-emerald-200 rounded-xl font-black text-emerald-700 text-xs text-center focus:bg-white focus:border-emerald-600 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                  {isAr ? 'عدد آلات الأتوليي' : 'Machines atelier (total)'}
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={totalMachines}
-                  onChange={(e) => setTotalMachines(Math.max(1, Number(e.target.value) || 1))}
-                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-indigo-600 text-xs text-center focus:bg-white focus:border-indigo-600 outline-none"
-                />
-              </div>
-            </div>
-
-            {/* Atelier Fixed Expenses in 4 Synchronized Units */}
-            <div className="p-2.5 bg-slate-50 rounded-2xl border border-slate-200/80">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[10px] font-black text-slate-700 flex items-center gap-1">
-                  <span>🏢</span>
-                  {isAr ? 'مصاريف الأتوليي الثابتة (الكرا، الضو...) — بالدقيقة / الساعة / النهار / الشهر:' : 'Frais fixes d\'atelier (Loyer, élec...) — Min / Heure / Jour / Mois :'}
-                </span>
-                {monthlyChargesSynced && (
-                  <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-1.5 py-0.5">
-                    {isAr ? 'مرتبط بصفحة المصاريف' : 'Synchro Charges'}
+                ) : (
+                  <span className="text-[11px] font-bold text-slate-400 px-2">
+                    {isAr ? '✨ ديزاين مترتب بدون سكرول' : '✨ Vue sans défilement'}
                   </span>
                 )}
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <div>
-                  <label className="block text-[9px] font-bold text-slate-500 mb-0.5 text-center">
-                    {isAr ? 'مصاريف الدقيقة (DH/د)' : 'Frais / Minute'}
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    value={getSyncValue('frais_min', monthlyAtelierMin, 3)}
-                    onFocus={() => {
-                      setActiveInputKey('frais_min');
-                      setActiveInputRaw(fmtNum(monthlyAtelierMin, 3));
-                    }}
-                    onBlur={() => setActiveInputKey(null)}
-                    onChange={(e) => {
-                      setActiveInputRaw(e.target.value);
-                      const v = e.target.value === '' ? 0 : Number(e.target.value);
-                      setMonthlyOther(Math.round(v * 12480 * 100) / 100);
-                      setMonthlyChargesSynced(false);
-                    }}
-                    className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg font-black text-slate-700 text-xs text-center focus:border-indigo-600 outline-none"
+              {/* Page Dots Indicator */}
+              <div className="flex items-center gap-2">
+                {[1, 2, 3].map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setCalcPage(p as 1 | 2 | 3)}
+                    className={`h-2.5 rounded-full transition-all ${
+                      calcPage === p ? 'w-8 bg-indigo-600' : 'w-2.5 bg-slate-300 hover:bg-slate-400'
+                    }`}
+                    title={isAr ? `الانتقال إلى الصفحة ${p}` : `Aller à la page ${p}`}
                   />
-                </div>
+                ))}
+                <span className="text-[11px] font-black text-slate-600 ms-1">
+                  {isAr ? `صفحة ${calcPage} / 3` : `Page ${calcPage} / 3`}
+                </span>
+              </div>
 
-                <div>
-                  <label className="block text-[9px] font-bold text-slate-500 mb-0.5 text-center">
-                    {isAr ? 'مصاريف الساعة (DH/س)' : 'Frais / Heure'}
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    value={getSyncValue('frais_hour', monthlyAtelierHour, 2)}
-                    onFocus={() => {
-                      setActiveInputKey('frais_hour');
-                      setActiveInputRaw(fmtNum(monthlyAtelierHour, 2));
-                    }}
-                    onBlur={() => setActiveInputKey(null)}
-                    onChange={(e) => {
-                      setActiveInputRaw(e.target.value);
-                      const v = e.target.value === '' ? 0 : Number(e.target.value);
-                      setMonthlyOther(Math.round(v * 208 * 100) / 100);
-                      setMonthlyChargesSynced(false);
-                    }}
-                    className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg font-black text-slate-700 text-xs text-center focus:border-indigo-600 outline-none"
-                  />
-                </div>
+              {/* Next Page / Final Actions */}
+              <div className="flex items-center gap-2">
+                {calcPage < 3 ? (
+                  <button
+                    type="button"
+                    onClick={() => setCalcPage((calcPage + 1) as 1 | 2 | 3)}
+                    className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-md shadow-indigo-200 active:scale-95"
+                  >
+                    <span>{isAr ? 'الصفحة التالية (Next Page)' : 'Page Suivante (Next)'}</span>
+                    {isAr ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setShowGammeModal(true)}
+                      className="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
+                    >
+                      <Wrench className="w-3.5 h-3.5" />
+                      <span>{isAr ? 'بوستات الخياطة' : 'Gamme'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => window.print()}
+                      className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                      <span>{isAr ? 'طباعة PDF Pro' : 'PDF Pro'}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
 
-                <div>
-                  <label className="block text-[9px] font-bold text-slate-500 mb-0.5 text-center">
-                    {isAr ? 'مصاريف النهار (DH/يوم)' : 'Frais / Jour (8h)'}
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    value={getSyncValue('frais_day', monthlyAtelierDay, 2)}
-                    onFocus={() => {
-                      setActiveInputKey('frais_day');
-                      setActiveInputRaw(fmtNum(monthlyAtelierDay, 2));
-                    }}
-                    onBlur={() => setActiveInputKey(null)}
-                    onChange={(e) => {
-                      setActiveInputRaw(e.target.value);
-                      const v = e.target.value === '' ? 0 : Number(e.target.value);
-                      setMonthlyOther(Math.round(v * 26 * 100) / 100);
-                      setMonthlyChargesSynced(false);
-                    }}
-                    className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg font-black text-slate-700 text-xs text-center focus:border-indigo-600 outline-none"
-                  />
-                </div>
+          </div>
+        </div>
 
-                <div>
-                  <label className="block text-[9px] font-bold text-indigo-700 mb-0.5 text-center">
-                    {isAr ? 'مصاريف الشهر (DH/شهر)' : 'Frais / Mois (26j)'}
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    value={getSyncValue('frais_month', monthlyOther, 2)}
-                    onFocus={() => {
-                      setActiveInputKey('frais_month');
-                      setActiveInputRaw(monthlyOther === 0 ? '' : fmtNum(monthlyOther, 2));
-                    }}
-                    onBlur={() => setActiveInputKey(null)}
-                    onChange={(e) => {
-                      setActiveInputRaw(e.target.value);
-                      setMonthlyOther(e.target.value === '' ? 0 : Number(e.target.value));
-                      setMonthlyChargesSynced(false);
-                    }}
-                    className="w-full px-2 py-1 bg-white border border-indigo-300 rounded-lg font-black text-indigo-700 text-xs text-center focus:border-indigo-600 outline-none"
-                  />
-                </div>
+      </div>
+      )}
+
+      {/* ================= EXECUTIVE A4 PDF PRINT SHEET (PRO SINGLE-PAGE REPORT) ================= */}
+      <div className="hidden print-only bg-white text-slate-900 space-y-3 text-xs">
+        {/* Top Executive PDF Banner */}
+        <div className="flex items-center justify-between border-b-2 border-slate-900 pb-2.5">
+          <div className="flex items-center gap-3">
+            <img
+              src={activeModelPhoto}
+              alt={itemName}
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK_GARMENT_SVG; }}
+              className="w-16 h-16 rounded-2xl object-cover border-2 border-slate-800"
+            />
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-indigo-700">
+                BEYA CREATIVE — FICHE OFFICIELLE DE RENTABILITÉ & COÛT DE REVIENT
+              </div>
+              <h1 className="text-lg font-black text-slate-950">
+                {isAr ? `تقرير تكلفة وأرباح الموديل: ${itemName || 'بدون اسم'}` : `Rapport de Rentabilité : ${itemName || 'Modèle'}`}
+              </h1>
+              <div className="text-[11px] font-bold text-slate-600">
+                {isAr ? `التاريخ: ${todayStr} | الكمية المعتمدة: ${fmtNum(quantity, 0)} بياسة | ثمن البيع للبياسة: ${pricePerPiece.toFixed(2)} درهم` : `Date : ${todayStr} | Quantité : ${fmtNum(quantity, 0)} pcs | Prix vente : ${pricePerPiece.toFixed(2)} DH/pc`}
               </div>
             </div>
           </div>
 
+          <div className="text-end border-2 border-slate-900 rounded-2xl px-3.5 py-2 bg-slate-50">
+            <div className="text-[10px] font-black text-slate-500">
+              {resultStatus === 'profit' ? (isAr ? 'الربح الصافي للطلبية' : 'PROFIT NET') : (isAr ? 'الخسارة الصافية' : 'PERTE NETTE')}
+            </div>
+            <div className={`text-xl font-black ${resultStatus === 'profit' ? 'text-emerald-700' : 'text-rose-700'}`}>
+              {difference >= 0 ? '+' : ''}{difference.toFixed(2)} DH
+            </div>
+            <div className="text-[10px] font-bold text-slate-700">
+              {isAr ? `تكلفة البياسة: ${costPerPiece.toFixed(2)} DH | الهامش: ${netMarginPct.toFixed(1)}%` : `Coût/pc : ${costPerPiece.toFixed(2)} DH | Marge : ${netMarginPct.toFixed(1)}%`}
+            </div>
+          </div>
         </div>
 
+        {/* 4 Executive Summary Boxes (Carreau) */}
+        <div className="grid grid-cols-4 gap-2 text-center">
+          <div className="p-2.5 rounded-xl border border-slate-300 bg-slate-50">
+            <span className="block text-[10px] font-bold text-slate-500">{isAr ? 'إجمالي المبيعات (CA)' : 'Chiffre d\'Affaires'}</span>
+            <strong className="text-sm font-black text-emerald-700">{totalPriceClient.toFixed(2)} DH</strong>
+          </div>
+          <div className="p-2.5 rounded-xl border border-slate-300 bg-slate-50">
+            <span className="block text-[10px] font-bold text-slate-500">{isAr ? 'التكلفة الإجمالية للإنتاج' : 'Coût Total Production'}</span>
+            <strong className="text-sm font-black text-slate-900">{realCost.toFixed(2)} DH</strong>
+          </div>
+          <div className="p-2.5 rounded-xl border border-slate-300 bg-slate-50">
+            <span className="block text-[10px] font-bold text-slate-500">{isAr ? 'تكلفة البياسة الشاملة' : 'Coût Unitaire Complet'}</span>
+            <strong className="text-sm font-black text-indigo-700">{costPerPiece.toFixed(2)} DH / pc</strong>
+          </div>
+          <div className="p-2.5 rounded-xl border border-slate-300 bg-slate-50">
+            <span className="block text-[10px] font-bold text-slate-500">{isAr ? 'العمال ومدة الإنجاز' : 'Équipe & Durée'}</span>
+            <strong className="text-sm font-black text-slate-900">{workers} {isAr ? 'عمال' : 'ouv.'} • {fmtNum(days, 2)} {isAr ? 'يوم' : 'j'} ({fmtNum(totalHoursPerWorker, 1)}h)</strong>
+          </div>
+        </div>
+
+        {/* All 3 Sections Printed Side-by-Side Cleanly */}
+        <div className="grid grid-cols-3 gap-2.5">
+          <div className="p-3 rounded-xl border border-slate-300 space-y-1">
+            <div className="font-black text-slate-900 border-b border-slate-200 pb-1 mb-1">
+              {isAr ? '1. الطلبية ووتيرة الإنتاج' : '1. Commande & Cadence'}
+            </div>
+            <div className="flex justify-between"><span>{isAr ? 'الكمية المعتمدة:' : 'Quantité :'}</span><strong>{fmtNum(quantity, 2)} pcs</strong></div>
+            <div className="flex justify-between"><span>{isAr ? 'إنتاج / دقيقة:' : 'Pièces / min :'}</span><strong>{fmtNum(pcsPerMin, 3)} pc/min</strong></div>
+            <div className="flex justify-between"><span>{isAr ? 'إنتاج / ساعة:' : 'Pièces / heure :'}</span><strong>{fmtNum(pcsPerHour, 2)} pc/h</strong></div>
+            <div className="flex justify-between"><span>{isAr ? 'إنتاج / نهار (8س):' : 'Pièces / jour (8h) :'}</span><strong>{fmtNum(pcsPerDay, 2)} pc/j</strong></div>
+            <div className="flex justify-between"><span>{isAr ? 'إنتاج / شهر (26ي):' : 'Pièces / mois (26j) :'}</span><strong>{fmtNum(pcsPerMonth, 0)} pc/mois</strong></div>
+          </div>
+
+          <div className="p-3 rounded-xl border border-slate-300 space-y-1">
+            <div className="font-black text-slate-900 border-b border-slate-200 pb-1 mb-1">
+              {isAr ? '2. اليد العاملة والوقت الدقيق' : '2. Main-d\'œuvre & Temps'}
+            </div>
+            <div className="flex justify-between"><span>{isAr ? 'عدد العمال:' : 'Ouvriers :'}</span><strong>{workers}</strong></div>
+            <div className="flex justify-between"><span>{isAr ? 'الوقت (دقيقة / ساعة):' : 'Temps (min / h) :'}</span><strong>{fmtNum(totalMinutesPerWorker, 0)} د ({fmtNum(totalHoursPerWorker, 2)} س)</strong></div>
+            <div className="flex justify-between"><span>{isAr ? 'أجر الساعة / الدقيقة:' : 'Taux (h / min) :'}</span><strong>{ratePerHour.toFixed(2)} DH/h ({ratePerMin.toFixed(3)} DH/د)</strong></div>
+            <div className="flex justify-between"><span>{isAr ? 'أجر النهار / الشهر:' : 'Taux (j / mois) :'}</span><strong>{ratePerDay.toFixed(1)} DH/j ({ratePerMonth.toFixed(0)} DH/m)</strong></div>
+            <div className="flex justify-between font-black text-indigo-800 pt-0.5 border-t border-slate-200"><span>{isAr ? 'إجمالي اليد العاملة:' : 'Total MOD :'}</span><span>{totalLaborCost.toFixed(2)} DH</span></div>
+          </div>
+
+          <div className="p-3 rounded-xl border border-slate-300 space-y-1">
+            <div className="font-black text-slate-900 border-b border-slate-200 pb-1 mb-1">
+              {isAr ? '3. السلعة ومصاريف الأتوليي' : '3. Matière & Frais Atelier'}
+            </div>
+            <div className="flex justify-between"><span>{isAr ? 'السلعة للبياسة:' : 'Matière / pièce :'}</span><strong>{unitMatCost.toFixed(2)} DH/pc</strong></div>
+            <div className="flex justify-between"><span>{isAr ? 'إجمالي السلعة:' : 'Total Matière :'}</span><strong>{materials.toFixed(2)} DH</strong></div>
+            <div className="flex justify-between"><span>{isAr ? 'مصاريف الأتوليي (شهر):' : 'Frais fixes / mois :'}</span><strong>{monthlyOther.toFixed(2)} DH ({totalMachines} آلات)</strong></div>
+            <div className="flex justify-between"><span>{isAr ? 'مصاريف (نهار / ساعة):' : 'Frais (jour / h) :'}</span><strong>{monthlyAtelierDay.toFixed(1)} DH/j ({monthlyAtelierHour.toFixed(2)} DH/h)</strong></div>
+            <div className="flex justify-between font-black text-indigo-800 pt-0.5 border-t border-slate-200"><span>{isAr ? 'نصيب الطلبية من المصاريف:' : 'Frais alloués :'}</span><span>{allocatedExpenses.toFixed(2)} DH</span></div>
+          </div>
+        </div>
+
+        {/* 4-Timeframe Precision Table in PDF */}
+        <div className="border border-slate-300 rounded-xl overflow-hidden">
+          <div className="bg-slate-900 text-white px-3 py-1.5 font-black text-[11px]">
+            {isAr ? '📊 جدول الحساب الدقيق الأوتوماتيكي (فالدقيقة • فالساعة • فالنهار • فالشهر)' : '📊 Tableau Récapitulatif Multi-Unités (Minute • Heure • Jour • Mois)'}
+          </div>
+          <table className="w-full text-[11px] border-collapse text-center">
+            <thead>
+              <tr className="bg-slate-100 border-b border-slate-300 font-black">
+                <th className="p-1.5 border-e border-slate-300">{isAr ? 'الوحدة الزمنية' : 'Unité de Temps'}</th>
+                <th className="p-1.5 border-e border-slate-300">{isAr ? 'كمية الإنتاج (بياسة)' : 'Production (pcs)'}</th>
+                <th className="p-1.5 border-e border-slate-300">{isAr ? 'إيرادات البيع (DH)' : 'Chiffre d\'Affaires (DH)'}</th>
+                <th className="p-1.5 border-e border-slate-300">{isAr ? 'التكلفة الشاملة (DH)' : 'Coût Total (DH)'}</th>
+                <th className="p-1.5">{isAr ? 'الربح الصافي (DH)' : 'Profit Net (DH)'}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { label: isAr ? '⏱️ فالدقيقة (1 د)' : '⏱️ Par Minute (1 min)', pcs: fmtNum(pcsPerMin, 3), rev: revMin.toFixed(2), cost: totalCostMin.toFixed(2), prof: profitMin.toFixed(2) },
+                { label: isAr ? '🕐 فالساعة (60 د)' : '🕐 Par Heure (60 min)', pcs: fmtNum(pcsPerHour, 2), rev: revHour.toFixed(2), cost: totalCostHour.toFixed(2), prof: profitHour.toFixed(2) },
+                { label: isAr ? '☀️ فالنهار (8 سوايع = 480 د)' : '☀️ Par Jour (8h = 480 min)', pcs: fmtNum(pcsPerDay, 2), rev: revDay.toFixed(2), cost: totalCostDay.toFixed(2), prof: profitDay.toFixed(2) },
+                { label: isAr ? '📅 فالشهر (26 يوم = 12,480 د)' : '📅 Par Mois (26j = 12 480 min)', pcs: fmtNum(pcsPerMonth, 0), rev: revMonth.toFixed(2), cost: totalCostMonth.toFixed(2), prof: profitMonth.toFixed(2) },
+              ].map((r, i) => (
+                <tr key={i} className="border-b border-slate-200 last:border-0">
+                  <td className="p-1.5 font-black border-e border-slate-300 text-start px-3">{r.label}</td>
+                  <td className="p-1.5 font-bold border-e border-slate-300">{r.pcs}</td>
+                  <td className="p-1.5 font-bold border-e border-slate-300">{r.rev} DH</td>
+                  <td className="p-1.5 font-bold border-e border-slate-300">{r.cost} DH</td>
+                  <td className="p-1.5 font-black text-emerald-700">{r.prof} DH</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Gamme de Montage Table in PDF */}
+        <div className="border border-slate-300 rounded-xl overflow-hidden">
+          <div className="bg-slate-100 px-3 py-1.5 border-b border-slate-300 flex items-center justify-between font-black text-[11px]">
+            <span>{isAr ? `🏭 مراحل الخياطة وبوستات العمل (Gamme de Montage — ${activePostesCount} بوستات)` : `🏭 Gamme de Montage (${activePostesCount} postes)`}</span>
+            <span>{isAr ? `مجموع وقت خياطة البياسة: ${activeGammeMinutes} دقيقة` : `Temps total : ${activeGammeMinutes} min/pièce`}</span>
+          </div>
+          <div className="grid grid-cols-2 gap-0">
+            {activePostesList.map((p, idx) => (
+              <div key={idx} className="px-3 py-1 border-b border-e border-slate-200 flex items-center justify-between text-[10px]">
+                <span className="font-bold truncate">
+                  <strong>#{idx + 1}</strong> {isAr ? p.nomAr : p.nomFr} <span className="text-slate-500">({p.machine})</span>
+                </span>
+                <strong className="font-black text-indigo-700 ms-2 shrink-0">{p.tempsMin} {isAr ? 'د' : 'min'}</strong>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Signatures Footer */}
+        <div className="grid grid-cols-2 gap-6 pt-3 text-[11px] font-bold text-slate-700">
+          <div className="border border-dashed border-slate-400 rounded-xl p-3 h-16 flex flex-col justify-between">
+            <span>{isAr ? '✍️ إمضاء المسؤول التقني / الشاف ديال لاشين:' : '✍️ Visa Responsable Technique / Chef d\'Atelier :'}</span>
+            <span className="text-[9px] text-slate-400">{isAr ? 'التاريخ والختم' : 'Date & Cachet'}</span>
+          </div>
+          <div className="border border-dashed border-slate-400 rounded-xl p-3 h-16 flex flex-col justify-between">
+            <span>{isAr ? '✅ مصادقة الإدارة العامة (BEYA CREATIVE):' : '✅ Validation Direction Générale (BEYA CREATIVE) :'}</span>
+            <span className="text-[9px] text-slate-400">{isAr ? 'اعتماد إطلاق الإنتاج' : 'Bon pour lancement en production'}</span>
+          </div>
+        </div>
       </div>
+
+      {/* MODAL: MODEL PHOTO LARGE PREVIEW & UPLOAD */}
+      {isPhotoPreviewOpen && (
+        <div
+          onClick={() => setIsPhotoPreviewOpen(false)}
+          className="no-print fixed inset-0 z-[1500] bg-slate-900/75 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl max-w-md w-full p-4 shadow-2xl border border-slate-100 space-y-3"
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+              <div className="font-black text-sm text-slate-900 flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-indigo-600" />
+                <span>{itemName || (isAr ? 'صورة الموديل' : 'Photo du Modèle')}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsPhotoPreviewOpen(false)}
+                className="p-1 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600"
+              >
+                ✕
+              </button>
+            </div>
+
+            <img
+              src={activeModelPhoto}
+              alt={itemName}
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK_GARMENT_SVG; }}
+              className="w-full h-72 object-cover rounded-2xl border border-slate-200 bg-slate-50"
+            />
+
+            <div className="flex items-center justify-between gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsPhotoPreviewOpen(false);
+                  modelPhotoInputRef.current?.click();
+                }}
+                className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-xs flex items-center justify-center gap-1.5 shadow-sm"
+              >
+                <Camera className="w-4 h-4" />
+                <span>{isAr ? 'رفع صورة من الجهاز' : 'Importer une photo'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsPhotoPreviewOpen(false);
+                  setIsFichePickerOpen(true);
+                }}
+                className="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-black text-xs flex items-center justify-center gap-1.5 shadow-sm"
+              >
+                <FileText className="w-4 h-4" />
+                <span>{isAr ? 'اختيار من الفيش تكنيك' : 'Choisir Fiche Tech'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* MODAL 1: ATELIER WORKERS SELECTION (Smart Feature 1) */}
