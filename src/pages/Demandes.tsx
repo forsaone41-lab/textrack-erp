@@ -154,25 +154,78 @@ export default function Demandes() {
     }
   });
 
-  useEffect(() => {
-    // 1. Show cached data INSTANTLY — no blank screen
-    let hasCached = false;
-    
-    const sanitizeLead = (l: any) => ({
-      ...l,
-      type: l.type || '',
-      phone: String(l.phone || ''),
-      name: l.name || '',
-      email: l.email || '',
-    });
+  const sanitizeLead = (l: any) => ({
+    ...l,
+    type: l.type || '',
+    phone: String(l.phone || ''),
+    name: l.name || '',
+    email: l.email || '',
+  });
 
+  const loadPhotosInBackground = async (leadsArr: Lead[]) => {
+    const withoutPhoto = leadsArr.filter(l => !l.photo);
+    if (!withoutPhoto.length) return;
+    for (let i = 0; i < withoutPhoto.length; i += 5) {
+      const batch = withoutPhoto.slice(i, i + 5);
+      const results = await Promise.allSettled(
+        batch.map(l => loadLeadPhoto(l.id).then(photo => ({ id: l.id, photo })))
+      );
+      const updates: Record<string, string> = {};
+      results.forEach(r => { if (r.status === 'fulfilled' && r.value.photo) updates[r.value.id] = r.value.photo; });
+      if (Object.keys(updates).length > 0) {
+        setLeads(prev => prev.map(l => updates[l.id] ? { ...l, photo: updates[l.id] } : l));
+      }
+    }
+  };
+
+  const refreshData = async (forceClearCache = false) => {
+    setLoading(true);
+    if (forceClearCache) {
+      try {
+        localStorage.removeItem('textrack_data_leads');
+      } catch (_) {}
+    }
+    try {
+      const [leadsData, usersData, tissusData] = await Promise.all([
+        loadLeads(),
+        loadData<User>('users'),
+        loadData<StockTissu>('tissus')
+      ]);
+      if (tissusData) setTissus(tissusData);
+      if (leadsData) {
+        let validLeads = (leadsData as Lead[]).filter(l => l && !l.type?.startsWith('__') && !l.name?.startsWith('__')).map(sanitizeLead);
+        
+        // Auto-delete logic: remove if crmStage === 'annule' and rejectedAt is > 48 hours ago
+        const now = Date.now();
+        const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
+        const toDelete = validLeads.filter(l => l.crmStage === 'annule' && l.rejectedAt && (now - new Date(l.rejectedAt).getTime() > FORTY_EIGHT_HOURS));
+        
+        if (toDelete.length > 0) {
+          toDelete.forEach(async l => {
+            await deleteRecord('leads', l.id, l.email);
+          });
+          validLeads = validLeads.filter(l => !toDelete.includes(l));
+        }
+
+        setLeads(validLeads);
+        loadPhotosInBackground(validLeads);
+      }
+      if (usersData) setUsers((usersData as User[]) || []);
+    } catch (e) {
+      console.warn('Refresh failed, using cache', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // 1. Show cached data INSTANTLY if available
     try {
       const cachedLeads = localStorage.getItem('textrack_data_leads');
       if (cachedLeads) {
         const parsed = JSON.parse(cachedLeads);
         if (Array.isArray(parsed) && parsed.length > 0) {
           setLeads(parsed.filter((l: any) => l && !l.type?.startsWith('__') && !l.name?.startsWith('__')).map(sanitizeLead));
-          hasCached = true;
         }
       }
       const cachedUsers = localStorage.getItem('textrack_data_users');
@@ -182,60 +235,8 @@ export default function Demandes() {
       }
     } catch { /* ignore */ }
 
-    // We no longer hide the loader here. It will hide when the live refresh() completes.
-
-    // 2. Refresh from network
-    async function refresh() {
-      try {
-        const [leadsData, usersData, tissusData] = await Promise.all([
-          loadLeads(),
-          loadData<User>('users'),
-          loadData<StockTissu>('tissus')
-        ]);
-        if (tissusData) setTissus(tissusData);
-        if (leadsData) {
-          let validLeads = (leadsData as Lead[]).filter(l => l && !l.type?.startsWith('__') && !l.name?.startsWith('__')).map(sanitizeLead);
-          
-          // Auto-delete logic: remove if crmStage === 'annule' and rejectedAt is > 48 hours ago
-          const now = Date.now();
-          const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
-          const toDelete = validLeads.filter(l => l.crmStage === 'annule' && l.rejectedAt && (now - new Date(l.rejectedAt).getTime() > FORTY_EIGHT_HOURS));
-          
-          if (toDelete.length > 0) {
-            toDelete.forEach(async l => {
-              await deleteRecord('leads', l.id, l.email);
-            });
-            validLeads = validLeads.filter(l => !toDelete.includes(l));
-          }
-
-          setLeads(validLeads);
-          // 3. Load photos in background (batch of 10)
-          loadPhotosInBackground(validLeads);
-        }
-        if (usersData) setUsers((usersData as User[]) || []);
-      } catch (e) { console.warn('Refresh failed, using cache'); }
-      finally { setLoading(false); }
-    }
-
-    async function loadPhotosInBackground(leadsArr: Lead[]) {
-      // Load all missing photos progressively
-      const withoutPhoto = leadsArr.filter(l => !l.photo);
-      if (!withoutPhoto.length) return;
-      // Load in batches of 5 to not block the thread
-      for (let i = 0; i < withoutPhoto.length; i += 5) {
-        const batch = withoutPhoto.slice(i, i + 5);
-        const results = await Promise.allSettled(
-          batch.map(l => loadLeadPhoto(l.id).then(photo => ({ id: l.id, photo })))
-        );
-        const updates: Record<string, string> = {};
-        results.forEach(r => { if (r.status === 'fulfilled' && r.value.photo) updates[r.value.id] = r.value.photo; });
-        if (Object.keys(updates).length > 0) {
-          setLeads(prev => prev.map(l => updates[l.id] ? { ...l, photo: updates[l.id] } : l));
-        }
-      }
-    }
-
-    refresh();
+    // 2. Refresh live data from Supabase
+    refreshData();
   }, []);
 
   const [employes, setEmployes] = useState<any[]>([]);
@@ -1679,6 +1680,13 @@ export default function Demandes() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-4">
+          <button
+            onClick={() => refreshData(true)}
+            title={isAr ? 'تحديث ومزامنة البيانات من السيرفر' : 'Actualiser et synchroniser avec le serveur'}
+            className="p-3 sm:p-4 bg-white border border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-200 rounded-2xl transition-all shadow-sm flex items-center justify-center group active:scale-95"
+          >
+            <RefreshCw className={`w-5 h-5 sm:w-6 sm:h-6 ${loading ? 'animate-spin text-indigo-600' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
+          </button>
           <button
             onClick={() => setShowSettings(true)}
             className="p-3 sm:p-4 bg-white border border-slate-200 text-slate-400 rounded-2xl hover:text-indigo-600 hover:border-indigo-100 transition-all shadow-sm"
