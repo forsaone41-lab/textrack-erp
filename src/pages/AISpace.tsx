@@ -6,6 +6,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { saveRecord, genId, FicheTechnique, loadLeads, Lead, loadCompanyProfile, loadLeadPhoto } from '../types';
 import { printElement } from '../utils/pdf';
 import { printRapportIA } from '../utils/print';
+import { PosteTravail, getGarmentTechnicalBreakdown } from '../lib/atelierAi';
 
 const STANDARD_MESURES: Record<string, { nom: string; valeurs: Record<string, number> }[]> = {
   Robe: [
@@ -161,6 +162,13 @@ function simplifyConsumption(raw?: string): string {
 function buildRapportText(result: any, arLang: boolean): string {
   const suggestedFabricName = result.fabricSuggested || (result.pieces?.[0]?.fabricSuggested) || '';
   const fabInfo = getFabricInfo(suggestedFabricName);
+  const searchContext = `${result.category || ''} ${suggestedFabricName} ${(result.pieces || []).map((p: any) => p.name).join(' ')}`;
+  const fallbackBreakdown = getGarmentTechnicalBreakdown(searchContext);
+  const gammePostes: PosteTravail[] = (result.gammeMontage && Array.isArray(result.gammeMontage) && result.gammeMontage.length > 0)
+    ? result.gammeMontage
+    : fallbackBreakdown.postesTravail;
+  const totalGammeMin = Number(gammePostes.reduce((sum, p) => sum + (Number(p.tempsMin) || 0), 0).toFixed(2));
+  const totalGammeSec = Math.round(totalGammeMin * 60);
 
   let chatMsg = '';
   if (arLang) {
@@ -187,11 +195,18 @@ function buildRapportText(result: any, arLang: boolean): string {
     } else {
       chatMsg += `   • قطعة واحدة متكاملة للموديل\n`;
     }
+    chatMsg += `\n🏭 لاغام ديال الخياطة وبوستات العمل (La Gamme de Montage):\n`;
+    chatMsg += `   • عدد البوستات / المراحل: ${gammePostes.length} محطات عمل\n`;
+    chatMsg += `   • إجمالي وقت الخياطة للبياسة (SAM): ${totalGammeMin} دقيقة (${totalGammeSec} ثانية)\n`;
+    gammePostes.forEach((gp, gIdx) => {
+      const sec = Math.round((Number(gp.tempsMin) || 0) * 60);
+      chatMsg += `   ${gIdx + 1}. ${gp.nomAr} — [الآلة: ${gp.machine}] — ⏱️ ${gp.tempsMin} د (${sec} ثانية)\n`;
+    });
     chatMsg += `\n✂️ توجيهات الورشة (الفصّال والخيّاط):\n`;
     chatMsg += `   • يُنصح بضبط جدول المقاسات S-XXL في التبويب المجاور قبل بدء التفصيل.\n`;
     chatMsg += `   • ميزة الثوب: ${fabInfo.pros}\n`;
     chatMsg += `────────────────────────────\n`;
-    chatMsg += `⚡ يمكنك الآن استخدام أزرار التوزيع الفوري أدناه لإرسال التقرير لـ Devis PRO، الورشة، أو المشتريات!`;
+    chatMsg += `⚡ اضغط على زر "إرسال للورشة Atelier" لإرسال هاد لاغام (${gammePostes.length} بوستات) مقادة ومرتبة مباشرة لحاسبة الإنتاج!`;
   } else {
     chatMsg = `✅ RAPPORT D'ANALYSE TECHNIQUE & SOURCING (BEYA EXPERT)\n`;
     chatMsg += `────────────────────────────\n\n`;
@@ -216,11 +231,18 @@ function buildRapportText(result: any, arLang: boolean): string {
     } else {
       chatMsg += `   • Pièce complète et intégrée\n`;
     }
+    chatMsg += `\n🏭 Gamme de Montage & Postes de Travail :\n`;
+    chatMsg += `   • Nombre de postes : ${gammePostes.length} postes\n`;
+    chatMsg += `   • Temps total de confection (SAM) : ${totalGammeMin} min (${totalGammeSec} sec)\n`;
+    gammePostes.forEach((gp, gIdx) => {
+      const sec = Math.round((Number(gp.tempsMin) || 0) * 60);
+      chatMsg += `   ${gIdx + 1}. ${gp.nomFr || gp.nomAr} — [Machine: ${gp.machine}] — ⏱️ ${gp.tempsMin} min (${sec} sec)\n`;
+    });
     chatMsg += `\n✂️ Conseils de confection Atelier :\n`;
     chatMsg += `   • Vérifiez le tableau des mesures S-XXL dans l'onglet voisin avant la coupe.\n`;
     chatMsg += `   • Propriété du tissu : ${fabInfo.prosFr}\n`;
     chatMsg += `────────────────────────────\n`;
-    chatMsg += `⚡ Utilisez les boutons d'export rapide en bas pour envoyer vers Devis PRO, l'Atelier ou les Achats !`;
+    chatMsg += `⚡ Cliquez sur "Atelier Production" pour envoyer directement cette Gamme (${gammePostes.length} postes) au Calculateur d'Atelier !`;
   }
   return chatMsg;
 }
@@ -240,6 +262,7 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
     complexity: string;
     components: string[];
     costEstimate: string;
+    gammeMontage?: PosteTravail[];
     pieces?: {
       name: string;
       consumption: string;
@@ -759,8 +782,9 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
 7. جدول القياسات لكل مقاس (S, M, L, XL, XXL) - أعطي قياسات واقعية:
    - للجزء العلوي: الصدر، الكتف، الطول، الكم، الخصر.
    - تنبيه هام جداً: إذا كانت القطعة العلوية طويلة (تصل أو تتجاوز منطقة الأرداف/الورك، مثل الفستان، الجلابة، القفطان، أو البلوزة الطويلة Tunique)، يجب عليك إضافة قياس "الورك (Hanches)" كقياس سادس أساسي في جدول هذه القطعة!
-   - للسروال: الخصر، الورك، الطول، الفخذ، أسفل الرجل.
+   - للسروال أو البوكسر: الخصر، الورك، الطول، الفخذ، أسفل الرجل.
 8. نوع الثوب الرئيسي المقترح لصناعة هذه القطعة مع اقتراحين بديلين للثوب، مع ذكر المزايا والعيوب لكل بديل بالدارجة المغربية بشكل مختصر ومفيد للمصنع.
+9. لاغام ديال الخياطة وبوستات العمل (gammeMontage): أعطني سلسلة مراحل الخياطة الدقيقة الخاصة بهذا الموديل بالضبط في الورشة (من الفصالة حتى التشطيب والتغليف)، مع تحديد الآلة لكل مرحلة من بين الآلات القياسية (Table de Coupe / Ciseaux, Surjeteuse 3/4 Fils, Surjeteuse 5 Fils (Safety), Piqueuse Plate, Piqueuse 2 Aiguilles, Recouvreuse, Boutonnière / Pose Bouton, Presse à Thermocoller, Machine Broderie / Sfifa, Fer Vapeur / Table Aspirante, Travail Manuel / Contrôle) والوقت الحقيقي بالدقائق (tempsMin، مثلاً 0.5 تعني 30 ثانية، 0.75 تعني 45 ثانية، 1.5 تعني دقيقة ونصف).
 
 أجب بصيغة JSON فقط بدون أي نص إضافي، بهذا الشكل:
 {
@@ -774,6 +798,15 @@ export default function AISpace({ initialLead, onClose }: { initialLead?: Lead, 
       "name": "كريب ريحانة / Crêpe Rayhana",
       "pros": "طايح، مكيتبينش، وساهل في الخياطة ومريح",
       "cons": "كيشرب شوية في المصلوح"
+    }
+  ],
+  "gammeMontage": [
+    {
+      "nomAr": "فصالة القماش وتحضير الأجزاء",
+      "nomFr": "Coupe & Préparation",
+      "machine": "Table de Coupe / Ciseaux",
+      "tempsMin": 1.0,
+      "roleOuvrier": "فصالة وباترون"
     }
   ],
   "pieces": [
@@ -805,8 +838,9 @@ Pour chaque pièce, donne-moi :
 6. Composants de la pièce (Buste, dos, manches, col, poches...)
 7. Tableau des mesures pour chaque taille (S, M, L, XL, XXL) :
    - Haut : Poitrine, Épaules, Longueur, Manche, Taille. (Ajoute Hanches si c'est une pièce longue comme une robe).
-   - Pantalon : Taille, Hanches, Longueur, Cuisse, Bas.
+   - Pantalon / Boxer : Taille, Hanches, Longueur, Cuisse, Bas.
 8. Type de tissu principal suggéré et deux alternatives avec avantages/inconvénients.
+9. La Gamme de Montage (gammeMontage) : donne la séquence exacte des opérations de confection industrielle pour ce modèle précis (de la coupe au contrôle/emballage), avec la machine standard (Table de Coupe / Ciseaux, Surjeteuse 3/4 Fils, Surjeteuse 5 Fils (Safety), Piqueuse Plate, Piqueuse 2 Aiguilles, Recouvreuse, Boutonnière / Pose Bouton, Presse à Thermocoller, Machine Broderie / Sfifa, Fer Vapeur / Table Aspirante, Travail Manuel / Contrôle) et le temps en minutes (tempsMin, ex: 0.5 pour 30 sec, 0.75 pour 45 sec).
 
 Réponds UNIQUEMENT au format JSON sans texte additionnel :
 {
@@ -820,6 +854,15 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
       "name": "Nom du tissu",
       "pros": "Avantages",
       "cons": "Inconvénients"
+    }
+  ],
+  "gammeMontage": [
+    {
+      "nomAr": "فصالة القماش وتحضير الأجزاء",
+      "nomFr": "Coupe & Préparation",
+      "machine": "Table de Coupe / Ciseaux",
+      "tempsMin": 1.0,
+      "roleOuvrier": "Coupe"
     }
   ],
   "pieces": [
@@ -912,6 +955,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
           costEstimate: parsed.totalCost || parsed.costEstimate || '—',
           components: [],
           pieces: [],
+          gammeMontage: [],
           fabricSuggested: parsed.fabricSuggested || '—',
           fabricAlternatives: parsed.fabricAlternatives || [],
           rawAnalysis: rawText
@@ -934,6 +978,20 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
           }));
           // Flatten all components
           result.components = result.pieces.flatMap((p: any) => p.components);
+        }
+
+        // Populate tailored Gamme de Montage (from AI JSON if provided, otherwise smart breakdown)
+        if (parsed.gammeMontage && Array.isArray(parsed.gammeMontage) && parsed.gammeMontage.length > 0) {
+          result.gammeMontage = parsed.gammeMontage.map((g: any) => ({
+            nomAr: g.nomAr || g.nomFr || 'مرحلة خياطة',
+            nomFr: g.nomFr || g.nomAr || 'Opération couture',
+            machine: g.machine || 'Piqueuse Plate',
+            tempsMin: Math.max(0.1, Number(parseFloat(String(g.tempsMin || 1)).toFixed(2))),
+            roleOuvrier: g.roleOuvrier || 'خياط متخصص'
+          }));
+        } else {
+          const fallbackCtx = `${result.category} ${result.fabricSuggested} ${result.pieces.map((p: any) => p.name).join(' ')}`;
+          result.gammeMontage = getGarmentTechnicalBreakdown(fallbackCtx).postesTravail;
         }
 
         // Update custom measurements from first piece
@@ -1094,6 +1152,189 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
     }
   };
 
+  const CHAT_AI_SYSTEM_PROMPT = `أنت خبير تحليل وتصميم وتسعير وإنتاج في مصنع نسيج وخياطة مغربي احترافي (BEYA Expert). تكلم بالدارجة المغربية والعربية بأسلوب احترافي، واضح، ومرتب جداً.
+مهمتك الأساسية عند تحليل أي موديل أو الإجابة عن أي طلب إنتاج أو تسعير:
+1. أولاً: حساب استهلاك الثوب بدقة (بالمتر لعرض 1.50م أو بالكيلو للجيرسي/القطن) والسلعة (لاستيك، أزرار، سحاب، خيط...).
+2. ثانياً: إعطاء تقديرات دقيقة للأسعار في السوق المغربي (أثمنة الأثواب والسلعة في درب عمر، القريعة، أو أسواق الجملة بالدار البيضاء).
+3. ثالثاً: تفصيل التكلفة المالية (Prix de revient): ثمن الثوب والسلعة، تكلفة اليد العاملة والخياطة (Façon)، والتكلفة الإجمالية للقطعة الواحدة وللكمية المطلوبة.
+4. رابعاً: نصائح تقنية للورشة وأماكن شراء السلعة في المغرب.
+5. خامساً (إلزامي دائماً في أي تحليل أو دراسة موديل): أدرج قسماً مفصلاً ومرتباً بعنوان:
+"🏭 خامساً: لاغام ديال الخياطة وبوستات العمل (La Gamme de Montage)"
+تذكر فيه جميع مراحل الخياطة المتسلسلة الخاصة بهذا الموديل بالضبط (من الفصالة إلى الكيّ والمراقبة والتغليف)، ولكل مرحلة اذكر:
+- رقم واسم المرحلة
+- الماكينة المستعملة (من بين: Table de Coupe / Ciseaux, Surjeteuse 3/4 Fils, Surjeteuse 5 Fils (Safety), Piqueuse Plate, Piqueuse 2 Aiguilles, Recouvreuse, Boutonnière / Pose Bouton, Presse à Thermocoller, Machine Broderie / Sfifa, Fer Vapeur / Table Aspirante, Travail Manuel / Contrôle)
+- وقت كل مرحلة بالدقيقة والثانية (مثلاً: 0.75 دقيقة / 45 ثانية)
+- وفي نهاية القسم اذكر: إجمالي وقت خياطة البياسة الواحدة (Total SAM) بالدقائق والثواني، وعدد البوستات/الماكينات المقترحة للورشة.
+
+تنبيه تقني مهم للنظام: في نهاية ردك تماماً (في سطر أخير منفصل)، أضف دائماً كود JSON مخفي يحتوي على مراحل لاغام التي ذكرتها بهذا الشكل الدقيق لكي يقرأه نظام الورشة تلقائياً:
+<<<GAMME_JSON:{"modelName":"اسم الموديل","postes":[{"nomAr":"اسم المرحلة بالعربية","nomFr":"Nom opération FR","machine":"Surjeteuse 3/4 Fils","tempsMin":0.75,"roleOuvrier":"ماكينة Overlock"}]}>>>`;
+
+  const parseAiChatAndExtractGamme = (rawAiText: string, userMessage: string) => {
+    let cleanText = rawAiText;
+    let extractedPostes: PosteTravail[] | null = null;
+    let extractedModelName = '';
+
+    const match = rawAiText.match(/<<<GAMME_JSON:([\s\S]*?)>>>/);
+    if (match) {
+      cleanText = rawAiText.replace(match[0], '').trim();
+      try {
+        const parsed = JSON.parse(match[1].trim());
+        if (parsed.modelName) extractedModelName = String(parsed.modelName).trim();
+        if (parsed.postes && Array.isArray(parsed.postes) && parsed.postes.length > 0) {
+          extractedPostes = parsed.postes.map((p: any) => ({
+            nomAr: p.nomAr || p.nomFr || 'مرحلة خياطة',
+            nomFr: p.nomFr || gNomFrFallback(p.nomAr),
+            machine: p.machine || 'Piqueuse Plate',
+            tempsMin: Math.max(0.1, Number(parseFloat(String(p.tempsMin || 1)).toFixed(2))),
+            roleOuvrier: p.roleOuvrier || 'خياط متخصص'
+          }));
+        }
+      } catch (e) {
+        console.warn('Could not parse GAMME_JSON from chat:', e);
+      }
+    }
+
+    function gNomFrFallback(s?: string) {
+      return s || 'Opération couture';
+    }
+
+    const combinedContext = `${extractedModelName} ${userMessage} ${cleanText}`;
+    const breakdown = getGarmentTechnicalBreakdown(combinedContext);
+    const finalPostes = (extractedPostes && extractedPostes.length > 0) ? extractedPostes : breakdown.postesTravail;
+    const finalModelName = extractedModelName || breakdown.categorie;
+
+    if (!cleanText.includes('لاغام') && !cleanText.toLowerCase().includes('gamme')) {
+      const totalMin = Number(finalPostes.reduce((s, p) => s + (Number(p.tempsMin) || 0), 0).toFixed(2));
+      const totalSec = Math.round(totalMin * 60);
+      let gammeBlock = `\n\n────────────────────────────\n`;
+      gammeBlock += `🏭 لاغام ديال الخياطة وبوستات العمل (La Gamme de Montage — ${finalModelName}):\n`;
+      gammeBlock += `• عدد البوستات المقترحة: ${finalPostes.length} محطات عمل\n`;
+      gammeBlock += `• إجمالي وقت خياطة البياسة (SAM): ${totalMin} دقيقة (${totalSec} ثانية)\n`;
+      finalPostes.forEach((gp, idx) => {
+        const sec = Math.round((Number(gp.tempsMin) || 0) * 60);
+        gammeBlock += `  ${idx + 1}. ${gp.nomAr} — [الآلة: ${gp.machine}] — ⏱️ ${gp.tempsMin} د (${sec} ثانية)\n`;
+      });
+      gammeBlock += `⚡ اضغط على زر "إرسال للورشة Atelier" باش تلقى هاد لاغام واجدة ومرتبة فحاسبة الورشة!`;
+      cleanText = cleanText + gammeBlock;
+    }
+
+    setAnalysisResult(prev => {
+      if (prev) {
+        return {
+          ...prev,
+          category: extractedModelName || prev.category,
+          gammeMontage: finalPostes
+        };
+      }
+      return {
+        category: finalModelName,
+        consumption: `${breakdown.consommationMetrage}m`,
+        complexity: 'متوسطة',
+        components: finalPostes.map(p => p.nomAr),
+        costEstimate: `${breakdown.coutRevientEstime.toFixed(1)} - ${breakdown.prixVenteConseille.toFixed(1)} MAD`,
+        fabricSuggested: breakdown.tissuType,
+        gammeMontage: finalPostes,
+        rawAnalysis: cleanText
+      };
+    });
+
+    return cleanText;
+  };
+
+  const dispatchToAtelier = () => {
+    const allChatText = chat.map(c => c.text).join('\n');
+    const userChatText = chat.filter(c => c.role === 'user').map(c => c.text).join(' ');
+    const combinedContext = `${analysisResult?.category || ''} ${analysisResult?.fabricSuggested || ''} ${(analysisResult?.pieces || []).map(p => p.name).join(' ')} ${userChatText} ${allChatText}`;
+
+    const breakdown = getGarmentTechnicalBreakdown(combinedContext);
+
+    // Determine best article name
+    let articleName = analysisResult?.category || breakdown.categorie || 'Modèle Atelier';
+    const lowerCtx = combinedContext.toLowerCase();
+    if (lowerCtx.includes('بوكسر') || lowerCtx.includes('كالسون') || lowerCtx.includes('boxer') || lowerCtx.includes('caleçon') || lowerCtx.includes('calson')) {
+      if (!articleName.toLowerCase().includes('boxer') && !articleName.includes('بوكسر') && !articleName.includes('كالسون')) {
+        articleName = isAr ? 'بوكسر رجالي جيرسي (Boxer / Sous-vêtement)' : 'Boxer / Sous-vêtement Jersey';
+      }
+    }
+
+    // Determine tailored Gamme de Montage (customPostes)
+    const customPostes: PosteTravail[] = (
+      analysisResult?.gammeMontage &&
+      Array.isArray(analysisResult.gammeMontage) &&
+      analysisResult.gammeMontage.length > 0 &&
+      !(
+        (lowerCtx.includes('بوكسر') || lowerCtx.includes('كالسون') || lowerCtx.includes('boxer')) &&
+        !analysisResult.gammeMontage.some(p => p.nomAr.includes('حجر') || p.nomAr.includes('خصر') || p.nomAr.includes('بوكسر') || p.nomAr.includes('جيرسي') || p.tempsMin <= 2)
+      )
+    )
+      ? analysisResult.gammeMontage
+      : breakdown.postesTravail;
+
+    // Extract quantity from user chat if mentioned (e.g. "6000")
+    let detectedQty = 1000;
+    const qtyMatches = userChatText.match(/\b(\d{2,6})\b/g);
+    if (qtyMatches && qtyMatches.length > 0) {
+      const validNums = qtyMatches.map(Number).filter(n => n >= 20 && n <= 500000);
+      if (validNums.length > 0) {
+        detectedQty = Math.max(...validNums);
+      }
+    }
+
+    // Parse consumption & unit material cost
+    let consMetrage = breakdown.consommationMetrage;
+    if (analysisResult?.consumption) {
+      const m = String(analysisResult.consumption).match(/[\d.]+/);
+      if (m && parseFloat(m[0]) > 0) consMetrage = parseFloat(m[0]);
+    }
+    const unitMaterialCost = Math.round(((consMetrage * breakdown.prixMetreEstime) + breakdown.fournituresEstimees) * 100) / 100;
+    const totalMaterialsCost = Math.round(unitMaterialCost * detectedQty);
+
+    let recommendedUnitPrice = breakdown.prixVenteConseille;
+    if (analysisResult?.costEstimate) {
+      const m = String(analysisResult.costEstimate).match(/[\d.]+/g);
+      if (m && m.length > 0) {
+        const parsedVal = parseFloat(m[m.length - 1]);
+        if (parsedVal > 0 && parsedVal < 2000) recommendedUnitPrice = parsedVal;
+      }
+    }
+
+    const totalSamMin = customPostes.reduce((acc, p) => acc + (Number(p.tempsMin) || 0), 0);
+    const workersCount = Math.max(1, customPostes.length);
+    const estimatedDays = Math.max(1, Math.ceil((detectedQty * totalSamMin) / (workersCount * 8 * 60)));
+
+    // Save to both localStorage keys so AtelierCalculator loads the exact Gamme, Photo, Quantity, and Costs
+    const pilotExportData = {
+      itemName: articleName,
+      photo: image || undefined,
+      customPostes,
+      workers: workersCount,
+      quantity: detectedQty,
+      materials: totalMaterialsCost,
+      pricePerPiece: recommendedUnitPrice,
+      days: estimatedDays,
+      timestamp: Date.now()
+    };
+    localStorage.setItem('beya_ai_gamme_pilot_export', JSON.stringify(pilotExportData));
+
+    const atelierData = {
+      modelName: articleName,
+      photo: image || undefined,
+      tissuMetrage: `${consMetrage}m`,
+      complexity: analysisResult?.complexity || 'Moyenne',
+      prixEstimation: `${recommendedUnitPrice} MAD`,
+      pieces: analysisResult?.pieces || [],
+      customPostes,
+      workers: workersCount,
+      quantity: detectedQty,
+      materials: totalMaterialsCost,
+      days: estimatedDays,
+      timestamp: Date.now()
+    };
+    localStorage.setItem('beya_atelier_import', JSON.stringify(atelierData));
+
+    window.open('/#/atelier-calculator', '_blank');
+  };
+
   const sendDirect = async (directMsg: string) => {
     const userMessage = directMsg;
     setChat(prev => [...prev, { role: 'user', text: userMessage }]);
@@ -1102,7 +1343,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
     if (apiKey) {
       try {
         setChat(prev => [...prev, { role: 'ai', text: '...' }]);
-        const contents: any[] = [{ role: "user", parts: [{ text: userMessage }] }];
+        const contents: any[] = [{ role: "user", parts: [{ text: `${CHAT_AI_SYSTEM_PROMPT}\n\nطلب المستخدم:\n${userMessage}` }] }];
         if (image) {
           const base64Data = image.split(',')[1];
           const mimeType = image.split(';')[0].split(':')[1];
@@ -1124,7 +1365,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
 
         let aiText = "";
         if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
-          aiText = data.candidates[0].content.parts[0].text;
+          aiText = parseAiChatAndExtractGamme(data.candidates[0].content.parts[0].text, userMessage);
         } else if (data.error) {
           const errMsg = data.error.message || '';
           if (errMsg.includes('high demand')) {
@@ -1166,7 +1407,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
           {
             role: "user",
             parts: [
-              { text: userMessage }
+              { text: `${CHAT_AI_SYSTEM_PROMPT}\n\nطلب المستخدم:\n${userMessage}` }
             ]
           }
         ];
@@ -1212,7 +1453,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
 
         let aiResponseText = "";
         if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
-          aiResponseText = data.candidates[0].content.parts[0].text;
+          aiResponseText = parseAiChatAndExtractGamme(data.candidates[0].content.parts[0].text, userMessage);
         } else if (data.error) {
           const errMsg = data.error.message || '';
           if (errMsg.includes('high demand')) {
@@ -1510,21 +1751,12 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
 
               <button
                 onClick={() => {
-                  if (analysisResult) {
-                    const atelierData = {
-                      modelName: analysisResult.category || 'Modèle Atelier',
-                      tissuMetrage: analysisResult.consumption || '2.0m',
-                      complexity: analysisResult.complexity || 'Moyenne',
-                      prixEstimation: analysisResult.costEstimate || '150 MAD',
-                      pieces: analysisResult.pieces || [],
-                      timestamp: Date.now()
-                    };
-                    localStorage.setItem('beya_atelier_import', JSON.stringify(atelierData));
-                    window.open('/#/atelier-calculator', '_blank');
+                  if (analysisResult || chat.length > 1 || image) {
+                    dispatchToAtelier();
                   } else {
                     setCustomAlert({
                       title: isAr ? 'تنبيه' : 'Attention',
-                      message: isAr ? 'يرجى تحليل موديل أولاً من الصورة!' : 'Veuillez analyser un modèle d\'abord !',
+                      message: isAr ? 'يرجى تحليل موديل أو استشارة الذكاء الاصطناعي أولاً!' : 'Veuillez analyser un modèle d\'abord !',
                       isError: true
                     });
                   }
@@ -1744,6 +1976,77 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
                       </div>
                     );
                   })}
+
+                  {/* Visual Gamme de Montage Card (لاغام ديال الخياطة وبوستات العمل) */}
+                  {(() => {
+                    const allChatText = chat.map(c => c.text).join('\n');
+                    const searchCtx = `${analysisResult.category || ''} ${analysisResult.fabricSuggested || ''} ${(analysisResult.pieces || []).map(p => p.name).join(' ')} ${allChatText}`;
+                    const fallbackGamme = getGarmentTechnicalBreakdown(searchCtx).postesTravail;
+                    const activeGamme = (analysisResult.gammeMontage && analysisResult.gammeMontage.length > 0)
+                      ? analysisResult.gammeMontage
+                      : fallbackGamme;
+                    const totalMin = Number(activeGamme.reduce((acc, p) => acc + (Number(p.tempsMin) || 0), 0).toFixed(2));
+                    const totalSec = Math.round(totalMin * 60);
+
+                    return (
+                      <div className="bg-gradient-to-br from-amber-50/70 to-white rounded-3xl p-5 border border-amber-200/80 shadow-sm space-y-4">
+                        <div className={`flex flex-wrap items-center justify-between gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
+                          <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+                            <div className="p-2.5 bg-amber-600 text-white rounded-2xl shadow-sm">
+                              <Scissors className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h3 className="font-black text-sm text-slate-900">
+                                {isAr ? '🏭 لاغام ديال الخياطة وبوستات العمل (La Gamme de Montage)' : '🏭 Gamme de Montage & Postes Atelier'}
+                              </h3>
+                              <p className="text-[10px] text-slate-500 font-bold">
+                                {isAr
+                                  ? `${activeGamme.length} محطات عمل | إجمالي وقت البياسة (SAM): ${totalMin} دقيقة (${totalSec} ثانية)`
+                                  : `${activeGamme.length} postes | Temps total (SAM): ${totalMin} min (${totalSec} sec)`}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={dispatchToAtelier}
+                            className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-black transition-all shadow-sm flex items-center gap-1.5"
+                          >
+                            <Scissors className="w-3.5 h-3.5" />
+                            <span>{isAr ? 'إرسال هاد لاغام للورشة 🚀' : 'Envoyer la Gamme à l\'Atelier 🚀'}</span>
+                          </button>
+                        </div>
+
+                        <div className="space-y-2">
+                          {activeGamme.map((gp, idx) => {
+                            const sec = Math.round((Number(gp.tempsMin) || 0) * 60);
+                            return (
+                              <div
+                                key={idx}
+                                className={`flex items-center justify-between gap-3 p-3 bg-white rounded-2xl border border-amber-100 shadow-sm ${isAr ? 'flex-row-reverse text-right' : ''}`}
+                              >
+                                <div className={`flex items-center gap-3 min-w-0 ${isAr ? 'flex-row-reverse' : ''}`}>
+                                  <span className="w-6 h-6 rounded-lg bg-amber-100 text-amber-800 font-black text-xs flex items-center justify-center shrink-0">
+                                    {idx + 1}
+                                  </span>
+                                  <div className="min-w-0">
+                                    <p className="text-xs font-black text-slate-900 truncate">{isAr ? gp.nomAr : (gp.nomFr || gp.nomAr)}</p>
+                                    <p className="text-[10px] font-bold text-indigo-600 truncate">⚙️ {gp.machine} — {gp.roleOuvrier}</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  <span className="px-2.5 py-1 bg-amber-50 border border-amber-200 text-amber-900 text-[11px] font-black rounded-lg">
+                                    {gp.tempsMin} {isAr ? 'د' : 'min'}
+                                  </span>
+                                  <span className="px-2.5 py-1 bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-black rounded-lg">
+                                    {sec} {isAr ? 'ثانية' : 'sec'}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Print / Export Report Button */}
                   <div className="pt-2 flex justify-end">
@@ -2128,16 +2431,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
               <button
                 onClick={() => {
                   setShowDispatchModal(false);
-                  const atelierData = {
-                    modelName: analysisResult?.category || 'Modèle Atelier',
-                    tissuMetrage: analysisResult?.consumption || '2.0m',
-                    complexity: analysisResult?.complexity || 'Moyenne',
-                    prixEstimation: analysisResult?.costEstimate || '150 MAD',
-                    pieces: analysisResult?.pieces || [],
-                    timestamp: Date.now()
-                  };
-                  localStorage.setItem('beya_atelier_import', JSON.stringify(atelierData));
-                  window.open('/#/atelier-calculator', '_blank');
+                  dispatchToAtelier();
                 }}
                 className={`flex items-center justify-between p-3.5 bg-amber-50 hover:bg-amber-100 border border-amber-200/60 text-amber-900 rounded-2xl font-black text-xs transition-all shadow-sm group ${isAr ? 'flex-row-reverse' : ''}`}
               >

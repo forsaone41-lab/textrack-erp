@@ -143,6 +143,7 @@ export default function AtelierCalculator({
 
   // Admin & AI import check
   const [isAdmin, setIsAdmin] = useState(true);
+  const importedGammeRef = useRef(false);
   useEffect(() => {
     try {
       const s = localStorage.getItem('textrack_auth');
@@ -153,26 +154,48 @@ export default function AtelierCalculator({
       setIsAdmin(true);
     }
 
-    // Auto-import from AI Expert (beya_atelier_import)
-    const imported = localStorage.getItem('beya_atelier_import');
-    if (imported) {
+    // Auto-import from AI Expert (beya_ai_gamme_pilot_export or beya_atelier_import)
+    const exportedRaw = localStorage.getItem('beya_ai_gamme_pilot_export') || localStorage.getItem('beya_atelier_import');
+    if (exportedRaw) {
       try {
-        const data = JSON.parse(imported);
-        if (data.modelName) setItemName(data.modelName);
+        const data = JSON.parse(exportedRaw);
+        importedGammeRef.current = true;
+        if (data.itemName || data.modelName) setItemName(data.itemName || data.modelName);
         if (data.photo) setCustomModelPhoto(data.photo);
-        if (data.prixEstimation) {
-          const m = String(data.prixEstimation).match(/[\d.]+/);
-          if (m) setPricePerPiece(parseFloat(m[0]) || 120);
+        if (data.customPostes && Array.isArray(data.customPostes)) {
+          setCustomPostes(data.customPostes);
+          setWorkers(data.customPostes.length || Number(data.workers) || 7);
+          setTotalMachines(data.customPostes.length || 7);
+        } else if (data.workers) {
+          setWorkers(Number(data.workers) || 8);
         }
-        if (data.tissuMetrage) {
+        if (typeof data.quantity === 'number' && data.quantity > 0) {
+          setQuantity(data.quantity);
+        }
+        if (typeof data.materials === 'number') {
+          setMaterials(data.materials);
+        } else if (data.tissuMetrage) {
           const m = String(data.tissuMetrage).match(/[\d.]+/);
           if (m) {
-            const cons = parseFloat(m[0]) || 2.0;
-            setMaterials(Math.round(cons * 35 * 100));
+            const cons = parseFloat(m[0]) || 1.5;
+            const q = (typeof data.quantity === 'number' && data.quantity > 0) ? data.quantity : 1000;
+            setMaterials(Math.round(cons * 20 * q));
           }
         }
+        if (typeof data.pricePerPiece === 'number') {
+          setPricePerPiece(data.pricePerPiece);
+        } else if (data.prixEstimation) {
+          const m = String(data.prixEstimation).match(/[\d.]+/);
+          if (m) setPricePerPiece(parseFloat(m[0]) || 45);
+        }
+        if (typeof data.days === 'number' && data.days > 0) {
+          setDays(data.days);
+        }
+        localStorage.removeItem('beya_ai_gamme_pilot_export');
         localStorage.removeItem('beya_atelier_import');
-      } catch (e) { /* ignore */ }
+      } catch (e) {
+        console.error(e);
+      }
     }
   }, []);
 
@@ -227,11 +250,11 @@ function isSupportRole(e: Employe): boolean {
       if (activeAtelier.length > 0) {
         setAllWorkers(activeAtelier);
         setSelectedWorkerIds(activeAtelier.map((e: Employe) => e.id));
-        setWorkers(activeAtelier.length);
+        if (!importedGammeRef.current) setWorkers(activeAtelier.length);
       } else {
         setAllWorkers(DEFAULT_WORKERS);
         setSelectedWorkerIds(DEFAULT_WORKERS.map(e => e.id));
-        setWorkers(DEFAULT_WORKERS.length);
+        if (!importedGammeRef.current) setWorkers(DEFAULT_WORKERS.length);
       }
     }).catch(() => {});
   }, []);
