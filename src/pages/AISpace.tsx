@@ -919,7 +919,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
   ]
 }`;
 
-      let response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
+      let response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -939,7 +939,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
       let data = await response.json();
       
       if (data.error && (data.error.message.includes('high demand') || data.error.code === 503 || data.error.code === 404 || data.error.message.includes('not found'))) {
-        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
+        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1081,63 +1081,145 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
     const m = userMsg.toLowerCase().trim();
 
     // Language switch overrides
-    if (/(dwi.*arbya|dwi.*arbia|hder.*blarbya|hder.*arbya|hder.*arbia|parle.*arabe|arabe|arbya|arabic|Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©|ØªÙƒÙ„Ù….*Ø¹Ø±Ø¨ÙŠ|ØªØ­Ø¯Ø«.*Ø¹Ø±Ø¨ÙŠ)/i.test(m)) {
+    if (/(dwi.*arbya|dwi.*arbia|hder.*blarbya|hder.*arbya|hder.*arbia|parle.*arabe|arabe|arbya|arabic|العربية|تكلم.*عربي|تحدث.*عربي)/i.test(m)) {
       setAiLangOverride('ar');
-      return 'ÙˆØ§Ø®Ø§! ðŸ˜Š Ù…Ù† Ø¯Ø§Ø¨Ø§ ØºØ§Ù†Ù‡Ø¶Ø± Ù…Ø¹Ø§Ùƒ Ø¨Ø§Ù„Ø¯Ø§Ø±Ø¬Ø© Ø§Ù„Ù…ØºØ±Ø¨ÙŠØ© ÙˆØ§Ù„Ø¹Ø±Ø¨ÙŠØ©. ÙƒÙŠÙØ§Ø´ Ù†Ù‚Ø¯Ø± Ù†Ø¹Ø§ÙˆÙ†Ùƒ Ø§Ù„ÙŠÙˆÙ…ØŸ';
+      return 'واخا! 😊 من دابا غانهضر معاك بالدارجة المغربية والعربية. كيفاش نقدر نعاونك اليوم؟';
     }
-    if (/(parle.*francais|parle.*franÃ§ais|dwi.*fransya|dwi.*fransia|dwi.*lfransya|french|francais|franÃ§ais|Ø§Ù„ÙØ±Ù†Ø³ÙŠØ©)/i.test(m)) {
+    if (/(parle.*francais|parle.*français|dwi.*fransya|dwi.*fransia|dwi.*lfransya|french|francais|français|الفرنسية)/i.test(m)) {
       setAiLangOverride('fr');
-      return "D'accord ! ðŸ˜Š Ã€ partir de maintenant, je vais vous rÃ©pondre en franÃ§ais. Comment puis-je vous aider aujourd'hui ?";
+      return "D'accord ! 😊 À partir de maintenant, je vais vous répondre en français. Comment puis-je vous aider aujourd'hui ?";
     }
 
     const speakAr = aiLangOverride === 'ar' || (aiLangOverride === null && isAr);
 
+    // 1. Specific Fabric: INTERLOCK / LANTRLOC
+    if (/(interlock|interlok|lantrloc|linterloc|linterlock|انترلوك|إنترلوك|لانترلوك)/i.test(m)) {
+      return speakAr
+        ? `🧵 ثوب الإنترلوك (Interlock) في عالم النسيج والخياطة:
+
+• ما هو ثوب الإنترلوك؟
+هو نوع ممتاز وفاخر من أثواب "الميلتون والتريكو" المحبوكة المزدوجة (Maille Double Face / Double Knit)، كيتخدم بماكينات دائرية فيها صفين ديال الإبر (Deux fontures).
+
+• الخصائص والمميزات ديالو:
+1. وجهين متطابقين: الوجه ديال الثوب والظهر ديالو بحال بحال تماماً (ملسين، ناعمين، ومكيفرقش الوجه من الظهر).
+2. ما كيتلواش من الجوانب: بعكس السانجل جيرسي (Single Jersey العادي) اللي كيتلوى من الحواشي فاش كتقطعو، الإنترلوك كيبقى مسرح (ne roule pas sur les bords)، وهادشي كيسهل الفصالة والخياطة بزاف فالمصنع.
+3. متين وأثقل: كيكون أثقل من الجيرسي العادي، مكيشفش، وعندو ثقل ومطاطية طبيعية مريحة (Elasticité naturelle) حتى بلا ليكرا.
+
+• فاش كيتستعمل غالباً؟
+• تيشرتات ثقيلة ذات جودة عالية (T-shirts Heavyweight من 240g حتى 300g)
+• سويت شيرتات وهوديات فخمة (Sweatshirts & Hoodies)
+• ملابس الأطفال والرضع (حيت ناعم بزاف على البشرة ومكيسببش حساسية)
+• بيجامات فخمة وملابس رياضية (Jogging / Ensembles).
+
+💰 ثمنه التقريبي في المغرب (درب عمر / القريعة): ما بين 45 إلى 70 درهم للكيلو (أو 35-50 درهم للمتر حسب الغراماج ونسبة القطن).`
+        : `🧵 Le tissu Interlock en confection industrielle :
+
+• Définition :
+L'Interlock est une maille tricotée double face (Double Knit). Les deux faces (endroit et envers) sont rigoureusement identiques, lisses et très douces.
+
+• Avantages majeurs en atelier :
+1. Ne roule pas sur les bords lors de la coupe, ce qui facilite grandement le travail du coupeur et des couturières.
+2. Plus dense, plus lourd et plus opaque que le jersey classique.
+3. Excellente tenue et tombé parfait pour le prêt-à-porter haut de gamme.
+
+• Utilisations idéales :
+T-shirts Heavyweight (240g-300g), polos, sweats légers, vêtements bébé/enfant et ensembles sportswear.`;
+    }
+
+    // 2. Specific Fabric: MOLLETON
+    if (/(molleton|molton|ميلتون|مولتون|ملتون)/i.test(m)) {
+      return speakAr
+        ? `🧵 ثوب الميلتون (Molleton / Sweat Fabric):
+هو الثوب الأساسي للهوديز والترينغات الشتوية (Sweat à capuche & Jogging).
+• الأنواع:
+  1. ميلتون مبطن وممشوط من الداخل (Molleton Gratté / Brossé): كيكون فيه فرو ناعم ودافي.
+  2. ميلتون غير مبطن (French Terry / Molleton Non Gratté): كيكون من الداخل بحال حلقات الخيط (bouclettes)، خفيف وربيعي.
+• الغراماج المعتاد: من 280g حتى 400g/m².
+💰 الثمن في المغرب: من 45 حتى 65 درهم للكيلو في درب عمر والقريعة.`
+        : `🧵 Le tissu Molleton :
+Idéal pour les sweats à capuche et joggings. Disponible en Molleton Gratté (chaud et doux) ou French Terry (bouclettes non grattées). Grammage moyen : 280-400g/m².`;
+    }
+
+    // 3. Specific Fabric: CREPE
+    if (/(crepe|crêpe|كريب)/i.test(m)) {
+      return speakAr
+        ? `🧵 أثواب الكريب (Crêpe) في المغرب:
+هو الثوب الأكثر طلباً للفساتين، الجلابة والقفطان العصري.
+• أشهر الأنواع: كريب ريحانة (Crêpe Rayhana)، كريب الحرير (Crêpe de Soie)، وكريب جورجيت.
+• المميزات: طايح، مكيتبينش، ومكيكمشش بزاف.
+💰 الثمن في المغرب: من 20 إلى 45 درهم للمتر حسب الجودة.`
+        : `🧵 Les tissus Crêpe :
+Incontournables pour robes, djellabas et caftans. Fluides, opaques et avec un tombé élégant.`;
+    }
+
+    // 4. Specific Fabric: POPELINE / COTON
+    if (/(popeline|بوبلين|قطن|coton)/i.test(m)) {
+      return speakAr
+        ? `🧵 ثوب البوبلين والقطن (Popeline de Coton):
+النسيج الأساسي للقمصان (Chemises)، البلوزات، وملابس العمل الطبية.
+• المميزات: محكم النسيج، ناعم، وبارد في الصيف ومريح على الجسم.
+💰 الثمن في المغرب: ما بين 18 إلى 35 درهم للمتر لعرض 1.50م.`
+        : `🧵 Popeline de Coton :
+Le tissu roi pour la chemiserie et blouses. Fin, doux et respirant.`;
+    }
+
+    // 5. Specific Fabric: GABARDINE
+    if (/(gabardine|غاباردين|كاباردين)/i.test(m)) {
+      return speakAr
+        ? `🧵 ثوب الغاباردين (Gabardine):
+نسيج مائل مضلع (Sergé) قوي جداً ومقاوم للاحتكاك.
+• الاستعمالات: سراويل شينو (Chino)، سترات، أزياء موحدة للشركات، ومعاطف خفيفة (Trench).
+💰 الثمن في المغرب: من 25 إلى 45 درهم للمتر.`
+        : `🧵 Tissu Gabardine :
+Tissage sergé très robuste pour pantalons chino, vestes et uniformes professionnels.`;
+    }
+
     // Greetings
-    if (/^(salam|salaam|slm|hi|hello|bonjour|bonsoir|hey|Ù…Ø±Ø­Ø¨Ø§|Ø§Ù„Ø³Ù„Ø§Ù…|Ø³Ù„Ø§Ù…|ØµØ¨Ø§Ø­|Ù…Ø³Ø§Ø¡|ahlan)/.test(m)) {
+    if (/^(salam|salaam|slm|hi|hello|bonjour|bonsoir|hey|مرحبا|السلام|سلام|صباح|مساء|ahlan)/.test(m)) {
       return speakAr
-        ? 'ÙˆØ¹Ù„ÙŠÙƒÙ… Ø§Ù„Ø³Ù„Ø§Ù…! ðŸ‘‹ Ù…Ø±Ø­Ø¨Ø§Ù‹ Ø¨Ùƒ ÙÙŠ Ù…Ø³Ø§Ø­Ø© Ø§Ù„ØªØ­Ù„ÙŠÙ„. ÙƒÙŠÙ ÙŠÙ…ÙƒÙ†Ù†ÙŠ Ù…Ø³Ø§Ø¹Ø¯ØªÙƒ Ø§Ù„ÙŠÙˆÙ…ØŸ ÙŠÙ…ÙƒÙ†Ùƒ Ø±ÙØ¹ ØµÙˆØ±Ø© Ù…ÙˆØ¯ÙŠÙ„ Ù„Ù„Ø¨Ø¯Ø¡ Ø£Ùˆ Ø·Ø±Ø­ Ø£ÙŠ Ø³Ø¤Ø§Ù„ ØªÙ‚Ù†ÙŠ.'
-        : 'Salam ! ðŸ‘‹ Bienvenue dans l\'espace d\'analyse. Comment puis-je vous aider aujourd\'hui ? Vous pouvez uploader une photo ou me poser une question technique.';
+        ? 'وعليكم السلام! 👋 مرحباً بك في مستشار BEYA الذكي. كيف يمكنني مساعدتك اليوم في الموديلات، الأثواب، أو حسابات الورشة؟'
+        : 'Salam ! 👋 Bienvenue dans votre cockpit BEYA. Comment puis-je vous aider aujourd\'hui ?';
     }
+
     // How are you
-    if (/^(kif|kifash|cv|Ã§a va|labas|labess|comment|ÙƒÙŠÙ|Ù„Ø§Ø¨Ø§Ø³|ÙˆØ§Ø´)/.test(m)) {
+    if (/^(kif|kifash|cv|ça va|labas|labess|comment|كيف|لاباس|واش)/.test(m)) {
       return speakAr
-        ? 'Ø§Ù„Ø­Ù…Ø¯ Ù„Ù„Ù‡ Ù„Ø§Ø¨Ø§Ø³! ðŸ˜Š Ø£Ù†Ø§ Ø¬Ø§Ù‡Ø² Ù„Ù…Ø³Ø§Ø¹Ø¯ØªÙƒ. ÙˆØ§Ø´ Ø¹Ù†Ø¯Ùƒ Ø´ÙŠ Ù…ÙˆØ¯ÙŠÙ„ Ø¬Ø¯ÙŠØ¯ Ø¨ØºÙŠØªÙŠ Ù†Ø­Ù„Ù„Ùˆ Ù„ÙŠÙƒØŸ'
-        : 'Ã‡a va bien, merci ! ðŸ˜Š Je suis prÃªt Ã  vous aider. Avez-vous un nouveau modÃ¨le Ã  analyser ?';
+        ? 'الحمد لله كلشي مزيان! 😊 أنا في الخدمة لمساعدتك في أي سؤال حول الأثواب، الفصالة، تكاليف الإنتاج، أو لاغام ديال الخياطة.'
+        : 'Très bien, merci ! 😊 Je suis à votre service pour toute question technique ou analyse.';
     }
-    // Fabric / Tissu questions
-    if (/(toub|tissu|fabric|Ù‚Ù…Ø§Ø´|Ø«ÙˆØ¨|Ù…ØªØ±|metre|consomm|conso|ÙƒÙ…ÙŠØ©|Ù‚Ø¯Ø´|chehal|combien.*tissu|combien.*metre)/i.test(m)) {
+
+    // Fabric / Tissu general questions
+    if (/(toub|tissu|fabric|قماش|ثوب|متر|metre|consomm|conso|كمية|قدش|chehal|combien.*tissu|combien.*metre)/i.test(m)) {
       return speakAr
-        ? 'ðŸ§µ Ù„ØªØ­Ø¯ÙŠØ¯ ÙƒÙ…ÙŠØ© Ø§Ù„Ø«ÙˆØ¨ Ø¨Ø¯Ù‚Ø©ØŒ Ø£Ø­ØªØ§Ø¬ Ù„ØµÙˆØ±Ø© Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„ + Ø¹Ø±Ø¶ Ø§Ù„Ø«ÙˆØ¨ (Ù…Ø«Ù„Ø§Ù‹ 1.50Ù… Ø£Ùˆ 2.80Ù…). Ø¨Ø´ÙƒÙ„ Ø¹Ø§Ù…:\nâ€¢ Ù‚Ù…ÙŠØµ: 1.20 - 1.60Ù…\nâ€¢ Ø³Ø±ÙˆØ§Ù„: 1.40 - 1.80Ù…\nâ€¢ ÙØ³ØªØ§Ù† Ù‚ØµÙŠØ±: 2.00 - 2.50Ù…\nâ€¢ ÙØ³ØªØ§Ù† Ø·ÙˆÙŠÙ„: 2.80 - 3.50Ù…\nâ€¢ Ø¬Ù„Ø§Ø¨Ø©: 3.00 - 4.00Ù…\n\nØ§Ø±ÙØ¹ ØµÙˆØ±Ø© Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„ ÙˆØ³Ø£Ø¹Ø·ÙŠÙƒ ØªÙ‚Ø¯ÙŠØ±Ø§Ù‹ Ø£Ø¯Ù‚!'
-        : 'ðŸ§µ Pour estimer la consommation prÃ©cise, j\'ai besoin de la photo du modÃ¨le + la laize du tissu (ex: 1.50m ou 2.80m). En gÃ©nÃ©ral :\nâ€¢ Chemise : 1.20 - 1.60m\nâ€¢ Pantalon : 1.40 - 1.80m\nâ€¢ Robe courte : 2.00 - 2.50m\nâ€¢ Robe longue : 2.80 - 3.50m\nâ€¢ Djellaba : 3.00 - 4.00m\n\nUploadez la photo pour une estimation plus prÃ©cise !';
+        ? '🧵 لتقدير استهلاك الثوب بدقة لعرض (Laize 1.50م):\n• قميص رجالي/نسائي: 1.30م - 1.60م\n• سروال كلاسيك/جينز: 1.30م - 1.50م\n• هودي/سويت شيرت: 1.50م - 1.80م\n• فستان قصير: 2.00م - 2.40م\n• فستان طويل/جلابة: 2.80م - 3.50م\n\nارفع صورة الموديل بالزر أعلاه وسأحلل لك الأمتار الدقيقة لكل قطعة!'
+        : '🧵 Consommation moyenne (laize 1.50m) :\n• Chemise : 1.30 - 1.60m\n• Pantalon : 1.30 - 1.50m\n• Hoodie : 1.50 - 1.80m\n• Robe / Djellaba : 2.50 - 3.50m\n\nUploadez la photo pour une estimation précise !';
     }
+
     // Cost / Price questions
-    if (/(prix|cout|coÃ»t|cost|taman|Ø«Ù…Ù†|Ø³Ø¹Ø±|ØªÙƒÙ„ÙØ©|ÙƒÙ„ÙØ©|chehal|combien|price|devis|ÙÙ„ÙˆØ³|flous|money)/i.test(m)) {
+    if (/(prix|cout|coût|cost|taman|ثمن|سعر|تكلفة|كلفة|chehal|combien|price|devis|فلوس|flous|money)/i.test(m)) {
       return speakAr
-        ? 'ðŸ’° ØªÙƒÙ„ÙØ© Ø§Ù„Ø¥Ù†ØªØ§Ø¬ ØªØ¹ØªÙ…Ø¯ Ø¹Ù„Ù‰ Ø¹Ø¯Ø© Ø¹ÙˆØ§Ù…Ù„:\nâ€¢ Ù†ÙˆØ¹ Ø§Ù„Ø«ÙˆØ¨ ÙˆØ³Ø¹Ø±Ù‡ Ø¨Ø§Ù„Ù…ØªØ±\nâ€¢ ØªØ¹Ù‚ÙŠØ¯ Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„ (Ø¹Ø¯Ø¯ Ø§Ù„Ù‚Ø·Ø¹ØŒ Ø§Ù„ØªÙØ§ØµÙŠÙ„)\nâ€¢ ØªÙƒÙ„ÙØ© Ø§Ù„ÙŠØ¯ Ø§Ù„Ø¹Ø§Ù…Ù„Ø©\nâ€¢ Ø§Ù„Ø¥ÙƒØ³Ø³ÙˆØ§Ø±Ø§Øª (Ø£Ø²Ø±Ø§Ø±ØŒ Ø³Ø­Ø§Ø¨Ø§Øª...)\n\nØ§Ø±ÙØ¹ ØµÙˆØ±Ø© Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„ ÙˆØ³Ø£Ù‚Ø¯Ø± Ù„Ùƒ Ø§Ù„ØªÙƒÙ„ÙØ© Ø§Ù„ØªÙ‚Ø±ÙŠØ¨ÙŠØ©ØŒ Ø£Ùˆ Ø§Ø³ØªØ®Ø¯Ù… Ø­Ø§Ø³Ø¨Ø© Ø§Ù„Ø£Ø³Ø¹Ø§Ø± ÙÙŠ Ø§Ù„Ø¨Ø·Ø§Ù‚Ø§Øª Ø§Ù„ØªÙ‚Ù†ÙŠØ©.'
-        : 'ðŸ’° Le coÃ»t de production dÃ©pend de plusieurs facteurs :\nâ€¢ Type de tissu et prix au mÃ¨tre\nâ€¢ ComplexitÃ© du modÃ¨le (nombre de piÃ¨ces, dÃ©tails)\nâ€¢ CoÃ»t de main d\'Å“uvre\nâ€¢ Accessoires (boutons, fermetures...)\n\nUploadez la photo du modÃ¨le et j\'estimerai le coÃ»t, ou utilisez le Calculateur de Prix dans Fiches Techniques.';
+        ? '💰 حساب تكلفة البياسة (Prix de revient) كيعتمد على 4 عناصر:\n1. ثمن الثوب بالمتر × الاستهلاك\n2. اليد العاملة فالورشة (الوقت بالدقائق SAM × ثمن الدقيقة)\n3. اللوازم (الخيط، الأزرار، السحاب، التيكيت، الميكة)\n4. المصاريف الثابتة ومارج الربح.\n\nاستعمل زر "تسعير Devis PRO" فاليسار لإنشاء حساب مفصل فوراً!'
+        : '💰 Le coût unitaire comprend : tissu + façon atelier + accessoires + charges fixes. Utilisez "Devis PRO" pour calculer le devis exact !';
     }
-    // Patronage / Pattern
-    if (/(patron|pattern|Ø¨Ø§Ø·Ø±ÙˆÙ†|Ø¨Ø§ØªØ±ÙˆÙ†|ØªØµÙ…ÙŠÙ…|design|Ù‚Øµ|coupe|taille|Ù…Ù‚Ø§Ø³|Ù‚ÙŠØ§Ø³)/i.test(m)) {
-      return speakAr
-        ? 'âœ‚ï¸ Ø¨Ø§Ù„Ù†Ø³Ø¨Ø© Ù„Ù„Ø¨Ø§Ø·Ø±ÙˆÙ†ØŒ Ø­Ø§Ù„ÙŠØ§Ù‹ ÙŠÙ…ÙƒÙ†Ù†ÙŠ Ù…Ø³Ø§Ø¹Ø¯ØªÙƒ ÙÙŠ:\nâ€¢ ØªØ­Ø¯ÙŠØ¯ Ù…ÙƒÙˆÙ†Ø§Øª Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„ (ØµØ¯Ø±ØŒ Ø£ÙƒÙ…Ø§Ù…ØŒ Ø¸Ù‡Ø±...)\nâ€¢ ØªÙ‚Ø¯ÙŠØ± Ø¹Ø¯Ø¯ Ø§Ù„Ù‚Ø·Ø¹ Ø§Ù„Ù…Ø·Ù„ÙˆØ¨Ø©\nâ€¢ Ø§Ù‚ØªØ±Ø§Ø­ Ù…Ø±Ø§Ø­Ù„ Ø§Ù„Ø®ÙŠØ§Ø·Ø©\n\nØ§Ø±ÙØ¹ ØµÙˆØ±Ø© Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„ ÙˆØ³Ø£Ø­Ù„Ù„ Ø§Ù„Ù…ÙƒÙˆÙ†Ø§Øª Ù„ÙŠÙƒ. Ù„Ø¨Ø§Ø·Ø±ÙˆÙ† Ø§Ø­ØªØ±Ø§ÙÙŠ (DXF) ÙŠÙ…ÙƒÙ†Ùƒ Ø§Ø³ØªØ®Ø¯Ø§Ù… Ø¨Ø±Ù†Ø§Ù…Ø¬ Ù…Ø«Ù„ Lectra Ø£Ùˆ Optitex.'
-        : 'âœ‚ï¸ Concernant le patronage, je peux vous aider avec :\nâ€¢ Identification des composants du modÃ¨le (buste, manches, dos...)\nâ€¢ Estimation du nombre de piÃ¨ces nÃ©cessaires\nâ€¢ Suggestion des Ã©tapes de confection\n\nUploadez la photo et j\'analyserai les composants. Pour un patronage professionnel (DXF), utilisez Lectra ou Optitex.';
-    }
+
     // Production steps
-    if (/(Ã©tape|etape|Ù…Ø±Ø§Ø­Ù„|Ù…Ø±Ø­Ù„Ø©|production|confection|Ø®ÙŠØ§Ø·Ø©|montage|ØªØ±ÙƒÙŠØ¨|process|ÙƒÙŠÙØ§Ø´|comment faire)/i.test(m)) {
+    if (/(étape|etape|مراحل|مرحلة|production|confection|خياطة|montage|تركيب|process|كيفاش|comment faire)/i.test(m)) {
       return speakAr
-        ? 'ðŸ­ Ù…Ø±Ø§Ø­Ù„ Ø§Ù„Ø¥Ù†ØªØ§Ø¬ Ø§Ù„Ø¹Ø§Ù…Ø© Ù„Ø£ÙŠ Ù‚Ø·Ø¹Ø©:\n1ï¸âƒ£ Ø§Ù„Ø¨Ø§Ø·Ø±ÙˆÙ† (Patronage) - ØªØµÙ…ÙŠÙ… Ø§Ù„Ù‚Ø§Ù„Ø¨\n2ï¸âƒ£ Ø§Ù„Ù‚Øµ (Coupe) - Ù‚Øµ Ø§Ù„Ø«ÙˆØ¨\n3ï¸âƒ£ Ø§Ù„ØªØ±ÙƒÙŠØ¨ (Montage) - Ø®ÙŠØ§Ø·Ø© Ø§Ù„Ù‚Ø·Ø¹\n4ï¸âƒ£ Ø§Ù„ØªØ´Ø·ÙŠØ¨ (Finition) - Ø§Ù„ØªÙØ§ØµÙŠÙ„ Ø§Ù„Ù†Ù‡Ø§Ø¦ÙŠØ©\n5ï¸âƒ£ Ø§Ù„ÙƒÙŠ (Repassage)\n6ï¸âƒ£ Ø§Ù„Ù…Ø±Ø§Ù‚Ø¨Ø© (ContrÃ´le QualitÃ©)\n7ï¸âƒ£ Ø§Ù„ØªØºÙ„ÙŠÙ (Emballage)\n\nØ§Ø±ÙØ¹ ØµÙˆØ±Ø© Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„ ÙˆØ³Ø£Ø­Ø¯Ø¯ Ù„Ùƒ Ø§Ù„Ù…Ø±Ø§Ø­Ù„ Ø§Ù„Ø®Ø§ØµØ© Ø¨Ù‡ Ø¨Ø¯Ù‚Ø© Ø£ÙƒØ¨Ø±!'
-        : 'ðŸ­ Ã‰tapes de production standard :\n1ï¸âƒ£ Patronage - CrÃ©ation du patron\n2ï¸âƒ£ Coupe - DÃ©coupe du tissu\n3ï¸âƒ£ Montage - Assemblage des piÃ¨ces\n4ï¸âƒ£ Finition - DÃ©tails et retouches\n5ï¸âƒ£ Repassage\n6ï¸âƒ£ ContrÃ´le QualitÃ©\n7ï¸âƒ£ Emballage\n\nUploadez la photo du modÃ¨le et je dÃ©taillerai les Ã©tapes spÃ©cifiques !';
+        ? '🏭 مراحل الإنتاج القياسية بالورشة:\n1️⃣ الفصالة (Coupe) والترقيم\n2️⃣ السورجي والتجميع المبدئي (Surjeteuse)\n3️⃣ الخياطة المسطحة والتثبيت (Piqueuse plate)\n4️⃣ التفاصيل والأزرار (Boutonnière / Pose)\n5️⃣ المصلوح والتشطيب (Repassage / Finition)\n6️⃣ المراقبة والتغليف (Contrôle & Emballage)\n\nاضغط على زر "إرسال للورشة Atelier" لعرض لاغام الكاملة!'
+        : '🏭 Étapes : Coupe ➔ Assemblage surjet ➔ Piqueuse plate ➔ Finitions & Boutons ➔ Repassage ➔ Contrôle qualité ➔ Emballage.';
     }
+
     // Thanks
     if (/(merci|شكرا|شكر|بارك|thanks|thank|chokran|jazak)/i.test(m)) {
       return speakAr
-        ? 'Ø¨Ù„Ø§ Ø¬Ù…ÙŠÙ„! ðŸ˜Š Ø£Ù†Ø§ Ù‡Ù†Ø§ Ø¯Ø§Ø¦Ù…Ø§Ù‹ Ù„Ù…Ø³Ø§Ø¹Ø¯ØªÙƒ. Ø¥Ø°Ø§ Ø§Ø­ØªØ¬Øª Ø£ÙŠ Ø´ÙŠØ¡ Ø¢Ø®Ø± Ù„Ø§ ØªØªØ±Ø¯Ø¯!'
-        : 'Avec plaisir ! ðŸ˜Š Je suis toujours lÃ  pour vous aider. N\'hÃ©sitez pas si vous avez d\'autres questions !';
+        ? 'بلا جميل! 😊 ديما هنا فخدمتك لمساعدتك تخرج إنتاج متقن وناجح.'
+        : 'Avec grand plaisir ! 😊 N\'hésitez pas pour toute autre question.';
     }
-    // Default - intelligent fallback
+
+    // Default
     return speakAr
-      ? `ÙÙ‡Ù…Øª Ø³Ø¤Ø§Ù„Ùƒ Ø­ÙˆÙ„ "${userMsg}". ðŸ¤” Ù„Ø£Ø¹Ø·ÙŠÙƒ Ø¥Ø¬Ø§Ø¨Ø© Ø¯Ù‚ÙŠÙ‚Ø©ØŒ Ø£Ù†ØµØ­Ùƒ:\n\n1. Ø§Ø±ÙØ¹ ØµÙˆØ±Ø© Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„ Ø§Ù„Ù…Ø¹Ù†ÙŠ Ù„ØªØ­Ù„ÙŠÙ„ Ù…ÙØµÙ„\n2. Ø£Ùˆ Ø§Ø·Ø±Ø­ Ø³Ø¤Ø§Ù„Ùƒ Ø¨Ø´ÙƒÙ„ Ø£Ø¯Ù‚ (Ù…Ø«Ù„Ø§Ù‹: "Ø´Ø­Ø§Ù„ Ù…Ù† Ù…ØªØ± ÙƒÙŠØ­ØªØ§Ø¬ Ù‡Ø§Ø¯ Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„ØŸ")\n\nÙŠÙ…ÙƒÙ†Ù†ÙŠ Ù…Ø³Ø§Ø¹Ø¯ØªÙƒ ÙÙŠ: ÙƒÙ…ÙŠØ© Ø§Ù„Ø«ÙˆØ¨ØŒ Ø§Ù„ØªÙƒÙ„ÙØ©ØŒ Ù…Ø±Ø§Ø­Ù„ Ø§Ù„Ø¥Ù†ØªØ§Ø¬ØŒ ÙˆØ§Ù„Ø¨Ø§Ø·Ø±ÙˆÙ†.`
-      : `J'ai notÃ© votre question sur "${userMsg}". ðŸ¤” Pour une rÃ©ponse prÃ©cise, je vous conseille :\n\n1. D'uploader la photo du modÃ¨le concernÃ©\n2. Ou de prÃ©ciser votre question (ex: "Combien de mÃ¨tres pour ce modÃ¨le ?")\n\nJe peux vous aider avec : consommation tissu, coÃ»ts, Ã©tapes de production, et patronage.`;
+      ? `فهمت سؤالك حول "${userMsg}". 💡 يمكنك رفع صورة الموديل أو طرح سؤال مباشر حول (نوع الثوب، أثمنة درب عمر، مراحل الخياطة، أو المقاسات S-XXL) وسأجيبك فوراً.`
+      : `J'ai noté votre question sur "${userMsg}". Vous pouvez uploader la photo du modèle ou poser une question précise sur les tissus, étapes d'atelier ou coûts.`;
   };
 
   const [translatingFabrics, setTranslatingFabrics] = useState(false);
@@ -1161,7 +1243,7 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
       const targetLang = isAr ? 'Arabic (Moroccan Darija)' : 'French';
       const prompt = `Translate the following JSON object containing fabric suggestions and alternatives into ${targetLang}. Keep the exact same JSON structure and keys (suggested, alternatives, name, pros, cons). Return ONLY valid JSON:\n${JSON.stringify(dataToTranslate)}`;
       
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }] })
       });
@@ -1386,16 +1468,16 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
           const mimeType = image.split(';')[0].split(':')[1];
           contents[0].parts.push({ inlineData: { data: base64Data, mimeType } });
         }
-        let response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
+        let response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents, systemInstruction: { parts: [{ text: "Ø£Ù†Øª Ø®Ø¨ÙŠØ± ØªØ­Ù„ÙŠÙ„ ÙˆØªØµÙ…ÙŠÙ… ÙˆØªØ³Ø¹ÙŠØ± ÙÙŠ Ù…ØµÙ†Ø¹ Ù†Ø³ÙŠØ¬ Ù…ØºØ±Ø¨ÙŠ. ØªÙƒÙ„Ù… Ø¨Ø§Ù„Ø¯Ø§Ø±Ø¬Ø© Ø§Ù„Ù…ØºØ±Ø¨ÙŠØ© Ø¨Ø£Ø³Ù„ÙˆØ¨ Ø§Ø­ØªØ±Ø§ÙÙŠ ÙˆÙˆØ¯ÙŠ. Ù…Ù‡Ù…ØªÙƒ Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ©: 1. Ø­Ø³Ø§Ø¨ ÙƒÙ…ÙŠØ§Øª Ø§Ù„Ø«ÙˆØ¨ Ø¨Ø¯Ù‚Ø©. 2. Ø¥Ø¹Ø·Ø§Ø¡ ØªÙ‚Ø¯ÙŠØ±Ø§Øª Ø¯Ù‚ÙŠÙ‚Ø© Ù„Ù„Ø£Ø³Ø¹Ø§Ø± ÙÙŠ Ø§Ù„Ø³ÙˆÙ‚ Ø§Ù„Ù…ØºØ±Ø¨ÙŠ (Ù…Ø«Ù„Ø§ Ø£Ø«Ù…Ù†Ø© Ø§Ù„Ø£Ø«ÙˆØ§Ø¨ ÙÙŠ Ø¯Ø±Ø¨ Ø¹Ù…Ø± Ø£Ùˆ Ø£Ø³ÙˆØ§Ù‚ Ø§Ù„Ø¬Ù…Ù„Ø©). 3. Ø¥Ø°Ø§ Ø³Ø£Ù„Ùƒ Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø¹Ù† Ø§Ù„ØªÙƒÙ„ÙØ©ØŒ Ø£Ø¹Ø·Ù‡ ØªÙØµÙŠÙ„Ø§Ù‹ Ø¯Ù‚ÙŠÙ‚Ø§Ù‹: Ø«Ù…Ù† Ø§Ù„Ø«ÙˆØ¨ (Ø´Ø­Ø§Ù„ Ù„Ù„Ù…ØªØ± ÙˆØ§Ù„Ù…Ø¬Ù…ÙˆØ¹)ØŒ ØªÙƒÙ„ÙØ© Ø§Ù„Ø®ÙŠØ§Ø·Ø© (Ø§Ù„ÙŠØ¯ Ø§Ù„Ø¹Ø§Ù…Ù„Ø©)ØŒ ÙˆØ§Ù„ØªÙƒÙ„ÙØ© Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠØ© Ù„Ù„Ù‚Ø·Ø¹Ø© (Prix de revient). 4. Ø§Ù‚ØªØ±Ø­ Ø£Ù…Ø§ÙƒÙ† Ø´Ø±Ø§Ø¡ Ø§Ù„Ø£Ø«ÙˆØ§Ø¨ ÙÙŠ Ø§Ù„Ù…ØºØ±Ø¨. ÙƒÙ† Ù…ÙÙŠØ¯Ø§Ù‹ØŒ Ø¯Ù‚ÙŠÙ‚Ø§Ù‹ ÙÙŠ Ø§Ù„Ø£Ø±Ù‚Ø§Ù… Ø§Ù„ØªÙ‚Ø±ÙŠØ¨ÙŠØ©ØŒ ÙˆØªØµØ±Ù ÙƒØ®Ø¨ÙŠØ± Ù†Ø³ÙŠØ¬ Ø­Ù‚ÙŠÙ‚ÙŠ." }] } })
+          body: JSON.stringify({ contents, systemInstruction: { parts: [{ text: "أنت خبير تحليل وتصميم وتسعير في مصنع نسيج مغربي. تكلم بالدارجة المغربية بأسلوب احترافي وودي. مهمتك الأساسية: 1. حساب كميات الثوب بدقة. 2. إعطاء تقديرات دقيقة للأسعار في السوق المغربي (مثلا أثمنة الأثواب في درب عمر أو أسواق الجملة). 3. إذا سألك المستخدم عن التكلفة، أعطه تفصيلاً دقيقاً: ثمن الثوب (شحال للمتر والمجموع)، تكلفة الخياطة (اليد العاملة)، والتكلفة الإجمالية للقطعة (Prix de revient). 4. اقترح أماكن شراء الأثواب في المغرب. كن مفيداً، دقيقاً في الأرقام التقريبية، وتصرف كخبير نسيج حقيقي." }] } })
         });
         let data = await response.json();
         
-        if (data.error && (data.error.message.includes('high demand') || data.error.code === 503)) {
-          response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
+        if (data.error && (data.error.message.includes('high demand') || data.error.code === 503 || data.error.code === 404 || data.error.message.includes('not found'))) {
+          response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents, systemInstruction: { parts: [{ text: "Ø£Ù†Øª Ø®Ø¨ÙŠØ± ØªØ­Ù„ÙŠÙ„ ÙˆØªØµÙ…ÙŠÙ… ÙˆØªØ³Ø¹ÙŠØ± ÙÙŠ Ù…ØµÙ†Ø¹ Ù†Ø³ÙŠØ¬ Ù…ØºØ±Ø¨ÙŠ. ØªÙƒÙ„Ù… Ø¨Ø§Ù„Ø¯Ø§Ø±Ø¬Ø© Ø§Ù„Ù…ØºØ±Ø¨ÙŠØ© Ø¨Ø£Ø³Ù„ÙˆØ¨ Ø§Ø­ØªØ±Ø§ÙÙŠ ÙˆÙˆØ¯ÙŠ. Ù…Ù‡Ù…ØªÙƒ Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ©: 1. Ø­Ø³Ø§Ø¨ ÙƒÙ…ÙŠØ§Øª Ø§Ù„Ø«ÙˆØ¨ Ø¨Ø¯Ù‚Ø©. 2. Ø¥Ø¹Ø·Ø§Ø¡ ØªÙ‚Ø¯ÙŠØ±Ø§Øª Ø¯Ù‚ÙŠÙ‚Ø© Ù„Ù„Ø£Ø³Ø¹Ø§Ø± ÙÙŠ Ø§Ù„Ø³ÙˆÙ‚ Ø§Ù„Ù…ØºØ±Ø¨ÙŠ (Ù…Ø«Ù„Ø§ Ø£Ø«Ù…Ù†Ø© Ø§Ù„Ø£Ø«ÙˆØ§Ø¨ ÙÙŠ Ø¯Ø±Ø¨ Ø¹Ù…Ø± Ø£Ùˆ Ø£Ø³ÙˆØ§Ù‚ Ø§Ù„Ø¬Ù…Ù„Ø©). 3. Ø¥Ø°Ø§ Ø³Ø£Ù„Ùƒ Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø¹Ù† Ø§Ù„ØªÙƒÙ„ÙØ©ØŒ Ø£Ø¹Ø·Ù‡ ØªÙØµÙŠÙ„Ø§Ù‹ Ø¯Ù‚ÙŠÙ‚Ø§Ù‹: Ø«Ù…Ù† Ø§Ù„Ø«ÙˆØ¨ (Ø´Ø­Ø§Ù„ Ù„Ù„Ù…ØªØ± ÙˆØ§Ù„Ù…Ø¬Ù…ÙˆØ¹)ØŒ ØªÙƒÙ„ÙØ© Ø§Ù„Ø®ÙŠØ§Ø·Ø© (Ø§Ù„ÙŠØ¯ Ø§Ù„Ø¹Ø§Ù…Ù„Ø©)ØŒ ÙˆØ§Ù„ØªÙƒÙ„ÙØ© Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠØ© Ù„Ù„Ù‚Ø·Ø¹Ø© (Prix de revient). 4. Ø§Ù‚ØªØ±Ø­ Ø£Ù…Ø§ÙƒÙ† Ø´Ø±Ø§Ø¡ Ø§Ù„Ø£Ø«ÙˆØ§Ø¨ ÙÙŠ Ø§Ù„Ù…ØºØ±Ø¨. ÙƒÙ† Ù…ÙÙŠØ¯Ø§Ù‹ØŒ Ø¯Ù‚ÙŠÙ‚Ø§Ù‹ ÙÙŠ Ø§Ù„Ø£Ø±Ù‚Ø§Ù… Ø§Ù„ØªÙ‚Ø±ÙŠØ¨ÙŠØ©ØŒ ÙˆØªØµØ±Ù ÙƒØ®Ø¨ÙŠØ± Ù†Ø³ÙŠØ¬ Ø­Ù‚ÙŠÙ‚ÙŠ." }] } })
+            body: JSON.stringify({ contents, systemInstruction: { parts: [{ text: "أنت خبير تحليل وتصميم وتسعير في مصنع نسيج مغربي. تكلم بالدارجة المغربية بأسلوب احترافي وودي." }] } })
           });
           data = await response.json();
         }
@@ -1403,25 +1485,23 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
         let aiText = "";
         if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
           aiText = parseAiChatAndExtractGamme(data.candidates[0].content.parts[0].text, userMessage);
-        } else if (data.error) {
-          const errMsg = data.error.message || '';
-          if (errMsg.includes('high demand')) {
-            aiText = "عذراً، خوادم الذكاء الاصطناعي عليها ضغط كبير الآن. ⏳ انتظر قليلاً وحاول مرة أخرى!";
-          } else if (errMsg.includes('limit: 0') || errMsg.includes('Quota exceeded')) {
-            aiText = "âš ï¸ Ø®Ø·Ø£ ÙÙŠ Ø§Ù„Ù…ÙØªØ§Ø­ (API Key): Ù…ÙØªØ§Ø­Ùƒ Ù…Ø§Ø¹Ù†Ø¯Ùˆ Ø­ØªÙ‰ Ø±ØµÙŠØ¯ (Limit: 0). Ù‡Ø§Ø¯Ø´ÙŠ ÙƒÙŠÙˆÙ‚Ø¹ Ø­ÙŠØª Google ÙƒØªÙØ±Ø¶ ØªÙØ¹ÙŠÙ„ Ø§Ù„Ø¯ÙØ¹ (Billing) ÙÙŠ Ø­Ø³Ø§Ø¨ Google Cloud Ø¯ÙŠØ§Ù„Ùƒ Ø¨Ø§Ø´ ØªÙ‚Ø¯Ø± ØªØ®Ø¯Ù… Ø§Ù„Ù€ API ÙÙŠ Ø§Ù„Ù…ØºØ±Ø¨.";
-          } else if (errMsg.includes('not found') || errMsg.includes('not supported')) {
-            aiText = "âš ï¸ Ø®Ø·Ø£ ÙÙŠ Ø§Ù„Ù…ÙØªØ§Ø­: Ù‡Ø§Ø¯ Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„ ØºÙŠØ± Ù…ØªØ§Ø­ Ù„Ù„Ù…ÙØªØ§Ø­ Ø¯ÙŠØ§Ù„Ùƒ (" + errMsg + ").";
-          } else if (errMsg.includes('API key not valid')) {
-            aiText = "âš ï¸ Ø®Ø·Ø£: Ø§Ù„Ù…ÙØªØ§Ø­ (API Key) Ø§Ù„Ù„ÙŠ Ø¯Ø®Ù„ØªÙŠ ØºÙŠØ± ØµØ­ÙŠØ­.";
-          } else {
-            aiText = "خطأ: " + errMsg;
-          }
         } else {
-          aiText = 'Ù„Ù… Ø£Ø³ØªØ·Ø¹ ÙÙ‡Ù… Ø§Ù„Ø±Ø¯.';
+          // If Gemini API fails or limits, answer directly with built-in textile expert!
+          const smartReply = getSmartReply(userMessage);
+          const errMsg = data.error?.message || '';
+          const isLimit0 = errMsg.includes('limit: 0') || errMsg.includes('Quota exceeded') || errMsg.includes('RESOURCE_EXHAUSTED');
+          let note = '';
+          if (isLimit0) {
+            note = isAr 
+              ? "\n\n────────────────────────────\n⚠️ ملاحظة: مفتاح Gemini API بدون رصيد في Google Cloud (Limit: 0)، تمت إجابتك مباشرة عبر خبير BEYA الداخلي."
+              : "\n\n────────────────────────────\n⚠️ Note: Clé Gemini API sans quota (Limit: 0), réponse fournie par l'Expert BEYA interne.";
+          }
+          aiText = smartReply + note;
         }
         setChat(prev => { const n = [...prev]; n.pop(); return [...n, { role: 'ai', text: aiText }]; });
       } catch (e: any) {
-        setChat(prev => { const n = [...prev]; n.pop(); return [...n, { role: 'ai', text: 'خطأ: ' + e.message }]; });
+        const smartReply = getSmartReply(userMessage);
+        setChat(prev => { const n = [...prev]; n.pop(); return [...n, { role: 'ai', text: smartReply }]; });
       }
     } else {
       setChat(prev => [...prev, { role: 'ai', text: getSmartReply(userMessage) }]);
@@ -1460,28 +1540,28 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
           });
         }
 
-        let response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
+        let response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents,
             systemInstruction: {
-              parts: [{ text: "Ø£Ù†Øª Ø®Ø¨ÙŠØ± ØªØ­Ù„ÙŠÙ„ ÙˆØªØµÙ…ÙŠÙ… ÙˆØªØ³Ø¹ÙŠØ± ÙÙŠ Ù…ØµÙ†Ø¹ Ù†Ø³ÙŠØ¬ Ù…ØºØ±Ø¨ÙŠ. ØªÙƒÙ„Ù… Ø¨Ø§Ù„Ø¯Ø§Ø±Ø¬Ø© Ø§Ù„Ù…ØºØ±Ø¨ÙŠØ© Ø¨Ø£Ø³Ù„ÙˆØ¨ Ø§Ø­ØªØ±Ø§ÙÙŠ ÙˆÙˆØ¯ÙŠ. Ù…Ù‡Ù…ØªÙƒ Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ©: 1. Ø­Ø³Ø§Ø¨ ÙƒÙ…ÙŠØ§Øª Ø§Ù„Ø«ÙˆØ¨ Ø¨Ø¯Ù‚Ø©. 2. Ø¥Ø¹Ø·Ø§Ø¡ ØªÙ‚Ø¯ÙŠØ±Ø§Øª Ø¯Ù‚ÙŠÙ‚Ø© Ù„Ù„Ø£Ø³Ø¹Ø§Ø± ÙÙŠ Ø§Ù„Ø³ÙˆÙ‚ Ø§Ù„Ù…ØºØ±Ø¨ÙŠ (Ù…Ø«Ù„Ø§ Ø£Ø«Ù…Ù†Ø© Ø§Ù„Ø£Ø«ÙˆØ§Ø¨ ÙÙŠ Ø¯Ø±Ø¨ Ø¹Ù…Ø± Ø£Ùˆ Ø£Ø³ÙˆØ§Ù‚ Ø§Ù„Ø¬Ù…Ù„Ø©). 3. Ø¥Ø°Ø§ Ø³Ø£Ù„Ùƒ Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø¹Ù† Ø§Ù„ØªÙƒÙ„ÙØ©ØŒ Ø£Ø¹Ø·Ù‡ ØªÙØµÙŠÙ„Ø§Ù‹ Ø¯Ù‚ÙŠÙ‚Ø§Ù‹: Ø«Ù…Ù† Ø§Ù„Ø«ÙˆØ¨ (Ø´Ø­Ø§Ù„ Ù„Ù„Ù…ØªØ± ÙˆØ§Ù„Ù…Ø¬Ù…ÙˆØ¹)ØŒ ØªÙƒÙ„ÙØ© Ø§Ù„Ø®ÙŠØ§Ø·Ø© (Ø§Ù„ÙŠØ¯ Ø§Ù„Ø¹Ø§Ù…Ù„Ø©)ØŒ ÙˆØ§Ù„ØªÙƒÙ„ÙØ© Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠØ© Ù„Ù„Ù‚Ø·Ø¹Ø© (Prix de revient). 4. Ø§Ù‚ØªØ±Ø­ Ø£Ù…Ø§ÙƒÙ† Ø´Ø±Ø§Ø¡ Ø§Ù„Ø£Ø«ÙˆØ§Ø¨ ÙÙŠ Ø§Ù„Ù…ØºØ±Ø¨. ÙƒÙ† Ù…ÙÙŠØ¯Ø§Ù‹ØŒ Ø¯Ù‚ÙŠÙ‚Ø§Ù‹ ÙÙŠ Ø§Ù„Ø£Ø±Ù‚Ø§Ù… Ø§Ù„ØªÙ‚Ø±ÙŠØ¨ÙŠØ©ØŒ ÙˆØªØµØ±Ù ÙƒØ®Ø¨ÙŠØ± Ù†Ø³ÙŠØ¬ Ø­Ù‚ÙŠÙ‚ÙŠ." }]
+              parts: [{ text: "أنت خبير تحليل وتصميم وتسعير في مصنع نسيج مغربي. تكلم بالدارجة المغربية بأسلوب احترافي وودي. مهمتك الأساسية: 1. حساب كميات الثوب بدقة. 2. إعطاء تقديرات دقيقة للأسعار في السوق المغربي (مثلا أثمنة الأثواب في درب عمر أو أسواق الجملة). 3. إذا سألك المستخدم عن التكلفة، أعطه تفصيلاً دقيقاً: ثمن الثوب (شحال للمتر والمجموع)، تكلفة الخياطة (اليد العاملة)، والتكلفة الإجمالية للقطعة (Prix de revient). 4. اقترح أماكن شراء الأثواب في المغرب. كن مفيداً، دقيقاً في الأرقام التقريبية، وتصرف كخبير نسيج حقيقي." }]
             }
           })
         });
 
         let data = await response.json();
         
-        // Fallback to gemini-3.5-flash if flash is overloaded
+        // Fallback to gemini-1.5-flash if 2.0 is overloaded or not found
         if (data.error && (data.error.message.includes('high demand') || data.error.code === 503 || data.error.code === 404 || data.error.message.includes('not found'))) {
-          response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
+          response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contents,
               systemInstruction: {
-                parts: [{ text: "Ø£Ù†Øª Ø®Ø¨ÙŠØ± ØªØ­Ù„ÙŠÙ„ ÙˆØªØµÙ…ÙŠÙ… ÙˆØªØ³Ø¹ÙŠØ± ÙÙŠ Ù…ØµÙ†Ø¹ Ù†Ø³ÙŠØ¬ Ù…ØºØ±Ø¨ÙŠ. ØªÙƒÙ„Ù… Ø¨Ø§Ù„Ø¯Ø§Ø±Ø¬Ø© Ø§Ù„Ù…ØºØ±Ø¨ÙŠØ© Ø¨Ø£Ø³Ù„ÙˆØ¨ Ø§Ø­ØªØ±Ø§ÙÙŠ ÙˆÙˆØ¯ÙŠ. Ù…Ù‡Ù…ØªÙƒ Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ©: 1. Ø­Ø³Ø§Ø¨ ÙƒÙ…ÙŠØ§Øª Ø§Ù„Ø«ÙˆØ¨ Ø¨Ø¯Ù‚Ø©. 2. Ø¥Ø¹Ø·Ø§Ø¡ ØªÙ‚Ø¯ÙŠØ±Ø§Øª Ø¯Ù‚ÙŠÙ‚Ø© Ù„Ù„Ø£Ø³Ø¹Ø§Ø± ÙÙŠ Ø§Ù„Ø³ÙˆÙ‚ Ø§Ù„Ù…ØºØ±Ø¨ÙŠ (Ù…Ø«Ù„Ø§ Ø£Ø«Ù…Ù†Ø© Ø§Ù„Ø£Ø«ÙˆØ§Ø¨ ÙÙŠ Ø¯Ø±Ø¨ Ø¹Ù…Ø± Ø£Ùˆ Ø£Ø³ÙˆØ§Ù‚ Ø§Ù„Ø¬Ù…Ù„Ø©). 3. Ø¥Ø°Ø§ Ø³Ø£Ù„Ùƒ Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø¹Ù† Ø§Ù„ØªÙƒÙ„ÙØ©ØŒ Ø£Ø¹Ø·Ù‡ ØªÙØµÙŠÙ„Ø§Ù‹ Ø¯Ù‚ÙŠÙ‚Ø§Ù‹: Ø«Ù…Ù† Ø§Ù„Ø«ÙˆØ¨ (Ø´Ø­Ø§Ù„ Ù„Ù„Ù…ØªØ± ÙˆØ§Ù„Ù…Ø¬Ù…ÙˆØ¹)ØŒ ØªÙƒÙ„ÙØ© Ø§Ù„Ø®ÙŠØ§Ø·Ø© (Ø§Ù„ÙŠØ¯ Ø§Ù„Ø¹Ø§Ù…Ù„Ø©)ØŒ ÙˆØ§Ù„ØªÙƒÙ„ÙØ© Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠØ© Ù„Ù„Ù‚Ø·Ø¹Ø© (Prix de revient). 4. Ø§Ù‚ØªØ±Ø­ Ø£Ù…Ø§ÙƒÙ† Ø´Ø±Ø§Ø¡ Ø§Ù„Ø£Ø«ÙˆØ§Ø¨ ÙÙŠ Ø§Ù„Ù…ØºØ±Ø¨. ÙƒÙ† Ù…ÙÙŠØ¯Ø§Ù‹ØŒ Ø¯Ù‚ÙŠÙ‚Ø§Ù‹ ÙÙŠ Ø§Ù„Ø£Ø±Ù‚Ø§Ù… Ø§Ù„ØªÙ‚Ø±ÙŠØ¨ÙŠØ©ØŒ ÙˆØªØµØ±Ù ÙƒØ®Ø¨ÙŠØ± Ù†Ø³ÙŠØ¬ Ø­Ù‚ÙŠÙ‚ÙŠ." }]
+                parts: [{ text: "أنت خبير تحليل وتصميم وتسعير في مصنع نسيج مغربي. تكلم بالدارجة المغربية بأسلوب احترافي وودي." }]
               }
             })
           });
@@ -1491,21 +1571,18 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
         let aiResponseText = "";
         if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
           aiResponseText = parseAiChatAndExtractGamme(data.candidates[0].content.parts[0].text, userMessage);
-        } else if (data.error) {
-          const errMsg = data.error.message || '';
-          if (errMsg.includes('high demand')) {
-            aiResponseText = "عذراً، خوادم الذكاء الاصطناعي عليها ضغط كبير الآن. ⏳ انتظر قليلاً وحاول مرة أخرى!";
-          } else if (errMsg.includes('limit: 0') || errMsg.includes('Quota exceeded')) {
-            aiResponseText = "âš ï¸ Ø®Ø·Ø£ ÙÙŠ Ø§Ù„Ù…ÙØªØ§Ø­ (API Key): Ù…ÙØªØ§Ø­Ùƒ Ù…Ø§Ø¹Ù†Ø¯Ùˆ Ø­ØªÙ‰ Ø±ØµÙŠØ¯ (Limit: 0). Ù‡Ø§Ø¯Ø´ÙŠ ÙƒÙŠÙˆÙ‚Ø¹ Ø­ÙŠØª Google ÙƒØªÙØ±Ø¶ ØªÙØ¹ÙŠÙ„ Ø§Ù„Ø¯ÙØ¹ (Billing) ÙˆØ¥Ø¶Ø§ÙØ© Ø¨Ø·Ø§Ù‚Ø© Ø¨Ù†ÙƒÙŠØ© ÙÙŠ Ø­Ø³Ø§Ø¨ Google Cloud Ø¯ÙŠØ§Ù„Ùƒ Ø¨Ø§Ø´ ØªÙ‚Ø¯Ø± ØªØ®Ø¯Ù… Ø§Ù„Ù€ API ÙÙŠ Ø§Ù„Ù…ØºØ±Ø¨ØŒ ÙˆØ§Ø®Ø§ Ù‡Ùˆ Ù…Ø¬Ø§Ù†ÙŠ.";
-          } else if (errMsg.includes('not found') || errMsg.includes('not supported')) {
-            aiResponseText = "âš ï¸ Ø®Ø·Ø£ ÙÙŠ Ø§Ù„Ù…ÙØªØ§Ø­: Ù‡Ø§Ø¯ Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„ (Gemini 1.5) ØºÙŠØ± Ù…ØªØ§Ø­ Ù„Ù„Ù…ÙØªØ§Ø­ Ø¯ÙŠØ§Ù„Ùƒ. ØªØ£ÙƒØ¯ Ø¨Ø§Ù„Ù„ÙŠ ÙØ¹Ù„ØªÙŠ Ø§Ù„Ù€ API Ø§Ù„ØµØ­ÙŠØ­ ÙÙŠ Google Cloud Console.";
-          } else if (errMsg.includes('API key not valid')) {
-            aiResponseText = "âš ï¸ Ø®Ø·Ø£: Ø§Ù„Ù…ÙØªØ§Ø­ (API Key) Ø§Ù„Ù„ÙŠ Ø¯Ø®Ù„ØªÙŠ ØºÙŠØ± ØµØ­ÙŠØ­. Ø§Ù„Ù…Ø±Ø¬Ùˆ Ø§Ù„ØªØ£ÙƒØ¯ Ù…Ù† Ù†Ø³Ø®Ù‡ Ø¨Ø´ÙƒÙ„ ØµØ­ÙŠØ­ Ù…Ù† Google AI Studio.";
-          } else {
-            aiResponseText = "Ø¹Ø°Ø±Ø§Ù‹ØŒ ÙˆÙ‚Ø¹ Ø®Ø·Ø£ ÙÙŠ ÙˆØ§Ø¬Ù‡Ø© Ø¨Ø±Ù…Ø¬Ø© Ø§Ù„ØªØ·Ø¨ÙŠÙ‚Ø§Øª (API Error): " + errMsg;
-          }
         } else {
-          aiResponseText = "Ù„Ù… Ø£Ø³ØªØ·Ø¹ ÙÙ‡Ù… Ø§Ù„Ø±Ø¯. Ø­Ø§ÙˆÙ„ Ù…Ø±Ø© Ø£Ø®Ø±Ù‰.";
+          // If Gemini API fails or has limit: 0, answer directly with the Smart Textile Expert!
+          const smartReply = getSmartReply(userMessage);
+          const errMsg = data.error?.message || '';
+          const isLimit0 = errMsg.includes('limit: 0') || errMsg.includes('Quota exceeded') || errMsg.includes('RESOURCE_EXHAUSTED');
+          let note = '';
+          if (isLimit0) {
+            note = isAr 
+              ? "\n\n────────────────────────────\n⚠️ ملاحظة: مفتاح Gemini API بدون رصيد في Google Cloud (Limit: 0)، تمت إجابتك مباشرة عبر خبير BEYA الداخلي."
+              : "\n\n────────────────────────────\n⚠️ Note: Clé Gemini API sans quota (Limit: 0), réponse fournie par l'Expert BEYA interne.";
+          }
+          aiResponseText = smartReply + note;
         }
 
         setChat(prev => {
@@ -1514,19 +1591,19 @@ Réponds UNIQUEMENT au format JSON sans texte additionnel :
           return [...newChat, { role: 'ai', text: aiResponseText }];
         });
       } catch (e: any) {
+        const smartReply = getSmartReply(userMessage);
         setChat(prev => {
           const newChat = [...prev];
           newChat.pop();
-          return [...newChat, { role: 'ai', text: "ÙˆÙ‚Ø¹ Ø®Ø·Ø£ ÙÙŠ Ø§Ù„Ø§ØªØµØ§Ù„: " + e.message }];
+          return [...newChat, { role: 'ai', text: smartReply }];
         });
       }
     } else {
       setTimeout(() => {
-        setChat(prev => [...prev, { role: 'ai', text: getSmartReply(userMessage) + "\n\nðŸ’¡ (Ù„Ù„Ø­ØµÙˆÙ„ Ø¹Ù„Ù‰ Ø°ÙƒØ§Ø¡ Ø§ØµØ·Ù†Ø§Ø¹ÙŠ Ø­Ù‚ÙŠÙ‚ÙŠ ÙŠÙÙ‡Ù… Ø§Ù„Ø¯Ø§Ø±Ø¬Ø© ÙˆÙŠØ­Ù„Ù„ Ø§Ù„ØµÙˆØ± Ø¨Ø¯Ù‚Ø©ØŒ Ù‚Ù… Ø¨Ø¥Ø¶Ø§ÙØ© Ù…ÙØªØ§Ø­ Gemini API Ù…Ù† Ø²Ø± Ø§Ù„Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø£Ø¹Ù„Ø§Ù‡!)" }]);
-      }, 800);
+        setChat(prev => [...prev, { role: 'ai', text: getSmartReply(userMessage) }]);
+      }, 500);
     }
   };
-
 
   return (
     <div className="flex flex-col h-full md:h-[calc(100vh-80px)] max-w-7xl mx-auto px-2 md:px-4 pb-2 md:pb-4 pt-2 md:pt-0 overflow-hidden select-none bg-white md:bg-transparent">
