@@ -996,10 +996,32 @@ export async function loadLeads(): Promise<Lead[]> {
       if (raw) deletedIds = JSON.parse(raw) || [];
     } catch (_) {}
 
-    // 1. Load from Supabase — simplest possible query
-    const { data: supaData, error } = await supabase
+    // 1. Load from Supabase — lightweight columns (exclude massive base64 photo blobs)
+    const LEADS_COLS = 'id, name, phone, phone2, ville, type, quantity, details, tailles, date, status, email, contactedAt, contactedType, contactedBy, crmStage, crmContactMethod, crmRdvDate, crmNotes, crmPrice, crmPriceConfirmed, photoCount, crmDevisMode, crmPriority, rejectedAt';
+    let supaData: any[] | null = null;
+    let error: any = null;
+
+    const res = await supabase
       .from('leads')
-      .select('*');
+      .select(LEADS_COLS)
+      .order('date', { ascending: false });
+
+    if (res.error) {
+      console.warn('[loadLeads] Light select failed, trying fallback limit query:', res.error.message);
+      const fallbackRes = await supabase
+        .from('leads')
+        .select('*')
+        .order('date', { ascending: false })
+        .limit(200);
+      if (!fallbackRes.error && fallbackRes.data) {
+        supaData = fallbackRes.data;
+        error = null;
+      } else {
+        error = res.error;
+      }
+    } else {
+      supaData = res.data;
+    }
 
     if (error) console.error('[loadLeads] Supabase error:', error.message, error.code);
 
